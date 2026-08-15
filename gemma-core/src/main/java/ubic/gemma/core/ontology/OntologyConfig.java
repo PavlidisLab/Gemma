@@ -208,6 +208,16 @@ public class OntologyConfig {
         return createOntologyFactory( MgiStrainOntologyService.class, MgiStrainOntologyService.URI_PREFIX + "MGI:" );
     }
 
+    /**
+     * Extra search strings for MONDO disease terms, not a vocabulary of its own — the URI prefix is
+     * MONDO's, which also fences the table to MONDO URIs should the builder ever emit anything else.
+     */
+    @Bean
+    public FactoryBean<MeshDiseaseSynonymOntologyService> meshDiseaseSynonymOntologyService() {
+        return createOntologyFactory( MeshDiseaseSynonymOntologyService.class,
+                MeshDiseaseSynonymOntologyService.URI_PREFIX );
+    }
+
     @Bean
     public FactoryBean<UberonOntologyService> uberonOntologyServiceOntologyService() {
         return createOntologyFactory( UberonOntologyService.class, "http://purl.obolibrary.org/obo/UBERON_" );
