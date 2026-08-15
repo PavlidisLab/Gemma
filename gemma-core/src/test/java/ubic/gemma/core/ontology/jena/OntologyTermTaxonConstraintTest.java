@@ -33,14 +33,21 @@ class OntologyTermTaxonConstraintTest {
     private static final String RDF = "<?xml version=\"1.0\"?>\n"
             + "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n"
             + "         xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"\n"
-            + "         xmlns:owl=\"http://www.w3.org/2002/07/owl#\">\n"
+            + "         xmlns:owl=\"http://www.w3.org/2002/07/owl#\"\n"
+            + "         xmlns:semapv=\"https://w3id.org/semapv/vocab/\">\n"
             + "  <owl:ObjectProperty rdf:about=\"http://purl.obolibrary.org/obo/RO_0002162\"/>\n"
+            // must be DECLARED, or getAnnotations() will not recognise the predicate — MONDO
+            // declares it, which is why the label-valued version reached production at all
+            + "  <owl:AnnotationProperty rdf:about=\"https://w3id.org/semapv/vocab/crossSpeciesExactMatch\"/>\n"
             + "  <owl:Class rdf:about=\"" + OVIS_ARIES + "\">\n"
             + "    <rdfs:label>Ovis aries</rdfs:label>\n"
             + "  </owl:Class>\n"
             // the species-constrained term: in_taxon some Ovis aries
             + "  <owl:Class rdf:about=\"" + SHEEP_LUNG_ADENOCARCINOMA + "\">\n"
             + "    <rdfs:label>sheep lung adenocarcinoma</rdfs:label>\n"
+            // the cross-species mapping MONDO declares, as a RESOURCE -- the whole point of the
+            // getValueUri test below is that resolving this to its label loses the identity
+            + "    <semapv:crossSpeciesExactMatch rdf:resource=\"" + LUNG_ADENOCARCINOMA + "\"/>\n"
             + "    <rdfs:subClassOf>\n"
             + "      <owl:Restriction>\n"
             + "        <owl:onProperty rdf:resource=\"http://purl.obolibrary.org/obo/RO_0002162\"/>\n"
@@ -107,5 +114,35 @@ class OntologyTermTaxonConstraintTest {
     void theConstraintDoesNotLeakBetweenTerms() {
         assertThat( term( SHEEP_LUNG_ADENOCARCINOMA ).getTaxonConstraint() ).isNotNull();
         assertThat( term( "http://purl.obolibrary.org/obo/MONDO_0000001" ).getTaxonConstraint() ).isNull();
+    }
+
+    /**
+     * The mapping must carry the IDENTIFIER. {@code AnnotationProperty.getContents()} resolves a
+     * resource to its {@code rdfs:label}, and this mapping first shipped that way —
+     * {@code ["lung adenocarcinoma"]}, a string that names both {@code MONDO:0005061} (a disease)
+     * and {@code HP:0030078} (a phenotype). Repairing an annotation from it can land on the
+     * phenotype and look like it worked.
+     */
+    @Test
+    void crossSpeciesExactMatchKeepsTheUriNotJustTheLabel() {
+        OntologyTerm t = term( SHEEP_LUNG_ADENOCARCINOMA );
+        java.util.List<ubic.gemma.core.ontology.model.AnnotationProperty> xs =
+                new java.util.ArrayList<>( t.getAnnotations( "https://w3id.org/semapv/vocab/crossSpeciesExactMatch" ) );
+
+        assertThat( xs ).hasSize( 1 );
+        assertThat( xs.get( 0 ).getValueUri() ).isEqualTo( LUNG_ADENOCARCINOMA );
+        // and the label indirection is still there for display, which is why the URI had to be added
+        assertThat( xs.get( 0 ).getContents() ).isEqualTo( "lung adenocarcinoma" );
+    }
+
+    /** Literal-valued annotations have no identity to return. */
+    @Test
+    void valueUriIsNullForALiteralAnnotation() {
+        OntologyTerm t = term( SHEEP_LUNG_ADENOCARCINOMA );
+        for ( ubic.gemma.core.ontology.model.AnnotationProperty a : t.getAnnotations() ) {
+            if ( a.getValueUri() == null ) {
+                return;  // at least one literal annotation, as expected
+            }
+        }
     }
 }

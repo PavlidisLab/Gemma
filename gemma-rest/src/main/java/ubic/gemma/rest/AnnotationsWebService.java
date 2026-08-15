@@ -2564,7 +2564,7 @@ public class AnnotationsWebService {
             // looked. A gate that cannot tell "no constraint declared" from "not checked" has to
             // treat both as unknown, which makes the field useless outside the top-N.
             OntologyTerm.TaxonConstraint taxon = term.getTaxonConstraint();
-            List<String> xspecies = crossSpeciesExactMatchesOf( term );
+            List<OntologyTermSimpleValueObject> xspecies = crossSpeciesExactMatchesOf( term );
             TaxonConstraintValueObject taxonVo = taxon != null
                     ? new TaxonConstraintValueObject( true, taxon.getUri(), taxon.getNcbiTaxonId(),
                             taxon.getLabel(), xspecies )
@@ -3254,7 +3254,7 @@ public class AnnotationsWebService {
             return null;
         }
         OntologyTerm.TaxonConstraint c = term.getTaxonConstraint();
-        List<String> xspecies = crossSpeciesExactMatchesOf( term );
+        List<OntologyTermSimpleValueObject> xspecies = crossSpeciesExactMatchesOf( term );
         return c != null
                 ? new TaxonConstraintValueObject( true, c.getUri(), c.getNcbiTaxonId(), c.getLabel(), xspecies )
                 : new TaxonConstraintValueObject( false, null, null, null, xspecies );
@@ -3268,14 +3268,33 @@ public class AnnotationsWebService {
     private static final String CROSS_SPECIES_EXACT_MATCH =
             "https://w3id.org/semapv/vocab/crossSpeciesExactMatch";
 
-    /** Empty, never null, so an enriched hit's empty list means "checked, none declared". */
-    static List<String> crossSpeciesExactMatchesOf( OntologyTerm term ) {
+    /**
+     * Empty, never null, so an enriched hit's empty list means "checked, none declared".
+     * <p>
+     * 🛑 Keyed on {@code getValueUri()}, NOT {@code getContents()}. The latter resolves a resource
+     * annotation to its {@code rdfs:label}, and a label is not an identity: this mapping first
+     * shipped as {@code ["lung adenocarcinoma"]}, a string naming both {@code MONDO:0005061} (the
+     * disease) and {@code HP:0030078} (the phenotype). A client repairing an annotation from that
+     * string can silently land on the phenotype — worse than not repairing, because it looks like it
+     * worked, and it is the same HP-beats-MONDO confusion the category table exists to prevent.
+     * Rows with no URI are dropped rather than downgraded to their label.
+     */
+    static List<OntologyTermSimpleValueObject> crossSpeciesExactMatchesOf( OntologyTerm term ) {
         try {
-            return term.getAnnotations( CROSS_SPECIES_EXACT_MATCH ).stream()
-                    .map( AnnotationProperty::getContents )
-                    .filter( StringUtils::isNotBlank )
-                    .distinct()
-                    .collect( Collectors.toList() );
+            Map<String, String> byUri = new LinkedHashMap<>();
+            for ( AnnotationProperty a : term.getAnnotations( CROSS_SPECIES_EXACT_MATCH ) ) {
+                String uri = a.getValueUri();
+                if ( StringUtils.isNotBlank( uri ) ) {
+                    // label is decoration; absent whenever the referenced term is in an ontology
+                    // that is not loaded, which is exactly when the URI matters most
+                    byUri.putIfAbsent( uri, a.getContents() );
+                }
+            }
+            List<OntologyTermSimpleValueObject> out = new ArrayList<>( byUri.size() );
+            for ( Map.Entry<String, String> e : byUri.entrySet() ) {
+                out.add( new OntologyTermSimpleValueObject( e.getKey(), e.getValue() ) );
+            }
+            return out;
         } catch ( RuntimeException e ) {
             // Same contract as the rest of enrichment: decoration must not cost the caller the row.
             return Collections.emptyList();
@@ -3477,10 +3496,16 @@ public class AnnotationsWebService {
          * defensible annotation, where a bare rejection leaves the experiment with no disease tag at
          * all. MONDO carries 2,279 of these.</p>
          *
+         * <p>Carries the URI, not just the label. {@code "lung adenocarcinoma"} names both
+         * {@code MONDO:0005061} and {@code HP:0030078}, so a client repairing from the string can
+         * land on the phenotype instead of the disease — the exact HP-beats-MONDO confusion the
+         * category table exists to prevent. {@code label} is null whenever the referenced term's
+         * ontology is not loaded, which is precisely when the identifier matters most.</p>
+         *
          * <p>Empty rather than null when the term declares none, since the object is only ever
          * emitted for hits we actually inspected.</p>
          */
-        List<String> crossSpeciesExactMatch;
+        List<OntologyTermSimpleValueObject> crossSpeciesExactMatch;
     }
 
     /**
