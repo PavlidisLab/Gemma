@@ -1446,8 +1446,34 @@ public class AnnotationsWebService {
         // re-break `FTC`. Do not change one without re-measuring the other.
         java.util.function.ToIntFunction<CharacteristicValueObject> sourceDemotionFn =
                 h -> h.isSupplementary() ? 1 : 0;
+        // ---- A hit with no URI can never beat one that has a URI ------------------------------
+        //
+        // A null-`valueUri` row is free text from the corpus: no client can store it, compare it or
+        // dedup it, so as an ANSWER it is unusable regardless of how well its label matches. Ranking
+        // it above a URI-bearing hit costs the caller its best answer whenever it takes the top hit,
+        // which is what a resolver does.
+        //
+        // Reported by CAB 2026-08-15: `Lewis lung carcinoma` returned the free-text
+        // `lewis lung carcinoma cell` (valueUri=null) at rank 1, ahead of EFO_1001770
+        // `carcinoma, lewis lung` — the gold answer, carrying usageCount=4, priorCategories
+        // {disease, disease model} and a definition naming 3LL, the very cell line in the
+        // experiment. The subagent took rank 1, got nothing usable, and ended up tagging a mouse
+        // experiment with `sheep lung adenocarcinoma`.
+        //
+        // Ordered AHEAD of the tier key rather than folded into it the way the supplementary
+        // demotion is, because this is not a statement about relevance: one tier of demotion still
+        // lets a null-URI row outrank a usable hit sitting one tier below it. It is a different KIND
+        // of row, so it sorts as a separate, dominant key.
+        //
+        // Safe by construction for grounding metrics: every gold answer has a URI, and this key can
+        // only move URI-LESS rows downward — it never reorders two URI-bearing hits with respect to
+        // each other. Fold MRR / recall can therefore improve or stay flat, never regress. Free-text
+        // rows are still returned, just below the usable ones.
+        java.util.function.ToIntFunction<CharacteristicValueObject> usableFn =
+                h -> StringUtils.isNotBlank( h.getValueUri() ) ? 0 : 1;
         rawHits.sort( Comparator
-                .<CharacteristicValueObject>comparingInt( h -> tierFn.applyAsInt( h ) + sourceDemotionFn.applyAsInt( h ) )
+                .<CharacteristicValueObject>comparingInt( usableFn::applyAsInt )
+                .thenComparingInt( h -> tierFn.applyAsInt( h ) + sourceDemotionFn.applyAsInt( h ) )
                 .thenComparingInt( sourceDemotionFn::applyAsInt )
                 .thenComparingInt( prefixRankFn::applyAsInt )
                 .thenComparingInt( cellLinePreferenceFn::applyAsInt )
