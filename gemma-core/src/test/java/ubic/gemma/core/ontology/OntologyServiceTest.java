@@ -208,6 +208,65 @@ public class OntologyServiceTest extends BaseTest5 {
     }
 
     /**
+     * Ranking below must not mean "only if there is room left over". The supplementary tier used to get
+     * {@code maxResults - ranked.size()}, which is exactly zero whenever the conventional ontologies fill
+     * the window — the common case, since a partial-token match on a word like "syndrome" saturates a
+     * default limit of 20 on its own. The catalogues were loaded, searched, and then discarded.
+     */
+    @Test
+    public void testSupplementaryTierIsReachableWhenConventionalHitsFillTheWindow() throws Exception {
+        List<OntologySearchResult<OntologyTerm>> conventional = new ArrayList<>();
+        for ( int i = 0; i < 10; i++ ) {
+            conventional.add( new OntologySearchResult<>(
+                    new OntologyTermSimple( "http://purl.obolibrary.org/obo/MONDO_" + i, "syndrome " + i ), 2.0 ) );
+        }
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "Gorlin Goltz Syndrome", 10 ) ).thenReturn( conventional );
+
+        when( cellosaurusOntologyService.isSupplementary() ).thenReturn( true );
+        when( cellosaurusOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( cellosaurusOntologyService.findTerm( "Gorlin Goltz Syndrome", 10 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "https://www.cellosaurus.org/CVCL_XXXX", "Gorlin Goltz" ), 137.0 ) ) );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "Gorlin Goltz Syndrome", 10, 5000, TimeUnit.MILLISECONDS ) );
+
+        // The window is still full, and the supplementary hit is in it rather than starved out.
+        assertEquals( 10, results.size() );
+        assertTrue( results.stream().anyMatch( r -> r.getResult().getUri().startsWith( "https://www.cellosaurus.org/" ) ),
+                "supplementary hit was starved by a full conventional window" );
+        // Still ranked below: every conventional hit that made the cut precedes it.
+        int supplementaryIndex = -1;
+        for ( int i = 0; i < results.size(); i++ ) {
+            if ( results.get( i ).getResult().getUri().startsWith( "https://www.cellosaurus.org/" ) ) {
+                supplementaryIndex = i;
+                break;
+            }
+        }
+        assertEquals( results.size() - 1, supplementaryIndex );
+    }
+
+    /**
+     * Reserving a slice must not cost a result when there is nothing to put in it: with no supplementary
+     * source contributing, the conventional hits still fill the whole window.
+     */
+    @Test
+    public void testReservedSliceIsReturnedToConventionalHitsWhenUnused() throws Exception {
+        List<OntologySearchResult<OntologyTerm>> conventional = new ArrayList<>();
+        for ( int i = 0; i < 10; i++ ) {
+            conventional.add( new OntologySearchResult<>(
+                    new OntologyTermSimple( "http://purl.obolibrary.org/obo/MONDO_" + i, "term " + i ), 2.0 ) );
+        }
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "myelopathy", 10 ) ).thenReturn( conventional );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "myelopathy", 10, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 10, results.size() );
+    }
+
+    /**
      * GO is consulted only when the other ontologies come up empty. That test must read the conventional
      * ontologies alone — otherwise enabling a supplementary catalogue would quietly switch the GO fallback off
      * for every query the catalogue happens to match.

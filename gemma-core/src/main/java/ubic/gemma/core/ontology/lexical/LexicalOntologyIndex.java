@@ -2,6 +2,7 @@ package ubic.gemma.core.ontology.lexical;
 
 import org.apache.lucene.analysis.Analyzer;
 import ubic.gemma.core.ontology.search.OntologyAnalyzers;
+import ubic.gemma.core.ontology.search.OntologyQueries;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -95,6 +96,9 @@ public class LexicalOntologyIndex implements AutoCloseable {
                 throw new IOException( "Failed to parse lexical ontology query: " + queryString, e2 );
             }
         }
+        // Same OR-default problem as the Jena index: without this a catalogue of 118k strain names
+        // answers any multi-word query on a single shared token.
+        textQuery = OntologyQueries.withMinimumShouldMatch( textQuery, OntologyQueries.DEFAULT_MIN_SHOULD_MATCH );
         // Combine an analyzed-text clause (recall) with a heavily-boosted exact name/synonym clause
         // (precision), so an exact match of the whole query against a name or synonym ranks first.
         Query exactQuery = new BoostQuery(

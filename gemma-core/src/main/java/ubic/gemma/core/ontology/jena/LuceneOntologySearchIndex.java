@@ -32,6 +32,7 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.lucene.analysis.Analyzer;
 import ubic.gemma.core.ontology.search.OntologyAnalyzers;
+import ubic.gemma.core.ontology.search.OntologyQueries;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -113,6 +114,9 @@ class LuceneOntologySearchIndex implements SearchIndex {
                 // Fall back to escaped term search if the user's query won't parse.
                 query = parser.parse( QueryParser.escape( queryString ) );
             }
+            // The parser's default operator is OR, which on an ontology index means a document
+            // matches on ONE shared token — `Gorlin Goltz Syndrome` retrieved `down syndrome`.
+            query = OntologyQueries.withMinimumShouldMatch( query, OntologyQueries.DEFAULT_MIN_SHOULD_MATCH );
             // Fetch a few extra to allow for class/individual filtering.
             int fetch = Math.max( maxResults * 2, maxResults );
             TopDocs hits = searcher.search( query, fetch );

@@ -179,6 +179,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         initializeRelationTerms();
     }
 
+    /**
+     * Share of a result window held for the supplementary tier when it has anything to contribute.
+     * A fifth is enough for a gap-filling catalogue hit to be seen without displacing the
+     * conventional ontologies that should normally answer.
+     */
+    private static final double SUPPLEMENTARY_RESERVED_SHARE = 0.2;
+
     private void countOccurrences( Map<String, CharacteristicValueObject> results ) {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -370,9 +377,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
+        // Supplementary hits are ranked below conventional ones, but "below" has to mean "later in
+        // the list", not "only if there is room left over". Giving them the LEFTOVER budget --
+        // maxResults - ranked.size() -- hands them exactly zero whenever the conventional
+        // ontologies fill the limit, which is the common case: `Gorlin Goltz Syndrome` had 20
+        // partial `syndrome` matches saturating a default limit of 20, so the catalogues were
+        // enabled, loaded, searched, and then silently discarded on almost every multi-word query.
+        // Reserving a slice keeps the tier's ordering intact while guaranteeing it can be reached.
+        int reserved = supplementaryResults.isEmpty()
+                ? 0
+                : Math.min( supplementaryResults.size(),
+                        Math.max( 1, ( int ) Math.floor( maxResults * SUPPLEMENTARY_RESERVED_SHARE ) ) );
         LinkedHashSet<OntologySearchResult<OntologyTerm>> ranked = results.stream()
                 .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
-                .limit( maxResults )
+                .limit( Math.max( maxResults - reserved, 0 ) )
                 .collect( Collectors.toCollection( LinkedHashSet::new ) );
         // equality is on the term, so a URI already contributed by a conventional ontology is not re-added
         supplementaryResults.stream()
@@ -380,6 +398,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .filter( osr -> !ranked.contains( osr ) )
                 .limit( Math.max( maxResults - ranked.size(), 0 ) )
                 .forEach( ranked::add );
+        // Anything the supplementary tier did not claim goes back to the conventional hits, so
+        // reserving a slice never costs a result when there is nothing to put in it.
+        if ( ranked.size() < maxResults ) {
+            results.stream()
+                    .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
+                    .filter( osr -> !ranked.contains( osr ) )
+                    .limit( maxResults - ranked.size() )
+                    .forEach( ranked::add );
+        }
         return ranked;
     }
 
