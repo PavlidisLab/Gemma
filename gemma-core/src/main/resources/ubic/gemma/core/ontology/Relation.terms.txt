@@ -20,3 +20,4 @@ http://gemma.msl.ubc.ca/ont/TGEMO_00171	induced by
 http://gemma.msl.ubc.ca/ont/TGEMO_00183	delivered to
 http://gemma.msl.ubc.ca/ont/TGEMO_00202	sampled after
 http://gemma.msl.ubc.ca/ont/TGEMO_00201	has child with disease
+http://purl.obolibrary.org/obo/CLO_0000015	derives from patient having disease
