@@ -67,8 +67,43 @@ class AnnotationsWebServiceSolidMatchTest {
         assertThat( AnnotationsWebService.isDesignationQuery( "  " ) ).isFalse();
         assertThat( AnnotationsWebService.isDesignationQuery( "7" ) ).isFalse();
         assertThat( AnnotationsWebService.isDesignationQuery( "2206" ) ).isFalse();  // no letter
-        // Multi-token: a designation is one coined token, even when it contains digits.
+        // A code plus a descriptive word is a description of the code, not a designation.
         assertThat( AnnotationsWebService.isDesignationQuery( "MK-2206 treatment" ) ).isFalse();
+    }
+
+    /**
+     * The space in {@code BAY 43-9006} is the author's (and CHEBI's — it stores {@code pd 0325901}
+     * and {@code sb 431542} spaced), not evidence of a description. Before this, the whitespace
+     * bail left {@code BAY 43-9006} returning {@code (s)-bay-k-8644} and an MGI mouse strain with
+     * {@code suppress_near_matches=true} on.
+     */
+    @Test
+    void splitVendorCodesAreDesignations() {
+        assertThat( AnnotationsWebService.isDesignationQuery( "BAY 43-9006" ) ).isTrue();
+        assertThat( AnnotationsWebService.isDesignationQuery( "SCH 900776" ) ).isTrue();
+        assertThat( AnnotationsWebService.isDesignationQuery( "CP 690550" ) ).isTrue();
+        assertThat( AnnotationsWebService.isDesignationQuery( "GW 501516" ) ).isTrue();
+        assertThat( AnnotationsWebService.isDesignationQuery( "PD 0325901" ) ).isTrue();
+    }
+
+    /**
+     * The widening has to stay narrower than "two tokens and a digit somewhere", or ordinary
+     * phrasing starts getting its near-matches suppressed — which empties the result set and pushes
+     * the caller onto exactly the fuzzy fallback that fabricates groundings.
+     */
+    @Test
+    void ordinaryPhrasingIsNotASplitDesignation() {
+        // Single digits: a count or a subtype, never a vendor code.
+        assertThat( AnnotationsWebService.isDesignationQuery( "type 2" ) ).isFalse();
+        assertThat( AnnotationsWebService.isDesignationQuery( "IL 6" ) ).isFalse();
+        // Digitless second token that is a word rather than a prefix.
+        assertThat( AnnotationsWebService.isDesignationQuery( "BAY leaf" ) ).isFalse();
+        assertThat( AnnotationsWebService.isDesignationQuery( "vitamin D3" ) ).isFalse();
+        // Three tokens is a phrase whatever the digits look like.
+        assertThat( AnnotationsWebService.isDesignationQuery( "high fat diet 2" ) ).isFalse();
+        assertThat( AnnotationsWebService.isDesignationQuery( "type 2 diabetes" ) ).isFalse();
+        // Two code-shaped tokens is a pair of designations, not one designation.
+        assertThat( AnnotationsWebService.isDesignationQuery( "MK-2206 GSK2879552" ) ).isFalse();
     }
 
     // ---- exact vs near attribution -------------------------------------------------------

@@ -2635,6 +2635,22 @@ public class AnnotationsWebService {
      * return nothing and push the caller onto a fuzzy fallback — which is where fabricated
      * groundings come from in the first place. Suppression has to be narrower than "be strict",
      * or it manufactures the very failure it exists to prevent.</p>
+     *
+     * <p><b>The separator is the author's, not the compound's.</b> This used to bail on the first
+     * whitespace, on the reasoning that multi-token ⇒ descriptive. That dropped a whole spelling of
+     * the same designations: {@code BAY 43-9006}, {@code SCH 900776}, {@code CP 690550},
+     * {@code GW 501516}. The space is not evidence of a description — CHEBI itself stores several
+     * of these spaced ({@code pd 0325901}, {@code sb 431542}), so it is the ontology's own
+     * spelling as much as the submitter's. {@code BAY 43-9006} was left returning
+     * {@code (s)-bay-k-8644} and an MGI mouse strain under {@code suppress_near_matches}, which is
+     * the exact failure this predicate gates.</p>
+     *
+     * <p>So a second token is admitted under a deliberately tight rule: at most two tokens, one
+     * carrying a run of at least {@link #MIN_DESIGNATION_DIGITS} digits, and any digitless token
+     * being a short vendor prefix (≤ {@link #MAX_VENDOR_PREFIX_LENGTH} characters).
+     * {@code type 2 diabetes} fails on token count AND on {@code diabetes} being a word rather than
+     * a prefix; {@code high fat diet} carries no digit at all; {@code type 2} and {@code IL 6} fail
+     * the digit floor. The single-token contract is untouched.</p>
      */
     static boolean isDesignationQuery( @Nullable String query ) {
         if ( query == null ) {
@@ -2644,20 +2660,74 @@ public class AnnotationsWebService {
         if ( q.length() < 2 ) {
             return false;
         }
-        boolean hasLetter = false, hasDigit = false;
-        for ( int i = 0; i < q.length(); i++ ) {
-            char c = q.charAt( i );
-            if ( Character.isWhitespace( c ) ) {
-                return false;   // multi-token ⇒ descriptive, not a designation
-            }
-            if ( Character.isLetter( c ) ) {
-                hasLetter = true;
-            } else if ( Character.isDigit( c ) ) {
-                hasDigit = true;
+        String[] tokens = q.split( "\\s+" );
+        if ( tokens.length > MAX_DESIGNATION_TOKENS ) {
+            return false;
+        }
+        if ( tokens.length == 1 ) {
+            // Unchanged single-token contract: at least one letter AND at least one digit.
+            return countLetters( q ) > 0 && countDigits( q ) > 0;
+        }
+        // Multi-token. Exactly one token may be a digitless vendor prefix; the other has to carry a
+        // real code number. The digit-run floor is what keeps ordinary phrasing out: `type 2` and
+        // `IL 6` have a single digit and are not designations, while every split vendor code we
+        // have seen carries at least three (43-9006, 900776, 690550, 501516, 0325901).
+        int codeTokens = 0;
+        for ( String token : tokens ) {
+            int digits = countDigits( token );
+            if ( digits >= MIN_DESIGNATION_DIGITS ) {
+                codeTokens++;
+            } else if ( digits > 0 || countLetters( token ) == 0
+                    || token.length() > MAX_VENDOR_PREFIX_LENGTH ) {
+                // A digitless token is only tolerable as the vendor prefix of a split code
+                // ("BAY" of "BAY 43-9006"). Anything longer is a word, and words describe.
+                return false;
             }
         }
-        return hasLetter && hasDigit;
+        // Exactly one code, exactly one prefix. Two code-shaped tokens ("MK-2206 GSK2879552") is a
+        // caller naming two entities, and answering it as one designation would be a guess about
+        // which of the two they meant.
+        return codeTokens == 1;
     }
+
+    private static int countLetters( String s ) {
+        int n = 0;
+        for ( int i = 0; i < s.length(); i++ ) {
+            if ( Character.isLetter( s.charAt( i ) ) ) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    private static int countDigits( String s ) {
+        int n = 0;
+        for ( int i = 0; i < s.length(); i++ ) {
+            if ( Character.isDigit( s.charAt( i ) ) ) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * Upper bound on tokens in a designation. Two covers every split vendor code we have seen
+     * ({@code BAY 43-9006}); three would start admitting short descriptive phrases.
+     */
+    private static final int MAX_DESIGNATION_TOKENS = 2;
+
+    /**
+     * Digits required in the code-bearing token of a split designation. Three is the smallest value
+     * that excludes {@code type 2} / {@code IL 6} while admitting every vendor code observed.
+     */
+    private static final int MIN_DESIGNATION_DIGITS = 3;
+
+    /**
+     * Longest all-letter token accepted as a vendor prefix rather than read as a word. Covers
+     * {@code BAY} / {@code SCH} / {@code GSK} / {@code BIBW}; {@code diet} (4) is the reason the
+     * token count is capped at two as well, since either guard alone leaks.
+     */
+    private static final int MAX_VENDOR_PREFIX_LENGTH = 4;
 
     /**
      * Whether an attribution represents string EQUALITY against one of the term's own names — its
