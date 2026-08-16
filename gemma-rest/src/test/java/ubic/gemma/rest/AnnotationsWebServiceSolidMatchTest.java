@@ -174,6 +174,49 @@ class AnnotationsWebServiceSolidMatchTest {
                 .containsExactly( "selumetinibxyz", "selumetinib" );
     }
 
+    // ---- suppression keeps declared names, drops overlap ---------------------------------
+
+    /**
+     * CHEBI files developmental compound codes under {@code hasRelatedSynonym} as a curation
+     * convention. Sharing one predicate between the relevance tier and the suppression filter made
+     * every one of those a near-match to be deleted: over 60 real corpus treatment codes, 34
+     * resolved without suppression and 15 with it.
+     */
+    @Test
+    void aDeclaredSynonymSurvivesSuppressionAtAnyScope() {
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.PREFERRED_LABEL ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.EXACT_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.NARROW_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.ALT_LABEL ) ).isTrue();
+    }
+
+    /**
+     * The near-matches the flag exists to kill are all overlap rather than equality, so widening
+     * survival to every declared synonym scope does not let any of them back in.
+     */
+    @Test
+    void overlapIsStillNotAName() {
+        // MK-8353 for MK-2206, (s)-bay-k-8644 for BAY 43-9006, gdc-0941-resistant cell lines.
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.LABEL_PREFIX ) ).isFalse();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.LABEL_TOKENS ) ).isFalse();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.SYNONYM_TOKENS ) ).isFalse();
+        assertThat( AnnotationsWebService.namesTheQuery( null ) ).isFalse();
+    }
+
+    /**
+     * The two predicates have to stay different, or the H1 complaint comes back: RELATED must be
+     * kept (suppression) AND demoted (ranking) at the same time.
+     */
+    @Test
+    void rankingAndSuppressionDisagreeOnRelatedByDesign() {
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isFalse();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isFalse();
+    }
+
     // ---- exact vs near attribution -------------------------------------------------------
 
     @Test

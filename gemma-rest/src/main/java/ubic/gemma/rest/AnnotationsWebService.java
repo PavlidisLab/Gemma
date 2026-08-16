@@ -1584,7 +1584,11 @@ public class AnnotationsWebService {
             java.util.function.Predicate<CharacteristicValueObject> solid = h -> {
                 String uri = h.getValueUri();
                 MatchAttribution m = uri != null ? candidateMatches.get( uri ) : null;
-                if ( isExactAttribution( m != null ? m.via : null ) ) {
+                // namesTheQuery, not isExactAttribution: surviving suppression asks whether the
+                // ontology declared this string as a name for the term, while the tier asks how
+                // strongly to rank it. A RELATED synonym is a weaker ORDERING signal and still a
+                // name — dropping it cost 19 of 34 resolvable drug codes.
+                if ( namesTheQuery( m != null ? m.via : null ) ) {
                     return true;
                 }
                 return !relevanceQueryCanon.isEmpty()
@@ -2827,10 +2831,57 @@ public class AnnotationsWebService {
      * specific answer, not a different one. ALT_LABEL stays because it is a label, not a
      * neighbourhood claim.</p>
      *
-     * <p>This also tightens {@code suppress_near_matches}, deliberately: a hit reachable only
-     * through a related or broad synonym is now DROPPED rather than kept, and reported under
-     * {@code negativeEvidence.ruledOut} so the caller can see what went and why.</p>
+     * <p><b>This governs ORDERING only.</b> It used to govern {@code suppress_near_matches} as
+     * well, which conflated two different decisions — see {@link #namesTheQuery} for why they
+     * split, and why RELATED being demoted is right while RELATED being dropped was not.</p>
      */
+    /**
+     * Whether the query equals a name the ontology actually declared for the term — its label or
+     * any synonym, whatever the synonym's scope — as opposed to overlapping it.
+     *
+     * <p>This is the line {@code suppress_near_matches} cuts on, and it is a different line from
+     * {@link #isExactAttribution}. That predicate answers "should this rank in the top tier"; this
+     * one answers "is this a lexical accident". Sharing one predicate for both silently made
+     * every RELATED and BROAD synonym hit a near-match to be DELETED, which is a much harsher
+     * claim than the demotion the H1 case called for.</p>
+     *
+     * <p><b>What that cost, measured.</b> CHEBI files developmental compound codes under
+     * {@code hasRelatedSynonym} as a matter of curation convention — AZD6244→selumetinib,
+     * CP-690550→tofacitinib, PLX4032→vemurafenib, INCB018424→ruxolitinib, RAD001→everolimus,
+     * AZD2281→olaparib all resolve that way. Over 60 real ungrounded treatment codes taken from
+     * the corpus, 34 resolved without suppression and only 15 with it: suppression was throwing
+     * away 19 correct compounds, every one of them a term whose declared synonym IS the string
+     * the caller typed. For the drug axis, related-synonym is the naming relation, not a
+     * neighbourhood hint.</p>
+     *
+     * <p>The near-matches the flag exists to kill are untouched, because they are all overlap
+     * rather than equality: {@code MK-8353} for {@code MK-2206}, {@code (s)-bay-k-8644} for
+     * {@code BAY 43-9006}, and the {@code gdc-0941-resistant} cell lines for {@code GDC-0941}
+     * reach their hits through {@link MatchedVia#LABEL_PREFIX}, {@link MatchedVia#LABEL_TOKENS}
+     * and {@link MatchedVia#SYNONYM_TOKENS}, none of which is a declared name.</p>
+     *
+     * <p>The H1 case stays fixed, because it was a ranking complaint and ranking still uses
+     * {@link #isExactAttribution}: {@code h1 horizontal cell} survives suppression now, but sits
+     * below {@code H1-hESC} rather than beside it.</p>
+     */
+    static boolean namesTheQuery( @Nullable MatchedVia via ) {
+        if ( via == null ) {
+            return false;
+        }
+        switch ( via ) {
+            case PREFERRED_LABEL:
+            case EXACT_SYNONYM:
+            case NARROW_SYNONYM:
+            case RELATED_SYNONYM:
+            case BROAD_SYNONYM:
+            case ALT_LABEL:
+                return true;
+            default:
+                // LABEL_PREFIX / LABEL_TOKENS / SYNONYM_TOKENS — overlap, not a name.
+                return false;
+        }
+    }
+
     static boolean isExactAttribution( @Nullable MatchedVia via ) {
         if ( via == null ) {
             return false;
