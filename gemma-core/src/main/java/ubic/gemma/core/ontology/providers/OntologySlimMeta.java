@@ -58,6 +58,16 @@ public final class OntologySlimMeta {
     @JsonProperty("source_url")
     public String sourceUrl;
 
+    /**
+     * The release the source ontology declared when this slim was cut, e.g. {@code 254} for CHEBI.
+     *
+     * <p>Recorded because {@link #sourceUrl} is an unversioned PURL that always resolves to the
+     * current release — it says where the slim came from but never which one. Null when the source
+     * declares no version, and absent from sidecars written before this field existed.
+     */
+    @JsonProperty("source_version")
+    public String sourceVersion;
+
     @JsonProperty("generated_at")
     public String generatedAt;
 

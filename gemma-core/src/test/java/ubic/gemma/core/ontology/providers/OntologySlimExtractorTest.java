@@ -4,7 +4,11 @@ import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.DC_11;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -101,6 +105,57 @@ class OntologySlimExtractorTest {
         assertEquals( 1, result.getCoveredSeedUris().size() );
         assertEquals( 1, result.getMissingSeedCount() );
         assertTrue( slim.isFile() );
+    }
+
+    /**
+     * The slim must answer "which release is this?" the same way the source does.
+     *
+     * <p>OWL-API's module extractor mints a fresh ontology identified only by the output file, so
+     * before 2026-08-16 the slim carried no {@code owl:versionInfo}, {@code owl:versionIRI} or
+     * {@code dc:title}. Those are exactly the properties {@code AbstractOntologyService} scans in
+     * {@code getVersion()} / {@code getName()} / {@code getDescription()}, so every slimmed
+     * ontology reported a null version — which reads as "upstream declares none", not "the slim
+     * dropped it". Answering "what CHEBI are we running?" meant reading the cached source OWL's
+     * header on the deploy host, because neither {@code /annotations/term} nor
+     * {@code /admin/ontologies} could say.
+     *
+     * <p>Asserted through Jena with the same property lookups the service uses, so this fails if
+     * the runtime read path stops seeing them for any reason, not just if the extractor regresses.
+     */
+    @Test
+    void slimCarriesTheSourceOntologyVersion( @TempDir Path tempDir ) throws Exception {
+        File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
+        File slim = tempDir.resolve( "slim.owl" ).toFile();
+
+        OntologySlimExtractor.ExtractResult result =
+                new OntologySlimExtractor().extract( source, List.of( SORAFENIB ), slim );
+
+        assertEquals( "254", result.getSourceVersion(),
+                "extractor reports the source's owl:versionInfo for the meta sidecar" );
+
+        OntModel jenaModel = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM );
+        try ( FileInputStream in = new FileInputStream( slim ) ) {
+            jenaModel.read( in, null );
+        }
+
+        assertEquals( "254", firstLiteral( jenaModel, OWL.versionInfo ),
+                "owl:versionInfo survives extraction — this is what getVersion() reads first" );
+        assertEquals( "http://purl.obolibrary.org/obo/chebi/254/chebi-mini.owl",
+                firstResourceUri( jenaModel, OWL2.versionIRI ),
+                "owl:versionIRI survives extraction — getVersion()'s fallback for ontologies "
+                        + "that declare no versionInfo" );
+        assertEquals( "CHEBI mini test fixture", firstLiteral( jenaModel, DC_11.title ),
+                "dc:title survives extraction — getName() reads it" );
+    }
+
+    private static String firstLiteral( OntModel model, org.apache.jena.rdf.model.Property p ) {
+        NodeIterator it = model.listObjectsOfProperty( p );
+        return it.hasNext() ? it.next().asLiteral().getString() : null;
+    }
+
+    private static String firstResourceUri( OntModel model, org.apache.jena.rdf.model.Property p ) {
+        NodeIterator it = model.listObjectsOfProperty( p );
+        return it.hasNext() ? it.next().asResource().getURI() : null;
     }
 
     @Test

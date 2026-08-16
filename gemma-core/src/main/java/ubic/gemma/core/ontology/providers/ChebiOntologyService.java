@@ -338,6 +338,7 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
                 getOntologyUrl(), OntologySlimMeta.seedPolicyWithRoles( SLIM_SEED_ROLES ),
                 seeds, slimOut.length(),
                 result.getClassCount(), result.getAxiomCount() );
+        meta.sourceVersion = result.getSourceVersion();
         meta.writeTo( metaOut );
 
         log.info( "Slim CHEBI extracted in {} ms: {} (seeds covered: {} / {}). Meta sidecar "

@@ -221,6 +221,7 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
         OntologySlimMeta meta = OntologySlimMeta.create(
                 getOntologyUrl(), seeds, slimOut.length(),
                 result.getClassCount(), result.getAxiomCount() );
+        meta.sourceVersion = result.getSourceVersion();
         meta.writeTo( metaOut );
 
         log.info( "Slim MONDO extracted in {} ms: {} (seeds covered: {} / {}). Meta sidecar "

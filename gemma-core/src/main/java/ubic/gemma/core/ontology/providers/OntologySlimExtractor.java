@@ -2,18 +2,23 @@ package ubic.gemma.core.ontology.providers;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat;
+import org.semanticweb.owlapi.model.AddOntologyAnnotation;
 import org.semanticweb.owlapi.model.ClassExpressionType;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLEntity;
+import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyID;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
+import org.semanticweb.owlapi.model.SetOntologyID;
 import org.semanticweb.owlapi.model.parameters.Imports;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +26,7 @@ import org.springframework.stereotype.Component;
 import uk.ac.manchester.cs.owlapi.modularity.ModuleType;
 import uk.ac.manchester.cs.owlapi.modularity.SyntacticLocalityModuleExtractor;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -156,6 +162,11 @@ public class OntologySlimExtractor {
         log.info( "STAR extraction returned {} classes / {} axioms in {} ms.",
                 classCount, axiomCount, System.currentTimeMillis() - extractStart );
 
+        // Must happen before the source is released below — the annotations are read off it.
+        String sourceVersion = copyOntologyMetadata( fullOntology, slim, df );
+        log.info( "Carried source ontology metadata onto the slim (version: {}).",
+                sourceVersion != null ? sourceVersion : "none declared upstream" );
+
         // Release the source OWL-API representation BEFORE serialising the slim. This is
         // the critical memory step on real-size sources: the in-memory full ontology is
         // multi-GB and is unneeded once STAR has run. Without this the saveOntology
@@ -172,7 +183,46 @@ public class OntologySlimExtractor {
         log.info( "Wrote {} axioms in {} ms.", slim.getAxiomCount(),
                 System.currentTimeMillis() - writeStart );
 
-        return new ExtractResult( coveredSeeds, missingSeedCount, axiomCount, classCount );
+        return new ExtractResult( coveredSeeds, missingSeedCount, axiomCount, classCount, sourceVersion );
+    }
+
+    /**
+     * Copy the source's ontology-level metadata onto the extracted slim.
+     *
+     * <p>{@link SyntacticLocalityModuleExtractor#extractAsOntology} mints a fresh ontology whose
+     * only identity is the output file path, so {@code owl:versionInfo}, {@code owl:versionIRI},
+     * {@code dc:title} and {@code dc:description} are all left behind with the source. Those are
+     * exactly the properties {@code AbstractOntologyService} scans for in
+     * {@code getVersion()} / {@code getName()} / {@code getDescription()}, so a slimmed ontology
+     * reported a null version — indistinguishable from an upstream that declares none. That made
+     * "which CHEBI release is loaded?" unanswerable from a running instance; the only way to tell
+     * was to read the cached source OWL's header on the deploy host.
+     *
+     * @return the version the source declared: {@code owl:versionInfo} when present (OBO
+     *         ontologies put the release number or date there), else the version IRI, else
+     *         {@code null}
+     */
+    private String copyOntologyMetadata( OWLOntology source, OWLOntology slim, OWLDataFactory df ) {
+        OWLOntologyManager slimManager = slim.getOWLOntologyManager();
+        String versionInfo = null;
+        for ( OWLAnnotation ann : source.getAnnotations() ) {
+            slimManager.applyChange( new AddOntologyAnnotation( slim, ann ) );
+            if ( ann.getProperty().equals( df.getOWLVersionInfo() ) && ann.getValue() instanceof OWLLiteral ) {
+                versionInfo = ( ( OWLLiteral ) ann.getValue() ).getLiteral();
+            }
+        }
+        // versionIRI belongs to the ontology ID rather than the annotation set, so it needs a
+        // SetOntologyID. Only the version is borrowed — the slim keeps its own ontology IRI,
+        // which is the output file, so it never claims to BE the upstream release.
+        var versionIri = source.getOntologyID().getVersionIRI();
+        if ( versionIri.isPresent() ) {
+            slimManager.applyChange( new SetOntologyID( slim,
+                    new OWLOntologyID( slim.getOntologyID().getOntologyIRI(), versionIri ) ) );
+        }
+        if ( versionInfo != null ) {
+            return versionInfo;
+        }
+        return versionIri.isPresent() ? versionIri.get().toString() : null;
     }
 
     /**
@@ -281,12 +331,26 @@ public class OntologySlimExtractor {
         private final int missingSeedCount;
         private final int axiomCount;
         private final long classCount;
+        @Nullable
+        private final String sourceVersion;
 
-        ExtractResult( Set<String> coveredSeedUris, int missingSeedCount, int axiomCount, long classCount ) {
+        ExtractResult( Set<String> coveredSeedUris, int missingSeedCount, int axiomCount, long classCount,
+                @Nullable String sourceVersion ) {
             this.coveredSeedUris = Set.copyOf( coveredSeedUris );
             this.missingSeedCount = missingSeedCount;
             this.axiomCount = axiomCount;
             this.classCount = classCount;
+            this.sourceVersion = sourceVersion;
+        }
+
+        /**
+         * The release the source ontology declared, or {@code null} when it declares none.
+         *
+         * @see #copyOntologyMetadata(OWLOntology, OWLOntology, OWLDataFactory)
+         */
+        @Nullable
+        public String getSourceVersion() {
+            return sourceVersion;
         }
 
         public Set<String> getCoveredSeedUris() {
