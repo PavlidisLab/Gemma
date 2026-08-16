@@ -31,8 +31,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.CharArraySet;
-import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import ubic.gemma.core.ontology.search.OntologyAnalyzers;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -55,7 +54,6 @@ import ubic.gemma.core.ontology.search.OntologySearchException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -160,14 +158,7 @@ class LuceneOntologySearchIndex implements SearchIndex {
     static LuceneOntologySearchIndex build( OntModel model, Collection<OntologyIndexer.IndexableProperty> properties, Set<String> excludedFromStemming ) throws IOException {
         // ByteBuffersDirectory is Lucene 9's drop-in for the removed RAMDirectory.
         Directory dir = new ByteBuffersDirectory();
-        CharArraySet stemExclusion = new CharArraySet(
-                excludedFromStemming == null ? Collections.emptySet() : excludedFromStemming,
-                false /* not case-sensitive */
-        );
-        EnglishAnalyzer analyzer = new EnglishAnalyzer(
-                EnglishAnalyzer.getDefaultStopSet(),
-                stemExclusion
-        );
+        Analyzer analyzer = OntologyAnalyzers.english( excludedFromStemming );
         IndexWriterConfig cfg = new IndexWriterConfig( analyzer );
         cfg.setOpenMode( IndexWriterConfig.OpenMode.CREATE );
         int docCount = 0;
