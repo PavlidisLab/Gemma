@@ -1261,6 +1261,161 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .containsExactlyInAnyOrder( "MESH:D003920", "UMLS:C0011860" );
     }
 
+    /**
+     * The EFO case that motivated the field (uib, 2026-08-16): {@code EFO_0000408 obsolete_disease}
+     * names {@code MONDO_0000001} as its successor, and EFO's OWL carries a label for that class, so
+     * no second lookup is needed.
+     */
+    @Test
+    public void testGetAnnotationTermExposesReplacementForObsoleteTerm() throws TimeoutException {
+        String uri = "http://www.ebi.ac.uk/efo/EFO_0000408";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.getLabel() ).thenReturn( "obsolete_disease" );
+        when( term.isObsolete() ).thenReturn( true );
+        AnnotationProperty replacedBy = mock( AnnotationProperty.class );
+        when( replacedBy.getValueUri() ).thenReturn( "http://purl.obolibrary.org/obo/MONDO_0000001" );
+        when( replacedBy.getContents() ).thenReturn( "disease" );
+        when( term.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0100001" ) ).thenReturn( replacedBy );
+        AnnotationProperty obsoletedIn = mock( AnnotationProperty.class );
+        when( obsoletedIn.getContents() ).thenReturn( "3.88.0" );
+        when( term.getAnnotation( "http://www.ebi.ac.uk/efo/obsoleted_in_version" ) ).thenReturn( obsoletedIn );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getVersion( eq( uri ), anyLong(), any() ) ).thenReturn( "3.92.0" );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.obsolete", true )
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", "http://purl.obolibrary.org/obo/MONDO_0000001" )
+                .hasFieldOrPropertyWithValue( "data.termReplacedByLabel", "disease" )
+                .hasFieldOrPropertyWithValue( "data.obsoletedInVersion", "3.88.0" )
+                .hasFieldOrPropertyWithValue( "data.ontologyVersion", "3.92.0" );
+
+        // the deprecating model had the label, so no successor lookup was needed
+        verify( ontologyService, times( 1 ) ).getTerm( anyString(), anyLong(), any() );
+    }
+
+    /**
+     * Same axiom written as a literal rather than an {@code rdf:resource} — the OBO→OWL conversions
+     * disagree on this, and reading only the resource form empties the field for whole ontologies.
+     * With no in-model label, the successor's label comes from resolving it through the service.
+     */
+    @Test
+    public void testGetAnnotationTermResolvesLiteralReplacementAndItsLabel() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0000021";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.getLabel() ).thenReturn( "obsolete immortal cat cell line cell" );
+        when( term.isObsolete() ).thenReturn( true );
+        AnnotationProperty replacedBy = mock( AnnotationProperty.class );
+        // literal-valued: no value URI, and getContents() hands back the IRI itself, not a label
+        when( replacedBy.getValueUri() ).thenReturn( null );
+        when( replacedBy.getContents() ).thenReturn( "http://purl.obolibrary.org/obo/CLO_0000457" );
+        when( term.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0100001" ) ).thenReturn( replacedBy );
+        OntologyTerm successor = mock( OntologyTerm.class );
+        when( successor.getLabel() ).thenReturn( "immortal cat cell line cell" );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getTerm( eq( "http://purl.obolibrary.org/obo/CLO_0000457" ), anyLong(), any() ) )
+                .thenReturn( successor );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", "http://purl.obolibrary.org/obo/CLO_0000457" )
+                .hasFieldOrPropertyWithValue( "data.termReplacedByLabel", "immortal cat cell line cell" )
+                // CLO declares no release stamp; null rather than invented
+                .hasFieldOrPropertyWithValue( "data.obsoletedInVersion", null );
+    }
+
+    /** A CURIE-valued literal ({@code CLO:0000457}) is canonicalised, not dropped. */
+    @Test
+    public void testGetAnnotationTermExpandsCurieValuedReplacement() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0000021";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.isObsolete() ).thenReturn( true );
+        AnnotationProperty replacedBy = mock( AnnotationProperty.class );
+        when( replacedBy.getContents() ).thenReturn( "CLO:0000457" );
+        when( term.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0100001" ) ).thenReturn( replacedBy );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", "http://purl.obolibrary.org/obo/CLO_0000457" );
+    }
+
+    /** A term that was split rather than merged names candidates, not a replacement. */
+    @Test
+    public void testGetAnnotationTermExposesConsiderCandidates() throws TimeoutException {
+        String uri = "http://www.ebi.ac.uk/efo/EFO_0000001";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.isObsolete() ).thenReturn( true );
+        AnnotationProperty first = mock( AnnotationProperty.class );
+        when( first.getValueUri() ).thenReturn( "http://www.ebi.ac.uk/efo/EFO_0000002" );
+        when( first.getContents() ).thenReturn( "first candidate" );
+        AnnotationProperty second = mock( AnnotationProperty.class );
+        when( second.getValueUri() ).thenReturn( "http://www.ebi.ac.uk/efo/EFO_0000003" );
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#consider" ) )
+                .thenReturn( Arrays.asList( first, second ) );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        Response response = target( "/annotations/term" ).queryParam( "uri", uri ).request().get();
+        assertThat( response ).hasStatus( Response.Status.OK );
+        assertThat( response )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", null );
+        assertThat( response )
+                .entity()
+                .extracting( "data.consider", list( Map.class ) )
+                .satisfiesExactlyInAnyOrder(
+                        c -> assertThat( c ).containsEntry( "uri", "http://www.ebi.ac.uk/efo/EFO_0000002" )
+                                .containsEntry( "label", "first candidate" ),
+                        // no label in the model; the URI is the identity, the label is decoration
+                        c -> assertThat( c ).containsEntry( "uri", "http://www.ebi.ac.uk/efo/EFO_0000003" )
+                                .containsEntry( "label", null ) );
+    }
+
+    /**
+     * A live term is never probed for obsolescence axioms — it declares none, and probing would cost a
+     * successor lookup per call for a field that is always null.
+     */
+    @Test
+    public void testGetAnnotationTermSkipsObsolescenceLookupForLiveTerm() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/diabetes" );
+        when( term.getLabel() ).thenReturn( "diabetes" );
+        when( term.isObsolete() ).thenReturn( false );
+        when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        Response response = target( "/annotations/term" ).queryParam( "uri", "http://example.com/diabetes" ).request().get();
+        assertThat( response ).hasStatus( Response.Status.OK );
+        assertThat( response )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", null )
+                .hasFieldOrPropertyWithValue( "data.termReplacedByLabel", null )
+                .hasFieldOrPropertyWithValue( "data.obsoletedInVersion", null );
+        assertThat( response )
+                .entity()
+                .extracting( "data.consider", list( Map.class ) )
+                .isEmpty();
+
+        verify( term, never() ).getAnnotation( anyString() );
+        verify( term, never() ).getAnnotations( "http://www.geneontology.org/formats/oboInOwl#consider" );
+    }
+
     @Test
     public void testGetAnnotationTermReportsZeroWhenNoExperimentsMatch() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );

@@ -361,7 +361,9 @@ public class AnnotationsWebService {
     @GET
     @Path("/term")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve an ontology term by its URI", responses = {
+    @Operation(summary = "Retrieve an ontology term by its URI",
+            description = "For a term the ontology has deprecated (`obsolete: true`), the response also carries where to go next: `termReplacedBy` (the successor's full IRI, `IAO:0100001`) with `termReplacedByLabel`, the weaker `consider` candidates, and `obsoletedInVersion`. These are absent/empty for live terms.",
+            responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             @ApiResponse(responseCode = "503", description = "Ontology lookup timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
@@ -402,7 +404,33 @@ public class AnnotationsWebService {
             String ontologyVersion = term.getUri() != null
                     ? ontologyService.getVersion( term.getUri(), Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS )
                     : null;
-            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, ontologyVersion, sourceMetadataOf( term ) ) );
+            // Where the ontology says to go next. Read only for terms it has actually deprecated: a
+            // live term declares none of these, so probing it would buy a successor lookup per call
+            // for a field that is always null.
+            String termReplacedBy = null;
+            String termReplacedByLabel = null;
+            List<OntologyTermSimpleValueObject> consider = Collections.emptyList();
+            String obsoletedInVersion = null;
+            if ( term.isObsolete() ) {
+                AnnotationProperty replacedBy = term.getAnnotation( IAO_TERM_REPLACED_BY );
+                if ( replacedBy != null ) {
+                    termReplacedBy = valueIriOf( replacedBy );
+                    termReplacedByLabel = valueLabelOf( replacedBy, termReplacedBy );
+                }
+                consider = termsNamedBy( term, OBO_CONSIDER );
+                obsoletedInVersion = literalAnnotationOf( term, EFO_OBSOLETED_IN_VERSION );
+                if ( termReplacedBy != null && termReplacedByLabel == null ) {
+                    // The successor routinely crosses ontologies — EFO_0000408 → MONDO_0000001 — so
+                    // the deprecating model may carry the IRI without a label for it. Resolve through
+                    // the service, which sees every loaded ontology. Null label if none of them has it.
+                    OntologyTerm successor = ontologyService.getTerm( termReplacedBy,
+                            Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+                    if ( successor != null ) {
+                        termReplacedByLabel = successor.getLabel();
+                    }
+                }
+            }
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, ontologyVersion, sourceMetadataOf( term ), termReplacedBy, termReplacedByLabel, consider, obsoletedInVersion ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
@@ -2669,6 +2697,27 @@ public class AnnotationsWebService {
     private static final String OBO_DB_XREF = "http://www.geneontology.org/formats/oboInOwl#hasDbXref";
 
     /**
+     * {@code IAO:0100001 term replaced by} — the successor a deprecated class names. Universal across
+     * OBO ontologies: EFO writes it on its tombstone classes, CLO likewise
+     * ({@code CLO:0000021 → CLO:0000457}).
+     */
+    private static final String IAO_TERM_REPLACED_BY = "http://purl.obolibrary.org/obo/IAO_0100001";
+
+    /**
+     * {@code oboInOwl#consider} — the weaker hint, naming candidates rather than a replacement. Used
+     * where a term was split rather than merged, so no single successor exists.
+     */
+    private static final String OBO_CONSIDER = "http://www.geneontology.org/formats/oboInOwl#consider";
+
+    /**
+     * {@code obsoleted_in_version} — the release that retired the term, e.g. {@code 3.88.0}. EFO's own
+     * predicate, in EFO's namespace rather than IAO's; OBO ontologies largely declare nothing
+     * equivalent (CLO's deprecated classes carry only {@code IAO:0000231 has obsolescence reason}), so
+     * expect this to be null outside EFO.
+     */
+    private static final String EFO_OBSOLETED_IN_VERSION = "http://www.ebi.ac.uk/efo/obsoleted_in_version";
+
+    /**
      * Whether {@code query} has the shape of a designation — a coined identifier for one specific
      * entity, rather than a description of one. Operationally: a single token carrying at least one
      * letter AND at least one digit.
@@ -3020,6 +3069,92 @@ public class AnnotationsWebService {
             }
         }
         return out;
+    }
+
+    /**
+     * The IRI an annotation's value names, whichever way the OWL happened to write it: an
+     * {@code rdf:resource} (→ {@link AnnotationProperty#getValueUri()}), a literal holding the full
+     * IRI, or a literal holding an OBO CURIE (→ expanded by {@link #expandTermQueryToUri}). Null when
+     * the value names nothing resolvable — a free-text literal, a blank node, an unknown ID space.
+     * <p>
+     * All three spellings are in live use for {@code IAO:0100001}, and which one a given ontology
+     * emits is an artifact of its OBO→OWL conversion, not of what it means. Reading only the resource
+     * form yields an empty field for half the population and no signal that anything was missed.
+     */
+    @Nullable
+    private static String valueIriOf( AnnotationProperty a ) {
+        String uri = a.getValueUri();
+        if ( StringUtils.isNotBlank( uri ) ) {
+            return uri;
+        }
+        String contents = StringUtils.strip( a.getContents() );
+        return StringUtils.isNotBlank( contents ) ? expandTermQueryToUri( contents ) : null;
+    }
+
+    /**
+     * The label an annotation's value carries in the SAME model, or null when there is none to read.
+     * <p>
+     * {@link AnnotationProperty#getContents()} resolves a resource value to its {@code rdfs:label} but
+     * hands back the literal itself when the value was written as a literal — which for a term-naming
+     * annotation is the IRI or CURIE, not a label. Comparing against the resolved IRI is what tells
+     * the two apart.
+     */
+    @Nullable
+    private static String valueLabelOf( AnnotationProperty a, @Nullable String resolvedUri ) {
+        String contents = StringUtils.strip( a.getContents() );
+        if ( StringUtils.isBlank( contents ) || contents.equals( resolvedUri ) ) {
+            return null;
+        }
+        return contents;
+    }
+
+    /**
+     * Every term named by {@code predicateUri} on an already-resolved term, as (uri, label) pairs.
+     * Empty, never null — an empty list means "checked, none declared".
+     * <p>
+     * 🛑 Keyed on the value's IRI, NOT on {@link AnnotationProperty#getContents()}. The latter resolves
+     * a resource annotation to its {@code rdfs:label}, and a label is not an identity: MONDO's
+     * {@code crossSpeciesExactMatch} first shipped as {@code ["lung adenocarcinoma"]}, a string naming
+     * both {@code MONDO:0005061} (the disease) and {@code HP:0030078} (the phenotype). A client
+     * repairing an annotation from that string can silently land on the phenotype — worse than not
+     * repairing, because it looks like it worked, and it is the same HP-beats-MONDO confusion the
+     * category table exists to prevent. Values naming nothing resolvable are dropped rather than
+     * downgraded to their label.
+     */
+    private static List<OntologyTermSimpleValueObject> termsNamedBy( OntologyTerm term, String predicateUri ) {
+        try {
+            Map<String, String> byUri = new LinkedHashMap<>();
+            for ( AnnotationProperty a : term.getAnnotations( predicateUri ) ) {
+                String uri = valueIriOf( a );
+                if ( StringUtils.isNotBlank( uri ) ) {
+                    // label is decoration; absent whenever the referenced term is in an ontology
+                    // that is not loaded, which is exactly when the URI matters most
+                    byUri.putIfAbsent( uri, valueLabelOf( a, uri ) );
+                }
+            }
+            List<OntologyTermSimpleValueObject> out = new ArrayList<>( byUri.size() );
+            for ( Map.Entry<String, String> e : byUri.entrySet() ) {
+                out.add( new OntologyTermSimpleValueObject( e.getKey(), e.getValue() ) );
+            }
+            return out;
+        } catch ( RuntimeException e ) {
+            // Same contract as the rest of enrichment: decoration must not cost the caller the row.
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * The single literal value of {@code predicateUri} on an already-resolved term, or null when the
+     * term declares none.
+     */
+    @Nullable
+    private static String literalAnnotationOf( OntologyTerm term, String predicateUri ) {
+        try {
+            AnnotationProperty a = term.getAnnotation( predicateUri );
+            return a != null ? StringUtils.stripToNull( a.getContents() ) : null;
+        } catch ( RuntimeException e ) {
+            return null;
+        }
     }
 
     /**
@@ -3566,36 +3701,12 @@ public class AnnotationsWebService {
             "https://w3id.org/semapv/vocab/crossSpeciesExactMatch";
 
     /**
-     * Empty, never null, so an enriched hit's empty list means "checked, none declared".
-     * <p>
-     * 🛑 Keyed on {@code getValueUri()}, NOT {@code getContents()}. The latter resolves a resource
-     * annotation to its {@code rdfs:label}, and a label is not an identity: this mapping first
-     * shipped as {@code ["lung adenocarcinoma"]}, a string naming both {@code MONDO:0005061} (the
-     * disease) and {@code HP:0030078} (the phenotype). A client repairing an annotation from that
-     * string can silently land on the phenotype — worse than not repairing, because it looks like it
-     * worked, and it is the same HP-beats-MONDO confusion the category table exists to prevent.
-     * Rows with no URI are dropped rather than downgraded to their label.
+     * Empty, never null, so an enriched hit's empty list means "checked, none declared". Keyed on the
+     * value's IRI rather than its label — see {@link #termsNamedBy} for why that distinction is not
+     * cosmetic here.
      */
     static List<OntologyTermSimpleValueObject> crossSpeciesExactMatchesOf( OntologyTerm term ) {
-        try {
-            Map<String, String> byUri = new LinkedHashMap<>();
-            for ( AnnotationProperty a : term.getAnnotations( CROSS_SPECIES_EXACT_MATCH ) ) {
-                String uri = a.getValueUri();
-                if ( StringUtils.isNotBlank( uri ) ) {
-                    // label is decoration; absent whenever the referenced term is in an ontology
-                    // that is not loaded, which is exactly when the URI matters most
-                    byUri.putIfAbsent( uri, a.getContents() );
-                }
-            }
-            List<OntologyTermSimpleValueObject> out = new ArrayList<>( byUri.size() );
-            for ( Map.Entry<String, String> e : byUri.entrySet() ) {
-                out.add( new OntologyTermSimpleValueObject( e.getKey(), e.getValue() ) );
-            }
-            return out;
-        } catch ( RuntimeException e ) {
-            // Same contract as the rest of enrichment: decoration must not cost the caller the row.
-            return Collections.emptyList();
-        }
+        return termsNamedBy( term, CROSS_SPECIES_EXACT_MATCH );
     }
 
     @Nullable
@@ -3879,6 +3990,41 @@ public class AnnotationsWebService {
          * {@link #definition} — NOT something to annotate an experiment with.
          */
         @Nullable LexicalTermMetadataValueObject sourceMetadata;
+        /**
+         * The successor this term names, {@code IAO:0100001 term replaced by} — where a curator holding
+         * the deprecated URI should re-bind to. Null unless {@link #obsolete} is true, and null then too
+         * for the terms whose ontology deprecated them without naming a replacement.
+         * <p>
+         * A full IRI, never an id scoped to the queried ontology: the successor routinely crosses
+         * ontologies, e.g. {@code EFO:0000408 obsolete_disease → MONDO:0000001 disease}.
+         * <p>
+         * This is the one field the {@code .obo} distributions cannot supply — obsolete classes are
+         * dropped at OBO parse time, so a consumer reading {@code efo.obo} never sees the tombstone at
+         * all. Gemma loads the OWL, which keeps them, which is why this is here.
+         */
+        @Nullable String termReplacedBy;
+        /**
+         * Preferred label of {@link #termReplacedBy}, so a client can render the re-bind without a
+         * second round trip. Read from the deprecating model when it carries a label for the successor,
+         * otherwise resolved through the loaded ontologies. Null when neither has it — the IRI is the
+         * identity, the label is decoration.
+         */
+        @Nullable String termReplacedByLabel;
+        /**
+         * {@code oboInOwl:consider} — candidates rather than a replacement, which is what a term that
+         * was SPLIT rather than merged leaves behind. Advisory: where {@link #termReplacedBy} is also
+         * present, that one is the answer and these are context. Empty when the term names none.
+         */
+        List<OntologyTermSimpleValueObject> consider;
+        /**
+         * Ontology release that retired this term, e.g. {@code 3.88.0} — the difference between "your
+         * curation was wrong" and "the ontology moved under you". Compare against
+         * {@link #ontologyVersion}, which is the release currently loaded.
+         * <p>
+         * EFO-specific ({@code efo:obsoleted_in_version}); expect null for terms from ontologies that
+         * declare no equivalent, which is most of them.
+         */
+        @Nullable String obsoletedInVersion;
     }
 
     /**
