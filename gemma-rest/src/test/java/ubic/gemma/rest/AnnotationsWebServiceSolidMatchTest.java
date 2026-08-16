@@ -174,6 +174,56 @@ class AnnotationsWebServiceSolidMatchTest {
                 .containsExactly( "selumetinibxyz", "selumetinib" );
     }
 
+    // ---- external identification is not an annotation ------------------------------------
+
+    /**
+     * The bridge case, and the reason the feature is worth having: the compound was already in
+     * CHEBI under a name nobody wrote on the sample. Only the bridged term is committable.
+     */
+    @Test
+    void aBridgedIdentificationOffersTheLoadedTermNotTheChemblId() {
+        AnnotationsWebService.ExternalIdentificationValueObject vo =
+                new AnnotationsWebService.ExternalIdentificationValueObject( "ChEMBL", "CHEMBL295416",
+                        "PIRINIXIC ACID", "wy-14643", "ChEMBL_37",
+                        "https://www.ebi.ac.uk/chembl/compound_report_card/CHEMBL295416/",
+                        "http://purl.obolibrary.org/obo/CHEBI_32509", "pirinixic acid" );
+
+        assertThat( vo.getGroundedTermUri() ).isEqualTo( "http://purl.obolibrary.org/obo/CHEBI_32509" );
+        assertThat( vo.getGroundedTermLabel() ).isEqualTo( "pirinixic acid" );
+        // Provenance sufficient to trace the claim: who said it, from which release, on what evidence.
+        assertThat( vo.getSource() ).isEqualTo( "ChEMBL" );
+        assertThat( vo.getSourceRelease() ).isEqualTo( "ChEMBL_37" );
+        assertThat( vo.getMatchedSynonym() ).isEqualTo( "wy-14643" );
+        assertThat( vo.getSourceUrl() ).contains( "CHEMBL295416" );
+    }
+
+    /**
+     * An identification that could not be bridged names the compound and offers nothing to commit.
+     * That is the honest outcome — a ChEMBL accession in valueUri would be a vocabulary Gemma does
+     * not load and cannot resolve later.
+     */
+    @Test
+    void anUnbridgedIdentificationHasNoCommittableUri() {
+        AnnotationsWebService.ExternalIdentificationValueObject vo =
+                new AnnotationsWebService.ExternalIdentificationValueObject( "ChEMBL", "CHEMBL4168754",
+                        null, "lly-283", "ChEMBL_37",
+                        "https://www.ebi.ac.uk/chembl/compound_report_card/CHEMBL4168754/", null, null );
+
+        assertThat( vo.getGroundedTermUri() ).isNull();
+        assertThat( vo.getIdentifier() ).isEqualTo( "CHEMBL4168754" );
+    }
+
+    /** Negative evidence without an external lookup is unchanged — the field is additive. */
+    @Test
+    void negativeEvidenceCarriesNoIdentificationByDefault() {
+        AnnotationsWebService.NegativeEvidenceValueObject ne =
+                new AnnotationsWebService.NegativeEvidenceValueObject( "nsc80997", false,
+                        java.util.Collections.emptyList(), false );
+
+        assertThat( ne.getExternalIdentification() ).isNull();
+        assertThat( ne.isSolidMatch() ).isFalse();
+    }
+
     // ---- suppression keeps declared names, drops overlap ---------------------------------
 
     /**

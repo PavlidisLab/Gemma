@@ -144,6 +144,13 @@ public class AnnotationsWebService {
     private DatasetArgService datasetArgService;
     private TaxonArgService taxonArgService;
     private ubic.gemma.persistence.service.genome.gene.GeneService geneService;
+    /**
+     * Optional: identifies a trial code against ChEMBL when nothing loaded names it. Absent in test
+     * contexts and when {@code gemma.chembl.enabled} is false, in which case the negative evidence
+     * simply carries no external identification.
+     */
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.chembl.ChemblCodeResolver chemblCodeResolver;
     @Autowired(required = false)
     private ubic.gemma.persistence.service.association.Gene2GOAssociationService gene2GOAssociationService;
     @Autowired(required = false)
@@ -1665,8 +1672,16 @@ public class AnnotationsWebService {
                 rawHits = keptInCategory;
             }
             if ( suppress || excludedAny ) {
+                // Nothing loaded names this string. Before reporting a bare negative, ask a naming
+                // authority what the code is — the compound is often already in CHEBI under a name
+                // nobody wrote on the sample (WY-14643 is pirinixic acid, CHEBI_32509, used 17
+                // times in the corpus). Only on this path, which is already narrow: the caller
+                // asked for suppression AND the query is designation-shaped AND we found nothing.
+                ExternalIdentificationValueObject external = rawHits.isEmpty() && suppress
+                        ? identifyExternally( designationProbe, Math.max( timeoutMs - timer.getTime(), 0 ) )
+                        : null;
                 negativeEvidence = new NegativeEvidenceValueObject( joinedRelevanceQuery,
-                        !rawHits.isEmpty(), ruledOut, nearMissTruncated );
+                        !rawHits.isEmpty(), ruledOut, nearMissTruncated, external );
             }
             if ( !preferredPrefixes.isEmpty() ) {
                 // Promote solid hits sitting in the category's preferred namespaces, in the
@@ -2788,6 +2803,65 @@ public class AnnotationsWebService {
         }
         return false;
     }
+
+    /**
+     * Ask ChEMBL what a code is, and try to turn its answer back into a term Gemma already has.
+     *
+     * <p>Two steps, and the second is the one that matters. ChEMBL identifies {@code WY-14643} as
+     * pirinixic acid; Gemma's own search then finds pirinixic acid is CHEBI_32509, already loaded
+     * and already used 17 times in the corpus. The compound was never missing — nothing connected
+     * the code the submitter wrote to the name CHEBI files it under. When that bridge lands, the
+     * caller gets an ordinary CHEBI URI to commit and no new vocabulary enters the corpus.</p>
+     *
+     * <p>When it does not land, the identification is still reported, and still carries no URI. It
+     * tells a curator what they are looking at ({@code LLY-283} is a real ChEMBL compound with no
+     * CHEBI counterpart) without inviting them to annotate with something Gemma cannot resolve.</p>
+     *
+     * <p>The bridged term has to NAME the ChEMBL name, not merely resemble it. Skipping that check
+     * would reintroduce near-match fabrication one step further out, where it would be harder to
+     * see because a plausible compound name is doing the vouching.</p>
+     */
+    @Nullable
+    private ExternalIdentificationValueObject identifyExternally( @Nullable String code, long budgetMs ) {
+        if ( chemblCodeResolver == null || code == null || budgetMs <= 0 ) {
+            return null;
+        }
+        ubic.gemma.core.ontology.chembl.ChemblCompound compound;
+        try {
+            compound = chemblCodeResolver.identify( code );
+        } catch ( RuntimeException e ) {
+            // Advisory enrichment must never be the reason a search fails.
+            log.debug( "ChEMBL identification failed for '{}'; reporting a bare negative", code, e );
+            return null;
+        }
+        if ( compound == null || !compound.isFound() ) {
+            return null;
+        }
+        String name = compound.getSearchableName();
+        String groundedUri = null, groundedLabel = null;
+        if ( name != null ) {
+            try {
+                String canonicalName = canonicaliseForExactMatch( name );
+                for ( CharacteristicValueObject hit : ontologyService.findExperimentsCharacteristicTags(
+                        name, EXTERNAL_BRIDGE_MAX_HITS, false, false, budgetMs, TimeUnit.MILLISECONDS ) ) {
+                    if ( hit.getValueUri() != null
+                            && canonicaliseForExactMatch( hit.getValue() ).equals( canonicalName ) ) {
+                        groundedUri = hit.getValueUri();
+                        groundedLabel = hit.getValue();
+                        break;
+                    }
+                }
+            } catch ( Exception e ) {
+                log.debug( "bridging ChEMBL name '{}' back into the ontologies failed", name, e );
+            }
+        }
+        return new ExternalIdentificationValueObject( "ChEMBL", compound.getChemblId(), name,
+                compound.getMatchedSynonym(), compound.getRelease(), compound.getSourceUrl(),
+                groundedUri, groundedLabel );
+    }
+
+    /** How deep to look when turning a ChEMBL name back into a loaded term. An exact name match ranks early or not at all. */
+    private static final int EXTERNAL_BRIDGE_MAX_HITS = 25;
 
     /**
      * Upper bound on tokens in a designation. Two covers every split vendor code we have seen
@@ -4366,18 +4440,143 @@ public class AnnotationsWebService {
      * the rest of what it is not" does. Free text is a valid annotation; a wrong CHEBI id is a
      * fabricated fact, and the whole point of this block is to make the first choice available.
      */
+    /**
+     * What an external naming authority says a query string is, when nothing Gemma has loaded names
+     * it — plus enough provenance to check the claim.
+     *
+     * <p>🛑 <b>{@link #getIdentifier()} is not an annotation.</b> The only URI here a curator may
+     * commit is {@link #getGroundedTermUri()}, and it is present precisely when the identification
+     * could be bridged back to a term Gemma already has: ChEMBL says {@code WY-14643} is pirinixic
+     * acid, Gemma's own search says pirinixic acid is CHEBI_32509 with 17 corpus uses, and that
+     * CHEBI URI is the answer. When the bridge does not land the identification still tells a
+     * curator what they are looking at, and there is nothing to annotate with — which is the honest
+     * outcome, not a gap to paper over.</p>
+     *
+     * <p>The provenance fields are the point of the object as much as the name is. An
+     * identification a curator cannot trace back to a source, a release and a matched string is an
+     * unsourced assertion, and those are what the curation pipeline is trying to stop emitting.</p>
+     */
+    public static class ExternalIdentificationValueObject {
+        private final String source;
+        @Nullable
+        private final String identifier;
+        @Nullable
+        private final String name;
+        @Nullable
+        private final String matchedSynonym;
+        @Nullable
+        private final String sourceRelease;
+        @Nullable
+        private final String sourceUrl;
+        @Nullable
+        private final String groundedTermUri;
+        @Nullable
+        private final String groundedTermLabel;
+
+        public ExternalIdentificationValueObject( String source, @Nullable String identifier,
+                @Nullable String name, @Nullable String matchedSynonym, @Nullable String sourceRelease,
+                @Nullable String sourceUrl, @Nullable String groundedTermUri,
+                @Nullable String groundedTermLabel ) {
+            this.source = source;
+            this.identifier = identifier;
+            this.name = name;
+            this.matchedSynonym = matchedSynonym;
+            this.sourceRelease = sourceRelease;
+            this.sourceUrl = sourceUrl;
+            this.groundedTermUri = groundedTermUri;
+            this.groundedTermLabel = groundedTermLabel;
+        }
+
+        /** Which authority answered, e.g. {@code ChEMBL}. */
+        public String getSource() {
+            return source;
+        }
+
+        /** The authority's accession, e.g. {@code CHEMBL295416}. NOT a term URI — do not annotate with it. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        /** The authority's preferred name, e.g. {@code PIRINIXIC ACID}. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getName() {
+            return name;
+        }
+
+        /** The synonym string that matched — the evidence for the identification, not decoration. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getMatchedSynonym() {
+            return matchedSynonym;
+        }
+
+        /** Release the identification was read from, e.g. {@code ChEMBL_37}. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getSourceRelease() {
+            return sourceRelease;
+        }
+
+        /** Link to the authority's record, for a curator who wants to check it. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getSourceUrl() {
+            return sourceUrl;
+        }
+
+        /**
+         * A term Gemma already has whose name equals {@link #getName()} — the one URI here that is
+         * safe to commit. Null when the identification could not be bridged.
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getGroundedTermUri() {
+            return groundedTermUri;
+        }
+
+        /** Label of {@link #getGroundedTermUri()}. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getGroundedTermLabel() {
+            return groundedTermLabel;
+        }
+    }
+
     public static class NegativeEvidenceValueObject {
         private final String query;
         private final boolean solidMatch;
         private final List<RuledOutTermValueObject> ruledOut;
         private final boolean ruledOutTruncated;
+        @Nullable
+        private final ExternalIdentificationValueObject externalIdentification;
 
         public NegativeEvidenceValueObject( String query, boolean solidMatch,
                 List<RuledOutTermValueObject> ruledOut, boolean ruledOutTruncated ) {
+            this( query, solidMatch, ruledOut, ruledOutTruncated, null );
+        }
+
+        public NegativeEvidenceValueObject( String query, boolean solidMatch,
+                List<RuledOutTermValueObject> ruledOut, boolean ruledOutTruncated,
+                @Nullable ExternalIdentificationValueObject externalIdentification ) {
             this.query = query;
             this.solidMatch = solidMatch;
             this.ruledOut = ruledOut;
             this.ruledOutTruncated = ruledOutTruncated;
+            this.externalIdentification = externalIdentification;
+        }
+
+        /**
+         * What an external naming authority says this string is, when nothing loaded named it.
+         * Present only on that path, and never a substitute for a term: see
+         * {@link ExternalIdentificationValueObject}.
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public ExternalIdentificationValueObject getExternalIdentification() {
+            return externalIdentification;
         }
 
         /** The designation that was identity-matched. */
