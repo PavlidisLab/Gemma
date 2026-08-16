@@ -107,6 +107,10 @@ public class EhcacheConfig {
         // OlsTermResolverImpl: IRI -> term fallback lookups against EBI OLS (positive and negative results).
         APP_CACHES.put( "OlsTermResolver.terms", new CacheSpec( 10000, Duration.ofHours( 12 ) ) );
 
+        // ChemblCodeResolverImpl: trial code -> compound identification against ChEMBL (positive
+        // and negative). Long TTL: a compound's research codes do not change between releases.
+        APP_CACHES.put( "ChemblCodeResolver.compounds", new CacheSpec( 10000, Duration.ofHours( 24 ) ) );
+
         // GeneOntologyServiceImpl: GO term metadata.
         APP_CACHES.put( "GeneOntologyService.goTerms", new CacheSpec( 50000, Duration.ofHours( 12 ) ) );
         APP_CACHES.put( "GeneOntologyService.term2Aspect", new CacheSpec( 50000, Duration.ofHours( 12 ) ) );
