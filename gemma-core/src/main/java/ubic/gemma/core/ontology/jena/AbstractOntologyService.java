@@ -1,6 +1,7 @@
 package ubic.gemma.core.ontology.jena;
 
 import org.apache.jena.ontology.*;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
@@ -14,6 +15,7 @@ import org.apache.jena.reasoner.rulesys.OWLMicroReasonerFactory;
 import org.apache.jena.reasoner.rulesys.OWLMiniReasonerFactory;
 import org.apache.jena.reasoner.transitiveReasoner.TransitiveReasonerFactory;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.DC_11;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
@@ -203,18 +205,35 @@ public abstract class AbstractOntologyService implements OntologyService {
 
     @Override
     public String getName() {
-        return getState().map( state -> {
-            NodeIterator it = state.model.listObjectsOfProperty( DC_11.title );
-            return it.hasNext() ? it.next().asLiteral().getString() : null;
-        } ).orElse( null );
+        return getState().map( state -> firstLiteral( state.model, DC_11.title, DCTerms.title ) ).orElse( null );
     }
 
     @Override
     public String getDescription() {
-        return getState().map( state -> {
-            NodeIterator it = state.model.listObjectsOfProperty( DC_11.description );
-            return it.hasNext() ? it.next().asLiteral().getString() : null;
-        } ).orElse( null );
+        return getState().map( state -> firstLiteral( state.model, DC_11.description, DCTerms.description ) ).orElse( null );
+    }
+
+    /**
+     * First literal found under any of {@code properties}, in order, or {@code null}.
+     *
+     * <p>Dublin Core has two namespaces and ontologies do not agree on which to use: the older
+     * {@code purl.org/dc/elements/1.1/} (GO, OBI) and DCTerms at {@code purl.org/dc/terms/}
+     * (CHEBI, and increasingly the OBO reissues). Reading only the 1.1 spelling reported a null
+     * name and description for every ontology on the modern namespace even though both were
+     * sitting in the model.
+     */
+    @Nullable
+    private static String firstLiteral( Model model, Property... properties ) {
+        for ( Property p : properties ) {
+            NodeIterator it = model.listObjectsOfProperty( p );
+            while ( it.hasNext() ) {
+                RDFNode n = it.next();
+                if ( n.isLiteral() ) {
+                    return n.asLiteral().getString();
+                }
+            }
+        }
+        return null;
     }
 
     @Override
