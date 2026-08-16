@@ -1511,6 +1511,15 @@ public class AnnotationsWebService {
                 ? Collections.emptyMap()
                 : attributeCandidates( rawHits, joinedRelevanceQuery,
                         CANDIDATE_ATTRIBUTION_CAP, Math.max( timeoutMs - timer.getTime(), 0 ) );
+        // Hoisted for the same reason the category promotion below is hoisted: the ranking strategy
+        // re-sorts the whole list on its own score and has no idea this tier was established, so
+        // the sort here is discarded unless it is RE-APPLIED afterwards. Measured on frink
+        // 2026-08-16, that is not hypothetical -- `Myelopathy` put `spinal cord injury` above
+        // `myelopathy` (HP_0002196, matched on its PREFERRED LABEL), and `Gorlin Goltz Syndrome`
+        // put `focal dermal hypoplasia` above `nevoid basal cell carcinoma syndrome`, which is the
+        // term the query actually names, matched on an exact synonym. In both cases an exact match
+        // lost to a token-overlap match with more corpus usage.
+        java.util.function.ToIntFunction<CharacteristicValueObject> exactTierFn = null;
         if ( !candidateMatches.isEmpty() ) {
             java.util.function.ToIntFunction<CharacteristicValueObject> synonymExactFn = h -> {
                 if ( tierFn.applyAsInt( h ) == 0 ) {
@@ -1520,6 +1529,7 @@ public class AnnotationsWebService {
                 MatchAttribution m = uri != null ? candidateMatches.get( uri ) : null;
                 return isExactAttribution( m != null ? m.via : null ) ? 0 : 1;
             };
+            exactTierFn = synonymExactFn;
             // Same one-tier demotion as the relevance sort above, for the same reason: without it
             // this lift would hand a catalogue hit the exact tier and undo the demotion two sorts
             // later, which is precisely how the distinction got lost the first time.
@@ -1812,12 +1822,29 @@ public class AnnotationsWebService {
         }
         List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri,
                 stringPriorByUri, matchedTextByUri );
+        // Re-apply the constraints the ranking strategy is not aware of, outermost first: a stated
+        // category outranks relevance, and an exact match outranks a lexical neighbour with more
+        // corpus usage. Both were established on the candidate list and both are otherwise
+        // discarded by the strategy's own sort. One comparator rather than two passes, so the
+        // precedence is written down instead of depending on the order the sorts happen to run in.
+        // Stable, so the strategy's ordering survives inside each tier, and idempotent for the
+        // default lucene strategy whose input was already in this order.
+        Comparator<CharacteristicValueObject> postRank = null;
         if ( categoryRankFn != null ) {
-            // Stable, so the strategy's ordering survives inside each tier. Idempotent for the
-            // default lucene strategy, whose input was already in this order.
             final java.util.function.ToIntFunction<CharacteristicValueObject> promote = categoryRankFn;
+            postRank = Comparator.comparingInt( promote::applyAsInt );
+        }
+        if ( exactTierFn != null ) {
+            final java.util.function.ToIntFunction<CharacteristicValueObject> exact = exactTierFn;
+            // Carries the supplementary demotion, exactly as the candidate-stage sort does: without
+            // it, lifting a catalogue hit into the exact tier would undo that demotion here.
+            Comparator<CharacteristicValueObject> byExactness = Comparator.comparingInt(
+                    h -> exact.applyAsInt( h ) + sourceDemotionFn.applyAsInt( h ) );
+            postRank = postRank == null ? byExactness : postRank.thenComparing( byExactness );
+        }
+        if ( postRank != null ) {
             ranked = new ArrayList<>( ranked );
-            ranked.sort( Comparator.<CharacteristicValueObject>comparingInt( promote::applyAsInt ) );
+            ranked.sort( postRank );
         }
         // Runs after the promotion (a stated category constraint still outranks this) and before
         // truncation, so a demoted salt can fall out of the window and let its parent in.

@@ -950,6 +950,67 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     /**
+     * The exact tier has the same problem the category promotion had: it is established on the
+     * candidate list and then thrown away by {@code strategy.rank()}, which re-sorts everything on
+     * its own score. Measured on frink 2026-08-16 before the fix, {@code Myelopathy} returned
+     * {@code spinal cord injury} above {@code myelopathy} — the latter matched on its PREFERRED
+     * LABEL and lost anyway, because the former carries far more corpus usage and composite weights
+     * usage. An exact match losing to a lexical neighbour is not a ranking preference, it is the
+     * ranking being wrong.
+     */
+    @Test
+    public void testExactMatchTierSurvivesTheRankingStrategy() throws Exception {
+        // The neighbour reaches the query through a RELATED synonym, so it scores full token
+        // coverage like the exact hit does -- coverage cannot separate them -- and it carries heavy
+        // corpus usage, which is what lets composite put it on top. RELATED is deliberately not an
+        // exact attribution, so only the tier distinguishes these two.
+        CharacteristicValueObject neighbour = new CharacteristicValueObject( "spinal cord injury",
+                "http://purl.obolibrary.org/obo/MONDO_0002542", "disease", null );
+        // The answer: the query IS its label, and it has no corpus usage to trade on.
+        CharacteristicValueObject exact = new CharacteristicValueObject( "myelopathy",
+                "http://purl.obolibrary.org/obo/HP_0002196", "phenotype", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "myelopathy" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( neighbour, exact ) );
+
+        OntologyTerm neighbourTerm = mock( OntologyTerm.class );
+        when( neighbourTerm.getLabel() ).thenReturn( "spinal cord injury" );
+        when( neighbourTerm.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        AnnotationProperty related = mock( AnnotationProperty.class );
+        when( related.getContents() ).thenReturn( "myelopathy" );
+        when( neighbourTerm.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym" ) )
+                .thenReturn( Collections.singletonList( related ) );
+        when( ontologyService.getTerm( eq( "http://purl.obolibrary.org/obo/MONDO_0002542" ), anyLong(), any() ) )
+                .thenReturn( neighbourTerm );
+
+        // Corpus usage for the neighbour only, which is what composite's usage term rewards.
+        Set<ExpressionExperiment> many = new HashSet<>();
+        for ( long id = 1; id <= 60; id++ ) {
+            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+            ee.setId( id );
+            many.add( ee );
+        }
+        Map<String, Set<ExpressionExperiment>> perUri = new HashMap<>();
+        perUri.put( "http://purl.obolibrary.org/obo/MONDO_0002542", many );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> usage = new HashMap<>();
+        usage.put( ExpressionExperiment.class, perUri );
+        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( usage );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "myelopathy" )
+                .queryParam( "rank", "composite" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .first()
+                .satisfies( top -> assertThat( top )
+                        .as( "an exact label match must not lose to a high-usage token overlap" )
+                        .containsEntry( "valueUri", "http://purl.obolibrary.org/obo/HP_0002196" ) );
+    }
+
+    /**
      * An excluded namespace leaves {@code data} but is REPORTED, not deleted — a gene symbol
      * answered with the disease it causes is the measured failure, and an over-firing rule has to
      * be visible rather than silent.
