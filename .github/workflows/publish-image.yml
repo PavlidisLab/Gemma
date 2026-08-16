@@ -100,6 +100,12 @@ jobs:
           target: runtime
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+          # Stamps the commit into the WAR manifest, so /rest/v2/info reports
+          # buildInfo.gitHash instead of "". The image tags already carry the
+          # short SHA; this puts the same fact where a running instance can be
+          # asked for it directly.
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
           # GHA registry layer cache: cheap incremental rebuilds, source of
           # truth lives in the registry rather than the runner's local disk.
           # mode=max caches the shared `build` stage too, so the CLI step below
@@ -117,6 +123,8 @@ jobs:
           target: cli
           push: true
           tags: ${{ steps.tags.outputs.cli_tags }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
           # Reuse the WAR job's buildcache: the `build` stage is shared, so this
           # only adds the tiny `cli` runtime layer on top.
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
