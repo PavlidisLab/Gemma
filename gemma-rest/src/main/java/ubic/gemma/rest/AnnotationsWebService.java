@@ -1800,6 +1800,9 @@ public class AnnotationsWebService {
             ranked = new ArrayList<>( ranked );
             ranked.sort( Comparator.<CharacteristicValueObject>comparingInt( promote::applyAsInt ) );
         }
+        // Runs after the promotion (a stated category constraint still outranks this) and before
+        // truncation, so a demoted salt can fall out of the window and let its parent in.
+        ranked = demoteUnusedDerivatives( ranked, countsByUri, designationProbe );
 
         // Truncate to the requested limit BEFORE enrichment, so per-URI definition + parents
         // lookups only fire for hits the client will actually see.
@@ -2708,6 +2711,78 @@ public class AnnotationsWebService {
             }
         }
         return n;
+    }
+
+    /**
+     * Order a compound's unused derivative below the compound itself, for designation queries only.
+     *
+     * <p>CHEBI carries a trial code on the parent compound and on its salts and solvates alike, so
+     * a code query returns both and the ranker has no reason to prefer either. It picked wrong:
+     * {@code AZD6244} led with {@code selumetinib sulfate}, used zero times in the corpus, above
+     * {@code selumetinib}, used seven. {@code OSI-774} led with {@code erlotinib hydrochloride}
+     * (zero) over {@code erlotinib} (nine), and {@code GSK1120212} with
+     * {@code trametinib dimethyl sulfoxide} (one) over {@code trametinib} (twenty-one). A curator
+     * annotating "treated with AZD6244" means the compound; the sulfate is a formulation detail
+     * nobody asked about, and annotating it fragments the corpus across two URIs.</p>
+     *
+     * <p>The test is a label prefix rather than the hierarchy, because <b>CHEBI does not make the
+     * free base a parent of its salt</b> — {@code selumetinib sulfate} has {@code antineoplastic
+     * agent} and {@code benzimidazoles} as parents, and no edge at all to {@code selumetinib}. A
+     * parent-graph implementation would not fire on a single one of these. Ranking also runs before
+     * enrichment resolves parents, so that graph is not in hand here anyway.</p>
+     *
+     * <p>Two guards keep it from touching anything else. It applies only when the query is a
+     * {@link #isDesignationQuery designation}, so {@code brain stem} is never demoted under
+     * {@code brain} for a caller who asked for the brain stem. And it demotes only a derivative
+     * with zero corpus usage beneath a parent that has some — where the corpus has actually used
+     * the more specific form, that usage is the curator's answer, not ours.</p>
+     */
+    static List<CharacteristicValueObject> demoteUnusedDerivatives(
+            List<CharacteristicValueObject> ranked, @Nullable Map<String, Integer> countsByUri,
+            @Nullable String query ) {
+        if ( ranked.size() < 2 || countsByUri == null || !isDesignationQuery( query ) ) {
+            return ranked;
+        }
+        // Labels that are present with real corpus usage; a derivative is only demoted under one.
+        Map<String, Integer> usedLabels = new HashMap<>();
+        for ( int i = 0; i < ranked.size(); i++ ) {
+            CharacteristicValueObject hit = ranked.get( i );
+            if ( hit.getValue() == null || hit.getValueUri() == null ) {
+                continue;
+            }
+            Integer usage = countsByUri.get( hit.getValueUri() );
+            if ( usage != null && usage > 0 ) {
+                usedLabels.putIfAbsent( hit.getValue().trim().toLowerCase( Locale.ROOT ), i );
+            }
+        }
+        if ( usedLabels.isEmpty() ) {
+            return ranked;
+        }
+        List<CharacteristicValueObject> out = new ArrayList<>( ranked );
+        // Stable partition: unused derivatives keep their relative order, appended after the rest.
+        out.sort( Comparator.comparingInt( hit -> isUnusedDerivativeOf( hit, countsByUri, usedLabels ) ? 1 : 0 ) );
+        return out;
+    }
+
+    private static boolean isUnusedDerivativeOf( CharacteristicValueObject hit,
+            Map<String, Integer> countsByUri, Map<String, Integer> usedLabels ) {
+        if ( hit.getValue() == null || hit.getValueUri() == null ) {
+            return false;
+        }
+        Integer usage = countsByUri.get( hit.getValueUri() );
+        if ( usage != null && usage > 0 ) {
+            return false;
+        }
+        String label = hit.getValue().trim().toLowerCase( Locale.ROOT );
+        for ( String used : usedLabels.keySet() ) {
+            // A derivative names its parent and then qualifies it: "selumetinib" + " sulfate".
+            // The space matters — it keeps "selumetinib" from swallowing an unrelated term that
+            // merely starts with the same characters.
+            if ( label.length() > used.length() + 1 && label.startsWith( used + " " ) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

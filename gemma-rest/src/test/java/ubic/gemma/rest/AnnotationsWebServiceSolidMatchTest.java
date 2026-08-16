@@ -106,6 +106,74 @@ class AnnotationsWebServiceSolidMatchTest {
         assertThat( AnnotationsWebService.isDesignationQuery( "MK-2206 GSK2879552" ) ).isFalse();
     }
 
+    // ---- unused-derivative demotion ------------------------------------------------------
+
+    private static ubic.gemma.model.common.description.CharacteristicValueObject hit( String label, String uri ) {
+        return new ubic.gemma.model.common.description.CharacteristicValueObject( label, uri, "treatment", null );
+    }
+
+    private static List<String> labels( List<ubic.gemma.model.common.description.CharacteristicValueObject> hits ) {
+        return hits.stream().map( ubic.gemma.model.common.description.CharacteristicValueObject::getValue )
+                .collect( Collectors.toList() );
+    }
+
+    /**
+     * CHEBI hangs a trial code on the parent compound and on its salts alike, so a code query gets
+     * both and the ranker had no reason to prefer either. It chose the formulation nobody used.
+     */
+    @Test
+    void unusedSaltFallsBelowTheCompoundItself() {
+        List<ubic.gemma.model.common.description.CharacteristicValueObject> ranked = List.of(
+                hit( "selumetinib sulfate", "u:sulfate" ),
+                hit( "selumetinib", "u:base" ) );
+        java.util.Map<String, Integer> counts = java.util.Map.of( "u:sulfate", 0, "u:base", 7 );
+
+        assertThat( labels( AnnotationsWebService.demoteUnusedDerivatives( ranked, counts, "AZD6244" ) ) )
+                .containsExactly( "selumetinib", "selumetinib sulfate" );
+    }
+
+    /**
+     * Where the corpus HAS used the more specific form, that usage is the curator's answer and
+     * outranks our guess about what the caller meant.
+     */
+    @Test
+    void aUsedDerivativeKeepsItsPlace() {
+        List<ubic.gemma.model.common.description.CharacteristicValueObject> ranked = List.of(
+                hit( "trametinib dimethyl sulfoxide", "u:solvate" ),
+                hit( "trametinib", "u:base" ) );
+        java.util.Map<String, Integer> counts = java.util.Map.of( "u:solvate", 1, "u:base", 21 );
+
+        assertThat( labels( AnnotationsWebService.demoteUnusedDerivatives( ranked, counts, "GSK1120212" ) ) )
+                .containsExactly( "trametinib dimethyl sulfoxide", "trametinib" );
+    }
+
+    /**
+     * Scoped to designations. A caller who typed {@code brain stem} asked for the brain stem, and
+     * demoting it under {@code brain} would answer a question they did not ask.
+     */
+    @Test
+    void descriptiveQueriesNeverDemoteTheMoreSpecificTerm() {
+        List<ubic.gemma.model.common.description.CharacteristicValueObject> ranked = List.of(
+                hit( "brain stem", "u:stem" ),
+                hit( "brain", "u:brain" ) );
+        java.util.Map<String, Integer> counts = java.util.Map.of( "u:stem", 0, "u:brain", 400 );
+
+        assertThat( labels( AnnotationsWebService.demoteUnusedDerivatives( ranked, counts, "brain stem" ) ) )
+                .containsExactly( "brain stem", "brain" );
+    }
+
+    @Test
+    void unrelatedTermsSharingAPrefixAreNotDerivatives() {
+        // "selumetinibX" is not "selumetinib" + qualifier; the space is what makes it a derivative.
+        List<ubic.gemma.model.common.description.CharacteristicValueObject> ranked = List.of(
+                hit( "selumetinibxyz", "u:other" ),
+                hit( "selumetinib", "u:base" ) );
+        java.util.Map<String, Integer> counts = java.util.Map.of( "u:other", 0, "u:base", 7 );
+
+        assertThat( labels( AnnotationsWebService.demoteUnusedDerivatives( ranked, counts, "AZD6244" ) ) )
+                .containsExactly( "selumetinibxyz", "selumetinib" );
+    }
+
     // ---- exact vs near attribution -------------------------------------------------------
 
     @Test
