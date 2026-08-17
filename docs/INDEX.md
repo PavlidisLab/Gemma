@@ -12,7 +12,7 @@ Total: 150 docs.
 
   <sub>archived sources (`pipeline-compute/archive/`): EXTERNAL_PIPELINE_HANDOFF_RECCE.md, PIPELINES_AND_SCHEDULER_RECCE.md, PIPELINE_COMPUTE_TEST_AND_CONTROL_RECCE.md, WORKFLOW_AND_COMPUTE_ARCHITECTURE.md</sub>
 
-## Recces — `docs/recce/` (19 live, 16 archived)
+## Recces — `docs/recce/` (20 live, 16 archived)
 
 16 recces whose subject shipped, whose premise is gone, or that a live doc supersedes were moved to [`docs/recce/archive/`](recce/archive/README.md) on 2026-08-11 — that README lists each one with the evidence checked.
 
@@ -21,6 +21,7 @@ Total: 150 docs.
 - [`AUDIT_AS_WORKFLOW_RECCE.md`](recce/AUDIT_AS_WORKFLOW_RECCE.md) — Audit-system as workflow / ticket tracker — Phase 3 recce
 - [`AUDIT_PHASE_C_RECCE.md`](recce/AUDIT_PHASE_C_RECCE.md) — AUDIT_PHASE_C_RECCE.md
 - [`COEXPRESSION_ORPHAN_RECCE.md`](recce/COEXPRESSION_ORPHAN_RECCE.md) — Coexpression-tables orphan recce
+- [`CURATION_PROVENANCE_RECCE.md`](recce/CURATION_PROVENANCE_RECCE.md) — what Gemma can answer today about where an annotation came from, and what it would take
 - [`DEA_FINDBYGENE_COLDCACHE_RECCE.md`](recce/DEA_FINDBYGENE_COLDCACHE_RECCE.md) — DEA findByGene cold-cache — fix recce
 - [`GEMMA_WEB_ONLY_AUDIT.md`](recce/GEMMA_WEB_ONLY_AUDIT.md) — what `@GemmaWebOnly` is really hiding: all 79 sites bucketed, and why a bulk removal is a security question
 - [`HEATMAP_REWRITE_RECCE.md`](recce/HEATMAP_REWRITE_RECCE.md) — Heatmap data generation — client-side rewrite recce

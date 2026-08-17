@@ -156,8 +156,9 @@ public class AnnotationSetsWebService {
         AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
                 ee, role, source, kind,
                 body.runId, body.createdBy,
-                body.agentVersion, body.model, body.ranAt, body.payloadJson,
-                parent );
+                new AnnotationSetService.RunProvenance( body.agentVersion, body.model, body.runSha,
+                        body.agentName, body.ranAt ),
+                body.payloadJson, parent );
         Response.Status status = attached.isCreated()
                 ? Response.Status.CREATED : Response.Status.OK;
         return Response.status( status )
@@ -388,6 +389,19 @@ public class AnnotationSetsWebService {
         @JsonProperty("model")
         @Nullable
         public String model;
+        /**
+         * The producing repository's git head sha. Not redundant with {@link #model} — behaviour differs
+         * between shas at one model, so the model alone does not identify the build.
+         */
+        @JsonProperty("runSha")
+        @JsonAlias("run_sha")
+        @Nullable
+        public String runSha;
+        /** Which specialist produced it ({@code cell_type}, {@code disease}, …); "the agent" is a fleet. */
+        @JsonProperty("agentName")
+        @JsonAlias("agent_name")
+        @Nullable
+        public String agentName;
         @JsonProperty("ranAt")
         @JsonAlias("ran_at")
         @Nullable
@@ -458,6 +472,13 @@ public class AnnotationSetsWebService {
         @JsonProperty("model")
         @Nullable
         public String model;
+        /** Round-tripped so a trace does not stop at Gemma's boundary; see the request DTO for why it matters. */
+        @JsonProperty("runSha")
+        @Nullable
+        public String runSha;
+        @JsonProperty("agentName")
+        @Nullable
+        public String agentName;
         @JsonProperty("ranAt")
         @Nullable
         public Date ranAt;
@@ -662,6 +683,8 @@ public class AnnotationSetsWebService {
         r.finalizedBy = a.getFinalizedBy();
         r.agentVersion = a.getAgentVersion();
         r.model = a.getModel();
+        r.runSha = a.getRunSha();
+        r.agentName = a.getAgentName();
         r.ranAt = a.getRanAt();
         r.payloadJson = a.getPayloadJson();
         r.parkedElements = a.getParkedElements();

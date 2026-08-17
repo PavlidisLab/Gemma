@@ -356,10 +356,11 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * Validate and apply a proposed design replacement.
      * <p>
      * When the preflight report carries blockers, returns {@link DesignChangeResult#blocked} without
-     * mutating state. When the preflight report has no blockers but predicts differential-expression analyses
-     * to be deleted and {@code force} is false, returns {@link DesignChangeResult#forceRequired} (the cascade
-     * needs explicit consent). Otherwise applies the change and returns {@link DesignChangeResult#ok} with the
-     * fresh design VO.
+     * mutating state. When the preflight report has no blockers but
+     * {@link DesignPreflightReport#requiresForce() requires consent} — it would delete differential-expression
+     * analyses, or strand a subset on deleted factor values — and {@code force} is false, returns
+     * {@link DesignChangeResult#forceRequired}. Otherwise applies the change and returns
+     * {@link DesignChangeResult#ok} with the fresh design VO.
      */
     public DesignChangeResult applyDesignChange( DatasetArg<?> arg, ExperimentalDesignValueObject proposed, boolean force ) {
         if ( proposed == null ) {
@@ -370,7 +371,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         if ( !report.getBlockers().isEmpty() ) {
             return DesignChangeResult.blocked( report );
         }
-        if ( !report.getDifferentialExpressionAnalysesToDelete().isEmpty() && !force ) {
+        if ( report.requiresForce() && !force ) {
             return DesignChangeResult.forceRequired( report );
         }
         DesignApplyOutcome outcome = service.applyDesignChange( ee, proposed );

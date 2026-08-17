@@ -82,6 +82,8 @@ import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetailsValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
@@ -114,6 +116,7 @@ import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -138,6 +141,7 @@ import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
@@ -267,6 +271,9 @@ public class DatasetsWebService {
     private AuditTrailService auditTrailService;
     @Autowired
     private AnnotationSetsWebService annotationSetsWebService;
+    /** Used by the snapshot/restore pair to load a stored payload; the delegating routes go through the web service above. */
+    @Autowired
+    private AnnotationSetService annotationSetService;
     @Autowired
     private SecurityService securityService;
     @Autowired
@@ -1841,6 +1848,74 @@ public class DatasetsWebService {
         return annotationSetsWebService.submitAnnotationSet( datasetArg, body );
     }
 
+    @POST
+    @Path("/{dataset}/annotation-sets/snapshot")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Capture the dataset's current curation as an immutable SNAPSHOT AnnotationSet.",
+            description = "Takes the backup for you: the server reads the current design, tags, sample "
+                    + "characteristics and curation note and stores them as the AnnotationSet's `payloadJson`. "
+                    + "Deliberate and append-only — nothing snapshots on its own, so this is what you call before "
+                    + "letting an agent apply a batch of changes.\n\n"
+                    + "The payload is a `CurationDocument`, the same shape `PUT /datasets/{id}/curation` accepts. "
+                    + "That is what makes the two companion operations free: "
+                    + "`POST /datasets/{id}/annotation-sets/{setId}/restore?dryRun=true` compares the snapshot "
+                    + "with the present, and the same call without `dryRun` puts it back.\n\n"
+                    + "Emits an `AnnotationSetEvent` on the experiment carrying the new row's id.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "The snapshot was captured.",
+                            content = @Content(schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response snapshotDatasetCuration(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Optional note recorded as the snapshot's producer identity, e.g. why the backup was taken.")
+            @QueryParam("createdBy") @Nullable String createdBy
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        AnnotationSetsWebService.AnnotationSetRequest body = new AnnotationSetsWebService.AnnotationSetRequest();
+        body.role = "snapshot";
+        body.createdBy = createdBy;
+        body.payloadJson = writeSnapshotPayload( buildCurationSnapshot( ee ) );
+        return annotationSetsWebService.submitAnnotationSet( datasetArg, body );
+    }
+
+    @POST
+    @Path("/{dataset}/annotation-sets/{setId}/restore")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Restore a dataset's curation from a SNAPSHOT, or compare it with the present.",
+            description = "Replays the snapshot's `CurationDocument` through the ordinary all-or-none commit, so "
+                    + "there is no second diff implementation that could disagree with the first.\n\n"
+                    + "`?dryRun=true` is the compare: it reports exactly what would change to get back to the "
+                    + "snapshot, and writes nothing.\n\n"
+                    + "🛑 A restore returns the curation's CONTENT, not its IDENTITY. Entities whose ids no longer "
+                    + "exist — because an intervening run deleted and recreated them — come back as new rows with "
+                    + "new ids, and any differential-expression analysis that survived that run is cascaded again "
+                    + "on the way back. Run with `dryRun=true` first and read `requiresForce`.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Restored, or (dryRun) the predicted changes."),
+                    @ApiResponse(responseCode = "400", description = "The set is not a SNAPSHOT, or its payload is not a CurationDocument.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "The restore would delete analyses or strand a subset; retry with ?force=true.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<CurationCommitReport> restoreDatasetCurationFromSnapshot(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("setId") Long setId,
+            @Parameter(description = "Predict the changes without writing. This is the 'compare with the snapshot' mode.")
+            @QueryParam("dryRun") @DefaultValue("false") Boolean dryRun,
+            @Parameter(description = "Consent to the restore's consequences (analysis cascade, stranded subsets).")
+            @QueryParam("force") @DefaultValue("false") Boolean force
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        CurationDocument snapshot = readSnapshotPayload( setId, ee );
+        reconcileSnapshotForRestore( snapshot, ee );
+        // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
+        // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
+        snapshot.setBaseline( null );
+        return respond( doCommitCuration( datasetArg, snapshot, dryRun, force ) );
+    }
+
     @GET
     @Path("/{dataset}/annotation-sets")
     @Produces(MediaType.APPLICATION_JSON)
@@ -2363,17 +2438,16 @@ public class DatasetsWebService {
             // need to be threaded into mapStatements' VO build, which is out of scope for this gate.
             collectDesignTermViolations( dc, termViolations );
 
-            // Gate on the same preflight the standalone PUT /design uses: blockers → 400; a change that would delete
-            // differential-expression analyses → 409 unless force (admin). A dry run predicts, so it never 409s.
+            // Gate on the same preflight the standalone PUT /design uses: blockers → 400; a change with
+            // consequences the curator has to agree to → 409 unless force (admin). A dry run predicts, so it
+            // never 409s.
             DesignPreflightReport report = datasetArgService.previewDesignChange( datasetArg, proposed );
             if ( !report.getBlockers().isEmpty() ) {
                 throw new BadRequestException( "The proposed design has validation blockers: " + summarizeDesignBlockers( report ) );
             }
-            if ( !dryRun && !report.getDifferentialExpressionAnalysesToDelete().isEmpty()
-                    && !( force && SecurityUtil.isUserAdmin() ) ) {
-                throw new jakarta.ws.rs.ClientErrorException( "This design change would delete "
-                        + report.getDifferentialExpressionAnalysesToDelete().size()
-                        + " differential-expression analysis/analyses; retry with ?force=true (admin only) to consent.",
+            if ( !dryRun && report.requiresForce() && !( force && SecurityUtil.isUserAdmin() ) ) {
+                throw new jakarta.ws.rs.ClientErrorException( summarizeDesignConsequences( report )
+                        + "; retry with ?force=true (admin only) to consent.",
                         jakarta.ws.rs.core.Response.Status.CONFLICT );
             }
         }
@@ -2670,6 +2744,19 @@ public class DatasetsWebService {
         private OntologyTermRef predicate;
         @Nullable
         private OntologyTermRef object;
+        /**
+         * Verbatim provenance for this statement — a JSON array of {@code {quote, source, location, …}} items.
+         * Stored and served opaquely; the agents repo owns the schema.
+         * <p>
+         * The statement is the level that matters most for composed patterns, where the operative claim lives in
+         * the triple rather than in the parent factor value: two factor values whose labels are byte-identical
+         * and differ only by a zygosity statement cannot be told apart by evidence hung on the value.
+         * <p>
+         * Null / omitted leaves any evidence already recorded untouched, so a client that does not carry
+         * provenance cannot wipe provenance somebody else recorded.
+         */
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
     }
 
     /** One experiment-level tag (CAB {@code TagCommit}); a statement-shaped tag rides its {@code statements}. */
@@ -2681,6 +2768,13 @@ public class DatasetsWebService {
         @Nullable
         private OntologyTermRef value;
         private Section<StatementCommit> statements = new Section<>();
+        /**
+         * Verbatim provenance for this tag. Same shape and same null = "no change" convention as
+         * {@link StatementCommit#getSupportingEvidence()}. When the tag rides a statement, evidence set on the
+         * statement wins; this is the fallback for a plain category/value tag.
+         */
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
     }
 
     /** One per-sample characteristic (CAB {@code SampleCharacteristicCommit}); the sample is a GSM short name. */
@@ -2693,6 +2787,12 @@ public class DatasetsWebService {
         private OntologyTermRef category;
         @Nullable
         private OntologyTermRef value;
+        /**
+         * Verbatim provenance for this sample characteristic. Same shape and same null = "no change" convention
+         * as {@link StatementCommit#getSupportingEvidence()}.
+         */
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
     }
 
     /** curationDetails section. Only {@code curationNote} commits here; the flags go through the ticket layer. */
@@ -2890,6 +2990,7 @@ public class DatasetsWebService {
                 svo.setObject( sc.getObject().getLabel() );
                 svo.setObjectUri( sc.getObject().getUri() );
             }
+            svo.setSupportingEvidence( sc.getSupportingEvidence() );
             out.add( svo );
         }
         // Carry forward untouched current statements — the design apply replaces statements wholesale on a kept FV,
@@ -2931,6 +3032,367 @@ public class DatasetsWebService {
     }
 
     /** GSM accession → biomaterial id for one dataset (no findByAccession exists; index the bioassays). */
+    /**
+     * Mapper for snapshot payloads. Configured to omit nulls so a snapshot records what the dataset has rather
+     * than a wall of empty fields, and to ignore unknown properties on read so a payload taken by an older build
+     * still restores after the document grows a field.
+     */
+    private static final com.fasterxml.jackson.databind.ObjectMapper SNAPSHOT_MAPPER =
+            new com.fasterxml.jackson.databind.ObjectMapper()
+                    .setSerializationInclusion( com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL )
+                    .configure( com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false );
+
+    private static String writeSnapshotPayload( CurationDocument doc ) {
+        try {
+            return SNAPSHOT_MAPPER.writeValueAsString( doc );
+        } catch ( com.fasterxml.jackson.core.JsonProcessingException e ) {
+            throw new IllegalStateException( "Could not serialize the curation snapshot.", e );
+        }
+    }
+
+    /**
+     * Load a SNAPSHOT annotation set and parse its payload back into a {@link CurationDocument}, refusing
+     * anything that is not this dataset's snapshot. A DRAFT or PROPOSAL payload is some other tool's shape;
+     * replaying it as a commit would write whatever happened to parse.
+     */
+    private CurationDocument readSnapshotPayload( Long setId, ExpressionExperiment ee ) {
+        AnnotationSet set = annotationSetService.load( setId );
+        if ( set == null ) {
+            throw new NotFoundException( "No annotation set with id " + setId + "." );
+        }
+        if ( set.getInvestigation() == null || !ee.getId().equals( set.getInvestigation().getId() ) ) {
+            throw new NotFoundException( "Annotation set " + setId + " does not belong to dataset " + ee.getId() + "." );
+        }
+        if ( set.getRole() != AnnotationSetRole.SNAPSHOT ) {
+            throw new BadRequestException( "Annotation set " + setId + " is a " + set.getRole()
+                    + ", not a SNAPSHOT; only a snapshot can be restored." );
+        }
+        if ( StringUtils.isBlank( set.getPayloadJson() ) ) {
+            throw new BadRequestException( "Annotation set " + setId + " has no payload to restore." );
+        }
+        try {
+            return SNAPSHOT_MAPPER.readValue( set.getPayloadJson(), CurationDocument.class );
+        } catch ( com.fasterxml.jackson.core.JsonProcessingException e ) {
+            throw new BadRequestException( "Annotation set " + setId
+                    + " payload is not a CurationDocument: " + e.getOriginalMessage() );
+        }
+    }
+
+    /**
+     * Capture a dataset's current curation as a {@link CurationDocument} — the same shape
+     * {@code PUT /datasets/{id}/curation} accepts.
+     * <p>
+     * The shape is the point. A snapshot that is itself a commit document means "restore" is the commit path
+     * we already have and "compare with the snapshot" is the preflight we already have; neither needs a second
+     * diff implementation that could disagree with the first.
+     * <p>
+     * Every captured entity carries its {@code gemmaId}, so a snapshot replayed against an unchanged structure
+     * updates in place rather than duplicating. Ids that no longer exist at restore time are reconciled by
+     * {@link #reconcileSnapshotForRestore}, not here — a snapshot records what was true, not what to do about it.
+     */
+    private CurationDocument buildCurationSnapshot( ExpressionExperiment ee ) {
+        CurationDocument doc = new CurationDocument();
+
+        CurationBasics basics = new CurationBasics();
+        basics.setName( ee.getName() );
+        basics.setDescription( ee.getDescription() );
+        doc.setBasics( basics );
+
+        ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
+        Map<Long, String> gsmByBmId = new HashMap<>();
+        for ( BioAssay ba : thawed.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm == null || bm.getId() == null ) continue;
+            String name = ba.getAccession() != null && ba.getAccession().getAccession() != null
+                    ? ba.getAccession().getAccession() : ba.getShortName();
+            if ( name != null ) {
+                gsmByBmId.putIfAbsent( bm.getId(), name );
+            }
+        }
+
+        ExperimentalDesignValueObject design = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        if ( design != null ) {
+            Map<Long, List<String>> samplesByFvId = new HashMap<>();
+            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : nullSafe( design.getBioMaterialAssignments() ) ) {
+                String gsm = gsmByBmId.get( a.getBioMaterialId() );
+                if ( gsm == null ) continue;
+                for ( Long fvId : nullSafe( a.getFactorValueIds() ) ) {
+                    samplesByFvId.computeIfAbsent( fvId, k -> new ArrayList<>() ).add( gsm );
+                }
+            }
+            DesignCommit dc = new DesignCommit();
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : nullSafe( design.getExperimentalFactors() ) ) {
+                FactorCommit fc = new FactorCommit();
+                fc.setGemmaId( f.getId() );
+                fc.setName( f.getName() );
+                fc.setDescription( f.getDescription() );
+                fc.setType( f.getType() );
+                fc.setCategory( termRef( f.getCategory() ) );
+                for ( FactorValueBasicValueObject v : nullSafe( f.getValues() ) ) {
+                    FactorValueCommit fvc = new FactorValueCommit();
+                    fvc.setGemmaId( v.getId() );
+                    //noinspection deprecation
+                    fvc.setFreeTextLabel( v.getValue() );
+                    fvc.setBaseline( v.getBaseline() );
+                    fvc.setMeasurement( snapshotMeasurement( v.getMeasurementObject() ) );
+                    // an explicit (possibly empty) list, so a restore re-asserts membership rather than
+                    // leaving whatever the intervening run assigned
+                    fvc.setBiomaterialShortNames( samplesByFvId.getOrDefault( v.getId(), new ArrayList<>() ) );
+                    for ( StatementValueObject s : nullSafe( v.getStatements() ) ) {
+                        StatementCommit sc = new StatementCommit();
+                        sc.setGemmaId( s.getId() );
+                        sc.setCategory( termRef( s.getCategory(), s.getCategoryUri() ) );
+                        sc.setSubject( termRef( s.getSubject(), s.getSubjectUri() ) );
+                        sc.setPredicate( termRef( s.getPredicate(), s.getPredicateUri() ) );
+                        sc.setObject( termRef( s.getObject(), s.getObjectUri() ) );
+                        sc.setSupportingEvidence( s.getSupportingEvidence() );
+                        fvc.getStatements().getItems().add( sc );
+                    }
+                    fc.getFactorValues().getItems().add( fvc );
+                }
+                dc.getFactors().getItems().add( fc );
+            }
+            doc.setDesign( dc );
+        }
+
+        Section<TagCommit> tags = new Section<>();
+        for ( AnnotationValueObject a : experimentLevelTags( ee ) ) {
+            TagCommit tc = new TagCommit();
+            tc.setGemmaId( a.getId() );
+            tc.setCategory( termRef( a.getClassName(), a.getClassUri() ) );
+            tc.setValue( termRef( a.getTermName(), a.getTermUri() ) );
+            tc.setSupportingEvidence( a.getSupportingEvidence() );
+            tags.getItems().add( tc );
+        }
+        doc.setTags( tags );
+
+        Section<SampleCharacteristicCommit> sampleChars = new Section<>();
+        for ( BioAssay ba : thawed.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm == null ) continue;
+            String gsm = gsmByBmId.get( bm.getId() );
+            if ( gsm == null ) continue;
+            for ( AnnotationValueObject a : sampleAnnotationVos( bm ) ) {
+                SampleCharacteristicCommit scc = new SampleCharacteristicCommit();
+                scc.setGemmaId( a.getId() );
+                scc.setBioassayShortName( gsm );
+                scc.setCategory( termRef( a.getClassName(), a.getClassUri() ) );
+                scc.setValue( termRef( a.getTermName(), a.getTermUri() ) );
+                scc.setSupportingEvidence( a.getSupportingEvidence() );
+                sampleChars.getItems().add( scc );
+            }
+        }
+        doc.setSampleCharacteristics( sampleChars );
+
+        if ( ee.getCurationDetails() != null && ee.getCurationDetails().getCurationNote() != null ) {
+            CurationDetailsCommit cd = new CurationDetailsCommit();
+            cd.setCurationNote( ee.getCurationDetails().getCurationNote() );
+            doc.setCurationDetails( cd );
+        }
+        return doc;
+    }
+
+    /**
+     * Turn a captured snapshot into a document that can actually be committed against the dataset as it stands
+     * now. Two reconciliations, both of which exist because a snapshot is replayed after something changed:
+     * <ol>
+     *     <li><b>Vanished ids become creates.</b> An entity whose {@code gemmaId} is gone (an intervening run
+     *         deleted and recreated its factor, say) is re-sent under a {@code clientRef}. The content comes
+     *         back; the identity does not, and cannot — the row it named no longer exists.</li>
+     *     <li><b>Entities absent from the snapshot become deletions.</b> Restoring means "make it look like the
+     *         snapshot", and the commit is declared-delete, so anything added since has to be named in
+     *         {@code deletedIds} or it would silently survive the restore.</li>
+     * </ol>
+     * Consequence worth stating plainly to callers: a restore returns the curation's <em>content</em>, not its
+     * <em>identity</em>. Recreated factor values get fresh ids, and any analysis that survived the intervening
+     * run is cascaded again on the way back.
+     */
+    private void reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee ) {
+        ExperimentalDesignValueObject current = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        Set<Long> liveFactorIds = new HashSet<>();
+        Set<Long> liveFvIds = new HashSet<>();
+        Set<Long> liveStatementIds = new HashSet<>();
+        if ( current != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : nullSafe( current.getExperimentalFactors() ) ) {
+                liveFactorIds.add( f.getId() );
+                for ( FactorValueBasicValueObject v : nullSafe( f.getValues() ) ) {
+                    liveFvIds.add( v.getId() );
+                    for ( StatementValueObject s : nullSafe( v.getStatements() ) ) {
+                        liveStatementIds.add( s.getId() );
+                    }
+                }
+            }
+        }
+
+        int seq = 0;
+        Set<Long> snapshotFactorIds = new HashSet<>();
+        Set<Long> snapshotFvIds = new HashSet<>();
+        Set<Long> snapshotStatementIds = new HashSet<>();
+        if ( snapshot.getDesign() != null ) {
+            for ( FactorCommit fc : nullSafe( snapshot.getDesign().getFactors().getItems() ) ) {
+                if ( fc.getGemmaId() != null && liveFactorIds.contains( fc.getGemmaId() ) ) {
+                    snapshotFactorIds.add( fc.getGemmaId() );
+                } else {
+                    fc.setGemmaId( null );
+                    fc.setClientRef( "restore-f-" + ( seq++ ) );
+                }
+                for ( FactorValueCommit fvc : nullSafe( fc.getFactorValues().getItems() ) ) {
+                    // a factor value cannot keep its id under a factor that is being recreated
+                    if ( fc.getGemmaId() != null && fvc.getGemmaId() != null && liveFvIds.contains( fvc.getGemmaId() ) ) {
+                        snapshotFvIds.add( fvc.getGemmaId() );
+                    } else {
+                        fvc.setGemmaId( null );
+                        fvc.setClientRef( "restore-fv-" + ( seq++ ) );
+                    }
+                    for ( StatementCommit sc : nullSafe( fvc.getStatements().getItems() ) ) {
+                        if ( fvc.getGemmaId() != null && sc.getGemmaId() != null && liveStatementIds.contains( sc.getGemmaId() ) ) {
+                            snapshotStatementIds.add( sc.getGemmaId() );
+                        } else {
+                            sc.setGemmaId( null );
+                            sc.setClientRef( "restore-s-" + ( seq++ ) );
+                        }
+                    }
+                    // statements present now but not in the snapshot were added since: drop them
+                    if ( fvc.getGemmaId() != null ) {
+                        for ( Long liveId : statementIdsOf( current, fvc.getGemmaId() ) ) {
+                            if ( !snapshotStatementIds.contains( liveId ) ) {
+                                fvc.getStatements().getDeletedIds().add( liveId );
+                            }
+                        }
+                    }
+                }
+                // factor values present now but not in the snapshot were added since
+                if ( fc.getGemmaId() != null ) {
+                    for ( Long liveId : factorValueIdsOf( current, fc.getGemmaId() ) ) {
+                        if ( !snapshotFvIds.contains( liveId ) ) {
+                            fc.getFactorValues().getDeletedIds().add( liveId );
+                        }
+                    }
+                }
+            }
+            for ( Long liveId : liveFactorIds ) {
+                if ( !snapshotFactorIds.contains( liveId ) ) {
+                    snapshot.getDesign().getFactors().getDeletedIds().add( liveId );
+                }
+            }
+        }
+
+        reconcileIdSection( snapshot.getTags(), currentTagIds( ee ), "restore-t-" );
+        reconcileIdSection( snapshot.getSampleCharacteristics(), currentSampleCharacteristicIds( ee ), "restore-sc-" );
+    }
+
+    /**
+     * Shared id reconciliation for the two flat, id-addressed sections (tags and sample characteristics):
+     * a snapshot id that no longer resolves is re-sent as a create, and a live id the snapshot never mentioned
+     * is added to {@code deletedIds}.
+     */
+    private static <T extends EntityRef> void reconcileIdSection( @Nullable Section<T> section, Set<Long> liveIds,
+            String clientRefPrefix ) {
+        if ( section == null ) {
+            return;
+        }
+        int seq = 0;
+        Set<Long> kept = new HashSet<>();
+        for ( T item : nullSafe( section.getItems() ) ) {
+            if ( item.getGemmaId() != null && liveIds.contains( item.getGemmaId() ) ) {
+                kept.add( item.getGemmaId() );
+            } else {
+                item.setGemmaId( null );
+                item.setClientRef( clientRefPrefix + ( seq++ ) );
+            }
+        }
+        for ( Long liveId : liveIds ) {
+            if ( !kept.contains( liveId ) ) {
+                section.getDeletedIds().add( liveId );
+            }
+        }
+    }
+
+    /**
+     * The experiment's OWN tags — the rows the commit's {@code tags} section writes.
+     * <p>
+     * {@code getAnnotations} deliberately aggregates three sources: experiment-level tags, experimental-design
+     * tags, and sample-level tags. That is right for a reader and wrong for a snapshot: replaying the aggregate
+     * through the {@code tags} section would re-create every design and sample annotation a second time as an
+     * experiment-level tag. {@code objectClass} is what separates them.
+     */
+    private List<AnnotationValueObject> experimentLevelTags( ExpressionExperiment ee ) {
+        return expressionExperimentService.getAnnotations( ee, true ).stream()
+                .filter( a -> "ExperimentTag".equals( a.getObjectClass() ) )
+                .collect( Collectors.toList() );
+    }
+
+    private Set<Long> currentTagIds( ExpressionExperiment ee ) {
+        return experimentLevelTags( ee ).stream()
+                .map( AnnotationValueObject::getId )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+    }
+
+    private Set<Long> currentSampleCharacteristicIds( ExpressionExperiment ee ) {
+        Set<Long> ids = new HashSet<>();
+        for ( BioAssay ba : expressionExperimentService.thawBioAssays( ee ).getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm == null ) continue;
+            for ( AnnotationValueObject a : sampleAnnotationVos( bm ) ) {
+                if ( a.getId() != null ) {
+                    ids.add( a.getId() );
+                }
+            }
+        }
+        return ids;
+    }
+
+    private static List<Long> factorValueIdsOf( @Nullable ExperimentalDesignValueObject design, Long factorId ) {
+        if ( design == null ) return Collections.emptyList();
+        return nullSafe( design.getExperimentalFactors() ).stream()
+                .filter( f -> factorId.equals( f.getId() ) )
+                .flatMap( f -> nullSafe( f.getValues() ).stream() )
+                .map( FactorValueBasicValueObject::getId )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+    }
+
+    private static List<Long> statementIdsOf( @Nullable ExperimentalDesignValueObject design, Long factorValueId ) {
+        if ( design == null ) return Collections.emptyList();
+        return nullSafe( design.getExperimentalFactors() ).stream()
+                .flatMap( f -> nullSafe( f.getValues() ).stream() )
+                .filter( v -> factorValueId.equals( v.getId() ) )
+                .flatMap( v -> nullSafe( v.getStatements() ).stream() )
+                .map( StatementValueObject::getId )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+    }
+
+    @Nullable
+    private static OntologyTermRef termRef( @Nullable CharacteristicValueObject c ) {
+        return c == null ? null : termRef( c.getCategory(), c.getCategoryUri() );
+    }
+
+    @Nullable
+    private static OntologyTermRef termRef( @Nullable String label, @Nullable String uri ) {
+        if ( label == null && uri == null ) {
+            return null;
+        }
+        OntologyTermRef ref = new OntologyTermRef();
+        ref.setLabel( label );
+        ref.setUri( uri );
+        return ref;
+    }
+
+    @Nullable
+    private static Measurement snapshotMeasurement( @Nullable MeasurementValueObject m ) {
+        if ( m == null || m.getValue() == null ) {
+            return null;
+        }
+        Measurement out = new Measurement();
+        out.setValue( m.getValue() );
+        out.setUnit( m.getUnit() );
+        out.setType( m.getType() );
+        out.setRepresentation( m.getRepresentation() );
+        return out;
+    }
+
     private Map<String, Long> buildGsmToBioMaterialIdIndex( ExpressionExperiment ee ) {
         ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
         Map<String, Long> index = new HashMap<>();
@@ -3002,6 +3464,9 @@ public class DatasetsWebService {
                 s.setObject( sc.getObject().getLabel() );
                 s.setObjectUri( sc.getObject().getUri() );
             }
+            // Evidence on the statement wins; the tag-level field is the fallback for a plain tag.
+            s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence(
+                    sc.getSupportingEvidence() != null ? sc.getSupportingEvidence() : tc.getSupportingEvidence() ) );
             return s;
         }
         if ( tc.getValue() == null || StringUtils.isBlank( tc.getValue().getLabel() ) ) {
@@ -3014,6 +3479,7 @@ public class DatasetsWebService {
         }
         c.setValue( tc.getValue().getLabel() );
         c.setValueUri( tc.getValue().getUri() );
+        c.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( tc.getSupportingEvidence() ) );
         return c;
     }
 
@@ -3110,6 +3576,7 @@ public class DatasetsWebService {
         }
         c.setValue( sc.getValue().getLabel() );
         c.setValueUri( sc.getValue().getUri() );
+        c.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( sc.getSupportingEvidence() ) );
         return c;
     }
 
@@ -3128,6 +3595,28 @@ public class DatasetsWebService {
         return report.getBlockers().stream()
                 .map( b -> b.getType() + ( b.getMessage() != null ? " (" + b.getMessage() + ")" : "" ) )
                 .collect( Collectors.joining( "; " ) );
+    }
+
+    /**
+     * Human-readable summary of the consequences a caller is being asked to consent to, for the 409 body. Names
+     * each cause separately rather than collapsing them into a count, because "would delete 2 analyses" and
+     * "would strand 1 subset" call for different curator judgment — and the stranded subset is the one that
+     * survives the change still looking valid.
+     */
+    private static String summarizeDesignConsequences( DesignPreflightReport report ) {
+        List<String> parts = new ArrayList<>();
+        int analyses = report.getDifferentialExpressionAnalysesToDelete().size();
+        if ( analyses > 0 ) {
+            parts.add( "delete " + analyses + " differential-expression analysis/analyses" );
+        }
+        int subsets = report.getSubsetsWithStaleAnchor().size();
+        if ( subsets > 0 ) {
+            parts.add( "leave " + subsets + " subset(s) anchored on factor values that would no longer exist ("
+                    + report.getSubsetsWithStaleAnchor().stream()
+                    .map( s -> s.getName() != null ? s.getName() : String.valueOf( s.getId() ) )
+                    .collect( Collectors.joining( ", " ) ) + ")" );
+        }
+        return "This design change would " + String.join( " and ", parts );
     }
 
     private static <X> List<X> nullSafe( @Nullable List<X> l ) {
@@ -5450,10 +5939,7 @@ public class DatasetsWebService {
      */
     @Nullable
     static String serializeEvidence( @Nullable com.fasterxml.jackson.databind.JsonNode evidence ) {
-        if ( evidence == null || evidence.isNull() || evidence.isEmpty() ) {
-            return null;
-        }
-        return evidence.toString();
+        return CharacteristicUtils.serializeSupportingEvidence( evidence );
     }
 
     /**
@@ -6385,8 +6871,10 @@ public class DatasetsWebService {
      * <p>
      * The same validation pass performed by {@code POST /datasets/{id}/designPreflight} is re-run server-side. If
      * blockers are present, returns 400 with a {@link DesignPreflightReport} payload — fix the body and retry.
-     * If the change would delete one or more differential-expression analyses and {@code force=false}, returns 409
-     * with the report; admins may re-issue the request with {@code ?force=true} to consent to the cascade.
+     * If the change carries consequences needing consent — it would delete differential-expression analyses, or
+     * leave a subset anchored on factor values that no longer exist — and {@code force=false}, returns 409 with
+     * the report; admins may re-issue with {@code ?force=true}. The 409 body is the report itself, so the client
+     * can show the curator exactly which analyses and which subsets they are agreeing to.
      * On success, returns 200 with the freshly-rebuilt design.
      */
     @PUT
@@ -6398,13 +6886,13 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))),
             @ApiResponse(responseCode = "400", description = "The proposed design has validation blockers; see the report in the response body.",
                     content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
-            @ApiResponse(responseCode = "409", description = "The proposed change would delete differential-expression analyses; retry with ?force=true to consent.",
+            @ApiResponse(responseCode = "409", description = "The proposed change would delete differential-expression analyses, or strand a subset on deleted factor values; retry with ?force=true to consent.",
                     content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response replaceDatasetDesign(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Set to true to consent to deleting differential-expression analyses that depend on factors or factor values affected by the change.") @QueryParam("force") @DefaultValue("false") Boolean force,
+            @Parameter(description = "Set to true to consent to the change's consequences: deleting differential-expression analyses that depend on affected factors or factor values, and leaving subsets anchored on factor values that would no longer exist.") @QueryParam("force") @DefaultValue("false") Boolean force,
             @Parameter(description = "Optional FK to an AgentProposal row driving this apply. Accepted by the endpoint; the link is not yet persisted (AgentProposal entity pending per AGENT_WRITEBACK_RECCE.md). Logged for audit-trail traceability once wired.") @QueryParam("agentProposalId") @Nullable Long agentProposalId,
             ExperimentalDesignValueObject proposed
     ) {
