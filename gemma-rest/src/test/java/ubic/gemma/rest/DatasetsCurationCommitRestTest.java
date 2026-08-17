@@ -23,6 +23,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -888,6 +889,41 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
             assertThat( r.getStatus() ).as( "response body: %s", r.readEntity( String.class ) )
                     .isEqualTo( Response.Status.OK.getStatusCode() );
         }
+    }
+
+    /**
+     * A backup must not modify what it backs up.
+     * <p>
+     * Every audit event on a curatable sets {@code curationDetails.lastUpdated} to the event date
+     * ({@code AbstractCuratableDao#updateCurationDetailsFromAuditEvent}, unconditionally, for every event type).
+     * So an {@code AnnotationSetEvent} emitted when a snapshot is captured makes the dataset look edited when
+     * nothing about it changed.
+     * <p>
+     * That is not cosmetic. {@code lastUpdated} is the optimistic-concurrency token the curation commit checks
+     * ({@code baseline.lastModified} &rarr; 409), so taking a backup would invalidate every in-flight curator
+     * draft on that dataset. It also perturbs anything ordering datasets by recency, and the dataset shows as
+     * touched in Gemma 1.0, which reads the same database.
+     * <p>
+     * Observed on gemma2: snapshotting GSE11630 moved its {@code lastUpdated} to 79 ms after the snapshot's
+     * {@code createdAt}. The AnnotationSet row already records that a backup was taken, with its own
+     * {@code createdAt}, {@code createdBy} and {@code runId} — the audit event is redundant for a capture that
+     * changes nothing.
+     */
+    @Test
+    public void testTakingASnapshotDoesNotMarkTheDatasetAsUpdated() {
+        // give the dataset a real lastUpdated first: a freshly seeded one has none, and the token only matters
+        // for a dataset somebody has curated
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request()
+                .put( Entity.json( "{\"curationDetails\":{\"curationNote\":\"establish a baseline token\"}}" ) ) ) {
+            assertOk( r );
+        }
+        Date before = expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated();
+        assertThat( before ).as( "the commit set a lastUpdated to compare against" ).isNotNull();
+
+        takeSnapshot();
+
+        Date after = expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated();
+        assertThat( after ).as( "a snapshot reads; it must not mark the dataset as edited" ).isEqualTo( before );
     }
 
     /** Take a snapshot of the dataset's current curation and return the new AnnotationSet's id. */

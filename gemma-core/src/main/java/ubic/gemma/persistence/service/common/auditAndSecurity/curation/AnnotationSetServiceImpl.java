@@ -51,6 +51,25 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     }
 
     /**
+     * When a newly-attached set earns an audit event.
+     * <p>
+     * Not for a SNAPSHOT. Every audit event on a curatable sets {@code curationDetails.lastUpdated} to the event
+     * date — see {@code AbstractCuratableDao#updateCurationDetailsFromAuditEvent}, which does it unconditionally
+     * for every event type. A snapshot captures existing state and changes nothing, so an event there would make
+     * a dataset look edited by the act of backing it up.
+     * <p>
+     * That is not cosmetic: {@code lastUpdated} is the optimistic-concurrency token the curation commit checks,
+     * so taking a backup would 409 every in-flight curator draft on that dataset. The AnnotationSet row is
+     * already its own record, carrying {@code createdAt}, {@code createdBy} and {@code runId}, so nothing is
+     * lost by staying quiet.
+     * <p>
+     * PROPOSAL and DRAFT keep their event: an agent attaching a hypothesis, or a curator opening a buffer, is
+     * activity on the dataset worth a trail entry.
+     */
+    private static final String ATTACH_AUDIT_WHEN =
+            "#result != null and #result.created and #result.annotationSet.role.name() != 'SNAPSHOT'";
+
+    /**
      * Audit note for a newly-attached set, shared by both {@code attach} overloads.
      * <p>
      * Extracted to a constant so the two cannot drift: the deprecated overload self-invokes the other, which
@@ -71,7 +90,7 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     @Override
     @Transactional
     @AuditedConditional(value = AnnotationSetEvent.class,
-            when = "#result != null and #result.created",
+            when = ATTACH_AUDIT_WHEN,
             messageSpel = ATTACH_AUDIT_MESSAGE)
     public AttachedAnnotationSet attach( Investigation investigation,
             AnnotationSetRole role,
@@ -91,7 +110,7 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     @Override
     @Transactional
     @AuditedConditional(value = AnnotationSetEvent.class,
-            when = "#result != null and #result.created",
+            when = ATTACH_AUDIT_WHEN,
             messageSpel = ATTACH_AUDIT_MESSAGE)
     public AttachedAnnotationSet attach( Investigation investigation,
             AnnotationSetRole role,
