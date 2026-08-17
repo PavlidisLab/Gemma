@@ -1861,7 +1861,10 @@ public class DatasetsWebService {
                     + "That is what makes the two companion operations free: "
                     + "`POST /datasets/{id}/annotation-sets/{setId}/restore?dryRun=true` compares the snapshot "
                     + "with the present, and the same call without `dryRun` puts it back.\n\n"
-                    + "Emits an `AnnotationSetEvent` on the experiment carrying the new row's id.",
+                    + "Emits no audit event, so the dataset's `lastUpdated` does not move: a backup must not "
+                    + "modify what it backs up, and `lastUpdated` is the optimistic-concurrency token the "
+                    + "curation commit checks. The AnnotationSet row is its own record of the capture, carrying "
+                    + "`createdAt`, `createdBy` and `runId`. (PROPOSAL and DRAFT do emit an `AnnotationSetEvent`.)",
             responses = {
                     @ApiResponse(responseCode = "201", description = "The snapshot was captured.",
                             content = @Content(schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class))),
