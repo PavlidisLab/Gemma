@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.ontology.model.OntologyProperty;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.ols.OlsTerm;
 import ubic.gemma.core.ontology.ols.OlsTermResolver;
@@ -196,8 +197,48 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
      * Resolve a URI's canonical label: Gemma's loaded ontologies first, then OLS. Records a violation and
      * returns {@code null} when the URI resolves nowhere or OLS is unreachable.
      */
+    /**
+     * Gemma's own answer for the two slots where Gemma has rules, or {@code null} for the slots where it does not.
+     * <p>
+     * Predicates and categories are constrained vocabularies Gemma ships and owns — {@code Relation.terms.txt}
+     * (22 relations) and the category terms — so for those slots the local list is the authority and there is
+     * nothing to ask an ontology or OLS about. Subjects, objects and values are deliberately unconstrained:
+     * curators legitimately use terms from ontologies Gemma has never loaded, and blocking those would be wrong.
+     * <p>
+     * Consulting the loaded ontologies instead of this list is what rejected {@code RO_0002573} — a predicate
+     * that IS in {@code Relation.terms.txt}, labelled exactly {@code "has modifier"}, and that Gemma had itself
+     * stored on GSE11630. RO is not among the loadable ontologies, so the generic path found nothing and the
+     * commit refused Gemma's own sanctioned relation.
+     */
+    @Nullable
+    private String resolveFromGemmaVocabulary( String slot, String uri ) {
+        if ( "predicate".equals( slot ) || "secondPredicate".equals( slot ) ) {
+            for ( OntologyProperty p : ontologyService.getRelationTerms() ) {
+                if ( uri.equals( p.getUri() ) ) {
+                    return p.getLabel();
+                }
+            }
+            return null;
+        }
+        if ( "category".equals( slot ) ) {
+            for ( OntologyTerm t : ontologyService.getCategoryTerms() ) {
+                if ( uri.equals( t.getUri() ) ) {
+                    return t.getLabel();
+                }
+            }
+            return null;
+        }
+        return null;
+    }
+
     @Nullable
     private String resolveLabel( String uri, String slot, @Nullable String submittedLabel, List<TermViolation> violations ) {
+        // Gemma's own vocabularies first: for a predicate or a category they are definitive, offline, and cannot
+        // be second-guessed by whatever an external service happens to know.
+        String own = resolveFromGemmaVocabulary( slot, uri );
+        if ( own != null ) {
+            return own;
+        }
         try {
             OntologyTerm local = ontologyService.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );
             if ( local != null && isRealLabel( uri, local.getLabel() ) ) {

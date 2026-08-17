@@ -20,6 +20,7 @@ package ubic.gemma.core.ontology;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import ubic.gemma.core.ontology.model.OntologyProperty;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.ols.OlsTerm;
 import ubic.gemma.core.ontology.ols.OlsTermResolver;
@@ -29,6 +30,8 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Set;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -311,6 +314,108 @@ public class OntologyTermValidatorImplTest {
 
         assertEquals( 1, v.size() );
         assertEquals( TermViolation.Reason.URI_UNRESOLVED, v.get( 0 ).getReason() );
+    }
+
+    /**
+     * A predicate is checked against Gemma's OWN vocabulary, not against whatever ontologies happen to be
+     * loaded. {@code Relation.terms.txt} is the rule for that slot: 22 relations Gemma ships and sanctions.
+     * <p>
+     * This is the case that failed on gemma2. {@code RO_0002573} is in that file, labelled exactly
+     * {@code "has modifier"}, and Gemma had stored it on GSE11630 — but RO is not among the loadable
+     * ontologies, so the generic resolve path found nothing and the commit refused Gemma's own relation.
+     */
+    @Test
+    public void testPredicateResolvesFromGemmasOwnRelationVocabulary() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/RO_0002573";
+        // deliberately unknown to both generic sources, exactly as on gemma2
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( null );
+        when( olsTermResolver.resolve( uri ) ).thenReturn( null );
+        Set<OntologyProperty> rels = relationTerms( uri, "has modifier" );
+        when( ontologyService.getRelationTerms() ).thenReturn( rels );
+
+        Statement s = Statement.Factory.newInstance();
+        s.setSubject( "astrocyte" );
+        s.setPredicate( "has modifier" );
+        s.setPredicateUri( uri );
+
+        assertTrue( validator.validateAndCanonicalize( s ).isEmpty(),
+                "a sanctioned relation must not need an external lookup" );
+    }
+
+    /** The same for the second predicate slot — statements carry two. */
+    @Test
+    public void testSecondPredicateResolvesFromGemmasOwnRelationVocabulary() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/RO_0000087";
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( null );
+        when( olsTermResolver.resolve( uri ) ).thenReturn( null );
+        Set<OntologyProperty> rels = relationTerms( uri, "has role" );
+        when( ontologyService.getRelationTerms() ).thenReturn( rels );
+
+        Statement s = Statement.Factory.newInstance();
+        s.setSubject( "cell" );
+        s.setSecondPredicate( "has role" );
+        s.setSecondPredicateUri( uri );
+
+        assertTrue( validator.validateAndCanonicalize( s ).isEmpty() );
+    }
+
+    /** A predicate URI that is NOT in the sanctioned list still has to ground somewhere. */
+    @Test
+    public void testPredicateOutsideTheVocabularyStillNeedsToResolve() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/RO_9999999";
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( null );
+        when( olsTermResolver.resolve( uri ) ).thenReturn( null );
+        Set<OntologyProperty> rels = relationTerms( "http://purl.obolibrary.org/obo/RO_0002573", "has modifier" );
+        when( ontologyService.getRelationTerms() ).thenReturn( rels );
+
+        Statement s = Statement.Factory.newInstance();
+        s.setSubject( "astrocyte" );
+        s.setPredicate( "invented relation" );
+        s.setPredicateUri( uri );
+
+        List<TermViolation> v = validator.validateAndCanonicalize( s );
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.URI_UNRESOLVED, v.get( 0 ).getReason() );
+    }
+
+    /** A category is likewise checked against Gemma's category vocabulary before anything external. */
+    @Test
+    public void testCategoryResolvesFromGemmasOwnCategoryVocabulary() throws Exception {
+        String uri = "http://www.ebi.ac.uk/efo/EFO_0000727";
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( null );
+        when( olsTermResolver.resolve( uri ) ).thenReturn( null );
+        OntologyTerm cat = mock( OntologyTerm.class );
+        when( cat.getUri() ).thenReturn( uri );
+        when( cat.getLabel() ).thenReturn( "treatment" );
+        Set<OntologyTerm> cats = Collections.singleton( cat );
+        when( ontologyService.getCategoryTerms() ).thenReturn( cats );
+
+        Characteristic c = characteristic( "treatment", uri, null, null );
+        assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+    }
+
+    /** Gemma's vocabulary is the authority: a wrong label on a sanctioned predicate is still a mismatch. */
+    @Test
+    public void testWrongLabelOnASanctionedPredicateIsStillRejected() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/RO_0002573";
+        Set<OntologyProperty> rels = relationTerms( uri, "has modifier" );
+        when( ontologyService.getRelationTerms() ).thenReturn( rels );
+
+        Statement s = Statement.Factory.newInstance();
+        s.setSubject( "astrocyte" );
+        s.setPredicate( "delivered at dose" ); // a real relation, but not this URI's
+        s.setPredicateUri( uri );
+
+        List<TermViolation> v = validator.validateAndCanonicalize( s );
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.LABEL_MISMATCH, v.get( 0 ).getReason() );
+    }
+
+    private Set<OntologyProperty> relationTerms( String uri, String label ) {
+        OntologyProperty p = mock( OntologyProperty.class );
+        when( p.getUri() ).thenReturn( uri );
+        when( p.getLabel() ).thenReturn( label );
+        return Collections.singleton( p );
     }
 
     /** A genuine label that merely looks id-ish must still resolve — the guard keys on the URI's own local name. */
