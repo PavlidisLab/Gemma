@@ -296,6 +296,71 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     /**
+     * The browse call: a disease URI and nothing else. The emitted per-row {@code filter} is the whole point
+     * of the endpoint for a client — it is what gets handed to {@code GET /datasets} — so it is pinned here
+     * rather than left to a live check. That it names BOTH sides is what makes it "the datasets this was read
+     * from" and not "every dataset carrying the genotype".
+     *
+     * @see AnnotationsWebServiceDiseaseModelsRestTest for the round-trip that runs the string against the
+     * dataset query
+     */
+    @Test
+    public void testDiseaseModels() {
+        String alzheimer = "http://purl.obolibrary.org/obo/MONDO_0004975";
+        String app = "http://purl.org/commons/record/ncbi_gene/11820";
+        when( characteristicService.findDiseaseModelInferences( anyCollection(), anyCollection(), anyCollection(),
+                anyCollection(), anyCollection(), anyInt(), anyDouble(), anyInt() ) )
+                .thenReturn( Collections.singletonList( new CharacteristicDao.DiseaseModelInference(
+                        "APP/PS1", app, "genotype", "http://www.ebi.ac.uk/efo/EFO_0000513",
+                        alzheimer, "Alzheimer disease", 2L, "mouse", 10090,
+                        11, 4, 7, 0, 42L, 13, 1 ) ) );
+
+        assertThat( target( "/annotations/diseaseModels" ).queryParam( "uri", alzheimer ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .extracting( "data.models", list( Object.class ) )
+                .singleElement()
+                .asInstanceOf( map( String.class, Object.class ) )
+                .satisfies( m -> {
+                    assertThat( m ).containsEntry( "value", "APP/PS1" );
+                    // mouse, so it models the disease rather than having it
+                    assertThat( m ).containsEntry( "inferredCategory", "disease model" );
+                    assertThat( m ).containsEntry( "specificity", 11d / 13d );
+                    assertThat( m ).containsEntry( "exampleDatasetId", 42 );
+                    assertThat( ( String ) m.get( "filter" ) )
+                            .as( "both sides of the inference, so the filter returns what it was read from" )
+                            .contains( app )
+                            .contains( alzheimer );
+                } );
+    }
+
+    /**
+     * A genotype that was never grounded in an ontology is the usual case on the model side, and the filter
+     * has to fall back to its literal value or it would name only the disease.
+     */
+    @Test
+    public void testDiseaseModelsFilterCarriesAFreeTextLegForUngroundedValues() {
+        String alzheimer = "http://purl.obolibrary.org/obo/MONDO_0004975";
+        when( characteristicService.findDiseaseModelInferences( anyCollection(), anyCollection(), anyCollection(),
+                anyCollection(), anyCollection(), anyInt(), anyDouble(), anyInt() ) )
+                .thenReturn( Collections.singletonList( new CharacteristicDao.DiseaseModelInference(
+                        "APP/PS1", null, "genotype", "http://www.ebi.ac.uk/efo/EFO_0000513",
+                        alzheimer, "Alzheimer disease", 2L, "mouse", 10090,
+                        3, 3, 0, 0, 7L, 3, 1 ) ) );
+
+        assertThat( target( "/annotations/diseaseModels" ).queryParam( "uri", alzheimer ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.models", list( Object.class ) )
+                .singleElement()
+                .asInstanceOf( map( String.class, Object.class ) )
+                .satisfies( m -> assertThat( ( String ) m.get( "filter" ) )
+                        .contains( "APP/PS1" )
+                        .contains( alzheimer ) );
+    }
+
+    /**
      * A specificity bar is a query constraint, not a filter over the page that came back: applied afterwards
      * it would silently shrink a {@code limit}-sized page. Pinned as a delegation because the ordering only
      * exists below this layer.

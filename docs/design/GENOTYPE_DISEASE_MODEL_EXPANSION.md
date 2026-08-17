@@ -140,8 +140,12 @@ separate decision, and `is model of` would be the predicate to discuss, not
 
 Every row carries `numberOfExperiments`, `numberOfExperimentsWithValue`,
 `numberOfDiseasesAttested`, `specificity`, the evidence split by annotation
-level, an example dataset, and a `filter` string that returns exactly the
-datasets the inference was read from. The response also carries one `filter` that
+level, an example dataset, and a `filter` string that returns the datasets the
+inference was read from. That filter is a slight over-approximation, not an
+identity: `GET /datasets` expands annotation URIs to their sub-terms, so a
+dataset annotated with a sub-class of the disease matches it too.
+`AnnotationsWebServiceDiseaseModelsRestTest` round-trips the string through the
+dataset query, which is the only place the two halves of the contract meet. The response also carries one `filter` that
 widens the original disease question to everything inferred — hand it straight to
 `GET /datasets?filter=`.
 
