@@ -140,6 +140,11 @@ public class ExpressionExperimentServiceTest extends BaseTest5 {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.common.description.PublicationAssociationService publicationAssociationService() {
+            return mock( ubic.gemma.persistence.service.common.description.PublicationAssociationService.class );
+        }
+
+        @Bean
         public PrincipalComponentAnalysisService principalComponentAnalysisService() {
             return mock( PrincipalComponentAnalysisService.class );
         }

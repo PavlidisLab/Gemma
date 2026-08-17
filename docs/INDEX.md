@@ -1,7 +1,7 @@
 # docs/ index
 
 Working design docs, recces, audits, plans, and session notes for Gemma, sorted into subfolders (2026-07-05 cleanup). `README.md` and `CLAUDE.md` stay at the repo root.
-Total: 150 docs.
+Total: 151 docs.
 
 
 ## Pipeline / compute / job-management (Nextflow) — `docs/pipeline-compute/` (1)
@@ -90,7 +90,7 @@ Total: 150 docs.
 - [`WORKTREE_CLEANUP_PLAN_v2.md`](plans/WORKTREE_CLEANUP_PLAN_v2.md) — Worktree cleanup plan — v2
 - [`WORKTREE_CLEANUP_PLAN_v3.md`](plans/WORKTREE_CLEANUP_PLAN_v3.md) — Worktree cleanup plan v3
 
-## Other design docs — `docs/design/` (58)
+## Other design docs — `docs/design/` (59)
 
 - [`ACL_ENTRY_VOTER_MIGRATION.md`](design/ACL_ENTRY_VOTER_MIGRATION.md) — ACL AclEntryVoter family migration plan
 - [`AFTER_INVOCATION_MIGRATION.md`](design/AFTER_INVOCATION_MIGRATION.md) — AfterInvocation → Spring Security 6 Modern API Migration Roadmap
@@ -134,6 +134,7 @@ Total: 150 docs.
 - [`PERSISTER_SHRINK_S2_DETAIL.md`](design/PERSISTER_SHRINK_S2_DETAIL.md) — PERSISTER_SHRINK_S2_DETAIL.md — promote the abstract persister chain to @Component beans
 - [`PERSISTER_SHRINK_S4_PROGRESS.md`](design/PERSISTER_SHRINK_S4_PROGRESS.md) — PERSISTER_SHRINK_S4_PROGRESS.md — recce for retiring `Persister` / `PersisterHelper` / `PersisterHelperImpl`
 - [`PHASE3_TEST_TRIAGE.md`](design/PHASE3_TEST_TRIAGE.md) — Phase 3 — `@Ignore` Test Audit
+- [`PUBLICATION_LINK_EVIDENCE.md`](design/PUBLICATION_LINK_EVIDENCE.md) — evidence and rejections on the experiment↔publication link (V25); precedence by rank replaces the exclusion file
 - [`PHASE3_TEST_TRIAGE_FAILURES.md`](design/PHASE3_TEST_TRIAGE_FAILURES.md) — Phase 3 Test Triage — Pre-existing Failure Batch (2026-05-18)
 - [`PHASE_3_VISION.md`](design/PHASE_3_VISION.md) — Phase 3 — vision
 - [`RELEASING.md`](design/RELEASING.md) — Releasing Gemma

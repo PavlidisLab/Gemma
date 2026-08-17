@@ -61,6 +61,8 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
@@ -121,6 +123,13 @@ public class ExpressionExperimentServiceImpl
     private UnitDao unitDao;
     @Autowired
     private OntologyService ontologyService;
+    /**
+     * Keeps the publication assertions in step with the publication links. The two are one record
+     * split across two tables (Gemma 1.32.x shares the database and reads only the links), so every
+     * write to either goes through {@link #updatePublications} and reaches both.
+     */
+    @Autowired
+    private PublicationAssociationService publicationAssociationService;
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
     @Autowired
@@ -2305,38 +2314,71 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * Replace an EE's primary + other-relevant publications. See the interface javadoc.
-     * <p>
-     * Set-replace: the other-relevant set is cleared and repopulated from {@code otherRelevantPublications}
-     * (skipping any entry that equals the incoming primary, so the primary never doubles as an other-relevant
-     * row), and the primary is set to {@code primaryPublication} (or cleared when null). Persisted through the
-     * inherited {@code update(ee)}, which carries the audit event — matching the legacy
-     * {@code setPrimaryPublication(...) + update(ee)} flow the gemma-web controller and the CLI used.
+     * Replace an EE's primary + other-relevant publications, recording every one as a bare curator
+     * assertion. See the interface javadoc.
      */
     @Override
     @Transactional
     public void updatePublications( ExpressionExperiment ee, BibliographicReference primaryPublication,
             Collection<BibliographicReference> otherRelevantPublications ) {
         Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
+        List<PublicationAssertion> other = new ArrayList<>( otherRelevantPublications.size() );
+        for ( BibliographicReference ref : otherRelevantPublications ) {
+            other.add( new PublicationAssertion( ref, PublicationAssociationSource.CURATOR ) );
+        }
+        updatePublications( ee,
+                primaryPublication != null ? new PublicationAssertion( primaryPublication, PublicationAssociationSource.CURATOR ) : null,
+                other, Collections.emptyList() );
+    }
+
+    /**
+     * Replace an EE's publications and the evidence behind them. See the interface javadoc.
+     * <p>
+     * Set-replace: the other-relevant set is cleared and repopulated from {@code otherRelevantPublications}
+     * (skipping any entry that equals the incoming primary, so the primary never doubles as an other-relevant
+     * row), and the primary is set to {@code primaryPublication} (or cleared when null). Persisted through the
+     * inherited {@code update(ee)}, which carries the audit event — matching the legacy
+     * {@code setPrimaryPublication(...) + update(ee)} flow the gemma-web controller and the CLI used.
+     * <p>
+     * The assertions are reconciled first, on purpose. It is the step that can refuse — a publication
+     * standing rejected by an authority the caller does not outrank throws — and doing it before the
+     * links are touched means the refusal happens with the experiment unmodified rather than relying
+     * on the transaction to undo a half-applied change.
+     */
+    @Override
+    @Transactional
+    public void updatePublications( ExpressionExperiment ee, @Nullable PublicationAssertion primaryPublication,
+            Collection<PublicationAssertion> otherRelevantPublications,
+            Collection<PublicationAssertion> rejectedPublications ) {
+        Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
+        Assert.notNull( rejectedPublications, "The rejected-publication set must not be null (use an empty collection)." );
 
         ee = ensureInSession( ee );
 
-        ee.setPrimaryPublication( primaryPublication );
+        BibliographicReference primaryRef = primaryPublication != null ? primaryPublication.getPublication() : null;
 
         Set<BibliographicReference> desiredOther = new HashSet<>();
-        for ( BibliographicReference ref : otherRelevantPublications ) {
-            if ( primaryPublication != null && Objects.equals( ref.getId(), primaryPublication.getId() ) ) {
+        List<PublicationAssertion> otherAssertions = new ArrayList<>();
+        for ( PublicationAssertion a : otherRelevantPublications ) {
+            if ( primaryRef != null && Objects.equals( a.getPublication().getId(), primaryRef.getId() ) ) {
                 continue;
             }
-            desiredOther.add( ref );
+            if ( desiredOther.add( a.getPublication() ) ) {
+                otherAssertions.add( a );
+            }
         }
+
+        publicationAssociationService.reconcile( ee, primaryPublication, otherAssertions, rejectedPublications );
+
+        ee.setPrimaryPublication( primaryRef );
         ee.getOtherRelevantPublications().clear();
         ee.getOtherRelevantPublications().addAll( desiredOther );
 
         update( ee );
         log.info( "updatePublications: " + ee.getShortName() + " (ID=" + ee.getId() + ") primary="
-                + ( primaryPublication != null ? primaryPublication.getId() : "none" )
-                + " otherRelevant=" + desiredOther.size() );
+                + ( primaryRef != null ? primaryRef.getId() : "none" )
+                + " otherRelevant=" + desiredOther.size()
+                + " rejected=" + rejectedPublications.size() );
     }
 
     @Override
@@ -2456,6 +2498,18 @@ public class ExpressionExperimentServiceImpl
             result.setPublicationsDeleted( deleted );
             result.setPublicationsUnchanged( unchanged );
             if ( !dryRun && ( created > 0 || deleted > 0 ) ) {
+                // Through the same reconcile the standalone write path uses, so a commit cannot leave
+                // an ACCEPTED assertion pointing at a link it has just removed. The composite request
+                // carries no evidence, so these are bare curator assertions: a publication the commit
+                // keeps holds on to whatever basis was already recorded for it, and one it adds gets
+                // an assertion with no stated reason.
+                List<PublicationAssertion> otherAssertions = new ArrayList<>( desiredOther.size() );
+                for ( BibliographicReference ref : desiredOther ) {
+                    otherAssertions.add( new PublicationAssertion( ref, PublicationAssociationSource.CURATOR ) );
+                }
+                publicationAssociationService.reconcile( ee,
+                        primary != null ? new PublicationAssertion( primary, PublicationAssociationSource.CURATOR ) : null,
+                        otherAssertions, Collections.emptyList() );
                 ee.setPrimaryPublication( primary );
                 ee.getOtherRelevantPublications().clear();
                 ee.getOtherRelevantPublications().addAll( desiredOther );

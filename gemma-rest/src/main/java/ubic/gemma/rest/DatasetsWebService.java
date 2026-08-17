@@ -112,12 +112,15 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEv
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.DatasetPublicationValueObject;
+import ubic.gemma.model.common.description.PublicationAssociationSource;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
@@ -145,6 +148,8 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.Annotatio
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationConflictException;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -1465,15 +1470,27 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/publications")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all publications associated with a dataset", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<List<BibliographicReferenceValueObject>> getDatasetAllPublications(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+    @Operation(summary = "Retrieve all publications associated with a dataset",
+            description = "Each publication carries an `association` object recording why it is attached: "
+                    + "the authority behind the claim (`curator`, `geo_submitter_link`, `agent`, …), the "
+                    + "one-line evidence, an evidence code, and when it was asserted. A null `association` "
+                    + "means the link exists but nothing was recorded about where it came from. "
+                    + "Set `includeRejected=true` to also list the publications ruled out for this dataset — "
+                    + "the \"do not re-propose\" set a publication finder should read before it starts. They "
+                    + "are excluded by default because a rejection is a record of a decision, not a "
+                    + "publication of the dataset.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<DatasetPublicationValueObject>> getDatasetAllPublications(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Also list the publications that were considered for this dataset and ruled out.")
+            @QueryParam("includeRejected") @DefaultValue("false") Boolean includeRejected
     ) {
 
-        List<BibliographicReferenceValueObject> out = datasetArgService.getPublications( datasetArg );
+        List<DatasetPublicationValueObject> out = datasetArgService.getPublications( datasetArg,
+                Boolean.TRUE.equals( includeRejected ) );
         return respond( out );
 
     }
@@ -1483,8 +1500,8 @@ public class DatasetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Replace the publications associated with a dataset",
-            description = "Idempotent set-replace for the dataset's primary and other-relevant publications. "
-                    + "Each publication is a typed identifier object carrying exactly one of `pubMedId` or "
+            description = "Idempotent set-replace for the dataset's primary, other-relevant and rejected "
+                    + "publications. Each publication is an object carrying exactly one of `pubMedId` or "
                     + "`doi`, e.g. `{\"pubMedId\":\"22438826\"}` or `{\"doi\":\"10.1101/2025.01.02.634567\"}`. "
                     + "`primaryPublication` sets the primary publication, or clears it when null/omitted; "
                     + "`otherRelevantPublications` replaces the other-relevant set (an empty list clears it, "
@@ -1493,20 +1510,33 @@ public class DatasetsWebService {
                     + "from PubMed; DOIs via PubMed-by-DOI then CrossRef (which covers bioRxiv / medRxiv "
                     + "preprints PubMed doesn't index). An identifier that resolves nowhere yields a 400. "
                     + "A publication given both as the primary and in the other-relevant list is kept only as "
-                    + "the primary. Returns the dataset's full publication list, same shape as the GET. "
-                    + "Requires `ACL_SECURABLE_EDIT` on the dataset. Replaces the retired gemma-web "
-                    + "`updatePubMed` / `removePrimaryPublication` controller methods, and the workaround of "
-                    + "noting a preprint in a curation comment.",
+                    + "the primary; one given as both accepted and rejected is a 400.\n\n"
+                    + "Every entry may carry the evidence behind it — `source`, `evidence`, "
+                    + "`supportingEvidence`, `evidenceCode`, `confidence`, `assertedBy` — which is stored "
+                    + "against the (dataset, publication) pair and returned under `association` by the GET.\n\n"
+                    + "`rejectedPublications` records the papers considered for this dataset and ruled out. "
+                    + "This is not the same as leaving them out: a rejection is enforced, so a later writer "
+                    + "of lower authority (a GEO re-fetch, a publication finder) that re-proposes the paper is "
+                    + "refused, whereas a paper merely dropped from the lists can be re-attached by anyone. "
+                    + "Precedence runs curator > geo_submitter_link / external_import > agent > legacy. "
+                    + "An accepted publication that stands rejected by an authority the caller's `source` does "
+                    + "not outrank yields a 409.\n\n"
+                    + "Returns the dataset's publication list, same shape as the GET (rejections excluded — "
+                    + "read them back with `?includeRejected=true`). Requires `ACL_SECURABLE_EDIT` on the "
+                    + "dataset. Replaces the retired gemma-web `updatePubMed` / `removePrimaryPublication` "
+                    + "controller methods, and the workaround of noting a preprint in a curation comment.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed, or a PubMed id could not be resolved.",
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed, a PubMed id could not be resolved, or a publication was given as both accepted and rejected.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "A publication being accepted was rejected for this dataset by an authority the caller's source does not outrank.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<List<BibliographicReferenceValueObject>> updateDatasetPublications(
+    public ResponseDataObject<List<DatasetPublicationValueObject>> updateDatasetPublications(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable PublicationsUpdateRequest body
     ) {
@@ -1515,29 +1545,86 @@ public class DatasetsWebService {
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
 
-        BibliographicReference primary = resolvePublication( body.getPrimaryPublication() );
+        PublicationAssertion primary = resolveAssertion( body.getPrimaryPublication(), "primaryPublication" );
 
-        List<BibliographicReference> other = new ArrayList<>();
-        for ( PublicationIdentifier id : body.getOtherRelevantPublications() ) {
-            BibliographicReference ref = resolvePublication( id );
-            if ( ref == null ) {
+        List<PublicationAssertion> other = new ArrayList<>();
+        for ( PublicationEntry entry : body.getOtherRelevantPublications() ) {
+            PublicationAssertion a = resolveAssertion( entry, "otherRelevantPublications" );
+            if ( a == null ) {
                 throw new BadRequestException( "Each entry in 'otherRelevantPublications' must carry a non-blank 'pubMedId' or 'doi'." );
             }
-            other.add( ref );
+            other.add( a );
         }
 
-        expressionExperimentService.updatePublications( ee, primary, other );
+        List<PublicationAssertion> rejected = new ArrayList<>();
+        if ( body.getRejectedPublications() != null ) {
+            for ( PublicationEntry entry : body.getRejectedPublications() ) {
+                PublicationAssertion a = resolveAssertion( entry, "rejectedPublications" );
+                if ( a == null ) {
+                    throw new BadRequestException( "Each entry in 'rejectedPublications' must carry a non-blank 'pubMedId' or 'doi'." );
+                }
+                rejected.add( a );
+            }
+        }
+
+        try {
+            expressionExperimentService.updatePublications( ee, primary, other, rejected );
+        } catch ( PublicationAssociationConflictException e ) {
+            // A refusal, not a malformed request: the caller asked for something coherent and was
+            // outranked. 409 so a client can tell "you got this wrong" from "someone else decided".
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+        }
         return respond( datasetArgService.getPublications( datasetArg ) );
     }
 
     /**
-     * Resolve a wire {@link PublicationIdentifier} to a persistent {@link BibliographicReference}, fetching
+     * Resolve a wire {@link PublicationEntry} into a {@link PublicationAssertion}: the persistent
+     * reference plus the evidence given for it.
+     * <p>
+     * {@code source} defaults to {@link PublicationAssociationSource#CURATOR}, which is right for the
+     * endpoint's normal user — a human with edit rights on the dataset — and is why an automated
+     * client has to say so explicitly. An unrecognised value is a 400 rather than a silent fallback to
+     * the highest authority in the ranking.
+     */
+    @Nullable
+    private PublicationAssertion resolveAssertion( @Nullable PublicationEntry entry, String field ) {
+        BibliographicReference ref = resolvePublication( entry );
+        if ( ref == null ) {
+            return null;
+        }
+        PublicationAssociationSource source = PublicationAssociationSource.CURATOR;
+        if ( StringUtils.isNotBlank( entry.getSource() ) ) {
+            try {
+                source = PublicationAssociationSource.fromDbValue( entry.getSource().trim() );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown 'source' " + entry.getSource() + " in '" + field
+                        + "'. Use one of: curator, geo_submitter_link, external_import, agent." );
+            }
+        }
+        GOEvidenceCode evidenceCode = null;
+        if ( StringUtils.isNotBlank( entry.getEvidenceCode() ) ) {
+            try {
+                evidenceCode = GOEvidenceCode.valueOf( entry.getEvidenceCode().trim().toUpperCase() );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown 'evidenceCode' " + entry.getEvidenceCode() + " in '" + field + "'." );
+            }
+        }
+        if ( entry.getConfidence() != null && ( entry.getConfidence() < 0.0 || entry.getConfidence() > 1.0 ) ) {
+            throw new BadRequestException( "'confidence' in '" + field + "' must be between 0 and 1." );
+        }
+        return new PublicationAssertion( ref, source, StringUtils.stripToNull( entry.getEvidence() ),
+                StringUtils.stripToNull( entry.getSupportingEvidence() ), evidenceCode, entry.getConfidence(),
+                StringUtils.stripToNull( entry.getAssertedBy() ) );
+    }
+
+    /**
+     * Resolve a wire {@link PublicationEntry} to a persistent {@link BibliographicReference}, fetching
      * from PubMed or CrossRef when necessary. A null / empty identifier resolves to {@code null} (i.e. "no
      * publication"). An identifier that names both a PubMed id and a DOI, or one whose id can't be resolved,
      * is surfaced as a {@code 400} rather than a {@code 500}.
      */
     @Nullable
-    private BibliographicReference resolvePublication( @Nullable PublicationIdentifier id ) {
+    private BibliographicReference resolvePublication( @Nullable PublicationEntry id ) {
         if ( id == null ) {
             return null;
         }
@@ -1562,47 +1649,88 @@ public class DatasetsWebService {
 
     /**
      * Request body for {@link #updateDatasetPublications}. Publications are addressed by
-     * {@link PublicationIdentifier} (PubMed id or DOI); {@code primaryPublication} may be null (clears the
-     * primary), {@code otherRelevantPublications} may be an empty list (clears the other-relevant set).
-     * Symmetric with the {@link #getDatasetAllPublications} read, which returns full
-     * {@link BibliographicReferenceValueObject}s (the identifier is on each VO's {@code pubAccession}).
+     * {@link PublicationEntry} (PubMed id or DOI, plus the evidence for the claim);
+     * {@code primaryPublication} may be null (clears the primary), {@code otherRelevantPublications} may
+     * be an empty list (clears the other-relevant set), and {@code rejectedPublications} records the
+     * papers ruled out for this dataset. Symmetric with the {@link #getDatasetAllPublications} read,
+     * which returns full {@link DatasetPublicationValueObject}s (the identifier is on each VO's
+     * {@code pubAccession}, the evidence under {@code association}).
      */
     public static class PublicationsUpdateRequest {
         @Nullable
-        private PublicationIdentifier primaryPublication;
+        private PublicationEntry primaryPublication;
         @Nullable
-        private List<PublicationIdentifier> otherRelevantPublications;
+        private List<PublicationEntry> otherRelevantPublications;
+        @Schema(description = "Publications considered for this dataset and ruled out. Recorded rather than merely omitted, so a later automated writer that re-finds one of them is refused instead of quietly re-attaching it. Omit or send an empty list to clear the rejections.")
+        @Nullable
+        private List<PublicationEntry> rejectedPublications;
 
         @Nullable
-        public PublicationIdentifier getPrimaryPublication() {
+        public PublicationEntry getPrimaryPublication() {
             return primaryPublication;
         }
 
-        public void setPrimaryPublication( @Nullable PublicationIdentifier primaryPublication ) {
+        public void setPrimaryPublication( @Nullable PublicationEntry primaryPublication ) {
             this.primaryPublication = primaryPublication;
         }
 
         @Nullable
-        public List<PublicationIdentifier> getOtherRelevantPublications() {
+        public List<PublicationEntry> getOtherRelevantPublications() {
             return otherRelevantPublications;
         }
 
-        public void setOtherRelevantPublications( @Nullable List<PublicationIdentifier> otherRelevantPublications ) {
+        public void setOtherRelevantPublications( @Nullable List<PublicationEntry> otherRelevantPublications ) {
             this.otherRelevantPublications = otherRelevantPublications;
+        }
+
+        @Nullable
+        public List<PublicationEntry> getRejectedPublications() {
+            return rejectedPublications;
+        }
+
+        public void setRejectedPublications( @Nullable List<PublicationEntry> rejectedPublications ) {
+            this.rejectedPublications = rejectedPublications;
         }
     }
 
     /**
-     * A single publication on the {@link #updateDatasetPublications} wire, carrying exactly one of
-     * {@code pubMedId} or {@code doi}. DOIs may be given bare ({@code 10.x/…}), as a {@code doi.org} URL, or
-     * {@code doi:}-prefixed; a DOI not indexed by PubMed is resolved via CrossRef (covers bioRxiv / medRxiv
-     * preprints). Manual metadata entry (title/authors) is intentionally not accepted here yet.
+     * A single publication on the {@link #updateDatasetPublications} wire: which paper, and why.
+     * <p>
+     * Identity is exactly one of {@code pubMedId} or {@code doi}. DOIs may be given bare
+     * ({@code 10.x/…}), as a {@code doi.org} URL, or {@code doi:}-prefixed; a DOI not indexed by PubMed
+     * is resolved via CrossRef (covers bioRxiv / medRxiv preprints). Manual metadata entry
+     * (title/authors) is intentionally not accepted here yet.
+     * <p>
+     * Everything after the identity is the evidence, and it is optional in the sense that a request
+     * without it still works — but {@code source} is what decides precedence between writers, so a
+     * caller that leaves it out is recorded as {@code curator}, the highest authority. An agent must
+     * set {@code "source": "agent"} rather than let it default, or its proposals will outrank the
+     * curators they are meant to defer to.
      */
-    public static class PublicationIdentifier {
+    public static class PublicationEntry {
         @Nullable
         private String pubMedId;
         @Nullable
         private String doi;
+        @Schema(description = "Who is making this claim: `curator`, `agent`, `geo_submitter_link`, `external_import`. Defaults to `curator`, which outranks everything — an automated caller must set this explicitly.",
+                allowableValues = { "curator", "agent", "geo_submitter_link", "external_import" })
+        @Nullable
+        private String source;
+        @Schema(description = "The one-line quotable basis, e.g. \"the series title names this paper almost verbatim\" or \"the paper cites this accession under Data Availability\".")
+        @Nullable
+        private String evidence;
+        @Schema(description = "Structured evidence items backing the one-line basis, as a JSON array in the curation agents' FindingEvidence shape. Stored verbatim and never parsed by Gemma.")
+        @Nullable
+        private String supportingEvidence;
+        @Schema(description = "How the claim was arrived at, in the vocabulary annotations use: IC (curator inference), TAS (stated in a traceable source), IEA (software, unchecked), IIA (carried in from imported data).")
+        @Nullable
+        private String evidenceCode;
+        @Schema(description = "Self-reported confidence in [0,1], for machine claims.")
+        @Nullable
+        private Double confidence;
+        @Schema(description = "Username or agent run identifier behind the claim. Defaults to the authenticated user.")
+        @Nullable
+        private String assertedBy;
 
         @Nullable
         public String getPubMedId() {
@@ -1620,6 +1748,60 @@ public class DatasetsWebService {
 
         public void setDoi( @Nullable String doi ) {
             this.doi = doi;
+        }
+
+        @Nullable
+        public String getSource() {
+            return source;
+        }
+
+        public void setSource( @Nullable String source ) {
+            this.source = source;
+        }
+
+        @Nullable
+        public String getEvidence() {
+            return evidence;
+        }
+
+        public void setEvidence( @Nullable String evidence ) {
+            this.evidence = evidence;
+        }
+
+        @Nullable
+        public String getSupportingEvidence() {
+            return supportingEvidence;
+        }
+
+        public void setSupportingEvidence( @Nullable String supportingEvidence ) {
+            this.supportingEvidence = supportingEvidence;
+        }
+
+        @Nullable
+        public String getEvidenceCode() {
+            return evidenceCode;
+        }
+
+        public void setEvidenceCode( @Nullable String evidenceCode ) {
+            this.evidenceCode = evidenceCode;
+        }
+
+        @Nullable
+        public Double getConfidence() {
+            return confidence;
+        }
+
+        public void setConfidence( @Nullable Double confidence ) {
+            this.confidence = confidence;
+        }
+
+        @Nullable
+        public String getAssertedBy() {
+            return assertedBy;
+        }
+
+        public void setAssertedBy( @Nullable String assertedBy ) {
+            this.assertedBy = assertedBy;
         }
     }
 
@@ -2409,7 +2591,7 @@ public class DatasetsWebService {
             // Resolve identifiers -> references BEFORE the commit transaction (PubMed/CrossRef fetch is slow).
             request.setPrimaryPublication( resolvePublication( pubs.getPrimary() ) );
             List<BibliographicReference> other = new ArrayList<>();
-            for ( PublicationIdentifier id : pubs.getOtherRelevant() ) {
+            for ( PublicationEntry id : pubs.getOtherRelevant() ) {
                 BibliographicReference ref = resolvePublication( id );
                 if ( ref == null ) {
                     throw new BadRequestException( "Each publications.otherRelevant entry needs a non-blank 'pubMedId' or 'doi'." );
@@ -2635,15 +2817,15 @@ public class DatasetsWebService {
     /** Publications section — same identifier shape and set-replace semantics as {@code PUT /publications}. */
     public static class CurationPublications {
         @Nullable
-        private PublicationIdentifier primary;
+        private PublicationEntry primary;
         @Nullable
-        private List<PublicationIdentifier> otherRelevant;
+        private List<PublicationEntry> otherRelevant;
         @Nullable
-        public PublicationIdentifier getPrimary() { return primary; }
-        public void setPrimary( @Nullable PublicationIdentifier primary ) { this.primary = primary; }
+        public PublicationEntry getPrimary() { return primary; }
+        public void setPrimary( @Nullable PublicationEntry primary ) { this.primary = primary; }
         @Nullable
-        public List<PublicationIdentifier> getOtherRelevant() { return otherRelevant; }
-        public void setOtherRelevant( @Nullable List<PublicationIdentifier> otherRelevant ) { this.otherRelevant = otherRelevant; }
+        public List<PublicationEntry> getOtherRelevant() { return otherRelevant; }
+        public void setOtherRelevant( @Nullable List<PublicationEntry> otherRelevant ) { this.otherRelevant = otherRelevant; }
     }
 
     // ── Design section DTOs (mirror CAB's curation_commit.py: DesignCommit / FactorCommit / … ) ──

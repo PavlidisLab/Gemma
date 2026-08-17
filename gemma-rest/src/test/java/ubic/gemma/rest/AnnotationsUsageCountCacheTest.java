@@ -116,7 +116,8 @@ public class AnnotationsUsageCountCacheTest extends BaseJerseyTest5 {
         @Bean
         public DatasetArgService datasetArgService( ExpressionExperimentService service, SearchService searchService ) {
             return new DatasetArgService( service, searchService, mock( ArrayDesignService.class ),
-                    mock( BioAssayService.class ), mock( ubic.gemma.core.analysis.preprocess.OutlierDetectionService.class ) );
+                    mock( BioAssayService.class ), mock( ubic.gemma.core.analysis.preprocess.OutlierDetectionService.class ),
+                    mock( ubic.gemma.persistence.service.common.description.PublicationAssociationService.class ) );
         }
 
         @Bean

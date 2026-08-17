@@ -124,7 +124,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
         @Bean
         public DatasetArgService datasetRestService( ExpressionExperimentService service, SearchService searchService ) {
-            return new DatasetArgService( service, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ) );
+            return new DatasetArgService( service, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ),
+                    mock( ubic.gemma.persistence.service.common.description.PublicationAssociationService.class ) );
         }
 
         @Bean

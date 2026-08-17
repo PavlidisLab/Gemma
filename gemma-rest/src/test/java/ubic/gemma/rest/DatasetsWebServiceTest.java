@@ -49,7 +49,13 @@ import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.PublicationAssociation;
+import ubic.gemma.model.common.description.PublicationAssociationSource;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationConflictException;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -194,8 +200,15 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
-        public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService, SearchService searchService ) {
-            return new DatasetArgService( expressionExperimentService, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ) );
+        public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService, SearchService searchService,
+                PublicationAssociationService publicationAssociationService ) {
+            return new DatasetArgService( expressionExperimentService, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ),
+                    publicationAssociationService );
+        }
+
+        @Bean
+        public PublicationAssociationService publicationAssociationService() {
+            return mock( PublicationAssociationService.class );
         }
 
         @Bean
@@ -3200,9 +3213,103 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         verify( bibliographicReferenceService ).findOrCreateByPubMedId( "111" );
         verify( bibliographicReferenceService ).findOrCreateByPubMedId( "222" );
-        ArgumentCaptor<Collection<BibliographicReference>> captor = ArgumentCaptor.forClass( Collection.class );
-        verify( expressionExperimentService ).updatePublications( eq( ee ), eq( prim ), captor.capture() );
-        assertThat( captor.getValue() ).containsExactly( other );
+        ArgumentCaptor<PublicationAssertion> primaryCaptor = ArgumentCaptor.forClass( PublicationAssertion.class );
+        ArgumentCaptor<Collection<PublicationAssertion>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( expressionExperimentService ).updatePublications( eq( ee ), primaryCaptor.capture(), captor.capture(),
+                argThat( Collection::isEmpty ) );
+        assertThat( primaryCaptor.getValue().getPublication() ).isEqualTo( prim );
+        // A body that states no source is the ordinary curator edit this endpoint exists for, and is
+        // recorded as such -- which is exactly why an agent has to say "agent" out loud.
+        assertThat( primaryCaptor.getValue().getSource() ).isEqualTo( PublicationAssociationSource.CURATOR );
+        assertThat( captor.getValue() ).singleElement()
+                .satisfies( a -> assertThat( a.getPublication() ).isEqualTo( other ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsCarriesEvidence() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
+        BibliographicReference prim = new BibliographicReference();
+        prim.setId( 10L );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "38165001" ) ).thenReturn( prim );
+
+        String body = "{\"primaryPublication\":{\"pubMedId\":\"38165001\",\"source\":\"agent\","
+                + "\"evidence\":\"the series title names this paper almost verbatim\","
+                + "\"evidenceCode\":\"IC\",\"confidence\":0.9,\"assertedBy\":\"pub_finder/run-42\"},"
+                + "\"otherRelevantPublications\":[]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<PublicationAssertion> captor = ArgumentCaptor.forClass( PublicationAssertion.class );
+        verify( expressionExperimentService ).updatePublications( eq( ee ), captor.capture(),
+                argThat( Collection::isEmpty ), argThat( Collection::isEmpty ) );
+        PublicationAssertion a = captor.getValue();
+        assertThat( a.getSource() ).isEqualTo( PublicationAssociationSource.AGENT );
+        assertThat( a.getEvidence() ).isEqualTo( "the series title names this paper almost verbatim" );
+        assertThat( a.getEvidenceCode() ).isEqualTo( GOEvidenceCode.IC );
+        assertThat( a.getConfidence() ).isEqualTo( 0.9 );
+        assertThat( a.getAssertedBy() ).isEqualTo( "pub_finder/run-42" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsRecordsRejection() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
+        BibliographicReference wrong = new BibliographicReference();
+        wrong.setId( 40L );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "38088204" ) ).thenReturn( wrong );
+
+        // GSE227854's shape: GEO's own !Series_pubmed_id names the wrong one of the submitter's two
+        // NAR 2024 papers, and there is no correct paper being set in the same breath.
+        String body = "{\"primaryPublication\":null,\"otherRelevantPublications\":[],"
+                + "\"rejectedPublications\":[{\"pubMedId\":\"38088204\",\"source\":\"curator\","
+                + "\"evidence\":\"GEO links this, but the series title names a different NAR 2024 paper by the same lab\"}]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<Collection<PublicationAssertion>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( expressionExperimentService ).updatePublications( eq( ee ), isNull(),
+                argThat( Collection::isEmpty ), captor.capture() );
+        assertThat( captor.getValue() ).singleElement().satisfies( a -> {
+            assertThat( a.getPublication() ).isEqualTo( wrong );
+            assertThat( a.getSource() ).isEqualTo( PublicationAssociationSource.CURATOR );
+            assertThat( a.getEvidence() ).contains( "the series title names a different NAR 2024 paper" );
+        } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsRejectedByHigherAuthorityIsConflict() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        BibliographicReference wrong = new BibliographicReference();
+        wrong.setId( 40L );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "38088204" ) ).thenReturn( wrong );
+        doThrow( new PublicationAssociationConflictException( "rejected by curator", new PublicationAssociation() ) )
+                .when( expressionExperimentService ).updatePublications( eq( ee ), any(), any(), any() );
+
+        String body = "{\"primaryPublication\":{\"pubMedId\":\"38088204\",\"source\":\"agent\"},\"otherRelevantPublications\":[]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CONFLICT );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsRejectsUnknownSource() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        BibliographicReference prim = new BibliographicReference();
+        prim.setId( 10L );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "111" ) ).thenReturn( prim );
+        // Not silently defaulted to curator: that would hand the highest rank to a typo.
+        String body = "{\"primaryPublication\":{\"pubMedId\":\"111\",\"source\":\"robot\"},\"otherRelevantPublications\":[]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).updatePublications( any(), any(), any(), any() );
     }
 
     @Test
@@ -3220,7 +3327,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK );
 
         verify( bibliographicReferenceService ).findOrCreateByDoi( "10.1101/2025.01.02.634567" );
-        verify( expressionExperimentService ).updatePublications( eq( ee ), eq( preprint ), argThat( Collection::isEmpty ) );
+        ArgumentCaptor<PublicationAssertion> preprintCaptor = ArgumentCaptor.forClass( PublicationAssertion.class );
+        verify( expressionExperimentService ).updatePublications( eq( ee ), preprintCaptor.capture(), argThat( Collection::isEmpty ), argThat( Collection::isEmpty ) );
+        assertThat( preprintCaptor.getValue().getPublication() ).isEqualTo( preprint );
     }
 
     @Test
@@ -3231,7 +3340,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         String body = "{\"primaryPublication\":{\"pubMedId\":\"111\",\"doi\":\"10.1101/x\"},\"otherRelevantPublications\":[]}";
         assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
-        verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
+        verify( expressionExperimentService, never() ).updatePublications( any(), any( PublicationAssertion.class ), any(), any() );
         verifyNoInteractions( bibliographicReferenceService );
     }
 
@@ -3246,7 +3355,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
 
-        verify( expressionExperimentService ).updatePublications( eq( ee ), isNull(), argThat( Collection::isEmpty ) );
+        verify( expressionExperimentService ).updatePublications( eq( ee ), isNull(), argThat( Collection::isEmpty ), argThat( Collection::isEmpty ) );
         verifyNoInteractions( bibliographicReferenceService );
     }
 
@@ -3258,7 +3367,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // empty object -- otherRelevantPublications is null, which is rejected to avoid silently wiping publications
         assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( "{}" ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
-        verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
+        verify( expressionExperimentService, never() ).updatePublications( any(), any( PublicationAssertion.class ), any(), any() );
     }
 
     @Test
@@ -3269,7 +3378,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         String body = "{\"otherRelevantPublications\":[{\"pubMedId\":\"  \"}]}";
         assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
-        verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
+        verify( expressionExperimentService, never() ).updatePublications( any(), any( PublicationAssertion.class ), any(), any() );
     }
 
     @Test
@@ -3282,7 +3391,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         String body = "{\"primaryPublication\":{\"pubMedId\":\"999\"},\"otherRelevantPublications\":[]}";
         assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
-        verify( expressionExperimentService, never() ).updatePublications( any(), any(), any() );
+        verify( expressionExperimentService, never() ).updatePublications( any(), any( PublicationAssertion.class ), any(), any() );
     }
 
     @Test

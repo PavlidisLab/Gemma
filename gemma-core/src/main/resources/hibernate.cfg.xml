@@ -196,6 +196,7 @@
         <mapping class="ubic.gemma.model.common.description.Keyword"/>
         <mapping class="ubic.gemma.model.common.description.MedicalSubjectHeading"/>
         <mapping class="ubic.gemma.model.common.description.BibliographicReference"/>
+        <mapping class="ubic.gemma.model.common.description.PublicationAssociation"/>
         <mapping class="ubic.gemma.model.common.description.Characteristic"/>
         <mapping class="ubic.gemma.model.expression.experiment.Statement"/>
         <mapping class="ubic.gemma.model.common.description.DatabaseEntry"/>
