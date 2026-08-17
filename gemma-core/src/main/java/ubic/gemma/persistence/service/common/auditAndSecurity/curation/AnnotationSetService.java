@@ -65,6 +65,84 @@ public interface AnnotationSetService {
             @Nullable AnnotationSet parent );
 
     /**
+     * As {@link #attach}, but carrying the full run provenance rather than the {@code agentVersion} /
+     * {@code model} / {@code ranAt} triple.
+     * <p>
+     * An overload rather than two more parameters on the method above: that signature already takes eleven
+     * arguments, six of which would then be adjacent nullable strings meaning different things
+     * ({@code runId}, {@code createdBy}, {@code agentVersion}, {@code model}, {@code runSha},
+     * {@code agentName}). Transposing two of those compiles silently and mis-files provenance in a way nothing
+     * would catch. {@link RunProvenance} makes that impossible and leaves the existing callers untouched.
+     */
+    AttachedAnnotationSet attach( Investigation investigation,
+            AnnotationSetRole role,
+            AnnotationSetSource source,
+            @Nullable AgentCurationKind kind,
+            @Nullable String runId,
+            @Nullable String createdBy,
+            @Nullable RunProvenance runProvenance,
+            @Nullable String payloadJson,
+            @Nullable AnnotationSet parent );
+
+    /**
+     * Who produced an annotation set, and from which build.
+     * <p>
+     * Answers the "which agent · when" half of curation provenance. Every field is optional — provenance is
+     * expected to be sparse, and an absent value means "not recorded", never "none".
+     */
+    class RunProvenance {
+        @Nullable
+        private final String agentVersion;
+        @Nullable
+        private final String model;
+        /**
+         * The producing repository's git head sha. Not redundant with {@link #model}: behaviour differs between
+         * shas at one model, so the model alone does not identify the build.
+         */
+        @Nullable
+        private final String runSha;
+        /** Which specialist produced it ({@code cell_type}, {@code disease}, …) — "the agent" is a fleet. */
+        @Nullable
+        private final String agentName;
+        @Nullable
+        private final Date ranAt;
+
+        public RunProvenance( @Nullable String agentVersion, @Nullable String model, @Nullable String runSha,
+                @Nullable String agentName, @Nullable Date ranAt ) {
+            this.agentVersion = agentVersion;
+            this.model = model;
+            this.runSha = runSha;
+            this.agentName = agentName;
+            this.ranAt = ranAt;
+        }
+
+        @Nullable
+        public String getAgentVersion() {
+            return agentVersion;
+        }
+
+        @Nullable
+        public String getModel() {
+            return model;
+        }
+
+        @Nullable
+        public String getRunSha() {
+            return runSha;
+        }
+
+        @Nullable
+        public String getAgentName() {
+            return agentName;
+        }
+
+        @Nullable
+        public Date getRanAt() {
+            return ranAt;
+        }
+    }
+
+    /**
      * Convenience overload for the common DRAFT-upsert path used by the
      * curation-UI: ensures one DRAFT per {@code (investigation, curator)}
      * by deriving {@code runId} as {@code "draft-{createdBy}"}. If a row

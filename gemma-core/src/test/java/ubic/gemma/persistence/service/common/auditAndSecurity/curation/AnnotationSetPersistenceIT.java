@@ -255,4 +255,46 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         assertTrue( byRole.getOrDefault( AnnotationSetRole.DRAFT, 0L ) >= 1L );
         assertTrue( byRole.getOrDefault( AnnotationSetRole.SNAPSHOT, 0L ) >= 1L );
     }
+
+    @Test
+    @DisplayName("run provenance (sha + agent name) survives a persist/reload")
+    public void runProvenance_roundTrips() {
+        String runId = "run-" + UUID.randomUUID();
+        AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
+                preboarded, AnnotationSetRole.PROPOSAL, AnnotationSetSource.AGENT,
+                AgentCurationKind.PROPOSAL, runId, "agent-1",
+                new AnnotationSetService.RunProvenance( "0.9.0", "claude-sonnet-5", "4d8fdbc", "cell_type", null ),
+                "{\"factors\":[]}", null );
+        assertTrue( attached.isCreated() );
+        Long id = attached.getAnnotationSet().getId();
+        flushAndClear();
+
+        AnnotationSet reloaded = annotationSetService.load( id );
+        assertNotNull( reloaded );
+        // The sha is what identifies the build; the model alone does not, which is why both are stored.
+        assertEquals( "4d8fdbc", reloaded.getRunSha() );
+        assertEquals( "cell_type", reloaded.getAgentName() );
+        assertEquals( "claude-sonnet-5", reloaded.getModel() );
+        assertEquals( "0.9.0", reloaded.getAgentVersion() );
+    }
+
+    @Test
+    @DisplayName("the pre-provenance attach overload still works and leaves the new columns null")
+    public void legacyAttachOverload_leavesRunProvenanceNull() {
+        String runId = "run-" + UUID.randomUUID();
+        AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
+                preboarded, AnnotationSetRole.PROPOSAL, AnnotationSetSource.AGENT,
+                AgentCurationKind.PROPOSAL, runId, "agent-1",
+                "0.8.0", "claude-opus-4-7", null,
+                "{\"factors\":[]}", null );
+        Long id = attached.getAnnotationSet().getId();
+        flushAndClear();
+
+        AnnotationSet reloaded = annotationSetService.load( id );
+        assertNotNull( reloaded );
+        assertEquals( "0.8.0", reloaded.getAgentVersion(), "the old overload still records what it always did" );
+        // Null means "not recorded", never "none" — a producer that predates run provenance says nothing.
+        assertNull( reloaded.getRunSha() );
+        assertNull( reloaded.getAgentName() );
+    }
 }

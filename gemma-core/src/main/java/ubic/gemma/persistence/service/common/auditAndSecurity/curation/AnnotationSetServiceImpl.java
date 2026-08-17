@@ -50,17 +50,29 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         this.annotationSetDao = annotationSetDao;
     }
 
+    /**
+     * Audit note for a newly-attached set, shared by both {@code attach} overloads.
+     * <p>
+     * Extracted to a constant so the two cannot drift: the deprecated overload self-invokes the other, which
+     * means the aspect fires on whichever method the caller entered through (a same-class call bypasses the
+     * proxy), so BOTH need the annotation and both must say the same thing. Reads everything off
+     * {@code #result} rather than the parameters, so one expression fits both signatures.
+     */
+    private static final String ATTACH_AUDIT_MESSAGE = "'AnnotationSet#' + #result.annotationSet.id"
+            + " + ' role=' + #result.annotationSet.role.dbValue"
+            + " + ' source=' + #result.annotationSet.source.dbValue"
+            + " + (#result.annotationSet.kind != null ? ' kind=' + #result.annotationSet.kind.dbValue : '')"
+            + " + ' run=' + #result.annotationSet.runId"
+            + " + (#result.annotationSet.agentName != null ? ' agent=' + #result.annotationSet.agentName : '')"
+            + " + (#result.annotationSet.agentVersion != null ? ' version=' + #result.annotationSet.agentVersion : '')"
+            + " + (#result.annotationSet.model != null ? ' model=' + #result.annotationSet.model : '')"
+            + " + (#result.annotationSet.runSha != null ? ' sha=' + #result.annotationSet.runSha : '')";
+
     @Override
     @Transactional
     @AuditedConditional(value = AnnotationSetEvent.class,
             when = "#result != null and #result.created",
-            messageSpel = "'AnnotationSet#' + #result.annotationSet.id"
-                    + " + ' role=' + #result.annotationSet.role.dbValue"
-                    + " + ' source=' + #result.annotationSet.source.dbValue"
-                    + " + (#result.annotationSet.kind != null ? ' kind=' + #result.annotationSet.kind.dbValue : '')"
-                    + " + ' run=' + #result.annotationSet.runId"
-                    + " + (#agentVersion != null ? ' agent=' + #agentVersion : '')"
-                    + " + (#model != null ? ' model=' + #model : '')")
+            messageSpel = ATTACH_AUDIT_MESSAGE)
     public AttachedAnnotationSet attach( Investigation investigation,
             AnnotationSetRole role,
             AnnotationSetSource source,
@@ -72,9 +84,30 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
             @Nullable Date ranAt,
             @Nullable String payloadJson,
             @Nullable AnnotationSet parent ) {
+        return attach( investigation, role, source, kind, runId, createdBy,
+                new RunProvenance( agentVersion, model, null, null, ranAt ), payloadJson, parent );
+    }
+
+    @Override
+    @Transactional
+    @AuditedConditional(value = AnnotationSetEvent.class,
+            when = "#result != null and #result.created",
+            messageSpel = ATTACH_AUDIT_MESSAGE)
+    public AttachedAnnotationSet attach( Investigation investigation,
+            AnnotationSetRole role,
+            AnnotationSetSource source,
+            @Nullable AgentCurationKind kind,
+            @Nullable String runId,
+            @Nullable String createdBy,
+            @Nullable RunProvenance runProvenance,
+            @Nullable String payloadJson,
+            @Nullable AnnotationSet parent ) {
         Assert.notNull( investigation, "Investigation must not be null." );
         Assert.notNull( role, "role must not be null." );
         Assert.notNull( source, "source must not be null." );
+        String agentVersion = runProvenance != null ? runProvenance.getAgentVersion() : null;
+        String model = runProvenance != null ? runProvenance.getModel() : null;
+        Date ranAt = runProvenance != null ? runProvenance.getRanAt() : null;
         String effectiveRunId = resolveRunId( role, runId, createdBy );
         AnnotationSet existing = annotationSetDao.findByInvestigationAndRoleAndRunId(
                 investigation, role, effectiveRunId );
@@ -93,6 +126,10 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         a.setUpdatedAt( now );
         a.setAgentVersion( agentVersion );
         a.setModel( model );
+        if ( runProvenance != null ) {
+            a.setRunSha( runProvenance.getRunSha() );
+            a.setAgentName( runProvenance.getAgentName() );
+        }
         a.setRanAt( ranAt != null ? ranAt : ( source == AnnotationSetSource.AGENT ? now : null ) );
         a.setPayloadJson( payloadJson );
         a.setParent( parent );
