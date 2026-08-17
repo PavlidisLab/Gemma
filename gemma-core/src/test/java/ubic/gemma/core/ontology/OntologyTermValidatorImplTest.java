@@ -274,4 +274,50 @@ public class OntologyTermValidatorImplTest {
         assertTrue( v.stream().anyMatch( tv -> tv.getSlot().equals( "predicate" ) && tv.getReason() == TermViolation.Reason.LABEL_MISMATCH ) );
         assertTrue( v.stream().anyMatch( tv -> tv.getSlot().equals( "object" ) && tv.getReason() == TermViolation.Reason.URI_UNRESOLVED ) );
     }
+
+    /**
+     * A resolver that hands back the term's own accession as its label has not resolved anything — it has told
+     * us it does not know the term. Treating that as an authoritative label produces a LABEL_MISMATCH against
+     * whatever the caller submitted, which turns "this vocabulary is not loaded" into "your label is wrong".
+     * <p>
+     * Observed on gemma2 with a real payload: RO_0002573 is not loaded (the term endpoint 404s for it), and a
+     * design read straight out of Gemma and offered back unchanged was rejected with
+     * {@code resolves to "RO_0002573", not the submitted label "has modifier"}. Data Gemma itself stored could
+     * not be written back, which also breaks restoring a snapshot of an unmodified dataset.
+     */
+    @Test
+    public void testLabelEqualToTheTermsOwnAccessionIsNotAResolution() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/RO_0002573";
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( null );
+        when( olsTermResolver.resolve( uri ) ).thenReturn( new OlsTerm( uri, "RO_0002573" ) );
+
+        Characteristic c = characteristic( null, null, "has modifier", uri );
+        List<TermViolation> v = validator.validateAndCanonicalize( c );
+
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.URI_UNRESOLVED, v.get( 0 ).getReason(),
+                "an unloaded vocabulary is an unresolved URI, not a mislabelled term" );
+    }
+
+    /** The same guard for a local hit: a loaded ontology that has no rdfs:label often falls back to the id. */
+    @Test
+    public void testLocalLabelEqualToTheTermsOwnAccessionIsNotAResolution() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/RO_0002573";
+        localResolves( uri, "RO_0002573" );
+        when( olsTermResolver.resolve( uri ) ).thenReturn( null );
+
+        Characteristic c = characteristic( null, null, "has modifier", uri );
+        List<TermViolation> v = validator.validateAndCanonicalize( c );
+
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.URI_UNRESOLVED, v.get( 0 ).getReason() );
+    }
+
+    /** A genuine label that merely looks id-ish must still resolve — the guard keys on the URI's own local name. */
+    @Test
+    public void testALabelThatMerelyResemblesAnAccessionStillResolves() throws Exception {
+        localResolves( "http://x/CL_0000127", "RO_0002573" ); // different term's id: not this term's local name
+        Characteristic c = characteristic( null, null, "RO_0002573", "http://x/CL_0000127" );
+        assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+    }
 }
