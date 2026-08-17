@@ -22,6 +22,7 @@ import ubic.gemma.core.security.SecurityService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +35,15 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import com.fasterxml.jackson.databind.JsonNode;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
+import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -48,10 +57,12 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.model.expression.experiment.StatementValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -59,6 +70,7 @@ import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -230,6 +242,11 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         public AuditTrailService auditTrailService() {
             return mock();
         }
+
+        @Bean
+        public UnitDao unitDao() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -255,6 +272,18 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
     @Autowired
     private BioMaterialService bioMaterialService;
+
+    @Autowired
+    private UnitDao unitDao;
+
+    /**
+     * The subset source {@code previewDesignChange} actually reads. It delegates through
+     * {@code getSubSetsWithBioAssays}, NOT through {@code eeDao.getSubSets} — stubbing the latter leaves this
+     * one returning an empty list, which is why the stale-anchor case looked undetectable and sat
+     * {@code @Disabled} as a "pre-existing failure".
+     */
+    @Autowired
+    private ExpressionExperimentSubSetReadService subSetReadService;
 
     @BeforeEach
     public void setupMocks() {
@@ -386,7 +415,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     private void buildFixture() {
         // @After in this class only resets a subset of mocks; reset the ones we touch here to keep
         // stubs from leaking between preflight tests.
-        reset( eeDao, deaService );
+        reset( eeDao, deaService, subSetReadService );
         when( eeDao.getElementClass() ).thenAnswer( a -> ExpressionExperiment.class );
 
         fixture = new ExpressionExperiment();
@@ -754,6 +783,413 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     // ============================================================================================
+    // Gold write-back acceptance cases (handoffs/CAB_TO_GEMBRO_2026_08_16_GOLD_WRITE_BACK_CASES.md).
+    //
+    // W-numbers are that document's case labels. These cover edits the curation side intends to send
+    // that the tests above never reach: factor-level metadata edits, continuous-factor measurements,
+    // and the two id-addressing cases where name- or label-keyed matching would fail silently.
+    // ============================================================================================
+
+    /**
+     * W11 — a factor description-only edit is a real change. Nothing structural moves, so every preflight
+     * counter stays at zero and {@code hasKeptFactorValueEdits} (which only inspects factor <em>values</em>)
+     * sees nothing; the apply must still reach {@code updateFactorMetadata} rather than short-circuiting.
+     */
+    @Test
+    public void testApplyFactorDescriptionOnlyEditIsNotANoOp() {
+        buildFixture();
+        treatmentFactor.setDescription( "WT, p53 heterozygous, p53 KO" );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposal.getExperimentalFactors().get( 0 ).setDescription( "Mycn oe, Myc oe" );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( treatmentFactor.getDescription() ).isEqualTo( "Mycn oe, Myc oe" );
+        // a metadata-only edit must not disturb the factor values
+        assertThat( treatmentFactor.getFactorValues() ).hasSize( 2 );
+        verify( factorValueService, never() ).remove( any( FactorValue.class ) );
+    }
+
+    /**
+     * W11 — same gap, reached through the factor name. A rename with no structural change is the other
+     * metadata-only edit the curation side sends.
+     */
+    @Test
+    public void testApplyFactorNameOnlyEditIsNotANoOp() {
+        buildFixture();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposal.getExperimentalFactors().get( 0 ).setName( "treatment (corrected)" );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( treatmentFactor.getName() ).isEqualTo( "treatment (corrected)" );
+    }
+
+    /**
+     * W11 / W1 — a factor category re-term with the factor values left in place. This is the edit that
+     * changes what the factor <em>means</em> while every id survives, so dropping it silently is the worst
+     * of the three: readers keep seeing the old category and nothing signals otherwise.
+     */
+    @Test
+    public void testApplyFactorCategoryOnlyEditIsNotANoOp() {
+        buildFixture();
+        treatmentFactor.setCategory( Characteristic.Factory.newInstance( "cell line",
+                "http://purl.obolibrary.org/obo/EFO_0000322", "cell line", "http://purl.obolibrary.org/obo/EFO_0000322" ) );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposal.getExperimentalFactors().get( 0 ).setCategory( new CharacteristicValueObject(
+                "individual", "http://www.ebi.ac.uk/efo/EFO_0000542",
+                "individual", "http://www.ebi.ac.uk/efo/EFO_0000542" ) );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( treatmentFactor.getCategory().getCategory() ).isEqualTo( "individual" );
+        assertThat( treatmentFactor.getCategory().getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000542" );
+    }
+
+    /**
+     * W14 — editing the measurement on a kept continuous factor value. {@code applyFactorValueChanges} updates
+     * statements, the deprecated {@code value}, and the baseline flag on an existing factor value; the
+     * measurement is the fourth field a continuous factor actually carries.
+     */
+    @Test
+    public void testApplyMeasurementEditOnKeptFactorValueIsApplied() {
+        buildContinuousFixture();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        MeasurementValueObject edited = new MeasurementValueObject();
+        edited.setValue( "37" );
+        edited.setUnit( "day" );
+        edited.setType( MeasurementType.ABSOLUTE.name() );
+        edited.setRepresentation( PrimitiveType.DOUBLE.name() );
+        designFv( proposal, 200L ).setMeasurementObject( edited );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( day7Fv.getMeasurement() ).isNotNull();
+        assertThat( day7Fv.getMeasurement().getValue() ).isEqualTo( "37" );
+    }
+
+    /**
+     * W14 — a newly created continuous factor value must keep its unit. {@code createFactorValue} copies the
+     * measurement's value, representation and type; the unit is what makes "37" mean anything.
+     */
+    @Test
+    public void testCreateFactorValueCarriesMeasurementUnit() {
+        buildContinuousFixture();
+        when( factorValueService.create( any( FactorValue.class ) ) ).thenAnswer( a -> {
+            FactorValue created = a.getArgument( 0 );
+            created.setId( 299L );
+            return created;
+        } );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        FactorValueBasicValueObject newFv = new FactorValueBasicValueObject();
+        newFv.setStatements( Collections.emptyList() );
+        newFv.setCharacteristics( Collections.emptyList() );
+        MeasurementValueObject m = new MeasurementValueObject();
+        m.setValue( "48" );
+        m.setUnit( "day" );
+        m.setType( MeasurementType.ABSOLUTE.name() );
+        m.setRepresentation( PrimitiveType.DOUBLE.name() );
+        newFv.setMeasurementObject( m );
+        proposal.getExperimentalFactors().get( 0 ).getValues().add( newFv );
+
+        svc.applyDesignChange( fixture, proposal );
+
+        ArgumentCaptor<FactorValue> captor = ArgumentCaptor.forClass( FactorValue.class );
+        verify( factorValueService ).create( captor.capture() );
+        assertThat( captor.getValue().getMeasurement() ).isNotNull();
+        assertThat( captor.getValue().getMeasurement().getValue() ).isEqualTo( "48" );
+        assertThat( captor.getValue().getMeasurement().getUnit() ).isNotNull();
+        assertThat( captor.getValue().getMeasurement().getUnit().getUnitNameCV() ).isEqualTo( "day" );
+    }
+
+    /**
+     * W9 — two factors sharing both category and name. The write path must address them by id; any
+     * (category, name) keying would edit whichever one it hit first. 20 of the curation side's 500
+     * experiments carry such sibling pairs.
+     */
+    @Test
+    public void testApplyAddressesSameCategorySameNameFactorsById() {
+        buildFixture();
+        // a second "treatment" factor, same name and category as the first
+        ExperimentalFactor sibling = new ExperimentalFactor();
+        sibling.setId( 11L );
+        sibling.setName( "treatment" );
+        sibling.setType( FactorType.CATEGORICAL );
+        fixture.getExperimentalDesign().getExperimentalFactors().add( sibling );
+        FactorValue siblingFv = makeFv( 102L, sibling, 1002L, "treatment", "estradiol" );
+        bm1000.getFactorValues().add( siblingFv );
+        when( deaService.findByFactor( sibling ) ).thenReturn( Collections.emptyList() );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        // edit the statement on the SIBLING's factor value only
+        designFv( proposal, 102L ).getStatements().get( 0 ).setSubject( "estradiol, 10 nM" );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( siblingFv.getCharacteristics() )
+                .anySatisfy( s -> assertThat( s.getSubject() ).isEqualTo( "estradiol, 10 nM" ) );
+        // the same-named sibling's values are untouched
+        assertThat( controlFv.getCharacteristics() )
+                .allSatisfy( s -> assertThat( s.getSubject() ).isEqualTo( "control" ) );
+        assertThat( treatedFv.getCharacteristics() )
+                .allSatisfy( s -> assertThat( s.getSubject() ).isEqualTo( "treated" ) );
+    }
+
+    /**
+     * W10 — two factor values under one factor whose statements serialize identically (distinguished only by
+     * a zygosity statement the curation side adds). Addressing one by id must change only that one; any
+     * label-keyed match would edit both, or the wrong one, and would do it silently.
+     */
+    @Test
+    public void testApplyAddressesIdenticalLabelFactorValuesById() {
+        buildFixture();
+        // two factor values whose single statement has identical content, different ids
+        FactorValue trp53a = makeFv( 110L, treatmentFactor, 1010L, "genotype", "Trp53" );
+        FactorValue trp53b = makeFv( 111L, treatmentFactor, 1011L, "genotype", "Trp53" );
+        bm1000.getFactorValues().add( trp53a );
+        bm1001.getFactorValues().add( trp53b );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        designFv( proposal, 110L ).getStatements().get( 0 ).setSubject( "Trp53 homozygous negative" );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( trp53a.getCharacteristics() )
+                .allSatisfy( s -> assertThat( s.getSubject() ).isEqualTo( "Trp53 homozygous negative" ) );
+        assertThat( trp53b.getCharacteristics() )
+                .allSatisfy( s -> assertThat( s.getSubject() ).isEqualTo( "Trp53" ) );
+    }
+
+    /**
+     * W8 — a factor value carrying deliberately ungrounded free text (JAX strain nomenclature, hybrid
+     * backgrounds with no ontology term in existence) round-trips with the text intact. The apply path must
+     * not coerce, drop, or auto-bind it to a nearest term.
+     */
+    @Test
+    public void testApplyPreservesUngroundedFreeTextStatement() {
+        buildFixture();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        StatementValueObject s = designFv( proposal, 100L ).getStatements().get( 0 );
+        s.setSubject( "129SvEv-Tac/C57BL/6" );
+        s.setSubjectUri( null );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( controlFv.getCharacteristics() ).singleElement().satisfies( st -> {
+            assertThat( st.getSubject() ).isEqualTo( "129SvEv-Tac/C57BL/6" );
+            assertThat( st.getSubjectUri() ).isNull();
+        } );
+    }
+
+    /**
+     * W16 — non-ASCII in curated text survives the apply byte-exact. The curation side repaired unicode our
+     * GEO import mangled in 68 experiments, so a write path that re-mangles undoes the repair.
+     */
+    @Test
+    public void testApplyPreservesNonAsciiCuratedText() {
+        buildFixture();
+        String curated = "10 µM β-estradiol, 37 °C";
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        designFv( proposal, 100L ).getStatements().get( 0 ).setSubject( curated );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( st -> assertThat( st.getSubject() ).isEqualTo( curated ) );
+    }
+
+    /**
+     * W3 — deleting a continuous factor takes its measurement-bearing factor values with it, and the
+     * preflight says so before the caller commits.
+     */
+    @Test
+    public void testPreviewDeletingContinuousFactorReportsItsMeasurementValues() {
+        buildContinuousFixture();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposal.getExperimentalFactors().clear();
+        proposal.getBioMaterialAssignments().forEach( a -> a.setFactorValueIds( new ArrayList<>() ) );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() ).isEmpty();
+        assertThat( report.getFactorsToDelete() ).hasSize( 1 );
+        assertThat( report.getFactorsToDelete().get( 0 ).getId() ).isEqualTo( 20L );
+        assertThat( report.getFactorValuesToDelete() ).hasSize( 1 );
+        assertThat( report.getFactorValuesToDelete().get( 0 ).getId() ).isEqualTo( 200L );
+    }
+
+    /**
+     * W13 — supporting evidence attached to a factor-value statement reaches the entity. The design section is
+     * the bulk of what curation produces, and until now it was the one section that could not carry a
+     * justification at all.
+     */
+    @Test
+    public void testApplyWritesSupportingEvidenceOntoAStatement() {
+        buildFixture();
+        JsonNode evidence = CharacteristicUtils.parseSupportingEvidence(
+                "[{\"quote\":\"organism part: stroma\",\"source\":\"characteristic\",\"location\":\"GSM1197956\"}]" );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        designFv( proposal, 100L ).getStatements().get( 0 ).setSupportingEvidence( evidence );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getSupportingEvidence() ).contains( "GSM1197956" ) );
+    }
+
+    /**
+     * Attaching evidence to an otherwise-unchanged statement leaves every content key identical, so the
+     * structural summary and {@code statementsChanged} both see nothing. Without a dedicated check this is
+     * swallowed as a no-op — the same defect class as the factor description-only edit above.
+     */
+    @Test
+    public void testApplyEvidenceOnlyEditIsNotANoOp() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        // identical content, evidence added
+        designFv( proposal, 100L ).getStatements().get( 0 ).setSupportingEvidence(
+                CharacteristicUtils.parseSupportingEvidence( "[{\"quote\":\"only the evidence changed\"}]" ) );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getSupportingEvidence() ).contains( "only the evidence changed" ) );
+    }
+
+    /**
+     * Evidence follows the {@code null = "no change"} convention the rest of the payload uses, so a client that
+     * does not carry provenance cannot wipe provenance somebody else recorded. Re-sending such a statement stays
+     * a no-op rather than becoming a silent erasure.
+     */
+    @Test
+    public void testApplyDoesNotWipeExistingEvidenceWhenThePayloadOmitsIt() {
+        buildFixture();
+        controlFv.getCharacteristics().iterator().next().setSupportingEvidence( "[{\"quote\":\"recorded earlier\"}]" );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        designFv( proposal, 100L ).getStatements().get( 0 ).setSupportingEvidence( null );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isFalse();
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getSupportingEvidence() ).contains( "recorded earlier" ) );
+    }
+
+    /**
+     * A stranded subset requires the same explicit consent as the analysis cascade. It is the more dangerous of
+     * the two precisely because it survives the change: still there, still named, still listed, and now anchored
+     * on factor values that were deleted out from under it.
+     */
+    @Test
+    public void testPreviewSubsetWithLostAnchorRequiresForce() {
+        buildFixture();
+        ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+        subset.setId( 7001L );
+        subset.setName( "control arm" );
+        BioAssay ba = BioAssay.Factory.newInstance();
+        ba.setId( 200L );
+        ba.setSampleUsed( bm1000 );
+        subset.getBioAssays().add( ba );
+        when( subSetReadService.getSubSetsWithBioAssays( fixture ) ).thenReturn( Collections.singletonList( subset ) );
+
+        // drop the FV the subset is anchored on
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposal.getExperimentalFactors().get( 0 ).getValues().removeIf( v -> v.getId().equals( 100L ) );
+        proposal.getBioMaterialAssignments().stream()
+                .filter( a -> a.getBioMaterialId().equals( 1000L ) )
+                .forEach( a -> a.setFactorValueIds( new ArrayList<>() ) );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() ).as( "a stale anchor is a consent question, not a payload error" ).isEmpty();
+        assertThat( report.getSubsetsWithStaleAnchor() ).hasSize( 1 );
+        assertThat( report.getSubsetsWithStaleAnchor().get( 0 ).getLostFactorValueIds() ).containsExactly( 100L );
+        assertThat( report.requiresForce() ).isTrue();
+    }
+
+    /** A change with no analyses to delete and no stranded subsets proceeds without consent. */
+    @Test
+    public void testPreviewWithoutConsequencesDoesNotRequireForce() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        designFv( proposal, 100L ).getStatements().get( 0 ).setSubject( "vehicle" );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() ).isEmpty();
+        assertThat( report.requiresForce() ).isFalse();
+    }
+
+    private ExperimentalFactor timepointFactor;
+    private FactorValue day7Fv;
+
+    /**
+     * A one-factor CONTINUOUS fixture: factor 20 ("timepoint") with a single measurement-bearing factor value
+     * 200 (7 days) on one sample. Continuous factors carry {@link ubic.gemma.model.common.measurement.Measurement}
+     * objects that categorical ones don't, which is why they need their own fixture.
+     */
+    private void buildContinuousFixture() {
+        reset( eeDao, deaService, unitDao );
+        when( eeDao.getElementClass() ).thenAnswer( a -> ExpressionExperiment.class );
+        // no persistent Unit row exists in this mocked context; create echoes what it was handed
+        when( unitDao.find( any( Unit.class ) ) ).thenReturn( null );
+        when( unitDao.create( any( Unit.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
+
+        fixture = new ExpressionExperiment();
+        fixture.setId( 2L );
+        fixture.setShortName( "GSE0002" );
+
+        ExperimentalDesign ed = new ExperimentalDesign();
+        ed.setId( 6L );
+        fixture.setExperimentalDesign( ed );
+
+        timepointFactor = new ExperimentalFactor();
+        timepointFactor.setId( 20L );
+        timepointFactor.setName( "timepoint" );
+        timepointFactor.setType( FactorType.CONTINUOUS );
+        ed.getExperimentalFactors().add( timepointFactor );
+
+        day7Fv = new FactorValue();
+        day7Fv.setId( 200L );
+        day7Fv.setExperimentalFactor( timepointFactor );
+        day7Fv.setMeasurement( Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "7",
+                PrimitiveType.DOUBLE ) );
+        day7Fv.getMeasurement().setUnit( Unit.Factory.newInstance( "day" ) );
+        timepointFactor.getFactorValues().add( day7Fv );
+
+        BioMaterial bm = makeBm( 2000L, "sample-T", day7Fv );
+        BioAssay ba = BioAssay.Factory.newInstance();
+        ba.setId( 300L );
+        ba.setSampleUsed( bm );
+        fixture.getBioAssays().add( ba );
+
+        when( eeDao.reload( fixture ) ).thenReturn( fixture );
+        when( eeDao.getSubSets( fixture ) ).thenReturn( Collections.emptyList() );
+        when( deaService.findByFactor( timepointFactor ) ).thenReturn( Collections.emptyList() );
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.emptyList() );
+    }
+
+    // ============================================================================================
     // commitCuration() design helpers: order-based clientRef→id correlation + second-pass assignment
     // ============================================================================================
 
@@ -824,9 +1260,12 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         assertThat( impl.buildAssignmentPass( rebuilt, new DesignCommitPlan(), idMap ) ).isNull();
     }
 
-    // TODO: pre-existing failure from PR #1657 (hotfix-1.32.7); previewDesignChange isn't
-    // detecting the stale-anchor subset case under this fixture shape.
-    @org.junit.jupiter.api.Disabled("Pre-existing failure from PR #1657")
+    /**
+     * Re-enabled 2026-08-16. It was not a preflight defect: the test stubbed {@code eeDao.getSubSets}, while
+     * {@code previewDesignChange} reads through {@code subSetReadService.getSubSetsWithBioAssays}, so the
+     * unstubbed mock returned an empty list and no subset could ever be flagged. Stubbing the source the code
+     * actually reads makes the detection visible.
+     */
     @Test
     public void testPreviewSubsetWithLostAnchorIsFlaggedButNotBlocked() {
         buildFixture();
@@ -840,7 +1279,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         subsetBa.setId( 300L );
         subsetBa.setSampleUsed( bm1000 );
         ss.getBioAssays().add( subsetBa );
-        when( eeDao.getSubSets( fixture ) ).thenReturn( Collections.singletonList( ss ) );
+        when( subSetReadService.getSubSetsWithBioAssays( fixture ) ).thenReturn( Collections.singletonList( ss ) );
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
         proposal.getExperimentalFactors().get( 0 ).getValues().removeIf( v -> v.getId().equals( 100L ) );

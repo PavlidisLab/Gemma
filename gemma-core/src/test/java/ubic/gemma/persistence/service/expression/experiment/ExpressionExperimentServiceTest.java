@@ -22,6 +22,7 @@ import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
@@ -190,6 +191,11 @@ public class ExpressionExperimentServiceTest extends BaseTest5 {
 
         @Bean
         public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public UnitDao unitDao() {
             return mock();
         }
     }
