@@ -65,6 +65,11 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
 
     /**
+     * @see CharacteristicDao#countExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, Collection)
+     */
+    Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds );
+
+    /**
      * Find characteristics that have a particular parent class or lack thereof.
      *
      * @throws IllegalArgumentException if parentClasses is

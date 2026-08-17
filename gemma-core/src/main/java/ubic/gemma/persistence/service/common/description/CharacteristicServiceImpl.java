@@ -75,6 +75,11 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     }
 
     @Override
+    public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
+        return readService.countExperimentsByUris( uris, includeSubjects, includePredicates, includeObjects, taxon, excludedExperimentIds );
+    }
+
+    @Override
     public Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults ) {
         return readService.findByParentClasses( parentClasses, includeNoParents, category, maxResults );
     }

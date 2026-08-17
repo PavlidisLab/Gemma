@@ -23,6 +23,7 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.MutableAclService;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -281,6 +282,193 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
         // ranking by level uses the order by field() which is not supported
         Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), true, true, true, taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
+    }
+
+    /**
+     * The aggregate count has to agree with the number the callers used to derive by loading every
+     * matching experiment and sizing a {@code Set} of their ids. Deriving the expected value that
+     * same way here rather than hard-coding it is the point: it is the two query shapes that have to
+     * stay in agreement, and a literal would still pass if both drifted together.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testCountExperimentsByUrisAgreesWithFindExperimentsByUris() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        String shared = "http://example.com/shared";
+        String lonely = "http://example.com/lonely";
+        for ( String uri : new String[] { shared, shared, lonely } ) {
+            ExpressionExperiment ee = new ExpressionExperiment();
+            ee.setTaxon( taxon );
+            ee.getCharacteristics().add( createCharacteristic( uri, "example" ) );
+            sessionFactory.getCurrentSession().persist( ee );
+            aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        }
+        sessionFactory.getCurrentSession().flush();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Collection<String> uris = Arrays.asList( shared, lonely, "http://example.com/nobody-uses-this" );
+        Map<String, Long> counts = characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() );
+
+        assertThat( counts ).containsEntry( shared, 2L )
+                .containsEntry( lonely, 1L )
+                // a URI nothing references is absent, not zero
+                .doesNotContainKey( "http://example.com/nobody-uses-this" );
+        assertThat( counts ).isEqualTo( distinctEeCountsTheOldWay( uris, Collections.emptySet() ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testCountExperimentsByUrisExcludesExperiments() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        String uri = "http://example.com/shared";
+        List<Long> eeIds = new ArrayList<>();
+        for ( int i = 0; i < 2; i++ ) {
+            ExpressionExperiment ee = new ExpressionExperiment();
+            ee.setTaxon( taxon );
+            ee.getCharacteristics().add( createCharacteristic( uri, "example" ) );
+            sessionFactory.getCurrentSession().persist( ee );
+            aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+            eeIds.add( ee.getId() );
+        }
+        sessionFactory.getCurrentSession().flush();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Collection<String> uris = Collections.singleton( uri );
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() ) )
+                .containsEntry( uri, 2L );
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.singleton( eeIds.get( 0 ) ) ) )
+                .containsEntry( uri, 1L );
+        // excluding every experiment leaves no row at all rather than a zero
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, new HashSet<>( eeIds ) ) )
+                .doesNotContainKey( uri );
+    }
+
+    /**
+     * The count is what a curator is shown as a term's corpus usage, so it must not include
+     * experiments they cannot read — the aggregate carries the same ACL restriction as the
+     * row-returning lookup it replaced.
+     */
+    @Test
+    @WithMockUser(username = "bob")
+    public void testCountExperimentsByUrisRespectsAcl() {
+        assertThat( SecurityUtil.isUserAdmin() ).isFalse();
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        String uri = "http://example.com/shared";
+
+        ExpressionExperiment readable = new ExpressionExperiment();
+        readable.setTaxon( taxon );
+        readable.getCharacteristics().add( createCharacteristic( uri, "example" ) );
+        sessionFactory.getCurrentSession().persist( readable );
+
+        ExpressionExperiment hidden = new ExpressionExperiment();
+        hidden.setTaxon( taxon );
+        hidden.getCharacteristics().add( createCharacteristic( uri, "example" ) );
+        sessionFactory.getCurrentSession().persist( hidden );
+        sessionFactory.getCurrentSession().flush();
+
+        MutableAcl acl = ( MutableAcl ) aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, readable.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.READ, new PrincipalSid( "bob" ), true );
+        aclService.updateAcl( acl );
+        // hidden gets an ACL with no ACE for bob AND a different owner. An owner reads its own
+        // object unconditionally, so creating this ACL as bob would have left it readable and the
+        // test would have passed for the wrong reason. createAcl takes the owner from the security
+        // context, so alice has to be the one holding it -- and going through the context is also
+        // what mints alice's principal sid, which setOwner alone cannot do.
+        SecurityContext bobContext = SecurityContextHolder.getContext();
+        try {
+            SecurityContext aliceContext = SecurityContextHolder.createEmptyContext();
+            aliceContext.setAuthentication( new UsernamePasswordAuthenticationToken( "alice", "password",
+                    Collections.singletonList( new SimpleGrantedAuthority( "GROUP_USER" ) ) ) );
+            SecurityContextHolder.setContext( aliceContext );
+            aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, hidden.getId() ) );
+        } finally {
+            SecurityContextHolder.setContext( bobContext );
+        }
+        assertThat( SecurityUtil.isUserAdmin() ).isFalse();
+
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Collection<String> uris = Collections.singleton( uri );
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() ) )
+                .containsEntry( uri, 1L );
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() ) )
+                .isEqualTo( distinctEeCountsTheOldWay( uris, Collections.emptySet() ) );
+    }
+
+    /**
+     * Count an experiment once even when its EE2C row carries the URI in more than one column. The
+     * union has one arm per column, so a statement whose subject and object are the same term
+     * produces the experiment twice; the {@code count(distinct ...)} outside the union is what
+     * collapses it, exactly as the caller's {@code Set<Long>} used to.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testCountExperimentsByUrisCountsAnExperimentOnceAcrossColumns() {
+        String uri = "http://example.com/same-on-both-sides";
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        sessionFactory.getCurrentSession().persist( ed );
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setExperimentalDesign( ed );
+        ef.setType( FactorType.CATEGORICAL );
+        ef.setCategory( createCharacteristic( null, "treatment" ) );
+        sessionFactory.getCurrentSession().persist( ef );
+
+        FactorValue fv = FactorValue.Factory.newInstance( ef );
+        Statement s = createStatement( Categories.UNCATEGORIZED, uri, "example" );
+        s.setObject( "example" );
+        s.setObjectUri( uri );
+        fv.getCharacteristics().add( s );
+        sessionFactory.getCurrentSession().persist( fv );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        ee.setExperimentalDesign( ed );
+        sessionFactory.getCurrentSession().persist( ee );
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        sessionFactory.getCurrentSession().flush();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Collection<String> uris = Collections.singleton( uri );
+        Map<String, Long> counts = characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() );
+        assertThat( counts ).containsEntry( uri, 1L );
+        assertThat( counts ).isEqualTo( distinctEeCountsTheOldWay( uris, Collections.emptySet() ) );
+    }
+
+    /**
+     * The tally as {@code AnnotationsWebService.getDistinctEeCountsByUri} computed it before the
+     * aggregate existed: load every matching experiment and size a set of their ids.
+     */
+    private Map<String, Long> distinctEeCountsTheOldWay( Collection<String> uris, Set<Long> excludedExperimentIds ) {
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits =
+                characteristicDao.findExperimentReferencesByUris( uris, true, true, true, null, -1, false );
+        Map<String, Set<Long>> distinctIdsByUri = new HashMap<>();
+        for ( Map<String, Set<ExpressionExperiment>> perClass : hits.values() ) {
+            for ( Map.Entry<String, Set<ExpressionExperiment>> entry : perClass.entrySet() ) {
+                Set<Long> bucket = distinctIdsByUri.computeIfAbsent( entry.getKey(), k -> new HashSet<>() );
+                for ( ExpressionExperiment ee : entry.getValue() ) {
+                    if ( !excludedExperimentIds.contains( ee.getId() ) ) {
+                        bucket.add( ee.getId() );
+                    }
+                }
+            }
+        }
+        Map<String, Long> counts = new HashMap<>();
+        distinctIdsByUri.forEach( ( k, v ) -> {
+            if ( !v.isEmpty() ) {
+                counts.put( k, ( long ) v.size() );
+            }
+        } );
+        return counts;
     }
 
     @Test

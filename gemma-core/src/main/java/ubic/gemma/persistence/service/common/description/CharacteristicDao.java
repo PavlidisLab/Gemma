@@ -105,6 +105,28 @@ public interface CharacteristicDao
     Map<Class<? extends Identifiable>, Map<String, Set<@MayBeUninitialized ExpressionExperiment>>> findExperimentReferencesByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean rankByLevel );
 
     /**
+     * Count the distinct experiments referencing each of the given URIs.
+     * <p>
+     * Same matching rules as {@link #findExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, int, boolean)}
+     * — the same per-column URI lookups, the same ACL restriction, the same taxon restriction — but
+     * the tally is formed by the database rather than by returning the matching experiments and
+     * counting them here.
+     * <p>
+     * Use this whenever the answer wanted is the number and not the experiments. The row-returning
+     * form emits one row per matching EE2C row, so its cost follows the size of the corpus the
+     * candidates cover rather than the size of the answer: measured on gemma2 2026-08-16,
+     * {@code /annotations/search?rank=composite} spent 3.7s of a 4.1s response counting a
+     * 1000-URI candidate set whose answer is 1000 numbers.
+     *
+     * @param excludedExperimentIds experiments to leave out of the tally, for leave-one-out
+     *                              evaluation. Applied in the query: an aggregate never returns the
+     *                              experiment ids, so there is nothing left to filter afterwards.
+     * @return map of URI to the number of distinct experiments referencing it, restricted to what
+     * the current user may read. A URI nothing references is absent rather than zero.
+     */
+    Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds );
+
+    /**
      * Find characteristics with the given URI.
      *
      * @param category         restrict the category of the characteristic, or null to ignore
