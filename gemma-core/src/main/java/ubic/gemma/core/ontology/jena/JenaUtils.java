@@ -5,6 +5,7 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.util.iterator.UniqueFilter;
 import org.apache.jena.util.iterator.WrappedIterator;
@@ -35,6 +36,36 @@ class JenaUtils {
             log.warn( "Conversion of {} to {} failed.", resource, clazz.getName() );
             return Optional.empty();
         }
+    }
+
+    /**
+     * The first literal value of {@code prop} on {@code res} in any language, or null when it declares
+     * none.
+     * <p>
+     * Use this instead of Jena's own any-language accessors — {@link OntResource#getLabel(String)} and
+     * {@link OntResource#getComment(String)} given a null language. Those pick one arbitrary statement
+     * and demand it be a literal, raising {@link org.apache.jena.rdf.model.LiteralRequiredException}
+     * when it is not. A resource-valued annotation is legal RDF and ontologies do emit it: CLO_0009922
+     * (obsolete T47D cell) writes {@code <rdfs:comment rdf:resource=".../CLO_0009251"/>}, naming its
+     * successor rather than describing itself, and reading that one field threw away the whole term —
+     * {@code /annotations/term} answered 500 for a term it holds complete. Skipping the non-literal is
+     * what the language-specific path of those same accessors already does; this brings the
+     * any-language path in line with it.
+     */
+    @Nullable
+    public static String getFirstLiteral( Resource res, Property prop ) {
+        StmtIterator it = res.listProperties( prop );
+        try {
+            while ( it.hasNext() ) {
+                RDFNode object = it.next().getObject();
+                if ( object.isLiteral() ) {
+                    return object.asLiteral().getString();
+                }
+            }
+        } finally {
+            it.close();
+        }
+        return null;
     }
 
     public static Collection<OntClass> getParents( OntModel model, Collection<OntClass> ontClasses, boolean direct, @Nullable Set<Restriction> additionalRestrictions ) {

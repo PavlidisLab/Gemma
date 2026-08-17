@@ -21,6 +21,7 @@ package ubic.gemma.core.ontology.jena;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.ontology.OntResource;
 import org.apache.jena.vocabulary.OWL2;
+import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ubic.gemma.core.ontology.model.OntologyResource;
@@ -73,7 +74,7 @@ abstract class AbstractOntologyResource implements OntologyResource {
         }
         String label = res.getLabel( "EN" );
         if ( label == null ) {
-            label = res.getLabel( null );
+            label = JenaUtils.getFirstLiteral( res, RDFS.label );
         }
         // normalizeSpace also strips, and collapses the internal double-spaces that the same
         // sources produce; null survives as null so "no label" stays distinguishable from "blank".
@@ -88,7 +89,7 @@ abstract class AbstractOntologyResource implements OntologyResource {
     public String getComment() {
         String label = res.getComment( "EN" );
         if ( label == null ) {
-            label = res.getLabel( null );
+            label = JenaUtils.getFirstLiteral( res, RDFS.label );
         }
         return label;
     }

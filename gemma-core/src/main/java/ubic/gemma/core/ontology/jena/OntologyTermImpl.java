@@ -24,6 +24,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.RDFS;
 import ubic.gemma.core.ontology.model.AnnotationProperty;
 import ubic.gemma.core.ontology.model.OntologyIndividual;
 import ubic.gemma.core.ontology.model.OntologyRestriction;
@@ -122,7 +123,7 @@ class OntologyTermImpl extends AbstractOntologyResource implements OntologyTerm 
      */
     @Override
     public String getComment() {
-        String comment = this.ontResource.getComment( null );
+        String comment = JenaUtils.getFirstLiteral( this.ontResource, RDFS.comment );
         return comment == null ? "" : comment;
     }
 
