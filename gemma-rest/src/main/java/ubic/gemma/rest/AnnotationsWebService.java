@@ -39,6 +39,7 @@ import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.*;
+import ubic.gemma.core.security.util.SecurityUtil;
 import ubic.gemma.core.security.concurrent.DelegatingSecurityContextExecutorService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
@@ -161,8 +162,49 @@ public class AnnotationsWebService {
 
     private static final String PRIOR_CURATION_CACHE_NAME = "AnnotationsPriorCurationCache";
 
+    /**
+     * Spring-registered cache for per-URI corpus usage counts, keyed by the caller's read scope and
+     * one URI. Unlike the two caches above this one holds a single number per entry rather than a
+     * whole result, which is what lets a typeahead share it: consecutive keystrokes propose
+     * overlapping candidate sets, so only the URIs nobody has asked about yet reach the database.
+     * <p>
+     * Configured in {@code EhcacheConfig#APP_CACHES}, so it is listed and flushable through the
+     * unified {@code /admin/caches} surface.
+     */
+    private static final String USAGE_COUNT_CACHE_NAME = "AnnotationsUsageCountCache";
+
     private volatile org.springframework.cache.Cache stringPriorCache;
     private volatile org.springframework.cache.Cache priorCurationCache;
+    private volatile org.springframework.cache.Cache usageCountCache;
+
+    private org.springframework.cache.Cache usageCountCache() {
+        org.springframework.cache.Cache c = usageCountCache;
+        if ( c == null && cacheManager != null ) {
+            c = cacheManager.getCache( USAGE_COUNT_CACHE_NAME );
+            usageCountCache = c;
+        }
+        return c;
+    }
+
+    /**
+     * Identify the set of experiments the caller may read, for use as a cache-key prefix.
+     * <p>
+     * Anonymous and admin are each one shared scope — every anonymous caller sees the public corpus,
+     * every admin sees all of it. A logged-in non-admin gets their own, because what they may read
+     * is the union of public data, what they own and what has been granted to them or their groups,
+     * and no two curators need share that. Getting this wrong in the sharing direction would serve
+     * one curator a count computed over another's unpublished data, so the default when the identity
+     * is not recognisable is a scope of its own rather than a shared one.
+     */
+    private static String readScopeKey() {
+        if ( SecurityUtil.isUserAnonymous() ) {
+            return "anon";
+        }
+        if ( SecurityUtil.isUserAdmin() ) {
+            return "admin";
+        }
+        return "u:" + SecurityUtil.getCurrentUsername();
+    }
 
     private org.springframework.cache.Cache priorCurationCache() {
         org.springframework.cache.Cache c = priorCurationCache;
@@ -3185,7 +3227,7 @@ public class AnnotationsWebService {
                 if ( StringUtils.isBlank( text ) ) {
                     continue;
                 }
-                if ( seen.add( probe[1] + ' ' + text ) ) {
+                if ( seen.add( probe[1] + '\0' + text ) ) {
                     out.add( new OntologyTermSynonymValueObject( text, probe[1] ) );
                 }
             }
@@ -3500,31 +3542,63 @@ public class AnnotationsWebService {
     }
 
     /**
+     * The tally is formed by the database rather than by loading the matching experiments and
+     * counting them here. The distinction decides whether this method is usable on a full candidate
+     * set: the row-returning lookup emits one row per matching EE2C row, so its cost follows how
+     * much of the corpus the candidates cover, not how many numbers come back. Measured on gemma2
+     * 2026-08-16, this phase was 3.7s of a 4.1s {@code rank=composite} response for 1000 candidate
+     * URIs — an answer of 1000 numbers.
+     *
      * @param excludedExperimentIds experiments to leave out of the tally, for leave-one-out
-     *                              evaluation. Filtered here rather than in the query: the lookup
-     *                              already returns the experiments themselves, so dropping them
-     *                              costs a set membership test and needs no second query shape.
+     *                              evaluation. Applied inside the query, since an aggregate never
+     *                              returns the experiment ids there would be nothing to filter here.
      */
     private Map<String, Integer> getDistinctEeCountsByUri( Set<String> uris, Set<Long> excludedExperimentIds ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits =
-                characteristicService.findExperimentsByUris( uris, true, true, true, null, -1, false, false );
-        Map<String, Set<Long>> distinctIdsByUri = new HashMap<>();
-        for ( Map<String, Set<ExpressionExperiment>> perClass : hits.values() ) {
-            for ( Map.Entry<String, Set<ExpressionExperiment>> entry : perClass.entrySet() ) {
-                Set<Long> bucket = distinctIdsByUri.computeIfAbsent( entry.getKey(), k -> new HashSet<>() );
-                for ( ExpressionExperiment ee : entry.getValue() ) {
-                    if ( excludedExperimentIds.contains( ee.getId() ) ) {
-                        continue;
-                    }
-                    bucket.add( ee.getId() );
+        org.springframework.cache.Cache cache = usageCountCache();
+        // A leave-one-out tally answers a different question per hold-out set and is asked by the
+        // evaluation harness, not by a curator, so it neither reads nor fills the shared cache.
+        if ( cache == null || !excludedExperimentIds.isEmpty() ) {
+            return toIntCounts( characteristicService.countExperimentsByUris( uris, true, true, true, null, excludedExperimentIds ) );
+        }
+
+        String scope = readScopeKey();
+        Map<String, Integer> counts = new HashMap<>( uris.size() );
+        Set<String> misses = new HashSet<>();
+        for ( String uri : uris ) {
+            org.springframework.cache.Cache.ValueWrapper hit = cache.get( scope + '\0' + uri );
+            if ( hit == null ) {
+                misses.add( uri );
+            } else if ( hit.get() instanceof Integer && ( Integer ) hit.get() > 0 ) {
+                counts.put( uri, ( Integer ) hit.get() );
+            }
+            // a cached zero is a real answer -- nobody uses this term -- and stays out of the result
+            // for the same reason an uncached zero does: the caller reads an absent key as no usage.
+        }
+
+        if ( !misses.isEmpty() ) {
+            Map<String, Long> fresh = characteristicService.countExperimentsByUris( misses, true, true, true, null, Collections.emptySet() );
+            for ( String uri : misses ) {
+                Long n = fresh.get( uri );
+                int value = n != null ? n.intValue() : 0;
+                // Cache the zeroes too. They are the bulk of a broad candidate set -- most of what
+                // an ontology proposes for a partial word is used by nothing -- so leaving them out
+                // would send every one of them back to the database on the next keystroke, which is
+                // the cost this cache exists to remove.
+                cache.put( scope + '\0' + uri, value );
+                if ( value > 0 ) {
+                    counts.put( uri, value );
                 }
             }
         }
-        Map<String, Integer> counts = new HashMap<>( distinctIdsByUri.size() );
-        distinctIdsByUri.forEach( ( k, v ) -> counts.put( k, v.size() ) );
+        return counts;
+    }
+
+    private static Map<String, Integer> toIntCounts( Map<String, Long> byUri ) {
+        Map<String, Integer> counts = new HashMap<>( byUri.size() );
+        byUri.forEach( ( k, v ) -> counts.put( k, v.intValue() ) );
         return counts;
     }
 

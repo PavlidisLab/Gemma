@@ -160,6 +160,23 @@ public class EhcacheConfig {
         // exclusion), so entries are complete and shared across every query shape. Same 6h TTL —
         // it is the same curation history, moving at the same speed.
         APP_CACHES.put( "AnnotationsPriorCurationCache", new CacheSpec( 20000, Duration.ofHours( 6 ) ) );
+
+        // How many distinct experiments use a given annotation URI — the usageCount shown against
+        // every /annotations/search hit, and the corpus signal ?rank=composite blends in.
+        //
+        // Keyed PER URI rather than per candidate set, which is what makes it work for a typeahead:
+        // successive keystrokes propose overlapping candidates, so after the first query only the
+        // newly-proposed URIs cost anything. A per-result-set key would miss on every keystroke.
+        //
+        // The key carries the caller's read scope because this tally IS ACL-restricted, unlike the
+        // two caches above — a count computed for a curator who can see unpublished data must never
+        // be served to anonymous.
+        //
+        // 12h TTL against a source table refreshed once per working day (SchedulerConfig runs the
+        // ee2c jobs at 19:00/19:10/19:20 MON-FRI), so an entry is stale only for the span between a
+        // refresh and its expiry, and only ever by the day's curation delta. Entry is a single
+        // integer, hence the large cap.
+        APP_CACHES.put( "AnnotationsUsageCountCache", new CacheSpec( 200000, Duration.ofHours( 12 ) ) );
     }
 
     static {
