@@ -32,6 +32,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -292,6 +293,66 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK );
         verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
         verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
+    }
+
+    /**
+     * A specificity bar is a query constraint, not a filter over the page that came back: applied afterwards
+     * it would silently shrink a {@code limit}-sized page. Pinned as a delegation because the ordering only
+     * exists below this layer.
+     */
+    @Test
+    public void testDiseaseModelsPassesTheSpecificityBarDownToTheQuery() {
+        when( characteristicService.findDiseaseModelInferences( anyCollection(), anyCollection(), anyCollection(),
+                anyCollection(), anyCollection(), anyInt(), anyDouble(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        assertThat( target( "/annotations/diseaseModels" )
+                .queryParam( "uri", "http://purl.obolibrary.org/obo/MONDO_0004975" )
+                .queryParam( "minSpecificity", "0.5" )
+                .queryParam( "limit", "7" )
+                .request().get() )
+                .hasStatus( Response.Status.OK );
+
+        verify( characteristicService ).findDiseaseModelInferences( anyCollection(), anyCollection(),
+                anyCollection(), anyCollection(), anyCollection(), eq( 1 ), eq( 0.5 ), eq( 7 ) );
+    }
+
+    /**
+     * "Any category" is written as an empty parameter, which an array arg cannot parse — so it arrives as no
+     * argument at all and has to read as no constraint rather than as a failure. This is the reverse-direction
+     * call an experiment page makes about a value whose category it does not want to commit to.
+     */
+    @Test
+    public void testDiseaseModelsAcceptsAnExplicitlyEmptyCategory() {
+        when( characteristicService.findDiseaseModelInferences( anyCollection(), anyCollection(), anyCollection(),
+                anyCollection(), anyCollection(), anyInt(), anyDouble(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        assertThat( target( "/annotations/diseaseModels" )
+                .queryParam( "value", "APP/PS1" )
+                .queryParam( "category", "" )
+                .request().get() )
+                .hasStatus( Response.Status.OK );
+
+        verify( characteristicService ).findDiseaseModelInferences( eq( Collections.emptySet() ), anyCollection(),
+                eq( Collections.singletonList( "APP/PS1" ) ), eq( Collections.emptyList() ), anyCollection(),
+                anyInt(), anyDouble(), anyInt() );
+    }
+
+    @Test
+    public void testDiseaseModelsWithNeitherSideConstrainedIsABadRequest() {
+        assertThat( target( "/annotations/diseaseModels" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verifyNoInteractions( characteristicService );
+    }
+
+    @Test
+    public void testDiseaseModelsRejectsASpecificityOutsideTheUnitInterval() {
+        assertThat( target( "/annotations/diseaseModels" )
+                .queryParam( "uri", "http://purl.obolibrary.org/obo/MONDO_0004975" )
+                .queryParam( "minSpecificity", "1.5" )
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
     }
 
     // ---------------------------------------------------------------------

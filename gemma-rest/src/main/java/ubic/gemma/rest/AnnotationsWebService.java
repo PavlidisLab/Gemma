@@ -396,10 +396,10 @@ public class AnnotationsWebService {
                     description = "Restrict the model side to these literal annotation values, e.g. `APP/PS1`. "
                             + "Most strain- and construct-shaped genotypes were never grounded in an ontology, "
                             + "so this is the usual way to ask the reverse question.")
-            @QueryParam("value") @DefaultValue("") StringArrayArg modelValues,
+            @QueryParam("value") @Nullable StringArrayArg modelValues,
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE,
                     description = "Restrict the model side to these value URIs. OR'd with `value`.")
-            @QueryParam("valueUri") @DefaultValue("") StringArrayArg modelValueUris,
+            @QueryParam("valueUri") @Nullable StringArrayArg modelValueUris,
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE,
                     description = "Categories the model side must be under, as labels (`genotype`) or category "
                             + "URIs. Defaults to `genotype,strain`; add `treatment` to include exposures, or "
@@ -407,7 +407,7 @@ public class AnnotationsWebService {
                             + "never accepted here whatever this says — those identify the other side of the "
                             + "relation, and admitting them would make each of two comorbid diseases on a study "
                             + "a model of the other.")
-            @QueryParam("category") @DefaultValue("genotype,strain") StringArrayArg categories,
+            @QueryParam("category") @DefaultValue("genotype,strain") String categories,
             @Parameter(description = "Also count experiments annotated with a sub-class of the given disease "
                     + "term, as inference does elsewhere in the API. The sub-terms folded in are echoed back in "
                     + "`inferredTerms`. Ignored when `uri` is omitted.")
@@ -438,7 +438,12 @@ public class AnnotationsWebService {
             throw new BadRequestException( "The 'minSpecificity' parameter must be within [0, 1]." );
         }
         StopWatch timer = StopWatch.createStarted();
-        List<String> requestedCategories = nonBlank( categories );
+        // Taken as a raw string rather than an array arg so that "any category" is expressible: an array arg
+        // cannot parse a blank value, and Jersey answers a conversion failure by substituting the default —
+        // so `&category=` would quietly narrow to `genotype,strain`, the opposite of what it asks for.
+        List<String> requestedCategories = StringUtils.isBlank( categories )
+                ? Collections.emptyList()
+                : nonBlank( StringArrayArg.valueOf( categories ) );
 
         // The disease the user picked plus, unless they opted out, everything below it: a query for "autism
         // spectrum disorder" should reach a study annotated with one of its subtypes.
@@ -516,7 +521,19 @@ public class AnnotationsWebService {
                 annotationFilter( expandedUris, expandedValues ).toOriginalString() ) );
     }
 
-    private static List<String> nonBlank( StringArrayArg arg ) {
+    /**
+     * Read an optional array argument as a list, treating "not given" and "given as empty" alike.
+     * <p>
+     * The argument is null in both cases and neither is an error here: an array arg refuses to parse a blank
+     * string (an empty array is not a meaningful filter for the endpoints that require one), so Jersey has
+     * nothing to inject when the parameter is absent or written as {@code &value=}. For this endpoint an
+     * absent constraint is the normal case — no {@code value} when asking from the disease side — so both
+     * read as "unconstrained" rather than as a malformed request.
+     */
+    private static List<String> nonBlank( @Nullable StringArrayArg arg ) {
+        if ( arg == null ) {
+            return Collections.emptyList();
+        }
         return arg.getValue().stream()
                 .map( StringUtils::trimToNull )
                 .filter( Objects::nonNull )

@@ -132,7 +132,7 @@ separate decision, and `is model of` would be the predicate to discuss, not
 |---|---|
 | `uri` | disease term; ask "what models this?" |
 | `value`, `valueUri` | model side; ask "what does this model?" |
-| `category` | model-side categories, default `genotype,strain`; empty for any. `disease` and `disease model` are never accepted — they identify the other side of the relation |
+| `category` | model-side categories, default `genotype,strain`; `category=` for any. `disease` and `disease model` are never accepted — they identify the other side of the relation |
 | `inferSubTerms` | fold the disease term's sub-classes in (default true) |
 | `minSupport`, `minSpecificity` | thresholds, both off by default; applied before `limit`, so raising one does not thin the page |
 | `excludeDatasets` | hold datasets out of the evidence |
