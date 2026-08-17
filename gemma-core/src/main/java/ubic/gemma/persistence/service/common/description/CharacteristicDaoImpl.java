@@ -514,6 +514,14 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 .append( " and S.`VALUE` is not null" )
                 // the disease annotation is not a model of itself
                 .append( " and (S.VALUE_URI is null or S.VALUE_URI <> D.VALUE_URI)" )
+                // ...nor is any OTHER disease on the same experiment a model of it. The category is the only
+                // thing separating the two sides of the join, so without this an unconstrained
+                // modelCategories - which is how a client asks for "any kind of model" - reads a study
+                // annotated with two comorbid diseases as each one modelling the other. Written null-safe
+                // rather than as a plain NOT: an uncategorised annotation has a null CATEGORY, and
+                // `null not in (...)` is null, which would drop exactly the free-text values this is for.
+                .append( " and (S.CATEGORY is null or S.CATEGORY not in (:diseaseCategories))" )
+                .append( " and (S.CATEGORY_URI is null or S.CATEGORY_URI not in (:diseaseCategoryUris))" )
                 // a control arm models nothing
                 .append( " and S.`VALUE` not in (:baselineValues)" )
                 .append( " and (S.VALUE_URI is null or S.VALUE_URI not in (:baselineUris))" );

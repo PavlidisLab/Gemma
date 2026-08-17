@@ -403,7 +403,10 @@ public class AnnotationsWebService {
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE,
                     description = "Categories the model side must be under, as labels (`genotype`) or category "
                             + "URIs. Defaults to `genotype,strain`; add `treatment` to include exposures, or "
-                            + "pass an empty value to accept any category.")
+                            + "pass an empty value to accept any category. `disease` and `disease model` are "
+                            + "never accepted here whatever this says — those identify the other side of the "
+                            + "relation, and admitting them would make each of two comorbid diseases on a study "
+                            + "a model of the other.")
             @QueryParam("category") @DefaultValue("genotype,strain") StringArrayArg categories,
             @Parameter(description = "Also count experiments annotated with a sub-class of the given disease "
                     + "term, as inference does elsewhere in the API. The sub-terms folded in are echoed back in "

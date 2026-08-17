@@ -317,7 +317,11 @@ public interface CharacteristicDao
      * inference. At least one constraint is required — this does not enumerate the corpus.
      * <p>
      * The disease side is always identified by CATEGORY ({@code disease} or {@code disease model}), never by
-     * which side was seeded, so a row means the same thing whichever way it was asked.
+     * which side was seeded, so a row means the same thing whichever way it was asked. The model side is the
+     * complement: an annotation under one of those two categories is never returned as a model, whatever
+     * {@code modelCategories} says. Without that, an unconstrained category — which is what a client asks for
+     * when it wants strains and constructs and everything else — makes every disease on an experiment a model
+     * of every other disease on it, since the only thing telling the two sides apart is the category.
      * <p>
      * ACL-restricted, like {@link #findRepresentativeUsageByValueUris(Collection)}: the result names
      * specific datasets, so a private dataset must not contribute a count or an example.

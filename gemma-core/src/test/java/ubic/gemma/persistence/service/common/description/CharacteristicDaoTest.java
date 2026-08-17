@@ -829,6 +829,45 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
     }
 
     /**
+     * A second disease on the same study is not a model of the first. The category is the only thing telling
+     * the two sides of the self-join apart, so an unconstrained category — which is how a client asks for
+     * strains and constructs and anything else that might stand for a disease — would otherwise report each
+     * of two comorbid diseases as modelling the other.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testAnotherDiseaseIsNotAModel() {
+        String alzheimer = "http://purl.obolibrary.org/obo/MONDO_0004975";
+        String diabetes = "http://purl.obolibrary.org/obo/MONDO_0005148";
+        String app = "http://purl.org/commons/record/ncbi_gene/11820";
+        Taxon mouse = getOrCreateTaxon( "mouse" );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( mouse );
+        ee.getCharacteristics().add( createCharacteristic( Categories.GENOTYPE, app, "APP/PS1" ) );
+        ee.getCharacteristics().add( createCharacteristic( Categories.DISEASE, alzheimer, "Alzheimer disease" ) );
+        ee.getCharacteristics().add( createCharacteristic( Categories.DISEASE, diabetes, "type 2 diabetes mellitus" ) );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        // no category constraint at all: the genotype comes back, the comorbid disease does not
+        assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( alzheimer ),
+                Collections.emptySet(), Collections.emptySet(), Collections.emptySet(),
+                Collections.emptySet(), 1, 0, 10 ) )
+                .as( "only the genotype models the disease; the comorbidity is not a model of it" )
+                .singleElement()
+                .satisfies( i -> assertThat( i.value ).isEqualTo( "APP/PS1" ) );
+
+        // and asking for the disease category outright does not smuggle it back in
+        assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( alzheimer ),
+                Collections.emptySet(), Collections.emptySet(), Collections.singleton( "disease" ),
+                Collections.emptySet(), 1, 0, 10 ) )
+                .isEmpty();
+    }
+
+    /**
      * Neither side constrained is a request to enumerate the corpus, and is refused.
      */
     @Test
