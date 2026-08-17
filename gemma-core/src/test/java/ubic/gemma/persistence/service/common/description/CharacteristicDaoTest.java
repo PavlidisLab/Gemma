@@ -633,7 +633,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
 
         List<CharacteristicDao.DiseaseModelInference> inferences = characteristicDao.findDiseaseModelInferences(
                 Collections.singleton( rett ), Collections.emptySet(), Collections.emptySet(),
-                Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 );
+                Collections.singleton( "genotype" ), Collections.emptySet(), 1, 0, 10 );
 
         assertThat( inferences ).singleElement().satisfies( i -> {
             assertThat( i.value ).isEqualTo( "Homozygous negative Mecp2" );
@@ -662,7 +662,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
         sessionFactory.getCurrentSession().flush();
 
         assertThat( characteristicDao.findDiseaseModelInferences( Collections.emptySet(), Collections.emptySet(),
-                Collections.singleton( "APP/PS1" ), Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 ) )
+                Collections.singleton( "APP/PS1" ), Collections.singleton( "genotype" ), Collections.emptySet(), 1, 0, 10 ) )
                 .singleElement()
                 .satisfies( i -> {
                     assertThat( i.value ).isEqualTo( "APP/PS1" );
@@ -698,7 +698,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
 
         List<CharacteristicDao.DiseaseModelInference> inferences = characteristicDao.findDiseaseModelInferences(
                 Collections.singleton( obesity ), Collections.emptySet(), Collections.emptySet(),
-                Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 );
+                Collections.singleton( "genotype" ), Collections.emptySet(), 1, 0, 10 );
 
         assertThat( inferences ).hasSize( 2 );
         assertThat( inferences.get( 0 ).value )
@@ -729,7 +729,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
 
         List<CharacteristicDao.DiseaseModelInference> inferences = characteristicDao.findDiseaseModelInferences(
                 Collections.singleton( parkinson ), Collections.emptySet(), Collections.emptySet(),
-                Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 );
+                Collections.singleton( "genotype" ), Collections.emptySet(), 1, 0, 10 );
 
         // one row per taxon: the taxon is part of the grain because it changes what the inference says
         assertThat( inferences ).hasSize( 2 );
@@ -757,7 +757,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
 
         assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( rett ),
                 Collections.emptySet(), Collections.emptySet(), Collections.singleton( "genotype" ),
-                Collections.emptySet(), 1, 10 ) ).isEmpty();
+                Collections.emptySet(), 1, 0, 10 ) ).isEmpty();
     }
 
     /**
@@ -776,12 +776,56 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
 
         assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( rett ),
                 Collections.emptySet(), Collections.emptySet(), Collections.singleton( "genotype" ),
-                Collections.emptySet(), 1, 10 ) ).hasSize( 1 );
+                Collections.emptySet(), 1, 0, 10 ) ).hasSize( 1 );
         assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( rett ),
                 Collections.emptySet(), Collections.emptySet(), Collections.singleton( "genotype" ),
-                Collections.singleton( onlyWitness ), 1, 10 ) )
+                Collections.singleton( onlyWitness ), 1, 0, 10 ) )
                 .as( "the dataset carrying the tag cannot be its own evidence" )
                 .isEmpty();
+    }
+
+    /**
+     * The specificity cut has to be taken before the row cap, not after. Applied afterwards it silently turns
+     * "the best 2 above this bar" into "however many of the best 2 clear it" — which for a corpus whose top
+     * rows are background strains is usually none, and looks to the caller like nothing models the disease.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testSpecificityCutIsTakenBeforeTheLimit() {
+        String obesity = "http://purl.obolibrary.org/obo/MONDO_0011122";
+        String stroke = "http://purl.obolibrary.org/obo/MONDO_0005098";
+        // two strains that out-support everything, each carrying an unrelated second disease so their
+        // specificity against obesity is only 0.5
+        for ( String strain : new String[] { "C57BL/6J", "BALB/c" } ) {
+            for ( int i = 0; i < 3; i++ ) {
+                createExperimentWithGenotypeAndDisease( "mouse", null, strain, obesity, "obesity" );
+            }
+            for ( int i = 0; i < 3; i++ ) {
+                createExperimentWithGenotypeAndDisease( "mouse", null, strain, stroke, "ischemic stroke" );
+            }
+        }
+        // ...and one real model, attested less often but against nothing else
+        createExperimentWithGenotypeAndDisease( "mouse", null, "Homozygous negative Lep", obesity, "obesity" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        // unfiltered, the strains take both of the two slots on raw score
+        assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( obesity ),
+                Collections.emptySet(), Collections.emptySet(), Collections.singleton( "genotype" ),
+                Collections.emptySet(), 1, 0, 2 ) )
+                .extracting( i -> i.value )
+                .containsExactlyInAnyOrder( "C57BL/6J", "BALB/c" );
+
+        // with a bar set, the slots go to what clears it rather than being spent on rows that get dropped
+        assertThat( characteristicDao.findDiseaseModelInferences( Collections.singleton( obesity ),
+                Collections.emptySet(), Collections.emptySet(), Collections.singleton( "genotype" ),
+                Collections.emptySet(), 1, 0.9, 2 ) )
+                .as( "the limit must be filled from rows above the threshold, not thinned by it" )
+                .singleElement()
+                .satisfies( i -> {
+                    assertThat( i.value ).isEqualTo( "Homozygous negative Lep" );
+                    assertThat( i.getSpecificity() ).isEqualTo( 1.0 );
+                } );
     }
 
     /**
@@ -791,7 +835,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testUnconstrainedInferenceReturnsNothing() {
         assertThat( characteristicDao.findDiseaseModelInferences( Collections.emptySet(), Collections.emptySet(),
-                Collections.emptySet(), Collections.singleton( "genotype" ), Collections.emptySet(), 1, 10 ) )
+                Collections.emptySet(), Collections.singleton( "genotype" ), Collections.emptySet(), 1, 0, 10 ) )
                 .isEmpty();
     }
 
@@ -800,13 +844,7 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
      */
     private Long createExperimentWithGenotypeAndDisease( String taxonCommonName, @Nullable String genotypeUri,
             String genotypeValue, String diseaseUri, String diseaseValue ) {
-        Taxon taxon = taxa.computeIfAbsent( taxonCommonName, name -> {
-            Taxon t = new Taxon();
-            t.setCommonName( name );
-            t.setNcbiId( "human".equals( name ) ? 9606 : 10090 );
-            sessionFactory.getCurrentSession().persist( t );
-            return t;
-        } );
+        Taxon taxon = getOrCreateTaxon( taxonCommonName );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setTaxon( taxon );
         ee.getCharacteristics().add( createCharacteristic( Categories.GENOTYPE, genotypeUri, genotypeValue ) );
@@ -815,6 +853,16 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
         sessionFactory.getCurrentSession().flush();
         aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
         return ee.getId();
+    }
+
+    private Taxon getOrCreateTaxon( String commonName ) {
+        return taxa.computeIfAbsent( commonName, name -> {
+            Taxon t = new Taxon();
+            t.setCommonName( name );
+            t.setNcbiId( "human".equals( name ) ? 9606 : 10090 );
+            sessionFactory.getCurrentSession().persist( t );
+            return t;
+        } );
     }
 
     private Characteristic createCharacteristic( @Nullable String valueUri, String value ) {

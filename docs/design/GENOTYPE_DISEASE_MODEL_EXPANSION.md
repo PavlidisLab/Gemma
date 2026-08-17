@@ -134,7 +134,7 @@ separate decision, and `is model of` would be the predicate to discuss, not
 | `value`, `valueUri` | model side; ask "what does this model?" |
 | `category` | model-side categories, default `genotype,strain`; empty for any |
 | `inferSubTerms` | fold the disease term's sub-classes in (default true) |
-| `minSupport`, `minSpecificity` | thresholds, both off by default |
+| `minSupport`, `minSpecificity` | thresholds, both off by default; applied before `limit`, so raising one does not thin the page |
 | `excludeDatasets` | hold datasets out of the evidence |
 | `limit` | default 50 |
 

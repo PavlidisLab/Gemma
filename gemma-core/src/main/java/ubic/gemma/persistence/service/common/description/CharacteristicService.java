@@ -98,11 +98,11 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
      * Derived on demand from annotations already in the corpus; writes nothing, and every row carries the
      * experiment count and an example dataset that produced it.
      *
-     * @see CharacteristicDao#findDiseaseModelInferences(Collection, Collection, Collection, Collection, Collection, int, int)
+     * @see CharacteristicDao#findDiseaseModelInferences(Collection, Collection, Collection, Collection, Collection, int, double, int)
      */
     List<CharacteristicDao.DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
             Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
-            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults );
+            Collection<Long> excludedExperimentIds, int minimumSupport, double minimumSpecificity, int maxResults );
 
     /**
      * Returns a collection of characteristics that have a value starting with the given string.

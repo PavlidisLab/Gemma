@@ -414,7 +414,8 @@ public class AnnotationsWebService {
             @Parameter(description = "Drop inferences whose specificity is below this, in [0, 1]. The default "
                     + "of 0 admits everything, including the background strains — no threshold has been tuned "
                     + "against curator judgement yet, and the shape of the distribution is worth seeing in the "
-                    + "UI before one is fixed here.")
+                    + "UI before one is fixed here. Applied before `limit`, so raising it does not thin out the "
+                    + "page: you get `limit` results that clear the bar, if that many exist.")
             @QueryParam("minSpecificity") @DefaultValue("0") double minSpecificity,
             @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE,
                     description = "Datasets held out of the evidence, by id or short name.")
@@ -465,14 +466,14 @@ public class AnnotationsWebService {
                 ? IdentifiableUtils.getIds( datasetArgService.getEntities( excludeDatasets ) )
                 : Collections.emptyList();
 
+        // minSpecificity goes down with the query rather than being applied to what comes back: the cut has to
+        // happen before `limit`, or asking for the top 50 above a bar returns only the part of the top 50 that
+        // clears it.
         List<CharacteristicDao.DiseaseModelInference> inferences = characteristicService.findDiseaseModelInferences(
-                diseaseUris, seedValueUris, seedValues, requestedCategories, excludedIds, minSupport, limit );
+                diseaseUris, seedValueUris, seedValues, requestedCategories, excludedIds, minSupport, minSpecificity, limit );
 
         List<InferredDiseaseModelValueObject> models = new ArrayList<>( inferences.size() );
         for ( CharacteristicDao.DiseaseModelInference i : inferences ) {
-            if ( i.getSpecificity() < minSpecificity ) {
-                continue;
-            }
             if ( termLabel == null && termUri != null && termUri.equalsIgnoreCase( i.diseaseValueUri ) ) {
                 // the term is not in a loaded ontology (Gemma's own TGEMO terms, retired URIs); the corpus
                 // still knows what curators called it

@@ -96,11 +96,11 @@ public interface CharacteristicReadService {
     /**
      * Infer which annotation values stand for the given diseases, from curation the corpus already carries.
      *
-     * @see CharacteristicDao#findDiseaseModelInferences(Collection, Collection, Collection, Collection, Collection, int, int)
+     * @see CharacteristicDao#findDiseaseModelInferences(Collection, Collection, Collection, Collection, Collection, int, double, int)
      */
     List<CharacteristicDao.DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
             Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
-            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults );
+            Collection<Long> excludedExperimentIds, int minimumSupport, double minimumSpecificity, int maxResults );
 
     /**
      * Returns a collection of characteristics that have a value starting with the given string.

@@ -496,7 +496,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Override
     public List<CharacteristicDao.DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
             Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
-            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults ) {
+            Collection<Long> excludedExperimentIds, int minimumSupport, double minimumSpecificity, int maxResults ) {
         if ( diseaseValueUris.isEmpty() && modelValueUris.isEmpty() && modelValues.isEmpty() ) {
             // refuse to enumerate the corpus; every caller knows one side of the relation
             return Collections.emptyList();
@@ -615,6 +615,12 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                     r[12] != null ? ( Long ) r[12] : 0L,
                     r[13] != null ? ( Long ) r[13] : 0L,
                     stats[0], stats[1] ) );
+        }
+        // the specificity cut comes BEFORE maxResults: applying it afterwards would silently turn "the top 50
+        // above this bar" into "whatever part of the top 50 clears it", which is a different and much smaller
+        // answer for exactly the thresholds a caller would want to set.
+        if ( minimumSpecificity > 0 ) {
+            result.removeIf( i -> i.getSpecificity() < minimumSpecificity );
         }
         result.sort( Comparator.comparingDouble( CharacteristicDao.DiseaseModelInference::getScore ).reversed()
                 .thenComparing( Comparator.comparingLong( ( CharacteristicDao.DiseaseModelInference i ) -> i.numberOfExperiments ).reversed() )

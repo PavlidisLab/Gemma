@@ -340,12 +340,16 @@ public interface CharacteristicDao
      *                               being examined is what makes "this tag is inferable, so it can be
      *                               dropped" an honest claim rather than a restatement of the tag
      * @param minimumSupport         drop inferences attested by fewer than this many experiments
+     * @param minimumSpecificity     drop inferences whose {@link DiseaseModelInference#getSpecificity()} is
+     *                               below this, in {@code [0, 1]}; 0 admits everything. Applied BEFORE
+     *                               {@code maxResults}, so a caller asking for the top 50 above a threshold
+     *                               gets 50 rows that clear it rather than whatever survives of the top 50
      * @param maxResults             cap on returned rows, or -1 for no cap. Applied after ranking by
-     *                               {@link DiseaseModelInference#getScore()}
+     *                               {@link DiseaseModelInference#getScore()} and after the specificity cut
      */
     List<DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
             Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
-            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults );
+            Collection<Long> excludedExperimentIds, int minimumSupport, double minimumSpecificity, int maxResults );
 
     /**
      * Find characteristics by URI.

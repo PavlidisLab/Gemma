@@ -98,9 +98,9 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     @Override
     public List<CharacteristicDao.DiseaseModelInference> findDiseaseModelInferences( Collection<String> diseaseValueUris,
             Collection<String> modelValueUris, Collection<String> modelValues, Collection<String> modelCategories,
-            Collection<Long> excludedExperimentIds, int minimumSupport, int maxResults ) {
+            Collection<Long> excludedExperimentIds, int minimumSupport, double minimumSpecificity, int maxResults ) {
         return readService.findDiseaseModelInferences( diseaseValueUris, modelValueUris, modelValues, modelCategories,
-                excludedExperimentIds, minimumSupport, maxResults );
+                excludedExperimentIds, minimumSupport, minimumSpecificity, maxResults );
     }
 
     @Override
