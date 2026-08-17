@@ -208,10 +208,27 @@
 				<column name="PREBOARDED_SOURCE" not-null="false" unique="false"
 						sql-type="VARCHAR(32)"/>
 			</property>
-			<property name="identifyingMetadata" type="org.hibernate.type.MaterializedClobType">
-				<column name="PREBOARDED_IDENTIFYING_METADATA" not-null="false" unique="false"
-						sql-type="LONGTEXT"/>
-			</property>
+			<!-- identifyingMetadata is DELIBERATELY NOT MAPPED here.
+
+			     phase2 renames PREBOARDED_IDENTIFYING_METADATA to SOURCE_METADATA,
+			     because the same upstream payload is wanted for imported experiments
+			     and not only preboarded ones. INVESTIGATION is single-table
+			     inheritance, so a subclass property here puts that column name into
+			     the SQL generated for any polymorphic Investigation query — and the
+			     rename would then break this build against the shared database, with
+			     an unknown-column SQLGrammarException, whether or not any preboarded
+			     row exists. The failure is at mapping resolution, not row read, so an
+			     empty table does not save us.
+
+			     Leaving the property unmapped makes 1.32.x indifferent to the column's
+			     name: the migration and this deployment can happen in either order,
+			     with no window in which one is broken. Nothing in 1.32.x reads the
+			     value — it is a JSON payload only phase2 consumes — so mapping it was
+			     always past "the minimum metadata to avoid the explosion" this compat
+			     port exists to provide.
+
+			     Do not re-add it. If 1.32.x ever needs the payload, map it to
+			     SOURCE_METADATA and sequence the migration before the deploy. -->
 		</subclass>
 	</class>
 </hibernate-mapping>

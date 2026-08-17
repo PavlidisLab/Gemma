@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAssetDownloadMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
 import ubic.gemma.core.util.SimpleRetryPolicy;
@@ -22,6 +23,7 @@ import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,9 +57,11 @@ public class CellXGeneFetcherTest extends BaseTest {
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testFetchCollectionMetadata() throws IOException {
-        CollectionMetadata metadata = fetcher.fetchCollectionMetadata( "31937775-0602-4e52-a799-b6acdd2bac2e" );
-        assertThat( metadata.getId() ).isEqualTo( "31937775-0602-4e52-a799-b6acdd2bac2e" );
+        String collectionId = pickDataset().getCollectionId();
+        CollectionMetadata metadata = fetcher.fetchCollectionMetadata( collectionId );
+        assertThat( metadata.getId() ).isEqualTo( collectionId );
     }
 
     @Test
@@ -67,24 +71,52 @@ public class CellXGeneFetcherTest extends BaseTest {
         assertThat( metadata ).isNotEmpty();
     }
 
+    /**
+     * Pick a dataset from the index to exercise the fetcher against.
+     * <p>
+     * CELLxGENE re-versions and removes datasets, rotating their IDs, so hard-coding a dataset ID makes these tests
+     * rot. Instead, select one dynamically: the earliest-published dataset that has an AnnData (H5AD) asset (so it can
+     * be downloaded), falling back to the first dataset in the index if no publication date is available.
+     */
+    private DatasetMetadata pickDataset() throws IOException {
+        List<DatasetMetadata> all = fetcher.fetchAllDatasetMetadata();
+        assertThat( all ).isNotEmpty();
+        return all.stream()
+                .filter( d -> d.getDatasetAssets() != null && d.getDatasetAssets().stream().anyMatch( CellXGeneUtils::isAnnData ) )
+                .min( Comparator.comparing( DatasetMetadata::getPublishedAt, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .orElse( all.get( 0 ) );
+    }
+
+    private DatasetAsset annDataAsset( DatasetMetadata dataset ) {
+        return dataset.getDatasetAssets().stream()
+                .filter( CellXGeneUtils::isAnnData )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "Expected an AnnData asset for " + dataset.getId() + "." ) );
+    }
+
     @Test
     @Category(SlowTest.class)
     public void testFetchDatasetMetadata() throws IOException {
-        DatasetMetadata datasetMetadata = fetcher.fetchDatasetMetadata( "860a9839-5d24-4073-9a67-6ad570f41da1" );
-        assertThat( datasetMetadata.getId() ).isEqualTo( "860a9839-5d24-4073-9a67-6ad570f41da1" );
+        String datasetId = pickDataset().getId();
+
+        DatasetMetadata datasetMetadata = fetcher.fetchDatasetMetadata( datasetId );
+        assertThat( datasetMetadata.getId() ).isEqualTo( datasetId );
 
         // try re-fetching, should hit the cache
-        datasetMetadata = fetcher.fetchDatasetMetadata( "860a9839-5d24-4073-9a67-6ad570f41da1" );
-        assertThat( datasetMetadata.getId() ).isEqualTo( "860a9839-5d24-4073-9a67-6ad570f41da1" );
+        datasetMetadata = fetcher.fetchDatasetMetadata( datasetId );
+        assertThat( datasetMetadata.getId() ).isEqualTo( datasetId );
 
-        DatasetAssetDownloadMetadata metadata = fetcher.fetchDatasetAssetDownloadMetadata( "860a9839-5d24-4073-9a67-6ad570f41da1", "ee04d5be-523b-4bde-af01-f892778e01d8" );
-        assertThat( metadata.getDatasetId() ).isEqualTo( "860a9839-5d24-4073-9a67-6ad570f41da1" );
+        DatasetAsset asset = annDataAsset( datasetMetadata );
+        DatasetAssetDownloadMetadata metadata = fetcher.fetchDatasetAssetDownloadMetadata( datasetId, asset.getId() );
+        assertThat( metadata.getDatasetId() ).isEqualTo( datasetId );
         assertThat( metadata.getUrl() ).isNotNull();
         assertThat( metadata.getFileSize() ).isGreaterThan( 1000 );
     }
 
     @Test
+    @Category(SlowTest.class)
     public void testDownloadDatasetAsset() throws IOException {
-        fetcher.downloadDatasetAsset( "03390dd0-fe16-4cef-b430-ab451e85c448", "4d947311-c9e6-45c7-9f3c-00176074912b", FileType.H5AD );
+        DatasetMetadata dataset = pickDataset();
+        fetcher.downloadDatasetAsset( dataset.getId(), annDataAsset( dataset ).getId(), FileType.H5AD );
     }
 }

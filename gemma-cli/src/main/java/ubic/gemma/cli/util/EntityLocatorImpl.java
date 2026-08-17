@@ -245,12 +245,25 @@ public class EntityLocatorImpl implements EntityLocator {
     public CellLevelCharacteristics locateCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, String clcIdentifier ) {
         Assert.isTrue( StringUtils.isNotBlank( clcIdentifier ), "Cell level characteristics name must not be blank." );
         clcIdentifier = StringUtils.strip( clcIdentifier );
-        CellLevelCharacteristics r = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt, Long.parseLong( clcIdentifier ) );
-        if ( r != null ) {
-            return r;
+        try {
+            CellLevelCharacteristics r = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt, Long.parseLong( clcIdentifier ) );
+            if ( r != null ) {
+                return r;
+            }
+        } catch ( NumberFormatException e ) {
+            // not an ID, try to match by name instead
+        }
+        List<CellLevelCharacteristics> possibleValues = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt );
+        String finalClcIdentifier = clcIdentifier;
+        List<CellLevelCharacteristics> matches = possibleValues.stream()
+                .filter( clc -> finalClcIdentifier.equalsIgnoreCase( clc.getName() ) )
+                .collect( Collectors.toList() );
+        if ( matches.size() == 1 ) {
+            return matches.get( 0 );
+        } else if ( matches.size() > 1 ) {
+            throw new IllegalArgumentException( "More than one cell level characteristics matches the name " + clcIdentifier + " in " + expressionExperiment.getShortName() + " for " + qt + ", use a numerical ID instead." + formatPossibleValues( possibleValues, true ) );
         } else {
-            List<CellLevelCharacteristics> possibleValues = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt );
-            throw new NullPointerException( "Could not locate any cell level characteristics with identifier matching " + clcIdentifier + "." + formatPossibleValues( possibleValues, false ) );
+            throw new NullPointerException( "Could not locate any cell level characteristics with identifier or name matching " + clcIdentifier + "." + formatPossibleValues( possibleValues, true ) );
         }
     }
 
