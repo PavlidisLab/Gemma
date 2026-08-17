@@ -28,6 +28,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -94,6 +95,46 @@ public class CharacteristicValueObjectTest {
         a.setValue( "foo" );
         b.setValue( "bar" );
         assertTrue( a.equals( b ) );
+    }
+
+    /**
+     * The {@code SUPPORTING_EVIDENCE} column has always existed on every characteristic; this value object
+     * simply never surfaced it, which left the design read path unable to answer "where did this come from"
+     * even for rows that recorded it. An {@link ubic.gemma.model.expression.experiment.ExperimentalFactor}'s
+     * category is a characteristic like any other, so this is the factor-level trace.
+     */
+    @Test
+    public void testSupportingEvidenceIsReadBackFromTheCharacteristic() {
+        Characteristic c = Characteristic.Factory.newInstance( "cell line", "http://x/EFO_0000322", "H510", null );
+        c.setSupportingEvidence( "[{\"quote\":\"primary tracheobronchial epithelial cultures\","
+                + "\"source\":\"paper\",\"location\":\"PMID 18156441\"}]" );
+
+        CharacteristicValueObject vo = new CharacteristicValueObject( c );
+
+        assertTrue( vo.getSupportingEvidence().isArray() );
+        assertEquals( "paper", vo.getSupportingEvidence().get( 0 ).get( "source" ).asText() );
+    }
+
+    /** Nothing recorded is the expected reading for most rows, and must arrive as null rather than as an error. */
+    @Test
+    public void testAbsentSupportingEvidenceIsNull() {
+        Characteristic c = Characteristic.Factory.newInstance( "cell line", "http://x/EFO_0000322", "H510", null );
+        assertNull( new CharacteristicValueObject( c ).getSupportingEvidence() );
+    }
+
+    /**
+     * Evidence is provenance, not identity. Two value objects for the same term, one carrying recorded
+     * evidence and one not, must stay equal — the search paths de-duplicate on this equality, so including
+     * the field would silently split a term into two.
+     */
+    @Test
+    public void testSupportingEvidenceDoesNotAffectEquality() {
+        a.setValueUri( "http://x/EFO_0000322" );
+        b.setValueUri( "http://x/EFO_0000322" );
+        a.setSupportingEvidence( CharacteristicUtils.parseSupportingEvidence( "[{\"quote\":\"q\"}]" ) );
+
+        assertTrue( a.equals( b ) );
+        assertEquals( a.hashCode(), b.hashCode() );
     }
 
     @Test

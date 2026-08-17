@@ -1,5 +1,7 @@
 package ubic.gemma.model.common.description;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import ubic.gemma.model.expression.experiment.Statement;
@@ -124,6 +126,50 @@ public class CharacteristicUtils {
                 && equals( sa.getSecondPredicate(), sa.getSecondPredicateUri(), sb.getSecondPredicate(), sb.getSecondPredicateUri() )
                 && equals( sa.getSecondObject(), sa.getSecondObjectUri(), sb.getSecondObject(), sb.getSecondObjectUri() );
     }
+
+    /**
+     * Parse a characteristic's opaque {@code supportingEvidence} JSON into a tree for serialization.
+     * <p>
+     * The column is a verbatim provenance payload the curation agents emitted (the agents-side
+     * {@code FindingEvidence} shape: a JSON array of {@code {quote, source, location, …}} items). Gemma stores
+     * and serves it opaquely — the agents repo owns the schema — so this only turns the stored string back into
+     * a tree. Writes always store a serialized tree, so it round-trips; a null / blank or (defensively)
+     * unparseable value yields {@code null} rather than propagating a parse failure into a read response.
+     * <p>
+     * Lives here rather than on any one value object because every read surface over a
+     * {@link Characteristic} needs the same treatment — {@link AnnotationValueObject},
+     * {@link CharacteristicValueObject}, and the design path's
+     * {@code StatementValueObject} — and three private copies would be three chances to drift.
+     */
+    @Nullable
+    public static JsonNode parseSupportingEvidence( @Nullable String json ) {
+        if ( json == null || json.isEmpty() ) {
+            return null;
+        }
+        try {
+            return SUPPORTING_EVIDENCE_MAPPER.readTree( json );
+        } catch ( Exception e ) {
+            return null;
+        }
+    }
+
+    /**
+     * Inverse of {@link #parseSupportingEvidence}: flatten a supporting-evidence tree back to the string the
+     * {@code SUPPORTING_EVIDENCE} column stores.
+     * <p>
+     * An absent, null, or empty tree yields {@code null} rather than {@code "[]"} or {@code "null"}, so
+     * "nothing recorded" has exactly one representation in the database and a caller cannot accidentally
+     * persist an empty array that later reads as though evidence were recorded and found wanting.
+     */
+    @Nullable
+    public static String serializeSupportingEvidence( @Nullable JsonNode evidence ) {
+        if ( evidence == null || evidence.isNull() || evidence.isEmpty() ) {
+            return null;
+        }
+        return evidence.toString();
+    }
+
+    private static final ObjectMapper SUPPORTING_EVIDENCE_MAPPER = new ObjectMapper();
 
     /**
      * Compare a pair of ontology terms.
