@@ -613,6 +613,14 @@ public abstract class AbstractOntologyService implements OntologyService {
     }
 
     @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferences() {
+        return getState().map( state -> CrossReferences.list( state.model ) ).orElseGet( () -> {
+            log.warn( "Ontology {} is not ready, no cross-references will be returned.", this );
+            return Collections.emptyList();
+        } );
+    }
+
+    @Override
     public OntologyResource getResource( String uri ) {
         return getState().map( state -> {
             if ( !state.isUriAllowed( uri ) ) {

@@ -529,4 +529,16 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
      * query still produces, so a row whose source annotation was deleted would outlive it.</p>
      */
     int removeByBasis( AnnotationRelationBasis basis, @Nullable Long experimentId );
+
+    /**
+     * The same rebuild delete, narrowed to one {@link AnnotationRelation#getSource() source}.
+     *
+     * <p>{@link AnnotationRelationBasis#ONTOLOGY} has more than one producer — CLO states which disease
+     * a cell line came from, CHEBI which roles a chemical bears — and they are loaded and rebuilt
+     * independently. Rebuilding one with the basis-wide delete would silently drop the other's rows and
+     * leave the table looking like the other producer had never run.</p>
+     *
+     * @param source the source to remove, or null for every source under the basis
+     */
+    int removeByBasis( AnnotationRelationBasis basis, @Nullable Long experimentId, @Nullable String source );
 }

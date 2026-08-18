@@ -276,13 +276,22 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
 
     @Override
     public int removeByBasis( AnnotationRelationBasis basis, @Nullable Long experimentId ) {
+        return removeByBasis( basis, experimentId, null );
+    }
+
+    @Override
+    public int removeByBasis( AnnotationRelationBasis basis, @Nullable Long experimentId, @Nullable String source ) {
         String sql = "delete from ANNOTATION_RELATION where BASIS = :basis"
-                + ( experimentId != null ? " and EXPRESSION_EXPERIMENT_FK = :eeId" : "" );
+                + ( experimentId != null ? " and EXPRESSION_EXPERIMENT_FK = :eeId" : "" )
+                + ( source != null ? " and SOURCE = :source" : "" );
         NativeQuery<?> q = getSessionFactory().getCurrentSession().createNativeQuery( sql )
                 .addSynchronizedEntityClass( AnnotationRelation.class );
         q.setParameter( "basis", basis.name() );
         if ( experimentId != null ) {
             q.setParameter( "eeId", experimentId );
+        }
+        if ( source != null ) {
+            q.setParameter( "source", source );
         }
         return q.executeUpdate();
     }

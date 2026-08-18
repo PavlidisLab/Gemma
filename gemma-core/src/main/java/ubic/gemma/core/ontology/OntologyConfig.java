@@ -280,6 +280,31 @@ public class OntologyConfig {
         return new JenaTextOntologySearchService( tdbDir, enabled );
     }
 
+    /**
+     * Writes the {@code ONTOLOGY} rows of {@code ANNOTATION_RELATION} — the relations CLO and CHEBI
+     * already assert and nothing has ever read.
+     *
+     * <p>Declared here rather than component-scanned so it lives and dies with the ontologies it reads:
+     * a context with no ontology services has nothing for it to do, and {@code TableMaintenanceUtil}
+     * takes it optionally for exactly that reason.</p>
+     *
+     * <p>The ontologies arrive as the whole list and are matched by name through
+     * {@link ubic.gemma.core.ontology.providers.OntologyServiceResolver}, so the producer holds no
+     * bean-level dependency on any one of them and a disabled ontology is a warning rather than a
+     * startup failure.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.OntologyRelationProducer ontologyRelationProducer(
+            @Autowired(required = false) java.util.List<OntologyService> ontologies,
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager,
+            @Autowired(required = false) ubic.gemma.persistence.service.genome.taxon.TaxonService taxonService,
+            @Autowired(required = false) ubic.gemma.core.ontology.OntologyService ontologyService ) {
+        return new ubic.gemma.core.ontology.relation.OntologyRelationProducerImpl( ontologies, annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ), taxonService,
+                ontologyService );
+    }
+
     private <T extends OntologyService> OntologyServiceFactory<T> createOntologyFactory( Class<T> ontologyClass, String... allowedUriPrefixes ) {
         OntologyServiceFactory<T> factory = new OntologyServiceFactory<>( ontologyClass );
         factory.setAutoLoad( loadOntologies );

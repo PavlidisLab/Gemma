@@ -22,6 +22,13 @@ being served; they have simply never been inverted.
 Everything below was checked against the live ontologies and against frink on
 2026-08-12. Where something is sampled rather than counted, it says so.
 
+*Update 2026-08-17 — S1 and S2 are built (`OntologyXrefIndex`,
+`OntologyRelationProducer`, `updateOntologyRelations`), and the coverage this
+document kept asking for is counted in §2b. Two of the guesses in §2 were wrong in
+a way that matters: `is disease model for` is ten times the volume of the property
+this recce led with, and cell line → species / organism part are not reachable
+from the flat restrictions at all.*
+
 ## 1. What exists
 
 **`OntologyTerm.getRestrictions()`** — declared on the interface
@@ -30,9 +37,11 @@ which exposes `getRestrictionOn()` (the property) and `getRestrictedTo()` (the
 target term). `RestrictionFactory`, `PropertyFactory`, `ObjectPropertyImpl`,
 `RestrictionWithOnPropertyFilter` are all present and working.
 
-🛑 **It is called from nowhere in `gemma-core` or `gemma-rest`.** The capability
-is complete and dead. That is the single most useful fact in this recce: this is
-an adoption problem, not a construction problem.
+🛑 **It was called from nowhere in `gemma-core` or `gemma-rest`.** The capability
+was complete and dead. That was the single most useful fact in this recce: an
+adoption problem, not a construction problem. As of 2026-08-17
+`OntologyRelationProducer` calls it, and nothing else does — the interactive read
+paths still do not, which is deliberate (see the cost note in §5).
 
 **The `additionalPropertyUris` mechanism** — `AbstractOntologyService` computes
 `additionalRestrictions` from a configurable set of property URIs and threads it
@@ -91,9 +100,98 @@ UBERON, all as URIs — and our OBO parser reads id/name/synonym/xref/subset/com
 and discards the rest. CAB measured CLO answering 2 lines Cellosaurus had no
 disease for, and Cellosaurus answering 24 CLO did not reach.
 
-**Someone should count this before we build on it.** The measurement is a pass
-over the loaded CLO model tallying classes with each property, and it is the first
-thing to do in stage 2 below.
+**Counted, 2026-08-17 — see §2b.** The guesses in this section were close on
+shape and wrong on proportion, and two of the properties listed above assert
+nothing at all.
+
+## 2b. Measured coverage
+
+*Counted 2026-08-17 against the release artifacts themselves — `clo.owl`
+(`owl:versionInfo` 2026-06-19), `mondo.obo` (`data-version releases/2026-08-04`)
+and `chebi.obo` (`data-version 254`) — by parsing the files, not by loading them
+into Gemma. That is the point of `SOURCE_VERSION` on every row: what a
+deployment actually loaded can be a slim or a `-base` artifact, and these numbers
+are the ceiling those are measured against, not a claim about any running
+instance. The producer emits the same tally per run so a load can be compared to
+this table.*
+
+**CLO — flat `someValuesFrom` restrictions.** 40,851 `owl:Class` declarations;
+all 9,583 restrictions on the properties below are declared on `CLO_` classes, so
+filtering subjects to CLO's own namespace loses nothing.
+
+| property | reads | classes | restrictions | nested |
+|---|---|---:|---:|---:|
+| `CLO:0000179` | is disease model for | **8,513** | **8,580** | 0 |
+| `CLO:0000015` | derives from patient having disease | 868 | 893 | 0 |
+| `RO:0001000` | derives from | 340 | 340 | **7,776** |
+| `CLO:0037209` | derives from cell | 67 | 67 | 0 |
+| `CLO:0037207` | derives from organism | 23 | 23 | 5 |
+| `CLO:0037208` | derives from anatomic part | 18 | 18 | 0 |
+| `CLO:0037210` | derived from cell line | 2 | 2 | 0 |
+| `CLO:0037227`, `CLO:0037229`, `CLO:0037375`–`CLO:0037378` | — | **0** | **0** | 0 |
+
+Four things in that table change the plan:
+
+1. **`CLO:0000179 is disease model for` is the volume, by ten to one.** §2 above
+   treats it as an interesting curiosity beside `CLO:0000015`; it is 8,513 classes
+   against 868. It is also **not in `Relation.terms.txt`**, which is where every
+   other predicate this feature emits already sits.
+2. **The alternates listed in §2 assert nothing.** `CLO:0037227`,
+   `CLO:0037229` and the four gene-modification properties
+   (`CLO:0037375`–`CLO:0037378`) carry no flat restriction in this release. A
+   plan that lists them as a fallback for the ones that do is planning around
+   an empty set.
+3. **Cell line → species and cell line → organism part are not available from
+   the flat properties.** 23 and 18 classes respectively — and one of the 23
+   `derives from organism` targets is `UBERON:0003101 male organism`, not a
+   taxon at all. Both facts are really in the nested `RO:0001000` chain, which
+   is 7,776 axioms against 340 flat ones. **S3 items 2 and 3 are therefore
+   blocked on the nested unwind, not deliverable from `getRestrictions()`
+   today.** That is the single most consequential correction here.
+4. **Inheritance is not a volume problem.** `getRestrictions()` walks the
+   transitive superclass closure, so a restriction declared on a parent is
+   returned again for every descendant. Of the 8,609 classes carrying one of
+   these restrictions only 50 have any descendant, adding 869 (class,
+   restriction) pairs — about 9%, and semantically correct. Deduplicating on the
+   triple is enough; no special handling is needed.
+
+**DOID → MONDO — the join is essentially total.** The MONDO xref index inverts to
+145,897 distinct foreign CURIEs over 33,295 MONDO terms.
+
+| property | distinct DOID targets | resolve to ≥1 MONDO term | reach a *live* MONDO term | restrictions covered | ambiguous |
+|---|---:|---:|---:|---:|---:|
+| `CLO:0000015` | 128 | 128 (100%) | 128 (100%) | 893 / 893 (100%) | 0 |
+| `CLO:0000179` | 436 | 436 (100%) | 433 (99%) | 8,568 / 8,577 (99.9%) | 0 |
+
+The three misses are `DOID:0050444` (7 restrictions), `DOID:13809` and
+`DOID:9080`, each of which resolves only to an *obsolete* MONDO term. **Zero DOID
+targets map to more than one live MONDO term**, so the many-to-many the design
+guards against is not exercised by CLO today — the code keeps every framing
+anyway, because the guarantee is about the mapping and not about this release.
+
+Qualifiers over the DOID/NCIT half of MONDO's index, as term–xref pairs:
+`MONDO:equivalentTo` 16,288 · `MONDO:equivalentObsolete` 191 ·
+`MONDO:obsoleteEquivalent` 175 · `MONDO:relatedTo` 33 ·
+`MONDO:obsoleteEquivalentObsolete` 12. 🛑 **A single xref can carry several
+`source=` values** — `{source="MONDO:obsoleteEquivalent", source="EFO:0002616"}`
+— where only one names a mapping predicate and the rest are provenance. Reading
+the first and stopping files a real equivalence as unqualified; this cost one
+wrong pass during the build and has a test on it.
+
+**CHEBI — `RO:0000087 has role`.** 218,709 terms; 31,606 carry at least one
+direct `has_role`, over 59,102 direct assertions. Inheriting ancestors' roles the
+way `getRestrictions()` does takes that to 194,244 (term, role) pairs, which is
+the worst case against full CHEBI. What a deployment actually loads is the
+corpus-seeded slim, so the real figure is far smaller — and it is exactly the
+difference `SOURCE_VERSION` exists to make visible.
+
+🛑 **A CHEBI role is not an indication.** Imatinib carries `antiviral agent`,
+`antihypertensive agent` and `hepatoprotective agent`; acetylsalicylic acid
+carries `antidepressant` and `anti-asthmatic agent`. These are reported
+activities from the literature. The object of a `has role` row is filed under
+CHEBI's own role root (`CHEBI:50906`), never under `disease`, and no lexical or
+heuristic route from a role to a disease is acceptable — drug → indication is a
+different source (MED-RT / DrugCentral) and a different piece of work.
 
 ## 3. The blocker, and why it is already solved
 
@@ -136,34 +234,52 @@ Caveats worth designing for:
   confidence. Serving the qualifier through the API is a second, smaller change.
 * Xref CURIEs vary in prefix case (`DOID:` / `NCIT:` / `NCIt:`), so normalize.
 * The mapping is many-to-many in both directions.
-* **Coverage is unmeasured.** One verified pair is not a rate. Counting how many
-  distinct DOIDs referenced by CLO resolve to a MONDO term belongs in stage 1.
+* ~~**Coverage is unmeasured.**~~ Measured 2026-08-17 — see §2b. Every distinct
+  DOID CLO references resolves to a MONDO term, and 99.9% of CLO's disease
+  restrictions reach a live one. One verified pair turned out to be
+  representative, which it had no right to be.
 
 ## 4. Staged plan
 
-**S1 — invert the xrefs.** A reverse index from foreign CURIE to MONDO term, built
-from the Jena model once per ontology load and invalidated with it, keeping the
-exact/narrow/broad qualifier. Small, self-contained, independently useful, and
-every later stage depends on it. Expose it as a service method plus a lookup on
-`/annotations/term` so callers stop label-matching. Report DOID and NCIt coverage
-into this document while building it.
+**S1 — invert the xrefs. DONE 2026-08-17.** `OntologyXref` +
+`OntologyService.getCrossReferences()` (bulk, off the Jena model, qualifier kept)
+and `OntologyXrefIndex`, which inverts it. Substitutes only across `exactMatch` /
+unqualified mappings; narrow and broad are readable but not substitutable, which
+is the whole reason the qualifier is carried. Coverage in §2b. **Still open:** the
+lookup on `/annotations/term`, so REST callers stop label-matching.
 
-**S2 — read restrictions and count coverage.** Call `getRestrictions()`, filter to
-a configured property allow-list, resolve foreign targets through S1, and surface
-the result on `/annotations/term` as relations — property URI, property label,
-target term — kept out of `parents` for the reason in §1. Tally per-property
-coverage across CLO while doing it, and put the numbers in this document.
+**S2 — read restrictions and count coverage. DONE 2026-08-17.**
+`OntologyRelationProducer` calls `getRestrictions()`, filters to the allow-list in
+`OntologyRelationSource`, resolves foreign targets through S1 and writes
+`ANNOTATION_RELATION` rows with `BASIS='ONTOLOGY'`, `EVIDENCE_CODE='IEA'`, no
+experiment and no ACL mask. Run it with `updateOntologyRelations`; it is a command
+of its own because it needs CLO, CHEBI and MONDO warmed up, which the EE2C-driven
+`updateEe2c --relations` has no business waiting on. Per-property coverage is
+logged per run as a tab-separated block. **Still open:** surfacing the relations on
+`/annotations/term`, kept out of `parents` for the reason in §1.
 
 **S3 — use it where curation is being asked for something derivable.** In priority
-order, because each maps to a curation cost we are already paying:
-1. **cell line → disease.** 26 of 33 cell-line experiments in the 500-experiment
-   gold carry a disease tag that restates the line's own disease.
-2. **cell line → species.** The check CAB asked for on 2026-08-11; it kills the
-   confident-wrong groundings where a mouse line was matched into a human study.
-3. **cell line → anatomical part**, which is an `organism part` annotation nobody
-   should be typing.
-4. **cell line → knocked-out gene**, which is a `genotype` annotation, and which
-   also feeds the disease-model inference.
+order, because each maps to a curation cost we are already paying. §2b changes
+what is actually reachable:
+1. **cell line → disease.** ✅ Available now: 9,473 disease restrictions across
+   the two properties, 9,461 of which reach a live MONDO term. 26 of 33 cell-line
+   experiments in the 500-experiment gold carry a disease tag that restates the
+   line's own disease.
+2. **cell line → species.** 🛑 **Not reachable from the flat properties** — 23
+   classes. The species really lives in the nested `RO:0001000` chain. The check
+   CAB asked for on 2026-08-11 needs the nested unwind first, or Cellosaurus's
+   `species-list`, which is a disjoint source and a smaller job.
+3. **cell line → anatomical part.** 🛑 Same: 18 classes. Nested, or Cellosaurus's
+   `derived-from-site-list`.
+4. **cell line → knocked-out gene.** 🛑 Zero: `CLO:0037375`–`CLO:0037378` carry no
+   flat restriction at all.
+
+**S3a — chemical → role.** ✅ Shipped alongside S2, and not in the original plan.
+CHEBI's `RO:0000087 has role` makes `imatinib` findable as an antineoplastic agent
+and a tyrosine kinase inhibitor. It is already in `Relation.terms.txt` and already
+in CHEBI's `additionalPropertyUris`, which means the roles come back as a term's
+*parents* today — reading them as relations is what lets a caller tell a role from
+chemistry. 🛑 It is not an indication: see the warning at the end of §2b.
 
 **S4 — let assertion outrank attestation.** Where `CLO:0000179 is disease model
 for` is stated, it is a claim by an ontology, not a count over our corpus. The
@@ -175,10 +291,17 @@ disease-model endpoint should prefer it and say which it used. That is a change 
 * **Hierarchy pollution** — covered in §1. The failure mode is silent and would
   corrupt disease browsing, so any change here needs a test asserting that a cell
   line never appears among a disease term's children.
-* **Cost is unmeasured.** `getRestrictions()` walks a term's superclasses;
-  per-term cost is unknown and both target call paths (experiment page, browse)
-  are interactive. Measure before wiring, and cache in `OntologyCache` alongside
-  the existing parent/child caches rather than beside them.
+* **Cost is why the read runs offline.** `getRestrictions()` walks the transitive
+  superclass closure twice and throws an exception per non-restriction superclass
+  on the second pass, which is most of them. Rather than measure it and hope, the
+  producer runs it in a maintenance job and stores the answer, so no interactive
+  path pays it at all — the point of a derived table. Wiring it to the experiment
+  page or the browse selector directly would still need the measurement, and a
+  cache in `OntologyCache` alongside the existing parent/child caches.
+  🛑 It also **throws outright** on a restriction shape it cannot convert
+  (`RestrictionFactory` refuses a property that is neither datatype nor object),
+  so a caller must guard per term or one bad class ends the pass over 40,000 good
+  ones.
 * **Index staleness.** Swapping an ontology source updates the Jena model but
   reuses the Lucene index, so `/annotations/term` and `/annotations/search`
   disagree until `refresh?forceIndexing=true`. A derived xref index will inherit
@@ -191,6 +314,29 @@ disease-model endpoint should prefer it and say which it used. That is a change 
 * **Inference stays inference.** None of this is written as an annotation. A
   relation read from an ontology is better evidence than a co-occurrence count,
   and it is still not a curator's claim.
+
+## 5a. Open: the predicate vocabulary is short of what CLO asserts
+
+`Relation.terms.txt` is what Gemma sanctions as a predicate, and it already
+carries `CLO:0000015 derives from patient having disease`, `CLO:0037209`,
+`CLO:0037210`, `RO:0001000` and `RO:0000087 has role`. Three of the properties the
+producer reads are **missing** from it:
+
+| property | reads | restrictions it would sanction |
+|---|---|---:|
+| `CLO:0000179` | is disease model for | 8,580 |
+| `CLO:0037207` | derives from organism | 23 |
+| `CLO:0037208` | derives from anatomic part | 18 |
+
+The producer writes those rows and **logs a WARN naming every unsanctioned
+predicate** rather than dropping them: `ANNOTATION_RELATION` is a derived index,
+not a curation surface — the vocabulary constrains what a curator may write into a
+`Statement`, which `OntologyTermValidatorImpl` enforces separately — and dropping
+them would discard 90% of what CLO asserts because a text file was not updated.
+But the file should be extended deliberately, not by a maintenance job, so this
+needs a decision. `CLO:0000179` is the one that matters; note that
+`RO:0003301 is model of` is already in the file and is a *different* URI, so
+adopting it instead would mean rewriting CLO's own predicate, which is worse.
 
 ## 6. Not recommended
 
