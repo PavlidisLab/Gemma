@@ -184,6 +184,24 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
         private int untranslatable = 0;
         private int unlabelledTargets = 0;
         private int readFailures = 0;
+        /**
+         * Restrictions on an allow-listed property that were rejected because they are not an
+         * {@link OntologyClassRestriction}, tallied by the concrete type that came back.
+         *
+         * <p>🛑 This branch used to drop silently, and the drop is large: CLO's {@code clo.owl}
+         * 2026-06-19 uses {@code CLO_0000179} as a restriction's {@code onProperty} 8,580 times and the
+         * pass reported 441. The "restrictions" column counts what survived this test, not what was
+         * found, so the difference was invisible in the report by construction — including to the two
+         * cell lines the whole feature exists for.</p>
+         */
+        private final Map<String, Integer> nonClassRestrictions = new TreeMap<>();
+        /**
+         * Classes the model actually offered, as distinct from the ones we kept. Recorded because
+         * {@code SOURCE_VERSION} cannot tell a full artifact from a slim one — CHEBI reported version
+         * {@code 254} both when it yielded 25,231 relations from 237,842 classes and when it yielded
+         * 11,378 from 20,964. The version was identical; the artifact was not.
+         */
+        private int classesOffered = 0;
         @Nullable
         private String sourceVersion;
 
@@ -207,7 +225,16 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
                         .append( '\t' ).append( e.getValue()[0] )
                         .append( '\t' ).append( e.getValue()[1] ).append( '\n' );
             }
-            sb.append( "classes visited\t" ).append( classesVisited ).append( '\n' );
+            sb.append( "classes visited\t" ).append( classesVisited )
+                    .append( "\tclasses offered by the model\t" ).append( classesOffered ).append( '\n' );
+            if ( !nonClassRestrictions.isEmpty() ) {
+                sb.append( "restrictions rejected as non-class (property -> type, count):\n" );
+                nonClassRestrictions.entrySet().stream()
+                        .sorted( ( a, b ) -> Integer.compare( b.getValue(), a.getValue() ) )
+                        .limit( 25 )
+                        .forEach( e -> sb.append( '\t' ).append( e.getKey() ).append( '\t' )
+                                .append( e.getValue() ).append( '\n' ) );
+            }
             sb.append( "dropped\tanonymous target (nested axiom)\t" ).append( anonymousTargets )
                     .append( "\tuntranslatable foreign target\t" ).append( untranslatable )
                     .append( "\ttarget absent from the loaded model\t" ).append( unlabelledTargets )
@@ -234,7 +261,9 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
         Set<String> unsanctioned = new LinkedHashSet<>();
         Map<Integer, Taxon> taxaByNcbiId = new HashMap<>();
 
-        for ( String uri : ontology.getAllURIs() ) {
+        Collection<String> allUris = ontology.getAllURIs();
+        reading.classesOffered = allUris.size();
+        for ( String uri : allUris ) {
             if ( uri == null || !isOwnTerm( source, uri ) ) {
                 continue;
             }
@@ -273,7 +302,15 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
                     continue;
                 }
                 OntologyRelationSource.Relation spec = source.getRelation( property.getUri() );
-                if ( spec == null || !( restriction instanceof OntologyClassRestriction ) ) {
+                if ( spec == null ) {
+                    continue;
+                }
+                if ( !( restriction instanceof OntologyClassRestriction ) ) {
+                    // counted, not swallowed: this is where the bulk of CLO_0000179 goes, and until it
+                    // was tallied the coverage block reported the survivors as though they were the
+                    // whole population
+                    reading.nonClassRestrictions.merge(
+                            property.getUri() + " -> " + restriction.getClass().getSimpleName(), 1, Integer::sum );
                     continue;
                 }
                 if ( !sanctionedPredicates.isEmpty() && !sanctionedPredicates.contains( property.getUri() ) ) {
