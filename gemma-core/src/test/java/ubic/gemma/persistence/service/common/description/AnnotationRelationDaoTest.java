@@ -283,6 +283,63 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     }
 
     /**
+     * 🛑 Within a basis, support has to order — the score used to be a constant.
+     *
+     * <p>{@code getScore()} returned {@code basisRank * 1000 + 1} for every self-sufficient basis, so
+     * every {@code CURATED} row scored identically and the sort became a no-op: results fell through
+     * to the alphabetical tiebreakers and a 2-dataset relation could be served above a 10-dataset one.
+     * uib saw the strongest Alzheimer row arrive tenth.</p>
+     */
+    @Test
+    public void testSupportOrdersWithinABasis() {
+        AnnotationRelation weak = attested( LEIGH, SURF1, AnnotationRelationBasis.CURATED, readMask() );
+        weak.setObjectValue( "zzz weak" );
+        annotationRelationDao.create( weak );
+        // three experiments attest the second one, and its label sorts last alphabetically
+        for ( int i = 0; i < 3; i++ ) {
+            AnnotationRelation strong = attested( LEIGH, SURF1, AnnotationRelationBasis.CURATED, readMask() );
+            strong.setObjectValue( "aaa strong" );
+            strong.setObjectValueUri( "http://example.com/strong" );
+            annotationRelationDao.create( strong );
+        }
+
+        List<AnnotationRelationDao.RelationSummary> found = annotationRelationDao.findRelations(
+                new AnnotationRelationDao.RelationQuery().subjectValueUris( Collections.singleton( LEIGH ) ) );
+
+        assertThat( found ).hasSize( 2 );
+        assertThat( found.get( 0 ).getNumberOfExperiments() )
+                .as( "the better-attested relation has to come first, not the alphabetically earlier one" )
+                .isEqualTo( 3 );
+    }
+
+    /**
+     * 🛑 A vocabulary label spelled two ways is one relation, not two.
+     *
+     * <p>{@code Disease model} and {@code disease model} share {@code TGEMO_00101}; {@code toward} and
+     * {@code towards} share {@code RO_0002503}. Grouping on the spelling splits one relation across two
+     * rows and <b>fragments its support</b>, so every ranking built on per-row support ranks fragments
+     * and whichever row a client renders understates the evidence.</p>
+     *
+     * <p>Normalized in SQL rather than by collation, so H2 and MySQL agree and this is actually
+     * testable — unlike {@code objectBreadth}'s case bug, which is not.</p>
+     */
+    @Test
+    public void testALabelSpelledTwoWaysIsOneRelation() {
+        for ( String spelling : new String[] { "Disease model", "disease model", "disease model" } ) {
+            AnnotationRelation r = attested( LEIGH, SURF1, AnnotationRelationBasis.CURATED, readMask() );
+            r.setSubjectCategory( spelling );
+            r.setSubjectCategoryUri( "http://gemma.msl.ubc.ca/ont/TGEMO_00101" );
+            annotationRelationDao.create( r );
+        }
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( LEIGH ) ) ) )
+                .as( "one relation, its support whole" )
+                .singleElement()
+                .satisfies( r -> assertThat( r.getNumberOfExperiments() ).isEqualTo( 3 ) );
+    }
+
+    /**
      * Refuse to enumerate the table. Every caller knows one end of the relation, and a query that
      * names neither is a mistake rather than a request for everything.
      */

@@ -197,8 +197,17 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          * all stay on the row for a client to apply its own bar to.</p>
          */
         public double getScore() {
-            double attested = basis.isSelfSufficient() ? 1d : getSpecificity() * numberOfExperiments;
-            return basis.getRank() * 1000d + attested;
+            // Within a basis, support orders. This used to be a CONSTANT for any self-sufficient
+            // basis, which made the score identical for every CURATED row and turned the sort into a
+            // no-op -- results then fell through to the alphabetical tiebreakers, so a 2-dataset
+            // relation could be served above a 10-dataset one and the strongest row arrived tenth.
+            double within = basis.isSelfSufficient()
+                    ? numberOfExperiments
+                    : getSpecificity() * numberOfExperiments;
+            // Bounded so it can NEVER cross a basis-rank gap. An assertion outranking an attestation
+            // is the contract, and no amount of co-occurrence may overtake a curator's statement --
+            // which a raw count could do, since support is bounded only by the size of the corpus.
+            return basis.getRank() * 1000d + Math.min( within, 999d );
         }
 
         public String getSubjectValue() {

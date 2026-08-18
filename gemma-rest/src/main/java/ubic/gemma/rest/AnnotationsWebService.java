@@ -974,6 +974,12 @@ public class AnnotationsWebService {
          * moment curators stop writing the redundant tag it is derived from.
          */
         boolean corroborated;
+        /**
+         * Identifies the subject/predicate/object triple irrespective of basis, so a client can group
+         * the side-by-side rows that one relation legitimately produces. Grouping on the rendered
+         * labels instead would merge relations that only look alike.
+         */
+        String tripleKey;
 
         AnnotationRelationValueObject( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationSummary s ) {
             this.subject = s.getSubjectValue();
@@ -1000,6 +1006,7 @@ public class AnnotationsWebService {
             this.specificity = s.getSpecificity();
             this.exampleDatasetId = s.getExampleExperimentId();
             this.corroborated = s.getBasis().isSelfSufficient();
+            this.tripleKey = s.getTripleKey();
         }
     }
 

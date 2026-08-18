@@ -112,9 +112,9 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         where.append( aclClause() );
 
         NativeQuery<?> query = getSessionFactory().getCurrentSession().createNativeQuery(
-                        "select R.SUBJECT_VALUE as SV, R.SUBJECT_VALUE_URI as SVU, R.SUBJECT_CATEGORY as SC, R.SUBJECT_CATEGORY_URI as SCU, "
-                                + "R.PREDICATE as P, R.PREDICATE_URI as PU, "
-                                + "R.OBJECT_VALUE as OV, R.OBJECT_VALUE_URI as OVU, R.OBJECT_CATEGORY as OC, R.OBJECT_CATEGORY_URI as OCU, "
+                        "select R.SUBJECT_VALUE as SV, R.SUBJECT_VALUE_URI as SVU, min(R.SUBJECT_CATEGORY) as SC, R.SUBJECT_CATEGORY_URI as SCU, "
+                                + "min(R.PREDICATE) as P, R.PREDICATE_URI as PU, "
+                                + "R.OBJECT_VALUE as OV, R.OBJECT_VALUE_URI as OVU, min(R.OBJECT_CATEGORY) as OC, R.OBJECT_CATEGORY_URI as OCU, "
                                 + "X.ID as TID, X.COMMON_NAME as TCN, X.NCBI_ID as TNCBI, "
                                 + "R.BASIS as B, R.SOURCE as SRC, R.SOURCE_VERSION as SRCV, "
                                 // asserted rows have no experiment, so this is 0 for them by construction
@@ -131,9 +131,13 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                                 // ONLY_FULL_GROUP_BY: every projected non-aggregate is grouped. Taxon is part of
                                 // the grain because it decides what the relation says, and BASIS is part of it
                                 // because two bases naming different terms must not be collapsed into one row.
-                                + " group by R.SUBJECT_VALUE, R.SUBJECT_VALUE_URI, R.SUBJECT_CATEGORY, R.SUBJECT_CATEGORY_URI, "
-                                + "R.PREDICATE, R.PREDICATE_URI, "
-                                + "R.OBJECT_VALUE, R.OBJECT_VALUE_URI, R.OBJECT_CATEGORY, R.OBJECT_CATEGORY_URI, "
+                                + " group by R.SUBJECT_VALUE, R.SUBJECT_VALUE_URI, lower(trim(R.SUBJECT_CATEGORY)), R.SUBJECT_CATEGORY_URI, "
+                                // grouped on the normalized LABEL, not the raw one. `Disease model` and
+                                // `disease model` share TGEMO_00101 and `toward`/`towards` share
+                                // RO_0002503; splitting on the spelling fragments one relation's support
+                                // across two rows, so every ranking built on it ranks fragments.
+                                + "lower(trim(R.PREDICATE)), R.PREDICATE_URI, "
+                                + "R.OBJECT_VALUE, R.OBJECT_VALUE_URI, lower(trim(R.OBJECT_CATEGORY)), R.OBJECT_CATEGORY_URI, "
                                 + "X.ID, X.COMMON_NAME, X.NCBI_ID, R.BASIS, R.SOURCE, R.SOURCE_VERSION" )
                 .addScalar( "SV", StandardBasicTypes.STRING )
                 .addScalar( "SVU", StandardBasicTypes.STRING )
