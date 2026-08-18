@@ -94,6 +94,69 @@ public class MgiRelationProducer {
         this.taxonService = taxonService;
     }
 
+    /** Config keys and disk-cache names for the two reports. */
+    private static final String ASSERTED_CACHE = "mgiGenoDisease";
+    private static final String REFUTED_CACHE = "mgiGenoNotDisease";
+
+    /**
+     * Rebuild from the reports as configured, fetching and caching them the way the lexical ontology
+     * services do.
+     *
+     * <p>The negative report is optional in the weakest sense: if it cannot be fetched the positives
+     * still load, because losing 161 refutations is worse than losing 4,124 assertions but not worse
+     * than losing both. It is logged rather than swallowed.</p>
+     *
+     * @return how many relation rows were written
+     */
+    public int produce() throws IOException {
+        try ( InputStream asserted = openReport( ASSERTED_CACHE ) ) {
+            InputStream refuted = null;
+            try {
+                refuted = openReport( REFUTED_CACHE );
+            } catch ( IOException e ) {
+                log.warn( "Could not read the MGI negative report; the {} refutations it carries will be"
+                        + " absent and nothing will mark their absence.", "~161", e );
+            }
+            try {
+                return produce( asserted, refuted );
+            } finally {
+                if ( refuted != null ) {
+                    refuted.close();
+                }
+            }
+        }
+    }
+
+    /**
+     * Fetch-and-cache, matching {@code MgiStrainOntologyService.openSource}: the cached copy is used
+     * when present, otherwise it is downloaded once and kept.
+     */
+    private InputStream openReport( String cacheName ) throws IOException {
+        String url = ubic.gemma.core.config.Configuration.getString( "url." + cacheName );
+        if ( url == null ) {
+            throw new IOException( "No url." + cacheName + " configured." );
+        }
+        java.io.File cache = ubic.gemma.core.ontology.jena.OntologyLoader.getDiskCachePath( cacheName );
+        if ( cache == null ) {
+            log.info( "No ontology cache dir configured; streaming {} directly from {}.", cacheName, url );
+            return java.net.URI.create( url ).toURL().openStream();
+        }
+        if ( cache.isFile() && cache.length() > 0 ) {
+            log.info( "Using cached {} at {} ({} bytes).", cacheName, cache, cache.length() );
+            return new java.io.FileInputStream( cache );
+        }
+        java.io.File parent = cache.getParentFile();
+        if ( parent != null ) {
+            //noinspection ResultOfMethodCallIgnored
+            parent.mkdirs();
+        }
+        log.info( "Downloading {} from {} to {} ...", cacheName, url, cache );
+        try ( InputStream in = java.net.URI.create( url ).toURL().openStream() ) {
+            java.nio.file.Files.copy( in, cache.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING );
+        }
+        return new java.io.FileInputStream( cache );
+    }
+
     /**
      * Rebuild every MGI relation from the two reports.
      *

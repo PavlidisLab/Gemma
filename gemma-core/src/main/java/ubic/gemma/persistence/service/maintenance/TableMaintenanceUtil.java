@@ -164,6 +164,23 @@ public interface TableMaintenanceUtil {
     int updateOntologyRelationEntries( @Nullable java.util.Collection<String> sources );
 
     /**
+     * Rebuild the {@link ubic.gemma.model.common.description.AnnotationRelationBasis#EXTERNAL} rows
+     * that MGI's genotype-to-disease reports assert — and the ones they deny.
+     *
+     * <p>A third entry point rather than a flag on the other two, for the reason they are separate from
+     * each other: this reads two files off MGI's download server and needs MONDO loaded to translate
+     * their DOIDs, which is a different set of prerequisites again from the curated harvest (EE2C) and
+     * the ontology pass (Jena models).</p>
+     *
+     * <p>🛑 <b>The delete is scoped to {@code SOURCE = 'MGI'}.</b> Other EXTERNAL sources are somebody
+     * else's rows and a run here must not touch them.</p>
+     *
+     * @return how many relation rows were written
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateExternalRelationEntries();
+
+    /**
      * Evict the query cache for the {@code ANNOTATION_RELATION} table.
      */
     @Secured({ "GROUP_ADMIN" })

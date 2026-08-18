@@ -559,6 +559,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private OntologyRelationProducer ontologyRelationProducer;
 
     /**
+     * Optional for the same reason as the ontology producer: a context without ontologies must still
+     * start, and this one additionally needs MONDO loaded to translate MGI's DOIDs.
+     */
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.relation.MgiRelationProducer mgiRelationProducer;
+
+    /**
      * Not {@code @Transactional}: the producer spends minutes walking Jena models before it has a row to
      * write, and its own transaction wraps only the delete-and-insert. Holding a connection open across
      * the read would be a maintenance job contending with the application for no reason.
@@ -577,6 +584,36 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         evictAnnotationRelationQueryCache();
         log.info( String.format( "Done updating ONTOLOGY ANNOTATION_RELATION entries%s; %d written in %d ms.",
                 what, written, timer.getTime() ) );
+        return written;
+    }
+
+    /**
+     * Not {@code @Transactional}, for the same reason as the ontology pass: the fetch and the parse
+     * happen before there is a row to write, and the producer's own transaction wraps only the
+     * delete-and-insert.
+     */
+    @Override
+    @Timed
+    public int updateExternalRelationEntries() {
+        if ( mgiRelationProducer == null ) {
+            log.warn( "No MGI relation producer is wired; EXTERNAL ANNOTATION_RELATION entries are not updated." );
+            return 0;
+        }
+        StopWatch timer = StopWatch.createStarted();
+        log.info( "Updating EXTERNAL ANNOTATION_RELATION entries from MGI..." );
+        int written;
+        try {
+            written = mgiRelationProducer.produce();
+        } catch ( java.io.IOException e ) {
+            // 🛑 Left alone rather than emptied. A download that failed is not MGI retracting every
+            // statement it has ever made, and rebuilding from nothing would look exactly like that --
+            // the same rule the ontology pass applies to an ontology that is not loaded.
+            log.error( "Could not read MGI's reports; its EXTERNAL relation rows are left as they are.", e );
+            return 0;
+        }
+        evictAnnotationRelationQueryCache();
+        log.info( String.format( "Done updating EXTERNAL ANNOTATION_RELATION entries; %d written in %d ms.",
+                written, timer.getTime() ) );
         return written;
     }
 

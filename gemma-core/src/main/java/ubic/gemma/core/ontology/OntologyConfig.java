@@ -305,6 +305,24 @@ public class OntologyConfig {
                 ontologyService );
     }
 
+    /**
+     * MGI's genotype-to-disease reports as {@code EXTERNAL} relations.
+     *
+     * <p>Declared here beside {@link #ontologyRelationProducer} because it shares the one thing that
+     * makes either work: MONDO, which is what MGI's {@code DOID:} identifiers are translated out of.
+     * It reads no other ontology — the statements themselves come off MGI's download server.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.MgiRelationProducer mgiRelationProducer(
+            @Autowired(required = false) java.util.List<OntologyService> ontologies,
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager,
+            @Autowired(required = false) ubic.gemma.persistence.service.genome.taxon.TaxonService taxonService ) {
+        return new ubic.gemma.core.ontology.relation.MgiRelationProducer( ontologies, annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ),
+                taxonService );
+    }
+
     private <T extends OntologyService> OntologyServiceFactory<T> createOntologyFactory( Class<T> ontologyClass, String... allowedUriPrefixes ) {
         OntologyServiceFactory<T> factory = new OntologyServiceFactory<>( ontologyClass );
         factory.setAutoLoad( loadOntologies );

@@ -1,0 +1,100 @@
+package ubic.gemma.apps;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.Nullable;
+import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.ontology.providers.OntologyServiceResolver;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Rebuilds the {@code EXTERNAL} rows of {@code ANNOTATION_RELATION} from MGI's genotype-to-disease
+ * reports — which mutant alleles MGI's curators say model which diseases, and which they say do not.
+ *
+ * <p>A command of its own for the reason {@code updateOntologyRelations} is one: the prerequisites
+ * differ. That one needs CLO and CHEBI warmed; this one reads two files off MGI's download server and
+ * needs only MONDO, which is what the reports' {@code DOID:} identifiers are translated out of.</p>
+ *
+ * <p>🛑 A failed download leaves the existing rows alone rather than emptying them. A fetch that did
+ * not work is not MGI retracting every statement it has ever made.</p>
+ */
+public class UpdateExternalRelationsCli extends AbstractAuthenticatedCLI {
+
+    /**
+     * Not a source of relations here — it is what MGI's DOIDs are translated <i>out</i> of, so nothing
+     * can be stored without it.
+     */
+    private static final String XREF_ONTOLOGY = "MONDO";
+
+    @Autowired
+    private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Autowired(required = false)
+    private List<ubic.gemma.core.ontology.providers.OntologyService> ontologies;
+
+    @Value("${load.ontologies}")
+    private boolean autoLoadOntologies;
+
+    @Nullable
+    @Override
+    public String getCommandName() {
+        return "updateExternalRelations";
+    }
+
+    @Nullable
+    @Override
+    public String getShortDesc() {
+        return "Rebuild the EXTERNAL ANNOTATION_RELATION rows from MGI's genotype-to-disease reports";
+    }
+
+    @Override
+    protected void buildOptions( Options options ) {
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
+    }
+
+    @Override
+    protected void doAuthenticatedWork() throws Exception {
+        warmUp();
+        int written = tableMaintenanceUtil.updateExternalRelationEntries();
+        log.info( "Wrote " + written + " EXTERNAL relation rows. Coverage is in the log above." );
+    }
+
+    /**
+     * MONDO only. Warming every ontology would spend the run on models this command never reads.
+     */
+    private void warmUp() throws InterruptedException {
+        if ( ontologies == null || ontologies.isEmpty() ) {
+            log.warn( "No ontology services are wired; MGI's DOIDs cannot be translated and nothing will be stored." );
+            return;
+        }
+        Optional<ubic.gemma.core.ontology.providers.OntologyService> mondo =
+                OntologyServiceResolver.resolve( ontologies, XREF_ONTOLOGY );
+        if ( !mondo.isPresent() ) {
+            log.warn( "No ontology matched '" + XREF_ONTOLOGY + "'; nothing can be translated." );
+            return;
+        }
+        ubic.gemma.core.ontology.providers.OntologyService ontology = mondo.get();
+        if ( !ontology.isOntologyLoaded() ) {
+            if ( autoLoadOntologies ) {
+                log.info( "Waiting for " + ontology + " to finish loading..." );
+                ontology.waitForInitializationThread();
+            } else {
+                log.info( "Loading " + ontology + "..." );
+                // no search index: the cross-references are read by identifier, never by text
+                ontology.setSearchEnabled( false );
+                ontology.initialize( true, false );
+            }
+        }
+        log.info( ontology + " is "
+                + ( ontology.isOntologyLoaded() ? "loaded (version " + ontology.getVersion() + ")." : "STILL NOT loaded." ) );
+    }
+}
