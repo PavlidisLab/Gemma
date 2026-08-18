@@ -167,6 +167,30 @@ public class VerifyPublicationEvidenceCliTest extends BaseCliTest5 {
         verify( eeService, never() ).updatePublications( any(), any(), any(), any() );
     }
 
+    /**
+     * 🛑 Refused while it is still an argument. The change log is opened after the experiment list is
+     * built, and building it loads the corpus — so a bad path used to cost a full scan (25,687
+     * datasets on prod) before failing, and failed as a NoSuchFileException naming the FILE when the
+     * missing thing was its DIRECTORY. Reported from a real run 2026-08-18.
+     *
+     * <p>What this pins is the failure and its message. That it happens before the corpus loads is a
+     * consequence of the check living in {@code processExperimentOptions}, which runs during argument
+     * parsing — asserting it here through mock interactions is not possible, because the beans in this
+     * context are shared across tests and carry the other tests' calls.</p>
+     */
+    @Test
+    @WithMockUser
+    public void testABadChangeLogPathIsRefusedBeforeAnythingIsLoaded() {
+        assertThat( cli )
+                .withArguments( "-e", "GSE123", "--verify",
+                        "--changeLog", "/no/such/directory/anywhere/out.tsv" )
+                .fails()
+                .standardError()
+                .asString( java.nio.charset.StandardCharsets.UTF_8 )
+                .contains( "does not exist" )
+                .contains( "/no/such/directory/anywhere" );
+    }
+
     private ExpressionExperiment geoExperiment() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );

@@ -193,6 +193,22 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
         }
         if ( commandLine.hasOption( CHANGE_LOG_OPTION ) ) {
             this.changeLogFile = new File( commandLine.getOptionValue( CHANGE_LOG_OPTION ) );
+            // 🛑 Checked HERE, not where the file is opened. Opening happens after the experiment
+            // list is built, and building it loads the whole corpus -- so an unwritable path used to
+            // cost a full scan before failing, and then failed as a bare NoSuchFileException that
+            // named the file rather than the directory that was actually missing. An argument that
+            // cannot work should be refused while it is still an argument.
+            File parent = changeLogFile.getAbsoluteFile().getParentFile();
+            if ( parent != null && !parent.isDirectory() ) {
+                throw new ParseException( "Cannot write the change log to " + changeLogFile
+                        + ": the directory " + parent + " does not exist. Note this path is resolved"
+                        + " where the CLI RUNS, which for the published image is inside the container"
+                        + " -- $HOME is mounted through, most other paths are not." );
+            }
+            if ( parent != null && !parent.canWrite() ) {
+                throw new ParseException( "Cannot write the change log to " + changeLogFile
+                        + ": " + parent + " is not writable by this user." );
+            }
         }
     }
 
@@ -201,8 +217,8 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
         try {
             openChangeLog();
         } catch ( IOException e ) {
-            throw new RuntimeException( "Could not open the change log; refusing to run a job whose"
-                    + " record of what it changed would be lost.", e );
+            throw new RuntimeException( "Could not open the change log at " + changeLogFile
+                    + "; refusing to run a job whose record of what it changed would be lost.", e );
         }
         try {
             super.processExpressionExperiments( ees );
