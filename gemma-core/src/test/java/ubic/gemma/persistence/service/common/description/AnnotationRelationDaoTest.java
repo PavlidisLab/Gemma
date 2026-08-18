@@ -382,7 +382,7 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
 
         // an unclassified predicate licenses nothing: a suppression must never rest on a relation
         // nobody has reasoned about
-        assertThat( RelationInferenceDirection.of( "http://purl.obolibrary.org/obo/RO_0001000", diseaseModel ) )
+        assertThat( RelationInferenceDirection.of( "http://purl.obolibrary.org/obo/CLO_0037375", diseaseModel ) )
                 .isEqualTo( RelationInferenceDirection.NEITHER );
         assertThat( RelationInferenceDirection.of( null, diseaseModel ) )
                 .isEqualTo( RelationInferenceDirection.NEITHER );
@@ -396,6 +396,57 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
         assertThat( RelationInferenceDirection.of( HAS_GENOTYPE, null ) )
                 .as( "an unknown subject category is not a licence" )
                 .isEqualTo( RelationInferenceDirection.NEITHER );
+    }
+
+    /**
+     * 🛑 {@code RO_0001000 derives from} licenses nothing until some source has said what its object
+     * IS.
+     *
+     * <p>It is the one predicate that carries both directions under a single subject category, so no
+     * subject-side rule can classify it. Both of these are curated and both are filed under
+     * {@code disease}:</p>
+     *
+     * <pre>
+     * refractory anemia with excess blasts -- derives from --> myelodysplastic syndrome   subject is specific
+     * influenza                            -- derives from --> H3N2                       object is specific
+     * </pre>
+     *
+     * <p>Over the 666 curated rows measured 2026-08-18, topicality admits 250 and they are the wrong
+     * ones — {@code Cachexia -> melanoma}, {@code infectious disease -> Borrellia burgdorferi},
+     * {@code partial duplication of chromosome 7 -> maternal duplication} beside the same subject's
+     * {@code -> paternal duplication}. An object category is set only by a producer and never by the
+     * curated harvest, so requiring one admits CLO's flat rows and refuses every curated row at once.</p>
+     */
+    @Test
+    public void testDerivesFromNeedsSomebodyToHaveSaidWhatTheObjectIs() {
+        String derivesFrom = "http://purl.obolibrary.org/obo/RO_0001000";
+        String cellLine = "http://purl.obolibrary.org/obo/CLO_0000031";
+        String organismPart = "http://www.ebi.ac.uk/efo/EFO_0000635";
+        String disease = "http://www.ebi.ac.uk/efo/EFO_0000408";
+
+        // CLO says MCF7 derives from breast AND says breast is an organism part
+        assertThat( RelationInferenceDirection.of( derivesFrom, cellLine, null, organismPart ) )
+                .as( "a typed object is what makes this readable" )
+                .isEqualTo( RelationInferenceDirection.SUBJECT_IMPLIES_OBJECT );
+
+        // the same predicate on a curated row, which has one category and it belongs to the subject
+        assertThat( RelationInferenceDirection.of( derivesFrom, cellLine, null, null ) )
+                .as( "an untyped object licenses nothing, whatever the subject is" )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
+        assertThat( RelationInferenceDirection.of( derivesFrom, disease, null, null ) )
+                .as( "influenza must not be allowed to imply H3N2" )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
+
+        // and the three-argument form cannot answer it, so it fails closed rather than guessing
+        assertThat( RelationInferenceDirection.of( derivesFrom, cellLine, null ) )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
+
+        // 🛑 the rule is scoped to this predicate: a typed object is NOT a general precondition, and
+        // every other subject-side predicate still licenses without one. CLO_0000015 says what its
+        // object is by saying its own name.
+        assertThat( RelationInferenceDirection.of( "http://purl.obolibrary.org/obo/CLO_0000015",
+                cellLine, null, null ) )
+                .isEqualTo( RelationInferenceDirection.SUBJECT_IMPLIES_OBJECT );
     }
 
     /**

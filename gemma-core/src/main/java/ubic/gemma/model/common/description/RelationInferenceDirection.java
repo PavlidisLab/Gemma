@@ -45,8 +45,14 @@ import java.util.Set;
  * MCF7 cell  -- derives from patient having disease -->  DOID   specific is the SUBJECT
  * </pre>
  *
- * <p>So this is a property of the predicate, read off which end carries the narrower thing. It is not
- * a property of the basis, the category, or the direction a caller happened to query from.</p>
+ * <p>So the direction is read off which end carries the narrower thing, and it is never a property of
+ * the direction a caller happened to query from.</p>
+ *
+ * <p><b>The predicate alone does not always settle it.</b> It did when this class was written; it does
+ * not now, and each exception was measured rather than anticipated. {@link RelationTopicality} decides
+ * first, because a predicate that does two jobs licenses on only one of them. And one predicate —
+ * {@code RO_0001000 derives from} — needs the OBJECT as well, because it carries both directions under
+ * a single subject category. See {@link #TYPED_OBJECT_REQUIRED}.</p>
  */
 public enum RelationInferenceDirection {
 
@@ -85,6 +91,7 @@ public enum RelationInferenceDirection {
             "http://purl.obolibrary.org/obo/CLO_0037227",
             "http://purl.obolibrary.org/obo/CLO_0037229",
             "http://purl.obolibrary.org/obo/ENVO_01003004",    // derives from part of
+            "http://purl.obolibrary.org/obo/RO_0001000",       // derives from -- TYPED OBJECT ONLY, see below
             "http://purl.obolibrary.org/obo/RO_0000087",       // has role -- imatinib implies antineoplastic
             "http://purl.obolibrary.org/obo/RO_0003301",       // is model of
             "http://purl.obolibrary.org/obo/RO_0016002",       // has disease -- SNCA implies Parkinson
@@ -108,12 +115,52 @@ public enum RelationInferenceDirection {
     );
 
     /**
+     * Predicates that license nothing unless some source has said what KIND of thing the object is.
+     *
+     * <p>🛑 <b>{@code RO_0001000 derives from} is the whole reason this set exists, and the subject
+     * side cannot settle it.</b> It genuinely carries both directions, on the same subject category:</p>
+     *
+     * <pre>
+     * refractory anemia with excess blasts -- derives from --> myelodysplastic syndrome   specific is the SUBJECT
+     * influenza                            -- derives from --> H3N2                       specific is the OBJECT
+     * </pre>
+     *
+     * <p>Both are curated, both filed under {@code disease}, and reading the second one subject-to-object
+     * asserts that influenza implies H3N2. Measured over the 666 curated {@code derives from} rows,
+     * 2026-08-18: {@link RelationTopicality} admits 250 of them and they are the wrong 250 —
+     * {@code Cachexia -> melanoma} (10 rows; cachexia is secondary to many cancers),
+     * {@code infectious disease -> Borrellia burgdorferi}, {@code brain ischemia -> light} (a
+     * photothrombotic model), {@code MYC [human] -> primary tumor sample}. The clearest disproof is
+     * {@code partial duplication of chromosome 7}, which derives from {@code maternal duplication} AND
+     * from {@code paternal duplication}: a subject implying two contradictory objects is recording what
+     * happened in one experiment, not a property of the term.</p>
+     *
+     * <p>The provenance sense sits in the 416 rows topicality already excludes —
+     * {@code hematopoietic stem cell -> liver}, {@code EGb 761 -> Ginkgo biloba} — so widening the
+     * subject gate would admit more of the bad rows before it reached any of the good ones. That is why
+     * the discriminator is the OBJECT.</p>
+     *
+     * <p><b>An object category is only ever set by a producer</b> —
+     * {@code OntologyRelationProducerImpl}, {@code MgiRelationProducer},
+     * {@code CellosaurusRelationProducer} — and never by the curated harvest, which has one category and
+     * it belongs to the subject. Of those three only CLO emits this predicate (Cellosaurus writes
+     * {@code CLO_0000015} / {@code CLO_0037208}, MGI the GENO ones), so requiring a typed object selects
+     * exactly CLO's flat {@code derives from} rows: {@code MCF7 -> breast},
+     * {@code MCF7 -> epithelial cell}, where the subject is a cell line by construction and the sense is
+     * provenance every time.</p>
+     *
+     * <p>It is the rule this class already applies, one column over. A predicate nobody has reasoned
+     * about licenses nothing; so does a row whose object nobody has typed.</p>
+     */
+    private static final Set<String> TYPED_OBJECT_REQUIRED = unmodifiable(
+            "http://purl.obolibrary.org/obo/RO_0001000"        // derives from
+    );
+
+    /**
      * Which way the implication runs for this predicate, or {@link #NEITHER}.
      *
      * <p>Unclassified predicates are {@link #NEITHER}, closed by default: a predicate nobody has
-     * reasoned about must not silently license a suppression. {@code RO_0001000 derives from} is
-     * deliberately absent — it covers both {@code amplified total RNA -> total RNA} and
-     * {@code cell line -> donor}, and one URI cannot carry two directions.</p>
+     * reasoned about must not silently license a suppression.</p>
      */
     private static RelationInferenceDirection byPredicate( @Nullable String predicateUri ) {
         if ( predicateUri == null ) {
@@ -153,9 +200,24 @@ public enum RelationInferenceDirection {
      * @param subjectValueUri the subject's own URI. Needed because the claim an
      *                        {@link #OBJECT_IMPLIES_SUBJECT} predicate licenses is a claim ABOUT
      *                        DISEASE, so it may only run where the subject is one.
+     * @deprecated by omission rather than by policy: a {@link #TYPED_OBJECT_REQUIRED} predicate
+     * cannot be answered without the object's category and comes back {@link #NEITHER} here. That
+     * fails closed, which is the right way for it to fail, but a caller holding a whole row should
+     * pass the fourth argument and get the real answer.
      */
     public static RelationInferenceDirection of( @Nullable String predicateUri,
             @Nullable String subjectCategoryUri, @Nullable String subjectValueUri ) {
+        return of( predicateUri, subjectCategoryUri, subjectValueUri, null );
+    }
+
+    /**
+     * @param objectCategoryUri what kind of thing the object is, where a source has said. Only a
+     *                          producer sets it; the curated harvest never does. See
+     *                          {@link #TYPED_OBJECT_REQUIRED} for the predicate this decides.
+     */
+    public static RelationInferenceDirection of( @Nullable String predicateUri,
+            @Nullable String subjectCategoryUri, @Nullable String subjectValueUri,
+            @Nullable String objectCategoryUri ) {
         if ( RelationTopicality.of( predicateUri, subjectCategoryUri, subjectValueUri )
                 != RelationTopicality.TERM_LEVEL ) {
             return NEITHER;
@@ -173,6 +235,10 @@ public enum RelationInferenceDirection {
             // Both reported by uib 2026-08-18, from a curator's screen on GSE99114. Topicality keeps
             // these rows on the card, which is right -- they are facts about the term -- and this
             // stops them being turned into a claim.
+            return NEITHER;
+        }
+        if ( direction == SUBJECT_IMPLIES_OBJECT && objectCategoryUri == null
+                && predicateUri != null && TYPED_OBJECT_REQUIRED.contains( predicateUri ) ) {
             return NEITHER;
         }
         return direction;

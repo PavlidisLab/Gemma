@@ -406,7 +406,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          */
         public ubic.gemma.model.common.description.RelationInferenceDirection getInferenceDirection() {
             return ubic.gemma.model.common.description.RelationInferenceDirection
-                    .of( predicateUri, subjectCategoryUri, subjectValueUri );
+                    .of( predicateUri, subjectCategoryUri, subjectValueUri, objectCategoryUri );
         }
 
         /**
