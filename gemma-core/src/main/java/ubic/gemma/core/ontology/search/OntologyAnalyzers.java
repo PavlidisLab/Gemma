@@ -120,10 +120,19 @@ public final class OntologyAnalyzers {
      * {@link #SHORT_CODE_RUN}. Order does not matter for correctness; the long-run fold runs first
      * so the short-run fold sees text already free of {@code BAY 43-9006}-shaped runs.</p>
      *
-     * <p><b>Changing either pattern requires a forced reindex.</b> An analyzer change does not
-     * invalidate an existing Lucene index, so a restart alone leaves the old tokens in place and
-     * the query side folding against them — visible as the model and the search disagreeing.
-     * {@code /admin/ontologies/{name}/refresh?forceIndexing=true} is what rebuilds it.</p>
+     * <p><b>Changing either pattern takes effect on the next load of each ontology — in practice,
+     * a restart.</b> The ontology Lucene indexes are not persisted: both
+     * {@link ubic.gemma.core.ontology.lexical.LexicalOntologyIndex} and the Jena-model index build
+     * into a {@code ByteBuffersDirectory}, and {@code OntologyIndexer.getSubjectIndex} returns
+     * {@code null} unconditionally, so the rebuild predicate in {@code AbstractOntologyService}
+     * ({@code forceReindexing || changed || sourceChanged || !indexExists}) is always satisfied by
+     * its last term. Every load reindexes from the model, and nothing survives the JVM.</p>
+     *
+     * <p>So there is no stale on-disk index to invalidate here, and
+     * {@code refresh?forceIndexing=true} would only re-download and re-parse each source to
+     * produce byte-identical tokens. That endpoint earns its keep when the SOURCE has changed,
+     * where the disk-cached copy would otherwise be reused across a restart and leave the model
+     * itself stale — a different failure with the same symptom.</p>
      *
      * <p>Wrapping rather than subclassing is deliberate — {@link EnglishAnalyzer} is final, and
      * {@link AnalyzerWrapper} adds the reader filter without restating the Porter chain, so the
