@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.cli.util.RestCacheEviction;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.core.ontology.providers.OntologyServiceResolver;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
@@ -54,6 +56,9 @@ public class UpdateExternalRelationsCli extends AbstractAuthenticatedCLI {
     private TableMaintenanceUtil tableMaintenanceUtil;
 
     @Autowired(required = false)
+    private GemmaRestApiClient gemmaRestApiClient;
+
+    @Autowired(required = false)
     private List<ubic.gemma.core.ontology.providers.OntologyService> ontologies;
 
     @Value("${load.ontologies}")
@@ -84,6 +89,7 @@ public class UpdateExternalRelationsCli extends AbstractAuthenticatedCLI {
         warmUp();
         int written = tableMaintenanceUtil.updateExternalRelationEntries();
         log.info( "Wrote " + written + " EXTERNAL relation rows. Coverage is in the log above." );
+        RestCacheEviction.evictAfterRebuild( gemmaRestApiClient, log );
     }
 
     /**

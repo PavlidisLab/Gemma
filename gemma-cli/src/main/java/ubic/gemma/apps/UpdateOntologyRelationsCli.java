@@ -6,6 +6,7 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.cli.util.RestCacheEviction;
 import ubic.gemma.core.ontology.providers.OntologyServiceResolver;
 import ubic.gemma.core.ontology.relation.OntologyRelationProducer;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
@@ -41,6 +42,9 @@ public class UpdateOntologyRelationsCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Autowired(required = false)
+    private ubic.gemma.core.util.GemmaRestApiClient gemmaRestApiClient;
 
     @Autowired
     private OntologyRelationProducer ontologyRelationProducer;
@@ -92,6 +96,7 @@ public class UpdateOntologyRelationsCli extends AbstractAuthenticatedCLI {
         int written = tableMaintenanceUtil.updateOntologyRelationEntries( sources );
         log.info( "Wrote " + written + " ONTOLOGY relation rows."
                 + " Per-property coverage is in the log above, one tab-separated block per source." );
+        RestCacheEviction.evictAfterRebuild( gemmaRestApiClient, log );
     }
 
     /**
