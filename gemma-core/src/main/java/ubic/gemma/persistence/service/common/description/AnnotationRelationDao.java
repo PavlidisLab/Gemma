@@ -170,6 +170,18 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         @Nullable
         private final String evidence;
 
+        /**
+         * 🛑 <b>Build one with {@link #builder()}, not with this.</b> Twenty-six positional arguments,
+         * a dozen of them {@code long} and most of the rest {@code String}, is a constructor where a
+         * transposition compiles and passes — and adding a field to it broke a stale test class three
+         * times in one day, because Maven does not recompile a test whose source has not changed and
+         * the mismatch therefore arrives at runtime as {@code NoSuchMethodError} rather than at
+         * compile time.
+         *
+         * <p>With a builder an added field is additive: existing callers keep compiling AND keep
+         * meaning what they meant, and the new field simply defaults.</p>
+         */
+        @lombok.Builder
         public RelationSummary( String subjectValue, @Nullable String subjectValueUri, @Nullable String subjectCategory,
                 @Nullable String subjectCategoryUri, @Nullable String predicate, @Nullable String predicateUri,
                 String objectValue, @Nullable String objectValueUri, @Nullable String objectCategory,

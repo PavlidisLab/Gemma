@@ -219,17 +219,27 @@ public class OntologySearchSourceInferredRelationsTest {
 
     private static AnnotationRelationDao.RelationSummary relation( String subjectUri, String objectUri,
             String objectValue, AnnotationRelationBasis basis ) {
-        return new AnnotationRelationDao.RelationSummary(
+        return AnnotationRelationDao.RelationSummary.builder()
+                .subjectValue( "subject" )
+                .subjectValueUri( subjectUri )
+                .subjectCategory( "disease model" )
                 // 🛑 the category URI, not just its label: has_genotype is subject-dependent, so a row
                 // with no subject category is EXPERIMENT_LEVEL and licenses no inference at all. This
                 // fixture said "disease model" in the label and left the URI null, which the rule that
-                // now gates inference on topicality reads as "unknown subject" -- correctly.
-                "subject", subjectUri, "disease model", "http://gemma.msl.ubc.ca/ont/TGEMO_00101",
-                "has_genotype", "http://purl.obolibrary.org/obo/GENO_0000222",
-                objectValue, objectUri, null, null,
-                null, null, null, basis,
-                ubic.gemma.model.common.description.AnnotationRelationStatus.ASSERTED, null, null,
-                1, 1, 0, 0, null, 1, 1, 1, null );
+                // gates inference on topicality reads as "unknown subject" -- correctly.
+                .subjectCategoryUri( "http://gemma.msl.ubc.ca/ont/TGEMO_00101" )
+                .predicate( "has_genotype" )
+                .predicateUri( "http://purl.obolibrary.org/obo/GENO_0000222" )
+                .objectValue( objectValue )
+                .objectValueUri( objectUri )
+                .basis( basis )
+                .status( ubic.gemma.model.common.description.AnnotationRelationStatus.ASSERTED )
+                .numberOfExperiments( 1 )
+                .numberOfExperimentsAtFactorValue( 1 )
+                .numberOfExperimentsWithSubject( 1 )
+                .objectBreadth( 1 )
+                .subjectBreadth( 1 )
+                .build();
     }
 
     private static SearchSettings settings( boolean inferRelations ) {

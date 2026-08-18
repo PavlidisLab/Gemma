@@ -249,16 +249,37 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             long total = basis == AnnotationRelationBasis.CORPUS
                     ? subjectTotals.getOrDefault( subjectKey( ( String ) r[0], ( String ) r[1] ), 0L )
                     : 0L;
-            RelationSummary s = new RelationSummary(
-                    ( String ) r[0], ( String ) r[1], ( String ) r[2], ( String ) r[3],
-                    ( String ) r[4], ( String ) r[5],
-                    ( String ) r[6], ( String ) r[7], ( String ) r[8], ( String ) r[9],
-                    ( Long ) r[10], ( String ) r[11], ( Integer ) r[12],
-                    basis, AnnotationRelationStatus.valueOf( ( String ) r[21] ), ( String ) r[14], ( String ) r[15],
-                    asLong( r[16] ), asLong( r[17] ), asLong( r[18] ), asLong( r[19] ),
-                    ( Long ) r[20], total, breadth.getOrDefault( breadthKey( ( String ) r[6] ), 0L ),
-                    subjectBreadth.getOrDefault( breadthKey( ( String ) r[0] ), 0L ),
-                    ( String ) r[22] );
+            // Named rather than positional: the projection is read by index, so this is the one place
+            // where a column and a field have to be lined up by hand, and it is worth being able to
+            // see that they are.
+            RelationSummary s = RelationSummary.builder()
+                    .subjectValue( ( String ) r[0] )
+                    .subjectValueUri( ( String ) r[1] )
+                    .subjectCategory( ( String ) r[2] )
+                    .subjectCategoryUri( ( String ) r[3] )
+                    .predicate( ( String ) r[4] )
+                    .predicateUri( ( String ) r[5] )
+                    .objectValue( ( String ) r[6] )
+                    .objectValueUri( ( String ) r[7] )
+                    .objectCategory( ( String ) r[8] )
+                    .objectCategoryUri( ( String ) r[9] )
+                    .taxonId( ( Long ) r[10] )
+                    .taxonCommonName( ( String ) r[11] )
+                    .taxonNcbiId( ( Integer ) r[12] )
+                    .basis( basis )
+                    .status( AnnotationRelationStatus.valueOf( ( String ) r[21] ) )
+                    .source( ( String ) r[14] )
+                    .sourceVersion( ( String ) r[15] )
+                    .numberOfExperiments( asLong( r[16] ) )
+                    .numberOfExperimentsAtFactorValue( asLong( r[17] ) )
+                    .numberOfExperimentsAtTag( asLong( r[18] ) )
+                    .numberOfExperimentsAtBioMaterial( asLong( r[19] ) )
+                    .exampleExperimentId( ( Long ) r[20] )
+                    .numberOfExperimentsWithSubject( total )
+                    .objectBreadth( breadth.getOrDefault( breadthKey( ( String ) r[6] ), 0L ) )
+                    .subjectBreadth( subjectBreadth.getOrDefault( breadthKey( ( String ) r[0] ), 0L ) )
+                    .evidence( ( String ) r[22] )
+                    .build();
             if ( s.getNumberOfExperiments() < q.getMinimumSupport() && !basis.isSelfSufficient() ) {
                 continue;
             }
