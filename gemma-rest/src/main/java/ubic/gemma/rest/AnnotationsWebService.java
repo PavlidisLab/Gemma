@@ -1004,6 +1004,27 @@ public class AnnotationsWebService {
          */
         String inferenceDirection;
         /**
+         * The claim the relation licenses, phrased as its own triple rather than left as the stored row
+         * for a client to invert. Null when nothing is implied.
+         *
+         * <p>{@code Alzheimer disease --has_genotype--> APP/PS1} is stored; what follows from it is
+         * {@code APP/PS1 --is model of--> Alzheimer disease}. Taxon picks the verb — a human subject
+         * gets {@code has disease}, because a human line carrying a variant is not modelling the
+         * disease, it has it.</p>
+         */
+        @Nullable
+        String impliedSubject;
+        @Nullable
+        String impliedSubjectUri;
+        @Nullable
+        String impliedPredicate;
+        @Nullable
+        String impliedPredicateUri;
+        @Nullable
+        String impliedObject;
+        @Nullable
+        String impliedObjectUri;
+        /**
          * Identifies the subject/predicate/object triple irrespective of basis, so a client can group
          * the side-by-side rows that one relation legitimately produces. Grouping on the rendered
          * labels instead would merge relations that only look alike.
@@ -1038,6 +1059,12 @@ public class AnnotationsWebService {
             this.tripleKey = s.getTripleKey();
             this.topicality = s.getTopicality().name();
             this.inferenceDirection = s.getInferenceDirection().name();
+            this.impliedSubject = s.getImpliedSubject();
+            this.impliedSubjectUri = s.getImpliedSubjectUri();
+            this.impliedPredicate = s.getImpliedPredicate();
+            this.impliedPredicateUri = s.getImpliedPredicateUri();
+            this.impliedObject = s.getImpliedObject();
+            this.impliedObjectUri = s.getImpliedObjectUri();
         }
     }
 

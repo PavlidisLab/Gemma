@@ -378,6 +378,51 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     }
 
     /**
+     * The derived claim is its own triple, and taxon picks its verb.
+     *
+     * <p>The store holds {@code Alzheimer disease --has_genotype--> APP/PS1}; what follows is
+     * "APP/PS1 is a disease model of Alzheimer's" — different ends AND a different verb. Handing a
+     * client only the stored row makes it invert and choose, and three clients will choose three
+     * ways.</p>
+     *
+     * <p>A mouse carrying the genotype <i>models</i> the disease; a human line carrying a variant
+     * <i>has</i> it. Unknown taxon takes the weaker claim rather than a guess.</p>
+     */
+    @Test
+    public void testTheDerivedClaimIsItsOwnTripleWithATaxonChosenVerb() {
+        AnnotationRelation mouse = attested( LEIGH, SURF1, AnnotationRelationBasis.CURATED, readMask() );
+        Taxon mus = new Taxon();
+        mus.setNcbiId( 10090 );
+        mus.setCommonName( "mouse" );
+        sessionFactory.getCurrentSession().persist( mus );
+        mouse.setTaxon( mus );
+        annotationRelationDao.create( mouse );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( LEIGH ) ) ) )
+                .singleElement()
+                .satisfies( r -> {
+                    // stored one way round...
+                    assertThat( r.getSubjectValueUri() ).isEqualTo( LEIGH );
+                    assertThat( r.getObjectValueUri() ).isEqualTo( SURF1 );
+                    // ...and the claim runs the other, with the genotype as its subject
+                    assertThat( r.getImpliedSubjectUri() ).isEqualTo( SURF1 );
+                    assertThat( r.getImpliedObjectUri() ).isEqualTo( LEIGH );
+                    assertThat( r.getImpliedPredicate() ).isEqualTo( "is model of" );
+                } );
+
+        // the human case is not a model of anything -- it has the disease
+        AnnotationRelation human = attested( COMPLEX_IV, SURF1, AnnotationRelationBasis.CURATED, readMask() );
+        human.setTaxon( taxon ); // the fixture taxon is human, NCBI 9606
+        annotationRelationDao.create( human );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( COMPLEX_IV ) ) ) )
+                .singleElement()
+                .satisfies( r -> assertThat( r.getImpliedPredicate() ).isEqualTo( "has disease" ) );
+    }
+
+    /**
      * Refuse to enumerate the table. Every caller knows one end of the relation, and a query that
      * names neither is a mistake rather than a request for everything.
      */

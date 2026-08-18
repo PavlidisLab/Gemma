@@ -337,6 +337,116 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
             return ubic.gemma.model.common.description.RelationInferenceDirection.of( predicateUri );
         }
 
+        /**
+         * NCBI taxon id for human, which decides whether an inferred disease claim reads as
+         * {@code has disease} or as {@code is model of}.
+         */
+        private static final int HUMAN_NCBI_TAXON_ID = 9606;
+
+        private static final String IS_MODEL_OF_URI = "http://purl.obolibrary.org/obo/RO_0003301";
+        private static final String HAS_DISEASE_URI = "http://purl.obolibrary.org/obo/RO_0016002";
+
+        /**
+         * The claim this relation licenses, as a triple in its own right — <b>not</b> the stored row
+         * read backwards.
+         *
+         * <p>Gemma stores {@code Alzheimer disease --has_genotype--> APP/PS1}, but the fact that
+         * follows from it is "APP/PS1 is a disease model of Alzheimer's": different ends, and a
+         * different verb. A consumer handed only the stored row has to invert it and choose a verb
+         * itself, and three consumers will choose three.</p>
+         *
+         * <p><b>Taxon picks the verb</b>, which is the rule the design settled on and the reason
+         * {@code RO_0003301 is model of} was added to the vocabulary. A mouse carrying {@code APP/PS1}
+         * <i>models</i> Alzheimer disease; a human line carrying {@code LRRK2 G2019S} is not modelling
+         * Parkinson disease, it <i>has</i> it. Unknown taxon falls to {@code is model of}, the weaker
+         * of the two claims, rather than being guessed at.</p>
+         *
+         * <p>Null when {@link #getInferenceDirection()} is
+         * {@link ubic.gemma.model.common.description.RelationInferenceDirection#NEITHER} — nothing is
+         * implied, so there is no claim to phrase.</p>
+         */
+        @Nullable
+        public String getImpliedSubject() {
+            switch ( getInferenceDirection() ) {
+                case OBJECT_IMPLIES_SUBJECT:
+                    return objectValue;
+                case SUBJECT_IMPLIES_OBJECT:
+                    return subjectValue;
+                default:
+                    return null;
+            }
+        }
+
+        @Nullable
+        public String getImpliedSubjectUri() {
+            switch ( getInferenceDirection() ) {
+                case OBJECT_IMPLIES_SUBJECT:
+                    return objectValueUri;
+                case SUBJECT_IMPLIES_OBJECT:
+                    return subjectValueUri;
+                default:
+                    return null;
+            }
+        }
+
+        @Nullable
+        public String getImpliedObject() {
+            switch ( getInferenceDirection() ) {
+                case OBJECT_IMPLIES_SUBJECT:
+                    return subjectValue;
+                case SUBJECT_IMPLIES_OBJECT:
+                    return objectValue;
+                default:
+                    return null;
+            }
+        }
+
+        @Nullable
+        public String getImpliedObjectUri() {
+            switch ( getInferenceDirection() ) {
+                case OBJECT_IMPLIES_SUBJECT:
+                    return subjectValueUri;
+                case SUBJECT_IMPLIES_OBJECT:
+                    return objectValueUri;
+                default:
+                    return null;
+            }
+        }
+
+        /**
+         * @see #getImpliedSubject()
+         */
+        @Nullable
+        public String getImpliedPredicateUri() {
+            switch ( getInferenceDirection() ) {
+                case OBJECT_IMPLIES_SUBJECT:
+                    // the genotype/inducer end implies a disease claim, and taxon says which one
+                    return taxonNcbiId != null && taxonNcbiId == HUMAN_NCBI_TAXON_ID
+                            ? HAS_DISEASE_URI
+                            : IS_MODEL_OF_URI;
+                case SUBJECT_IMPLIES_OBJECT:
+                    // already oriented specific-to-general, and the curator's own verb reads correctly:
+                    // "MCF7 derives from a patient having adenocarcinoma" needs no rewriting
+                    return predicateUri;
+                default:
+                    return null;
+            }
+        }
+
+        @Nullable
+        public String getImpliedPredicate() {
+            switch ( getInferenceDirection() ) {
+                case OBJECT_IMPLIES_SUBJECT:
+                    return taxonNcbiId != null && taxonNcbiId == HUMAN_NCBI_TAXON_ID
+                            ? "has disease"
+                            : "is model of";
+                case SUBJECT_IMPLIES_OBJECT:
+                    return predicate;
+                default:
+                    return null;
+            }
+        }
+
         public String getTripleKey() {
             return ( subjectValueUri != null ? subjectValueUri : subjectValue )
                     + " " + ( predicateUri != null ? predicateUri : "" )
