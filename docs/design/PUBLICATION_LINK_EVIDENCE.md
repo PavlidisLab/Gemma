@@ -173,9 +173,18 @@ and are deliberately not loaded.
   publications disappear from Gemma 1.0. Dropping the columns is strictly a cutover step.
 - Assertions for the writers that still bypass this (split, CELLxGENE, simple loader) — small, and a
   prerequisite for the read flip above rather than the optional cleanup it looked like initially.
-- **Verify the 23,066 backfilled `IIA` rows against GEO.** Batched esummary over the accessions
-  (~120 requests) yields, for each, whether Gemma's primary still matches GEO's `!Series_pubmed_id`.
-  Matches can be promoted `IIA` → `TAS`. Mismatches are the interesting set and split two ways that
-  no automated rule can separate: a curator corrected GEO (GSE102911), or GEO is wrong (GSE227854).
-  Either way it turns 23,066 unexamined rows into a reviewable list — the corpus-scale version of
-  the audit cab did by hand for 500.
+- **Verify the 23,066 backfilled `IIA` rows against GEO** — shipped as the `verifyPublicationEvidence`
+  CLI. Agreement is restated as `TAS` with the date it was checked; disagreement writes nothing and
+  goes to a change log, because it splits into "a curator corrected GEO" (GSE102911) and "GEO is
+  wrong" (GSE227854) and no rule separates those. `--fill` adds a primary where Gemma has none and
+  GEO has one, and adds GEO's second and later `!Series_pubmed_id` values as other-relevant.
+
+  🛑 **The "batched esummary (~120 requests)" plan this bullet used to carry does not work, and the
+  failure is silent.** `esummary db=gds` lags the live GEO record — `ExpressionExperimentBibRefFinder`
+  documents this and chose `acc.cgi` for the same reason. Follow a re-pointed series: GEO moves
+  GSE123 from paper A to paper B, Gemma still holds A because it was imported before the change, and
+  esummary still reports A. Gemma and esummary agree, and the row gets stamped `TAS` — on the one link
+  that has actually drifted. Lag produces false MATCHES as well as false mismatches, and a scheme that
+  re-checks only the disagreements never revisits a false match. So it is `acc.cgi` for every series:
+  23,066 requests, paced, and resumable from the change log because at that rate the run is measured
+  in hours.
