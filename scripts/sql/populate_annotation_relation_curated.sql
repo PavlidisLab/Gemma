@@ -53,8 +53,15 @@
 --     DELETE /rest/v2/admin/caches/default-query-results-region
 --     DELETE /rest/v2/admin/caches/default-update-timestamps-region
 --
--- (admin auth; the unified cache surface, see AdminWebService.) The CLI path does not need this --
--- updateAnnotationRelationEntries writes through Hibernate and synchronizes the query space itself.
+-- (admin auth; the unified cache surface, see AdminWebService.)
+--
+-- 🛑 THE CLI PATH NEEDS THIS TOO. An earlier version of this note said it did not, on the grounds
+-- that updateAnnotationRelationEntries writes through Hibernate and synchronizes the query space.
+-- It synchronizes THE CLI'S SessionFactory. gemma-cli runs outside the container, in its own JVM,
+-- with its own caches; the REST server is a different JVM and learns nothing from that write. Seen
+-- on 2026-08-18: after the producer rebuilt CLO from 2,262 rows to 8,410, MEC-1 read 0 through a
+-- query that had been warmed before the run and 1 through one that had not. Flush after ANY rebuild,
+-- by SQL or by CLI.
 
 -- Expect roughly: 10,040 datasets carry a GENO_0000222 has_genotype statement, 1,829 an
 -- RO_0002573 has modifier, 469 a TGEMO_00171 induced by. Row counts run higher than dataset counts,
