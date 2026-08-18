@@ -405,6 +405,14 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          * claim rather than a circular one: exclude the dataset and ask whether the <i>rest</i> of the
          * corpus still recovers the relation. Without it, a dataset is shown its own annotation as
          * independent support for itself.</p>
+         *
+         * <p><b>Expected to be long, and it has to be done here.</b> A scored evaluation holds out its
+         * whole panel, not one dataset, because precedent drawn from the other panel experiments is
+         * leakage into the same benchmark. A caller cannot do this filtering for itself afterwards:
+         * what comes back is an aggregate count, not the list of datasets behind it, so a client
+         * holding a relation with support 5 has no way to know which five contributed and no way to
+         * subtract its own. The list is sorted and deduped before binding so a long hold-out reuses one
+         * prepared statement rather than minting a plan per distinct length.</p>
          */
         public RelationQuery excludedExperimentIds( Collection<Long> v ) {
             this.excludedExperimentIds = v;

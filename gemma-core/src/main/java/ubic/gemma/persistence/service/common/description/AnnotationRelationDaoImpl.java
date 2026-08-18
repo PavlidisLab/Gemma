@@ -26,6 +26,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.EE2CAclQueryUtils;
 
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -167,7 +169,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             query.setParameter( "taxonId", q.getTaxonId() );
         }
         if ( !q.getExcludedExperimentIds().isEmpty() ) {
-            query.setParameterList( "excludedIds", q.getExcludedExperimentIds() );
+            query.setParameterList( "excludedIds", optimizeParameterList( q.getExcludedExperimentIds() ) );
         }
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         query.setCacheable( true );
@@ -260,7 +262,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             query.setParameter( "taxonId", taxonId );
         }
         if ( !excludedExperimentIds.isEmpty() ) {
-            query.setParameterList( "excludedIds", excludedExperimentIds );
+            query.setParameterList( "excludedIds", optimizeParameterList( excludedExperimentIds ) );
         }
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         query.setCacheable( true );
@@ -340,7 +342,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             query.setParameter( "taxonId", taxonId );
         }
         if ( !excludedExperimentIds.isEmpty() ) {
-            query.setParameterList( "excludedIds", excludedExperimentIds );
+            query.setParameterList( "excludedIds", optimizeParameterList( excludedExperimentIds ) );
         }
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         query.setCacheable( true );
