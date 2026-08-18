@@ -73,6 +73,25 @@ public class OntologyXrefIndex {
         return index.isEmpty() ? EMPTY : new OntologyXrefIndex( index, labels );
     }
 
+    /**
+     * Invert an ontology's cross-references, <b>read from its SOURCE artifact rather than the model it
+     * happens to have loaded</b>.
+     *
+     * <p>🛑 This exists so the rule has one home. A corpus-seeded slim holds the terms Gemma already
+     * annotates, which is precisely the wrong set for translating a foreign identifier: the ones that
+     * fail are for things we do NOT yet annotate. Building the index off the loaded model cost ~970 CLO
+     * relations before it was caught, and the fix was only half a fix until the labels moved too. Any
+     * second caller reaching for {@code getCrossReferences()} would reintroduce it silently, so callers
+     * get this instead.</p>
+     *
+     * @param ontology the cross-referencing ontology (MONDO, in every current use), or null when it is
+     *                 not loaded — in which case nothing can be translated and an empty index says so
+     */
+    public static OntologyXrefIndex fromSource(
+            @Nullable ubic.gemma.core.ontology.providers.OntologyService ontology ) {
+        return ontology != null ? build( ontology.getCrossReferencesFromSource() ) : empty();
+    }
+
     private final Map<String, Map<String, OntologyXref.Strength>> index;
     private final Map<String, String> labels;
 

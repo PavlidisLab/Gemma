@@ -621,7 +621,7 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
         //
         // Reading the source is a plain-triples parse, lighter than the inference-mode model this
         // service already builds at boot, so it does not give back what slimming bought.
-        OntologyXrefIndex index = OntologyXrefIndex.build( mondo.getCrossReferencesFromSource() );
+        OntologyXrefIndex index = OntologyXrefIndex.fromSource( mondo );
         log.info( "Inverted {} cross-references from the {} source in {} ms: {}.", index.size(),
                 XREF_SOURCE_TOKEN, timer.getTime(), index.countsByPrefix() );
         return index;
