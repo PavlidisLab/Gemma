@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.mail.MailEngine;
+import ubic.gemma.core.ontology.relation.OntologyRelationProducer;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -528,6 +529,35 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         log.info( String.format( "Done updating CURATED ANNOTATION_RELATION entries%s; %d removed, %d written in %d ms.",
                 what, removed, inserted, timer.getTime() ) );
         return inserted;
+    }
+
+    /**
+     * Absent from ontology-free contexts (tests, and any deployment with the ontologies switched off),
+     * which is why this is optional rather than required: {@code TableMaintenanceUtil} must still start.
+     */
+    @Autowired(required = false)
+    private OntologyRelationProducer ontologyRelationProducer;
+
+    /**
+     * Not {@code @Transactional}: the producer spends minutes walking Jena models before it has a row to
+     * write, and its own transaction wraps only the delete-and-insert. Holding a connection open across
+     * the read would be a maintenance job contending with the application for no reason.
+     */
+    @Override
+    @Timed
+    public int updateOntologyRelationEntries( @Nullable Collection<String> sources ) {
+        if ( ontologyRelationProducer == null ) {
+            log.warn( "No ontology relation producer is wired; ONTOLOGY ANNOTATION_RELATION entries are not updated." );
+            return 0;
+        }
+        StopWatch timer = StopWatch.createStarted();
+        String what = sources != null && !sources.isEmpty() ? " for " + sources : "";
+        log.info( String.format( "Updating ONTOLOGY ANNOTATION_RELATION entries%s...", what ) );
+        int written = ontologyRelationProducer.produce( sources );
+        evictAnnotationRelationQueryCache();
+        log.info( String.format( "Done updating ONTOLOGY ANNOTATION_RELATION entries%s; %d written in %d ms.",
+                what, written, timer.getTime() ) );
+        return written;
     }
 
     @Override

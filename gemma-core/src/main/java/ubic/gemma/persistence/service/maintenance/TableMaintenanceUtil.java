@@ -144,6 +144,26 @@ public interface TableMaintenanceUtil {
     int updateAnnotationRelationEntries( @Nullable ExpressionExperiment ee );
 
     /**
+     * Rebuild the {@code ANNOTATION_RELATION} rows a loaded ontology asserts.
+     *
+     * <p>Sibling of {@link #updateAnnotationRelationEntries(ExpressionExperiment)} and deliberately a
+     * separate entry point, because the two read from different places and cannot be ordered against
+     * each other. The curated harvest reads {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} and belongs
+     * beside the EE2C rebuild; this one reads the Jena models and needs CLO, CHEBI and MONDO loaded,
+     * which is minutes of warm-up an experiment-driven job has no business waiting on.</p>
+     *
+     * <p>🛑 <b>An ontology that is not loaded leaves its rows alone rather than deleting them.</b>
+     * Rebuilding from an empty model would be indistinguishable from the ontology having retracted every
+     * axiom it ever stated.</p>
+     *
+     * @param sources source names to rebuild ({@code CLO}, {@code CHEBI}), or null/empty for all of
+     *                them; the delete is narrowed the same way, so a partial run does not drop the rest
+     * @return how many relation rows were written
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateOntologyRelationEntries( @Nullable java.util.Collection<String> sources );
+
+    /**
      * Evict the query cache for the {@code ANNOTATION_RELATION} table.
      */
     @Secured({ "GROUP_ADMIN" })
