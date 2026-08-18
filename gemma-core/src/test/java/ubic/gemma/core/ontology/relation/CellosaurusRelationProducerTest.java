@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.model.OntologyXref;
 import ubic.gemma.model.common.description.AnnotationRelation;
 import ubic.gemma.model.common.description.AnnotationRelationBasis;
@@ -15,6 +16,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -81,12 +83,31 @@ class CellosaurusRelationProducerTest {
             "" );
 
     private List<AnnotationRelation> produce( String obo ) throws Exception {
+        return produce( obo, true );
+    }
+
+    /**
+     * @param uberonLoaded whether UBERON is available to name the anatomic-part objects; false
+     *                     exercises the fallback, which is a real deployment state (UBERON is
+     *                     off by default) and not a hypothetical
+     */
+    private List<AnnotationRelation> produce( String obo, boolean uberonLoaded ) throws Exception {
         ubic.gemma.core.ontology.providers.OntologyService mondo =
                 mock( ubic.gemma.core.ontology.providers.OntologyService.class );
         when( mondo.getIdentifier() ).thenReturn( "mondoOntology" );
         when( mondo.isOntologyLoaded() ).thenReturn( true );
         when( mondo.getCrossReferencesFromSource() ).thenReturn( xrefs );
-        new CellosaurusRelationProducer( Collections.singletonList( mondo ), dao, transactionTemplate,
+        ubic.gemma.core.ontology.providers.OntologyService uberon =
+                mock( ubic.gemma.core.ontology.providers.OntologyService.class );
+        when( uberon.getIdentifier() ).thenReturn( "uberonOntology" );
+        when( uberon.isOntologyLoaded() ).thenReturn( uberonLoaded );
+        if ( uberonLoaded ) {
+            OntologyTerm pleuralEffusion = mock( OntologyTerm.class );
+            when( pleuralEffusion.getLabel() ).thenReturn( "pleural effusion" );
+            when( uberon.getTerm( "http://purl.obolibrary.org/obo/UBERON_0000175" ) )
+                    .thenReturn( pleuralEffusion );
+        }
+        new CellosaurusRelationProducer( Arrays.asList( mondo, uberon ), dao, transactionTemplate,
                 taxonService )
                 .produce( new ByteArrayInputStream( obo.getBytes( StandardCharsets.UTF_8 ) ) );
         @SuppressWarnings("unchecked")
@@ -147,7 +168,40 @@ class CellosaurusRelationProducerTest {
                     assertThat( r.getObjectValueUri() )
                             .isEqualTo( "http://purl.obolibrary.org/obo/UBERON_0000175" );
                     assertThat( r.getObjectCategory() ).isEqualTo( "organism part" );
+                } );
+    }
+
+    /**
+     * The object is what a curator reads as the term's name, so it has to be the term's name. It used
+     * to be Cellosaurus's raw site field — {@code Metastatic; Pleural effusion} — which is a sentence
+     * no ontology contains, while {@code evidence} held a verbatim copy of the same string.
+     */
+    @Test
+    void theSiteObjectIsTheTermsLabelAndTheRawFieldIsTheEvidence() throws Exception {
+        assertThat( produce( MCF7 ) )
+                .filteredOn( r -> r.getPredicateUri().endsWith( "CLO_0037208" ) )
+                .isNotEmpty()
+                .allSatisfy( r -> {
+                    assertThat( r.getObjectValue() ).isEqualTo( "pleural effusion" );
+                    // Not dropped: primary-vs-metastatic survives only in the source's sentence.
+                    assertThat( r.getEvidence() ).isEqualTo( "Metastatic; Pleural effusion" );
+                    assertThat( r.getEvidence() ).isNotEqualTo( r.getObjectValue() );
+                } );
+    }
+
+    /**
+     * UBERON is off by default, so the fallback is a state Gemma actually runs in. A sentence in the
+     * object field is worse than the term's name and better than an empty one.
+     */
+    @Test
+    void theRawSiteFieldIsKeptWhenUberonCannotNameTheTerm() throws Exception {
+        assertThat( produce( MCF7, false ) )
+                .filteredOn( r -> r.getPredicateUri().endsWith( "CLO_0037208" ) )
+                .isNotEmpty()
+                .allSatisfy( r -> {
                     assertThat( r.getObjectValue() ).isEqualTo( "Metastatic; Pleural effusion" );
+                    assertThat( r.getObjectValueUri() )
+                            .isEqualTo( "http://purl.obolibrary.org/obo/UBERON_0000175" );
                 } );
     }
 

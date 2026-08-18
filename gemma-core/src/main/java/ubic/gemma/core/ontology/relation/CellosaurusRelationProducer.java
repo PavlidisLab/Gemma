@@ -15,6 +15,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.support.TransactionTemplate;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.OntologyServiceResolver;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.AnnotationRelation;
@@ -83,6 +84,12 @@ public class CellosaurusRelationProducer {
 
     private static final String XREF_SOURCE_TOKEN = "MONDO";
 
+    /** Where the anatomic-part identifiers point; consulted for their labels only. */
+    private static final String SITE_SOURCE_TOKEN = "UBERON";
+
+    /** Memo sentinel: this URI was looked up and the ontology had no label for it. */
+    private static final String NO_LABEL = "";
+
     /**
      * The only species whose cell lines Gemma has any use for.
      *
@@ -140,6 +147,17 @@ public class CellosaurusRelationProducer {
             log.warn( "{} is not loaded; no NCIt disease can be translated. Only the anatomic-part"
                     + " relations will be written.", XREF_SOURCE_TOKEN );
         }
+        ubic.gemma.core.ontology.providers.OntologyService sites =
+                OntologyServiceResolver.resolve( ontologies, SITE_SOURCE_TOKEN )
+                        .filter( ubic.gemma.core.ontology.providers.OntologyService::isOntologyLoaded )
+                        .orElse( null );
+        if ( sites == null ) {
+            // Not fatal the way an untranslatable NCIt is: the identifier is already UBERON's, so the
+            // row is correct and only its object reads as Cellosaurus's sentence instead of the term.
+            log.warn( "{} is not loaded; anatomic-part relations will carry the source's raw site"
+                    + " description as the object's name.", SITE_SOURCE_TOKEN );
+        }
+        Map<String, String> siteLabels = new HashMap<>();
         Date generatedAt = new Date();
         Map<Integer, Taxon> taxaByNcbiId = new HashMap<>();
         Reading reading = new Reading();
@@ -158,7 +176,8 @@ public class CellosaurusRelationProducer {
                 }
                 if ( e.getSiteUri() != null ) {
                     rows.add( build( e, subjectUri, DERIVES_FROM_PART_URI, DERIVES_FROM_PART_LABEL,
-                            e.getSiteUri(), lastSegmentLabel( e ), Categories.ORGANISM_PART, taxon,
+                            e.getSiteUri(), siteLabel( sites, e, siteLabels, reading ),
+                            Categories.ORGANISM_PART, taxon,
                             e.getSiteDescription(), generatedAt ) );
                     reading.site++;
                 }
@@ -249,8 +268,63 @@ public class CellosaurusRelationProducer {
     }
 
     /**
-     * The UBERON term's label is not in the file — only its identifier and the free-text site
-     * description — so the description doubles as the label until something resolves UBERON.
+     * The object's name is the term's label; Cellosaurus's own sentence stays in {@code evidence}.
+     *
+     * <p>The file gives an identifier and a free-text site description, and the description used to
+     * double as the label. That put a string no ontology contains where a curator reads the term's
+     * name — {@code In situ; Lung}, {@code Metastatic; Pleural effusion}, {@code In situ; Uterus,
+     * cervix} — while {@code evidence} carried a verbatim copy of the same string, so the row stated
+     * the raw field twice and the term's name never. The disease branch had always resolved its
+     * label; this is that branch's behaviour, applied here.</p>
+     *
+     * <p>🛑 The raw string is not redundant and is not dropped. {@code In situ; Fetal kidney} grounds
+     * to plain {@code kidney}, and {@code Metastatic; Pleural effusion} to the same URI as
+     * {@code In situ; Pleural effusion} — developmental stage, and whether the sample was primary or
+     * metastatic, survive only in that sentence. It is evidence, and it stays in {@code evidence}.</p>
+     *
+     * <p>A side effect worth expecting: object breadth is counted over the stored rows, so the three
+     * spellings of UBERON_0002048 that used to be counted apart ({@code In situ; Lung} 2843,
+     * {@code Metastatic; Lung} 164, the bronchoalveolar-lavage note 4) now collapse into one number.
+     * Any threshold calibrated against the split counts is reading a different scale afterwards.</p>
+     *
+     * <p>Falls back to the old behaviour when UBERON is not loaded or has no label for the
+     * identifier: a sentence in the object field is worse than a term name and better than nothing,
+     * and the count of fallbacks is reported at the end of the run.</p>
+     */
+    private static String siteLabel( @Nullable ubic.gemma.core.ontology.providers.OntologyService sites,
+            CellosaurusRelationReport.Entry e, Map<String, String> memo, Reading reading ) {
+        String label = memo.computeIfAbsent( e.getSiteUri(), uri -> {
+            String resolved = lookUpLabel( sites, uri );
+            // Cache the miss too — an unresolvable URI recurs across thousands of records, and
+            // computeIfAbsent would re-ask the ontology for every one of them.
+            return resolved != null && !resolved.isEmpty() ? resolved : NO_LABEL;
+        } );
+        if ( !NO_LABEL.equals( label ) ) {
+            return label;
+        }
+        reading.unlabelledSite++;
+        return lastSegmentLabel( e );
+    }
+
+    @Nullable
+    private static String lookUpLabel( @Nullable ubic.gemma.core.ontology.providers.OntologyService sites,
+            String uri ) {
+        if ( sites == null ) {
+            return null;
+        }
+        try {
+            OntologyTerm term = sites.getTerm( uri );
+            return term != null ? term.getLabel() : null;
+        } catch ( Exception ex ) {
+            // One unreadable term must not abandon 142k rows.
+            log.warn( "Failed to resolve a label for {} from {}: {}", uri, SITE_SOURCE_TOKEN, ex.getMessage() );
+            return null;
+        }
+    }
+
+    /**
+     * Last resort when the site identifier resolves to no label: the source's sentence if it has one,
+     * else the identifier's last segment.
      */
     private static String lastSegmentLabel( CellosaurusRelationReport.Entry e ) {
         if ( e.getSiteDescription() != null ) {
@@ -280,13 +354,15 @@ public class CellosaurusRelationProducer {
         private int wrongSpecies = 0;
         private int untranslatable = 0;
         private int unlabelled = 0;
+        private int unlabelledSite = 0;
         private final Map<String, Integer> unresolved = new HashMap<>();
 
         private String report() {
             StringBuilder sb = new StringBuilder();
             sb.append( "\nskipped\tnot human/mouse/rat\t" ).append( wrongSpecies )
                     .append( "\tuntranslatable NCIt\t" ).append( untranslatable )
-                    .append( "\ttranslated but unnamed\t" ).append( unlabelled );
+                    .append( "\ttranslated but unnamed\t" ).append( unlabelled )
+                    .append( "\tsite kept its raw description\t" ).append( unlabelledSite );
             if ( !unresolved.isEmpty() ) {
                 sb.append( "\nNCIt terms MONDO does not cross-reference (" ).append( unresolved.size() )
                         .append( "), most affected:\n" );
