@@ -23,6 +23,7 @@ Usage:
     scripts/perf_search.py --runs 5 --out perf.md   # write markdown report
     scripts/perf_search.py --base http://localhost:8080 --evict
     scripts/perf_search.py --only annotations,goterms
+    scripts/perf_search.py --only relations   # ANNOTATION_RELATION reads + the search-widening A/B
 
 --evict re-runs /annotations/search/cache/evict (admin) before each query so
 each timing is "warm Lucene, cold response cache" rather than memoised noise.
@@ -211,6 +212,49 @@ def diffex_cases() -> list[Case]:
     ]
 
 
+def relation_cases() -> list[Case]:
+    """
+    ANNOTATION_RELATION reads.
+
+    The claim being tested is that moving the derivation into the maintenance job turned an
+    interactive request into an indexed lookup. That claim is currently unmeasured, and "should be
+    fast" is not a measurement -- these are the cases that would falsify it.
+
+    Four shapes, chosen because each stresses a different part of the read:
+
+    * asserted lookup -- the common path. One indexed seek, no specificity denominator, because a
+      CURATED row has nothing to divide by. Should be the fastest thing here.
+    * background value -- the denominator's worst case. A value carried by hundreds of experiments
+      makes the CORPUS specificity query count over all of them; C57BL/6J is the value that broke
+      the ranking in the first place and it is the right stress case for the counting.
+    * dataset-seeded -- the experiment page. Exercises the `exists` against EE2C that exists
+      precisely so this is one query rather than a round trip to collect the dataset's annotations.
+    * widened search -- the only case that puts the relation read on an already-interactive path.
+      Compare it against the same query with the flag off; the difference IS the feature's cost, and
+      it is the number that decides whether the browse checkboxes can turn this on.
+    """
+    leigh = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FMONDO_0009723"
+    return [
+        Case("relations", "implies (gate, asserted)",
+             f"/rest/v2/annotations/relations/implies?from={leigh}&basis=CURATED,ONTOLOGY&limit=100"),
+        Case("relations", "by subject (disease)",
+             f"/rest/v2/annotations/relations?subject={leigh}&limit=50"),
+        # Background strain: the specificity denominator has to count every experiment carrying the
+        # value, and this value is carried by a great many of them.
+        Case("relations", "background value C57BL/6J",
+             "/rest/v2/annotations/relations?object=C57BL%2F6J&limit=50"),
+        Case("relations", "dataset-seeded (experiment page)",
+             "/rest/v2/annotations/relations?dataset=27325&limit=50"),
+        # The A/B that matters. Same query twice; the delta is what widening costs.
+        Case("relations", "search, widening OFF",
+             "/rest/v2/search?query=Leigh+syndrome&resultTypes=ExpressionExperiment&limit=20",
+             expected_nonzero=False),
+        Case("relations", "search, widening ON",
+             "/rest/v2/search?query=Leigh+syndrome&resultTypes=ExpressionExperiment&limit=20&inferRelations=true",
+             expected_nonzero=False),
+    ]
+
+
 def all_cases(only: set[str] | None) -> list[Case]:
     matrix = {
         "genes":       gene_cases,
@@ -218,6 +262,7 @@ def all_cases(only: set[str] | None) -> list[Case]:
         "goterms":     goterm_cases,
         "datasets":    dataset_cases,
         "diffex":      diffex_cases,
+        "relations":   relation_cases,
     }
     if only:
         unknown = only - set(matrix)
@@ -373,7 +418,7 @@ def main() -> int:
     ap.add_argument("--runs", type=int, default=3,
                     help="Number of runs per case (default 3).")
     ap.add_argument("--only", default="",
-                    help="Comma-separated groups to include: genes,annotations,goterms,datasets,diffex.")
+                    help="Comma-separated groups to include: genes,annotations,goterms,datasets,diffex,relations.")
     ap.add_argument("--evict", action="store_true",
                     help="Evict /annotations/search response cache before each annotations probe.")
     ap.add_argument("--anonymous", action="store_true",
