@@ -1032,6 +1032,15 @@ public class AnnotationsWebService {
         @Nullable
         String impliedObjectUri;
         /**
+         * Identity of the CLAIM, for deduplicating a card. Two different stored relations can derive
+         * one claim -- {@code BRCA1 --has disease--> breast cancer} and
+         * {@code breast cancer --has_genotype--> BRCA1} both yield
+         * {@code BRCA1 has disease breast cancer} -- and {@code tripleKey}, which identifies the row as
+         * stored, cannot group them. Null when the row licenses no claim.
+         */
+        @Nullable
+        String impliedTripleKey;
+        /**
          * Identifies the subject/predicate/object triple irrespective of basis, so a client can group
          * the side-by-side rows that one relation legitimately produces. Grouping on the rendered
          * labels instead would merge relations that only look alike.
@@ -1073,6 +1082,7 @@ public class AnnotationsWebService {
             this.impliedPredicateUri = s.getImpliedPredicateUri();
             this.impliedObject = s.getImpliedObject();
             this.impliedObjectUri = s.getImpliedObjectUri();
+            this.impliedTripleKey = s.getImpliedTripleKey();
         }
     }
 

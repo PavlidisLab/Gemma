@@ -24,6 +24,7 @@ import ubic.gemma.model.common.description.RelationTopicality;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -507,6 +508,47 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
         return r;
     }
 
+
+    /**
+     * 🛑 Two different stored relations converging on one claim must key the same.
+     *
+     * <p>uib on the {@code BRCA1} card, 2026-08-18: {@code BRCA1 --has disease--> breast cancer} and
+     * {@code breast cancer --has_genotype--> BRCA1} render the identical implied triple, word for word,
+     * and carry two different {@code tripleKey}s — so a consumer deduplicating on the stored row shows
+     * the claim twice. {@code tripleKey} groups the rows one relation produces across bases; this is
+     * the other shape.</p>
+     */
+    @Test
+    public void testTwoRelationsDerivingOneClaimShareAnImpliedTripleKey() {
+        String brca1 = "http://purl.org/commons/record/ncbi_gene/672";
+        String breastCancer = "http://purl.obolibrary.org/obo/MONDO_0007254";
+        String hasDisease = "http://purl.obolibrary.org/obo/RO_0016002";
+
+        // stored one way: the gene has the disease -- subject is the specific end
+        AnnotationRelation forward = attested( brca1, breastCancer, AnnotationRelationBasis.CURATED, readMask() );
+        forward.setSubjectCategoryUri( DISEASE_MODEL );
+        forward.setPredicate( "has disease" );
+        forward.setPredicateUri( hasDisease );
+        annotationRelationDao.create( forward );
+
+        // and the other way: the disease has the genotype -- object is the specific end
+        annotationRelationDao.create( attested( breastCancer, brca1, AnnotationRelationBasis.CURATED, readMask() ) );
+
+        List<AnnotationRelationDao.RelationSummary> rows = new ArrayList<>();
+        rows.addAll( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( brca1 ) ) ) );
+        rows.addAll( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( breastCancer ) ) ) );
+
+        assertThat( rows ).hasSize( 2 );
+        assertThat( rows ).extracting( AnnotationRelationDao.RelationSummary::getTripleKey )
+                .as( "as stored they are two different relations" )
+                .doesNotHaveDuplicates();
+        assertThat( rows ).extracting( AnnotationRelationDao.RelationSummary::getImpliedTripleKey )
+                .as( "as claimed they are one, and a card must be able to fold them" )
+                .allMatch( k -> k != null )
+                .containsOnly( rows.get( 0 ).getImpliedTripleKey() );
+    }
 
     /**
      * 🛑 The curated CATEGORY is the unreliable half of the row; the subject's VOCABULARY is the

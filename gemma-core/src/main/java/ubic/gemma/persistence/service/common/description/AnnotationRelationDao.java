@@ -480,6 +480,39 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
             }
         }
 
+        /**
+         * Identity of the CLAIM this row licenses, as opposed to {@link #getTripleKey()}, which is the
+         * identity of the row as stored. Null when the row licenses nothing.
+         *
+         * <p>🛑 <b>Two different stored relations routinely derive one claim, and {@code tripleKey}
+         * cannot see it.</b> uib measured it on the {@code BRCA1} card, 2026-08-18:</p>
+         *
+         * <pre>
+         * BRCA1         --has disease-->  breast cancer   tripleKey  …/672 RO_0016002 …/MONDO_0007254
+         * breast cancer --has_genotype--> BRCA1           tripleKey  …/MONDO_0007254 GENO_0000222 …/672
+         * </pre>
+         *
+         * <p>Two keys, one claim — {@code BRCA1 — has disease → breast cancer} — rendered twice, word
+         * for word. {@code tripleKey} groups the side-by-side rows ONE relation produces across bases,
+         * which is a different shape from two relations converging on one claim, so a consumer reaching
+         * for it to deduplicate a card gets a duplicate anyway. Dedup belongs at the level the reader
+         * actually sees, which is the claim.</p>
+         *
+         * <p>It correctly keeps apart claims whose verb differs: the same genotype relation on a mouse
+         * implies {@code is model of} and on a human line {@code has disease}, and those are two claims
+         * rather than one rendered twice.</p>
+         */
+        @Nullable
+        public String getImpliedTripleKey() {
+            String subject = getImpliedSubjectUri() != null ? getImpliedSubjectUri() : getImpliedSubject();
+            String object = getImpliedObjectUri() != null ? getImpliedObjectUri() : getImpliedObject();
+            if ( subject == null || object == null ) {
+                return null;
+            }
+            return subject + " " + ( getImpliedPredicateUri() != null ? getImpliedPredicateUri() : "" )
+                    + " " + object;
+        }
+
         public String getTripleKey() {
             return ( subjectValueUri != null ? subjectValueUri : subjectValue )
                     + " " + ( predicateUri != null ? predicateUri : "" )
