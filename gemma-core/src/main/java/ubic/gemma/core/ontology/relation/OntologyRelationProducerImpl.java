@@ -449,7 +449,7 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
         relation.setPredicateUri( property.getUri() );
         relation.setObjectValue( truncate( objectLabel, VALUE_MAX ) );
         relation.setObjectValueUri( objectUri );
-        Category objectCategory = spec.getObjectCategory();
+        Category objectCategory = spec.getObjectCategory( objectUri );
         if ( objectCategory != null ) {
             relation.setObjectCategory( objectCategory.getCategory() );
             relation.setObjectCategoryUri( objectCategory.getCategoryUri() );

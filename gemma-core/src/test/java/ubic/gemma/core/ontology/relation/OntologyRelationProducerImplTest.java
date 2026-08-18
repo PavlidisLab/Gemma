@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -323,18 +324,73 @@ class OntologyRelationProducerImplTest {
     }
 
     /**
-     * {@code RO_0001000 derives from} on a CLO cell line is a nested intersection carrying cell type,
-     * organism part, species and the donor's disease in one axiom, of which {@code getRestrictions()}
-     * surfaces only the outermost layer. Reading that layer would store a relation whose object is a
-     * blank node. Out of scope, and it has to stay out.
+     * The NESTED {@code RO_0001000 derives from} axiom is still not read: on a CLO cell line it is an
+     * intersection carrying cell type, organism part, species and the donor's disease in one axiom, of
+     * which the restriction walk surfaces only the outermost layer, whose target is a blank node.
+     * Measured with ROBOT against CLO 2026-06-19: 7,084 such restrictions, plus 692 more buried inside
+     * intersection lists. Out of scope, and it has to stay out.
+     *
+     * <p>The FLAT ones beside them are read — see
+     * {@link #aFlatDerivesFromTakesItsCategoryFromTheTargetsVocabulary()}. This test asserted that both
+     * were dropped, which was right when neither was read and is now too strong by half.</p>
      */
     @Test
-    void theNestedDerivesFromAxiomIsNotRead() {
+    void theNestedDerivesFromAxiomIsStillNotRead() {
         cloTerms.put( MCF7, term( MCF7, "MCF7 cell",
-                anonymousRestriction( DERIVES_FROM, "derives from" ),
-                restriction( DERIVES_FROM, "derives from", term( BREAST, "breast" ) ) ) );
+                anonymousRestriction( DERIVES_FROM, "derives from" ) ) );
 
         assertThat( produce( "CLO" ) ).isEmpty();
+    }
+
+    /**
+     * 🛑 {@code RO_0001000 derives from} does not say what its object is, so the object's own
+     * vocabulary does.
+     *
+     * <p>This is the same lesson as a subject's vocabulary outranking a curated category, one level
+     * down. CLO's 340 flat {@code derives from} targets are 166 CL cell types, 157 UBERON parts, 14 CLO
+     * cell lines, 2 DDANAT parts and one NCBITaxon organism — one property, five kinds of object — so a
+     * fixed {@code objectCategory} would file most of them wrongly.</p>
+     *
+     * <p>Worth reading beside the specific properties: CLO curators mostly wrote the generic one, so
+     * {@code CLO_0037208 derives from anatomic part} covers 3 classes where {@code derives from} covers
+     * 157. The rare spelling was the only one being read.</p>
+     */
+    @Test
+    void aFlatDerivesFromTakesItsCategoryFromTheTargetsVocabulary() {
+        String lymphocyte = OBO + "CL_0000542";
+        cloTerms.put( MCF7, term( MCF7, "MCF7 cell",
+                restriction( DERIVES_FROM, "derives from", term( BREAST, "breast" ) ),
+                restriction( DERIVES_FROM, "derives from", term( lymphocyte, "lymphocyte" ) ) ) );
+
+        List<AnnotationRelation> rows = produce( "CLO" );
+
+        assertThat( rows ).hasSize( 2 );
+        assertThat( rows )
+                .extracting( AnnotationRelation::getObjectValueUri, AnnotationRelation::getObjectCategory )
+                .containsExactlyInAnyOrder(
+                        tuple( BREAST, "organism part" ),
+                        tuple( lymphocyte, "cell type" ) );
+    }
+
+    /**
+     * A target from a vocabulary the map does not list is stored WITHOUT a category rather than
+     * dropped or guessed at. The relation is still true; what it relates to is simply not one of
+     * Gemma's annotation categories — the state {@code CLO_0037207 derives from organism} has carried
+     * all along, and the one every CURATED row carries by construction.
+     */
+    @Test
+    void anUnlistedTargetVocabularyStoresTheRelationWithoutACategory() {
+        String someGene = "http://purl.org/commons/record/ncbi_gene/672";
+        cloTerms.put( MCF7, term( MCF7, "MCF7 cell",
+                restriction( DERIVES_FROM, "derives from", term( someGene, "BRCA1" ) ) ) );
+
+        assertThat( produce( "CLO" ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getObjectValueUri() ).isEqualTo( someGene );
+                    assertThat( r.getObjectCategory() ).isNull();
+                    assertThat( r.getObjectCategoryUri() ).isNull();
+                } );
     }
 
     /**

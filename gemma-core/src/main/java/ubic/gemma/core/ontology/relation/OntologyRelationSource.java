@@ -59,13 +59,20 @@ class OntologyRelationSource {
         @Nullable
         private final Category objectCategory;
         private final boolean foreignTargets;
+        private final boolean categoryFromTargetVocabulary;
 
         Relation( String propertyUri, String fallbackLabel, @Nullable Category objectCategory,
                 boolean foreignTargets ) {
+            this( propertyUri, fallbackLabel, objectCategory, foreignTargets, false );
+        }
+
+        Relation( String propertyUri, String fallbackLabel, @Nullable Category objectCategory,
+                boolean foreignTargets, boolean categoryFromTargetVocabulary ) {
             this.propertyUri = propertyUri;
             this.fallbackLabel = fallbackLabel;
             this.objectCategory = objectCategory;
             this.foreignTargets = foreignTargets;
+            this.categoryFromTargetVocabulary = categoryFromTargetVocabulary;
         }
 
         String getPropertyUri() {
@@ -83,6 +90,29 @@ class OntologyRelationSource {
         @Nullable
         Category getObjectCategory() {
             return objectCategory;
+        }
+
+        /**
+         * What the object is, for a property that does not settle it.
+         *
+         * <p>Most properties name their object's kind by naming themselves — a
+         * {@code derives from anatomic part} target is an organism part and cannot be anything else.
+         * {@code RO_0001000 derives from} does not: its 340 flat targets in CLO 2026-06-19 are 166 CL
+         * cell types, 157 UBERON parts, 14 CLO cell lines, 2 DDANAT parts and one NCBITaxon organism.
+         * The target's own vocabulary is what says which, the same way a subject's vocabulary says what
+         * it is when the curated category will not.</p>
+         *
+         * <p>Null for a vocabulary not listed, which stores the relation without asserting what kind of
+         * thing the object is. That is an ordinary state — every {@code CURATED} row has a null object
+         * category by construction, and so does {@code CLO_0037207 derives from organism} — and it is
+         * the honest answer where guessing would file a term under a category nobody asserted.</p>
+         */
+        @Nullable
+        Category getObjectCategory( @Nullable String targetUri ) {
+            if ( !categoryFromTargetVocabulary ) {
+                return objectCategory;
+            }
+            return categoryForVocabularyOf( targetUri );
         }
 
         /**
@@ -146,6 +176,44 @@ class OntologyRelationSource {
     private static final String OBO = "http://purl.obolibrary.org/obo/";
 
     /**
+     * Term vocabulary → the Gemma category a term from it belongs to.
+     *
+     * <p>Ordered longest-prefix-first is unnecessary here because OBO local names are
+     * {@code PREFIX_digits} and the prefixes below are disjoint. {@code NCBITaxon} is deliberately
+     * absent: an organism is not one of Gemma's annotation categories, and the taxon it names is
+     * carried on {@code TAXON_FK} where it can be joined — exactly as
+     * {@code CLO_0037207 derives from organism} already does.</p>
+     */
+    private static final Map<String, Category> CATEGORY_BY_VOCABULARY;
+
+    static {
+        Map<String, Category> m = new LinkedHashMap<>();
+        m.put( "CL_", Categories.CELL_TYPE );
+        m.put( "UBERON_", Categories.ORGANISM_PART );
+        m.put( "DDANAT_", Categories.ORGANISM_PART );   // Dictyostelium anatomy; 2 uses, same kind of thing
+        m.put( "CLO_", CELL_LINE );
+        CATEGORY_BY_VOCABULARY = Collections.unmodifiableMap( m );
+    }
+
+    /**
+     * @see Relation#getObjectCategory(String)
+     */
+    @Nullable
+    private static Category categoryForVocabularyOf( @Nullable String termUri ) {
+        if ( termUri == null ) {
+            return null;
+        }
+        int cut = Math.max( termUri.lastIndexOf( '/' ), termUri.lastIndexOf( '#' ) );
+        String localName = cut >= 0 ? termUri.substring( cut + 1 ) : termUri;
+        for ( Map.Entry<String, Category> e : CATEGORY_BY_VOCABULARY.entrySet() ) {
+            if ( localName.startsWith( e.getKey() ) ) {
+                return e.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
      * CLO — the flat {@code someValuesFrom} restrictions on its cell-line classes.
      *
      * <p>{@code RO_0001000 derives from} is deliberately absent. On the same classes it is a nested
@@ -164,7 +232,23 @@ class OntologyRelationSource {
             new Relation( OBO + "CLO_0037207", "derives from organism", null, false ),
             new Relation( OBO + "CLO_0037229", "cell line cell derived from organism", null, false ),
             new Relation( OBO + "CLO_0037209", "derives from cell", Categories.CELL_TYPE, false ),
-            new Relation( OBO + "CLO_0037210", "derived from cell line", CELL_LINE, false ) ) );
+            new Relation( OBO + "CLO_0037210", "derived from cell line", CELL_LINE, false ),
+            // 🛑 RO_0001000 derives from -- the FLAT ones only, and they are the bulk of this source.
+            // CLO curators mostly wrote the generic property and let the target's vocabulary carry the
+            // meaning, so the specific properties above are the rare spelling of the same relation.
+            // Measured with ROBOT against CLO 2026-06-19:
+            //
+            //     relation          specific property   classes    RO_0001000 flat
+            //     -> cell type      CLO_0037209              56               166
+            //     -> organism part  CLO_0037208               3               157
+            //     -> cell line      CLO_0037210               1                14
+            //     -> organism       CLO_0037207              11                 1
+            //
+            // The nested ones are NOT read and remain out of scope: 7,084 restrictions whose target is
+            // an anonymous intersection plus 692 buried inside intersection lists (7,776 together).
+            // They arrive here as anonymous targets and are tallied as such, which is now the honest
+            // measure of that backlog rather than an invisible gap.
+            new Relation( OBO + "RO_0001000", "derives from", null, false, true ) ) );
 
     /**
      * CHEBI — {@code RO_0000087 has role}, which is what makes {@code imatinib} findable as an
