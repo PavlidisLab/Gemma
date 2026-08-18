@@ -125,6 +125,8 @@ Total: 151 docs.
 - [`MAVEN_MODERNIZATION.md`](design/MAVEN_MODERNIZATION.md) — Maven Plugin + Dependency Modernization
 - [`MGI_MOUSE_STRAIN_GENOTYPE.md`](design/MGI_MOUSE_STRAIN_GENOTYPE.md) — MGI as a mouse-strain resolution source + rule-aware allele→gene disambiguation for complicated genotypes
 - [`MOCKITO_MODERNIZATION.md`](design/MOCKITO_MODERNIZATION.md) — Mockito Modernization Recce (Phase 3)
+- [`ONTOLOGY_SUBSYSTEM.md`](design/ONTOLOGY_SUBSYSTEM.md) — manifest of the ontology subsystem: what is loaded, what the resolver does step by step, and every switch
+- [`ONTOLOGY_SUPPLEMENTARY_METHODS.md`](design/ONTOLOGY_SUPPLEMENTARY_METHODS.md) — the same subsystem as paper Methods prose, for the Gemma 2.0 manuscript
 - [`PERF_PROBE_ANNOTATIONS.md`](design/PERF_PROBE_ANNOTATIONS.md) — Perf probe — Annotations + Characteristic (live gemd, 2026-05-20)
 - [`PERF_PROBE_DATA_EXPORTS.md`](design/PERF_PROBE_DATA_EXPORTS.md) — Perf probe — TSV/data-export + DEA-run paths (live gemd)
 - [`PERF_PROBE_REPORT.md`](design/PERF_PROBE_REPORT.md) — Live-gemd perf probe (2026-05-20 phase2-acl-migrate)
