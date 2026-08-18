@@ -202,13 +202,35 @@ public class OntologySlimExtractor {
      *         ontologies put the release number or date there), else the version IRI, else
      *         {@code null}
      */
+    /**
+     * Appended to a slim's declared version so the artifact identifies itself wherever the version
+     * travels — {@code /admin/ontologies}, the producer's coverage log, and every
+     * {@code ANNOTATION_RELATION.SOURCE_VERSION} row.
+     *
+     * <p>Chosen to read as a build qualifier rather than a different release: {@code 254+gemma-slim}
+     * is obviously the same upstream 254, cut down by us. Anything comparing versions for equality
+     * now correctly sees two artifacts rather than one, and anything displaying it tells a curator
+     * which they are looking at.</p>
+     */
+    public static final String SLIM_VERSION_SUFFIX = "+gemma-slim";
+
     private String copyOntologyMetadata( OWLOntology source, OWLOntology slim, OWLDataFactory df ) {
         OWLOntologyManager slimManager = slim.getOWLOntologyManager();
         String versionInfo = null;
         for ( OWLAnnotation ann : source.getAnnotations() ) {
-            slimManager.applyChange( new AddOntologyAnnotation( slim, ann ) );
             if ( ann.getProperty().equals( df.getOWLVersionInfo() ) && ann.getValue() instanceof OWLLiteral ) {
-                versionInfo = ( ( OWLLiteral ) ann.getValue() ).getLiteral();
+                // 🛑 Marked, not copied. A slim is a DIFFERENT ARTIFACT from the release it was cut
+                // from and has to say so, because everything downstream reads getVersion() and would
+                // otherwise be told the two are the same thing. Observed 2026-08-18: the relation
+                // producer reported CHEBI "254" both when it read 25,231 relations from 237,842
+                // classes (full) and 11,378 from 20,964 (slim) — a halving of coverage with nothing
+                // in the version to show for it, and SOURCE_VERSION exists precisely to make that
+                // kind of difference visible.
+                versionInfo = ( ( OWLLiteral ) ann.getValue() ).getLiteral() + SLIM_VERSION_SUFFIX;
+                slimManager.applyChange( new AddOntologyAnnotation( slim,
+                        df.getOWLAnnotation( df.getOWLVersionInfo(), df.getOWLLiteral( versionInfo ) ) ) );
+            } else {
+                slimManager.applyChange( new AddOntologyAnnotation( slim, ann ) );
             }
         }
         // versionIRI belongs to the ontology ID rather than the annotation set, so it needs a
@@ -222,7 +244,9 @@ public class OntologySlimExtractor {
         if ( versionInfo != null ) {
             return versionInfo;
         }
-        return versionIri.isPresent() ? versionIri.get().toString() : null;
+        // no versionInfo upstream: the IRI still has to carry the marker, or a slim cut from an
+        // ontology that declares only a versionIRI is again indistinguishable from the full one
+        return versionIri.isPresent() ? versionIri.get() + SLIM_VERSION_SUFFIX : SLIM_VERSION_SUFFIX.trim();
     }
 
     /**

@@ -123,23 +123,30 @@ class OntologySlimExtractorTest {
      * the runtime read path stops seeing them for any reason, not just if the extractor regresses.
      */
     @Test
-    void slimCarriesTheSourceOntologyVersion( @TempDir Path tempDir ) throws Exception {
+    void slimCarriesTheSourceVersionMarkedAsASlim( @TempDir Path tempDir ) throws Exception {
         File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
         File slim = tempDir.resolve( "slim.owl" ).toFile();
 
         OntologySlimExtractor.ExtractResult result =
                 new OntologySlimExtractor().extract( source, List.of( SORAFENIB ), slim );
 
-        assertEquals( "254", result.getSourceVersion(),
-                "extractor reports the source's owl:versionInfo for the meta sidecar" );
+        // 🛑 MARKED, not verbatim. A slim is a different artifact from the release it was cut from,
+        // and everything downstream reads getVersion(): /admin/ontologies, the relation producer's
+        // coverage log, and every ANNOTATION_RELATION.SOURCE_VERSION row. Copying the version
+        // unchanged told all of them the two were the same thing — CHEBI reported "254" both when it
+        // yielded 25,231 relations from 237,842 classes and 11,378 from 20,964.
+        assertEquals( "254" + OntologySlimExtractor.SLIM_VERSION_SUFFIX, result.getSourceVersion(),
+                "the meta sidecar has to say the artifact is a slim, not just which release it came from" );
 
         OntModel jenaModel = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM );
         try ( FileInputStream in = new FileInputStream( slim ) ) {
             jenaModel.read( in, null );
         }
 
-        assertEquals( "254", firstLiteral( jenaModel, OWL.versionInfo ),
-                "owl:versionInfo survives extraction — this is what getVersion() reads first" );
+        assertEquals( "254" + OntologySlimExtractor.SLIM_VERSION_SUFFIX,
+                firstLiteral( jenaModel, OWL.versionInfo ),
+                "the marker rides in the FILE, not just the sidecar — getVersion() reads the model, so "
+                        + "a slim loaded from cache on a later boot still identifies itself" );
         assertEquals( "http://purl.obolibrary.org/obo/chebi/254/chebi-mini.owl",
                 firstResourceUri( jenaModel, OWL2.versionIRI ),
                 "owl:versionIRI survives extraction — getVersion()'s fallback for ontologies "
