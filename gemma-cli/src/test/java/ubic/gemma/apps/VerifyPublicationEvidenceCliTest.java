@@ -191,6 +191,67 @@ public class VerifyPublicationEvidenceCliTest extends BaseCliTest5 {
                 .contains( "/no/such/directory/anywhere" );
     }
 
+    /**
+     * 🛑 GEO listing several papers is not GEO disagreeing.
+     *
+     * <p>GSE934 lists {@code 15802019} and {@code 15867358} — two 2005 papers from the same lab — and
+     * Gemma holds the second. GEO does link it to that series, so it is verified; only which one is
+     * called primary differs, and first-is-primary is {@code GeoConverterImpl}'s convention rather
+     * than something GEO asserts. Comparing against the first id alone reported this as a
+     * disagreement, which would have buried the real disagreements in noise. Caught on the first
+     * live run, 2026-08-18.</p>
+     */
+    @Test
+    @WithMockUser
+    public void testAPaperGeoListsSecondIsStillVerified() throws Exception {
+        ExpressionExperiment ee = geoExperiment();
+        ee.getPrimaryPublication().getPubAccession().setAccession( "15867358" );
+        when( entityLocator.locateExpressionExperiment( eq( "GSE123" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
+
+        PublicationAssociation held = new PublicationAssociation();
+        held.setSource( PublicationAssociationSource.GEO_SUBMITTER_LINK );
+        held.setEvidenceCode( GOEvidenceCode.IIA );
+        when( publicationAssociationService.find( any(), any() ) ).thenReturn( held );
+
+        ExpressionExperimentBibRefFinder finder = mock( ExpressionExperimentBibRefFinder.class );
+        when( finder.locatePubMedIds( "GSE123" ) )
+                .thenReturn( java.util.Arrays.asList( 15802019, 15867358 ) );
+        cli.setFinder( finder );
+
+        assertThat( cli ).withArguments( "-e", "GSE123", "--verify", "--paceMillis", "0" ).succeeds();
+
+        // verified, not flagged
+        verify( publicationAssociationService ).assertAccepted( any(), any(), any() );
+    }
+
+    /**
+     * A paper GEO does not link to the series at all IS the disagreement, and nothing is written for
+     * it: it splits into "a curator corrected GEO" and "GEO is wrong", which no rule separates.
+     */
+    @Test
+    @WithMockUser
+    public void testAPaperGeoDoesNotListAtAllIsNotWritten() throws Exception {
+        ExpressionExperiment ee = geoExperiment();
+        ee.getPrimaryPublication().getPubAccession().setAccession( "99999999" );
+        when( entityLocator.locateExpressionExperiment( eq( "GSE123" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
+
+        PublicationAssociation held = new PublicationAssociation();
+        held.setSource( PublicationAssociationSource.GEO_SUBMITTER_LINK );
+        held.setEvidenceCode( GOEvidenceCode.IIA );
+        when( publicationAssociationService.find( any(), any() ) ).thenReturn( held );
+
+        ExpressionExperimentBibRefFinder finder = mock( ExpressionExperimentBibRefFinder.class );
+        when( finder.locatePubMedIds( "GSE123" ) )
+                .thenReturn( java.util.Arrays.asList( 15802019, 15867358 ) );
+        cli.setFinder( finder );
+
+        assertThat( cli ).withArguments( "-e", "GSE123", "--verify", "--paceMillis", "0" ).succeeds();
+
+        verify( publicationAssociationService, never() ).assertAccepted( any(), any(), any() );
+    }
+
     private ExpressionExperiment geoExperiment() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );

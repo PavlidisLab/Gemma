@@ -244,15 +244,43 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
             return;
         }
 
-        List<Integer> geoIds = fetchFromGeo( accession );
         BibliographicReference primary = ee.getPrimaryPublication();
 
         if ( primary == null ) {
-            handleMissingPrimary( ee, accession, geoIds );
-        } else {
-            handleExistingPrimary( ee, accession, geoIds, primary );
+            // ~2,599 datasets, and GEO is the only thing that can answer for them
+            handleMissingPrimary( ee, accession, fill ? fetchFromGeo( accession ) : NOT_FETCHED );
+            return;
         }
+        if ( !verify ) {
+            return;
+        }
+        // 🛑 Ask the database before asking GEO. Every check below is local and can settle the row on
+        // its own -- no assertion, someone who outranks GEO, or an already-verified TAS -- and asking
+        // GEO first meant a round trip per dataset whose answer was then thrown away. That is ~23,000
+        // needless fetches on any re-run, on a job already measured in hours, against a public NCBI
+        // endpoint. GEO is consulted only where its answer can still change something.
+        String gemmaPmid = pubMedIdOf( primary );
+        PublicationAssociation held = publicationAssociationService.find( ee, primary );
+        if ( held == null ) {
+            record( ee, accession, "no_assertion_on_record", gemmaPmid, null, null,
+                    "the link has no PUBLICATION_ASSOCIATION row; V25 should have created one" );
+            return;
+        }
+        if ( held.getSource() != PublicationAssociationSource.GEO_SUBMITTER_LINK ) {
+            record( ee, accession, "skipped_not_geo_asserted", gemmaPmid, null,
+                    String.valueOf( held.getEvidenceCode() ),
+                    "asserted by " + held.getSource() + "; GEO does not outrank it" );
+            return;
+        }
+        if ( held.getEvidenceCode() == GOEvidenceCode.TAS ) {
+            record( ee, accession, "already_verified", gemmaPmid, null, "TAS", null );
+            return;
+        }
+        handleExistingPrimary( ee, accession, fetchFromGeo( accession ), primary, held, gemmaPmid );
     }
+
+    /** Marks "GEO was deliberately not asked", which is different from "GEO said nothing". */
+    private static final List<Integer> NOT_FETCHED = Collections.emptyList();
 
     /**
      * Gemma has no primary. This is the only branch that creates a link, and the ~2,599 datasets in
@@ -260,14 +288,16 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
      * when there is none.
      */
     private void handleMissingPrimary( ExpressionExperiment ee, String accession, List<Integer> geoIds ) {
+        if ( !fill ) {
+            // GEO is not consulted in a verify-only run: it cannot change anything here, and asking
+            // would cost a request per dataset to write a note nobody can act on until --fill runs.
+            record( ee, accession, "no_primary", null, null, null,
+                    "Gemma has no primary; run with --" + FILL_OPTION + " to ask GEO for one" );
+            return;
+        }
         if ( geoIds.isEmpty() ) {
             record( ee, accession, "no_primary_geo_states_none", null, null, null,
                     "neither Gemma nor GEO has a publication for this series" );
-            return;
-        }
-        if ( !fill ) {
-            record( ee, accession, "no_primary_geo_has_one", null, join( geoIds ), null,
-                    "would be added under --" + FILL_OPTION );
             return;
         }
         BibliographicReference primaryRef = bibliographicReferenceService
@@ -302,52 +332,39 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
      * Gemma has a primary. Nothing here ever changes the link — only whether Gemma can say it checked.
      */
     private void handleExistingPrimary( ExpressionExperiment ee, String accession, List<Integer> geoIds,
-            BibliographicReference primary ) {
-        if ( !verify ) {
-            return;
-        }
-        String gemmaPmid = pubMedIdOf( primary );
-        PublicationAssociation held = publicationAssociationService.find( ee, primary );
-
-        if ( held == null ) {
-            record( ee, accession, "no_assertion_on_record", gemmaPmid, join( geoIds ), null,
-                    "the link has no PUBLICATION_ASSOCIATION row; V25 should have created one" );
-            return;
-        }
-        // 🛑 A curator outranks GEO, and apply() declines such a write in silence. A run whose whole
-        // output is a record of what changed must not report a promotion that never happened, so the
-        // held assertion is read first rather than written at and hoped for.
-        if ( held.getSource() != PublicationAssociationSource.GEO_SUBMITTER_LINK ) {
-            record( ee, accession, "skipped_not_geo_asserted", gemmaPmid, join( geoIds ),
-                    String.valueOf( held.getEvidenceCode() ),
-                    "asserted by " + held.getSource() + "; GEO does not outrank it" );
-            return;
-        }
-        if ( held.getEvidenceCode() == GOEvidenceCode.TAS ) {
-            record( ee, accession, "already_verified", gemmaPmid, join( geoIds ), "TAS", null );
-            return;
-        }
+            BibliographicReference primary, PublicationAssociation held, @Nullable String gemmaPmid ) {
         if ( geoIds.isEmpty() ) {
             record( ee, accession, "geo_states_none", gemmaPmid, null, String.valueOf( held.getEvidenceCode() ),
                     "Gemma has a primary GEO no longer lists; not touched" );
             return;
         }
-        String geoPrimary = String.valueOf( geoIds.get( 0 ) );
-        if ( !geoPrimary.equals( gemmaPmid ) ) {
-            // The interesting set, and deliberately not actionable by this command.
+        // 🛑 Membership, not position. A series may list several papers -- GSE934 lists 15802019 and
+        // 15867358, two 2005 papers from the same lab -- and Gemma holds the second. GEO does link
+        // that paper to that series, so it is verified; what differs is which one is called primary,
+        // and first-is-primary is GeoConverterImpl's convention rather than anything GEO asserts.
+        // Comparing against geoIds.get(0) alone reported those as disagreements and would have filled
+        // the review list with non-issues, burying the real ones. Found on the first live run.
+        int position = gemmaPmid == null ? -1 : geoIds.indexOf( toInt( gemmaPmid ) );
+        if ( position < 0 ) {
+            // GEO does not link this paper to this series at all: the genuinely interesting set, and
+            // deliberately not actionable by this command.
             record( ee, accession, "mismatch", gemmaPmid, join( geoIds ),
                     String.valueOf( held.getEvidenceCode() ),
-                    "Gemma says " + gemmaPmid + ", GEO says " + geoPrimary + "; needs a person" );
-            addWarningObject( ee, "Primary publication disagrees with GEO: Gemma " + gemmaPmid
-                    + " vs GEO " + geoPrimary );
+                    "Gemma says " + gemmaPmid + ", GEO lists " + join( geoIds ) + "; needs a person" );
+            addWarningObject( ee, "Primary publication is not among GEO's: Gemma " + gemmaPmid
+                    + " vs GEO " + join( geoIds ) );
             return;
         }
         publicationAssociationService.assertAccepted( ee,
                 new PublicationAssertion( primary, PublicationAssociationSource.GEO_SUBMITTER_LINK,
-                        geoEvidence( accession, geoIds.get( 0 ), true ), null, GOEvidenceCode.TAS, null, null ),
+                        geoEvidence( accession, geoIds.get( position ), position == 0 ), null,
+                        GOEvidenceCode.TAS, null, null ),
                 PublicationAssociationRole.PRIMARY );
-        record( ee, accession, "promoted_iia_to_tas", gemmaPmid, join( geoIds ), "TAS",
-                geoIds.size() > 1 ? "GEO also lists " + ( geoIds.size() - 1 ) + " further paper(s)" : null );
+        record( ee, accession, position == 0 ? "promoted_iia_to_tas" : "promoted_iia_to_tas_not_geo_first",
+                gemmaPmid, join( geoIds ), "TAS",
+                geoIds.size() > 1
+                        ? "GEO lists " + geoIds.size() + " papers; Gemma holds #" + ( position + 1 )
+                        : null );
         addSuccessObject( ee, "Verified against GEO; IIA -> TAS." );
     }
 
@@ -391,6 +408,16 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
     @Nullable
     private String pubMedIdOf( BibliographicReference ref ) {
         return ref.getPubAccession() != null ? ref.getPubAccession().getAccession() : null;
+    }
+
+    @Nullable
+    private Integer toInt( String s ) {
+        try {
+            return Integer.valueOf( s.trim() );
+        } catch ( NumberFormatException e ) {
+            // a primary whose accession is not a PubMed id cannot be found in GEO's list of them
+            return null;
+        }
     }
 
     private String join( @Nullable List<Integer> ids ) {
