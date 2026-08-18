@@ -102,6 +102,16 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             return mock( OntologyService.class );
         }
 
+        /**
+         * Required by {@code AnnotationsWebService} since the relation endpoints landed; without it
+         * every test here fails on context init rather than on anything it asserts. A mock, because
+         * nothing in this class exercises a relation — {@code AnnotationRelationDaoTest} does.
+         */
+        @Bean
+        public ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService() {
+            return mock( ubic.gemma.persistence.service.common.description.AnnotationRelationService.class );
+        }
+
         @Bean
         public SearchService searchService() {
             return mock( SearchService.class );

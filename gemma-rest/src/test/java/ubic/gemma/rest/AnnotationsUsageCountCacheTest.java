@@ -88,6 +88,15 @@ public class AnnotationsUsageCountCacheTest extends BaseJerseyTest5 {
             return mock( OntologyService.class );
         }
 
+        /**
+         * Required by {@code AnnotationsWebService} since the relation endpoints landed; without it the
+         * context fails to build and these cache tests error before asserting anything.
+         */
+        @Bean
+        public ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService() {
+            return mock( ubic.gemma.persistence.service.common.description.AnnotationRelationService.class );
+        }
+
         @Bean
         public SearchService searchService() {
             return mock( SearchService.class );
