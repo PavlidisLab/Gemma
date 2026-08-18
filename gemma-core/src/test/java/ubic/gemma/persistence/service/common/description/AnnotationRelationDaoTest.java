@@ -392,6 +392,9 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
         r.setSubjectValue( "subject " + subjectUri );
         r.setSubjectValueUri( subjectUri );
         r.setSubjectCategory( "disease model" );
+        // has_genotype is knowledge only when the subject IS one of the term-level categories --
+        // without the URI these fixtures classify as per-experiment bookkeeping and are filtered out
+        r.setSubjectCategoryUri( "http://gemma.msl.ubc.ca/ont/TGEMO_00101" );
         r.setPredicate( "has_genotype" );
         r.setPredicateUri( HAS_GENOTYPE );
         r.setObjectValue( "SURF1" );

@@ -730,6 +730,10 @@ public class AnnotationsWebService {
             @Parameter(description = "Minimum number of attesting experiments; ignored for asserted bases.") @QueryParam("minSupport") @DefaultValue("0") int minSupport,
             @Parameter(description = "Minimum specificity in [0,1]; ignored for asserted bases. Off by "
                     + "default -- no threshold has been tuned against curator judgement yet.") @QueryParam("minSpecificity") @DefaultValue("0") double minSpecificity,
+            @Parameter(description = "Include per-experiment parameters (dose, duration, developmental "
+                    + "stage, a sample's sex) alongside relations that say what the term is. Off by default: "
+                    + "the bookkeeping is roughly four rows in five and none of it is what a reader of a term "
+                    + "wants. Nothing is dropped from the store -- this is a read-time filter.") @QueryParam("includeExperimentLevel") @DefaultValue("false") boolean includeExperimentLevel,
             @Parameter(description = "Drop relations whose object relates to more than this many distinct "
                     + "subjects. An object shared by hundreds of subjects identifies none of them: measured "
                     + "on the corpus, 'Homozygous negative' relates to 2,898, 'Overexpression' to 1,839, "
@@ -746,6 +750,7 @@ public class AnnotationsWebService {
                 .minimumSupport( minSupport )
                 .minimumSpecificity( minSpecificity )
                 .maximumObjectBreadth( maxObjectBreadth )
+                .termLevelOnly( !includeExperimentLevel )
                 .maxResults( limit );
         // A term is addressed by URI when it has one and by its value when it does not; rather than
         // making the caller say which, both legs are seeded and the query ORs them.
@@ -837,6 +842,8 @@ public class AnnotationsWebService {
                     + "subjects. For a suppression gate this wants to be small -- an object shared by "
                     + "hundreds of diseases implies all of them and cannot say whether one is redundant. "
                     + "0 (the default) does not filter.") @QueryParam("maxObjectBreadth") @DefaultValue("0") int maxObjectBreadth,
+            @Parameter(description = "Include per-experiment parameters. Off by default -- a dose or a "
+                    + "duration cannot imply an annotation, so a gate has no use for them.") @QueryParam("includeExperimentLevel") @DefaultValue("false") boolean includeExperimentLevel,
             @QueryParam("limit") @DefaultValue("100") int limit
     ) {
         if ( StringUtils.isBlank( from ) ) {
@@ -862,6 +869,7 @@ public class AnnotationsWebService {
                             .excludedExperimentIds( excluded )
                             .taxonId( taxonId )
                             .maximumObjectBreadth( maxObjectBreadth )
+                            .termLevelOnly( !includeExperimentLevel )
                             .maxResults( limit );
             if ( fromIsSubject ) {
                 q.subjectValueUris( fromUris );
@@ -975,6 +983,12 @@ public class AnnotationsWebService {
          */
         boolean corroborated;
         /**
+         * {@code TERM_LEVEL} when the relation says what the subject term is or where it came from;
+         * {@code EXPERIMENT_LEVEL} when it records how one experiment was run (a dose, a duration, a
+         * sample's sex). Both are real curation; only the first belongs on a term card.
+         */
+        String topicality;
+        /**
          * Identifies the subject/predicate/object triple irrespective of basis, so a client can group
          * the side-by-side rows that one relation legitimately produces. Grouping on the rendered
          * labels instead would merge relations that only look alike.
@@ -1007,6 +1021,7 @@ public class AnnotationsWebService {
             this.exampleDatasetId = s.getExampleExperimentId();
             this.corroborated = s.getBasis().isSelfSufficient();
             this.tripleKey = s.getTripleKey();
+            this.topicality = s.getTopicality().name();
         }
     }
 

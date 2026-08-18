@@ -234,6 +234,10 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             if ( q.getMaximumObjectBreadth() > 0 && s.getObjectBreadth() > q.getMaximumObjectBreadth() ) {
                 continue;
             }
+            if ( q.isTermLevelOnly()
+                    && s.getTopicality() != ubic.gemma.model.common.description.RelationTopicality.TERM_LEVEL ) {
+                continue;
+            }
             if ( q.getMinimumSpecificity() > 0 && !basis.isSelfSufficient()
                     && s.getSpecificity() < q.getMinimumSpecificity() ) {
                 continue;

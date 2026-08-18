@@ -320,6 +320,14 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          * Key identifying the triple irrespective of basis, so a caller can group the side-by-side rows
          * and see for itself where two bases do land on the same term.
          */
+        /**
+         * Whether this relation says something about the subject TERM, or records a parameter of one
+         * experiment. See {@link ubic.gemma.model.common.description.RelationTopicality}.
+         */
+        public ubic.gemma.model.common.description.RelationTopicality getTopicality() {
+            return ubic.gemma.model.common.description.RelationTopicality.of( predicateUri, subjectCategoryUri );
+        }
+
         public String getTripleKey() {
             return ( subjectValueUri != null ? subjectValueUri : subjectValue )
                     + " " + ( predicateUri != null ? predicateUri : "" )
@@ -351,6 +359,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         private Direction seedDirection = Direction.SUBJECT_TO_OBJECT;
         private int minimumSupport = 0;
         private int maximumObjectBreadth = 0;
+        private boolean termLevelOnly = true;
         private double minimumSpecificity = 0d;
         private int maxResults = 50;
 
@@ -540,6 +549,23 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          */
         public RelationQuery maximumObjectBreadth( int v ) {
             this.maximumObjectBreadth = v;
+            return this;
+        }
+
+        public boolean isTermLevelOnly() {
+            return termLevelOnly;
+        }
+
+        /**
+         * Keep only relations that say something about the subject term, dropping per-experiment
+         * parameters. <b>On by default</b>, which is a change of behaviour made deliberately: the
+         * bookkeeping is roughly four rows in five, none of it is what a reader of a term wants, and
+         * every consumer was about to write its own list of predicates to exclude.
+         *
+         * <p>Set false to get everything the harvest stored. Nothing is dropped from the table.</p>
+         */
+        public RelationQuery termLevelOnly( boolean v ) {
+            this.termLevelOnly = v;
             return this;
         }
 

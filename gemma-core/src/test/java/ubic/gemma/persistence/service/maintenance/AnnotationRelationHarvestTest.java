@@ -191,7 +191,10 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
 
         assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 2 );
         assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .subjectValueUris( Collections.singleton( "http://purl.obolibrary.org/obo/MONDO_0004979" ) ) ) )
+                .subjectValueUris( Collections.singleton( "http://purl.obolibrary.org/obo/MONDO_0004979" ) )
+                // unfiltered: `delivered at dose` is a per-experiment parameter and is correctly absent
+                // from the default view, but the harvest still has to have stored it
+                .termLevelOnly( false ) ) )
                 .extracting( AnnotationRelationDao.RelationSummary::getObjectValue )
                 .containsExactlyInAnyOrder( "ovalbumin", "10 mg/kg" );
     }
@@ -263,7 +266,10 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
 
         assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 1 );
         assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .subjectValues( Collections.singleton( "asthma" ) ) ) )
+                .subjectValues( Collections.singleton( "asthma" ) )
+                // unfiltered: the point is what was STORED. A row whose predicate has no URI cannot be
+                // classified and so is not term-level, which is right, and not what this test is about.
+                .termLevelOnly( false ) ) )
                 .singleElement()
                 .satisfies( r -> {
                     assertThat( r.getSubjectValueUri() ).isNull();
