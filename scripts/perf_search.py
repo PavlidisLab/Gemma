@@ -247,10 +247,12 @@ def relation_cases() -> list[Case]:
              "/rest/v2/annotations/relations?dataset=27325&limit=50"),
         # The A/B that matters. Same query twice; the delta is what widening costs.
         Case("relations", "search, widening OFF",
-             "/rest/v2/search?query=Leigh+syndrome&resultTypes=ExpressionExperiment&limit=20",
+             "/rest/v2/search?query=Leigh+syndrome"
+             "&resultTypes=ubic.gemma.model.expression.experiment.ExpressionExperiment&limit=20",
              expected_nonzero=False),
         Case("relations", "search, widening ON",
-             "/rest/v2/search?query=Leigh+syndrome&resultTypes=ExpressionExperiment&limit=20&inferRelations=true",
+             "/rest/v2/search?query=Leigh+syndrome"
+             "&resultTypes=ubic.gemma.model.expression.experiment.ExpressionExperiment&limit=20&inferRelations=true",
              expected_nonzero=False),
     ]
 
