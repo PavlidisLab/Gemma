@@ -59,6 +59,7 @@ public class OntologySearchSourceInferredRelationsTest {
         ReflectionTestUtils.setField( source, "annotationRelationService", annotationRelationService );
         ReflectionTestUtils.setField( source, "maxInferredTermsPerSeed", 5 );
         ReflectionTestUtils.setField( source, "minInferredSpecificity", 0d );
+        ReflectionTestUtils.setField( source, "maxInferredObjectBreadth", 0 );
 
         uris = new HashSet<>( Collections.singleton( LEIGH ) );
         uri2value = new HashMap<>( Collections.singletonMap( LEIGH, "Leigh syndrome" ) );
@@ -223,7 +224,7 @@ public class OntologySearchSourceInferredRelationsTest {
                 "has_genotype", "http://purl.obolibrary.org/obo/GENO_0000222",
                 objectValue, objectUri, null, null,
                 null, null, null, basis, null, null,
-                1, 1, 0, 0, null, 1 );
+                1, 1, 0, 0, null, 1, 1 );
     }
 
     private static SearchSettings settings( boolean inferRelations ) {

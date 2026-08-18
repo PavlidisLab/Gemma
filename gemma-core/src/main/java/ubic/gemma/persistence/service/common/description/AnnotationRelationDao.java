@@ -119,6 +119,23 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          */
         private final long numberOfExperimentsWithSubject;
 
+        /**
+         * How many distinct subjects this object stands in relation to, across the whole table.
+         *
+         * <p>🛑 <b>The discriminator for whether an object identifies anything.</b> Measured on the
+         * corpus: {@code Homozygous negative} relates to 2,898 subjects, {@code Overexpression} to
+         * 1,839, {@code Knockdown} to 1,346, {@code Heterozygous} to 473, {@code 10 uM} to 451,
+         * {@code 24 h} to 448, and {@code induced pluripotent stem cell line cell} to 81 — while
+         * {@code MPTP}, {@code 5xFAD} and {@code APP/PS1} sit in the low single digits. A gate seeded
+         * with a high-breadth object implies every one of those subjects.</p>
+         *
+         * <p>This is <b>not</b> a quality judgement. A dose and a duration are perfectly good curated
+         * statements; they are simply not identifying, and one number covers zygosity, perturbation
+         * direction, dose, duration and generic ontology classes without anyone maintaining a list of
+         * them. Reported so a client sets its own bar rather than inheriting ours.</p>
+         */
+        private final long objectBreadth;
+
         public RelationSummary( String subjectValue, @Nullable String subjectValueUri, @Nullable String subjectCategory,
                 @Nullable String subjectCategoryUri, @Nullable String predicate, @Nullable String predicateUri,
                 String objectValue, @Nullable String objectValueUri, @Nullable String objectCategory,
@@ -126,7 +143,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
                 @Nullable Integer taxonNcbiId, AnnotationRelationBasis basis, @Nullable String source,
                 @Nullable String sourceVersion, long numberOfExperiments, long numberOfExperimentsAtFactorValue,
                 long numberOfExperimentsAtTag, long numberOfExperimentsAtBioMaterial,
-                @Nullable Long exampleExperimentId, long numberOfExperimentsWithSubject ) {
+                @Nullable Long exampleExperimentId, long numberOfExperimentsWithSubject, long objectBreadth ) {
             this.subjectValue = subjectValue;
             this.subjectValueUri = subjectValueUri;
             this.subjectCategory = subjectCategory;
@@ -149,6 +166,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
             this.numberOfExperimentsAtBioMaterial = numberOfExperimentsAtBioMaterial;
             this.exampleExperimentId = exampleExperimentId;
             this.numberOfExperimentsWithSubject = numberOfExperimentsWithSubject;
+            this.objectBreadth = objectBreadth;
         }
 
         /**
@@ -285,6 +303,10 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
             return numberOfExperimentsWithSubject;
         }
 
+        public long getObjectBreadth() {
+            return objectBreadth;
+        }
+
         /**
          * Key identifying the triple irrespective of basis, so a caller can group the side-by-side rows
          * and see for itself where two bases do land on the same term.
@@ -319,6 +341,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         private Long seedFromExperimentId;
         private Direction seedDirection = Direction.SUBJECT_TO_OBJECT;
         private int minimumSupport = 0;
+        private int maximumObjectBreadth = 0;
         private double minimumSpecificity = 0d;
         private int maxResults = 50;
 
@@ -491,6 +514,26 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
             return this;
         }
 
+        public int getMaximumObjectBreadth() {
+            return maximumObjectBreadth;
+        }
+
+        /**
+         * Drop relations whose object relates to more than this many distinct subjects. Zero, the
+         * default, does not filter.
+         *
+         * <p>No default is imposed because the right bar depends on the question. A suppression gate
+         * wants something small — an object shared by hundreds of diseases implies all of them and is
+         * useless for deciding whether one of them is redundant. A curator browsing what a dataset's
+         * annotations relate to may well want the dose and the duration.</p>
+         *
+         * @see RelationSummary#getObjectBreadth()
+         */
+        public RelationQuery maximumObjectBreadth( int v ) {
+            this.maximumObjectBreadth = v;
+            return this;
+        }
+
         public int getMaxResults() {
             return maxResults;
         }
@@ -528,7 +571,8 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
      */
     List<String[]> findRelatedTerms( Collection<String> seedValueUris, Collection<String> seedValues,
             Direction direction, Set<AnnotationRelationBasis> bases, Collection<String> predicateUris,
-            @Nullable Long taxonId, Collection<Long> excludedExperimentIds, int maxResults );
+            @Nullable Long taxonId, Collection<Long> excludedExperimentIds, int maximumObjectBreadth,
+            int maxResults );
 
     /**
      * Remove every derived row for a basis, optionally for one experiment.

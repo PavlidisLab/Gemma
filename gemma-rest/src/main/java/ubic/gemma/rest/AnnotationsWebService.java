@@ -709,6 +709,13 @@ public class AnnotationsWebService {
             @Parameter(description = "Term on the subject side, as a URI or a plain value.") @QueryParam("subject") @Nullable String subject,
             @Parameter(description = "Term on the object side, as a URI or a plain value.") @QueryParam("object") @Nullable String object,
             @Parameter(description = "Restrict to these predicate URIs; omit for any.") @QueryParam("predicate") @Nullable String predicate,
+            @Parameter(description = "Restrict the subject side to these category URIs, e.g. "
+                    + "EFO_0000408 (disease) or TGEMO_00101 (disease model). Useful with 'dataset', where "
+                    + "the seed is every annotation the dataset carries and structural terms -- roles, "
+                    + "doses, units -- are terms like any other.") @QueryParam("subjectCategory") @Nullable String subjectCategory,
+            @Parameter(description = "Restrict the object side to these category URIs. Note that a curated "
+                    + "statement has ONE category and it belongs to the subject, so object categories are "
+                    + "populated only for relations produced from an ontology.") @QueryParam("objectCategory") @Nullable String objectCategory,
             @Parameter(description = "Restrict to these bases: CURATED, ONTOLOGY, EXTERNAL, CORPUS.") @QueryParam("basis") @Nullable String basis,
             @Parameter(description = "Seed from every annotation a dataset carries, by dataset id, instead "
                     + "of naming a term. This is the experiment-page question: what do this dataset's own "
@@ -723,6 +730,12 @@ public class AnnotationsWebService {
             @Parameter(description = "Minimum number of attesting experiments; ignored for asserted bases.") @QueryParam("minSupport") @DefaultValue("0") int minSupport,
             @Parameter(description = "Minimum specificity in [0,1]; ignored for asserted bases. Off by "
                     + "default -- no threshold has been tuned against curator judgement yet.") @QueryParam("minSpecificity") @DefaultValue("0") double minSpecificity,
+            @Parameter(description = "Drop relations whose object relates to more than this many distinct "
+                    + "subjects. An object shared by hundreds of subjects identifies none of them: measured "
+                    + "on the corpus, 'Homozygous negative' relates to 2,898, 'Overexpression' to 1,839, "
+                    + "'24 h' to 448 and 'induced pluripotent stem cell line cell' to 81, while MPTP and "
+                    + "5xFAD sit in the low single digits. Not a quality judgement -- a dose is a good "
+                    + "statement and a very broad object. 0 (the default) does not filter.") @QueryParam("maxObjectBreadth") @DefaultValue("0") int maxObjectBreadth,
             @QueryParam("limit") @DefaultValue("50") int limit
     ) {
         if ( StringUtils.isBlank( subject ) && StringUtils.isBlank( object ) && datasetId == null ) {
@@ -732,6 +745,7 @@ public class AnnotationsWebService {
                 .taxonId( taxonId )
                 .minimumSupport( minSupport )
                 .minimumSpecificity( minSpecificity )
+                .maximumObjectBreadth( maxObjectBreadth )
                 .maxResults( limit );
         // A term is addressed by URI when it has one and by its value when it does not; rather than
         // making the caller say which, both legs are seeded and the query ORs them.
@@ -743,6 +757,12 @@ public class AnnotationsWebService {
         }
         if ( StringUtils.isNotBlank( predicate ) ) {
             q.predicateUris( Collections.singleton( predicate ) );
+        }
+        if ( StringUtils.isNotBlank( subjectCategory ) ) {
+            q.subjectCategoryUris( Arrays.asList( subjectCategory.split( "," ) ) );
+        }
+        if ( StringUtils.isNotBlank( objectCategory ) ) {
+            q.objectCategoryUris( Arrays.asList( objectCategory.split( "," ) ) );
         }
         if ( StringUtils.isNotBlank( basis ) ) {
             q.bases( parseBases( basis ) );
@@ -813,6 +833,10 @@ public class AnnotationsWebService {
             @Parameter(description = "Restrict to these bases: CURATED, ONTOLOGY, EXTERNAL, CORPUS. A gate that "
                     + "should not act on co-occurrence alone can ask for the asserted bases only.") @QueryParam("basis") @Nullable String basis,
             @Parameter(description = "Restrict to a taxon by id.") @QueryParam("taxonId") @Nullable Long taxonId,
+            @Parameter(description = "Drop relations whose object relates to more than this many distinct "
+                    + "subjects. For a suppression gate this wants to be small -- an object shared by "
+                    + "hundreds of diseases implies all of them and cannot say whether one is redundant. "
+                    + "0 (the default) does not filter.") @QueryParam("maxObjectBreadth") @DefaultValue("0") int maxObjectBreadth,
             @QueryParam("limit") @DefaultValue("100") int limit
     ) {
         if ( StringUtils.isBlank( from ) ) {
@@ -837,6 +861,7 @@ public class AnnotationsWebService {
                             .bases( bases )
                             .excludedExperimentIds( excluded )
                             .taxonId( taxonId )
+                            .maximumObjectBreadth( maxObjectBreadth )
                             .maxResults( limit );
             if ( fromIsSubject ) {
                 q.subjectValueUris( fromUris );
@@ -934,6 +959,12 @@ public class AnnotationsWebService {
         long numberOfExperimentsAtTag;
         long numberOfExperimentsAtBioMaterial;
         long numberOfExperimentsWithSubject;
+        /**
+         * How many distinct subjects this object relates to. High means the object identifies nothing
+         * -- it is not a quality judgement, since a dose is a perfectly good statement and a very broad
+         * object.
+         */
+        long objectBreadth;
         double specificity;
         @Nullable
         Long exampleDatasetId;
@@ -965,6 +996,7 @@ public class AnnotationsWebService {
             this.numberOfExperimentsAtTag = s.getNumberOfExperimentsAtTag();
             this.numberOfExperimentsAtBioMaterial = s.getNumberOfExperimentsAtBioMaterial();
             this.numberOfExperimentsWithSubject = s.getNumberOfExperimentsWithSubject();
+            this.objectBreadth = s.getObjectBreadth();
             this.specificity = s.getSpecificity();
             this.exampleDatasetId = s.getExampleExperimentId();
             this.corroborated = s.getBasis().isSelfSufficient();

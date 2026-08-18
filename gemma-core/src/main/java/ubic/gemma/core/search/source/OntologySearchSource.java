@@ -143,6 +143,18 @@ public class OntologySearchSource implements SearchSource {
     private double minInferredSpecificity = 0d;
 
     /**
+     * Widen only through objects that relate to at most this many distinct subjects.
+     *
+     * <p>Unlike the specificity threshold, this one HAS a default, because the distribution has been
+     * looked at and it is not close: {@code Homozygous negative} relates to 2,898 subjects,
+     * {@code Overexpression} to 1,839, {@code 24 h} to 448, while {@code MPTP} and {@code 5xFAD} sit
+     * in the low single digits. Widening a search through a dose or a zygosity reaches most of the
+     * corpus and returns it as though it answered the question.</p>
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.search.inferredRelations.maxObjectBreadth:25}")
+    private int maxInferredObjectBreadth = 25;
+
+    /**
      * Special indicator for exact matches. Those are stripped out when computing summary statistics and then assigned
      * the value of exactly 1.0.
      */
@@ -392,6 +404,7 @@ public class OntologySearchSource implements SearchSource {
             AnnotationRelationDao.RelationQuery q = new AnnotationRelationDao.RelationQuery()
                     .taxonId( taxonId )
                     .minimumSpecificity( minInferredSpecificity )
+                    .maximumObjectBreadth( maxInferredObjectBreadth )
                     // unlimited here, then capped per seed below: cutting the ranked list globally
                     // would let one prolific seed spend the whole budget
                     .maxResults( -1 );

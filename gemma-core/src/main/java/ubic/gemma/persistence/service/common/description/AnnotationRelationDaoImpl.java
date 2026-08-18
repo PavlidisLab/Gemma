@@ -192,6 +192,12 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                 .collect( Collectors.toList() ), q.getTaxonId(), q.getExcludedExperimentIds() )
                 : Collections.emptyMap();
 
+        Map<String, Long> breadth = findObjectBreadth( rows.stream()
+                .map( r -> ( String ) r[6] )
+                .filter( Objects::nonNull )
+                .distinct()
+                .collect( Collectors.toList() ) );
+
         List<RelationSummary> result = new ArrayList<>( rows.size() );
         for ( Object[] r : rows ) {
             AnnotationRelationBasis basis = AnnotationRelationBasis.valueOf( ( String ) r[13] );
@@ -205,8 +211,11 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                     ( Long ) r[10], ( String ) r[11], ( Integer ) r[12],
                     basis, ( String ) r[14], ( String ) r[15],
                     asLong( r[16] ), asLong( r[17] ), asLong( r[18] ), asLong( r[19] ),
-                    ( Long ) r[20], total );
+                    ( Long ) r[20], total, breadth.getOrDefault( ( String ) r[6], 0L ) );
             if ( s.getNumberOfExperiments() < q.getMinimumSupport() && !basis.isSelfSufficient() ) {
+                continue;
+            }
+            if ( q.getMaximumObjectBreadth() > 0 && s.getObjectBreadth() > q.getMaximumObjectBreadth() ) {
                 continue;
             }
             if ( q.getMinimumSpecificity() > 0 && !basis.isSelfSufficient()
@@ -226,7 +235,8 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
     @Override
     public List<String[]> findRelatedTerms( Collection<String> seedValueUris, Collection<String> seedValues,
             Direction direction, Set<AnnotationRelationBasis> bases, Collection<String> predicateUris,
-            @Nullable Long taxonId, Collection<Long> excludedExperimentIds, int maxResults ) {
+            @Nullable Long taxonId, Collection<Long> excludedExperimentIds, int maximumObjectBreadth,
+            int maxResults ) {
         if ( seedValueUris.isEmpty() && seedValues.isEmpty() || bases.isEmpty() ) {
             return Collections.emptyList();
         }
@@ -271,8 +281,18 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         }
         //noinspection unchecked
         List<Object[]> rows = ( List<Object[]> ) query.list();
-        return rows.stream()
+        List<String[]> terms = rows.stream()
                 .map( r -> new String[] { ( String ) r[0], ( String ) r[1] } )
+                .collect( Collectors.toList() );
+        if ( maximumObjectBreadth <= 0 || terms.isEmpty() ) {
+            return terms;
+        }
+        // Filtered after the fetch rather than as a correlated subquery per row: two indexed queries
+        // beat one that re-counts the whole relation set for every candidate.
+        Map<String, Long> breadth = findObjectBreadth( terms.stream()
+                .map( t -> t[0] ).filter( Objects::nonNull ).distinct().collect( Collectors.toList() ) );
+        return terms.stream()
+                .filter( t -> breadth.getOrDefault( t[0], 0L ) <= maximumObjectBreadth )
                 .collect( Collectors.toList() );
     }
 
@@ -296,6 +316,40 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             q.setParameter( "source", source );
         }
         return q.executeUpdate();
+    }
+
+    /**
+     * How many distinct subjects each object relates to, corpus-wide.
+     *
+     * <p>Read from the relation table rather than EE2C, because the question is about the relations
+     * themselves and not about annotation frequency: {@code 24 h} is a common annotation AND a broad
+     * object, but {@code C57BL/6J} is a common annotation and a narrow object, and only the second
+     * number tells a gate anything.</p>
+     *
+     * <p>Deliberately NOT ACL-filtered. Breadth is a property of the relation set, not a count of
+     * anyone's datasets, and filtering it per user would make the same relation look identifying to
+     * one caller and generic to another.</p>
+     */
+    private Map<String, Long> findObjectBreadth( Collection<String> objectValues ) {
+        if ( objectValues.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        NativeQuery<?> query = getSessionFactory().getCurrentSession().createNativeQuery(
+                        "select R.OBJECT_VALUE as V, count(distinct R.SUBJECT_VALUE) as N "
+                                + "from ANNOTATION_RELATION R where R.OBJECT_VALUE in (:values) "
+                                + "group by R.OBJECT_VALUE" )
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                .addSynchronizedEntityClass( AnnotationRelation.class );
+        query.setParameterList( "values", optimizeParameterList( objectValues ) );
+        query.setCacheable( true );
+        //noinspection unchecked
+        List<Object[]> rows = ( List<Object[]> ) query.list();
+        Map<String, Long> out = new LinkedHashMap<>();
+        for ( Object[] r : rows ) {
+            out.put( ( String ) r[0], asLong( r[1] ) );
+        }
+        return out;
     }
 
     /**

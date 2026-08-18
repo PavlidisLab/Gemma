@@ -70,5 +70,6 @@ public interface AnnotationRelationService {
      */
     List<String[]> findRelatedTermsForSearch( Collection<String> seedValueUris, Collection<String> seedValues,
             AnnotationRelationDao.Direction direction, Set<AnnotationRelationBasis> bases,
-            @Nullable Long taxonId, Collection<Long> excludedExperimentIds, int maxResults );
+            @Nullable Long taxonId, Collection<Long> excludedExperimentIds, int maximumObjectBreadth,
+            int maxResults );
 }

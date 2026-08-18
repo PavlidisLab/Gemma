@@ -205,11 +205,49 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
                 Collections.singleton( SURF1 ), Collections.emptySet(),
                 AnnotationRelationDao.Direction.OBJECT_TO_SUBJECT,
                 EnumSet.allOf( AnnotationRelationBasis.class ), Collections.emptySet(),
-                null, Collections.emptySet(), -1 );
+                null, Collections.emptySet(), 0, -1 );
 
         assertThat( related ).hasSize( 3 )
                 .extracting( r -> r[1] )
                 .containsExactlyInAnyOrder( LEIGH, COMPLEX_IV, "http://purl.obolibrary.org/obo/MONDO_0033885" );
+    }
+
+    /**
+     * 🛑 An object that relates to many subjects identifies none of them.
+     *
+     * <p>Measured on the corpus: {@code Homozygous negative} relates to 2,898 distinct subjects,
+     * {@code Overexpression} to 1,839, {@code 24 h} to 448, {@code induced pluripotent stem cell line
+     * cell} to 81 — while {@code MPTP} and {@code 5xFAD} sit in the low single digits. A gate seeded
+     * with a broad object implies every one of those subjects, which is how a suppression rule ends up
+     * dropping a tag because the experiment mentioned a dose.</p>
+     *
+     * <p>Not a quality judgement and not a list of bad terms: a dose is a perfectly good curated
+     * statement, and one measured number covers zygosity, perturbation direction, dose, duration and
+     * generic ontology classes without anyone maintaining it.</p>
+     */
+    @Test
+    public void testABroadObjectIsDroppedWhenACallerSetsABar() {
+        // one narrow object, one shared by three subjects
+        annotationRelationDao.create( attested( LEIGH, SURF1, AnnotationRelationBasis.CURATED, readMask() ) );
+        for ( String subject : new String[] { LEIGH, COMPLEX_IV, "http://purl.obolibrary.org/obo/MONDO_0033885" } ) {
+            AnnotationRelation broad = attested( subject, "http://purl.obolibrary.org/obo/GENO_0000135",
+                    AnnotationRelationBasis.CURATED, readMask() );
+            broad.setObjectValue( "Heterozygous" );
+            annotationRelationDao.create( broad );
+        }
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( LEIGH ) ) ) )
+                .hasSize( 2 );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( LEIGH ) )
+                .maximumObjectBreadth( 2 ) ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getObjectValue() ).isEqualTo( "SURF1" );
+                    assertThat( r.getObjectBreadth() ).isEqualTo( 1 );
+                } );
     }
 
     /**
