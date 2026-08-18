@@ -4284,7 +4284,24 @@ public class AnnotationsWebService {
     public static class AnnotationSearchResultValueObject {
         String value;
         String valueUri;
+        /**
+         * The category a curator has already applied to this URI in the corpus — NOT what kind of
+         * thing the term is. It is carried over from the {@code Characteristic} rows the search
+         * matched, so a term nobody has tagged yet is null however obvious its kind: CLO's
+         * {@code ahl-1 cell} is as uncategorised as any Cellosaurus row, because neither has ever
+         * been used. That makes absent mean "unused", never "conflicts with the category you asked
+         * for" — a client that filters rows on category equality discards every term it would be
+         * the first to apply, which is most of a freshly loaded vocabulary. CAB lost two weeks to
+         * exactly that reading (2026-08-18): one previously-curated CLO row suppressed every other
+         * registration of the same cell line.
+         * <p>
+         * {@code priorCategories} is the same signal unflattened, with the per-category counts, and
+         * is the better one to resolve on. For "what kind of thing is this", walk {@code parents} on
+         * an ontology term, or read {@code sourceMetadata.cellLineType} / {@code strainType} on a
+         * flat catalogue — those are declared by the source rather than inferred from curation.
+         */
         String category;
+        /** URI of {@link #category}, on the same terms: the curated category's URI, null when unused. */
         String categoryUri;
         Integer usageCount;
         /**
