@@ -22,6 +22,7 @@ import ubic.gemma.model.common.description.AnnotationRelation;
 import ubic.gemma.model.common.description.AnnotationRelationBasis;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.EE2CAclQueryUtils;
@@ -60,7 +61,18 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
      * the column across verbatim, so the same strings identify where an attesting annotation sat.
      */
     private static final String LEVEL_EE = ExpressionExperiment.class.getName();
-    private static final String LEVEL_FV = FactorValue.class.getName();
+
+    /**
+     * 🛑 {@link ExperimentalDesign}, not {@link FactorValue}.
+     *
+     * <p>A statement lives on a factor value, so the obvious constant here is {@code FactorValue} --
+     * and it matches nothing. EE2C resolves design-level annotations under
+     * {@code ExperimentalDesign} and never writes {@code FactorValue} as a level at all, so the entire
+     * evidence split silently reported zero for every row. Nothing failed; the numbers were simply
+     * always 0, which reads as "this relation is attested nowhere in particular".</p>
+     */
+    private static final String LEVEL_FV = ExperimentalDesign.class.getName();
+
     private static final String LEVEL_BM = BioMaterial.class.getName();
 
     @Autowired

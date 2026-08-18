@@ -19,6 +19,7 @@ import ubic.gemma.core.mail.MailEngine;
 import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.AnnotationRelationBasis;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
@@ -271,6 +272,35 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
                 } );
     }
 
+    /**
+     * The evidence split has to actually split.
+     *
+     * <p>A statement lives on a factor value, but EE2C files design-level annotations under
+     * {@code ExperimentalDesign} and never writes {@code FactorValue} as a level — so a count keyed on
+     * {@code FactorValue} matched nothing and every row reported zero at every level. That failure is
+     * invisible: it does not throw, it reports "attested nowhere in particular" for a relation with
+     * real support behind it.</p>
+     */
+    @Test
+    public void testTheEvidenceSplitCountsDesignLevelStatements() {
+        Statement s = newStatement( "Alzheimer disease", "http://purl.obolibrary.org/obo/MONDO_0004975",
+                "has_genotype", "http://purl.obolibrary.org/obo/GENO_0000222", "5xFAD", null );
+        persistEe2cRow( s, ExperimentalDesign.class.getName() );
+
+        tableMaintenanceUtil.updateAnnotationRelationEntries( null );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .objectValues( Collections.singleton( "5xFAD" ) ) ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getNumberOfExperiments() ).isEqualTo( 1 );
+                    assertThat( r.getNumberOfExperimentsAtFactorValue() )
+                            .as( "a design-level statement has to land somewhere in the split" )
+                            .isEqualTo( 1 );
+                    assertThat( r.getNumberOfExperimentsAtTag() ).isZero();
+                } );
+    }
+
     private void givenEe2cStatement( String subject, String subjectUri, String predicate, String predicateUri,
             String object, String objectUri ) {
         persistEe2cRow( newStatement( subject, subjectUri, predicate, predicateUri, object, objectUri ) );
@@ -298,6 +328,10 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
      * ambiguous between the two.</p>
      */
     private void persistEe2cRow( Statement s ) {
+        persistEe2cRow( s, ExpressionExperiment.class.getName() );
+    }
+
+    private void persistEe2cRow( Statement s, String level ) {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setTaxon( taxon );
         sessionFactory.getCurrentSession().persist( ee );
@@ -326,7 +360,7 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
                 .setParameter( "secondObjectUri", s.getSecondObjectUri() )
                 .setParameter( "eeId", ee.getId() )
                 .setParameter( "mask", BasePermission.READ.getMask() )
-                .setParameter( "level", ExpressionExperiment.class.getName() )
+                .setParameter( "level", level )
                 .executeUpdate();
         sessionFactory.getCurrentSession().flush();
     }
