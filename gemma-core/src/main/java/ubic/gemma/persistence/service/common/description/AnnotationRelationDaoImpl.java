@@ -20,6 +20,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.AnnotationRelation;
 import ubic.gemma.model.common.description.AnnotationRelationBasis;
+import ubic.gemma.model.common.description.AnnotationRelationStatus;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -87,6 +88,9 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             return Collections.emptyList();
         }
 
+        // 🛑 An inference may never rest on a refutation. This path is the suppression gate, so a
+        // REFUTED row reaching it would license exactly the claim its source denied -- there is no
+        // caller for whom that is the right answer, which is why this one has no opt-in.
         StringBuilder where = new StringBuilder( " where R.BASIS in (:bases)" );
         where.append( uriOrValueConstraint( "SUBJECT", q.getSubjectValueUris(), q.getSubjectValues() ) );
         where.append( uriOrValueConstraint( "OBJECT", q.getObjectValueUris(), q.getObjectValues() ) );
@@ -109,6 +113,12 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         if ( !q.getExcludedExperimentIds().isEmpty() ) {
             where.append( " and (R.EXPRESSION_EXPERIMENT_FK is null or R.EXPRESSION_EXPERIMENT_FK not in (:excludedIds))" );
         }
+        if ( !q.isIncludeRefuted() ) {
+            // 🛑 A refuted row states the opposite of an asserted one, so it is out of the default
+            // read. "Absent" and "denied" are different answers, and only a caller who asks by name
+            // gets the second.
+            where.append( " and R.STATUS = :assertedStatus" );
+        }
         where.append( aclClause() );
 
         NativeQuery<?> query = getSessionFactory().getCurrentSession().createNativeQuery(
@@ -124,7 +134,10 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                                 + "count(distinct case when R.`LEVEL` = :fvLevel then R.EXPRESSION_EXPERIMENT_FK end) as NFV, "
                                 + "count(distinct case when R.`LEVEL` = :eeLevel then R.EXPRESSION_EXPERIMENT_FK end) as NTAG, "
                                 + "count(distinct case when R.`LEVEL` = :bmLevel then R.EXPRESSION_EXPERIMENT_FK end) as NBM, "
-                                + "min(R.EXPRESSION_EXPERIMENT_FK) as EX "
+                                + "min(R.EXPRESSION_EXPERIMENT_FK) as EX, "
+                                // appended LAST on purpose: the row mapping below is positional, so a
+                                // column inserted mid-projection silently re-reads every field after it
+                                + "R.STATUS as ST "
                                 + "from ANNOTATION_RELATION R "
                                 + "left join TAXON X on X.ID = R.TAXON_FK"
                                 + where
@@ -138,7 +151,10 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                                 // across two rows, so every ranking built on it ranks fragments.
                                 + "lower(trim(R.PREDICATE)), R.PREDICATE_URI, "
                                 + "R.OBJECT_VALUE, R.OBJECT_VALUE_URI, lower(trim(R.OBJECT_CATEGORY)), R.OBJECT_CATEGORY_URI, "
-                                + "X.ID, X.COMMON_NAME, X.NCBI_ID, R.BASIS, R.SOURCE, R.SOURCE_VERSION" )
+                                // STATUS is part of the grain: an assertion and a refutation of the same
+                                // triple are two things a source said, and collapsing them would let one
+                                // hide the other
+                                + "X.ID, X.COMMON_NAME, X.NCBI_ID, R.BASIS, R.SOURCE, R.SOURCE_VERSION, R.STATUS" )
                 .addScalar( "SV", StandardBasicTypes.STRING )
                 .addScalar( "SVU", StandardBasicTypes.STRING )
                 .addScalar( "SC", StandardBasicTypes.STRING )
@@ -160,6 +176,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                 .addScalar( "NTAG", StandardBasicTypes.LONG )
                 .addScalar( "NBM", StandardBasicTypes.LONG )
                 .addScalar( "EX", StandardBasicTypes.LONG )
+                .addScalar( "ST", StandardBasicTypes.STRING )
                 .addSynchronizedEntityClass( AnnotationRelation.class )
                 .addSynchronizedEntityClass( ExpressionExperiment.class );
 
@@ -167,6 +184,9 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                 .setParameter( "fvLevel", LEVEL_FV )
                 .setParameter( "eeLevel", LEVEL_EE )
                 .setParameter( "bmLevel", LEVEL_BM );
+        if ( !q.isIncludeRefuted() ) {
+            query.setParameter( "assertedStatus", AnnotationRelationStatus.ASSERTED.name() );
+        }
         bindUriOrValue( query, "subject", q.getSubjectValueUris(), q.getSubjectValues() );
         bindUriOrValue( query, "object", q.getObjectValueUris(), q.getObjectValues() );
         if ( !q.getPredicateUris().isEmpty() ) {
@@ -230,7 +250,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                     ( String ) r[4], ( String ) r[5],
                     ( String ) r[6], ( String ) r[7], ( String ) r[8], ( String ) r[9],
                     ( Long ) r[10], ( String ) r[11], ( Integer ) r[12],
-                    basis, ( String ) r[14], ( String ) r[15],
+                    basis, AnnotationRelationStatus.valueOf( ( String ) r[21] ), ( String ) r[14], ( String ) r[15],
                     asLong( r[16] ), asLong( r[17] ), asLong( r[18] ), asLong( r[19] ),
                     ( Long ) r[20], total, breadth.getOrDefault( breadthKey( ( String ) r[6] ), 0L ),
                     subjectBreadth.getOrDefault( breadthKey( ( String ) r[0] ), 0L ) );
@@ -285,7 +305,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         String seedSide = direction == Direction.SUBJECT_TO_OBJECT ? "SUBJECT" : "OBJECT";
         String returnSide = direction == Direction.SUBJECT_TO_OBJECT ? "OBJECT" : "SUBJECT";
 
-        StringBuilder where = new StringBuilder( " where R.BASIS in (:bases)" );
+        StringBuilder where = new StringBuilder( " where R.BASIS in (:bases) and R.STATUS = :assertedStatus" );
         where.append( uriOrValueConstraint( seedSide, seedValueUris, seedValues ) );
         if ( !predicateUris.isEmpty() ) {
             where.append( " and R.PREDICATE_URI in (:predicateUris)" );
@@ -306,6 +326,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                 .addSynchronizedEntityClass( AnnotationRelation.class )
                 .addSynchronizedEntityClass( ExpressionExperiment.class );
         query.setParameterList( "bases", bases.stream().map( Enum::name ).collect( Collectors.toList() ) );
+        query.setParameter( "assertedStatus", AnnotationRelationStatus.ASSERTED.name() );
         bindUriOrValue( query, seedSide.toLowerCase(), seedValueUris, seedValues );
         if ( !predicateUris.isEmpty() ) {
             query.setParameterList( "predicateUris", predicateUris );

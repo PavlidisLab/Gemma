@@ -1050,6 +1050,15 @@ public class AnnotationsWebService {
         @Nullable
         String impliedTripleKey;
         /**
+         * {@code ASSERTED} or {@code REFUTED} — whether the source states this relation holds, or
+         * states that it does not.
+         *
+         * <p>Effectively always {@code ASSERTED} unless the caller asked for refutations, which are
+         * excluded by default and never license an inference. Present on every row so a client that
+         * does ask cannot mistake one for support.</p>
+         */
+        String status;
+        /**
          * Identifies the subject/predicate/object triple irrespective of basis, so a client can group
          * the side-by-side rows that one relation legitimately produces. Grouping on the rendered
          * labels instead would merge relations that only look alike.
@@ -1092,6 +1101,7 @@ public class AnnotationsWebService {
             this.impliedObject = s.getImpliedObject();
             this.impliedObjectUri = s.getImpliedObjectUri();
             this.impliedTripleKey = s.getImpliedTripleKey();
+            this.status = s.getStatus().name();
         }
     }
 

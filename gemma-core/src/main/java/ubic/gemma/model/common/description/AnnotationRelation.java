@@ -160,6 +160,21 @@ public class AnnotationRelation extends AbstractIdentifiable {
     private AnnotationRelationBasis basis;
 
     /**
+     * Whether the source states this relation holds, or states that it does not.
+     *
+     * <p>🛑 Defaults to {@link AnnotationRelationStatus#ASSERTED} on the field as well as in the
+     * schema, because a writer that forgets it must produce an assertion rather than a null that some
+     * reader interprets. A {@link AnnotationRelationStatus#REFUTED} row read by code unaware of this
+     * column says the opposite of what its source said, which is why the reads filter and why no
+     * inference may rest on one.</p>
+     *
+     * @see AnnotationRelationStatus
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS", nullable = false, columnDefinition = "VARCHAR(16)")
+    private AnnotationRelationStatus status = AnnotationRelationStatus.ASSERTED;
+
+    /**
      * Which ontology or resource asserted it — {@code CLO}, {@code MONDO}, {@code MGI_DO},
      * {@code CELLOSAURUS} — with {@link #getSourceVersion()} alongside so a row is invalidated with
      * the artifact it came from. Null for {@link AnnotationRelationBasis#CURATED} and
@@ -328,6 +343,14 @@ public class AnnotationRelation extends AbstractIdentifiable {
 
     public AnnotationRelationBasis getBasis() {
         return basis;
+    }
+
+    public AnnotationRelationStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus( AnnotationRelationStatus status ) {
+        this.status = status;
     }
 
     public void setBasis( AnnotationRelationBasis basis ) {

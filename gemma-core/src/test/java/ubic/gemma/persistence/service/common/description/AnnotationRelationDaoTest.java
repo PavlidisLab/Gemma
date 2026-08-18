@@ -19,6 +19,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.description.AnnotationRelation;
 import ubic.gemma.model.common.description.AnnotationRelationBasis;
+import ubic.gemma.model.common.description.AnnotationRelationStatus;
 import ubic.gemma.model.common.description.RelationInferenceDirection;
 import ubic.gemma.model.common.description.RelationTopicality;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -589,6 +590,68 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
                 .as( "only the specific object clears a breadth bar of 2, whatever the cap fetched" )
                 .extracting( t -> t[1] )
                 .containsExactly( specific );
+    }
+
+    /**
+     * 🛑 A refutation is not weak support — it is the opposite — so it stays out of ordinary reads and
+     * out of every inference.
+     *
+     * <p>MGI publishes 1,211 of these ({@code MGI_Geno_NotDiseaseDO.rpt}): curated, cited rows saying a
+     * genotype does NOT model a disease. Worth holding, and dangerous to hold carelessly — read by
+     * anything unaware of the column it states the reverse of its source. Hence excluded by default,
+     * reachable only by asking, and never able to license a claim.</p>
+     */
+    @Test
+    public void testARefutedRelationIsExcludedUnlessAskedForAndNeverInfers() {
+        String subject = "http://purl.obolibrary.org/obo/CLO_9200001";
+        String denied = "http://purl.obolibrary.org/obo/CHEBI_9200002";
+        AnnotationRelation r = ontologyRow( subject, "the genotype", denied, "the denied role" );
+        r.setStatus( AnnotationRelationStatus.REFUTED );
+        annotationRelationDao.create( r );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( subject ) ) ) )
+                .as( "absent and denied are different answers; the default read gives neither" )
+                .isEmpty();
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( subject ) )
+                .includeRefuted( true ) ) )
+                .singleElement()
+                .satisfies( summary -> {
+                    assertThat( summary.getStatus() ).isEqualTo( AnnotationRelationStatus.REFUTED );
+                    assertThat( summary.getObjectValueUri() ).isEqualTo( denied );
+                } );
+
+        // 🛑 and the gate has no opt-in at all: there is no caller for whom "infer the thing the
+        // source denied" is the right answer
+        assertThat( annotationRelationDao.findRelatedTerms(
+                Collections.singleton( subject ), Collections.emptySet(),
+                AnnotationRelationDao.Direction.SUBJECT_TO_OBJECT,
+                EnumSet.of( AnnotationRelationBasis.ONTOLOGY ), Collections.emptySet(),
+                null, Collections.emptySet(), 0, 50 ) )
+                .as( "a refutation must never license an inference" )
+                .isEmpty();
+    }
+
+    /**
+     * An assertion and a refutation of the same triple are two things a source said, so the grain must
+     * keep them apart. Collapsed into one row, whichever won would hide the other.
+     */
+    @Test
+    public void testAnAssertionAndARefutationOfOneTripleDoNotCollapse() {
+        String subject = "http://purl.obolibrary.org/obo/CLO_9200003";
+        String object = "http://purl.obolibrary.org/obo/CHEBI_9200004";
+        annotationRelationDao.create( ontologyRow( subject, "subj", object, "obj" ) );
+        AnnotationRelation refuted = ontologyRow( subject, "subj", object, "obj" );
+        refuted.setStatus( AnnotationRelationStatus.REFUTED );
+        annotationRelationDao.create( refuted );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( subject ) )
+                .includeRefuted( true ) ) )
+                .extracting( AnnotationRelationDao.RelationSummary::getStatus )
+                .containsExactlyInAnyOrder( AnnotationRelationStatus.ASSERTED, AnnotationRelationStatus.REFUTED );
     }
 
     /**

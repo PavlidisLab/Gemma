@@ -227,7 +227,8 @@ public class OntologySearchSourceInferredRelationsTest {
                 "subject", subjectUri, "disease model", "http://gemma.msl.ubc.ca/ont/TGEMO_00101",
                 "has_genotype", "http://purl.obolibrary.org/obo/GENO_0000222",
                 objectValue, objectUri, null, null,
-                null, null, null, basis, null, null,
+                null, null, null, basis,
+                ubic.gemma.model.common.description.AnnotationRelationStatus.ASSERTED, null, null,
                 1, 1, 0, 0, null, 1, 1, 1 );
     }
 

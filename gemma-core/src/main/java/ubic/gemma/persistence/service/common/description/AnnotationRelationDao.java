@@ -93,6 +93,16 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         @Nullable
         private final Integer taxonNcbiId;
         private final AnnotationRelationBasis basis;
+        /**
+         * Whether the source states this relation holds or states that it does not.
+         *
+         * <p>Sits beside {@link #basis} in the constructor deliberately: both are enums, so getting
+         * the two the wrong way round is a compile error rather than a silent swap in a constructor
+         * this long.</p>
+         *
+         * @see ubic.gemma.model.common.description.AnnotationRelationStatus
+         */
+        private final ubic.gemma.model.common.description.AnnotationRelationStatus status;
         @Nullable
         private final String source;
         @Nullable
@@ -156,7 +166,8 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
                 @Nullable String subjectCategoryUri, @Nullable String predicate, @Nullable String predicateUri,
                 String objectValue, @Nullable String objectValueUri, @Nullable String objectCategory,
                 @Nullable String objectCategoryUri, @Nullable Long taxonId, @Nullable String taxonCommonName,
-                @Nullable Integer taxonNcbiId, AnnotationRelationBasis basis, @Nullable String source,
+                @Nullable Integer taxonNcbiId, AnnotationRelationBasis basis,
+                ubic.gemma.model.common.description.AnnotationRelationStatus status, @Nullable String source,
                 @Nullable String sourceVersion, long numberOfExperiments, long numberOfExperimentsAtFactorValue,
                 long numberOfExperimentsAtTag, long numberOfExperimentsAtBioMaterial,
                 @Nullable Long exampleExperimentId, long numberOfExperimentsWithSubject, long objectBreadth,
@@ -175,6 +186,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
             this.taxonCommonName = taxonCommonName;
             this.taxonNcbiId = taxonNcbiId;
             this.basis = basis;
+            this.status = status;
             this.source = source;
             this.sourceVersion = sourceVersion;
             this.numberOfExperiments = numberOfExperiments;
@@ -293,6 +305,10 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
 
         public AnnotationRelationBasis getBasis() {
             return basis;
+        }
+
+        public ubic.gemma.model.common.description.AnnotationRelationStatus getStatus() {
+            return status;
         }
 
         @Nullable
@@ -545,6 +561,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         private int minimumSupport = 0;
         private int maximumObjectBreadth = 0;
         private boolean termLevelOnly = true;
+        private boolean includeRefuted = false;
         private double minimumSpecificity = 0d;
         private int maxResults = 50;
 
@@ -734,6 +751,22 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          */
         public RelationQuery maximumObjectBreadth( int v ) {
             this.maximumObjectBreadth = v;
+            return this;
+        }
+
+        public boolean isIncludeRefuted() {
+            return includeRefuted;
+        }
+
+        /**
+         * Also return relations a source states do NOT hold. <b>Off by default.</b>
+         *
+         * <p>🛑 A refuted row is not a weak assertion, it is the opposite of one, so it must never
+         * arrive where a caller expects support. Asking for it is asking a different question — "does
+         * anything actively deny this?" — and only a caller posing that question should see one.</p>
+         */
+        public RelationQuery includeRefuted( boolean v ) {
+            this.includeRefuted = v;
             return this;
         }
 
