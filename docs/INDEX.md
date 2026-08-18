@@ -90,7 +90,7 @@ Total: 151 docs.
 - [`WORKTREE_CLEANUP_PLAN_v2.md`](plans/WORKTREE_CLEANUP_PLAN_v2.md) — Worktree cleanup plan — v2
 - [`WORKTREE_CLEANUP_PLAN_v3.md`](plans/WORKTREE_CLEANUP_PLAN_v3.md) — Worktree cleanup plan v3
 
-## Other design docs — `docs/design/` (59)
+## Other design docs — `docs/design/` (60)
 
 - [`ACL_ENTRY_VOTER_MIGRATION.md`](design/ACL_ENTRY_VOTER_MIGRATION.md) — ACL AclEntryVoter family migration plan
 - [`AFTER_INVOCATION_MIGRATION.md`](design/AFTER_INVOCATION_MIGRATION.md) — AfterInvocation → Spring Security 6 Modern API Migration Roadmap
@@ -98,6 +98,7 @@ Total: 151 docs.
 - [`CELLOSAURUS_CELL_LINE_SEARCH.md`](design/CELLOSAURUS_CELL_LINE_SEARCH.md) — Cellosaurus as a lexical cell-line name-resolution source (backup for CLO's coverage gaps)
 - [`CONTAINER_CONFIG.md`](design/CONTAINER_CONFIG.md) — Container Config — Env-Var-Only Gemma Configuration
 - [`CRUFT_INVENTORY.md`](design/CRUFT_INVENTORY.md) — Phase 3 cruft inventory + LoC endstate projection
+- [`GENOTYPE_DISEASE_MODEL_EXPANSION.md`](design/GENOTYPE_DISEASE_MODEL_EXPANSION.md) — deriving what a genotype models; spec for the unbuilt CORPUS + EXTERNAL relation bases (PR #1685's mechanism is superseded)
 - [`CURATION_COMMIT_SPEC.md`](design/CURATION_COMMIT_SPEC.md) — Curation commit — composite all-or-none write (`PUT /datasets/{id}/curation`)
 - [`CURATION_DETAILS_RETIREMENT.md`](design/CURATION_DETAILS_RETIREMENT.md) — CurationDetails write-path retirement — phase 1
 - [`EXECUTOR_VIRTUAL_THREAD_PREP.md`](design/EXECUTOR_VIRTUAL_THREAD_PREP.md) — Executor centralization audit + virtual-thread prep
