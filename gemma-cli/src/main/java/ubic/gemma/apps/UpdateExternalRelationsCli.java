@@ -14,8 +14,12 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Rebuilds the {@code EXTERNAL} rows of {@code ANNOTATION_RELATION} from MGI's genotype-to-disease
- * reports — which mutant alleles MGI's curators say model which diseases, and which they say do not.
+ * Rebuilds the {@code EXTERNAL} rows of {@code ANNOTATION_RELATION} from the third-party resources
+ * that state relations Gemma cannot derive itself.
+ *
+ * <p>MGI: which mutant alleles its curators say model which diseases, and which they say do not.
+ * Cellosaurus: which disease a cell line's donor had and which part of the body it came from — the
+ * relations CLO barely asserts, for 141,670 lines including the ones that exist nowhere else.</p>
  *
  * <p>A command of its own for the reason {@code updateOntologyRelations} is one: the prerequisites
  * differ. That one needs CLO and CHEBI warmed; this one reads two files off MGI's download server and
@@ -27,8 +31,8 @@ import java.util.Optional;
 public class UpdateExternalRelationsCli extends AbstractAuthenticatedCLI {
 
     /**
-     * Not a source of relations here — it is what MGI's DOIDs are translated <i>out</i> of, so nothing
-     * can be stored without it.
+     * Not a source of relations here — it is what MGI's {@code DOID:} and Cellosaurus's {@code NCIt:}
+     * identifiers are translated <i>out</i> of, so no disease relation can be stored without it.
      */
     private static final String XREF_ONTOLOGY = "MONDO";
 
@@ -50,7 +54,7 @@ public class UpdateExternalRelationsCli extends AbstractAuthenticatedCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Rebuild the EXTERNAL ANNOTATION_RELATION rows from MGI's genotype-to-disease reports";
+        return "Rebuild the EXTERNAL ANNOTATION_RELATION rows from MGI and Cellosaurus";
     }
 
     @Override
@@ -73,7 +77,7 @@ public class UpdateExternalRelationsCli extends AbstractAuthenticatedCLI {
      */
     private void warmUp() throws InterruptedException {
         if ( ontologies == null || ontologies.isEmpty() ) {
-            log.warn( "No ontology services are wired; MGI's DOIDs cannot be translated and nothing will be stored." );
+            log.warn( "No ontology services are wired; foreign disease identifiers cannot be translated." );
             return;
         }
         Optional<ubic.gemma.core.ontology.providers.OntologyService> mondo =

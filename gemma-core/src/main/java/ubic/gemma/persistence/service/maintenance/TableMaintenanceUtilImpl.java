@@ -571,6 +571,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Autowired(required = false)
     private ubic.gemma.core.ontology.relation.MgiRelationProducer mgiRelationProducer;
 
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.relation.CellosaurusRelationProducer cellosaurusRelationProducer;
+
     /**
      * Not {@code @Transactional}: the producer spends minutes walking Jena models before it has a row to
      * write, and its own transaction wraps only the delete-and-insert. Holding a connection open across
@@ -606,16 +609,23 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
             return 0;
         }
         StopWatch timer = StopWatch.createStarted();
-        log.info( "Updating EXTERNAL ANNOTATION_RELATION entries from MGI..." );
-        int written;
+        log.info( "Updating EXTERNAL ANNOTATION_RELATION entries..." );
+        int written = 0;
+        // 🛑 Each source stands or falls alone. Both deletes are scoped to their own SOURCE, so one
+        // failing download must not cost the other its rows -- and a failure leaves the existing rows
+        // in place rather than emptying them, since rebuilding from nothing is indistinguishable from
+        // the source having retracted everything it ever said.
         try {
-            written = mgiRelationProducer.produce();
+            written += mgiRelationProducer.produce();
         } catch ( java.io.IOException e ) {
-            // 🛑 Left alone rather than emptied. A download that failed is not MGI retracting every
-            // statement it has ever made, and rebuilding from nothing would look exactly like that --
-            // the same rule the ontology pass applies to an ontology that is not loaded.
             log.error( "Could not read MGI's reports; its EXTERNAL relation rows are left as they are.", e );
-            return 0;
+        }
+        if ( cellosaurusRelationProducer != null ) {
+            try {
+                written += cellosaurusRelationProducer.produce();
+            } catch ( java.io.IOException e ) {
+                log.error( "Could not read Cellosaurus; its EXTERNAL relation rows are left as they are.", e );
+            }
         }
         evictAnnotationRelationQueryCache();
         log.info( String.format( "Done updating EXTERNAL ANNOTATION_RELATION entries; %d written in %d ms.",
