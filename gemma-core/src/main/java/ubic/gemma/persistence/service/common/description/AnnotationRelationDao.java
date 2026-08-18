@@ -328,6 +328,15 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
             return ubic.gemma.model.common.description.RelationTopicality.of( predicateUri, subjectCategoryUri );
         }
 
+        /**
+         * Which end of this relation licenses an inference about the other. A relation is readable
+         * from both ends and inferable from only one — see
+         * {@link ubic.gemma.model.common.description.RelationInferenceDirection}.
+         */
+        public ubic.gemma.model.common.description.RelationInferenceDirection getInferenceDirection() {
+            return ubic.gemma.model.common.description.RelationInferenceDirection.of( predicateUri );
+        }
+
         public String getTripleKey() {
             return ( subjectValueUri != null ? subjectValueUri : subjectValue )
                     + " " + ( predicateUri != null ? predicateUri : "" )

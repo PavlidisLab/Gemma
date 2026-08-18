@@ -884,6 +884,14 @@ public class AnnotationsWebService {
             }
             for ( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationSummary r
                     : annotationRelationService.findRelations( q ) ) {
+                // 🛑 Only the licensed direction. The store is symmetric and the INFERENCE is not:
+                // `Alzheimer disease --has_genotype--> APP/PS1` lets APP/PS1 imply an Alzheimer model,
+                // and does NOT let Alzheimer imply APP/PS1, because not every Alzheimer model is
+                // APP/PS1. Following both would let this endpoint suppress a correct
+                // `genotype: APP/PS1` tag because the dataset also said `disease: Alzheimer`.
+                if ( !r.getInferenceDirection().licenses( fromIsSubject ) ) {
+                    continue;
+                }
                 if ( seen.add( r.getTripleKey() + " " + r.getBasis() ) ) {
                     out.add( new AnnotationRelationValueObject( r ) );
                 }
@@ -989,6 +997,13 @@ public class AnnotationsWebService {
          */
         String topicality;
         /**
+         * {@code SUBJECT_IMPLIES_OBJECT}, {@code OBJECT_IMPLIES_SUBJECT} or {@code NEITHER}. A
+         * relation is readable from both ends and inferable from only one: the store holds
+         * {@code Alzheimer disease --has_genotype--> APP/PS1}, and APP/PS1 implies an Alzheimer model
+         * while Alzheimer implies nothing about APP/PS1 — not every Alzheimer model is APP/PS1.
+         */
+        String inferenceDirection;
+        /**
          * Identifies the subject/predicate/object triple irrespective of basis, so a client can group
          * the side-by-side rows that one relation legitimately produces. Grouping on the rendered
          * labels instead would merge relations that only look alike.
@@ -1022,6 +1037,7 @@ public class AnnotationsWebService {
             this.corroborated = s.getBasis().isSelfSufficient();
             this.tripleKey = s.getTripleKey();
             this.topicality = s.getTopicality().name();
+            this.inferenceDirection = s.getInferenceDirection().name();
         }
     }
 

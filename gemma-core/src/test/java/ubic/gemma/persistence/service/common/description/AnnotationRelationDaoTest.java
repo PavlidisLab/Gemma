@@ -19,6 +19,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.description.AnnotationRelation;
 import ubic.gemma.model.common.description.AnnotationRelationBasis;
+import ubic.gemma.model.common.description.RelationInferenceDirection;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -337,6 +338,43 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
                 .as( "one relation, its support whole" )
                 .singleElement()
                 .satisfies( r -> assertThat( r.getNumberOfExperiments() ).isEqualTo( 3 ) );
+    }
+
+    /**
+     * 🛑 A relation is readable from both ends and inferable from only one.
+     *
+     * <p>Gemma stores {@code Alzheimer disease --has_genotype--> APP/PS1}. APP/PS1 implies an
+     * Alzheimer disease model; Alzheimer implies nothing about APP/PS1, because not every Alzheimer
+     * model is APP/PS1. A gate following both directions would suppress a correct
+     * {@code genotype: APP/PS1} tag on the strength of the dataset also carrying
+     * {@code disease: Alzheimer} — deleting curation for an inference nobody made.</p>
+     *
+     * <p>And the licensed direction flips per predicate, because the curation does not put the
+     * specific end on the same side each time: a cell line's {@code derives from patient having
+     * disease} runs subject-to-object, while {@code has_genotype} runs object-to-subject.</p>
+     */
+    @Test
+    public void testTheImplicationRunsOnlyOneWayAndTheWayDependsOnThePredicate() {
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE ) )
+                .isEqualTo( RelationInferenceDirection.OBJECT_IMPLIES_SUBJECT );
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE ).licenses( false ) )
+                .as( "APP/PS1, the object, implies the disease" ).isTrue();
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE ).licenses( true ) )
+                .as( "the disease must NOT imply the genotype" ).isFalse();
+
+        String derivesFromPatient = "http://purl.obolibrary.org/obo/CLO_0000015";
+        assertThat( RelationInferenceDirection.of( derivesFromPatient ) )
+                .isEqualTo( RelationInferenceDirection.SUBJECT_IMPLIES_OBJECT );
+        assertThat( RelationInferenceDirection.of( derivesFromPatient ).licenses( true ) )
+                .as( "MCF7, the subject, implies its disease" ).isTrue();
+        assertThat( RelationInferenceDirection.of( derivesFromPatient ).licenses( false ) )
+                .as( "the disease must NOT imply the cell line" ).isFalse();
+
+        // an unclassified predicate licenses nothing: a suppression must never rest on a relation
+        // nobody has reasoned about
+        assertThat( RelationInferenceDirection.of( "http://purl.obolibrary.org/obo/RO_0001000" ) )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
+        assertThat( RelationInferenceDirection.of( null ) ).isEqualTo( RelationInferenceDirection.NEITHER );
     }
 
     /**
