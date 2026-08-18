@@ -1,0 +1,252 @@
+package ubic.gemma.model.annotations;
+
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
+import org.junit.jupiter.api.Test;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+/**
+ * Enforcement for {@link WithheldFromApi}. The annotation on its own is a comment that compiles —
+ * nothing stops the next person deleting it from {@code getCurrentUserIsOwner()} and shipping
+ * per-caller authorization state on a cacheable response. This is what stops that.
+ *
+ * <h2>What it pins</h2>
+ *
+ * <ol>
+ * <li><b>The inventory.</b> {@code withheld-from-api-inventory.txt} lists every application of the
+ * annotation with its reason. Adding, removing or re-reasoning one fails until the file is updated,
+ * so each change is a deliberate line in a diff rather than an invisible API change. Deleting an
+ * annotation fails here — which an annotation-driven scan alone could never catch, since a deleted
+ * annotation simply vanishes from the scan.</li>
+ * <li><b>The suppression.</b> Every listed member is absent from Jackson's serialization view of its
+ * class. Checked by comparing {@link java.lang.reflect.Member}s, not property names, so a
+ * name-derivation mistake cannot make the assertion vacuously true.</li>
+ * <li><b>The ratchet.</b> {@link Reason#UNTRIAGED} is migration debt, so its population may only
+ * shrink. {@link #UNTRIAGED_CEILING} is a separate constant on purpose: regenerating the inventory
+ * would hide a new untriaged member, and this would not.</li>
+ * </ol>
+ *
+ * When you legitimately change a suppression, update the inventory file and — if you retired an
+ * untriaged member — lower the ceiling.
+ */
+class WithheldFromApiInventoryTest {
+
+    private static final String INVENTORY_RESOURCE = "/withheld-from-api-inventory.txt";
+    private static final String MODEL_PACKAGE_PATH = "ubic/gemma/model";
+
+    /**
+     * Number of {@link Reason#UNTRIAGED} members left over from the {@code @GemmaWebOnly} migration.
+     * This may only ever go down. Do not raise it — a new suppression has a real reason available.
+     */
+    private static final int UNTRIAGED_CEILING = 13;
+
+    private static final Set<Reason> MUST_NEVER_SERIALIZE = EnumSet.of( Reason.CALLER_IDENTITY, Reason.DISCLOSURE );
+
+    /** One application of the annotation: the member it is on, and the reason it claims. */
+    private record Site(Class<?> owner, AnnotatedElementRef member, Reason reason) {
+        String key() {
+            return owner.getName() + "#" + member.name();
+        }
+    }
+
+    /** A field or a method, uniformly addressable — Jackson exposes both as accessors. */
+    private record AnnotatedElementRef(Field field, Method method) {
+        String name() {
+            return field != null ? field.getName() : method.getName();
+        }
+
+        boolean isSameAs( AnnotatedMember m ) {
+            return field != null ? field.equals( m.getMember() ) : method.equals( m.getMember() );
+        }
+    }
+
+    // ---------------------------------------------------------------- scanning
+
+    private static List<Class<?>> modelClasses() {
+        Path base;
+        try {
+            base = Paths.get( WithheldFromApi.class.getProtectionDomain().getCodeSource().getLocation().toURI() );
+        } catch ( URISyntaxException e ) {
+            throw new IllegalStateException( e );
+        }
+        assertTrue( Files.isDirectory( base ),
+                "expected to scan exploded classes but got " + base + "; this guard cannot run from a jar" );
+        Path pkg = base.resolve( MODEL_PACKAGE_PATH );
+        assertTrue( Files.isDirectory( pkg ), "no compiled model package under " + base );
+
+        List<Class<?>> classes = new ArrayList<>();
+        List<String> failures = new ArrayList<>();
+        try ( Stream<Path> walk = Files.walk( pkg ) ) {
+            for ( Path p : walk.filter( f -> f.toString().endsWith( ".class" ) ).collect( Collectors.toList() ) ) {
+                String name = base.relativize( p ).toString()
+                        .replace( java.io.File.separatorChar, '.' )
+                        .replaceAll( "\\.class$", "" );
+                if ( name.endsWith( "package-info" ) || name.endsWith( "module-info" ) ) {
+                    continue; // not addressable through Class.forName, and cannot carry the annotation
+                }
+                try {
+                    // initialize=false: reading annotations must not run static initializers
+                    classes.add( Class.forName( name, false, WithheldFromApi.class.getClassLoader() ) );
+                } catch ( Throwable t ) {
+                    failures.add( name + " (" + t.getClass().getSimpleName() + ")" );
+                }
+            }
+        } catch ( IOException e ) {
+            throw new UncheckedIOException( e );
+        }
+        // a class we cannot load is a class we cannot check — say so rather than under-reporting
+        assertTrue( failures.isEmpty(), "could not load, so could not check: " + failures );
+        assertFalse( classes.isEmpty(), "scanned nothing under " + pkg );
+        return classes;
+    }
+
+    private static List<Site> scan() {
+        List<Site> sites = new ArrayList<>();
+        for ( Class<?> c : modelClasses() ) {
+            for ( Field f : c.getDeclaredFields() ) {
+                WithheldFromApi a = f.getAnnotation( WithheldFromApi.class );
+                if ( a != null ) {
+                    sites.add( new Site( c, new AnnotatedElementRef( f, null ), a.value() ) );
+                }
+            }
+            for ( Method m : c.getDeclaredMethods() ) {
+                WithheldFromApi a = m.getAnnotation( WithheldFromApi.class );
+                if ( a != null ) {
+                    sites.add( new Site( c, new AnnotatedElementRef( null, m ), a.value() ) );
+                }
+            }
+        }
+        return sites;
+    }
+
+    private static TreeMap<String, Reason> pinned() {
+        TreeMap<String, Reason> expected = new TreeMap<>();
+        try ( InputStream in = WithheldFromApiInventoryTest.class.getResourceAsStream( INVENTORY_RESOURCE ) ) {
+            assertTrue( in != null, "missing " + INVENTORY_RESOURCE );
+            for ( String line : new String( in.readAllBytes(), StandardCharsets.UTF_8 ).split( "\n" ) ) {
+                String s = line.trim();
+                if ( s.isEmpty() || s.startsWith( "#" ) ) {
+                    continue;
+                }
+                String[] parts = s.split( "\\s+" );
+                assertEquals( 2, parts.length, "malformed inventory line: " + s );
+                expected.put( parts[0], Reason.valueOf( parts[1] ) );
+            }
+        } catch ( IOException e ) {
+            throw new UncheckedIOException( e );
+        }
+        return expected;
+    }
+
+    // ------------------------------------------------------------------- tests
+
+    @Test
+    void theInventoryMatchesTheTree() {
+        TreeMap<String, Reason> expected = pinned();
+        TreeMap<String, Reason> actual = new TreeMap<>();
+        for ( Site s : scan() ) {
+            assertTrue( actual.put( s.key(), s.reason() ) == null,
+                    "two suppressions resolve to the same key, so the inventory cannot address them: " + s.key() );
+        }
+
+        Set<String> added = new TreeSet<>( actual.keySet() );
+        added.removeAll( expected.keySet() );
+        Set<String> removed = new TreeSet<>( expected.keySet() );
+        removed.removeAll( actual.keySet() );
+        Set<String> rereasoned = new LinkedHashSet<>();
+        for ( String k : actual.keySet() ) {
+            if ( expected.containsKey( k ) && expected.get( k ) != actual.get( k ) ) {
+                rereasoned.add( k + ": " + expected.get( k ) + " -> " + actual.get( k ) );
+            }
+        }
+
+        if ( !added.isEmpty() || !removed.isEmpty() || !rereasoned.isEmpty() ) {
+            fail( "the @WithheldFromApi inventory is stale. If these changes are intended, update"
+                    + " gemma-core/src/test/resources" + INVENTORY_RESOURCE + "."
+                    + "\n  newly suppressed (not in inventory): " + added
+                    + "\n  no longer suppressed (REMOVING ONE OF THESE MAY PUBLISH IT): " + removed
+                    + "\n  reason changed: " + rereasoned );
+        }
+    }
+
+    @Test
+    void nothingInTheInventoryReachesTheWire() {
+        ObjectMapper mapper = new ObjectMapper();
+        List<String> leaked = new ArrayList<>();
+        List<Site> sites = scan();
+        assertFalse( sites.isEmpty(), "nothing scanned, so nothing was actually checked" );
+
+        for ( Site s : sites ) {
+            BeanDescription desc = mapper.getSerializationConfig()
+                    .introspect( mapper.constructType( s.owner() ) );
+            List<BeanPropertyDefinition> props = desc.findProperties();
+            // guards against a vacuous pass: if Jackson saw no properties at all on this class, the
+            // loop below proves nothing
+            assertFalse( props.isEmpty(), "Jackson introspected no properties on " + s.owner().getName() );
+            for ( BeanPropertyDefinition p : props ) {
+                for ( AnnotatedMember m : new AnnotatedMember[] { p.getField(), p.getGetter() } ) {
+                    if ( m != null && s.member().isSameAs( m ) ) {
+                        leaked.add( s.key() + " serializes as \"" + p.getName() + "\"" );
+                    }
+                }
+            }
+        }
+        assertTrue( leaked.isEmpty(), "@WithheldFromApi is not suppressing these: " + leaked );
+    }
+
+    @Test
+    void theCallerIdentityAndDisclosureSitesAreStillThere() {
+        // the members this annotation was created for. Losing one is the failure mode that matters,
+        // so name them here as well: the inventory can be regenerated, this list has to be argued with.
+        Set<String> required = Set.of(
+                "ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject#getCurrentUserIsOwner",
+                "ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject#getCurrentUserHasWritePermission",
+                "ubic.gemma.model.genome.gene.GeneSetValueObject#getCurrentUserIsOwner",
+                "ubic.gemma.model.expression.biomaterial.BioMaterialValueObject#fastqHeaders" );
+
+        Set<String> found = scan().stream()
+                .filter( s -> MUST_NEVER_SERIALIZE.contains( s.reason() ) )
+                .map( Site::key )
+                .collect( Collectors.toCollection( TreeSet::new ) );
+
+        assertTrue( found.containsAll( required ),
+                "a caller-identity or disclosure suppression was removed or re-reasoned: "
+                        + required.stream().filter( r -> !found.contains( r ) ).collect( Collectors.toList() ) );
+    }
+
+    @Test
+    void theUntriagedBacklogOnlyShrinks() {
+        long untriaged = scan().stream().filter( s -> s.reason() == Reason.UNTRIAGED ).count();
+        assertTrue( untriaged <= UNTRIAGED_CEILING,
+                "UNTRIAGED is migration debt from @GemmaWebOnly, not a reason for new suppressions:"
+                        + " found " + untriaged + ", ceiling " + UNTRIAGED_CEILING
+                        + ". A new member should carry a real reason; if you retired one, lower the ceiling." );
+    }
+}

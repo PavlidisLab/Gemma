@@ -20,7 +20,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.annotations.GemmaRestOnly;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
 import org.springframework.lang.NonNull;
@@ -65,8 +66,8 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
      * written through the curation API and for anything that never had a distinct original. A
      * consumer that reads null as "unchanged" turns an unknown into a confirmed no-op.
      * <p>
-     * Serialized only when present. Was withheld from REST under {@code @GemmaWebOnly} until the
-     * field's only consumer, Gemma Web, was retired.
+     * Serialized only when present. Was withheld from REST under the old {@code @GemmaWebOnly}
+     * marker until the field's only consumer, Gemma Web, was retired.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String originalValue = null;
@@ -83,11 +84,14 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     /**
      * id used by url on the client side
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "never populated")
     private String urlId = "";
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "curator editor state; says nothing about the characteristic itself")
     private boolean alreadyPresentInDatabase = false;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "Phenocarta editor state, never populated")
     private boolean alreadyPresentOnGene = false; // phenocarta?
     /**
      * True when this candidate came from a flat lexical catalogue (MGI names, Cellosaurus) rather
@@ -108,34 +112,42 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     /**
      * child term from a root
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "ontology-tree render state, never populated")
     private boolean child = false;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "populated by OntologyServiceImpl; a real usage tally no client can read")
     private int numTimesUsed = 0;
     /**
      * what Ontology uses this term
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "never populated")
     private String ontologyUsed = null;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "never populated; a Phenocarta gene tally, not an ACL count")
     private long privateGeneCount = 0L; // phenocarta?
     /**
      * number of occurrences in all genes
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "never populated; a Phenocarta gene tally, not an ACL count")
     private long publicGeneCount = 0L; // phenocarta?
     /**
      * root of a query
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "ontology-tree render state, never populated")
     private boolean root = false;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened common name, never populated outside tests")
     private String taxon = "";
     /**
      * The definition of the value, if it is an ontology term, as supplied by the ontology. If the value is
      * free text, this will be empty
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "never populated")
     private String valueDefinition = "";
 
     /**

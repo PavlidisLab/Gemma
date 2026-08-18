@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -38,7 +39,8 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
      * @deprecated Do not use, there's never been an accession field in the data model.
      */
     @Deprecated
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "plausibly wanted on a subset; trace where it is populated first")
     private String accession;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer numberOfBioAssays;
@@ -59,7 +61,8 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
     private boolean userOwned = false;
 
     @Nullable
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "check whether it is meaningful without the analysis context")
     private Double minPvalue;
 
     public ExpressionExperimentSubsetValueObject() {
@@ -103,7 +106,8 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
      * @deprecated use {@link #getSourceExperimentId()} instead
      */
     @Deprecated
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "may already be reachable through another field")
     public Long getSourceExperiment() {
         return sourceExperimentId;
     }

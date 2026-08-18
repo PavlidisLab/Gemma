@@ -13,7 +13,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.util.ModelUtils;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.description.Characteristic;
 
 /**
@@ -51,29 +52,41 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
     /**
      * It could be the id of the measurement if there is no characteristic.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private Long charId;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String value;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String valueUri;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String predicate;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String predicateUri;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String object;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String objectUri;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String secondPredicate;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String secondPredicateUri;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String secondObject;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String secondObjectUri;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private Boolean needsAttention;
 
     /**

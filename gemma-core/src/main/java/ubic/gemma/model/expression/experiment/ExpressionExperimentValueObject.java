@@ -11,7 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -132,7 +133,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Set<CharacteristicValueObject> characteristics;
 
     @Nullable
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "check whether it is meaningful without the analysis context")
     private Double minPvalue;
 
     /**
@@ -336,7 +338,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         return this.isShared;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened common name; taxonObject already serializes")
     public String getTaxon() {
         return taxonObject == null ? null : taxonObject.getCommonName();
     }
@@ -387,12 +390,14 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.userOwned = isUserOwned;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.CALLER_IDENTITY,
+            comment = "per-principal permission on a response cached by URL")
     public boolean getCurrentUserHasWritePermission() {
         return userCanWrite;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.CALLER_IDENTITY,
+            comment = "per-principal ownership on a response cached by URL")
     public boolean getCurrentUserIsOwner() {
         return userOwned;
     }

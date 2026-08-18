@@ -26,7 +26,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.util.ModelUtils;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -50,12 +51,15 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
 
     private String name;
     private String description;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "duplicates the BioAssay payload")
     private String assayName;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "duplicates the BioAssay payload")
     private String assayDescription;
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.DISCLOSURE,
+            comment = "raw sequencer header text; carries internal paths, run ids and submitter-local naming")
     private String fastqHeaders = null;
 
     /**
@@ -70,14 +74,16 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     /*
      * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "category-keyed and therefore lossy; characteristics already serializes")
     private Map<String, String> characteristicValues = new HashMap<>();
 
     /**
      * Map of categories to original text values (for this biomaterial).
      * This is only used for display and will only be populated if the original value is different from the value.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "category-keyed and therefore lossy; characteristics carries originalValue")
     private Map<String, String> characteristicOriginalValues = new HashMap<>();
 
     /**
@@ -95,13 +101,15 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     /**
      * Map of ids (fv133) to a representation of the value (for this biomaterial.)
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "category-keyed label map; the basic factor-value VOs already serialize")
     private Map<String, String> factorValues;
 
     /**
      * Map of factor ids (factor232) to factor value (id or the actual value) for this biomaterial.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "id cross-reference built for the Web editor")
     private Map<String, String> factorIdToFactorValueId;
 
     /**
@@ -111,7 +119,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     @Schema(description = "This is deprecated, use the `factorValues` collection instead.", deprecated = true)
     private Map<String, String> factors;
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "duplicates the BioAssay payload")
     private Date assayProcessingDate;
 
     /**

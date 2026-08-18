@@ -25,7 +25,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.Versioned;
@@ -274,7 +275,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         return expressionExperimentCount;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened common name; taxonObject already serializes")
     public String getTaxon() {
         return taxonObject == null ? null : taxonObject.getCommonName();
     }

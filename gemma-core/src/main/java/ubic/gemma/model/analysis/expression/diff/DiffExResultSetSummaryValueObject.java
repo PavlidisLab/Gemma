@@ -22,7 +22,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.lang.Nullable;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -84,7 +85,8 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
     /**
      * This is used once in the frontend, but never filled, so please ignore.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "check whether it duplicates the exposed corrected p-value shape")
     private Double qValue;
 
     /**
@@ -244,7 +246,8 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
     /**
      * Alias for {@link #getId()} kept for backward-compatibility in the Gemma Web frontend.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "a result-set id clients cannot see is suspicious; check whether it duplicates id")
     public Long getResultSetId() {
         return id;
     }

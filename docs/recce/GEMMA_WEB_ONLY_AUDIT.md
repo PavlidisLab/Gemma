@@ -1,8 +1,19 @@
 # `@GemmaWebOnly` — what it is really hiding
 
-**Date:** 2026-08-10 · **Status:** read-only audit; no code changed by this document
+**Date:** 2026-08-10 · **Status:** ACTED ON 2026-08-18 — `@GemmaWebOnly` is deleted; all 79
+sites now carry `@WithheldFromApi(Reason)`, enforced by `WithheldFromApiInventoryTest`
 **Scope:** all 79 annotation sites across 15 files in `gemma-core/src/main` +
 `gemma-rest/src/main` (as of `3646111985`)
+
+> **Read this first.** The buckets below are the reasoning; the applied assignments are in
+> `gemma-core/src/test/resources/withheld-from-api-inventory.txt`, which is the pinned
+> record. Where the two disagree, the inventory is what ships. Four deliberate deviations
+> from bucket D: `CharacteristicValueObject.numTimesUsed` and `TaxonValueObject.isGenesUsable`
+> moved to `UNTRIAGED` (both are populated in production code, so "redundant" was not true of
+> them), while `TaxonValueObject.isSpecies` and most of bucket D were confirmed
+> `REDUNDANT` by checking that nothing writes them at all. Bucket B's `POLICY` framing became
+> `PUBLIC_PROJECTION_EXISTS`, and bucket C folded into `REDUNDANT` rather than getting a
+> constant of its own — the VO is deprecated, not the suppression.
 
 ## Why this exists
 

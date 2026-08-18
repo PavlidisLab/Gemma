@@ -30,8 +30,10 @@ import java.util.Date;
 
 /**
  * Public per-factor GEEQ breakdown. Mirrors {@link GeeqValueObject} but without the
- * {@code @GemmaWebOnly} JSON-suppression on the per-factor sScore* / qScore* getters, so the
- * decomposed scores reach REST clients. Admin-only fields exposed by
+ * {@link ubic.gemma.model.annotations.WithheldFromApi} JSON-suppression on the per-factor sScore* /
+ * qScore* getters, so the decomposed scores reach REST clients. This VO is the projection those
+ * suppressions name in their {@code comment()} — do not resolve them by un-hiding the originals, or
+ * the admin-field exclusion below is bypassed. Admin-only fields exposed by
  * {@link GeeqAdminValueObject} (detected/manual override scores, free-text {@code otherIssues})
  * are deliberately omitted.
  *

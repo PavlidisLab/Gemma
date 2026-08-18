@@ -16,7 +16,8 @@ package ubic.gemma.model.genome;
 
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
@@ -31,9 +32,11 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
     private String scientificName;
     private String commonName;
     private Integer ncbiId;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "no constructor or setter call ever populates it")
     private Boolean isSpecies;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "populated from the entity in the constructor; real data no client can read")
     private Boolean isGenesUsable;
     private ExternalDatabaseValueObject externalDatabase;
 

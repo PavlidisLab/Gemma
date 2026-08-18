@@ -3,7 +3,8 @@ package ubic.gemma.model.expression.experiment;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.annotations.GemmaRestOnly;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
 import org.springframework.lang.NonNull;
@@ -54,16 +55,20 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
     @Nullable
     private String objectUri;
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "AnnotationValueObject exposes the same four; the asymmetry looks accidental")
     private String secondPredicate;
     @Nullable
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "AnnotationValueObject exposes the same four; the asymmetry looks accidental")
     private String secondPredicateUri;
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "AnnotationValueObject exposes the same four; the asymmetry looks accidental")
     private String secondObject;
     @Nullable
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.UNTRIAGED,
+            comment = "AnnotationValueObject exposes the same four; the asymmetry looks accidental")
     private String secondObjectUri;
 
     /**
