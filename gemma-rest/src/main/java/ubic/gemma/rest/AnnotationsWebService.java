@@ -418,7 +418,12 @@ public class AnnotationsWebService {
             @ApiResponse(responseCode = "503", description = "Ontology lookup timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<OntologyTermValueObject> getAnnotationTerm(
-            @Parameter(description = "Term URI") @QueryParam("uri") String termUri ) {
+            @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
+            @Parameter(description = "Include literature citations (pubmed, doi, …) among the cross-references. "
+                    + "Off by default: they are provenance for the definition rather than records about the "
+                    + "term, and on a CHEBI compound they outnumber the resolvable identifiers 51 to 12. "
+                    + "citationXrefCount always reports how many there are either way.")
+            @QueryParam("includeCitationXrefs") @DefaultValue("false") boolean includeCitationXrefs ) {
         if ( StringUtils.isBlank( termUri ) ) {
             throw new BadRequestException( "The 'uri' parameter must not be blank." );
         }
@@ -449,7 +454,11 @@ public class AnnotationsWebService {
             List<String> alternativeIds = term.getAlternativeIds() != null
                     ? new ArrayList<>( term.getAlternativeIds() )
                     : Collections.emptyList();
-            List<String> dbXrefs = collectDbXrefs( term );
+            List<String> allXrefs = collectDbXrefs( term );
+            int citationXrefCount = ( int ) allXrefs.stream().filter( AnnotationsWebService::isCitationXref ).count();
+            List<String> dbXrefs = includeCitationXrefs
+                    ? allXrefs
+                    : allXrefs.stream().filter( x -> !isCitationXref( x ) ).collect( Collectors.toList() );
             String ontologyVersion = term.getUri() != null
                     ? ontologyService.getVersion( term.getUri(), Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS )
                     : null;
@@ -479,7 +488,7 @@ public class AnnotationsWebService {
                     }
                 }
             }
-            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, ontologyVersion, sourceMetadataOf( term ), termReplacedBy, termReplacedByLabel, consider, obsoletedInVersion ) );
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, citationXrefCount, ontologyVersion, sourceMetadataOf( term ), termReplacedBy, termReplacedByLabel, consider, obsoletedInVersion ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
@@ -3500,6 +3509,31 @@ public class AnnotationsWebService {
     }
 
     /**
+     * Prefixes naming a piece of LITERATURE rather than a record about the term.
+     *
+     * <p>🛑 The distinction is what the xref resolves TO, not how common it is. {@code drugbank:DB00619}
+     * names a record about imatinib; {@code pubmed:22891806} names a paper that says something about
+     * imatinib. A curator clicks the first and never the second, and only the second arrives in bulk —
+     * measured on {@code CHEBI_45783}: 51 {@code pubmed:} against exactly one each of {@code cas},
+     * {@code drugbank}, {@code drugcentral}, {@code kegg.drug}, {@code hmdb}, {@code reaxys},
+     * {@code pdb-ccd}, {@code beilstein}, {@code lincs.smallmolecule} and {@code wikipedia.en}.</p>
+     *
+     * <p>{@code patent:} is deliberately NOT here. It reads like provenance but it names a document you
+     * can look up about the compound, and it does not arrive in floods — two on imatinib.</p>
+     */
+    private static final Set<String> CITATION_XREF_PREFIXES = Collections.unmodifiableSet( new HashSet<>(
+            Arrays.asList( "pubmed", "pmid", "pmcid", "doi", "isbn" ) ) );
+
+    /**
+     * @see #CITATION_XREF_PREFIXES
+     */
+    private static boolean isCitationXref( String xref ) {
+        int colon = xref.indexOf( ':' );
+        return colon > 0 && CITATION_XREF_PREFIXES.contains(
+                xref.substring( 0, colon ).trim().toLowerCase( java.util.Locale.ROOT ) );
+    }
+
+    /**
      * Collect the class-level database cross-references ({@code oboInOwl#hasDbXref}) declared on an
      * already-resolved term. Reuses the predicate-targeted {@code getAnnotations(uri)} lookup the synonym
      * sweep uses, so it is a cheap in-memory read (no DB hit). De-duplicates and drops blanks.
@@ -4454,8 +4488,25 @@ public class AnnotationsWebService {
          * Database cross-references for this term (OBO {@code hasDbXref}) — pointers into other resources
          * such as MESH, OMIM, UMLS, ICD, SNOMED, etc. (e.g. {@code "MESH:D003920"}, {@code "OMIM:222100"}).
          * Empty when the term declares none. This is the OBO "xref" most consumers mean.
+         *
+         * <p>🛑 <b>Literature citations are withheld unless asked for</b> — see
+         * {@link #citationXrefCount} and the {@code includeCitationXrefs} parameter. They are a
+         * different kind of thing from the identifiers around them: a {@code pubmed:} xref is
+         * provenance for what the term's definition asserts, not a record about the term you can
+         * resolve and click.</p>
          */
         List<String> dbXrefs;
+        /**
+         * How many literature citations {@link #dbXrefs} is holding back, or would be holding back if
+         * they had not been asked for.
+         *
+         * <p>Reported rather than dropped silently, because a caller that needs them has to be able to
+         * tell "this term cites nothing" from "this term cites fifty-one things you did not ask for".
+         * On {@code imatinib}, 51 of 63 cross-references are {@code pubmed:} while every identifier
+         * that names a record — {@code cas}, {@code drugbank}, {@code drugcentral}, {@code kegg.drug} —
+         * appears exactly once, so the citations push the useful ones off any bounded view.</p>
+         */
+        int citationXrefCount;
         /**
          * Version (release) of the ontology this term came from — {@code owl:versionInfo} (often a release
          * date), falling back to {@code owl:versionIRI}. Null when the owning ontology declares no version.

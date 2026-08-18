@@ -1240,6 +1240,55 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     /**
+     * 🛑 Literature citations are withheld from {@code dbXrefs} unless asked for, and always counted.
+     *
+     * <p>Measured on {@code CHEBI_45783 imatinib}: 63 cross-references, of which 51 are {@code pubmed:}
+     * and every identifier that names a record — {@code cas}, {@code drugbank}, {@code drugcentral},
+     * {@code kegg.drug} — appears exactly once. The citations push the clickable ones off any bounded
+     * view, so uib was capping the list client-side and every other consumer would have written the
+     * same rule.</p>
+     *
+     * <p>Counted rather than dropped silently: a caller has to be able to tell "cites nothing" from
+     * "cites fifty-one things you did not ask for".</p>
+     */
+    @Test
+    public void testGetAnnotationTermWithholdsLiteratureCitationsUnlessAsked() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CHEBI_45783";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.getLabel() ).thenReturn( "imatinib" );
+        List<AnnotationProperty> xrefs = new ArrayList<>();
+        for ( String x : Arrays.asList( "drugbank:DB00619", "cas:152459-95-5", "pubmed:22891806",
+                "pubmed:17457302", "doi:10.1021/jm9903837" ) ) {
+            AnnotationProperty ap = mock( AnnotationProperty.class );
+            when( ap.getContents() ).thenReturn( x );
+            xrefs.add( ap );
+        }
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasDbXref" ) ).thenReturn( xrefs );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        Response byDefault = target( "/annotations/term" ).queryParam( "uri", uri ).request().get();
+        assertThat( byDefault ).hasStatus( Response.Status.OK );
+        assertThat( byDefault ).entity()
+                .extracting( "data.dbXrefs", list( String.class ) )
+                .as( "the identifiers a curator would click, and nothing else" )
+                .containsExactlyInAnyOrder( "drugbank:DB00619", "cas:152459-95-5" );
+        assertThat( byDefault ).entity()
+                .hasFieldOrPropertyWithValue( "data.citationXrefCount", 3 );
+
+        Response asked = target( "/annotations/term" ).queryParam( "uri", uri )
+                .queryParam( "includeCitationXrefs", "true" ).request().get();
+        assertThat( asked ).entity()
+                .extracting( "data.dbXrefs", list( String.class ) )
+                .hasSize( 5 );
+        assertThat( asked ).entity()
+                .as( "the count reports what there is, whether or not it was returned" )
+                .hasFieldOrPropertyWithValue( "data.citationXrefCount", 3 );
+    }
+
+    /**
      * The EFO case that motivated the field (uib, 2026-08-16): {@code EFO_0000408 obsolete_disease}
      * names {@code MONDO_0000001} as its successor, and EFO's OWL carries a label for that class, so
      * no second lookup is needed.
