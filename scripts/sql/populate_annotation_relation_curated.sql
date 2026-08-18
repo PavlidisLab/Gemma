@@ -43,6 +43,19 @@
 --    this file runs outside the application; the Java harvest reads them from the class itself so
 --    there is one list and not two.
 
+-- 🛑 AFTER RUNNING THIS, FLUSH THE QUERY CACHE. The relation reads are Hibernate-cacheable, and
+-- Hibernate invalidates them on writes it performs itself -- which these are not. A rebuild done in
+-- SQL leaves every already-warmed query answering from the pre-rebuild result set, so the rows you
+-- just deleted keep being served and only the queries nobody had run yet look correct. Verified the
+-- hard way on 2026-08-17: `reference subject role` kept returning rows after its 1,967 rows were
+-- deleted, while `control` and `wild type genotype` -- never queried before -- were already right.
+--
+--     DELETE /rest/v2/admin/caches/default-query-results-region
+--     DELETE /rest/v2/admin/caches/default-update-timestamps-region
+--
+-- (admin auth; the unified cache surface, see AdminWebService.) The CLI path does not need this --
+-- updateAnnotationRelationEntries writes through Hibernate and synchronizes the query space itself.
+
 -- Expect roughly: 10,040 datasets carry a GENO_0000222 has_genotype statement, 1,829 an
 -- RO_0002573 has modifier, 469 a TGEMO_00171 induced by. Row counts run higher than dataset counts,
 -- since a dataset may carry several.
