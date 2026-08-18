@@ -46,11 +46,14 @@ public class GeoScrapeTaskImpl extends AbstractTask<GeoScrapeTaskCommand>
         req.setMaxRecords( cmd.getMaxRecords() );
         req.setCriteria( cmd.getCriteria() );
         req.setDryRun( cmd.isDryRun() );
+        req.setStartAt( cmd.getStartAt() );
+        req.setSkip( cmd.getSkip() );
         log.info( "Starting GEO scrape: since=" + cmd.getSince()
                 + " until=" + cmd.getUntil()
                 + " maxRecords=" + cmd.getMaxRecords()
                 + " criteria=" + cmd.getCriteria()
-                + " dryRun=" + cmd.isDryRun() );
+                + " dryRun=" + cmd.isDryRun()
+                + " startAt=" + cmd.getStartAt() );
         GeoScrapeWatermark wm = geoScrapeService.scrape( req );
         log.info( "GEO scrape complete: status=" + wm.getStatus()
                 + " scanned=" + wm.getRecordsScanned()

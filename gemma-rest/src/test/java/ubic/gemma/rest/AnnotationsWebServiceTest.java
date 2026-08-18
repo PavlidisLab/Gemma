@@ -4,6 +4,7 @@ import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -785,6 +786,128 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
      * the CHEBI compound that only matches via a synonym — silently undoing the preference the
      * caller asked for. The category is a constraint; the strategy is a relevance heuristic.
      */
+    /**
+     * Reported by CAB 2026-08-11: `H1` is a declared exact synonym of EFO_0003042 ("H1-hESC", 18
+     * corpus uses), but the relevance tiers read the hit's LABEL only, so on "h1-hesc" it scored
+     * as a prefix match and came back at rank 7 -- behind two CHEBI histamine-receptor ligands
+     * with no corpus use at all. A caller cannot act on that: the row it wants is
+     * indistinguishable from the noise it has to filter. An exact synonym is an exact match, and
+     * now earns the exact tier.
+     */
+    @Test
+    public void testExactSynonymEarnsTheExactTier() throws Exception {
+        CharacteristicValueObject ligand = new CharacteristicValueObject( "h1-receptor antagonist",
+                "http://purl.obolibrary.org/obo/CHEBI_37955", "treatment", null );
+        CharacteristicValueObject hesc = new CharacteristicValueObject( "h1-hesc",
+                "http://www.ebi.ac.uk/efo/EFO_0003042", "cell line", null );
+        // Order from the ontology puts the ligand first; on labels alone both are mere prefix
+        // matches for "H1" and the ligand keeps that lead.
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "H1" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( ligand, hesc ) );
+
+        OntologyTerm h1hesc = mock( OntologyTerm.class );
+        when( h1hesc.getLabel() ).thenReturn( "H1-hESC" );
+        when( h1hesc.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        AnnotationProperty syn = mock( AnnotationProperty.class );
+        when( syn.getContents() ).thenReturn( "H1" );
+        when( h1hesc.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym" ) )
+                .thenReturn( Collections.singletonList( syn ) );
+        when( ontologyService.getTerm( eq( "http://www.ebi.ac.uk/efo/EFO_0003042" ), anyLong(), any() ) )
+                .thenReturn( h1hesc );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "H1" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .first()
+                .satisfies( top -> {
+                    assertThat( top ).containsEntry( "valueUri", "http://www.ebi.ac.uk/efo/EFO_0003042" );
+                    // and the caller is told WHY, which is the half it acts on
+                    assertThat( top ).containsEntry( "matchedVia", "exact_synonym" );
+                } );
+    }
+
+    @Test
+    public void testLexicalCatalogueHitIsWorthOneTierLessThanAnOntologyHit() throws Exception {
+        // The measured shape of the FTC failure, without the string: a flat lexical catalogue
+        // (MGI names) carries a row whose LABEL equals the query, so on label exactness alone it
+        // took position 0 ahead of every conventional-ontology candidate. gemma-core already ranks
+        // these sources below conventional ones; the tiers here used to see only exactness.
+        CharacteristicValueObject catalogueExact = new CharacteristicValueObject( "ftc",
+                "https://www.informatics.jax.org/strain/MGI:2667754", null, null );
+        catalogueExact.setSupplementary( true );
+        CharacteristicValueObject ontologyPrefix = new CharacteristicValueObject( "ftc-133 cell",
+                "http://purl.obolibrary.org/obo/CLO_0003402", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "FTC" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( catalogueExact, ontologyPrefix ) );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "FTC" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .satisfies( data -> {
+                    // demoted one tier: exact(0)+1 == prefix(1), and the conventional source wins
+                    // the tie, so the ontology term leads
+                    assertThat( data.get( 0 ) ).containsEntry( "valueUri",
+                            "http://purl.obolibrary.org/obo/CLO_0003402" );
+                    // ...and still returned rather than banished. These sources are backups for
+                    // names the ontologies lack, so dropping them defeats the reason they load.
+                    assertThat( data.get( 1 ) ).containsEntry( "valueUri",
+                            "https://www.informatics.jax.org/strain/MGI:2667754" );
+                } );
+    }
+
+    @Test
+    public void testLexicalCatalogueHitAlsoSinksBelowANonExactOntologyHit() throws Exception {
+        // The half the two-candidate test above cannot see, pinned from live behaviour rather than
+        // from intent. The synonym-exact pass sorts on a BINARY key (exact / not exact), so adding
+        // the demotion to it carries a supplementary exact match across the bucket boundary: it
+        // ends up behind every non-exact conventional hit, not one tier down. Measured on gemma2
+        // 2026-08-13, `FTC` with no category put the MGI row at position 7, below CHEBI rows
+        // reached only through a related synonym.
+        //
+        // This is stronger than the comment at the sort site originally claimed and is kept on
+        // purpose -- it is what demotes the catalogue row below the ontology, and it costs nothing
+        // measurable (lucene on the 400-pair TUNE fold is identical to three decimals before and
+        // after). Guarded so that softening the demotion is a deliberate act with a red test, not
+        // a silent side effect of touching either sort.
+        CharacteristicValueObject catalogueExact = new CharacteristicValueObject( "ftc",
+                "https://www.informatics.jax.org/strain/MGI:2667754", null, null );
+        catalogueExact.setSupplementary( true );
+        CharacteristicValueObject ontologyBySynonym = new CharacteristicValueObject( "ferroptocide",
+                "http://purl.obolibrary.org/obo/CHEBI_173106", null, null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "FTC" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( catalogueExact, ontologyBySynonym ) );
+        // ferroptocide names the query only through a RELATED synonym -- a weaker attribution than
+        // the catalogue row's preferred-label match, which is the point.
+        OntologyTerm ferroptocide = mock( OntologyTerm.class );
+        when( ferroptocide.getLabel() ).thenReturn( "ferroptocide" );
+        when( ferroptocide.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        AnnotationProperty related = mock( AnnotationProperty.class );
+        when( related.getContents() ).thenReturn( "FTC" );
+        when( ferroptocide.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym" ) )
+                .thenReturn( Collections.singletonList( related ) );
+        when( ontologyService.getTerm( eq( "http://purl.obolibrary.org/obo/CHEBI_173106" ), anyLong(), any() ) )
+                .thenReturn( ferroptocide );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "FTC" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .satisfies( data -> assertThat( data.get( 0 ) )
+                        .as( "a weaker ontology match still precedes an exact catalogue name" )
+                        .containsEntry( "valueUri", "http://purl.obolibrary.org/obo/CHEBI_173106" ) );
+    }
+
     @Test
     public void testCategoryPromotionSurvivesTheRankingStrategy() throws Exception {
         CharacteristicValueObject gene = new CharacteristicValueObject( "ftc",
@@ -795,6 +918,13 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .thenReturn( Arrays.asList( gene, chem ) );
         // emtricitabine is reachable from "FTC" only through a synonym, so it is solid but scores
         // poorly on label coverage — exactly the shape composite mis-ranks.
+        //
+        // 🛑 The synonym scope below is HYPOTHETICAL and the test says so on purpose. Live, ChEBI
+        // files `FTC` as a RELATED synonym (on ferroptocide) and emtricitabine's string is
+        // `(-)-FTC`, so no CHEBI candidate is promotable and this query does NOT behave this way
+        // against the real ontology — see AnnotationsWebServiceSolidMatchTest#theRealFtcShapeIsNotSolid.
+        // What is under test here is that promotion SURVIVES strategy.rank(), which needs some
+        // solid preferred-namespace hit to exist; it is not a claim about FTC.
         OntologyTerm emtricitabine = mock( OntologyTerm.class );
         when( emtricitabine.getLabel() ).thenReturn( "emtricitabine" );
         when( emtricitabine.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
@@ -2141,5 +2271,97 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                     assertThat( ( ( Map<?, ?> ) hits.get( 0 ) ).get( "valueUri" ) ).isEqualTo( "http://purl.obolibrary.org/obo/MONDO_0008903" );
                     assertThat( ( ( Map<?, ?> ) hits.get( 1 ) ).get( "valueUri" ) ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0001071" );
                 } );
+    }
+
+    /*
+     * supportingEvidence on AnnotationDto -- the agent-writeback path.
+     *
+     * PUT /datasets/{id}/annotations could already carry evidence but emits a single aggregate event;
+     * these two endpoints emit per-row Tag{Added,Removed}Event, which is what agent writeback needs.
+     * Before this, the choice was attribution or evidence. See
+     * handoffs/CAB_ASK_2026_08_12_CARRY_SUPPORTING_EVIDENCE_ON_ANNOTATION_DTO.md.
+     */
+
+    private static final String EVIDENCE_JSON =
+            "[{\"quote\":\"Male C57BL/6J mice (8 weeks) were used throughout.\","
+                    + "\"source\":\"paper\",\"location\":\"Methods, para 1\"}]";
+
+    @Test
+    @WithMockUser
+    public void testAddDatasetAnnotationCarriesSupportingEvidence() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any() ) )
+                .thenAnswer( a -> a.getArgument( 1 ) );
+        String body = "{\"category\":\"strain\",\"value\":\"C57BL/6J\","
+                + "\"valueUri\":\"http://www.ebi.ac.uk/efo/EFO_0004472\",\"evidenceCode\":\"IC\","
+                + "\"supportingEvidence\":" + EVIDENCE_JSON + "}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        ArgumentCaptor<Characteristic> captor = ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue().getSupportingEvidence() )
+                .contains( "\"quote\":\"Male C57BL/6J mice (8 weeks) were used throughout.\"" )
+                .contains( "\"source\":\"paper\"" )
+                .contains( "\"location\":\"Methods, para 1\"" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testAddDatasetAnnotationWithoutEvidenceLeavesSupportingEvidenceNull() {
+        // Must be null, not "" or "[]" -- a blank would be indistinguishable from evidence that
+        // serialized to nothing, and the read VO would start advertising empty provenance.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any() ) )
+                .thenAnswer( a -> a.getArgument( 1 ) );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        ArgumentCaptor<Characteristic> captor = ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue().getSupportingEvidence() ).isNull();
+    }
+
+    @Test
+    @WithMockUser
+    public void testAddDatasetAnnotationCarriesSupportingEvidenceOnAStatement() {
+        // Statement extends Characteristic, so the provenance slots are inherited -- but the mapper
+        // builds Statement and Characteristic on separate branches, so the Statement branch needs
+        // its own guard or it can silently lose the field.
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any() ) )
+                .thenAnswer( a -> a.getArgument( 1 ) );
+        String body = "{\"category\":\"treatment\",\"value\":\"HFD\","
+                + "\"predicate\":\"has dose\",\"object\":\"10mg\","
+                + "\"supportingEvidence\":" + EVIDENCE_JSON + "}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        ArgumentCaptor<Characteristic> captor = ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue() ).isInstanceOf( Statement.class );
+        assertThat( captor.getValue().getSupportingEvidence() ).contains( "\"source\":\"paper\"" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testReplaceDatasetAnnotationsCarriesSupportingEvidence() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setCharacteristics( new HashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any() ) )
+                .thenAnswer( a -> a.getArgument( 1 ) );
+        String body = "{\"annotations\":[{\"category\":\"strain\",\"value\":\"C57BL/6J\","
+                + "\"supportingEvidence\":" + EVIDENCE_JSON + "}]}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<Characteristic> captor = ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        assertThat( captor.getValue().getSupportingEvidence() ).contains( "\"source\":\"paper\"" );
     }
 }

@@ -14,6 +14,7 @@ package ubic.gemma.core.geoscrape;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -98,6 +99,25 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
 
     private static final int DEFAULT_MAX_RECORDS = 1000;
 
+    /**
+     * {@link GeoRetrieveConfig#DETAILED} plus {@code ignoreErrors}, so one unusable record does not
+     * void the whole scan.
+     * <p>
+     * GEO serves invalid MINiML for withdrawn / restricted / transiently-broken series and DETAILED
+     * throws on it, which killed entire batches: the agents side lost a walk that had already
+     * gathered 55 candidates to a single bad record sitting between scan positions 50 and 100
+     * (GSE304614, 2026-08-12). Such a record is now kept with whatever the eutils summary gave, and
+     * its accession reported, instead of the batch being discarded. Detail-dependent matchers may
+     * under-match on it — which is exactly why the caller is told which records they were.
+     */
+    private static final GeoRetrieveConfig DETAILED_TOLERANT = GeoRetrieveConfig.builder()
+            .subSeriesStatus( true )
+            .libraryStrategy( true )
+            .sampleDetails( true )
+            .meshHeadings( true )
+            .ignoreErrors( true )
+            .build();
+
     private final SessionFactory sessionFactory;
     private final PreboardedExperimentService preboardedExperimentService;
     private final List<GeoRecordMatcher> matchers;
@@ -154,6 +174,40 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
         this.pageSize = pageSize;
     }
 
+    /**
+     * Resolve {@code startAt} (a GEO series accession the caller last processed) to the upper bound
+     * of the scan window, by looking the record up and taking its release date.
+     * <p>
+     * One Entrez call, versus paging forward until the accession turns up — which would pay the
+     * per-page rate gate for records we intend to discard. An explicit {@code until} wins.
+     *
+     * @return the effective upper bound, or {@code req.getUntil()} when no cursor was supplied
+     * @throws IllegalArgumentException if the accession cannot be resolved or carries no release
+     *                                  date. Deliberately fatal: ignoring a bad cursor would
+     *                                  silently rescan from the newest record, which is the exact
+     *                                  duplicate-work the cursor exists to prevent.
+     */
+    @Nullable
+    Date resolveUntil( ScrapeRequest req ) {
+        if ( req.getUntil() != null || StringUtils.isBlank( req.getStartAt() ) ) {
+            return req.getUntil();
+        }
+        String accession = req.getStartAt().trim();
+        GeoRecord record;
+        try {
+            record = resolveGeoBrowser().getGeoRecord( GeoRecordType.SERIES, accession );
+        } catch ( IOException e ) {
+            throw new IllegalArgumentException( "Could not resolve startAt accession '" + accession
+                    + "' against GEO: " + e.getMessage(), e );
+        }
+        if ( record == null || record.getReleaseDate() == null ) {
+            throw new IllegalArgumentException( "startAt accession '" + accession
+                    + "' did not resolve to a GEO series with a release date." );
+        }
+        log.info( "Resuming GEO scrape at " + accession + " (released " + record.getReleaseDate() + ")." );
+        return record.getReleaseDate();
+    }
+
     @Override
     public GeoScrapeWatermark scrape( ScrapeRequest req ) {
         if ( req == null ) req = new ScrapeRequest();
@@ -165,6 +219,9 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             GeoScrapeWatermark prev = getLastCompletedWatermark();
             scanFrom = prev != null ? prev.getScanTo() : null;
         }
+        // Resolved before the watermark is persisted: a bad startAt must fail the request outright
+        // rather than leave an orphaned IN_PROGRESS row behind.
+        Date effectiveUntil = resolveUntil( req );
         Date scanTo = new Date();
 
         GeoScrapeWatermark wm = new GeoScrapeWatermark();
@@ -182,11 +239,16 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             matchedByCriterion.put( m.name(), 0 );
         }
         try {
+            // scanFrom, NOT req.getSince(): when the caller omits `since` the resume point is the
+            // previous completed scrape's scanTo (computed above). Passing req.getSince() here meant
+            // an omitted `since` scanned the whole window every run while the watermark recorded a
+            // scanFrom it had never actually applied -- so the watermark under-reported the range and
+            // "resume from the last scrape" silently did not.
             GeoQuery query = resolveGeoBrowser().searchGeoRecords(
                     GeoRecordType.SERIES, null, null,
                     ALLOWED_TAXA, null,
                     EXPRESSION_PROFILING_TYPES,
-                    req.getSince(), req.getUntil() );
+                    scanFrom, effectiveUntil );
             int pageStart = 0;
             int effectivePage = Math.max( 1, pageSize );
             while ( scanned < maxRecords ) {
@@ -201,7 +263,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                 int remaining = maxRecords - scanned;
                 int thisPage = Math.min( effectivePage, remaining );
                 Slice<GeoRecord> slice = resolveGeoBrowser().retrieveGeoRecords( query, pageStart, thisPage,
-                        GeoRetrieveConfig.DETAILED );
+                        DETAILED_TOLERANT );
                 if ( slice == null || slice.isEmpty() ) {
                     break;
                 }
@@ -267,20 +329,29 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
     }
 
     @Override
-    public List<GeoScrapeDryRunCandidate> scrapeDryRun( ScrapeRequest req ) {
+    public DryRunResult scrapeDryRun( ScrapeRequest req ) {
         if ( req == null ) req = new ScrapeRequest();
         List<GeoRecordMatcher> active = selectActive( req.getCriteria() );
         int maxRecords = req.getMaxRecords() != null ? req.getMaxRecords() : DEFAULT_MAX_RECORDS;
 
         List<GeoScrapeDryRunCandidate> out = new ArrayList<>();
+        // Neither of these is recoverable from the candidate list, which is why a batching caller
+        // had to guess where to resume. See GeoScrapeService.DryRunResult.
+        String lastScannedAccession = null;
+        Date lastScannedDate = null;
+        List<String> incompleteRecords = new ArrayList<>();
         int scanned = 0;
+        // Record-level resumption: begin this scan `skip` records into the resolved window rather
+        // than at its head. See ScrapeRequest.skip -- without it, a day wider than maxRecords can
+        // only be escaped by stepping past it, which loses whatever was never reached.
+        int skip = req.getSkip() != null && req.getSkip() > 0 ? req.getSkip() : 0;
         try {
             GeoQuery query = resolveGeoBrowser().searchGeoRecords(
                     GeoRecordType.SERIES, null, null,
                     ALLOWED_TAXA, null,
                     EXPRESSION_PROFILING_TYPES,
-                    req.getSince(), req.getUntil() );
-            int pageStart = 0;
+                    req.getSince(), resolveUntil( req ) );
+            int pageStart = skip;
             int effectivePage = Math.max( 1, pageSize );
             while ( scanned < maxRecords ) {
                 if ( Thread.interrupted() ) {
@@ -289,18 +360,35 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                 int remaining = maxRecords - scanned;
                 int thisPage = Math.min( effectivePage, remaining );
                 Slice<GeoRecord> slice = resolveGeoBrowser().retrieveGeoRecords( query, pageStart, thisPage,
-                        GeoRetrieveConfig.DETAILED );
+                        DETAILED_TOLERANT );
                 if ( slice == null || slice.isEmpty() ) {
                     break;
                 }
                 for ( GeoRecord r : slice ) {
                     scanned++;
+                    // Every record LOOKED at, matched or not -- that is the point of the cursor.
+                    if ( r.getGeoAccession() != null ) {
+                        lastScannedAccession = r.getGeoAccession();
+                        lastScannedDate = r.getReleaseDate();
+                    }
+                    if ( r.isDetailsIncomplete() && r.getGeoAccession() != null ) {
+                        incompleteRecords.add( r.getGeoAccession() );
+                    }
                     if ( !isAllowedTaxon( r ) ) continue;
                     if ( !isExpressionProfiling( r ) ) continue;
                     List<String> matchedNames = new ArrayList<>( active.size() );
+                    // Keep the matcher's own reason. It has always been computed -- e.g.
+                    // "brain keyword: cortical" -- and thrown away here, leaving a caller unable to
+                    // audit a hit or notice a matcher drifting. Same shape as ignoreErrors: the
+                    // capability existed and was never wired out.
+                    Map<String, String> matchedWhy = new LinkedHashMap<>();
                     for ( GeoRecordMatcher m : active ) {
-                        if ( m.evaluate( r ).isMatched() ) {
+                        GeoRecordMatcher.MatchResult mr = m.evaluate( r );
+                        if ( mr.isMatched() ) {
                             matchedNames.add( m.name() );
+                            if ( mr.getReason() != null ) {
+                                matchedWhy.put( m.name(), mr.getReason() );
+                            }
                         }
                     }
                     if ( matchedNames.isEmpty() ) continue;
@@ -315,6 +403,7 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
                     c.latestProposal = null;
                     c.auditTrailUrl = null;
                     c.matchedCriteria = matchedNames;
+                    c.matchedEvidence = matchedWhy.isEmpty() ? null : matchedWhy;
                     out.add( c );
                 }
                 pageStart += thisPage;
@@ -323,7 +412,13 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             log.warn( "GEO dry-run scrape failed: " + e.getMessage() );
             // Surface partial results; caller is interactive and can retry.
         }
-        return out;
+        if ( !incompleteRecords.isEmpty() ) {
+            log.warn( "GEO served unusable MINiML for " + incompleteRecords.size()
+                    + " record(s) in this scan; kept on summary data only: " + incompleteRecords );
+        }
+        // Absolute offset, so the caller can hand it straight back as `skip`.
+        Integer nextOffset = scanned > 0 ? skip + scanned : null;
+        return new DryRunResult( out, lastScannedAccession, lastScannedDate, incompleteRecords, nextOffset );
     }
 
     @Override
@@ -482,6 +577,18 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
             fmt.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
             payload.put( "releaseDate", fmt.format( r.getReleaseDate() ) );
         }
+        // Series relation. Already fetched -- DETAILED_TOLERANT requests subSeriesStatus -- and
+        // previously dropped here. Without it a caller cannot honour "drop series under 4 samples
+        // UNLESS the rest of the experiment is in a sibling subseries", so it drops half a study
+        // and keeps the other half: mutilated rather than cleanly excluded. Reported by bro
+        // 2026-08-12 with GSE342447 / GSE342451, the same study under two accessions.
+        if ( r.isSuperSeries() ) {
+            payload.put( "superSeries", true );
+        }
+        if ( r.isSubSeries() ) {
+            payload.put( "subSeries", true );
+        }
+        putIfNotBlank( payload, "subSeriesOf", r.getSubSeriesOf() );
         putIfNotBlank( payload, "libraryStrategy", r.getLibraryStrategy() );
         putIfNotBlank( payload, "librarySource", r.getLibrarySource() );
         putIfNotBlank( payload, "sampleDetails", r.getSampleDetails() );

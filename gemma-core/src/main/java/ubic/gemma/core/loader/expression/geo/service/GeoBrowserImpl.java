@@ -111,9 +111,25 @@ public class GeoBrowserImpl implements GeoBrowser {
     private final String ncbiApiKey;
     private final PubMedSearch pubmedFetcher;
 
+    /**
+     * Warn once per JVM when NCBI calls are running unauthenticated. Without a key,
+     * {@code EntrezUtils.doNicely} spaces every Entrez call 333 ms apart instead of 100 ms, and
+     * that gate is a JVM-global monitor — so an unkeyed GEO scrape is 3.3x slower AND serialises
+     * against every other Entrez caller in the process. Silent before this: the only symptom was
+     * work that took minutes instead of seconds.
+     */
+    private static final java.util.concurrent.atomic.AtomicBoolean WARNED_NO_API_KEY =
+            new java.util.concurrent.atomic.AtomicBoolean();
+
     public GeoBrowserImpl( String ncbiApiKey ) {
         this.ncbiApiKey = ncbiApiKey;
         this.pubmedFetcher = new PubMedSearch( ncbiApiKey );
+        if ( StringUtils.isBlank( ncbiApiKey ) && WARNED_NO_API_KEY.compareAndSet( false, true ) ) {
+            log.warn( "No NCBI API key configured (entrez.efetch.apikey is blank): Entrez calls will be "
+                    + "throttled to one per 333 ms instead of one per 100 ms, JVM-wide. Set the "
+                    + "ENTREZ_EFETCH_APIKEY environment variable (or entrez.efetch.apikey in "
+                    + "Gemma.properties) to a key from https://account.ncbi.nlm.nih.gov/settings/." );
+        }
     }
 
     @Nullable
@@ -379,6 +395,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         } catch ( Exception e ) {
             if ( config.isIgnoreErrors() ) {
                 log.error( "Error while processing MINiML for " + record.getGeoAccession() + ", sample details will not be obtained.", e );
+                record.setDetailsIncomplete( true );
                 return;
             } else {
                 throw new RuntimeException( "Error while processing MINiML for " + record.getGeoAccession() + ".", e );
@@ -387,6 +404,7 @@ public class GeoBrowserImpl implements GeoBrowser {
 
         if ( document == null ) {
             log.warn( "Could not find any details for " + record );
+            record.setDetailsIncomplete( true );
             return;
         }
 

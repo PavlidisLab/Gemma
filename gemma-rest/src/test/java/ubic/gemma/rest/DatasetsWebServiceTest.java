@@ -2198,7 +2198,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
-                .hasFieldOrPropertyWithValue( "data.dataset_id", 1 )
+                .hasFieldOrPropertyWithValue( "data.datasetId", 1 )
                 .extracting( "data.steps", list( Map.class ) )
                 .isNotEmpty()
                 .satisfies( steps -> {
@@ -2241,7 +2241,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .satisfies( steps -> {
                     Map<String, Object> pp = findStep( steps, "preprocess" );
                     org.assertj.core.api.Assertions.assertThat( pp.get( "status" ) ).isEqualTo( "ok" );
-                    org.assertj.core.api.Assertions.assertThat( pp.get( "event_type" ) ).isEqualTo( "ProcessedVectorComputationEvent" );
+                    org.assertj.core.api.Assertions.assertThat( pp.get( "eventType" ) ).isEqualTo( "ProcessedVectorComputationEvent" );
                 } );
     }
 
@@ -2261,7 +2261,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .satisfies( steps -> {
                     Map<String, Object> pca = findStep( steps, "pca" );
                     org.assertj.core.api.Assertions.assertThat( pca.get( "status" ) ).isEqualTo( "failed" );
-                    org.assertj.core.api.Assertions.assertThat( pca.get( "event_type" ) ).isEqualTo( "FailedPCAAnalysisEvent" );
+                    org.assertj.core.api.Assertions.assertThat( pca.get( "eventType" ) ).isEqualTo( "FailedPCAAnalysisEvent" );
                     org.assertj.core.api.Assertions.assertThat( pca.get( "details" ) ).isEqualTo( "boom" );
                 } );
     }
@@ -2314,9 +2314,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
-                .hasFieldOrPropertyWithValue( "data.has_batch_information", true )
-                .hasFieldOrPropertyWithValue( "data.needs_attention", true )
-                .hasFieldOrPropertyWithValue( "data.is_public", true );
+                .hasFieldOrPropertyWithValue( "data.hasBatchInformation", true )
+                .hasFieldOrPropertyWithValue( "data.needsAttention", true )
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
     }
 
     @Test
@@ -2328,7 +2328,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
-                .hasFieldOrPropertyWithValue( "data.curation_note", "admin only" );
+                .hasFieldOrPropertyWithValue( "data.curationNote", "admin only" );
     }
 
     @Test
@@ -2340,7 +2340,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
-                .hasFieldOrPropertyWithValue( "data.curation_note", null );
+                .hasFieldOrPropertyWithValue( "data.curationNote", null );
     }
 
     @Test

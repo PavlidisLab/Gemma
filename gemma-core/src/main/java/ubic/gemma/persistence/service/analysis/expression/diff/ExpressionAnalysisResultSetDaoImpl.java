@@ -347,8 +347,11 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             @Nullable Collection<DatabaseEntry> databaseEntries,
             @Nullable Filters filters ) {
         List<Predicate> preds = new ArrayList<>();
-        // Filters predicate (returns cb.conjunction() if filters null/empty).
-        preds.add( FilterJpaUtils.formRestrictionClause( cb, query, root, filters ) );
+        // Filters predicate (returns cb.conjunction() if filters null/empty). The alias map has to be
+        // passed explicitly: alias-registered properties (e.g. baselineGroup.characteristics.* under
+        // "bc") reach us as Filter(objectAlias="bc", propertyName="value"), and without the map the
+        // prefix is dropped and the path resolves as root.get("value").
+        preds.add( FilterJpaUtils.formRestrictionClause( cb, query, root, filters, getFilterablePropertyObjectAliases() ) );
         if ( bioAssaySets != null ) {
             // analysis.experimentAnalyzed in (:bioAssaySets)
             Path<BioAssaySet> experimentAnalyzed = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
@@ -795,14 +798,16 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private List<Order> buildOrders( CriteriaBuilder cb, Root<ExpressionAnalysisResultSet> root, Sort sort ) {
         List<Order> orders = new ArrayList<>();
+        Map<String, String> aliasPrefixes = getFilterablePropertyObjectAliases();
         for ( ; sort != null; sort = sort.getAndThen() ) {
             String propertyName = sort.getPropertyName();
+            String objectAlias = sort.getObjectAlias();
             Expression<?> expr;
             if ( propertyName.endsWith( ".size" ) ) {
                 String collectionPath = propertyName.substring( 0, propertyName.length() - ".size".length() );
-                expr = cb.size( ( Expression ) FilterJpaUtils.resolvePath( root, collectionPath ) );
+                expr = cb.size( ( Expression ) FilterJpaUtils.resolvePathWithAlias( root, objectAlias, collectionPath, aliasPrefixes ) );
             } else {
-                expr = FilterJpaUtils.resolvePath( root, propertyName );
+                expr = FilterJpaUtils.resolvePathWithAlias( root, objectAlias, propertyName, aliasPrefixes );
             }
             Order order = sort.getDirection() == Sort.Direction.DESC ? cb.desc( expr ) : cb.asc( expr );
             if ( sort.getNullMode() != null && sort.getNullMode() != Sort.NullMode.DEFAULT && order instanceof JpaOrder ) {

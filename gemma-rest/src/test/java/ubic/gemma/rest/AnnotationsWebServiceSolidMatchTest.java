@@ -8,6 +8,8 @@ import ubic.gemma.core.ontology.model.OntologyTerm;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -25,6 +27,7 @@ import static org.mockito.Mockito.when;
 class AnnotationsWebServiceSolidMatchTest {
 
     private static final String OBO_EXACT_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym";
+    private static final String OBO_RELATED_SYNONYM = "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym";
 
     // ---- designation shape ---------------------------------------------------------------
 
@@ -74,10 +77,22 @@ class AnnotationsWebServiceSolidMatchTest {
     void equalityTiersAreExact() {
         assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.PREFERRED_LABEL ) ).isTrue();
         assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.EXACT_SYNONYM ) ).isTrue();
+        // A narrower term carrying the query as one of its names is a more specific answer, not a
+        // different one; an alternative label is a label rather than a neighbourhood claim.
         assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.NARROW_SYNONYM ) ).isTrue();
-        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isTrue();
-        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isTrue();
         assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.ALT_LABEL ) ).isTrue();
+    }
+
+    /**
+     * RELATED and BROAD are the scopes an ontology uses for a term in the neighbourhood rather than
+     * a name for the thing itself, and they are almost always the wrong answer for a caller that
+     * asked by name. A query of `H1` reaches `h1 horizontal cell` (CL_0004217) through a RELATED
+     * synonym; admitting that scope put a retinal interneuron in the exact tier beside `H1-hESC`.
+     */
+    @Test
+    void relatedAndBroadSynonymsAreNotEquality() {
+        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isFalse();
+        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isFalse();
     }
 
     @Test
@@ -111,19 +126,51 @@ class AnnotationsWebServiceSolidMatchTest {
 
     @Test
     void abbreviationMatchesViaExactSynonym() {
-        // The FTC → emtricitabine case: the label shares nothing with the query, so this hit can
-        // only be recognised — and promoted over the identically-labelled MGI gene — through its
-        // synonym.
-        OntologyTerm t = term( "emtricitabine" );
+        // A term whose label shares nothing with the query can still be recognised — and promoted
+        // over an identically-labelled hit in another namespace — through an EXACT synonym.
+        OntologyTerm t = term( "a compound" );
         // Build the stub value BEFORE opening the when(...) — nesting mock creation inside
         // thenReturn(...) trips Mockito's UnfinishedStubbing check.
-        Collection<AnnotationProperty> synonyms = annotations( "FTC" );
+        Collection<AnnotationProperty> synonyms = annotations( "ABC" );
         when( t.getAnnotations( OBO_EXACT_SYNONYM ) ).thenReturn( synonyms );
-        AnnotationsWebService.MatchAttribution m = AnnotationsWebService.computeMatchAttribution( t, "FTC" );
+        AnnotationsWebService.MatchAttribution m = AnnotationsWebService.computeMatchAttribution( t, "ABC" );
         assertThat( m ).isNotNull();
         assertThat( m.via ).isEqualTo( AnnotationsWebService.MatchedVia.EXACT_SYNONYM );
-        assertThat( m.text ).isEqualTo( "FTC" );
+        assertThat( m.text ).isEqualTo( "ABC" );
         assertThat( AnnotationsWebService.isExactAttribution( m.via ) ).isTrue();
+    }
+
+    @Test
+    void theRealFtcShapeIsNotSolid() {
+        // This test used to BE the FTC case, and it encoded an ontology fact that is not true:
+        // it stubbed `FTC` as emtricitabine's hasExactSynonym. Measured on gemma2 2026-08-13,
+        // ChEBI files the abbreviation as a RELATED synonym, and on emtricitabine the string is
+        // `(-)-FTC`, not `FTC`. Both halves matter, and each one alone defeats promotion:
+        //
+        //   ferroptocide   related_synonym  "FTC"      -> exact string, non-exact scope
+        //   emtricitabine  related_synonym  "(-)-FTC"  -> non-exact scope AND non-equal string
+        //
+        // So neither ChEBI candidate passes `solid`, the only solid hit for `FTC` under
+        // category=treatment is the MGI gene (whose URI carries no preferred prefix), every hit
+        // lands in the same promotion tier and the stable sort is a no-op. The green version of
+        // this test is why the false claim survived in the `category` docs for months.
+        OntologyTerm ferroptocide = term( "ferroptocide" );
+        Collection<AnnotationProperty> related = annotations( "FTC" );
+        when( ferroptocide.getAnnotations( OBO_RELATED_SYNONYM ) ).thenReturn( related );
+        AnnotationsWebService.MatchAttribution m =
+                AnnotationsWebService.computeMatchAttribution( ferroptocide, "FTC" );
+        assertThat( m ).isNotNull();
+        assertThat( m.via ).isEqualTo( AnnotationsWebService.MatchedVia.RELATED_SYNONYM );
+        assertThat( AnnotationsWebService.isExactAttribution( m.via ) )
+                .withFailMessage( "a related synonym must not read as an exact match" )
+                .isFalse();
+
+        // And emtricitabine, the compound the corpus actually uses, is further away still: its
+        // matched string canonicalises to "()ftc" — canonicaliseForExactMatch strips hyphens but
+        // not parentheses — so relaxing the scope gate would promote ferroptocide (0 corpus uses)
+        // and STILL leave emtricitabine behind. Only corpus usage separates this pair.
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( "(-)-FTC" ) )
+                .isNotEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "FTC" ) );
     }
 
     @Test
@@ -240,10 +287,57 @@ class AnnotationsWebServiceSolidMatchTest {
         // the URI form silently did not, and /annotations/categories advertised no preference.
         assertThat( AnnotationsWebService.categoryKey( "obsolete_disease" ) ).isEqualTo( "disease" );
         assertThat( AnnotationsWebService.categoryKey( "disease" ) ).isEqualTo( "disease" );
-        assertThat( AnnotationsWebService.categoryKey( "organism part" ) ).isEqualTo( "organismPart" );
-        assertThat( AnnotationsWebService.categoryKey( "developmental stage" ) ).isEqualTo( "developmentalStage" );
+        assertThat( AnnotationsWebService.categoryKey( "organism part" ) ).isEqualTo( "organismpart" );
+        assertThat( AnnotationsWebService.categoryKey( "developmental stage" ) ).isEqualTo( "developmentalstage" );
         // "obsolete" as a word of its own is not a marker prefix
         assertThat( AnnotationsWebService.categoryKey( "obsolete" ) ).isEqualTo( "obsolete" );
+    }
+
+    /**
+     * Every caller of canonicaliseForExactMatch is deciding an equality — the relevance tiers, the
+     * near-match solid test, exact_label, and match attribution. Stored terms carry the submitter's
+     * spacing (13,179 production values hold an internal double space), so the comparison must
+     * collapse runs or a search for the clean spelling misses the stored one and vice versa.
+     */
+    @Test
+    void exactMatchIgnoresInternalWhitespaceRuns() {
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( "high  fat  diet" ) )
+                .isEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "high fat diet" ) );
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( " cancer cell line " ) )
+                .isEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "cancer cell line" ) );
+        // The hyphen and cell-suffix rules it already carried must still hold.
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( "MEC-2  cell" ) )
+                .isEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "mec2" ) );
+        // Distinct terms must not collapse into each other.
+        assertThat( AnnotationsWebService.canonicaliseForExactMatch( "high fat diet" ) )
+                .isNotEqualTo( AnnotationsWebService.canonicaliseForExactMatch( "low fat diet" ) );
+    }
+
+    @Test
+    void everySpellingOfACategoryFoldsOntoOneKey() {
+        // The trap this closes: `category=cellLine` — the spelling a client copies straight out of
+        // annotation.category.prefixes — used to lowercase to "cellline" and match the "cellLine"
+        // config key. An unrecognised category is a silent no-op, so the caller got no promotion
+        // and no signal, while `category=cell line` worked. Asserted as a set collapsing to size 1
+        // rather than against a literal, so the property survives a change of fold.
+        assertThat( Stream.of( "cell line", "cellLine", "Cell Line", "CELL LINE", " cell_line ", "cell-line" )
+                .map( AnnotationsWebService::categoryKey )
+                .collect( Collectors.toSet() ) )
+                .hasSize( 1 );
+        // Distinct categories must not collide under the looser fold.
+        assertThat( AnnotationsWebService.categoryKey( "cell line" ) )
+                .isNotEqualTo( AnnotationsWebService.categoryKey( "cell type" ) );
+    }
+
+    @Test
+    void configKeysAndCallerSpellingsMeetOnTheSameKey() {
+        // Both sides run through categoryKey, so the property can be written in whichever spelling
+        // reads best and still answer every spelling a caller sends.
+        var parsed = AnnotationsWebService.parseCategoryPrefixProperty( "cellLine:CLO_,EFO_,CVCL_" );
+        assertThat( parsed.get( AnnotationsWebService.categoryKey( "cell line" ) ) )
+                .containsExactly( "CLO_", "EFO_", "CVCL_" );
+        assertThat( parsed.get( AnnotationsWebService.categoryKey( "cellLine" ) ) )
+                .containsExactly( "CLO_", "EFO_", "CVCL_" );
     }
 
     @Test
@@ -251,9 +345,25 @@ class AnnotationsWebServiceSolidMatchTest {
         var parsed = AnnotationsWebService.parseCategoryPrefixProperty(
                 "genotype:TGEMO_,GENO_,EFO_; organismPart:UBERON_,EMAPA_,EFO_ ;;bad_entry" );
         assertThat( parsed.get( "genotype" ) ).containsExactly( "TGEMO_", "GENO_", "EFO_" );
-        // order is the preference order and must survive parsing
-        assertThat( parsed.get( "organismPart" ) ).containsExactly( "UBERON_", "EMAPA_", "EFO_" );
+        // order is the preference order and must survive parsing; the key is folded on the way in,
+        // so the camelCase spelling in the property lands under the canonical key
+        assertThat( parsed.get( "organismpart" ) ).containsExactly( "UBERON_", "EMAPA_", "EFO_" );
         assertThat( parsed ).doesNotContainKey( "bad_entry" );
+    }
+
+    @Test
+    void shippedExclusionsParseIncludingAPrefixThatContainsAColon() {
+        // The MGI catalogue's URIs carry the accession as `MGI:2667754`, so the excluded prefix is
+        // `MGI:` -- a value containing the same character that separates key from value. Only the
+        // FIRST colon splits, which is what makes this expressible at all; a naive split(":")
+        // would silently yield the prefix "" and exclude every hit under `treatment`.
+        var parsed = AnnotationsWebService.parseCategoryPrefixProperty( "genotype:MONDO_;treatment:MGI:" );
+        assertThat( parsed.get( "genotype" ) ).containsExactly( "MONDO_" );
+        assertThat( parsed.get( "treatment" ) ).containsExactly( "MGI:" );
+        // The exclusion is applied with String.contains against the whole URI, so pin the shape it
+        // has to match and one it must not.
+        assertThat( "https://www.informatics.jax.org/strain/MGI:2667754" ).contains( "MGI:" );
+        assertThat( "http://purl.obolibrary.org/obo/CHEBI_31536" ).doesNotContain( "MGI:" );
     }
 
     @Test

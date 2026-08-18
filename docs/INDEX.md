@@ -1,7 +1,7 @@
 # docs/ index
 
 Working design docs, recces, audits, plans, and session notes for Gemma, sorted into subfolders (2026-07-05 cleanup). `README.md` and `CLAUDE.md` stay at the repo root.
-Total: 148 docs.
+Total: 150 docs.
 
 
 ## Pipeline / compute / job-management (Nextflow) — `docs/pipeline-compute/` (1)
@@ -12,42 +12,29 @@ Total: 148 docs.
 
   <sub>archived sources (`pipeline-compute/archive/`): EXTERNAL_PIPELINE_HANDOFF_RECCE.md, PIPELINES_AND_SCHEDULER_RECCE.md, PIPELINE_COMPUTE_TEST_AND_CONTROL_RECCE.md, WORKFLOW_AND_COMPUTE_ARCHITECTURE.md</sub>
 
-## Recces — `docs/recce/` (34)
+## Recces — `docs/recce/` (19 live, 16 archived)
+
+16 recces whose subject shipped, whose premise is gone, or that a live doc supersedes were moved to [`docs/recce/archive/`](recce/archive/README.md) on 2026-08-11 — that README lists each one with the evidence checked.
 
 - [`ACTUATOR_RECCE.md`](recce/ACTUATOR_RECCE.md) — Actuator-style observability endpoints — Phase 3 recce
-- [`AGENT_WRITEBACK_RECCE.md`](recce/AGENT_WRITEBACK_RECCE.md) — Agent writeback — Gemma-side reconnaissance
 - [`API_KEY_AUTH_RECCE.md`](recce/API_KEY_AUTH_RECCE.md) — API-key admission + layered auth (TLS/TOTP/keys) for `/rest/v2` once off the VPN
 - [`AUDIT_AS_WORKFLOW_RECCE.md`](recce/AUDIT_AS_WORKFLOW_RECCE.md) — Audit-system as workflow / ticket tracker — Phase 3 recce
-- [`AUDIT_MIGRATION_PHASE_C_RECCE.md`](recce/AUDIT_MIGRATION_PHASE_C_RECCE.md) — Audit migration Phase C — scoping recce
 - [`AUDIT_PHASE_C_RECCE.md`](recce/AUDIT_PHASE_C_RECCE.md) — AUDIT_PHASE_C_RECCE.md
-- [`AUTH_FOR_SPA_RECCE.md`](recce/AUTH_FOR_SPA_RECCE.md) — Auth-for-SPA recce: gemma-rest auth flows for the curation-UI
-- [`BASECODE_MATH_LINEARMODELS_RECCE.md`](recce/BASECODE_MATH_LINEARMODELS_RECCE.md) — baseCode `math` + `linearmodels` (+ neighbours) — pull-in recce
-- [`BASECODE_MATRIX_RECCE.md`](recce/BASECODE_MATRIX_RECCE.md) — baseCode `dataStructure.matrix` subsystem — pull-in recce
 - [`COEXPRESSION_ORPHAN_RECCE.md`](recce/COEXPRESSION_ORPHAN_RECCE.md) — Coexpression-tables orphan recce
-- [`CONTAINER_IMAGE_RECCE.md`](recce/CONTAINER_IMAGE_RECCE.md) — Container image recce -- gemma-rest WAR on Tomcat 10.1
-- [`CONTAINER_RECCE.md`](recce/CONTAINER_RECCE.md) — Container / Docker readiness recce
-- [`CORS_RECCE.md`](recce/CORS_RECCE.md) — CORS Recce — gemma-rest standalone WAR for curation-UI
-- [`CURSOR_PAGINATION_RECCE.md`](recce/CURSOR_PAGINATION_RECCE.md) — Cursor-Based Pagination — Reconnaissance
 - [`DEA_FINDBYGENE_COLDCACHE_RECCE.md`](recce/DEA_FINDBYGENE_COLDCACHE_RECCE.md) — DEA findByGene cold-cache — fix recce
-- [`GEMMA_REST_STANDALONE_RECCE.md`](recce/GEMMA_REST_STANDALONE_RECCE.md) — gemma-rest standalone packaging — RECCE
 - [`GEMMA_WEB_ONLY_AUDIT.md`](recce/GEMMA_WEB_ONLY_AUDIT.md) — what `@GemmaWebOnly` is really hiding: all 79 sites bucketed, and why a bulk removal is a security question
-- [`GENE_PAGE_REWORK_RECCE.md`](recce/GENE_PAGE_REWORK_RECCE.md) — Gene page rework — call-surface recce
-- [`GSEC_PHASE_C_RECCE.md`](recce/GSEC_PHASE_C_RECCE.md) — gsec Phase C recce — drop `GsecAclServiceAdapter`
 - [`HEATMAP_REWRITE_RECCE.md`](recce/HEATMAP_REWRITE_RECCE.md) — Heatmap data generation — client-side rewrite recce
-- [`JDK21_FEATURES_RECCE.md`](recce/JDK21_FEATURES_RECCE.md) — JDK 21 features — migration recce
 - [`LOAD_DETAILS_COLD_PATH_RECCE.md`](recce/LOAD_DETAILS_COLD_PATH_RECCE.md) — `loadDetailsValueObjectsByIds` cold-path anatomy
 - [`LOGGING_MODERNIZATION_RECCE.md`](recce/LOGGING_MODERNIZATION_RECCE.md) — Structured logging + OpenTelemetry — Phase 3 recce
 - [`LUCENE_HS_READINESS_RECCE.md`](recce/LUCENE_HS_READINESS_RECCE.md) — Lucene 10 + Hibernate Search 8 readiness recce
 - [`MOCK_FIXTURE_CONVERSION_RECCE.md`](recce/MOCK_FIXTURE_CONVERSION_RECCE.md) — Mock fixture conversion recce — top-N tests to convert
 - [`OBJECT_STORAGE_RECCE.md`](recce/OBJECT_STORAGE_RECCE.md) — Object-Storage Abstraction — Reconnaissance
 - [`OPENTELEMETRY_RECCE.md`](recce/OPENTELEMETRY_RECCE.md) — OpenTelemetry tracing — Phase 3 detailed recce
-- [`PERSISTER_BK_STEP1_RECCE.md`](recce/PERSISTER_BK_STEP1_RECCE.md) — persisterHelper retirement -- Step 1 (BK consolidation) recce
-- [`PERSISTER_CACHE_LIFT_RECCE.md`](recce/PERSISTER_CACHE_LIFT_RECCE.md) — persisterHelper retirement -- cache-lift recce
 - [`PERSISTER_SHRINK_RECCE.md`](recce/PERSISTER_SHRINK_RECCE.md) — PERSISTER_SHRINK_RECCE.md — shortest path to retiring `persisterHelper` post-Caches
 - [`SAMPLES_DESIGN_PERF_RECCE.md`](recce/SAMPLES_DESIGN_PERF_RECCE.md) — `/datasets/{id}/samples` and `/datasets/{id}/design` perf recce
-- [`SEARCH_RECCE.md`](recce/SEARCH_RECCE.md) — Search Subsystem Restoration — Reconnaissance
 - [`SPRING_MODULITH_RECCE.md`](recce/SPRING_MODULITH_RECCE.md) — Spring Modulith — Phase 3 reconnaissance
 - [`WORKFLOW_GROUPS_RECCE.md`](recce/WORKFLOW_GROUPS_RECCE.md) — Workflow Groups CRUD + `/datasets/{id}/groups` — Reconnaissance
+- [`WORKFLOW_STATE_TRACKS_RECCE.md`](recce/WORKFLOW_STATE_TRACKS_RECCE.md) — Workflow state: the curation/analysis fork — proposal
 
 ## Audits — `docs/audit/` (30)
 
@@ -102,7 +89,7 @@ Total: 148 docs.
 - [`WORKTREE_CLEANUP_PLAN_v2.md`](plans/WORKTREE_CLEANUP_PLAN_v2.md) — Worktree cleanup plan — v2
 - [`WORKTREE_CLEANUP_PLAN_v3.md`](plans/WORKTREE_CLEANUP_PLAN_v3.md) — Worktree cleanup plan v3
 
-## Other design docs — `docs/design/` (57)
+## Other design docs — `docs/design/` (58)
 
 - [`ACL_ENTRY_VOTER_MIGRATION.md`](design/ACL_ENTRY_VOTER_MIGRATION.md) — ACL AclEntryVoter family migration plan
 - [`AFTER_INVOCATION_MIGRATION.md`](design/AFTER_INVOCATION_MIGRATION.md) — AfterInvocation → Spring Security 6 Modern API Migration Roadmap
@@ -125,6 +112,7 @@ Total: 148 docs.
 - [`GEMMA_REST_BOOTSTRAP_PHASE1.md`](design/GEMMA_REST_BOOTSTRAP_PHASE1.md) — gemma-rest standalone bootstrap — Phase 1 landed
 - [`GEMMA_UI_ENDPOINT_GAP.md`](design/GEMMA_UI_ENDPOINT_GAP.md) — gemma-ui ↔ gemma-rest endpoint gap analysis
 - [`GEMMA_UI_FEATURE_CATALOG.md`](design/GEMMA_UI_FEATURE_CATALOG.md) — Gemma UI feature catalog — what's needed to fully replace gemma-web
+- [`GENOTYPE_DISEASE_MODEL_EXPANSION.md`](design/GENOTYPE_DISEASE_MODEL_EXPANSION.md) — inferring the disease a genotype models, so the disease selector reaches studies annotated only with the model
 - [`GSEC_HQL_DEPRECATION.md`](design/GSEC_HQL_DEPRECATION.md) — gsec ACL HQL Deprecation — Inventory and Migration Playbook
 - [`GSEC_HQL_DEPRECATION_CONTINUED.md`](design/GSEC_HQL_DEPRECATION_CONTINUED.md) — Phase 3 — gsec HQL deprecation (continued)
 - [`GSEC_VERSION_ALIGNMENT.md`](design/GSEC_VERSION_ALIGNMENT.md) — gsec version alignment — feasibility recce

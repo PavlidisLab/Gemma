@@ -11,6 +11,7 @@
  */
 package ubic.gemma.rest;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -60,7 +61,7 @@ import ubic.gemma.rest.util.ResponseErrorObject;
  *   <li>{@code GET    /preboarded?accession=X} — resolve accession to id.</li>
  *   <li>{@code POST   /preboarded/{id}/annotation-sets} — attach an annotation
  *       set (typically a PROPOSAL role from an agent run), idempotent on
- *       {@code (role, run_id)}.</li>
+ *       {@code (role, runId)}.</li>
  *   <li>{@code POST   /preboarded/{id}/promote} — promote to a loaded EE.
  *       Restricted to GROUP_CURATOR / GROUP_ADMIN; agents cannot promote.</li>
  *   <li>{@code GET    /preboarded?state=...} — list preboarded by workflow state
@@ -106,7 +107,7 @@ public class PreboardedWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Create a preboarded for a previously-unknown accession",
             description = "Body: `{\"accession\":\"GSE12345\",\"source\":\"GEO\","
-                    + "\"identifying_metadata\":{...}}`. Returns 409 with the existing entity's id "
+                    + "\"identifyingMetadata\":{...}}`. Returns 409 with the existing entity's id "
                     + "and type when the accession is already known to Gemma.",
             responses = {
                     @ApiResponse(responseCode = "201", useReturnTypeSchema = true, content = @Content()),
@@ -116,7 +117,7 @@ public class PreboardedWebService {
                     @ApiResponse(responseCode = "409",
                             description = "An entity with this accession already exists. Body includes the existing entity's id and type.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(description = "{ error, accession, existing_id, existing_type }")))
+                                    schema = @Schema(description = "{ error, accession, existingId, existingType }")))
             })
     public Response createPreboarded( @Nullable CreatePreboardedRequest req ) {
         if ( req == null || req.accession == null || req.accession.trim().isEmpty() ) {
@@ -132,8 +133,8 @@ public class PreboardedWebService {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put( "error", "Accession already exists" );
             body.put( "accession", accession );
-            body.put( "existing_id", e.getExistingId() );
-            body.put( "existing_type", e.getExistingType() );
+            body.put( "existingId", e.getExistingId() );
+            body.put( "existingType", e.getExistingType() );
             return Response.status( Response.Status.CONFLICT ).entity( body ).build();
         }
     }
@@ -195,14 +196,14 @@ public class PreboardedWebService {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put( "error", "Queue-by-state listing is served by /workflow/queue" );
         body.put( "state", s.name() );
-        body.put( "redirect_to",
-                "/workflow/queue?state=" + s.name() + "&dataset_type=preboarded_experiment" );
+        body.put( "redirectTo",
+                "/workflow/queue?state=" + s.name() + "&datasetType=preboarded_experiment" );
         return Response.status( Response.Status.NOT_IMPLEMENTED ).entity( body ).build();
     }
 
     /**
      * Attach a new annotation set to a preboarded. Idempotent on
-     * {@code (role, run_id)}: if a row with the same triple already exists,
+     * {@code (role, runId)}: if a row with the same triple already exists,
      * returns 200 OK with the existing row rather than 201 Created.
      */
     @POST
@@ -211,13 +212,13 @@ public class PreboardedWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Attach an annotation set to a preboarded",
-            description = "Idempotent on `(role, run_id)`: a retry returns 200 with the existing row.",
+            description = "Idempotent on `(role, runId)`: a retry returns 200 with the existing row.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "New annotation set attached.",
                             content = @Content()),
-                    @ApiResponse(responseCode = "200", description = "An annotation set with this (role, run_id) already attached.",
+                    @ApiResponse(responseCode = "200", description = "An annotation set with this (role, runId) already attached.",
                             content = @Content()),
-                    @ApiResponse(responseCode = "400", description = "Missing run_id.",
+                    @ApiResponse(responseCode = "400", description = "Missing runId.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "Preboarded not found.",
@@ -227,7 +228,7 @@ public class PreboardedWebService {
     public Response attachAnnotationSet( @PathParam("id") Long id,
             @Nullable AttachAnnotationSetRequest req ) {
         if ( req == null || req.runId == null || req.runId.trim().isEmpty() ) {
-            throw new BadRequestException( "Request body must include a non-blank `run_id`." );
+            throw new BadRequestException( "Request body must include a non-blank `runId`." );
         }
         AgentCurationKind kind = parseKindOrThrow( req.kind, AgentCurationKind.PROPOSAL );
         AnnotationSetRole role = parseRoleOrDefault( req.role, AnnotationSetRole.PROPOSAL );
@@ -255,12 +256,12 @@ public class PreboardedWebService {
     @Operation(summary = "Promote a preboarded to a loaded ExpressionExperiment",
             description = "Curator-only. Rebinds AnnotationSet rows from the preboarded to the EE; "
                     + "advances both rows' workflow state to Loaded (when not further along). "
-                    + "`apply_latest_proposal` is accepted for forward-compatibility but currently "
+                    + "`applyLatestProposal` is accepted for forward-compatibility but currently "
                     + "a no-op; the curator applies the proposal via the design-write / "
                     + "annotation-write endpoints. See STATUS_PROPOSED_EXPERIMENT_WORKFLOW.md.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Promoted.", content = @Content()),
-                    @ApiResponse(responseCode = "400", description = "Missing ee_id.",
+                    @ApiResponse(responseCode = "400", description = "Missing eeId.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "Preboarded or EE not found.",
@@ -268,12 +269,12 @@ public class PreboardedWebService {
                                     schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "Preboarded already promoted.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(description = "{ error, preboarded_id }")))
+                                    schema = @Schema(description = "{ error, preboardedId }")))
             })
     public Response promotePreboarded( @PathParam("id") Long id,
             @Nullable PromoteRequest req ) {
         if ( req == null || req.eeId == null ) {
-            throw new BadRequestException( "Request body must include `ee_id`." );
+            throw new BadRequestException( "Request body must include `eeId`." );
         }
         PreboardedExperiment skel = loadPreboardedOrThrow( id );
         ExpressionExperiment ee = expressionExperimentService.load( req.eeId );
@@ -286,7 +287,7 @@ public class PreboardedWebService {
         } catch ( PreboardedExperimentService.PreboardedAlreadyPromotedException ex ) {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put( "error", "Preboarded already promoted" );
-            body.put( "preboarded_id", id );
+            body.put( "preboardedId", id );
             return Response.status( Response.Status.CONFLICT ).entity( body ).build();
         }
         PromoteResponse body = new PromoteResponse();
@@ -390,25 +391,30 @@ public class PreboardedWebService {
         @JsonProperty("source")
         @Nullable
         public String source;
-        @JsonProperty("identifying_metadata")
+        @JsonProperty("identifyingMetadata")
+        @JsonAlias("identifying_metadata")
         @Nullable
         public String identifyingMetadata;
     }
 
     /** Body of {@link #attachAnnotationSet}. */
     public static class AttachAnnotationSetRequest {
-        @JsonProperty("run_id")
+        @JsonProperty("runId")
+        @JsonAlias("run_id")
         public String runId;
-        @JsonProperty("agent_version")
+        @JsonProperty("agentVersion")
+        @JsonAlias("agent_version")
         @Nullable
         public String agentVersion;
         @JsonProperty("model")
         @Nullable
         public String model;
-        @JsonProperty("ran_at")
+        @JsonProperty("ranAt")
+        @JsonAlias("ran_at")
         @Nullable
         public Date ranAt;
-        @JsonProperty("payload_json")
+        @JsonProperty("payloadJson")
+        @JsonAlias("payload_json")
         @Nullable
         public String payloadJson;
         /**
@@ -432,79 +438,82 @@ public class PreboardedWebService {
         @JsonProperty("source")
         @Nullable
         public String source;
-        @JsonProperty("created_by")
+        @JsonProperty("createdBy")
+        @JsonAlias("created_by")
         @Nullable
         public String createdBy;
     }
 
     /** Body of {@link #promotePreboarded}. */
     public static class PromoteRequest {
-        @JsonProperty("ee_id")
+        @JsonProperty("eeId")
+        @JsonAlias("ee_id")
         public Long eeId;
-        @JsonProperty("apply_latest_proposal")
+        @JsonProperty("applyLatestProposal")
+        @JsonAlias("apply_latest_proposal")
         @Nullable
         public Boolean applyLatestProposal;
     }
 
     /** Response of get/create preboarded. */
     public static class PreboardedResponse {
-        @JsonProperty("preboarded_id")
+        @JsonProperty("preboardedId")
         public Long preboardedId;
         public String accession;
         public String source;
-        @JsonProperty("identifying_metadata")
+        @JsonProperty("identifyingMetadata")
         @Nullable
         public String identifyingMetadata;
         public String state;
-        @JsonProperty("entered_current_state_at")
+        @JsonProperty("enteredCurrentStateAt")
         @Nullable
         public Date enteredCurrentStateAt;
-        @JsonProperty("proposal_count")
+        @JsonProperty("proposalCount")
         public long proposalCount;
-        @JsonProperty("latest_annotation_set")
+        @JsonProperty("latestAnnotationSet")
         @Nullable
         public AnnotationSetSnapshotResponse latestAnnotationSet;
-        @JsonProperty("audit_trail_url")
+        @JsonProperty("auditTrailUrl")
         public String auditTrailUrl;
     }
 
     /** Thin annotation-set summary shown inline on the preboarded GET. */
     public static class AnnotationSetSnapshotResponse {
-        @JsonProperty("annotation_set_id")
+        @JsonProperty("annotationSetId")
         public Long annotationSetId;
-        @JsonProperty("preboarded_id")
+        @JsonProperty("preboardedId")
         public Long preboardedId;
         @JsonProperty("role")
         public String role;
         @JsonProperty("kind")
         @Nullable
         public String kind;
-        @JsonProperty("run_id")
+        @JsonProperty("runId")
         public String runId;
-        @JsonProperty("agent_version")
+        @JsonProperty("agentVersion")
         @Nullable
         public String agentVersion;
         @Nullable
         public String model;
-        @JsonProperty("ran_at")
+        @JsonProperty("ranAt")
         @Nullable
         public Date ranAt;
-        @JsonProperty("payload_json")
+        @JsonProperty("payloadJson")
         @Nullable
         public String payloadJson;
     }
 
     /** Response of promote. */
     public static class PromoteResponse {
-        @JsonProperty("preboarded_id")
+        @JsonProperty("preboardedId")
         public Long preboardedId;
-        @JsonProperty("ee_id")
+        @JsonProperty("eeId")
         public Long eeId;
-        @JsonProperty("promoted_at")
+        @JsonProperty("promotedAt")
         public Date promotedAt;
-        @JsonProperty("annotation_sets_rebound")
+        @JsonProperty("annotationSetsRebound")
         public int annotationSetsRebound;
-        @JsonProperty("applied_proposal_id")
+        @JsonProperty("appliedProposalId")
         @Nullable
         public Long appliedProposalId;
     }

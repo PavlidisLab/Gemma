@@ -140,7 +140,7 @@ public class GroupsWebService {
     }
 
     /**
-     * Retrieve a single group by id. With {@code include_summaries=true} the
+     * Retrieve a single group by id. With {@code includeSummaries=true} the
      * response carries lightweight member summaries; otherwise only counts.
      */
     @GET
@@ -148,13 +148,19 @@ public class GroupsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Retrieve a single group by id",
-            description = "When include_summaries=true the response payload is a "
+            description = "When includeSummaries=true the response payload is a "
                     + "GroupWithMembersValueObject (members included); otherwise the lighter "
-                    + "GroupValueObject (memberCount only).")
+                    + "GroupValueObject (memberCount only). The legacy snake_case spelling "
+                    + "`include_summaries` is still accepted.")
     public ResponseDataObject<? extends GroupValueObject> getGroup(
             @PathParam("id") Long id,
-            @QueryParam("include_summaries") @DefaultValue("false") boolean includeSummaries
+            @QueryParam("includeSummaries") @DefaultValue("false") boolean includeSummaries,
+            // Legacy spelling, accepted so a stale caller gets the behaviour it asked for rather
+            // than silently falling back to the default. Remove once no client sends it.
+            @Parameter(hidden = true)
+            @QueryParam("include_summaries") @DefaultValue("false") boolean includeSummariesLegacy
     ) {
+        includeSummaries = includeSummaries || includeSummariesLegacy;
         UserGroup g = loadGroupById( id );
         if ( includeSummaries ) {
             return respond( GroupWithMembersValueObject.from( g ) );
@@ -502,7 +508,7 @@ public class GroupsWebService {
 
     /**
      * Full response including member summaries; used for {@code GET
-     * /groups/{id}?include_summaries=true} and the membership-mutating
+     * /groups/{id}?includeSummaries=true} and the membership-mutating
      * endpoints so the caller doesn't need a follow-up GET.
      */
     public static class GroupWithMembersValueObject extends GroupValueObject {

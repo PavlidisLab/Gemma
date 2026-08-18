@@ -25,8 +25,10 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.ontology.model.AnnotationProperty;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -42,6 +44,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -152,7 +155,11 @@ public class OntologyServiceTest extends BaseTest5 {
 
     @AfterEach
     public void tearDown() {
-        reset( chebiOntologyService, obiService, cellosaurusOntologyService, searchService );
+        // characteristicReadService belongs here too: it was the one collaborator left holding
+        // invocations across tests, so a `never()` verification against it reported the PREVIOUS
+        // test's call and failed on test order rather than on behaviour.
+        reset( chebiOntologyService, obiService, cellosaurusOntologyService, searchService,
+                characteristicReadService );
     }
 
     /**
@@ -246,6 +253,76 @@ public class OntologyServiceTest extends BaseTest5 {
         verify( chebiOntologyService ).findTerm( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", 5000 );
     }
 
+    /**
+     * A two-character query is a real term name — H1, H7 and H9 are among the most-used human
+     * embryonic stem cell lines, and EFO_0003042 (H1-hESC) carries `H1` as an exact synonym. The
+     * floor used to sit at three and return an empty set with no log line, so those queries were
+     * indistinguishable from an ontology that had not been loaded.
+     */
+    @Test
+    public void testTwoCharacterQueryReachesTheOntologies() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        ontologyService.findExperimentsCharacteristicTags( "H1", 100, false, false, 5000, TimeUnit.MILLISECONDS );
+
+        verify( chebiOntologyService ).findTerm( "H1", 100 );
+    }
+
+    /**
+     * One character stays out: that is where the candidate set stops being a name and becomes a
+     * scan of the index, and nothing we annotate is designated by a single character.
+     */
+    @Test
+    public void testSingleCharacterQueryIsStillRefused() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+
+        assertTrue( ontologyService.findExperimentsCharacteristicTags( "H", 100, false, false, 5000, TimeUnit.MILLISECONDS ).isEmpty() );
+
+        verify( chebiOntologyService, never() ).findTerm( anyString(), anyInt() );
+        verify( characteristicReadService, never() ).findByValueLike( any(), any(), any(), anyBoolean(), anyInt() );
+    }
+
+    /**
+     * The cap has to keep the BEST candidates, not merely the same ones every time.
+     *
+     * <p>`H1 cell line` overflows the candidate cap with chemicals whose labels contain the
+     * substring, and EFO_0003042 -- the stem cell line actually being asked for -- is a poor match
+     * on its LABEL and a strong one on its declared synonym. Cutting alphabetically, or in whatever
+     * order a HashSet iterated, buried it: the term was absent from a hundred rows while scoring
+     * far above everything that displaced it. Relevance has to survive as far as the cut, so the
+     * search score is carried out of the ontology fan-out instead of being dropped at the value
+     * object.</p>
+     */
+    @Test
+    public void testTheCapKeepsTheBestCandidatesNotTheAlphabeticalOnes() throws Exception {
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        // Nine weak matches whose URIs sort FIRST, and the strong one whose URI sorts last.
+        List<OntologySearchResult<OntologyTerm>> hits = new ArrayList<>();
+        for ( int i = 0; i < 9; i++ ) {
+            hits.add( new OntologySearchResult<>( new OntologyTermSimple(
+                    String.format( "http://purl.obolibrary.org/obo/AAA_%04d", i ), "zzz weak " + i ), 0.5 ) );
+        }
+        OntologyTermSimple best = new OntologyTermSimple( "http://purl.obolibrary.org/obo/ZZZ_9999", "zzz best" );
+        hits.add( new OntologySearchResult<>( best, 42.0 ) );
+        when( chebiOntologyService.findTerm( eq( "zzz" ), anyInt() ) ).thenReturn( hits );
+
+        List<CharacteristicValueObject> capped = new ArrayList<>(
+                ontologyService.findExperimentsCharacteristicTags( "zzz", 3, false, false, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 3, capped.size() );
+        // The high scorer survives a cap of three despite sorting last alphabetically.
+        assertEquals( "http://purl.obolibrary.org/obo/ZZZ_9999", capped.get( 0 ).getValueUri() );
+        // ...and the cut is still reproducible.
+        List<CharacteristicValueObject> again = new ArrayList<>(
+                ontologyService.findExperimentsCharacteristicTags( "zzz", 3, false, false, 5000, TimeUnit.MILLISECONDS ) );
+        assertEquals( capped.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ),
+                again.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ) );
+    }
+
     @Test
     public void testTermLackingLabelIsIgnored() throws TimeoutException {
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
@@ -257,5 +334,63 @@ public class OntologyServiceTest extends BaseTest5 {
         when( obiService.isOntologyLoaded() ).thenReturn( true );
         when( obiService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", "this is a test term" ) );
         assertNotNull( ontologyService.getTerm( "http://test", 5000, TimeUnit.MILLISECONDS ) );
+    }
+
+    /**
+     * CLO does not use the OBO definition property. It writes what it knows about a cell line into
+     * {@code rdfs:comment} — {@code CLO_0008127} (NCI-H929) carries "disease: plasmacytoma;   myeloma" and no
+     * OBO definition at all — so probing only {@code IAO_0000115} returned null for exactly the terms whose
+     * description is the point. That disease is a property of the line, and nobody should have to curate it
+     * onto an experiment when an ontology already loaded here asserts it.
+     */
+    @Test
+    public void testDefinitionFallsBackToCommentWhenTheOntologyUsesOne() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0008127";
+        OntologyTerm term = mock();
+        when( term.getLabel() ).thenReturn( "NCI-H929 cell" );
+        when( term.getAnnotation( OntologyUtils.DEFINITION_URI ) ).thenReturn( null );
+        when( term.getComment() ).thenReturn( "disease: plasmacytoma;   myeloma" );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
+
+        assertEquals( "disease: plasmacytoma;   myeloma",
+                ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
+    }
+
+    /**
+     * The fallback is a fallback: an ontology that states a definition properly still wins, so a MONDO or
+     * UBERON term never reports an editorial comment as its definition.
+     */
+    @Test
+    public void testOboDefinitionWinsOverComment() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/MONDO_0004975";
+        AnnotationProperty definition = mock();
+        when( definition.getContents() ).thenReturn( "A progressive form of dementia." );
+        OntologyTerm term = mock();
+        when( term.getLabel() ).thenReturn( "Alzheimer disease" );
+        when( term.getAnnotation( OntologyUtils.DEFINITION_URI ) ).thenReturn( definition );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
+
+        assertEquals( "A progressive form of dementia.",
+                ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
+        verify( term, never() ).getComment();
+    }
+
+    /**
+     * A term with neither still reports nothing, rather than an empty string a caller would render as a
+     * definition that exists and is blank.
+     */
+    @Test
+    public void testDefinitionIsNullWhenTheTermDescribesItselfNowhere() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0000019";
+        OntologyTerm term = mock();
+        when( term.getLabel() ).thenReturn( "immortal cell line cell" );
+        when( term.getAnnotation( OntologyUtils.DEFINITION_URI ) ).thenReturn( null );
+        when( term.getComment() ).thenReturn( "   " );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
+
+        assertNull( ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
     }
 }

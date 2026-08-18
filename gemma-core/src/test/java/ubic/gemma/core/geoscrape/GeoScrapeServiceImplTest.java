@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoQuery;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -39,7 +40,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -235,6 +238,255 @@ public class GeoScrapeServiceImplTest {
         verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), sinceCap.capture(), untilCap.capture() );
         assertThat( sinceCap.getValue() ).isEqualTo( since );
         assertThat( untilCap.getValue() ).isEqualTo( until );
+    }
+
+    @Test
+    public void scrape_omittedSince_resumesFromLastCompletedWatermark() throws Exception {
+        // The documented contract for a null `since` is "resume from the last successful scrape's
+        // scanTo". That resume point was computed and written into the new watermark but never
+        // handed to the GeoBrowser -- the query got req.getSince() (null), so every run re-scanned
+        // the whole window while the watermark claimed a narrower range. The default setUp stubs
+        // getLastCompletedWatermark() to null, which is why no existing test could see it.
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        java.util.Date previousScanTo = new java.util.GregorianCalendar( 2026, java.util.Calendar.MARCH, 3 ).getTime();
+        GeoScrapeWatermark prev = new GeoScrapeWatermark();
+        prev.setScanTo( previousScanTo );
+        prev.setStatus( GeoScrapeWatermark.Status.COMPLETED );
+        doReturn( prev ).when( svc ).getLastCompletedWatermark();
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        // `since` deliberately left null -- this is the resume path.
+
+        GeoScrapeWatermark wm = svc.scrape( req );
+
+        ArgumentCaptor<java.util.Date> sinceCap = ArgumentCaptor.forClass( java.util.Date.class );
+        verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), sinceCap.capture(), any() );
+        assertThat( sinceCap.getValue() )
+                .as( "an omitted `since` must query from the previous scrape's scanTo" )
+                .isEqualTo( previousScanTo );
+        // and the watermark must record the same point it actually queried from
+        assertThat( wm.getScanFrom() ).isEqualTo( previousScanTo );
+    }
+
+    @Test
+    public void scrape_explicitSince_overridesTheWatermark() throws Exception {
+        // Control for the test above: an explicit `since` must win, so the resume fix cannot
+        // quietly start ignoring the caller.
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        GeoScrapeWatermark prev = new GeoScrapeWatermark();
+        prev.setScanTo( new java.util.GregorianCalendar( 2026, java.util.Calendar.MARCH, 3 ).getTime() );
+        prev.setStatus( GeoScrapeWatermark.Status.COMPLETED );
+        doReturn( prev ).when( svc ).getLastCompletedWatermark();
+
+        java.util.Date explicit = new java.util.GregorianCalendar( 2026, java.util.Calendar.JUNE, 1 ).getTime();
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setSince( explicit );
+        req.setMaxRecords( 10 );
+
+        svc.scrape( req );
+
+        ArgumentCaptor<java.util.Date> sinceCap = ArgumentCaptor.forClass( java.util.Date.class );
+        verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), sinceCap.capture(), any() );
+        assertThat( sinceCap.getValue() ).isEqualTo( explicit );
+    }
+
+    @Test
+    public void scrape_startAt_resolvesAccessionToTheWindowUpperBound() throws Exception {
+        // The batching cursor: "here is the last GSE we processed, carry on from there". One
+        // lookup converts it to a date and the existing query window does the rest -- no paging
+        // forward through records we intend to discard, which would pay the Entrez rate gate.
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        java.util.Date released = new java.util.GregorianCalendar( 2026, java.util.Calendar.MAY, 20 ).getTime();
+        GeoRecord cursor = new GeoRecord();
+        cursor.setGeoAccession( "GSE342847" );
+        cursor.setReleaseDate( released );
+        when( geoBrowser.getGeoRecord( GeoRecordType.SERIES, "GSE342847" ) ).thenReturn( cursor );
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setStartAt( "GSE342847" );
+        req.setMaxRecords( 10 );
+
+        svc.scrape( req );
+
+        ArgumentCaptor<java.util.Date> untilCap = ArgumentCaptor.forClass( java.util.Date.class );
+        verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), any(), untilCap.capture() );
+        assertThat( untilCap.getValue() )
+                .as( "startAt's release date becomes the upper bound of the scan window" )
+                .isEqualTo( released );
+    }
+
+    @Test
+    public void scrape_explicitUntil_beatsStartAt() throws Exception {
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        java.util.Date explicitUntil = new java.util.GregorianCalendar( 2026, java.util.Calendar.JULY, 4 ).getTime();
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setStartAt( "GSE342847" );
+        req.setUntil( explicitUntil );
+        req.setMaxRecords( 10 );
+
+        svc.scrape( req );
+
+        ArgumentCaptor<java.util.Date> untilCap = ArgumentCaptor.forClass( java.util.Date.class );
+        verify( geoBrowser ).searchGeoRecords( any(), any(), any(), any(), any(), any(), any(), untilCap.capture() );
+        assertThat( untilCap.getValue() ).isEqualTo( explicitUntil );
+        // and we must not have spent an Entrez call resolving a cursor we were never going to use
+        verify( geoBrowser, never() ).getGeoRecord( any(), any() );
+    }
+
+    @Test
+    public void scrape_unresolvableStartAt_failsInsteadOfRescanningFromTheTop() throws Exception {
+        // Silently dropping a bad cursor would scan from the newest record and redo the whole
+        // backlog -- the precise duplicate work the cursor exists to avoid. Fail loudly, and
+        // before any IN_PROGRESS watermark is persisted.
+        when( geoBrowser.getGeoRecord( GeoRecordType.SERIES, "GSE000nope" ) ).thenReturn( null );
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setStartAt( "GSE000nope" );
+        req.setMaxRecords( 10 );
+
+        assertThatThrownBy( () -> svc.scrape( req ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "GSE000nope" );
+        verify( svc, never() ).persistWatermark( any( GeoScrapeWatermark.class ) );
+    }
+
+    @Test
+    public void dryRun_reportsTheLastRecordScannedNotJustTheLastMatched() throws Exception {
+        // A caller can only cursor on the oldest CANDIDATE, but maxRecords caps records SCANNED and
+        // most scanned records match nothing. When the matches sit near the head, the next request
+        // re-scans the same span and returns nothing new -- 38 of 101 requests bought nothing on a
+        // measured walk, each a full synchronous scan against the 60 s proxy budget.
+        GeoRecord matched = rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" );
+        GeoRecord unmatched = rec( "GSE0002", "Pancreatic islet bulk expression", "Homo sapiens" );
+        unmatched.setReleaseDate( new java.util.GregorianCalendar( 2026, java.util.Calendar.APRIL, 2 ).getTime() );
+        wireSlice( Arrays.asList( matched, unmatched ) );
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getLastScannedAccession() )
+                .as( "the cursor must be the last record LOOKED at, not the last one that matched" )
+                .isEqualTo( "GSE0002" );
+        assertThat( result.getCandidates() ).extracting( c -> c.accession ).containsExactly( "GSE0001" );
+    }
+
+    @Test
+    public void dryRun_namesRecordsGeoServedUnusableMinimlFor() throws Exception {
+        // GEO serves invalid MINiML for withdrawn / restricted series. Before this, DETAILED threw
+        // and one such record voided the entire batch -- the agents side lost a walk that had
+        // already gathered 55 candidates. Now the record is kept on summary data and named, so a
+        // caller can say its list is incomplete and retry later.
+        GeoRecord ok = rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" );
+        GeoRecord degraded = rec( "GSE304614", "Brain something restricted", "Homo sapiens" );
+        degraded.setDetailsIncomplete( true );
+        wireSlice( Arrays.asList( ok, degraded ) );
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getIncompleteRecords() ).containsExactly( "GSE304614" );
+        assertThat( result.getCandidates() )
+                .as( "a degraded record must not void the batch -- the good candidates survive" )
+                .isNotEmpty();
+    }
+
+    @Test
+    public void dryRun_cleanScanReportsNoIncompleteRecords() throws Exception {
+        wireSlice( Arrays.asList( rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" ) ) );
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getIncompleteRecords() ).isEmpty();
+    }
+
+    @Test
+    public void dryRun_skipResumesAtRecordLevelNotAtTheStartOfTheDay() throws Exception {
+        // startAt resolves to a release DATE and GEO's filter is day-granular, so resuming at X
+        // re-scans X's whole day. When the day is wider than maxRecords the scan cannot advance,
+        // and the only escape -- stepping `until` past the day -- discards whatever was never
+        // reached. Measured by the agents side: 19 candidates at maxRecords=100 vs 16 at 10, a
+        // strict subset. `skip` is what makes the walk complete rather than merely non-wasteful.
+        wireSlice( Collections.emptyList() );
+        wirePreboardedCreate();
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setSkip( 40 );
+        req.setDryRun( true );
+
+        svc.scrapeDryRun( req );
+
+        ArgumentCaptor<Integer> startCap = ArgumentCaptor.forClass( Integer.class );
+        verify( geoBrowser ).retrieveGeoRecords( any(), startCap.capture(), anyInt(), any() );
+        assertThat( startCap.getValue() )
+                .as( "paging must begin at the requested offset, not at the head of the day" )
+                .isEqualTo( 40 );
+    }
+
+    @Test
+    public void dryRun_reportsAnAbsoluteNextOffset() throws Exception {
+        // wireSlice() stubs the first page at offset 0; this scan starts at 40, so wire it there.
+        List<GeoRecord> recs = Arrays.asList(
+                rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" ),
+                rec( "GSE0002", "Another brain study", "Homo sapiens" ) );
+        when( geoBrowser.retrieveGeoRecords( any( GeoQuery.class ), eq( 40 ), any( Integer.class ),
+                any( GeoRetrieveConfig.class ) ) )
+                .thenReturn( new Slice<>( recs, null, 40, recs.size(), ( long ) recs.size() ) );
+        when( geoBrowser.retrieveGeoRecords( any( GeoQuery.class ), eq( 42 ), any( Integer.class ),
+                any( GeoRetrieveConfig.class ) ) )
+                .thenReturn( new Slice<>( new ArrayList<>(), null, 42, 0, ( long ) recs.size() ) );
+        wirePreboardedCreate();
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setSkip( 40 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getNextOffset() )
+                .as( "absolute, so the caller hands it straight back as skip: 40 + 2 scanned" )
+                .isEqualTo( 42 );
+    }
+
+    @Test
+    public void dryRun_emitsWhyEachCriterionFired() throws Exception {
+        // The matchers always computed a reason; it was dropped at this boundary, leaving a false
+        // positive unreviewable and a drifting matcher invisible.
+        wireSlice( Arrays.asList( rec( "GSE0001", "Brain cortex neuron study", "Homo sapiens" ) ) );
+        wirePreboardedCreate();
+
+        GeoScrapeService.ScrapeRequest req = new GeoScrapeService.ScrapeRequest();
+        req.setMaxRecords( 10 );
+        req.setDryRun( true );
+
+        GeoScrapeService.DryRunResult result = svc.scrapeDryRun( req );
+
+        assertThat( result.getCandidates() ).hasSize( 1 );
+        assertThat( result.getCandidates().get( 0 ).matchedEvidence )
+                .as( "which matcher fired is not enough -- a caller must see WHY" )
+                .isNotNull()
+                .containsKey( "brain" );
+        assertThat( result.getCandidates().get( 0 ).matchedEvidence.get( "brain" ) )
+                .contains( "keyword" );
     }
 
     @Test

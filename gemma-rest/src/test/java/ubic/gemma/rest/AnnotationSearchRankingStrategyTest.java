@@ -20,6 +20,8 @@ import ubic.gemma.rest.ranking.CompositeRankingStrategy;
 import ubic.gemma.rest.ranking.LuceneOrderRankingStrategy;
 import ubic.gemma.rest.ranking.TokenCoverageRankingStrategy;
 import ubic.gemma.rest.ranking.UsageWeightedRankingStrategy;
+import java.util.Arrays;
+import ubic.gemma.rest.ranking.QueryTokens;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -192,6 +194,85 @@ public class AnnotationSearchRankingStrategyTest {
         assertThat( compositeOrder )
                 .as( "composite must differ from usage-only on mixed-signal fixture" )
                 .isNotEqualTo( usageOrder );
+    }
+
+    @Test
+    public void usageWeighted_neverDisplacesTheTopLexicalHit() {
+        // The property the production defaults exist to hold, and the one whose absence produced
+        // `malignant melanoma` -> `gastric cancer`. The usage term tops out at usageWeight; the
+        // rank term is rankWeight for the hit at position 0. Keep usageWeight below rankWeight and
+        // no amount of corpus popularity can take position 0 from an exact lexical match; let them
+        // meet and the ranker quietly becomes "every used term above every unused one".
+        //
+        // Deliberately built with the PRODUCTION constructor (no weights passed) so this fails if
+        // someone retunes past the invariant rather than only if they change this test.
+        CharacteristicValueObject topLexical = new CharacteristicValueObject( "melanoma",
+                "http://example.org/TOP_LEXICAL", null, null );
+        CharacteristicValueObject wildlyPopular = new CharacteristicValueObject( "breast cancer",
+                "http://example.org/POPULAR", null, null );
+        List<CharacteristicValueObject> input = new ArrayList<>();
+        input.add( topLexical );
+        for ( int i = 0; i < 50; i++ ) {
+            input.add( new CharacteristicValueObject( "filler " + i,
+                    "http://example.org/FILLER_" + i, null, null ) );
+        }
+        input.add( wildlyPopular );
+        Map<String, Integer> counts = new HashMap<>();
+        counts.put( "http://example.org/TOP_LEXICAL", 0 );
+        counts.put( "http://example.org/POPULAR", 100000 );
+
+        List<CharacteristicValueObject> ranked =
+                new UsageWeightedRankingStrategy( 0.5, 0.3, 0.2, 100 ).rank( "melanoma", input, counts );
+
+        assertThat( indexOfUri( ranked, "http://example.org/TOP_LEXICAL" ) )
+                .as( "a usage-0 exact match at rank 0 must survive a usage-100000 hit 51 places below it" )
+                .isEqualTo( 0 );
+        assertThat( indexOfUri( ranked, "http://example.org/POPULAR" ) )
+                .as( "usage must still lift the popular hit above the unused filler it started behind" )
+                .isEqualTo( 1 );
+    }
+
+    @Test
+    public void composite_scoresCoverageAgainstTheMatchedSynonymNotJustTheLabel() {
+        // `dmso` shares no token with "dimethyl sulfoxide", so label-only coverage scored the right
+        // answer at 0.0 -- identical to every irrelevant hit -- and it led on gemma2 only because
+        // the deuterated variant also scored 0 and usage broke the tie. Give the ranker the string
+        // that actually matched and the synonym hit is scored on what it matched.
+        CharacteristicValueObject deuterated = new CharacteristicValueObject( "dimethyl sulfoxide-d6",
+                "http://purl.obolibrary.org/obo/CHEBI_D6", null, null );
+        CharacteristicValueObject dmso = new CharacteristicValueObject( "dimethyl sulfoxide",
+                "http://purl.obolibrary.org/obo/CHEBI_28262", null, null );
+        // Lucene order puts the deuterated variant first, as it does live.
+        List<CharacteristicValueObject> hits = Arrays.asList( deuterated, dmso );
+        Map<String, Integer> noCounts = Collections.emptyMap();
+        CompositeRankingStrategy composite = new CompositeRankingStrategy( 0.5, 0.3, 0.2 );
+
+        assertThat( indexOfUri( composite.rank( "dmso", hits, noCounts ), "http://purl.obolibrary.org/obo/CHEBI_28262" ) )
+                .as( "without the matched text, coverage is 0 for both and Lucene order stands" )
+                .isEqualTo( 1 );
+
+        Map<String, String> matched = new HashMap<>();
+        matched.put( "http://purl.obolibrary.org/obo/CHEBI_28262", "DMSO" );
+        assertThat( indexOfUri( composite.rank( "dmso", hits, noCounts, Collections.emptyMap(), matched ),
+                "http://purl.obolibrary.org/obo/CHEBI_28262" ) )
+                .as( "the hit whose declared synonym IS the query must lead" )
+                .isEqualTo( 0 );
+    }
+
+    @Test
+    public void queryTokens_dropStopWordsThatCoverageWouldOtherwiseMatchAsSubstrings() {
+        // Coverage is substring containment, so an unstripped stop-word is not merely noise: `the`
+        // scores against "theca cell" and `of` against "profile". "epithelium of esophagus" is a
+        // real curated label, and its `of` handed a third of the score to any label with those two
+        // letters anywhere.
+        assertThat( QueryTokens.contentTokens( "epithelium of esophagus" ) )
+                .containsExactly( "epithelium", "esophagus" );
+        assertThat( QueryTokens.contentTokens( "cell line of the liver" ) )
+                .containsExactly( "cell", "line", "liver" );
+        // Single characters go too; identifier queries still split into usable content tokens.
+        assertThat( QueryTokens.contentTokens( "MK-2206" ) ).containsExactly( "mk", "2206" );
+        assertThat( QueryTokens.contentTokens( "  " ) ).isEmpty();
+        assertThat( QueryTokens.contentTokens( null ) ).isEmpty();
     }
 
     private static List<String> uriOrder( List<CharacteristicValueObject> list ) {

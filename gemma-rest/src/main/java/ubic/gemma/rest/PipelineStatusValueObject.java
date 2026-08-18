@@ -25,33 +25,33 @@ import java.util.List;
 @Setter
 public class PipelineStatusValueObject {
 
-    @JsonProperty("dataset_id")
+    @JsonProperty("datasetId")
     @JsonAlias({ "experimentId" })
     private Long experimentId;
 
     private List<PipelineStepValueObject> steps;
 
-    @JsonProperty("has_batch_information")
+    @JsonProperty("hasBatchInformation")
     @JsonAlias({ "hasBatchInformation" })
     private boolean hasBatchInformation;
 
-    @JsonProperty("has_dea")
+    @JsonProperty("hasDea")
     @JsonAlias({ "hasDifferentialExpressionAnalysis" })
     private boolean hasDifferentialExpressionAnalysis;
 
-    @JsonProperty("has_coexpression_analysis")
+    @JsonProperty("hasCoexpressionAnalysis")
     @JsonAlias({ "hasCoexpressionAnalysis" })
     private boolean hasCoexpressionAnalysis;
 
-    @JsonProperty("is_troubled")
+    @JsonProperty("isTroubled")
     @JsonAlias({ "troubled" })
     private boolean troubled;
 
-    @JsonProperty("trouble_details")
+    @JsonProperty("troubleDetails")
     @JsonAlias({ "troubleDetails" })
     private String troubleDetails;
 
-    @JsonProperty("needs_attention")
+    @JsonProperty("needsAttention")
     @JsonAlias({ "needsAttention" })
     private boolean needsAttention;
 
@@ -59,7 +59,7 @@ public class PipelineStatusValueObject {
      * Admin-only; remains {@code null} for non-administrators.
      */
     @Nullable
-    @JsonProperty("curation_note")
+    @JsonProperty("curationNote")
     @JsonAlias({ "curationNote" })
     private String curationNote;
 
@@ -68,12 +68,12 @@ public class PipelineStatusValueObject {
     @Nullable
     private GeeqValueObject geeq;
 
-    @JsonProperty("is_public")
+    @JsonProperty("isPublic")
     public boolean getIsPublic() {
         return isPublic;
     }
 
-    @JsonProperty("is_public")
+    @JsonProperty("isPublic")
     @JsonAlias({ "isPublic" })
     public void setIsPublic( boolean isPublic ) {
         this.isPublic = isPublic;
@@ -97,7 +97,7 @@ public class PipelineStatusValueObject {
         @JsonAlias({ "state" })
         private String state;
         @Nullable
-        @JsonProperty("last_run")
+        @JsonProperty("lastRun")
         @JsonAlias({ "lastRun" })
         private Date lastRun;
         /**
@@ -105,7 +105,7 @@ public class PipelineStatusValueObject {
          * {@code FailedPCAAnalysisEvent}, etc.). {@code null} when no event has been recorded.
          */
         @Nullable
-        @JsonProperty("event_type")
+        @JsonProperty("eventType")
         @JsonAlias({ "eventType" })
         private String eventType;
         /**

@@ -23,13 +23,13 @@ import java.util.List;
  * had been produced by a production scrape — flip the dryRun flag off
  * later and no downstream change is needed.
  *
- * <p>Lifecycle fields ({@code preboarded_id}, {@code entered_current_state_at},
- * {@code audit_trail_url}) are always {@code null} for dry-run candidates
+ * <p>Lifecycle fields ({@code preboardedId}, {@code enteredCurrentStateAt},
+ * {@code auditTrailUrl}) are always {@code null} for dry-run candidates
  * since nothing is persisted.</p>
  */
 public class GeoScrapeDryRunCandidate {
 
-    @JsonProperty("preboarded_id")
+    @JsonProperty("preboardedId")
     @Nullable
     public Long preboardedId;
 
@@ -37,27 +37,38 @@ public class GeoScrapeDryRunCandidate {
 
     public String source;
 
-    @JsonProperty("identifying_metadata")
+    @JsonProperty("identifyingMetadata")
     @Nullable
     public String identifyingMetadata;
 
     public String state;
 
-    @JsonProperty("entered_current_state_at")
+    @JsonProperty("enteredCurrentStateAt")
     @Nullable
     public java.util.Date enteredCurrentStateAt;
 
-    @JsonProperty("proposal_count")
+    @JsonProperty("proposalCount")
     public long proposalCount;
 
-    @JsonProperty("latest_proposal")
+    @JsonProperty("latestProposal")
     @Nullable
     public Object latestProposal;
 
-    @JsonProperty("audit_trail_url")
+    @JsonProperty("auditTrailUrl")
     @Nullable
     public String auditTrailUrl;
 
-    @JsonProperty("matched_criteria")
+    @JsonProperty("matchedCriteria")
     public List<String> matchedCriteria;
+    /**
+     * Why each criterion fired, keyed by matcher name — e.g.
+     * {@code {"brain": "brain keyword: cortical"}}.
+     * <p>
+     * The matchers have always produced this; it was discarded at the scrape boundary, so a
+     * caller could see WHICH matcher fired but never WHY. That makes a false positive
+     * unreviewable and a drifting matcher invisible. Null when no matcher supplied a reason.
+     */
+    @JsonProperty("matchedEvidence")
+    @Nullable
+    public java.util.Map<String, String> matchedEvidence;
 }

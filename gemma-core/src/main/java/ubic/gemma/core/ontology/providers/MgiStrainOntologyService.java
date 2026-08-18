@@ -4,6 +4,7 @@ import ubic.gemma.core.config.Configuration;
 import ubic.gemma.core.ontology.jena.OntologyLoader;
 import ubic.gemma.core.ontology.lexical.AbstractLexicalOntologyService;
 import ubic.gemma.core.ontology.lexical.LexicalTerm;
+import ubic.gemma.core.ontology.lexical.LexicalTermMetadata;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -38,6 +39,23 @@ public class MgiStrainOntologyService extends AbstractLexicalOntologyService {
 
     private static final String NAME = "MGI";
     private static final String CACHE_NAME = "mgiStrain";
+
+    /**
+     * Species asserted for every MGI strain, because {@code MGI_Strain.rpt} has no species column at all —
+     * three columns, none of them taxonomic. Unlike Cellosaurus, where species is READ from the source,
+     * this is Gemma INFERRING it from what the source is.
+     * <p>
+     * 🛑 The inference is that MGI (Mouse Genome Informatics) ships mouse strains. That is true of the
+     * report today — 124,037 rows, zero mentions of rat or <i>Rattus</i>, and every strain type is mouse
+     * genetics (coisogenic, congenic, consomic, conplastic, recombinant inbred). It is an assumption
+     * nonetheless. If MGI ever publishes non-mouse strains in this report, every one of them will be
+     * labelled <i>Mus musculus</i> here and nothing will complain. Re-check this constant before widening
+     * the set of strain sources, and note the trap it guards against: <i>Rattus norvegicus</i> (10116) and
+     * <i>Rattus rattus</i> (10117) are one letter apart, so a wrong rat is much harder to notice than a
+     * wrong species.
+     */
+    private static final List<LexicalTermMetadata.Taxon> MOUSE =
+            List.of( new LexicalTermMetadata.Taxon( 10090, "Mus musculus (Mouse)" ) );
 
     /** Canonical, resolvable MGI strain URI prefix; {@code <prefix>MGI:2160170}. */
     public static final String URI_PREFIX = "https://www.informatics.jax.org/strain/";
@@ -102,7 +120,18 @@ public class MgiStrainOntologyService extends AbstractLexicalOntologyService {
                 if ( name.isEmpty() ) {
                     continue;
                 }
-                terms.add( new LexicalTerm( URI_PREFIX + id, name ) );
+                String strainType = null;
+                if ( tab2 >= 0 ) {
+                    int tab3 = line.indexOf( '\t', tab2 + 1 );
+                    String t = ( tab3 < 0 ? line.substring( tab2 + 1 ) : line.substring( tab2 + 1, tab3 ) ).trim();
+                    // The report writes these two placeholders where it has nothing to say. Passing them
+                    // through would dress "unknown" up as a strain type.
+                    if ( !t.isEmpty() && !t.equals( "Not Applicable" ) && !t.equals( "Not Specified" ) ) {
+                        strainType = t;
+                    }
+                }
+                terms.add( new LexicalTerm( URI_PREFIX + id, name, List.of(),
+                        new LexicalTermMetadata( MOUSE, null, null, strainType, null, null ) ) );
             }
         }
         log.info( "Parsed {} MGI strain terms.", terms.size() );

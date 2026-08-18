@@ -198,7 +198,9 @@ public class Statement extends Characteristic {
     }
 
     public void setObject( @Nullable String object ) {
-        this.object = object;
+        // Same free-text normalization as the subject, which reaches it via super.setValue().
+        // Production carries 151 objects with edge whitespace and 6 with internal runs.
+        this.object = normalizeTermText( object );
     }
 
     @Nullable
@@ -238,7 +240,7 @@ public class Statement extends Characteristic {
     }
 
     public void setSecondObject( @Nullable String secondObject ) {
-        this.secondObject = secondObject;
+        this.secondObject = normalizeTermText( secondObject );
     }
 
     @Nullable

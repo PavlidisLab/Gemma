@@ -1460,7 +1460,14 @@ public class AdminWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Submit a GEO scrape & preboard run (async, or sync dry-run)",
-            description = "Iterates recent GEO records, filters to human/mouse/rat expression profiling, evaluates the registered matchers (subset selectable via `criteria`: {brain, scbrain, tfperturb}). With dryRun=false (default) creates PreboardedExperiment rows and returns 202 + async task ID. With dryRun=true evaluates only and returns 200 + the candidate list inline (no watermark, no preboarded rows, no ticket).",
+            description = "Iterates recent GEO records, filters to human/mouse/rat expression profiling, evaluates the registered matchers (subset selectable via `criteria`: {brain, scbrain, tfperturb}). With dryRun=false (default) creates PreboardedExperiment rows and returns 202 + async task ID. With dryRun=true evaluates only and returns 200 + the candidate list inline (no watermark, no preboarded rows, no ticket). "
+                    + "DRY RUNS MUST BE KEPT SMALL: the sync branch is subject to the 60-second proxy timeout in front of this API, "
+                    + "and the scrape grows superlinearly because every Entrez call passes through a global rate gate "
+                    + "(333 ms between calls without an NCBI API key, 100 ms with one). Measured 2026-08-12 against live: "
+                    + "50 records 6s, 100 records 22s, 150 records 37s, 200 records 502 Proxy Error at 60s, and the 1000 default "
+                    + "cannot complete synchronously at all. Keep dryRun batches at or under ~100 records and walk a backlog by "
+                    + "moving the `since`/`until` window — NOT by repeating `maxRecords`, which always restarts from record 0. "
+                    + "dryRun=false is unaffected: it is already async and returns immediately.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
@@ -1481,9 +1488,26 @@ public class AdminWebService {
             req.setUntil( body.until );
             req.setMaxRecords( body.maxRecords );
             req.setCriteria( body.criteria );
+            req.setStartAt( body.startAt );
+            req.setSkip( body.skip );
             req.setDryRun( true );
-            List<GeoScrapeDryRunCandidate> candidates = geoScrapeService.scrapeDryRun( req );
-            return Response.ok( respond( candidates ) ).build();
+            GeoScrapeService.DryRunResult result;
+            try {
+                result = geoScrapeService.scrapeDryRun( req );
+            } catch ( IllegalArgumentException e ) {
+                // Unresolvable `startAt`. No global IllegalArgumentException mapper exists, so wrap
+                // here or the caller gets a 500 for what is a bad request.
+                throw new BadRequestException( e.getMessage(), e );
+            }
+            // `data` stays the candidate array it has always been -- the scan cursor and the
+            // degraded-record list ride alongside it, so existing clients keep parsing unchanged.
+            GeoScrapeDryRunResponse dryRunResponse = new GeoScrapeDryRunResponse();
+            dryRunResponse.data = result.getCandidates();
+            dryRunResponse.lastScannedAccession = result.getLastScannedAccession();
+            dryRunResponse.lastScannedDate = result.getLastScannedDate();
+            dryRunResponse.incompleteRecords = result.getIncompleteRecords();
+            dryRunResponse.nextOffset = result.getNextOffset();
+            return Response.ok( dryRunResponse ).build();
         }
         GeoScrapeTaskCommand cmd = new GeoScrapeTaskCommand();
         if ( body != null ) {
@@ -1491,6 +1515,8 @@ public class AdminWebService {
             cmd.setUntil( body.until );
             cmd.setMaxRecords( body.maxRecords );
             cmd.setCriteria( body.criteria );
+            cmd.setStartAt( body.startAt );
+            cmd.setSkip( body.skip );
             cmd.setDryRun( false );
         }
         String jobId = taskRunningService.submitTaskCommand( cmd );
@@ -2486,7 +2512,19 @@ public class AdminWebService {
         /** Upper bound of the scrape window (publication date inclusive). Null means "today". */
         @Nullable
         public Date until;
-        /** Hard cap on number of GEO records examined. Null means use service default. */
+        /**
+         * Hard cap on number of GEO records examined, counted from the HEAD of the result set.
+         * Null means the service default (1000).
+         * <p>
+         * 🛑 This is a cap, NOT a page size — there is no cursor or offset on this request, and the
+         * scrape restarts at record 0 on every call. Two calls with maxRecords=50 return the same
+         * 50 records; a client looping on it re-scans the same head forever and never advances.
+         * Verified 2026-08-12 against live: the 25-record run's candidates are a strict prefix of
+         * the 50's, which prefix the 100's, which prefix the 150's.
+         * <p>
+         * To walk a backlog, window with {@link #since} / {@link #until} instead — those are the
+         * only parameters that move.
+         */
         @Nullable
         public Integer maxRecords;
         /** Subset of matcher names to apply (e.g. {@code ["brain","tfperturb"]}); null/empty = all available. */
@@ -2495,6 +2533,66 @@ public class AdminWebService {
         /** If true, evaluate matches but do not persist any PreboardedExperiment rows. */
         @Nullable
         public Boolean dryRun;
+        /**
+         * GEO series accession to resume from, e.g. {@code "GSE342847"} — the last record you
+         * processed. Its release date becomes the upper bound of the window, so the scan picks up
+         * where the previous batch stopped and walks backwards. This is the cursor to use for
+         * batching; `maxRecords` is a head cap and cannot advance.
+         * <p>
+         * An accession rather than an offset because GEO returns newest-first: a numeric offset
+         * shifts whenever a new series is published, so an offset-paging client silently skips
+         * records. Series released the same day reappear — that overlap is intentional.
+         * <p>
+         * An explicit `until` wins over this. An accession that cannot be resolved is a 400, not a
+         * silent fallback, because ignoring the cursor rescans from the newest record.
+         */
+        @Nullable
+        public String startAt;
+        /**
+         * Records to skip at the start of the resolved window — record-level resumption.
+         * `startAt` resolves to a release DATE and GEO's filter is day-granular, so resuming at X
+         * re-scans X's whole day; when that day is wider than `maxRecords` the scan cannot advance
+         * and stepping past the day discards whatever it never reached. Pass the previous
+         * response's `nextOffset` here alongside the same `startAt` to continue at record level.
+         */
+        @Nullable
+        public Integer skip;
+    }
+
+    /**
+     * Dry-run response. {@code data} is the candidate array unchanged; the rest is what a batching
+     * caller could not previously work out for itself.
+     */
+    public static class GeoScrapeDryRunResponse {
+        /** The candidates, in scan order. Unchanged shape. */
+        public List<GeoScrapeDryRunCandidate> data;
+        /**
+         * The last record the scan LOOKED at, matched or not — cursor on this rather than on the
+         * oldest candidate. `maxRecords` caps records SCANNED while the batch counts candidates
+         * RETURNED, so when a batch's matches sit near the head the next request re-scans the same
+         * span for nothing: 38 of 101 requests bought nothing on a measured 2026-06-01..08-12 walk,
+         * each a full synchronous scan against the 60-second proxy budget. Null if nothing was
+         * examined.
+         */
+        @Nullable
+        public String lastScannedAccession;
+        /** Release date of `lastScannedAccession`, so `until` can be stepped without a lookup. */
+        @Nullable
+        public Date lastScannedDate;
+        /**
+         * Accessions examined on degraded information — GEO served unusable MINiML, so the record
+         * was kept on its summary rather than failing the batch. Detail-dependent matchers may have
+         * under-matched on these, so a caller can report its list as incomplete and name them.
+         * Usually transient; worth retrying later. Empty when everything parsed.
+         */
+        public List<String> incompleteRecords;
+        /**
+         * Absolute offset into the resolved window where this scan stopped. Hand it back as `skip`
+         * with the same `startAt` to resume at record level instead of restarting that day. Null
+         * when nothing was scanned.
+         */
+        @Nullable
+        public Integer nextOffset;
     }
 
     public static class GeoScrapeSubmitResponse {

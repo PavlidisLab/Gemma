@@ -216,7 +216,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
             boolean useNeuroCartaOntology, boolean forceGeneOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
 
-        if ( searchQuery.trim().length() < 3 ) {
+        // Two characters is a real term name -- H1, H7 and H9 are among the most-used human
+        // embryonic stem cell lines, and EFO_0003042 (H1-hESC, 18 uses in the corpus) carries `H1`
+        // as an exact synonym. The floor sat at 3 and returned an empty set with no log line, so
+        // every such query looked like an ontology-coverage gap rather than a guard: CAB filed
+        // H1/H7 as "in the source index but not served" on 2026-08-11, and bare H9 failed
+        // identically, which is what showed the variable was length rather than coverage.
+        //
+        // One character stays out. That is where the candidate set stops being a name and becomes
+        // a scan of the index, and no designation we annotate is one character.
+        if ( searchQuery.trim().length() < 2 ) {
             return new HashSet<>();
         }
 
@@ -254,27 +263,47 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Collection<CharacteristicValueObject> characteristicsSubstring = new ArrayList<>();
         Collection<CharacteristicValueObject> characteristicsNoRuleFound = new ArrayList<>();
 
-        // from the database with a uri
-        this.putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseWithValueUri.values(),
+        // from the database with a uri -- values() of a HashMap, so ordered here or not at all
+        List<CharacteristicValueObject> dbWithUri = new ArrayList<>( characteristicFromDatabaseWithValueUri.values() );
+        dbWithUri.sort( Comparator.comparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        this.putCharacteristicsIntoSpecificList( searchQuery, dbWithUri,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
         // from the ontology
         this.putCharacteristicsIntoSpecificList( searchQuery, characteristicsFromOntology,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
-        // from the database with no uri
-        this.putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseFreeText,
+        // from the database with no uri -- a HashSet, same reasoning as above
+        List<CharacteristicValueObject> dbFreeText = new ArrayList<>( characteristicFromDatabaseFreeText );
+        dbFreeText.sort( Comparator.comparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        this.putCharacteristicsIntoSpecificList( searchQuery, dbFreeText,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
 
+        // Within a bucket the order is the order the three sources were added — database-with-URI,
+        // then ontology, then database free-text — and each source is now internally ordered before
+        // it gets here: the ontology block by search score (best first), the database collections
+        // below by URI, since a HashMap's values and a HashSet iterate in an order nobody chose.
+        //
+        // Deliberately NOT re-sorted by URI here. An earlier pass did exactly that to kill the
+        // nondeterminism and it worked, but it also threw away relevance at the one point that
+        // decides who survives the cap: EFO_0003042 is a poor match for `H1 cell line` on its LABEL
+        // and a strong one on its declared synonym, so alphabetical order buried it under chemicals
+        // that merely contain the substring. Stable and wrong is worse than flaky and wrong -- the
+        // flake at least announces itself.
         List<CharacteristicValueObject> allCharacteristicsFound = new ArrayList<>();
         allCharacteristicsFound.addAll( characteristicsWithExactMatch );
         allCharacteristicsFound.addAll( characteristicsStartWithQuery );
         allCharacteristicsFound.addAll( characteristicsSubstring );
         allCharacteristicsFound.addAll( characteristicsNoRuleFound );
 
-        // limit the size of the returned phenotypes to 100 terms
+        // Never silently: a truncated tail is indistinguishable from "the ontology does not have
+        // it", which is the reading that sent us looking for a missing term rather than a dropped
+        // one.
         if ( allCharacteristicsFound.size() > maxResults ) {
+            log.warn( String.format( "Candidate set for '%s' is %d terms, over the %d cap; dropping %d."
+                            + " The cut is relevance-bucketed and stable, but a term below it cannot be ranked or promoted.",
+                    searchQuery, allCharacteristicsFound.size(), maxResults, allCharacteristicsFound.size() - maxResults ) );
             return allCharacteristicsFound.subList( 0, maxResults );
         }
 
@@ -544,14 +573,22 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public String getDefinition( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         OntologyTerm ot = this.getTerm( uri, timeout, timeUnit );
-        if ( ot != null ) {
-            // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
-            AnnotationProperty annot = ot.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0000115" );
-            if ( annot != null ) {
-                return annot.getContents();
-            }
+        if ( ot == null ) {
+            return null;
         }
-        return null;
+        // UBERON, HP, MP and MONDO all use the OBO definition property.
+        AnnotationProperty annot = ot.getAnnotation( OntologyUtils.DEFINITION_URI );
+        if ( annot != null && StringUtils.isNotBlank( annot.getContents() ) ) {
+            return annot.getContents();
+        }
+        // CLO does not. It writes what it knows about a cell line into rdfs:comment instead —
+        // CLO_0008127 (NCI-H929) carries "disease: plasmacytoma;   myeloma" and no OBO definition at all —
+        // so reading only the OBO property returned null for the very terms whose description is the point.
+        // That disease is a property of the line, knowable without anyone curating it onto an experiment,
+        // and it was sitting in an ontology already loaded here. OLS resolves the same fallback, and reports
+        // the result as the term's definition, so this agrees with what a caller sees there.
+        String comment = ot.getComment();
+        return StringUtils.isNotBlank( comment ) ? comment : null;
     }
 
     @Override
@@ -934,6 +971,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * given a collection of characteristics add them to the correct List
      */
+    /**
+     * A candidate plus the search score that produced it, so relevance survives the trip from the
+     * ontology index to the point where the candidate set is capped.
+     */
+    private static final class ScoredCandidate {
+        private final CharacteristicValueObject vo;
+        private final double score;
+
+        private ScoredCandidate( CharacteristicValueObject vo, double score ) {
+            this.vo = vo;
+            this.score = score;
+        }
+    }
+
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery, int maxResults,
             boolean useNeuroCartaOntology, boolean forceGeneOntology,
             Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri, long timeoutMs ) throws SearchException {
@@ -949,9 +1000,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             ontologyServicesToUse = this.ontologyServices;
         }
 
-        Collection<CharacteristicValueObject> fromOntologies = searchInThreads( ontologyService -> {
+        // The search score is carried out of the fan-out rather than discarded at the VO boundary,
+        // because the cap downstream has to choose WHICH candidates to keep. Lucene already knows
+        // that a term matching `h1` as a declared synonym is a far better answer than a chemical
+        // whose label merely contains the substring; throwing that away left the cut to break ties
+        // on whatever order a HashSet iterated in.
+        List<ScoredCandidate> scored = searchInThreads( ontologyService -> {
+            // Whether this source is a flat lexical catalogue rather than a conventional ontology.
+            // The sibling findTermsInexact() consumes the same flag to append these hits after the
+            // merged ontology results; this path merges by score, so it carries the flag onto the
+            // value object instead and lets the ranking layer decide. Dropping it here is what let
+            // an exact-name catalogue hit climb back over every ontology term downstream.
+            boolean supplementary = ontologyService.isSupplementary();
             Collection<OntologySearchResult<OntologyTerm>> ontologyTerms = ontologyCache.findTerm( ontologyService, searchQuery, maxResults );
-            Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
+            Collection<ScoredCandidate> characteristicsFromOntology = new ArrayList<>();
             for ( OntologySearchResult<OntologyTerm> ontologyTerm : ontologyTerms ) {
                 // if the ontology term wasnt already found in the database
                 if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getResult().getUri() ) == null ) {
@@ -960,11 +1022,21 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         continue;
                     }
                     CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getResult().getLabel().toLowerCase(), ontologyTerm.getResult().getUri() );
-                    characteristicsFromOntology.add( phenotype );
+                    phenotype.setSupplementary( supplementary );
+                    characteristicsFromOntology.add( new ScoredCandidate( phenotype, ontologyTerm.getScore() ) );
                 }
             }
             return characteristicsFromOntology;
         }, ontologyServicesToUse, "terms matching " + searchQuery, timeoutMs );
+
+        // Best first, across every ontology, before anything downstream cuts. URI breaks ties so
+        // the order is total: equal scores are common and must not fall back on arrival order.
+        Collection<CharacteristicValueObject> fromOntologies = scored.stream()
+                .sorted( Comparator.comparingDouble( ( ScoredCandidate sc ) -> -sc.score )
+                        .thenComparing( sc -> sc.vo.getValueUri(), Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .map( sc -> sc.vo )
+                .distinct()
+                .collect( Collectors.toList() );
 
         // GeneOntologyServiceImpl isn't part of the autowired ontologyServices list (it's a
         // delegating-bean wrapper around basecode's GO service); the sibling findTerms() method

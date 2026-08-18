@@ -134,23 +134,27 @@ public abstract class AbstractLexicalOntologyService implements OntologyService 
     }
 
     private void doInitialize( Collection<LexicalTerm> terms ) throws IOException {
-        Map<String, String> uriToLabel = new HashMap<>();
+        // uri -> (label, metadata). Synonyms are deliberately NOT retained: they exist to be indexed,
+        // and holding them for a ~169k-entry catalogue would cost heap for nothing. The metadata IS
+        // retained because it is what the caller sees on a hit; for Cellosaurus that is ~55 MB, almost
+        // all of it the comments, which is a measured trade documented on that service.
+        Map<String, LexicalTerm> uriToTerm = new HashMap<>();
         List<LexicalTerm> kept = new ArrayList<>();
         for ( LexicalTerm t : terms ) {
             if ( t.uri() == null || !isAllowed( t.uri() ) ) {
                 continue;
             }
-            uriToLabel.put( t.uri(), t.label() );
+            uriToTerm.put( t.uri(), new LexicalTerm( t.uri(), t.label(), List.of(), t.metadata() ) );
             kept.add( t );
         }
         LexicalOntologyIndex index = searchEnabled ? LexicalOntologyIndex.build( kept, excludedWordsFromStemming ) : null;
-        State newState = new State( index, Collections.unmodifiableMap( uriToLabel ) );
+        State newState = new State( index, Collections.unmodifiableMap( uriToTerm ) );
         State old = this.state;
         this.state = newState;
         if ( old != null ) {
             old.close();
         }
-        log.info( "{} loaded: {} terms{}.", name, uriToLabel.size(), index != null ? " (indexed)" : "" );
+        log.info( "{} loaded: {} terms{}.", name, uriToTerm.size(), index != null ? " (indexed)" : "" );
     }
 
     private boolean isAllowed( String uri ) {
@@ -258,8 +262,10 @@ public abstract class AbstractLexicalOntologyService implements OntologyService 
 
     private OntologyTerm toTerm( String uri ) {
         State s = this.state;
-        String label = s != null ? s.uriToLabel.get( uri ) : null;
-        return new LexicalOntologyTerm( uri, label );
+        LexicalTerm t = s != null ? s.uriToTerm.get( uri ) : null;
+        return t != null
+                ? new LexicalOntologyTerm( uri, t.label(), t.metadata() )
+                : new LexicalOntologyTerm( uri, null );
     }
 
     // ---------------------------------------------------------------------
@@ -270,10 +276,10 @@ public abstract class AbstractLexicalOntologyService implements OntologyService 
     @Override
     public OntologyTerm getTerm( String uri ) {
         State s = this.state;
-        if ( s == null || !s.uriToLabel.containsKey( uri ) ) {
+        if ( s == null || !s.uriToTerm.containsKey( uri ) ) {
             return null;
         }
-        return new LexicalOntologyTerm( uri, s.uriToLabel.get( uri ) );
+        return toTerm( uri );
     }
 
     @Nullable
@@ -285,7 +291,7 @@ public abstract class AbstractLexicalOntologyService implements OntologyService 
     @Override
     public Set<String> getAllURIs() {
         State s = this.state;
-        return s == null ? Collections.emptySet() : new LinkedHashSet<>( s.uriToLabel.keySet() );
+        return s == null ? Collections.emptySet() : new LinkedHashSet<>( s.uriToTerm.keySet() );
     }
 
     @Override
@@ -453,11 +459,11 @@ public abstract class AbstractLexicalOntologyService implements OntologyService 
     private static final class State {
         @Nullable
         private final LexicalOntologyIndex index;
-        private final Map<String, String> uriToLabel;
+        private final Map<String, LexicalTerm> uriToTerm;
 
-        private State( @Nullable LexicalOntologyIndex index, Map<String, String> uriToLabel ) {
+        private State( @Nullable LexicalOntologyIndex index, Map<String, LexicalTerm> uriToTerm ) {
             this.index = index;
-            this.uriToLabel = uriToLabel;
+            this.uriToTerm = uriToTerm;
         }
 
         private void close() {

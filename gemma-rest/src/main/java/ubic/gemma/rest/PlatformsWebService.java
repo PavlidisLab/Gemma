@@ -74,6 +74,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 public class PlatformsWebService {
 
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
+    private static final String ERROR_ANNOTATION_FILE_CANNOT_BE_GENERATED = "Annotation file for platform %s is not on disk and this instance cannot generate it: %s";
 
     public static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";
     public static final MediaType TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE = new MediaType( "text", "tab-separated-values", "UTF-8" );
@@ -505,13 +506,25 @@ public class PlatformsWebService {
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
         java.nio.file.Path file = annotationFileService.getAnnotDataDir().resolve( fileName );
-        if ( !force || !Files.exists( file ) ) {
+        if ( force || !Files.exists( file ) ) {
             try {
                 // generate it. This will cause a delay, and potentially a time-out, but better than a 404
                 // To speed things up, we don't delete other files
                 annotationFileService.create( arrayDesign, true, false ); // include GO by default.
             } catch ( IOException e ) {
                 log.error( "Failed to generate annotation file for " + arrayDesign, e );
+                throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
+            } catch ( IllegalStateException e ) {
+                // create() refuses to run unless GO is loaded, so an instance started with
+                // load.geneOntology=false can never satisfy a cache miss here. Report that rather
+                // than letting the raw message escape as a 500.
+                log.error( "Cannot generate annotation file for " + arrayDesign + ": " + e.getMessage() );
+                throw new ServiceUnavailableException(
+                        String.format( ERROR_ANNOTATION_FILE_CANNOT_BE_GENERATED, arrayDesign.getShortName(), e.getMessage() ),
+                        30L, e );
+            }
+            // create() returns quietly for platforms with no gene mappings, leaving nothing on disk
+            if ( !Files.exists( file ) ) {
                 throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
             }
         }

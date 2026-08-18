@@ -10,6 +10,7 @@
  */
 package ubic.gemma.rest;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -133,10 +134,10 @@ public class AnnotationSetsWebService {
     /**
      * Create or upsert an annotation set on a dataset. The body's
      * {@code role} determines the lifecycle shape:
-     * {@code PROPOSAL} requires a {@code run_id}; {@code DRAFT} derives
+     * {@code PROPOSAL} requires a {@code runId}; {@code DRAFT} derives
      * one from the current user (use the dedicated draft PUT instead for
      * upsert semantics); {@code SNAPSHOT} generates a UUID when
-     * {@code run_id} is omitted.
+     * {@code runId} is omitted.
      */
     public Response submitAnnotationSet( DatasetArg<?> datasetArg,
             @Nullable AnnotationSetRequest body ) {
@@ -150,7 +151,7 @@ public class AnnotationSetsWebService {
                 ? AgentCurationKind.PROPOSAL : null );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         AnnotationSet parent = body.parentId != null
-                ? requireLoad( body.parentId, "parent_id" )
+                ? requireLoad( body.parentId, "parentId" )
                 : null;
         AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
                 ee, role, source, kind,
@@ -166,7 +167,7 @@ public class AnnotationSetsWebService {
 
     /**
      * List annotation sets attached to a dataset, newest first. Filter
-     * by {@code role}, {@code source}, {@code created_by}; choose
+     * by {@code role}, {@code source}, {@code createdBy}; choose
      * response shape with {@code shape=full|meta} (default {@code full}).
      */
     public Response listAnnotationSets( DatasetArg<?> datasetArg,
@@ -215,20 +216,20 @@ public class AnnotationSetsWebService {
 
     /**
      * Upsert the current curator's {@code DRAFT} for the given dataset.
-     * One DRAFT per (dataset, curator); body's {@code payload_json} +
-     * optional {@code parked_elements} + optional {@code parent_id}
+     * One DRAFT per (dataset, curator); body's {@code payloadJson} +
+     * optional {@code parkedElements} + optional {@code parentId}
      * (the PROPOSAL the draft was seeded from). Returns 201 on create,
      * 200 on update.
      */
     public Response upsertDraftForDataset( DatasetArg<?> datasetArg,
             @Nullable UpsertDraftRequest body ) {
         if ( body == null || body.payloadJson == null ) {
-            throw new BadRequestException( "Request body must include `payload_json`." );
+            throw new BadRequestException( "Request body must include `payloadJson`." );
         }
         User curator = requireCurrentUser();
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         AnnotationSet parent = body.parentId != null
-                ? requireLoad( body.parentId, "parent_id" )
+                ? requireLoad( body.parentId, "parentId" )
                 : null;
         boolean preExisted = annotationSetService.findByInvestigationAndRoleAndRunId(
                 ee, AnnotationSetRole.DRAFT, draftRunId( curator ) ) != null;
@@ -242,7 +243,7 @@ public class AnnotationSetsWebService {
 
     /**
      * Cross-experiment list of annotation sets, paginated. Thin
-     * metadata projection (no {@code payload_json}).
+     * metadata projection (no {@code payloadJson}).
      */
     @GET
     @Path("/annotation-sets")
@@ -372,25 +373,31 @@ public class AnnotationSetsWebService {
         @JsonProperty("kind")
         @Nullable
         public String kind;
-        @JsonProperty("run_id")
+        @JsonProperty("runId")
+        @JsonAlias("run_id")
         @Nullable
         public String runId;
-        @JsonProperty("created_by")
+        @JsonProperty("createdBy")
+        @JsonAlias("created_by")
         @Nullable
         public String createdBy;
-        @JsonProperty("agent_version")
+        @JsonProperty("agentVersion")
+        @JsonAlias("agent_version")
         @Nullable
         public String agentVersion;
         @JsonProperty("model")
         @Nullable
         public String model;
-        @JsonProperty("ran_at")
+        @JsonProperty("ranAt")
+        @JsonAlias("ran_at")
         @Nullable
         public Date ranAt;
-        @JsonProperty("payload_json")
+        @JsonProperty("payloadJson")
+        @JsonAlias("payload_json")
         @Nullable
         public String payloadJson;
-        @JsonProperty("parent_id")
+        @JsonProperty("parentId")
+        @JsonAlias("parent_id")
         @Nullable
         public Long parentId;
     }
@@ -399,12 +406,15 @@ public class AnnotationSetsWebService {
      * Body for {@link #upsertDraftForDataset}.
      */
     public static class UpsertDraftRequest {
-        @JsonProperty("payload_json")
+        @JsonProperty("payloadJson")
+        @JsonAlias("payload_json")
         public String payloadJson;
-        @JsonProperty("parked_elements")
+        @JsonProperty("parkedElements")
+        @JsonAlias("parked_elements")
         @Nullable
         public String parkedElements;
-        @JsonProperty("parent_id")
+        @JsonProperty("parentId")
+        @JsonAlias("parent_id")
         @Nullable
         public Long parentId;
     }
@@ -415,7 +425,7 @@ public class AnnotationSetsWebService {
     public static class AnnotationSetResponse {
         @JsonProperty("id")
         public Long id;
-        @JsonProperty("dataset_id")
+        @JsonProperty("datasetId")
         public Long datasetId;
         @JsonProperty("role")
         public String role;
@@ -424,48 +434,48 @@ public class AnnotationSetsWebService {
         @JsonProperty("kind")
         @Nullable
         public String kind;
-        @JsonProperty("run_id")
+        @JsonProperty("runId")
         public String runId;
-        @JsonProperty("parent_id")
+        @JsonProperty("parentId")
         @Nullable
         public Long parentId;
-        @JsonProperty("created_by")
+        @JsonProperty("createdBy")
         @Nullable
         public String createdBy;
-        @JsonProperty("created_at")
+        @JsonProperty("createdAt")
         public Date createdAt;
-        @JsonProperty("updated_at")
+        @JsonProperty("updatedAt")
         public Date updatedAt;
-        @JsonProperty("finalized_at")
+        @JsonProperty("finalizedAt")
         @Nullable
         public Date finalizedAt;
-        @JsonProperty("finalized_by")
+        @JsonProperty("finalizedBy")
         @Nullable
         public String finalizedBy;
-        @JsonProperty("agent_version")
+        @JsonProperty("agentVersion")
         @Nullable
         public String agentVersion;
         @JsonProperty("model")
         @Nullable
         public String model;
-        @JsonProperty("ran_at")
+        @JsonProperty("ranAt")
         @Nullable
         public Date ranAt;
-        @JsonProperty("payload_json")
+        @JsonProperty("payloadJson")
         @Nullable
         public String payloadJson;
-        @JsonProperty("parked_elements")
+        @JsonProperty("parkedElements")
         @Nullable
         public String parkedElements;
     }
 
     /**
-     * Thin metadata response shape (no payload_json).
+     * Thin metadata response shape (no payloadJson).
      */
     public static class AnnotationSetSummaryResponse {
         @JsonProperty("id")
         public Long id;
-        @JsonProperty("dataset_id")
+        @JsonProperty("datasetId")
         public Long datasetId;
         @JsonProperty("role")
         public String role;
@@ -474,34 +484,34 @@ public class AnnotationSetsWebService {
         @JsonProperty("kind")
         @Nullable
         public String kind;
-        @JsonProperty("run_id")
+        @JsonProperty("runId")
         public String runId;
-        @JsonProperty("parent_id")
+        @JsonProperty("parentId")
         @Nullable
         public Long parentId;
-        @JsonProperty("created_by")
+        @JsonProperty("createdBy")
         @Nullable
         public String createdBy;
-        @JsonProperty("created_at")
+        @JsonProperty("createdAt")
         public Date createdAt;
-        @JsonProperty("updated_at")
+        @JsonProperty("updatedAt")
         public Date updatedAt;
-        @JsonProperty("finalized_at")
+        @JsonProperty("finalizedAt")
         @Nullable
         public Date finalizedAt;
-        @JsonProperty("finalized_by")
+        @JsonProperty("finalizedBy")
         @Nullable
         public String finalizedBy;
-        @JsonProperty("agent_version")
+        @JsonProperty("agentVersion")
         @Nullable
         public String agentVersion;
         @JsonProperty("model")
         @Nullable
         public String model;
-        @JsonProperty("ran_at")
+        @JsonProperty("ranAt")
         @Nullable
         public Date ranAt;
-        @JsonProperty("payload_size")
+        @JsonProperty("payloadSize")
         @Nullable
         public Long payloadSize;
     }

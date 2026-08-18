@@ -30,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.util.CursorPage;
 
 import java.util.Collections;
 import java.util.Date;
@@ -42,6 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -279,6 +282,13 @@ public class TicketServiceImplTest {
     @Test
     public void findTicketsByCursorExtended_passesAllFiltersThroughToDao() {
         Date since = new Date( 3000L );
+        // The service walks the returned page to initialize each ticket for projection, so an
+        // unstubbed DAO hands it null and it NPEs before reaching the assertion. Stub an empty
+        // page: this test is about the filters reaching the DAO, and an empty result isolates
+        // that from anything the initialization pass does.
+        when( ticketDao.findTicketsByCursor( anyBoolean(), any(), any(), any(), any(), any(), any(), any(), anyInt() ) )
+                .thenReturn( new CursorPage<>( Collections.emptyList(), null, 10, null, null, 0L ) );
+
         service.findTicketsByCursor( false, null, TicketPriority.LOW,
                 TicketType.REALIGNMENT_NEEDED, TicketState.IN_PROGRESS,
                 TicketTargetType.ARRAY_DESIGN, since, null, 10 );

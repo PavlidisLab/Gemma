@@ -14,8 +14,10 @@
  */
 package ubic.gemma.model.common.description;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.GemmaWebOnly;
@@ -87,6 +89,22 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     private boolean alreadyPresentInDatabase = false;
     @GemmaWebOnly
     private boolean alreadyPresentOnGene = false; // phenocarta?
+    /**
+     * True when this candidate came from a flat lexical catalogue (MGI names, Cellosaurus) rather
+     * than a conventional ontology.
+     * <p>
+     * These sources exist to back-fill names the ontologies lack, and their index applies a large
+     * exact-name boost whose scores are not comparable with a Jena index's — which is why
+     * {@code OntologyServiceImpl.findTermsInexact} ranks them below every conventional hit rather
+     * than merging them. Carrying the flag onto the value object lets the ranking layers keep that
+     * distinction instead of re-deriving it from URI namespaces one pair at a time.
+     * <p>
+     * Provenance rather than identity, so it is excluded from equals/hashCode: the same term
+     * reached through two sources is the same term.
+     */
+    @JsonIgnore
+    @EqualsAndHashCode.Exclude
+    private boolean supplementary = false;
     /**
      * child term from a root
      */

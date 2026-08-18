@@ -134,7 +134,18 @@ All in `gemma-rest/src/main/java/ubic/gemma/rest/security/`:
 ## 8. Table shape
 
 Two independent dialect sequences (same logical change gets different `V` numbers):
-`db/migration/mysql/V23__api_key.sql`, `db/migration/h2/V24__api_key.sql`.
+`db/migration/mysql/V<next>__api_key.sql`, `db/migration/h2/V<next>__api_key.sql`.
+
+🛑 **Do not copy a version number out of this doc** — the numbers this recce
+originally named (mysql V23, h2 V24) have since been taken by
+`scde_cascade_on_parent_delete`. Resolve `<next>` at implementation time:
+
+```bash
+ls gemma-core/src/main/resources/db/migration/mysql/ | sort -V | tail -1
+ls gemma-core/src/main/resources/db/migration/h2/    | sort -V | tail -1
+```
+
+As of 2026-08-12 that puts the pair at mysql **V25** / h2 **V26**.
 
 ```sql
 CREATE TABLE API_KEY (
