@@ -612,6 +612,43 @@ public abstract class AbstractOntologyService implements OntologyService {
         } );
     }
 
+    /**
+     * Read cross-references from the cached SOURCE artifact instead of the loaded model.
+     *
+     * <p>A PLAIN model, deliberately: no {@code OntModel}, no inference, no imports — just the
+     * triples {@link CrossReferences} needs. That is strictly lighter than the model this service
+     * already builds at boot, so it cannot be the thing that runs the host out of memory, and it
+     * reuses the existing qualifier logic rather than growing a second parser that could disagree
+     * with it about exact-versus-narrow.</p>
+     *
+     * <p>Falls back to the loaded model when there is no cached source — better a smaller index than
+     * none.</p>
+     */
+    @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferencesFromSource() {
+        String cacheName = getCacheName();
+        if ( cacheName == null ) {
+            return getCrossReferences();
+        }
+        java.io.File cached = OntologyLoader.getDiskCachePath( cacheName );
+        if ( !cached.isFile() || cached.length() == 0 ) {
+            log.warn( "No cached source for {} at {}; falling back to the loaded model's cross-references, "
+                    + "which under-cover if that model is a slim.", cacheName, cached );
+            return getCrossReferences();
+        }
+        org.apache.jena.rdf.model.Model model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel();
+        try ( java.io.InputStream in = java.nio.file.Files.newInputStream( cached.toPath() ) ) {
+            model.read( in, getOntologyUrl() );
+            return CrossReferences.list( model );
+        } catch ( Exception e ) {
+            log.warn( "Could not read cross-references from the cached source " + cached
+                    + "; falling back to the loaded model.", e );
+            return getCrossReferences();
+        } finally {
+            model.close();
+        }
+    }
+
     @Override
     public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferences() {
         return getState().map( state -> CrossReferences.list( state.model ) ).orElseGet( () -> {

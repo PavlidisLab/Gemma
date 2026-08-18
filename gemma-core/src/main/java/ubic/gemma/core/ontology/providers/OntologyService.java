@@ -313,6 +313,24 @@ public interface OntologyService extends AutoCloseable {
      * <p>Empty for a source with no cross-references to state (a flat lexical catalogue) and for an
      * ontology that is not loaded.</p>
      */
+    /**
+     * Cross-references read from the ontology's SOURCE artifact on disk, rather than from whatever
+     * model happens to be loaded.
+     *
+     * <p>🛑 These differ, and the difference is not cosmetic. A corpus-seeded slim contains the terms
+     * Gemma already annotates — which is exactly the wrong set for translating a foreign identifier,
+     * whose whole job is to reach terms we do <b>not</b> yet annotate. Measured on 2026-08-18:
+     * inverting MONDO's xrefs from the loaded slim gave 32,594 (DOID 3,111) against 145,917
+     * (DOID 12,091) from the full artifact, and the relation producer lost ~970 CLO relations to
+     * untranslatable targets as a direct result.</p>
+     *
+     * <p>Defaults to {@link #getCrossReferences()}, so an implementation with no separate source is
+     * unaffected.</p>
+     */
+    default Collection<OntologyXref> getCrossReferencesFromSource() {
+        return getCrossReferences();
+    }
+
     default Collection<OntologyXref> getCrossReferences() {
         return Collections.emptyList();
     }

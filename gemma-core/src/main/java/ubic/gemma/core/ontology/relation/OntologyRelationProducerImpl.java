@@ -587,9 +587,19 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
             return OntologyXrefIndex.empty();
         }
         StopWatch timer = StopWatch.createStarted();
-        OntologyXrefIndex index = OntologyXrefIndex.build( mondo.getCrossReferences() );
-        log.info( "Inverted {} cross-references from {} in {} ms: {}.", index.size(), XREF_SOURCE_TOKEN,
-                timer.getTime(), index.countsByPrefix() );
+        // 🛑 From the SOURCE, not the loaded model. A corpus-seeded slim holds the diseases Gemma
+        // already annotates, which is precisely the wrong set for translating a foreign identifier --
+        // the identifiers that fail are the ones for diseases we do NOT yet annotate, and those are
+        // what the slim leaves out. Measured 2026-08-18: the slim yielded 32,594 cross-references
+        // (DOID 3,111) against 145,917 (DOID 12,091) from the full artifact, and 980 CLO restrictions
+        // became untranslatable as a result -- about 970 relations lost, one disease term accounting
+        // for 172 of them.
+        //
+        // Reading the source is a plain-triples parse, lighter than the inference-mode model this
+        // service already builds at boot, so it does not give back what slimming bought.
+        OntologyXrefIndex index = OntologyXrefIndex.build( mondo.getCrossReferencesFromSource() );
+        log.info( "Inverted {} cross-references from the {} source in {} ms: {}.", index.size(),
+                XREF_SOURCE_TOKEN, timer.getTime(), index.countsByPrefix() );
         return index;
     }
 

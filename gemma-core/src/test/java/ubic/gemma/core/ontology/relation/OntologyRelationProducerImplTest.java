@@ -136,6 +136,11 @@ class OntologyRelationProducerImplTest {
         when( o.getAllURIs() ).thenReturn( new LinkedHashSet<>( terms.keySet() ) );
         when( o.getTerm( anyString() ) ).thenAnswer( inv -> terms.get( inv.<String>getArgument( 0 ) ) );
         when( o.getCrossReferences() ).thenReturn( crossReferences );
+        // The producer inverts the SOURCE's cross-references, not the loaded model's: a corpus-seeded
+        // slim covers the diseases we already annotate and so cannot translate identifiers for the
+        // ones we do not. A mock returns empty for an unstubbed default method, so stubbing only the
+        // model variant would leave every foreign target untranslatable.
+        when( o.getCrossReferencesFromSource() ).thenReturn( crossReferences );
         return o;
     }
 
