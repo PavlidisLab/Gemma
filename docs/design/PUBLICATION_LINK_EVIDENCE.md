@@ -150,9 +150,11 @@ the submitter cross-linked the wrong one of their own.
 
 As of 2026-08-17 the dataset (id 27929) has **no publication in Gemma at all**, so nothing is
 currently wrong. What needs preventing is the next GEO refresh, which sets a primary precisely
-when there is none. `scripts/sql/gse227854_reject_geo_publication.sql` records the rejection;
-the REST equivalent is in that file's header and is preferable once the code is deployed,
-since it resolves the reference from PubMed rather than requiring it to exist already.
+when there is none. The rejection SQL, and the `PUT /datasets/{id}/publications` equivalent that
+is preferable once the code is deployed (it resolves the reference from PubMed instead of
+requiring it to already exist), live in `~/Dev/Gemma/handoffs/` alongside the review list —
+`PUBLICATION_BACKFILL_AND_GEO_EXPOSURE_2026_08_17.md`. This repo keeps the design; per-dataset
+curation decisions and measured corpus tallies are data and are not tracked here.
 
 The other eighteen corrections in the eval repo are that repo's gold being wrong, not Gemma,
 and are deliberately not loaded.
