@@ -26,6 +26,23 @@
 -- table would mean re-deriving all of that and keeping a second, divergent copy of it. So: make sure
 -- EE2C is current first.
 
+
+-- 🛑 TWO CORRECTIONS after the first production run (2026-08-17). Re-running this replaces the
+-- CURATED rows wholesale, so it is also the cleanup.
+--
+-- 1. EMPTY-STRING URIs. Some curated rows carry PREDICATE_URI = '' rather than NULL. An empty
+--    string passes an `IS NOT NULL` test and then matches nothing: a consumer filtering on the URI
+--    never finds the row, and a consumer checking for NULL does not either. Every URI column is now
+--    NULLIF(TRIM(...), '').
+--
+-- 2. CONTROL-ARM MARKERS. A statement whose OBJECT is a baseline marker is not a relation between
+--    two concepts -- it is how a control arm is flagged. `OBI_0000220 reference subject role`
+--    appeared as the object of 10 curated statements and IS grounded, so a gate seeded with an
+--    experiment's term URIs would reach it and conclude that every disease which ever had a control
+--    arm was implied by having one. The lists below are BaselineSelection's, copied here because
+--    this file runs outside the application; the Java harvest reads them from the class itself so
+--    there is one list and not two.
+
 -- Expect roughly: 10,040 datasets carry a GENO_0000222 has_genotype statement, 1,829 an
 -- RO_0002573 has modifier, 469 a TGEMO_00171 induced by. Row counts run higher than dataset counts,
 -- since a dataset may carry several.
@@ -41,15 +58,15 @@ INSERT INTO ANNOTATION_RELATION (SUBJECT_VALUE, SUBJECT_VALUE_URI, SUBJECT_CATEG
                                  TAXON_FK, BASIS, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`,
                                  ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, GENERATED_AT)
 SELECT C.`VALUE`,
-       C.VALUE_URI,
+       NULLIF(TRIM(C.VALUE_URI), ''),
        -- The category belongs to the SUBJECT. A statement has one category, and inventing one for
        -- the object would assert something the curator did not -- hence no OBJECT_CATEGORY here.
        C.CATEGORY,
-       C.CATEGORY_URI,
+       NULLIF(TRIM(C.CATEGORY_URI), ''),
        C.PREDICATE,
-       C.PREDICATE_URI,
+       NULLIF(TRIM(C.PREDICATE_URI), ''),
        C.OBJECT,
-       C.OBJECT_URI,
+       NULLIF(TRIM(C.OBJECT_URI), ''),
        -- Taxon is part of the grain: it is what decides whether a genotype MODELS a disease or HAS
        -- it. Null where the experiment has none, which reads as the weaker claim.
        I.TAXON_FK,
@@ -65,8 +82,20 @@ FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC C
          JOIN INVESTIGATION I ON I.ID = C.EXPRESSION_EXPERIMENT_FK
 -- Predicate-agnostic on purpose. An allow-list would need maintaining in step with the curators'
 -- vocabulary and would silently drop whatever was added to it last.
-WHERE C.OBJECT IS NOT NULL
-  AND (C.PREDICATE IS NOT NULL OR C.PREDICATE_URI IS NOT NULL);
+WHERE NULLIF(TRIM(C.OBJECT), '') IS NOT NULL
+  AND (NULLIF(TRIM(C.PREDICATE), '') IS NOT NULL OR NULLIF(TRIM(C.PREDICATE_URI), '') IS NOT NULL)
+  AND C.OBJECT NOT IN (
+      'baseline participant role','baseline','control diet','control group','control',
+      'initial time point','normal','placebo','reference subject role','reference substance role',
+      'to be treated with placebo role','untreated','wild type control','wild type genotype',
+      'wild type','control role','negative control role','normal control group','normal littermate',
+      'normal littermates')
+  AND (C.OBJECT_URI IS NULL OR C.OBJECT_URI NOT IN (
+      'http://purl.obolibrary.org/obo/OBI_0000025','http://purl.obolibrary.org/obo/OBI_0000143',
+      'http://purl.obolibrary.org/obo/OBI_0000220','http://purl.obolibrary.org/obo/OBI_0000825',
+      'http://purl.obolibrary.org/obo/OBI_0100046','http://www.ebi.ac.uk/efo/EFO_0001461',
+      'http://www.ebi.ac.uk/efo/EFO_0001674','http://www.ebi.ac.uk/efo/EFO_0004425',
+      'http://www.ebi.ac.uk/efo/EFO_0005168'));
 
 -- Second clause. A statement can carry two predicate/object pairs and the second is not decoration:
 -- a dose or a duration rides there, as does the second half of anything expressed as two clauses.
@@ -75,13 +104,13 @@ INSERT INTO ANNOTATION_RELATION (SUBJECT_VALUE, SUBJECT_VALUE_URI, SUBJECT_CATEG
                                  TAXON_FK, BASIS, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`,
                                  ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, GENERATED_AT)
 SELECT C.`VALUE`,
-       C.VALUE_URI,
+       NULLIF(TRIM(C.VALUE_URI), ''),
        C.CATEGORY,
-       C.CATEGORY_URI,
+       NULLIF(TRIM(C.CATEGORY_URI), ''),
        C.SECOND_PREDICATE,
-       C.SECOND_PREDICATE_URI,
+       NULLIF(TRIM(C.SECOND_PREDICATE_URI), ''),
        C.SECOND_OBJECT,
-       C.SECOND_OBJECT_URI,
+       NULLIF(TRIM(C.SECOND_OBJECT_URI), ''),
        I.TAXON_FK,
        'CURATED',
        C.EVIDENCE_CODE,
@@ -91,8 +120,20 @@ SELECT C.`VALUE`,
        NOW(3)
 FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC C
          JOIN INVESTIGATION I ON I.ID = C.EXPRESSION_EXPERIMENT_FK
-WHERE C.SECOND_OBJECT IS NOT NULL
-  AND (C.SECOND_PREDICATE IS NOT NULL OR C.SECOND_PREDICATE_URI IS NOT NULL);
+WHERE NULLIF(TRIM(C.SECOND_OBJECT), '') IS NOT NULL
+  AND (NULLIF(TRIM(C.SECOND_PREDICATE), '') IS NOT NULL OR NULLIF(TRIM(C.SECOND_PREDICATE_URI), '') IS NOT NULL)
+  AND C.SECOND_OBJECT NOT IN (
+      'baseline participant role','baseline','control diet','control group','control',
+      'initial time point','normal','placebo','reference subject role','reference substance role',
+      'to be treated with placebo role','untreated','wild type control','wild type genotype',
+      'wild type','control role','negative control role','normal control group','normal littermate',
+      'normal littermates')
+  AND (C.SECOND_OBJECT_URI IS NULL OR C.SECOND_OBJECT_URI NOT IN (
+      'http://purl.obolibrary.org/obo/OBI_0000025','http://purl.obolibrary.org/obo/OBI_0000143',
+      'http://purl.obolibrary.org/obo/OBI_0000220','http://purl.obolibrary.org/obo/OBI_0000825',
+      'http://purl.obolibrary.org/obo/OBI_0100046','http://www.ebi.ac.uk/efo/EFO_0001461',
+      'http://www.ebi.ac.uk/efo/EFO_0001674','http://www.ebi.ac.uk/efo/EFO_0004425',
+      'http://www.ebi.ac.uk/efo/EFO_0005168'));
 
 -- What landed, by predicate. Sanity: has_genotype should dominate.
 SELECT PREDICATE,
@@ -117,3 +158,19 @@ WHERE BASIS = 'CURATED'
 GROUP BY SUBJECT_VALUE, PREDICATE, OBJECT_VALUE
 ORDER BY datasets DESC
 LIMIT 40;
+
+-- 🛑 GENERIC OBJECTS. An object related to MANY distinct subjects identifies nothing, and a gate
+-- seeded with it implies all of them. `Heterozygous` (GENO_0000135) and `Homozygous negative`
+-- (TGEMO_00001) reach every disease that ever had such an arm; `surgical manipulation` reaches every
+-- surgically induced one. This is the object-side of the same argument that says support is not
+-- evidence -- breadth is what separates `MPTP` from `surgical manipulation`, and it is measurable
+-- rather than a list somebody has to maintain.
+SELECT OBJECT_VALUE,
+       OBJECT_VALUE_URI,
+       COUNT(DISTINCT SUBJECT_VALUE)            AS distinct_subjects,
+       COUNT(DISTINCT EXPRESSION_EXPERIMENT_FK) AS datasets
+FROM ANNOTATION_RELATION
+WHERE BASIS = 'CURATED'
+GROUP BY OBJECT_VALUE, OBJECT_VALUE_URI
+ORDER BY distinct_subjects DESC
+LIMIT 30;

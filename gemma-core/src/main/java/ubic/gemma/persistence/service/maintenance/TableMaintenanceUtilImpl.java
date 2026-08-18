@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.mail.MailEngine;
 import ubic.gemma.core.ontology.relation.OntologyRelationProducer;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -463,13 +464,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * subject. Inventing a category for the object would assert something the curator did not.</p>
      */
     private static final String AR_STATEMENT_QUERY =
-            "select C.`VALUE`, C.VALUE_URI, C.CATEGORY, C.CATEGORY_URI, "
-                    + "C.PREDICATE, C.PREDICATE_URI, C.OBJECT, C.OBJECT_URI, "
+            "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
+                    + "C.PREDICATE, nullif(trim(C.PREDICATE_URI), ''), C.OBJECT, nullif(trim(C.OBJECT_URI), ''), "
                     + "I.TAXON_FK, 'CURATED', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
                     + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
                     + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
                     + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
-                    + "where C.OBJECT is not null and (C.PREDICATE is not null or C.PREDICATE_URI is not null) "
+                    + "where nullif(trim(C.OBJECT), '') is not null and (nullif(trim(C.PREDICATE), '') is not null or nullif(trim(C.PREDICATE_URI), '') is not null) and C.OBJECT not in (:baselineValues) and (C.OBJECT_URI is null or C.OBJECT_URI not in (:baselineUris)) "
                     + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
 
     /**
@@ -480,13 +481,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * two clauses. Dropping it would lose a triple that is as asserted as the first one.</p>
      */
     private static final String AR_SECOND_STATEMENT_QUERY =
-            "select C.`VALUE`, C.VALUE_URI, C.CATEGORY, C.CATEGORY_URI, "
-                    + "C.SECOND_PREDICATE, C.SECOND_PREDICATE_URI, C.SECOND_OBJECT, C.SECOND_OBJECT_URI, "
+            "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
+                    + "C.SECOND_PREDICATE, nullif(trim(C.SECOND_PREDICATE_URI), ''), C.SECOND_OBJECT, nullif(trim(C.SECOND_OBJECT_URI), ''), "
                     + "I.TAXON_FK, 'CURATED', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
                     + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
                     + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
                     + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
-                    + "where C.SECOND_OBJECT is not null and (C.SECOND_PREDICATE is not null or C.SECOND_PREDICATE_URI is not null) "
+                    + "where nullif(trim(C.SECOND_OBJECT), '') is not null and (nullif(trim(C.SECOND_PREDICATE), '') is not null or nullif(trim(C.SECOND_PREDICATE_URI), '') is not null) and C.SECOND_OBJECT not in (:baselineValues) and (C.SECOND_OBJECT_URI is null or C.SECOND_OBJECT_URI not in (:baselineUris)) "
                     + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
 
     private static final String AR_INSERT_COLUMNS =
@@ -524,6 +525,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
                     .setParameter( "eeId", ee != null ? ee.getId() : null )
                     .setParameter( "now", now )
+                    .setParameterList( "baselineValues", BaselineSelection.getControlGroupTerms() )
+                    .setParameterList( "baselineUris", BaselineSelection.getControlGroupUris() )
                     .executeUpdate();
         }
         log.info( String.format( "Done updating CURATED ANNOTATION_RELATION entries%s; %d removed, %d written in %d ms.",

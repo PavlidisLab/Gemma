@@ -231,6 +231,46 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
                 .satisfies( r -> assertThat( r.getTaxonCommonName() ).isEqualTo( "human" ) );
     }
 
+    /**
+     * 🛑 A statement whose object is a control-arm marker is not a relation between two concepts.
+     *
+     * <p>Found live: {@code OBI_0000220 reference subject role} appeared as the object of 10 curated
+     * statements, and it is grounded, so a gate seeded with an experiment's term URIs would reach it
+     * and conclude that every disease which ever had a control arm was implied by having one. The
+     * recognition is {@code BaselineSelection}'s, the same list that picks a DEA baseline, so there is
+     * one list and not two.</p>
+     */
+    @Test
+    public void testAControlArmMarkerIsNotHarvestedAsARelation() {
+        givenEe2cStatement( "Alzheimer disease", "http://purl.obolibrary.org/obo/MONDO_0004975",
+                "has role", "http://purl.obolibrary.org/obo/RO_0000087",
+                "reference subject role", "http://purl.obolibrary.org/obo/OBI_0000220" );
+
+        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isZero();
+    }
+
+    /**
+     * An empty-string URI is not a URI, and stored as one it is unreachable.
+     *
+     * <p>Found live: rows arrived with {@code PREDICATE_URI = ''} rather than null, which passes an
+     * {@code is not null} test and then matches nothing — a consumer filtering on the URI never finds
+     * it, and a consumer checking for null does not either.</p>
+     */
+    @Test
+    public void testAnEmptyStringUriIsStoredAsNull() {
+        givenEe2cStatement( "asthma", "", "induced by", "", "ovalbumin", "" );
+
+        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 1 );
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValues( Collections.singleton( "asthma" ) ) ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getSubjectValueUri() ).isNull();
+                    assertThat( r.getPredicateUri() ).isNull();
+                    assertThat( r.getObjectValueUri() ).isNull();
+                } );
+    }
+
     private void givenEe2cStatement( String subject, String subjectUri, String predicate, String predicateUri,
             String object, String objectUri ) {
         persistEe2cRow( newStatement( subject, subjectUri, predicate, predicateUri, object, objectUri ) );

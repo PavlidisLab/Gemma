@@ -233,12 +233,14 @@ def relation_cases() -> list[Case]:
       Compare it against the same query with the flag off; the difference IS the feature's cost, and
       it is the number that decides whether the browse checkboxes can turn this on.
     """
-    leigh = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FMONDO_0009723"
+    # Chosen because it HAS curated relations. A seed with none times an empty result and
+    # reports it as a win.
+    alz = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FMONDO_0004975"
     return [
         Case("relations", "implies (gate, asserted)",
-             f"/rest/v2/annotations/relations/implies?from={leigh}&basis=CURATED,ONTOLOGY&limit=100"),
+             f"/rest/v2/annotations/relations/implies?from={alz}&basis=CURATED,ONTOLOGY&limit=100"),
         Case("relations", "by subject (disease)",
-             f"/rest/v2/annotations/relations?subject={leigh}&limit=50"),
+             f"/rest/v2/annotations/relations?subject={alz}&limit=50"),
         # Background strain: the specificity denominator has to count every experiment carrying the
         # value, and this value is carried by a great many of them.
         Case("relations", "background value C57BL/6J",
@@ -247,11 +249,11 @@ def relation_cases() -> list[Case]:
              "/rest/v2/annotations/relations?dataset=27325&limit=50"),
         # The A/B that matters. Same query twice; the delta is what widening costs.
         Case("relations", "search, widening OFF",
-             "/rest/v2/search?query=Leigh+syndrome"
+             "/rest/v2/search?query=Alzheimer+disease"
              "&resultTypes=ubic.gemma.model.expression.experiment.ExpressionExperiment&limit=20",
              expected_nonzero=False),
         Case("relations", "search, widening ON",
-             "/rest/v2/search?query=Leigh+syndrome"
+             "/rest/v2/search?query=Alzheimer+disease"
              "&resultTypes=ubic.gemma.model.expression.experiment.ExpressionExperiment&limit=20&inferRelations=true",
              expected_nonzero=False),
     ]

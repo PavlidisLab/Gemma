@@ -110,6 +110,28 @@ public class BaselineSelection {
     }
 
     /**
+     * The control-group terms and URIs themselves, for callers that have to recognise a baseline in
+     * SQL rather than over loaded entities.
+     *
+     * <p>Exposed rather than copied so there is one list. The relation harvest needs it because a
+     * curated statement whose object is a control-arm marker is not a relation between two concepts
+     * — {@code OBI_0000220 reference subject role} left in makes every disease that ever had a
+     * control arm look implied by it.</p>
+     *
+     * <p>Both sets are already unmodifiable.</p>
+     */
+    public static Set<String> getControlGroupTerms() {
+        return controlGroupTerms;
+    }
+
+    /**
+     * @see #getControlGroupTerms()
+     */
+    public static Set<String> getControlGroupUris() {
+        return controlGroupUris;
+    }
+
+    /**
      * Check if a given factor value indicates a baseline condition.
      */
     public static boolean isBaselineCondition( FactorValue factorValue ) {
