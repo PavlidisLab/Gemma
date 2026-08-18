@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
@@ -67,7 +68,38 @@ class CachedSource {
         log.info( "Downloading {} from {} to {} ...", name, url, cache );
         try ( InputStream in = URI.create( url ).toURL().openStream() ) {
             Files.copy( in, cache.toPath(), StandardCopyOption.REPLACE_EXISTING );
+        } catch ( FileSystemException e ) {
+            // 🛑 The cache is somewhere this process may not write, and that is a normal way to run
+            // rather than a broken one: gemma-cli mounts the ontology volume `:ro` on purpose, so a
+            // producer whose artifact happens not to be seeded yet cannot cache it. On 2026-08-18
+            // that turned into "MGI wrote 0 relation rows" -- diagnosable only from a stack trace,
+            // and indistinguishable at the table from MGI having nothing to say.
+            //
+            // Not being able to KEEP the file is no reason not to READ it. Fall through to the same
+            // direct stream used when no cache dir is configured at all; the cost is re-fetching on
+            // the next run, which for a report measured in megabytes is the cheaper failure.
+            //
+            // Narrow on purpose: FileSystemException is the filesystem refusing (read-only mount,
+            // permissions, quota). A download that fails on the network throws plain IOException and
+            // still propagates, because retrying that as a stream would only fail again, less clearly.
+            log.warn( "Could not cache {} at {} ({}); streaming it directly from {} instead."
+                    + " It will be re-fetched on every run until that path is writable.",
+                    name, cache, e.getMessage(), url );
+            deletePartial( cache );
+            return URI.create( url ).toURL().openStream();
         }
         return new FileInputStream( cache );
+    }
+
+    /**
+     * A failed copy can leave a truncated file behind, and a truncated file is worse than none: the
+     * length check above would accept it on the next run and hand a producer half a report.
+     */
+    private static void deletePartial( File cache ) {
+        try {
+            Files.deleteIfExists( cache.toPath() );
+        } catch ( IOException suppressed ) {
+            log.debug( "Could not remove the partial cache file at {}.", cache, suppressed );
+        }
     }
 }

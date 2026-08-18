@@ -58,6 +58,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
@@ -615,21 +617,34 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         // failing download must not cost the other its rows -- and a failure leaves the existing rows
         // in place rather than emptying them, since rebuilding from nothing is indistinguishable from
         // the source having retracted everything it ever said.
+        List<String> failed = new ArrayList<>();
         try {
             written += mgiRelationProducer.produce();
         } catch ( java.io.IOException e ) {
             log.error( "Could not read MGI's reports; its EXTERNAL relation rows are left as they are.", e );
+            failed.add( "MGI: " + e.getMessage() );
         }
         if ( cellosaurusRelationProducer != null ) {
             try {
                 written += cellosaurusRelationProducer.produce();
             } catch ( java.io.IOException e ) {
                 log.error( "Could not read Cellosaurus; its EXTERNAL relation rows are left as they are.", e );
+                failed.add( "Cellosaurus: " + e.getMessage() );
             }
         }
         evictAnnotationRelationQueryCache();
         log.info( String.format( "Done updating EXTERNAL ANNOTATION_RELATION entries; %d written in %d ms.",
                 written, timer.getTime() ) );
+        // 🛑 Both sources are attempted before this throws, which is the point -- isolation is about
+        // one source not costing the other its rows, and it says nothing about what the CALLER should
+        // be told. On 2026-08-18 MGI failed on a read-only cache path and the command logged
+        // "Wrote 243212 EXTERNAL relation rows" and exited 0. Half the job had not run, and the only
+        // way to find out was to go and count the table.
+        if ( !failed.isEmpty() ) {
+            throw new IllegalStateException( "EXTERNAL relation update finished with "
+                    + failed.size() + " of its sources failing, and their existing rows untouched: "
+                    + String.join( "; ", failed ) + ". " + written + " rows were written by the rest." );
+        }
         return written;
     }
 
