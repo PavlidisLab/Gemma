@@ -28,6 +28,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationConflictException;
 import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -317,10 +318,22 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
                         geoEvidence( accession, geoIds.get( i ), false ), null, GOEvidenceCode.TAS, null, null ) );
             }
         }
-        eeService.updatePublications( ee,
-                new PublicationAssertion( primaryRef, PublicationAssociationSource.GEO_SUBMITTER_LINK,
-                        geoEvidence( accession, geoIds.get( 0 ), true ), null, GOEvidenceCode.TAS, null, null ),
-                other, Collections.emptyList() );
+        try {
+            eeService.updatePublications( ee,
+                    new PublicationAssertion( primaryRef, PublicationAssociationSource.GEO_SUBMITTER_LINK,
+                            geoEvidence( accession, geoIds.get( 0 ), true ), null, GOEvidenceCode.TAS, null, null ),
+                    other, Collections.emptyList() );
+        } catch ( PublicationAssociationConflictException e ) {
+            // ✅ The refusal the design exists to produce, and the reason this command can be pointed
+            // at the whole corpus. GSE227854 is the case: it has no primary, GEO's !Series_pubmed_id
+            // is the wrong one of the submitter's own two NAR papers, and --fill would otherwise
+            // write that error in. A standing curator rejection outranks GEO_SUBMITTER_LINK and stops
+            // it here rather than leaving it to be tidied up afterwards.
+            record( ee, accession, "fill_refused_by_standing_rejection", null, join( geoIds ), null,
+                    e.getMessage() );
+            addWarningObject( ee, "GEO's publication for " + accession + " stands rejected; not added." );
+            return;
+        }
         record( ee, accession, other.isEmpty() ? "filled_primary" : "filled_primary_and_other",
                 null, join( geoIds ), "TAS",
                 "added primary " + geoIds.get( 0 )
@@ -355,16 +368,30 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
                     + " vs GEO " + join( geoIds ) );
             return;
         }
+        if ( position > 0 ) {
+            // 🛑 In GEO's list but not first: reported, NOT promoted. TAS has to mean Gemma and GEO
+            // agree on the primary, or it means nothing -- and this is precisely where the errors
+            // live. GSE227854 is the worked case: the submitter cross-linked the wrong one of their
+            // own two NAR papers, so GEO's own list contains a paper that is wrong for the dataset.
+            // Comparing Gemma to GEO cannot detect that, which is exactly why a partial agreement
+            // must stay visible instead of being certified and closed. Not a mismatch either -- GEO
+            // does list this paper -- so it gets its own outcome and a curator decides which of the
+            // two is primary.
+            record( ee, accession, "in_geo_list_but_not_first", gemmaPmid, join( geoIds ),
+                    String.valueOf( held.getEvidenceCode() ),
+                    "GEO lists " + geoIds.size() + " papers and Gemma holds #" + ( position + 1 )
+                            + "; left as " + held.getEvidenceCode() + " for a curator" );
+            addWarningObject( ee, "Primary is in GEO's list but is not GEO's first: Gemma "
+                    + gemmaPmid + " vs GEO " + join( geoIds ) );
+            return;
+        }
         publicationAssociationService.assertAccepted( ee,
                 new PublicationAssertion( primary, PublicationAssociationSource.GEO_SUBMITTER_LINK,
-                        geoEvidence( accession, geoIds.get( position ), position == 0 ), null,
+                        geoEvidence( accession, geoIds.get( 0 ), true ), null,
                         GOEvidenceCode.TAS, null, null ),
                 PublicationAssociationRole.PRIMARY );
-        record( ee, accession, position == 0 ? "promoted_iia_to_tas" : "promoted_iia_to_tas_not_geo_first",
-                gemmaPmid, join( geoIds ), "TAS",
-                geoIds.size() > 1
-                        ? "GEO lists " + geoIds.size() + " papers; Gemma holds #" + ( position + 1 )
-                        : null );
+        record( ee, accession, "promoted_iia_to_tas", gemmaPmid, join( geoIds ), "TAS",
+                geoIds.size() > 1 ? "GEO also lists " + ( geoIds.size() - 1 ) + " further paper(s)" : null );
         addSuccessObject( ee, "Verified against GEO; IIA -> TAS." );
     }
 

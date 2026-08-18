@@ -195,15 +195,12 @@ public class VerifyPublicationEvidenceCliTest extends BaseCliTest5 {
      * 🛑 GEO listing several papers is not GEO disagreeing.
      *
      * <p>GSE934 lists {@code 15802019} and {@code 15867358} — two 2005 papers from the same lab — and
-     * Gemma holds the second. GEO does link it to that series, so it is verified; only which one is
-     * called primary differs, and first-is-primary is {@code GeoConverterImpl}'s convention rather
-     * than something GEO asserts. Comparing against the first id alone reported this as a
-     * disagreement, which would have buried the real disagreements in noise. Caught on the first
-     * live run, 2026-08-18.</p>
+     * Gemma holds the second. That is not a disagreement: GEO does link the paper to the series. Nor
+     * is it agreement on the primary. It gets its own outcome and no write.</p>
      */
     @Test
     @WithMockUser
-    public void testAPaperGeoListsSecondIsStillVerified() throws Exception {
+    public void testAPaperGeoListsSecondIsReportedNotCertified() throws Exception {
         ExpressionExperiment ee = geoExperiment();
         ee.getPrimaryPublication().getPubAccession().setAccession( "15867358" );
         when( entityLocator.locateExpressionExperiment( eq( "GSE123" ), anyBoolean() ) ).thenReturn( ee );
@@ -221,8 +218,12 @@ public class VerifyPublicationEvidenceCliTest extends BaseCliTest5 {
 
         assertThat( cli ).withArguments( "-e", "GSE123", "--verify", "--paceMillis", "0" ).succeeds();
 
-        // verified, not flagged
-        verify( publicationAssociationService ).assertAccepted( any(), any(), any() );
+        // 🛑 NOT promoted. GEO does list this paper, so it is not a mismatch -- but TAS has to mean
+        // Gemma and GEO agree on the PRIMARY, and they do not. GSE227854 is why: GEO's own list can
+        // contain a paper that is wrong for the dataset (the submitter cross-linked one of their own
+        // two NAR papers), and comparing Gemma to GEO cannot detect that. Certifying a partial
+        // agreement would close the one case that most needs a person.
+        verify( publicationAssociationService, never() ).assertAccepted( any(), any(), any() );
     }
 
     /**
