@@ -175,10 +175,14 @@ public class AnnotationRelation extends AbstractIdentifiable {
     private AnnotationRelationStatus status = AnnotationRelationStatus.ASSERTED;
 
     /**
-     * Which ontology or resource asserted it — {@code CLO}, {@code MONDO}, {@code MGI_DO},
+     * Which ontology or resource asserted it — {@code CLO}, {@code MONDO}, {@code MGI},
      * {@code CELLOSAURUS} — with {@link #getSourceVersion()} alongside so a row is invalidated with
-     * the artifact it came from. Null for {@link AnnotationRelationBasis#CURATED} and
-     * {@link AnnotationRelationBasis#CORPUS}, whose source is Gemma itself.
+     * the artifact it came from.
+     *
+     * <p>{@code 'Gemma'} for {@link AnnotationRelationBasis#CURATED} and
+     * {@link AnnotationRelationBasis#CORPUS}, whose source is Gemma itself. That used to be null on
+     * the reasoning that it went without saying; it does not go without saying to anyone reading the
+     * table, and a bare NULL against 36,073 rows was the first thing anybody asked about.
      *
      * <p>Recording the version is not ceremony: several ontologies load from upstream {@code -base}
      * files and CHEBI/MONDO have slim paths, so a relation can be present in the full artifact and

@@ -164,6 +164,24 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
     }
 
     /**
+     * A curated row says who asserted it, like every other row.
+     *
+     * <p>SOURCE was null here on the reasoning that Gemma is obviously the source of its own curation.
+     * It is not obvious from the table: {@code GROUP BY SOURCE} answered with a bare NULL against
+     * 36,073 rows, and explaining what those were was the first question the column produced.</p>
+     */
+    @Test
+    public void testACuratedRowNamesGemmaAsItsSource() {
+        givenEe2cStatement( "left ventricular hypertrophy", LVH, "induced by", INDUCED_BY, "aortic banding", null );
+
+        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 1 );
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( LVH ) ) ) )
+                .singleElement()
+                .satisfies( r -> assertThat( r.getSource() ).isEqualTo( "Gemma" ) );
+    }
+
+    /**
      * An annotation with no predicate is not a relation and must not become one.
      */
     @Test

@@ -470,11 +470,17 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      *
      * <p>{@code OBJECT_CATEGORY} stays null: a statement has one category, which belongs to the
      * subject. Inventing a category for the object would assert something the curator did not.</p>
+     *
+     * <p>{@code SOURCE} is {@code 'Gemma'} rather than null. It used to be null on the reasoning that
+     * a curated row's source is Gemma itself and therefore goes without saying — but it does not go
+     * without saying to anyone reading the table. {@code GROUP BY SOURCE} returned a bare NULL for
+     * 36,073 rows and the first question anybody asked of it was what those were. A column that means
+     * "who asserted this" should answer for every row it has.</p>
      */
     private static final String AR_STATEMENT_QUERY =
             "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
                     + "C.PREDICATE, nullif(trim(C.PREDICATE_URI), ''), C.OBJECT, nullif(trim(C.OBJECT_URI), ''), "
-                    + "I.TAXON_FK, 'CURATED', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
+                    + "I.TAXON_FK, 'CURATED', 'Gemma', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
                     + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
                     + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
                     + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
@@ -494,7 +500,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private static final String AR_SECOND_STATEMENT_QUERY =
             "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
                     + "C.SECOND_PREDICATE, nullif(trim(C.SECOND_PREDICATE_URI), ''), C.SECOND_OBJECT, nullif(trim(C.SECOND_OBJECT_URI), ''), "
-                    + "I.TAXON_FK, 'CURATED', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
+                    + "I.TAXON_FK, 'CURATED', 'Gemma', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
                     + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
                     + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
                     + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
@@ -506,7 +512,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private static final String AR_INSERT_COLUMNS =
             "insert into ANNOTATION_RELATION (SUBJECT_VALUE, SUBJECT_VALUE_URI, SUBJECT_CATEGORY, SUBJECT_CATEGORY_URI, "
                     + "PREDICATE, PREDICATE_URI, OBJECT_VALUE, OBJECT_VALUE_URI, "
-                    + "TAXON_FK, BASIS, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`, "
+                    + "TAXON_FK, BASIS, SOURCE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`, "
                     + "ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, GENERATED_AT) ";
 
     @Override

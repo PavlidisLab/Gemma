@@ -70,12 +70,16 @@ SELECT COUNT(*) AS ee2c_rows_with_a_predicate
 FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC
 WHERE OBJECT IS NOT NULL AND (PREDICATE IS NOT NULL OR PREDICATE_URI IS NOT NULL);
 
+-- SOURCE is 'Gemma', not null. It was null on the reasoning that a curated row's source is Gemma
+-- itself and so goes without saying -- but it does not go without saying to anyone reading the
+-- table: `GROUP BY SOURCE` returned a bare NULL against 36,073 rows and that was the first thing
+-- anybody asked about. A column meaning "who asserted this" should answer for every row it has.
 DELETE FROM ANNOTATION_RELATION WHERE BASIS = 'CURATED';
 
 -- First clause of the statement.
 INSERT INTO ANNOTATION_RELATION (SUBJECT_VALUE, SUBJECT_VALUE_URI, SUBJECT_CATEGORY, SUBJECT_CATEGORY_URI,
                                  PREDICATE, PREDICATE_URI, OBJECT_VALUE, OBJECT_VALUE_URI,
-                                 TAXON_FK, BASIS, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`,
+                                 TAXON_FK, BASIS, SOURCE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`,
                                  ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, GENERATED_AT)
 SELECT C.`VALUE`,
        NULLIF(TRIM(C.VALUE_URI), ''),
@@ -91,6 +95,7 @@ SELECT C.`VALUE`,
        -- it. Null where the experiment has none, which reads as the weaker claim.
        I.TAXON_FK,
        'CURATED',
+       'Gemma',
        C.EVIDENCE_CODE,
        C.EXPRESSION_EXPERIMENT_FK,
        C.`LEVEL`,
@@ -133,7 +138,7 @@ WHERE NULLIF(TRIM(C.OBJECT), '') IS NOT NULL
 -- often does too, and is excluded by the same quantity filter as the first clause.)
 INSERT INTO ANNOTATION_RELATION (SUBJECT_VALUE, SUBJECT_VALUE_URI, SUBJECT_CATEGORY, SUBJECT_CATEGORY_URI,
                                  PREDICATE, PREDICATE_URI, OBJECT_VALUE, OBJECT_VALUE_URI,
-                                 TAXON_FK, BASIS, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`,
+                                 TAXON_FK, BASIS, SOURCE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`,
                                  ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, GENERATED_AT)
 SELECT C.`VALUE`,
        NULLIF(TRIM(C.VALUE_URI), ''),
@@ -145,6 +150,7 @@ SELECT C.`VALUE`,
        NULLIF(TRIM(C.SECOND_OBJECT_URI), ''),
        I.TAXON_FK,
        'CURATED',
+       'Gemma',
        C.EVIDENCE_CODE,
        C.EXPRESSION_EXPERIMENT_FK,
        C.`LEVEL`,
