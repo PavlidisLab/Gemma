@@ -509,6 +509,84 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
 
 
     /**
+     * 🛑 The curated CATEGORY is the unreliable half of the row; the subject's VOCABULARY is the
+     * reliable half.
+     *
+     * <p>uib measured the same fact twice in one corpus, 2026-08-18:
+     * {@code seizures MP_0002064 --induced by--> kainic acid} filed once as {@code Disease model} and
+     * once as {@code treatment}. Licensing on the category alone made one a disease model and the
+     * other nothing — one fact wearing two spellings of its metadata, which is the same class of
+     * defect as label-spelling fragmentation.</p>
+     *
+     * <p>{@code media EFO_0000579} is the control that stops this becoming "license everything filed
+     * as treatment": a growth condition really is a treatment condition, and LPS added to media
+     * models nothing. EFO is deliberately absent from the namespace list for exactly that reason —
+     * EFO diseases come in by their category, which is correct on those rows.</p>
+     */
+    @Test
+    public void testASubjectsVocabularyOutranksAMiscategorizedRow() {
+        String seizuresMp = "http://purl.obolibrary.org/obo/MP_0002064";
+        String treatment = "http://www.ebi.ac.uk/efo/EFO_0000727";
+
+        assertThat( RelationInferenceDirection.of( INDUCED_BY, treatment, seizuresMp ) )
+                .as( "a phenotype subject is the disease-model shape however it was filed" )
+                .isEqualTo( RelationInferenceDirection.OBJECT_IMPLIES_SUBJECT );
+        assertThat( RelationInferenceDirection.of( INDUCED_BY, DISEASE_MODEL, seizuresMp ) )
+                .as( "and the correctly-filed twin of the same fact agrees" )
+                .isEqualTo( RelationInferenceDirection.OBJECT_IMPLIES_SUBJECT );
+
+        assertThat( RelationInferenceDirection.of( INDUCED_BY, treatment,
+                "http://www.ebi.ac.uk/efo/EFO_0000579" ) )
+                .as( "a growth condition is a treatment condition and models nothing" )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
+
+        // an EFO disease still qualifies -- by its category, since EFO is not a disease namespace
+        assertThat( RelationInferenceDirection.of( INDUCED_BY, DISEASE_MODEL,
+                "http://www.ebi.ac.uk/efo/EFO_0003896" ) )
+                .isEqualTo( RelationInferenceDirection.OBJECT_IMPLIES_SUBJECT );
+    }
+
+    /**
+     * 🛑 An {@code OBJECT_IMPLIES_SUBJECT} licence resolves to {@code is model of} or
+     * {@code has disease} — a claim ABOUT DISEASE — so it may only run where the subject is one.
+     *
+     * <p>uib, 2026-08-18, from the {@code C57BL/6} chip on GSE99114:</p>
+     * <pre>
+     * strain:   C10 Congenic (A.B6chr10) --has_genotype--> C57BL/6
+     *   =&gt; C57BL/6 is model of C10 Congenic     backwards: C57BL/6 is its BACKGROUND
+     * genotype: Myrf [mouse]             --has_genotype--> C57BL/6
+     *   =&gt; C57BL/6 is model of Myrf             a strain is not a model of a gene
+     * </pre>
+     *
+     * <p>The licence assumed the pattern {@code disease model: X --has_genotype--> <genotype>}, where
+     * the specific end is the object. With a strain or a genotype as the subject the arrow simply runs
+     * the other way, and inverting it asserts something nobody said.</p>
+     *
+     * <p>These rows stay TERM_LEVEL and stay on the card — they are facts about the term. Only the
+     * claim is withdrawn. Two orthogonal filters, as designed.</p>
+     */
+    @Test
+    public void testAStrainOrGenotypeSubjectLicensesNoDiseaseClaim() {
+        String strain = "http://www.ebi.ac.uk/efo/EFO_0005135";
+        String genotype = "http://www.ebi.ac.uk/efo/EFO_0000513";
+
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE, strain, null ) )
+                .as( "a congenic line's background strain is not a model of the line" )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE, genotype, null ) )
+                .as( "a strain is not a model of a gene" )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
+
+        assertThat( RelationTopicality.of( HAS_GENOTYPE, strain, null ) )
+                .as( "still a fact about the term, so it stays on the card" )
+                .isEqualTo( RelationTopicality.TERM_LEVEL );
+
+        // the motivating case is untouched: a disease subject still licenses its inference
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE, DISEASE_MODEL, null ) )
+                .isEqualTo( RelationInferenceDirection.OBJECT_IMPLIES_SUBJECT );
+    }
+
+    /**
      * 🛑 uib, 2026-08-18: a curator's term card carried
      * {@code induced pluripotent stem cell line cell --has disease--> lower motor neuron}. A neuron is
      * not a disease and a cell line does not have one.

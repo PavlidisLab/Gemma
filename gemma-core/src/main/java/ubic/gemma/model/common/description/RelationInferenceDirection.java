@@ -146,10 +146,36 @@ public enum RelationInferenceDirection {
      */
     public static RelationInferenceDirection of( @Nullable String predicateUri,
             @Nullable String subjectCategoryUri ) {
-        if ( RelationTopicality.of( predicateUri, subjectCategoryUri ) != RelationTopicality.TERM_LEVEL ) {
+        return of( predicateUri, subjectCategoryUri, null );
+    }
+
+    /**
+     * @param subjectValueUri the subject's own URI. Needed because the claim an
+     *                        {@link #OBJECT_IMPLIES_SUBJECT} predicate licenses is a claim ABOUT
+     *                        DISEASE, so it may only run where the subject is one.
+     */
+    public static RelationInferenceDirection of( @Nullable String predicateUri,
+            @Nullable String subjectCategoryUri, @Nullable String subjectValueUri ) {
+        if ( RelationTopicality.of( predicateUri, subjectCategoryUri, subjectValueUri )
+                != RelationTopicality.TERM_LEVEL ) {
             return NEITHER;
         }
-        return byPredicate( predicateUri );
+        RelationInferenceDirection direction = byPredicate( predicateUri );
+        if ( direction == OBJECT_IMPLIES_SUBJECT
+                && !RelationTopicality.subjectIsADisease( subjectCategoryUri, subjectValueUri ) ) {
+            // 🛑 Every predicate on this side resolves to `is model of` or `has disease`, so the
+            // licence only makes sense when the SUBJECT names a disease. Where it does not, the arrow
+            // is simply pointing the other way and inverting it asserts something nobody said:
+            //   strain: C10 Congenic (A.B6chr10) --has_genotype--> C57BL/6
+            //     => C57BL/6 is model of C10 Congenic          -- backwards; C57BL/6 is its BACKGROUND
+            //   genotype: Myrf [mouse] --has_genotype--> C57BL/6
+            //     => C57BL/6 is model of Myrf                  -- a strain is not a model of a gene
+            // Both reported by uib 2026-08-18, from a curator's screen on GSE99114. Topicality keeps
+            // these rows on the card, which is right -- they are facts about the term -- and this
+            // stops them being turned into a claim.
+            return NEITHER;
+        }
+        return direction;
     }
 
     /**

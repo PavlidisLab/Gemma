@@ -210,6 +210,15 @@ public enum RelationTopicality {
      * the name alone.</p>
      */
     public static RelationTopicality of( @Nullable String predicateUri, @Nullable String subjectCategoryUri ) {
+        return of( predicateUri, subjectCategoryUri, null );
+    }
+
+    /**
+     * @param subjectValueUri the subject term's own URI, which names what it IS when the curated
+     *                        category disagrees — see {@link #denotesADiseaseOrPhenotype}
+     */
+    public static RelationTopicality of( @Nullable String predicateUri, @Nullable String subjectCategoryUri,
+            @Nullable String subjectValueUri ) {
         if ( predicateUri == null ) {
             return EXPERIMENT_LEVEL;
         }
@@ -217,11 +226,74 @@ public enum RelationTopicality {
             return TERM_LEVEL;
         }
         if ( SUBJECT_DEPENDENT.contains( predicateUri ) ) {
-            return subjectCategoryUri != null && TERM_LEVEL_SUBJECT_CATEGORIES.contains( subjectCategoryUri )
+            boolean byCategory = subjectCategoryUri != null
+                    && TERM_LEVEL_SUBJECT_CATEGORIES.contains( subjectCategoryUri );
+            return byCategory || denotesADiseaseOrPhenotype( subjectValueUri )
                     ? TERM_LEVEL
                     : EXPERIMENT_LEVEL;
         }
         return EXPERIMENT_LEVEL;
+    }
+
+    /**
+     * Identifier spaces whose terms ARE a disease or phenotype, whatever a curator filed them under.
+     *
+     * <p>🛑 <b>The curated category is the unreliable half of the row and the subject's vocabulary is
+     * the reliable half.</b> uib measured the same fact twice in one corpus, 2026-08-18:
+     * {@code seizures MP_0002064 --induced by--> kainic acid} appears once categorised
+     * {@code Disease model} and once {@code treatment}, and only the category differs. Licensing on
+     * the category alone made one of them a disease model and the other nothing — the same fact
+     * wearing two spellings of its metadata. {@code tauopathy MONDO_0005574} is filed under
+     * {@code treatment} too, and is plainly a disease.</p>
+     *
+     * <p>🛑 <b>EFO is deliberately NOT here</b>, even though it carries plenty of diseases. It also
+     * carries {@code EFO_0000579 growth condition}, which is what {@code media --induced by-->
+     * lipopolysaccharide} is — a real treatment condition and not a disease model. So EFO diseases are
+     * admitted by their CATEGORY, which is right on those rows, and the namespaces here admit the ones
+     * whose category is wrong. Either signal suffices; neither is required.</p>
+     */
+    private static final Set<String> DISEASE_LOCAL_NAME_PREFIXES = unmodifiable(
+            "MONDO_", "DOID_", "MP_", "HP_" );
+
+    /**
+     * Whether a term URI names a disease or phenotype by virtue of the vocabulary it belongs to.
+     *
+     * @see #DISEASE_LOCAL_NAME_PREFIXES
+     */
+    public static boolean denotesADiseaseOrPhenotype( @Nullable String termUri ) {
+        if ( termUri == null ) {
+            return false;
+        }
+        int cut = Math.max( termUri.lastIndexOf( '/' ), termUri.lastIndexOf( '#' ) );
+        String localName = cut >= 0 ? termUri.substring( cut + 1 ) : termUri;
+        for ( String prefix : DISEASE_LOCAL_NAME_PREFIXES ) {
+            if ( localName.startsWith( prefix ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Categories that make the subject a disease in its own right, for a predicate whose implied claim
+     * is about disease. Narrower than {@link #TERM_LEVEL_SUBJECT_CATEGORIES}, which also admits cell
+     * line, genotype and strain: those are facts worth showing on a term card and are NOT things that
+     * bear a disease.
+     */
+    private static final Set<String> DISEASE_SUBJECT_CATEGORIES = unmodifiable(
+            "http://www.ebi.ac.uk/efo/EFO_0000408",            // disease
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00101"          // disease model
+    );
+
+    /**
+     * Whether this row's subject is a disease, by either signal.
+     *
+     * @see RelationInferenceDirection
+     */
+    public static boolean subjectIsADisease( @Nullable String subjectCategoryUri,
+            @Nullable String subjectValueUri ) {
+        return ( subjectCategoryUri != null && DISEASE_SUBJECT_CATEGORIES.contains( subjectCategoryUri ) )
+                || denotesADiseaseOrPhenotype( subjectValueUri );
     }
 
     private static Set<String> unmodifiable( String... uris ) {

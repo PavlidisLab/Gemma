@@ -350,7 +350,8 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          * experiment. See {@link ubic.gemma.model.common.description.RelationTopicality}.
          */
         public ubic.gemma.model.common.description.RelationTopicality getTopicality() {
-            return ubic.gemma.model.common.description.RelationTopicality.of( predicateUri, subjectCategoryUri );
+            return ubic.gemma.model.common.description.RelationTopicality
+                    .of( predicateUri, subjectCategoryUri, subjectValueUri );
         }
 
         /**
@@ -360,7 +361,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          */
         public ubic.gemma.model.common.description.RelationInferenceDirection getInferenceDirection() {
             return ubic.gemma.model.common.description.RelationInferenceDirection
-                    .of( predicateUri, subjectCategoryUri );
+                    .of( predicateUri, subjectCategoryUri, subjectValueUri );
         }
 
         /**
