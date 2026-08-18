@@ -223,7 +223,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                     ( Long ) r[10], ( String ) r[11], ( Integer ) r[12],
                     basis, ( String ) r[14], ( String ) r[15],
                     asLong( r[16] ), asLong( r[17] ), asLong( r[18] ), asLong( r[19] ),
-                    ( Long ) r[20], total, breadth.getOrDefault( ( String ) r[6], 0L ) );
+                    ( Long ) r[20], total, breadth.getOrDefault( breadthKey( ( String ) r[6] ), 0L ) );
             if ( s.getNumberOfExperiments() < q.getMinimumSupport() && !basis.isSelfSufficient() ) {
                 continue;
             }
@@ -304,7 +304,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         Map<String, Long> breadth = findObjectBreadth( terms.stream()
                 .map( t -> t[0] ).filter( Objects::nonNull ).distinct().collect( Collectors.toList() ) );
         return terms.stream()
-                .filter( t -> breadth.getOrDefault( t[0], 0L ) <= maximumObjectBreadth )
+                .filter( t -> breadth.getOrDefault( breadthKey( t[0] ), 0L ) <= maximumObjectBreadth )
                 .collect( Collectors.toList() );
     }
 
@@ -338,6 +338,14 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
      * object, but {@code C57BL/6J} is a common annotation and a narrow object, and only the second
      * number tells a gate anything.</p>
      *
+     * <p>🛑 The engines disagree here and only one of them is production. MySQL's collation is
+     * case-insensitive, so the {@code in} clause matches case variants and the group-by would collapse
+     * them under an arbitrary spelling; H2 in {@code MODE=MYSQL} is case-SENSITIVE and does neither.
+     * Grouping on the normalized value makes the returned key deterministic on both, which is why the
+     * key is computed in SQL rather than trusted from the raw column. <b>The collation half of this
+     * cannot be covered by the H2 tests</b> — they would pass against a version that is wrong in
+     * production.</p>
+     *
      * <p>Deliberately NOT ACL-filtered. Breadth is a property of the relation set, not a count of
      * anyone's datasets, and filtering it per user would make the same relation look identifying to
      * one caller and generic to another.</p>
@@ -347,9 +355,12 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             return Collections.emptyMap();
         }
         NativeQuery<?> query = getSessionFactory().getCurrentSession().createNativeQuery(
-                        "select R.OBJECT_VALUE as V, count(distinct R.SUBJECT_VALUE) as N "
+                        "select lower(trim(R.OBJECT_VALUE)) as V, count(distinct R.SUBJECT_VALUE) as N "
                                 + "from ANNOTATION_RELATION R where R.OBJECT_VALUE in (:values) "
-                                + "group by R.OBJECT_VALUE" )
+                                // grouped on the normalized value, not the raw one: MySQL would otherwise
+                                // collapse case variants itself and hand back an arbitrary spelling,
+                                // which the Java-side lookup then misses
+                                + "group by lower(trim(R.OBJECT_VALUE))" )
                 .addScalar( "V", StandardBasicTypes.STRING )
                 .addScalar( "N", StandardBasicTypes.LONG )
                 .addSynchronizedEntityClass( AnnotationRelation.class );
@@ -357,11 +368,25 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         query.setCacheable( true );
         //noinspection unchecked
         List<Object[]> rows = ( List<Object[]> ) query.list();
+        // 🛑 Keyed case-insensitively, because MySQL's collation is. The group-by collapses case
+        // variants into ONE group and picks a representative spelling arbitrarily, so a map keyed on
+        // that spelling misses when the outer query's row spells it differently -- and the miss reads
+        // as breadth 0, i.e. maximally specific. That fails OPEN: maxObjectBreadth would keep exactly
+        // the rows whose value is dirty enough to have case variants. Seen live on
+        // `familial Alzheimer's disease` and `intermediate`.
         Map<String, Long> out = new LinkedHashMap<>();
         for ( Object[] r : rows ) {
-            out.put( ( String ) r[0], asLong( r[1] ) );
+            out.merge( breadthKey( ( String ) r[0] ), asLong( r[1] ), Long::max );
         }
         return out;
+    }
+
+    /**
+     * Normalized lookup key for {@link #findObjectBreadth}, matching how the database compared the
+     * values in the first place.
+     */
+    private static String breadthKey( @Nullable String value ) {
+        return value != null ? value.trim().toLowerCase( java.util.Locale.ROOT ) : "";
     }
 
     /**

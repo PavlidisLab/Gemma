@@ -251,6 +251,38 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     }
 
     /**
+     * Breadth counts subjects, not rows.
+     *
+     * <p>🛑 What this test CANNOT cover: the production failure was a case variant, and H2 in
+     * {@code MODE=MYSQL} is case-sensitive where production MySQL is not — so a test asserting that
+     * behaviour here passes against code that is wrong in production. The fix is therefore in SQL
+     * ({@code group by lower(trim(...))}), where both engines agree, rather than in a Java-side
+     * comparison a test could bless. Seen live as breadth 0 on {@code familial Alzheimer's disease}
+     * and {@code intermediate}, where 0 means "maximally specific" and so fails OPEN.</p>
+     */
+    @Test
+    public void testBreadthCountsDistinctSubjects() {
+        for ( String subject : new String[] { LEIGH, COMPLEX_IV, "http://purl.obolibrary.org/obo/MONDO_0033885" } ) {
+            AnnotationRelation r = attested( subject, null, AnnotationRelationBasis.CURATED, readMask() );
+            r.setObjectValue( "intermediate" );
+            annotationRelationDao.create( r );
+        }
+        AnnotationRelation narrow = attested( LEIGH, SURF1, AnnotationRelationBasis.CURATED, readMask() );
+        annotationRelationDao.create( narrow );
+
+        List<AnnotationRelationDao.RelationSummary> found = annotationRelationDao.findRelations(
+                new AnnotationRelationDao.RelationQuery().subjectValueUris( Collections.singleton( LEIGH ) ) );
+
+        assertThat( found ).hasSize( 2 );
+        assertThat( found ).filteredOn( r -> "intermediate".equals( r.getObjectValue() ) )
+                .singleElement()
+                .satisfies( r -> assertThat( r.getObjectBreadth() ).isEqualTo( 3 ) );
+        assertThat( found ).filteredOn( r -> "SURF1".equals( r.getObjectValue() ) )
+                .singleElement()
+                .satisfies( r -> assertThat( r.getObjectBreadth() ).isEqualTo( 1 ) );
+    }
+
+    /**
      * Refuse to enumerate the table. Every caller knows one end of the relation, and a query that
      * names neither is a mistake rather than a request for everything.
      */
