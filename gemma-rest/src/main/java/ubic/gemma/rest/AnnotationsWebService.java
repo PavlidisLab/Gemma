@@ -981,6 +981,13 @@ public class AnnotationsWebService {
          * object.
          */
         long objectBreadth;
+        /**
+         * How many distinct objects this SUBJECT relates to -- the mirror of {@link #objectBreadth}.
+         * High means the term is enumerating a list rather than saying something about itself: an
+         * {@code induced pluripotent stem cell line cell} naming seventeen cell lines it was derived
+         * into is a heading, not a fact about the term on the card.
+         */
+        long subjectBreadth;
         double specificity;
         @Nullable
         Long exampleDatasetId;
@@ -1053,6 +1060,7 @@ public class AnnotationsWebService {
             this.numberOfExperimentsAtBioMaterial = s.getNumberOfExperimentsAtBioMaterial();
             this.numberOfExperimentsWithSubject = s.getNumberOfExperimentsWithSubject();
             this.objectBreadth = s.getObjectBreadth();
+            this.subjectBreadth = s.getSubjectBreadth();
             this.specificity = s.getSpecificity();
             this.exampleDatasetId = s.getExampleExperimentId();
             this.corroborated = s.getBasis().isSelfSufficient();

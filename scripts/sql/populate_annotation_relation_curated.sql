@@ -100,8 +100,14 @@ SELECT C.`VALUE`,
        NOW(3)
 FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC C
          JOIN INVESTIGATION I ON I.ID = C.EXPRESSION_EXPERIMENT_FK
--- Predicate-agnostic on purpose. An allow-list would need maintaining in step with the curators'
--- vocabulary and would silently drop whatever was added to it last.
+-- Predicate-agnostic on purpose, with ONE carve-out. An allow-list would need maintaining in step
+-- with the curators' vocabulary and would silently drop whatever was added to it last. But predicates
+-- whose OBJECT is a QUANTITY relate no two concepts and are excluded: `delivered at dose` (6,039 rows,
+-- objects `10 uM` 497, `1 uM` 311, `100 nM` 142, `10 mg/kg` 67), `delivered for duration` (3,231),
+-- `sampled after` (334) and the ungrounded label `timepoint` (2) -- 9,606 of 36,073, a quarter of the
+-- harvest that no reader can use and every reader had to filter. Relation.terms.txt already says so:
+-- it opens "Terms usable for relations among CONCEPTS" and then lists three of them.
+-- The Java harvest reads this list from RelationTopicality so there is one list and not two.
 WHERE NULLIF(TRIM(C.OBJECT), '') IS NOT NULL
   AND (NULLIF(TRIM(C.PREDICATE), '') IS NOT NULL OR NULLIF(TRIM(C.PREDICATE_URI), '') IS NOT NULL)
   AND C.OBJECT NOT IN (
@@ -115,10 +121,16 @@ WHERE NULLIF(TRIM(C.OBJECT), '') IS NOT NULL
       'http://purl.obolibrary.org/obo/OBI_0000220','http://purl.obolibrary.org/obo/OBI_0000825',
       'http://purl.obolibrary.org/obo/OBI_0100046','http://www.ebi.ac.uk/efo/EFO_0001461',
       'http://www.ebi.ac.uk/efo/EFO_0001674','http://www.ebi.ac.uk/efo/EFO_0004425',
-      'http://www.ebi.ac.uk/efo/EFO_0005168'));
+      'http://www.ebi.ac.uk/efo/EFO_0005168'))
+  AND (C.PREDICATE_URI IS NULL OR C.PREDICATE_URI NOT IN (
+      'http://gemma.msl.ubc.ca/ont/TGEMO_00166','http://gemma.msl.ubc.ca/ont/TGEMO_00167',
+      'http://gemma.msl.ubc.ca/ont/TGEMO_00202'))
+  AND (C.PREDICATE IS NULL OR TRIM(C.PREDICATE) NOT IN (
+      'delivered at dose','delivered for duration','sampled after','timepoint'));
 
 -- Second clause. A statement can carry two predicate/object pairs and the second is not decoration:
--- a dose or a duration rides there, as does the second half of anything expressed as two clauses.
+-- the second half of anything a curator expressed as two clauses rides there. (A dose or a duration
+-- often does too, and is excluded by the same quantity filter as the first clause.)
 INSERT INTO ANNOTATION_RELATION (SUBJECT_VALUE, SUBJECT_VALUE_URI, SUBJECT_CATEGORY, SUBJECT_CATEGORY_URI,
                                  PREDICATE, PREDICATE_URI, OBJECT_VALUE, OBJECT_VALUE_URI,
                                  TAXON_FK, BASIS, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`,
@@ -153,7 +165,12 @@ WHERE NULLIF(TRIM(C.SECOND_OBJECT), '') IS NOT NULL
       'http://purl.obolibrary.org/obo/OBI_0000220','http://purl.obolibrary.org/obo/OBI_0000825',
       'http://purl.obolibrary.org/obo/OBI_0100046','http://www.ebi.ac.uk/efo/EFO_0001461',
       'http://www.ebi.ac.uk/efo/EFO_0001674','http://www.ebi.ac.uk/efo/EFO_0004425',
-      'http://www.ebi.ac.uk/efo/EFO_0005168'));
+      'http://www.ebi.ac.uk/efo/EFO_0005168'))
+  AND (C.SECOND_PREDICATE_URI IS NULL OR C.SECOND_PREDICATE_URI NOT IN (
+      'http://gemma.msl.ubc.ca/ont/TGEMO_00166','http://gemma.msl.ubc.ca/ont/TGEMO_00167',
+      'http://gemma.msl.ubc.ca/ont/TGEMO_00202'))
+  AND (C.SECOND_PREDICATE IS NULL OR TRIM(C.SECOND_PREDICATE) NOT IN (
+      'delivered at dose','delivered for duration','sampled after','timepoint'));
 
 -- What landed, by predicate. Sanity: has_genotype should dominate.
 SELECT PREDICATE,

@@ -176,12 +176,41 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
     /**
      * The second clause of a two-clause statement is as asserted as the first.
      *
-     * <p>A dose or a duration rides in the second predicate/object pair, and so does the second half
-     * of anything a curator expressed as two clauses. Harvesting only the first would lose a triple
-     * silently.</p>
+     * <p>The second half of anything a curator expressed as two clauses rides in the second
+     * predicate/object pair. Harvesting only the first would lose a triple silently.</p>
      */
     @Test
     public void testBothClausesOfATwoClauseStatementAreHarvested() {
+        Statement s = newStatement( "asthma", "http://purl.obolibrary.org/obo/MONDO_0004979",
+                "induced by", INDUCED_BY, "ovalbumin", null );
+        s.setSecondPredicate( "delivered to" );
+        s.setSecondPredicateUri( "http://gemma.msl.ubc.ca/ont/TGEMO_00183" );
+        s.setSecondObject( "lung" );
+        persistEe2cRow( s );
+
+        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 2 );
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( "http://purl.obolibrary.org/obo/MONDO_0004979" ) )
+                // unfiltered: `delivered to` is a per-experiment parameter and is correctly absent from
+                // the default view, but the harvest still has to have stored it
+                .termLevelOnly( false ) ) )
+                .extracting( AnnotationRelationDao.RelationSummary::getObjectValue )
+                .containsExactlyInAnyOrder( "ovalbumin", "lung" );
+    }
+
+    /**
+     * 🛑 A clause whose object is a QUANTITY is not harvested, in either clause position.
+     *
+     * <p>This test used to assert the opposite, and the old contract was the defect. {@code 10 mg/kg}
+     * is not a concept: the row cannot be read from the object end, cannot corroborate anything and
+     * cannot license an inference, so storing it only gave every reader something to filter. Measured
+     * on the corpus 2026-08-18 it was 9,606 of 36,073 curated rows — {@code delivered at dose} 6,039,
+     * {@code delivered for duration} 3,231, {@code sampled after} 334, {@code timepoint} 2.</p>
+     *
+     * <p>The first clause survives, so the statement is not lost — only the measurement half of it.</p>
+     */
+    @Test
+    public void testAQuantityValuedClauseIsNotHarvested() {
         Statement s = newStatement( "asthma", "http://purl.obolibrary.org/obo/MONDO_0004979",
                 "induced by", INDUCED_BY, "ovalbumin", null );
         s.setSecondPredicate( "delivered at dose" );
@@ -189,14 +218,24 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
         s.setSecondObject( "10 mg/kg" );
         persistEe2cRow( s );
 
-        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 2 );
+        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 1 );
         assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
                 .subjectValueUris( Collections.singleton( "http://purl.obolibrary.org/obo/MONDO_0004979" ) )
-                // unfiltered: `delivered at dose` is a per-experiment parameter and is correctly absent
-                // from the default view, but the harvest still has to have stored it
                 .termLevelOnly( false ) ) )
                 .extracting( AnnotationRelationDao.RelationSummary::getObjectValue )
-                .containsExactlyInAnyOrder( "ovalbumin", "10 mg/kg" );
+                .containsExactly( "ovalbumin" );
+    }
+
+    /**
+     * And caught by LABEL where the curator grounded nothing: {@code timepoint} appears in no
+     * vocabulary file and two curated rows use it as a bare string. A URI-only rule would miss them.
+     */
+    @Test
+    public void testAnUngroundedQuantityPredicateIsCaughtByItsLabel() {
+        givenEe2cStatement( "asthma", "http://purl.obolibrary.org/obo/MONDO_0004979",
+                "timepoint", null, "24 h", null );
+
+        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isZero();
     }
 
     /**

@@ -115,7 +115,7 @@ public enum RelationInferenceDirection {
      * deliberately absent — it covers both {@code amplified total RNA -> total RNA} and
      * {@code cell line -> donor}, and one URI cannot carry two directions.</p>
      */
-    public static RelationInferenceDirection of( @Nullable String predicateUri ) {
+    private static RelationInferenceDirection byPredicate( @Nullable String predicateUri ) {
         if ( predicateUri == null ) {
             return NEITHER;
         }
@@ -126,6 +126,45 @@ public enum RelationInferenceDirection {
             return OBJECT_IMPLIES_SUBJECT;
         }
         return NEITHER;
+    }
+
+    /**
+     * Which way the implication runs for this row.
+     *
+     * <p>🛑 <b>The predicate alone is not enough, and taking it as enough is what shipped nonsense to a
+     * curator.</b> Half these predicates do two jobs depending on what the subject is — that is the
+     * whole premise of {@link RelationTopicality} — and the two jobs do not license the same
+     * inference. {@code TGEMO_00171 induced by} on a disease is a disease model and on a cell type is a
+     * differentiation protocol; read as the former, the latter yields
+     * <i>iPSC line has disease lower motor neuron</i>. {@code GENO_0000222 has_genotype} on
+     * {@code female} is the same failure with a different predicate.</p>
+     *
+     * <p>So an {@link RelationTopicality#EXPERIMENT_LEVEL} row licenses nothing, whatever its
+     * predicate. That is one rule rather than a second subject-category list maintained beside the
+     * first, and it closes the same hole for every subject-dependent predicate at once instead of for
+     * the one that happened to be reported.</p>
+     */
+    public static RelationInferenceDirection of( @Nullable String predicateUri,
+            @Nullable String subjectCategoryUri ) {
+        if ( RelationTopicality.of( predicateUri, subjectCategoryUri ) != RelationTopicality.TERM_LEVEL ) {
+            return NEITHER;
+        }
+        return byPredicate( predicateUri );
+    }
+
+    /**
+     * Whether this predicate names an INDUCER rather than something that can bear the disease itself.
+     *
+     * <p>🛑 The taxon rule — organism models the disease, human line has it — is right for a genotype
+     * and unsatisfiable for a compound. uib measured it on one subject: {@code MPTP},
+     * {@code alpha-synuclein inclusion body} and {@code methamphetamine} were reported
+     * <i>is model of Parkinson disease</i> and {@code oxidopamine} <i>has disease Parkinson
+     * disease</i> — same relation, and the only thing that differed was which taxon the attesting
+     * experiment happened to carry. A compound is never the thing that has the disease, so for these
+     * predicates the verb is settled by the predicate and taxon is not consulted.</p>
+     */
+    public static boolean impliesAnInducer( @Nullable String predicateUri ) {
+        return "http://gemma.msl.ubc.ca/ont/TGEMO_00171".equals( predicateUri );
     }
 
     /**

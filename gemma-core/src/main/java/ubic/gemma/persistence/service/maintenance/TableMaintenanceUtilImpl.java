@@ -454,7 +454,15 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     /**
      * The harvest: every EE2C row that carries a predicate and an object is already a triple.
      *
-     * <p>Predicate-agnostic on purpose. An allow-list would have to be maintained in step with the
+     * <p>🛑 One carve-out, and only one: predicates whose object is a QUANTITY rather than a concept
+     * ({@code delivered at dose} 6,039 rows, {@code delivered for duration} 3,231,
+     * {@code sampled after} 334, {@code timepoint} 2 — 9,606 of 36,073, a quarter of the harvest).
+     * Their objects are {@code 10 uM} and {@code 10 mg/kg}: nothing can be read from the object end,
+     * corroborated, or inferred. See
+     * {@link ubic.gemma.model.common.description.RelationTopicality#getQuantityValuedPredicateUris()},
+     * which owns the list so the read side and the harvest cannot disagree about it.</p>
+     *
+     * <p>Otherwise predicate-agnostic on purpose. An allow-list would have to be maintained in step with the
      * curators\' vocabulary and would silently drop whatever was added to it last -
      * {@code GENO_0000222 has_genotype}, {@code RO_0002573 has modifier} and
      * {@code TGEMO_00171 induced by} are the three that carry volume today, but the table is general
@@ -471,14 +479,17 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
                     + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
                     + "where nullif(trim(C.OBJECT), '') is not null and (nullif(trim(C.PREDICATE), '') is not null or nullif(trim(C.PREDICATE_URI), '') is not null) and C.OBJECT not in (:baselineValues) and (C.OBJECT_URI is null or C.OBJECT_URI not in (:baselineUris)) "
+                    + "and (C.PREDICATE_URI is null or C.PREDICATE_URI not in (:quantityUris)) "
+                    + "and (C.PREDICATE is null or trim(C.PREDICATE) not in (:quantityLabels)) "
                     + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
 
     /**
      * The same harvest for the second leg of a two-clause statement.
      *
      * <p>A {@code Statement} can carry two predicate/object pairs, and the second is not decoration:
-     * a dose or a duration rides there, and so does the second half of anything a curator expressed as
-     * two clauses. Dropping it would lose a triple that is as asserted as the first one.</p>
+     * the second half of anything a curator expressed as two clauses rides there. Dropping it would
+     * lose a triple that is as asserted as the first one. (A dose or a duration often rides there too,
+     * and is excluded by the same quantity filter as the first clause.)</p>
      */
     private static final String AR_SECOND_STATEMENT_QUERY =
             "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
@@ -488,6 +499,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
                     + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
                     + "where nullif(trim(C.SECOND_OBJECT), '') is not null and (nullif(trim(C.SECOND_PREDICATE), '') is not null or nullif(trim(C.SECOND_PREDICATE_URI), '') is not null) and C.SECOND_OBJECT not in (:baselineValues) and (C.SECOND_OBJECT_URI is null or C.SECOND_OBJECT_URI not in (:baselineUris)) "
+                    + "and (C.SECOND_PREDICATE_URI is null or C.SECOND_PREDICATE_URI not in (:quantityUris)) "
+                    + "and (C.SECOND_PREDICATE is null or trim(C.SECOND_PREDICATE) not in (:quantityLabels)) "
                     + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
 
     private static final String AR_INSERT_COLUMNS =
@@ -527,6 +540,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     .setParameter( "now", now )
                     .setParameterList( "baselineValues", BaselineSelection.getControlGroupTerms() )
                     .setParameterList( "baselineUris", BaselineSelection.getControlGroupUris() )
+                    .setParameterList( "quantityUris",
+                            ubic.gemma.model.common.description.RelationTopicality.getQuantityValuedPredicateUris() )
+                    .setParameterList( "quantityLabels",
+                            ubic.gemma.model.common.description.RelationTopicality.getQuantityValuedPredicateLabels() )
                     .executeUpdate();
         }
         log.info( String.format( "Done updating CURATED ANNOTATION_RELATION entries%s; %d removed, %d written in %d ms.",

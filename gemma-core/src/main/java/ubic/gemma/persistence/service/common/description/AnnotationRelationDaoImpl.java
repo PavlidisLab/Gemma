@@ -213,6 +213,11 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                 .filter( Objects::nonNull )
                 .distinct()
                 .collect( Collectors.toList() ) );
+        Map<String, Long> subjectBreadth = findSubjectBreadth( rows.stream()
+                .map( r -> ( String ) r[0] )
+                .filter( Objects::nonNull )
+                .distinct()
+                .collect( Collectors.toList() ) );
 
         List<RelationSummary> result = new ArrayList<>( rows.size() );
         for ( Object[] r : rows ) {
@@ -227,7 +232,8 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                     ( Long ) r[10], ( String ) r[11], ( Integer ) r[12],
                     basis, ( String ) r[14], ( String ) r[15],
                     asLong( r[16] ), asLong( r[17] ), asLong( r[18] ), asLong( r[19] ),
-                    ( Long ) r[20], total, breadth.getOrDefault( breadthKey( ( String ) r[6] ), 0L ) );
+                    ( Long ) r[20], total, breadth.getOrDefault( breadthKey( ( String ) r[6] ), 0L ),
+                    subjectBreadth.getOrDefault( breadthKey( ( String ) r[0] ), 0L ) );
             if ( s.getNumberOfExperiments() < q.getMinimumSupport() && !basis.isSelfSufficient() ) {
                 continue;
             }
@@ -359,20 +365,39 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
      * one caller and generic to another.</p>
      */
     private Map<String, Long> findObjectBreadth( Collection<String> objectValues ) {
-        if ( objectValues.isEmpty() ) {
+        return findBreadth( objectValues, "OBJECT_VALUE", "SUBJECT_VALUE" );
+    }
+
+    /**
+     * Distinct objects per subject — {@link #findObjectBreadth} with the ends swapped, which is exactly
+     * what uib asked for and the reason the query below is parameterized on its columns rather than
+     * copied. Two near-identical native queries would be two places for the case-collation trap to be
+     * fixed in, and it would get fixed in one.
+     */
+    private Map<String, Long> findSubjectBreadth( Collection<String> subjectValues ) {
+        return findBreadth( subjectValues, "SUBJECT_VALUE", "OBJECT_VALUE" );
+    }
+
+    /**
+     * @param keyColumn   the end being asked about; the values passed in are its values
+     * @param countColumn the other end, counted distinctly. Both are literals from this class, never
+     *                    caller input.
+     */
+    private Map<String, Long> findBreadth( Collection<String> values, String keyColumn, String countColumn ) {
+        if ( values.isEmpty() ) {
             return Collections.emptyMap();
         }
         NativeQuery<?> query = getSessionFactory().getCurrentSession().createNativeQuery(
-                        "select lower(trim(R.OBJECT_VALUE)) as V, count(distinct R.SUBJECT_VALUE) as N "
-                                + "from ANNOTATION_RELATION R where R.OBJECT_VALUE in (:values) "
+                        "select lower(trim(R." + keyColumn + ")) as V, count(distinct R." + countColumn + ") as N "
+                                + "from ANNOTATION_RELATION R where R." + keyColumn + " in (:values) "
                                 // grouped on the normalized value, not the raw one: MySQL would otherwise
                                 // collapse case variants itself and hand back an arbitrary spelling,
                                 // which the Java-side lookup then misses
-                                + "group by lower(trim(R.OBJECT_VALUE))" )
+                                + "group by lower(trim(R." + keyColumn + "))" )
                 .addScalar( "V", StandardBasicTypes.STRING )
                 .addScalar( "N", StandardBasicTypes.LONG )
                 .addSynchronizedEntityClass( AnnotationRelation.class );
-        query.setParameterList( "values", optimizeParameterList( objectValues ) );
+        query.setParameterList( "values", optimizeParameterList( values ) );
         query.setCacheable( true );
         //noinspection unchecked
         List<Object[]> rows = ( List<Object[]> ) query.list();

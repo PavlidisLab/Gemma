@@ -20,6 +20,7 @@ import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.description.AnnotationRelation;
 import ubic.gemma.model.common.description.AnnotationRelationBasis;
 import ubic.gemma.model.common.description.RelationInferenceDirection;
+import ubic.gemma.model.common.description.RelationTopicality;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -57,6 +58,12 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     private static final String COMPLEX_IV = "http://purl.obolibrary.org/obo/MONDO_0700250";
     private static final String SURF1 = "http://purl.org/commons/record/ncbi_gene/6834";
     private static final String HAS_GENOTYPE = "http://purl.obolibrary.org/obo/GENO_0000222";
+    private static final String INDUCED_BY = "http://gemma.msl.ubc.ca/ont/TGEMO_00171";
+    private static final String DISEASE_MODEL = "http://gemma.msl.ubc.ca/ont/TGEMO_00101";
+    private static final String CELL_TYPE = "http://www.ebi.ac.uk/efo/EFO_0000324";
+    private static final String MOTOR_NEURON = "http://purl.obolibrary.org/obo/CL_0011001";
+    private static final String IPSC_LINE = "http://purl.obolibrary.org/obo/CLO_0037279";
+    private static final String OXIDOPAMINE = "http://purl.obolibrary.org/obo/CHEBI_78741";
 
     @Autowired
     private AnnotationRelationDao annotationRelationDao;
@@ -355,26 +362,38 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
      */
     @Test
     public void testTheImplicationRunsOnlyOneWayAndTheWayDependsOnThePredicate() {
-        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE ) )
+        String diseaseModel = "http://gemma.msl.ubc.ca/ont/TGEMO_00101";
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE, diseaseModel ) )
                 .isEqualTo( RelationInferenceDirection.OBJECT_IMPLIES_SUBJECT );
-        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE ).licenses( false ) )
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE, diseaseModel ).licenses( false ) )
                 .as( "APP/PS1, the object, implies the disease" ).isTrue();
-        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE ).licenses( true ) )
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE, diseaseModel ).licenses( true ) )
                 .as( "the disease must NOT imply the genotype" ).isFalse();
 
         String derivesFromPatient = "http://purl.obolibrary.org/obo/CLO_0000015";
-        assertThat( RelationInferenceDirection.of( derivesFromPatient ) )
+        assertThat( RelationInferenceDirection.of( derivesFromPatient, diseaseModel ) )
                 .isEqualTo( RelationInferenceDirection.SUBJECT_IMPLIES_OBJECT );
-        assertThat( RelationInferenceDirection.of( derivesFromPatient ).licenses( true ) )
+        assertThat( RelationInferenceDirection.of( derivesFromPatient, diseaseModel ).licenses( true ) )
                 .as( "MCF7, the subject, implies its disease" ).isTrue();
-        assertThat( RelationInferenceDirection.of( derivesFromPatient ).licenses( false ) )
+        assertThat( RelationInferenceDirection.of( derivesFromPatient, diseaseModel ).licenses( false ) )
                 .as( "the disease must NOT imply the cell line" ).isFalse();
 
         // an unclassified predicate licenses nothing: a suppression must never rest on a relation
         // nobody has reasoned about
-        assertThat( RelationInferenceDirection.of( "http://purl.obolibrary.org/obo/RO_0001000" ) )
+        assertThat( RelationInferenceDirection.of( "http://purl.obolibrary.org/obo/RO_0001000", diseaseModel ) )
                 .isEqualTo( RelationInferenceDirection.NEITHER );
-        assertThat( RelationInferenceDirection.of( null ) ).isEqualTo( RelationInferenceDirection.NEITHER );
+        assertThat( RelationInferenceDirection.of( null, diseaseModel ) )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
+
+        // 🛑 and the predicate alone does not decide. has_genotype on a sample descriptor is a
+        // statement about one experiment's samples, so it licenses nothing -- the same predicate that
+        // licenses an inference two lines above.
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE, "http://purl.obolibrary.org/obo/PATO_0000047" ) )
+                .as( "has_genotype on `female` implies nothing" )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
+        assertThat( RelationInferenceDirection.of( HAS_GENOTYPE, null ) )
+                .as( "an unknown subject category is not a licence" )
+                .isEqualTo( RelationInferenceDirection.NEITHER );
     }
 
     /**
@@ -485,6 +504,107 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
         r.setTaxon( taxon );
         r.setBasis( basis );
         r.setGeneratedAt( new Date() );
+        return r;
+    }
+
+
+    /**
+     * 🛑 uib, 2026-08-18: a curator's term card carried
+     * {@code induced pluripotent stem cell line cell --has disease--> lower motor neuron}. A neuron is
+     * not a disease and a cell line does not have one.
+     *
+     * <p>The stored row was right — {@code lower motor neuron --induced by--> iPSC line} is a
+     * differentiation protocol, one of the commonest things curated here. What was wrong was reading
+     * {@code induced by} as though it always meant the disease-model sense it carries on
+     * {@code Parkinson disease --induced by--> MPTP}. The subject's category is what separates them,
+     * and the inference now consults it.</p>
+     *
+     * <p>uib could not filter this out themselves: {@code objectCategory} is null on CURATED rows by
+     * construction, so {@code has disease -> neuron} and {@code has disease -> glioblastoma} are
+     * indistinguishable to a client. It had to be fixed here or it stayed on screen.</p>
+     */
+    @Test
+    public void testInducedByOnACellTypeSubjectLicensesNothing() {
+        annotationRelationDao.create( inducedBy( MOTOR_NEURON, IPSC_LINE, "cell type", CELL_TYPE ) );
+
+        // it does not reach a default reader at all, which is where uib's card gets its rows...
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( MOTOR_NEURON ) ) ) ).isEmpty();
+
+        // ...and asked for explicitly, it is still there and still licenses nothing. Both halves
+        // matter: the row is real curation and stays in the table, and no reader may infer from it.
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( MOTOR_NEURON ) )
+                .termLevelOnly( false ) ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getTopicality() ).isEqualTo( RelationTopicality.EXPERIMENT_LEVEL );
+                    assertThat( r.getInferenceDirection() ).isEqualTo( RelationInferenceDirection.NEITHER );
+                    assertThat( r.getImpliedSubjectUri() ).as( "no claim to phrase" ).isNull();
+                    assertThat( r.getImpliedPredicate() ).isNull();
+                } );
+
+        // ...and the disease sense of the SAME predicate still licenses its inference
+        annotationRelationDao.create( inducedBy( LEIGH, OXIDOPAMINE, "Disease model", DISEASE_MODEL ) );
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( LEIGH ) ) ) )
+                .singleElement()
+                .satisfies( r -> assertThat( r.getInferenceDirection() )
+                        .isEqualTo( RelationInferenceDirection.OBJECT_IMPLIES_SUBJECT ) );
+    }
+
+    /**
+     * 🛑 An inducer is never handed the disease, whatever the taxon.
+     *
+     * <p>uib measured four {@code induced by} rows on one subject: {@code MPTP},
+     * {@code alpha-synuclein inclusion body} and {@code methamphetamine} came back
+     * <i>is model of Parkinson disease</i> and {@code oxidopamine} came back <i>has disease Parkinson
+     * disease</i>. The only thing that differed was which taxon the attesting experiment carried.</p>
+     *
+     * <p>"A mouse carrying APP/PS1 models the disease; a human line carrying LRRK2 G2019S has it" is
+     * the right rule for an organism or a line and unsatisfiable for a compound. The fixture taxon here
+     * is human, so the taxon rule alone would say {@code has disease}.</p>
+     */
+    @Test
+    public void testAnInducerIsNeverHandedTheDiseaseEvenForAHumanExperiment() {
+        annotationRelationDao.create( inducedBy( LEIGH, OXIDOPAMINE, "Disease model", DISEASE_MODEL ) );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( LEIGH ) ) ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getTaxonNcbiId() ).as( "the fixture taxon is human" ).isEqualTo( 9606 );
+                    assertThat( r.getImpliedSubjectUri() ).isEqualTo( OXIDOPAMINE );
+                    assertThat( r.getImpliedPredicate() ).isEqualTo( "is model of" );
+                } );
+    }
+
+    /**
+     * A predicate whose object is a quantity does not relate two concepts, so the harvest does not
+     * store it at all — 9,606 of 36,073 curated rows, whose objects are {@code 10 uM} and
+     * {@code 10 mg/kg}. Caught by URI, and by label for the rows nobody grounded.
+     */
+    @Test
+    public void testAQuantityValuedPredicateIsNotARelationBetweenConcepts() {
+        assertThat( RelationTopicality.isQuantityValued(
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", "delivered at dose" ) ).isTrue();
+        assertThat( RelationTopicality.isQuantityValued( null, "timepoint" ) )
+                .as( "two curated rows use it as a bare label, with no URI to match on" ).isTrue();
+        assertThat( RelationTopicality.isQuantityValued( HAS_GENOTYPE, "has_genotype" ) ).isFalse();
+        assertThat( RelationTopicality.isQuantityValued( null, null ) ).isFalse();
+    }
+
+    /**
+     * An {@code induced by} row with the subject category the caller cares about — the predicate whose
+     * meaning that category decides.
+     */
+    private AnnotationRelation inducedBy( String subjectUri, String objectUri, String category,
+            String categoryUri ) {
+        AnnotationRelation r = attested( subjectUri, objectUri, AnnotationRelationBasis.CURATED, readMask() );
+        r.setSubjectCategory( category );
+        r.setSubjectCategoryUri( categoryUri );
+        r.setPredicate( "induced by" );
+        r.setPredicateUri( INDUCED_BY );
         return r;
     }
 

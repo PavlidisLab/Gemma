@@ -136,6 +136,22 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          */
         private final long objectBreadth;
 
+        /**
+         * Distinct objects this relation's SUBJECT relates to under the same predicate — the mirror of
+         * {@link #objectBreadth}, and it answers the question at the other end of the arrow.
+         *
+         * <p>A generic class enumerates its members exactly the way a disease enumerates its models:
+         * {@code induced pluripotent stem cell line cell} carries 17 rows of
+         * {@code derived from cell line} naming 201B7, 585A1, Detroit 551, WT33 and the rest. Nothing
+         * there is about the term a curator is looking at; the term is a heading for a list.</p>
+         *
+         * <p>Reported rather than filtered on, for the reason {@link #objectBreadth} is: uib was
+         * inferring it from a page of results — more than three objects under one predicate, drop the
+         * group — which is a guess about a global fact from a local sample, and wrong exactly when the
+         * page happens to be short.</p>
+         */
+        private final long subjectBreadth;
+
         public RelationSummary( String subjectValue, @Nullable String subjectValueUri, @Nullable String subjectCategory,
                 @Nullable String subjectCategoryUri, @Nullable String predicate, @Nullable String predicateUri,
                 String objectValue, @Nullable String objectValueUri, @Nullable String objectCategory,
@@ -143,7 +159,8 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
                 @Nullable Integer taxonNcbiId, AnnotationRelationBasis basis, @Nullable String source,
                 @Nullable String sourceVersion, long numberOfExperiments, long numberOfExperimentsAtFactorValue,
                 long numberOfExperimentsAtTag, long numberOfExperimentsAtBioMaterial,
-                @Nullable Long exampleExperimentId, long numberOfExperimentsWithSubject, long objectBreadth ) {
+                @Nullable Long exampleExperimentId, long numberOfExperimentsWithSubject, long objectBreadth,
+                long subjectBreadth ) {
             this.subjectValue = subjectValue;
             this.subjectValueUri = subjectValueUri;
             this.subjectCategory = subjectCategory;
@@ -167,6 +184,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
             this.exampleExperimentId = exampleExperimentId;
             this.numberOfExperimentsWithSubject = numberOfExperimentsWithSubject;
             this.objectBreadth = objectBreadth;
+            this.subjectBreadth = subjectBreadth;
         }
 
         /**
@@ -317,6 +335,13 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         }
 
         /**
+         * @see #subjectBreadth
+         */
+        public long getSubjectBreadth() {
+            return subjectBreadth;
+        }
+
+        /**
          * Key identifying the triple irrespective of basis, so a caller can group the side-by-side rows
          * and see for itself where two bases do land on the same term.
          */
@@ -334,7 +359,8 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          * {@link ubic.gemma.model.common.description.RelationInferenceDirection}.
          */
         public ubic.gemma.model.common.description.RelationInferenceDirection getInferenceDirection() {
-            return ubic.gemma.model.common.description.RelationInferenceDirection.of( predicateUri );
+            return ubic.gemma.model.common.description.RelationInferenceDirection
+                    .of( predicateUri, subjectCategoryUri );
         }
 
         /**
@@ -420,8 +446,12 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         public String getImpliedPredicateUri() {
             switch ( getInferenceDirection() ) {
                 case OBJECT_IMPLIES_SUBJECT:
-                    // the genotype/inducer end implies a disease claim, and taxon says which one
-                    return taxonNcbiId != null && taxonNcbiId == HUMAN_NCBI_TAXON_ID
+                    // the genotype end implies a disease claim and taxon says which one -- but only
+                    // where the implied subject is the sort of thing that could bear the disease. An
+                    // inducer never is: see RelationInferenceDirection.impliesAnInducer.
+                    return !ubic.gemma.model.common.description.RelationInferenceDirection
+                            .impliesAnInducer( predicateUri )
+                            && taxonNcbiId != null && taxonNcbiId == HUMAN_NCBI_TAXON_ID
                             ? HAS_DISEASE_URI
                             : IS_MODEL_OF_URI;
                 case SUBJECT_IMPLIES_OBJECT:
@@ -437,7 +467,9 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         public String getImpliedPredicate() {
             switch ( getInferenceDirection() ) {
                 case OBJECT_IMPLIES_SUBJECT:
-                    return taxonNcbiId != null && taxonNcbiId == HUMAN_NCBI_TAXON_ID
+                    return !ubic.gemma.model.common.description.RelationInferenceDirection
+                            .impliesAnInducer( predicateUri )
+                            && taxonNcbiId != null && taxonNcbiId == HUMAN_NCBI_TAXON_ID
                             ? "has disease"
                             : "is model of";
                 case SUBJECT_IMPLIES_OBJECT:

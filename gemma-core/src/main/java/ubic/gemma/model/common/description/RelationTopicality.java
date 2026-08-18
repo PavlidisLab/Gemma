@@ -49,6 +49,10 @@ import java.util.Set;
  * <li>{@code RO_0001000 derives from} covers {@code amplified total RNA -> total RNA} (bookkeeping)
  * and {@code cell line -> female donor} (provenance). A predicate allow-list has to drop both to be
  * safe, which loses the second.</li>
+ * <li>{@code TGEMO_00171 induced by} is a disease model when the subject is a disease and a
+ * differentiation protocol when the subject is a cell type — {@code Parkinson disease --induced by-->
+ * MPTP} versus {@code lower motor neuron --induced by--> iPSC line}. Same predicate, opposite
+ * meanings; the subject decides.</li>
  * </ul>
  *
  * <p><b>Nothing is dropped from the store.</b> This is a read-time reading of two columns the row
@@ -85,7 +89,6 @@ public enum RelationTopicality {
             "http://purl.obolibrary.org/obo/ENVO_01003004",    // derives from part of -- cell line -> brain
             "http://purl.obolibrary.org/obo/RO_0000087",       // has role -- CHEBI's drug -> role
             "http://purl.obolibrary.org/obo/RO_0003301",       // is model of
-            "http://gemma.msl.ubc.ca/ont/TGEMO_00171",         // induced by
             "http://gemma.msl.ubc.ca/ont/TGEMO_00201"          // has child with disease
     );
 
@@ -102,7 +105,15 @@ public enum RelationTopicality {
             "http://purl.obolibrary.org/obo/GENO_0000413",     // has_allele
             "http://purl.obolibrary.org/obo/RO_0001000",       // derives from -- two jobs, see class javadoc
             "http://gemma.msl.ubc.ca/ont/TGEMO_00169",         // positive for product of gene
-            "http://gemma.msl.ubc.ca/ont/TGEMO_00170"          // negative for product of gene
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00170",         // negative for product of gene
+            // 🛑 induced by was in the always-list and had to leave it. It carries two senses and the
+            // corpus uses both: `Parkinson disease --induced by--> MPTP` is a disease model, and
+            // `lower motor neuron --induced by--> iPSC line` is a stem-cell differentiation protocol,
+            // one of the commonest things curated here. Reported by uib 2026-08-18, who were shown
+            // `iPSC line has disease neuron` on a curator's term card. Over the 541 curated rows:
+            // 301 Disease model, 56 disease, 46 genotype and 1 cell line are the disease sense;
+            // 106 treatment, 20 cell type, 6 phenotype and 3 collection of material are not.
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00171"          // induced by
     );
 
     /**
@@ -120,6 +131,70 @@ public enum RelationTopicality {
             "http://www.ebi.ac.uk/efo/EFO_0000513",            // genotype
             "http://www.ebi.ac.uk/efo/EFO_0005135"             // strain
     );
+
+    /**
+     * Predicates whose OBJECT is a quantity, not a concept.
+     *
+     * <p>🛑 <b>These have no business in a relation store at all</b>, which is different from being
+     * {@link #EXPERIMENT_LEVEL}. A developmental stage is a concept and a poor topic; {@code 10 uM} is
+     * not a concept. Measured on the corpus 2026-08-18, the objects of {@code delivered at dose} are
+     * {@code 10 uM} (497), {@code 1 uM} (311), {@code 100 nM} (142), {@code 10 ng/ml} (102),
+     * {@code 10 mg/kg} (67) — measurements all the way down. Nobody will ever ask what is delivered at
+     * 10 uM, so the row cannot be read from the object end, cannot corroborate another row, and cannot
+     * license an inference. It was 9,606 of the 36,073 curated rows: a quarter of the table that every
+     * reader had to filter and no reader could use.</p>
+     *
+     * <p>{@code Relation.terms.txt} already states the rule — it opens "Terms usable for relations
+     * among <b>concepts</b>" and then lists all three of these. This is that header, enforced.</p>
+     *
+     * <p><b>A deny-list, where {@link #of} is an allow-list, and deliberately so.</b> The harvest is
+     * predicate-agnostic on purpose: a relational predicate added tomorrow should be harvested without
+     * anyone editing this file. Only measurement predicates need naming, and there are few — so the
+     * closed default belongs on the read side, where an unvetted predicate merely stays off a term
+     * card, and the open default belongs in the harvest, where it decides whether data exists at
+     * all.</p>
+     */
+    private static final Set<String> QUANTITY_VALUED_URIS = unmodifiable(
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00166",         // delivered at dose
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00167",         // delivered for duration
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00202"          // sampled after
+    );
+
+    /**
+     * The same predicates by label, for the rows that carry no URI.
+     *
+     * <p>{@code timepoint} is here and in no vocabulary file: two curated rows use it as a bare label.
+     * Matching on the label as well as the URI is what keeps the rule from being defeated by a
+     * predicate nobody grounded.</p>
+     */
+    private static final Set<String> QUANTITY_VALUED_LABELS = unmodifiable(
+            "delivered at dose", "delivered for duration", "sampled after", "timepoint"
+    );
+
+    /**
+     * @see #QUANTITY_VALUED_URIS
+     */
+    public static Set<String> getQuantityValuedPredicateUris() {
+        return QUANTITY_VALUED_URIS;
+    }
+
+    /**
+     * @see #QUANTITY_VALUED_LABELS
+     */
+    public static Set<String> getQuantityValuedPredicateLabels() {
+        return QUANTITY_VALUED_LABELS;
+    }
+
+    /**
+     * Whether a relation with this predicate relates two concepts at all.
+     *
+     * <p>Either end identifies it: a row carrying the URI is caught by the URI, and a row carrying
+     * only a label is caught by the label.</p>
+     */
+    public static boolean isQuantityValued( @Nullable String predicateUri, @Nullable String predicate ) {
+        return ( predicateUri != null && QUANTITY_VALUED_URIS.contains( predicateUri ) )
+                || ( predicate != null && QUANTITY_VALUED_LABELS.contains( predicate.trim() ) );
+    }
 
     /**
      * Classify one row.
