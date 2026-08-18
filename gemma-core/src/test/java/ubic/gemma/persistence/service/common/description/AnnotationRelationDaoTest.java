@@ -551,6 +551,44 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     }
 
     /**
+     * 🛑 An asserted basis carries no support, so every row of it scores the same and the sort used to
+     * fall through to alphabetical.
+     *
+     * <p>uib measured it on {@code imatinib} once CHEBI's roles came back whole: ten roles, all support
+     * 0, ordered a–z, so {@code antihypertensive agent} (borne by 487 chemicals) led the card and
+     * {@code tyrosine kinase inhibitor} (44) — the only role that identifies the compound — sat tenth
+     * behind a "+5 more". Breadth ascending puts the specific end first, which is the advice we gave
+     * for reading roles at all, applied at the one place a client cannot apply it: inside a
+     * {@code ?limit=}.</p>
+     *
+     * <p>The fixture is built so the two orderings disagree — the specific object sorts LAST
+     * alphabetically — or it would pass without the comparator.</p>
+     */
+    @Test
+    public void testTiedAssertedRowsAreOrderedSpecificFirst() {
+        String cell = "http://purl.obolibrary.org/obo/CLO_9000001";
+        String generic = "http://purl.obolibrary.org/obo/CHEBI_9000001";
+        String specific = "http://purl.obolibrary.org/obo/CHEBI_9000002";
+
+        // "aaa" vs "zzz": alphabetically the generic one wins, so only breadth can flip them
+        annotationRelationDao.create( ontologyRow( cell, "the cell", generic, "aaa generic role" ) );
+        annotationRelationDao.create( ontologyRow( cell, "the cell", specific, "zzz specific role" ) );
+        // two more subjects bear the generic role, so its breadth is 3 against the specific one's 1
+        annotationRelationDao.create( ontologyRow( cell + "_b", "other b", generic, "aaa generic role" ) );
+        annotationRelationDao.create( ontologyRow( cell + "_c", "other c", generic, "aaa generic role" ) );
+
+        List<AnnotationRelationDao.RelationSummary> rows = annotationRelationDao.findRelations(
+                new AnnotationRelationDao.RelationQuery().subjectValueUris( Collections.singleton( cell ) ) );
+
+        assertThat( rows ).hasSize( 2 );
+        assertThat( rows.get( 0 ).getObjectValue() )
+                .as( "the role that identifies the subject leads, though it sorts last by name" )
+                .isEqualTo( "zzz specific role" );
+        assertThat( rows.get( 0 ).getObjectBreadth() ).isEqualTo( 1L );
+        assertThat( rows.get( 1 ).getObjectBreadth() ).isEqualTo( 3L );
+    }
+
+    /**
      * 🛑 The curated CATEGORY is the unreliable half of the row; the subject's VOCABULARY is the
      * reliable half.
      *
@@ -725,6 +763,26 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
         r.setSubjectCategoryUri( categoryUri );
         r.setPredicate( "induced by" );
         r.setPredicateUri( INDUCED_BY );
+        return r;
+    }
+
+    /**
+     * An ONTOLOGY row: asserted, so it carries no experiment and therefore no support to sort on.
+     */
+    private AnnotationRelation ontologyRow( String subjectUri, String subjectValue, String objectUri,
+            String objectValue ) {
+        AnnotationRelation r = new AnnotationRelation();
+        r.setSubjectValue( subjectValue );
+        r.setSubjectValueUri( subjectUri );
+        r.setSubjectCategory( "cell line" );
+        r.setSubjectCategoryUri( "http://purl.obolibrary.org/obo/CLO_0000031" );
+        r.setPredicate( "has role" );
+        r.setPredicateUri( "http://purl.obolibrary.org/obo/RO_0000087" );
+        r.setObjectValue( objectValue );
+        r.setObjectValueUri( objectUri );
+        r.setBasis( AnnotationRelationBasis.ONTOLOGY );
+        r.setSource( "CHEBI" );
+        r.setGeneratedAt( new Date() );
         return r;
     }
 

@@ -250,7 +250,23 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             }
             result.add( s );
         }
+        // 🛑 Breadth ASCENDING breaks ties the score left, and only those. An asserted basis carries no
+        // support -- an ontology's claim holds independently of anything Gemma stores -- so every row
+        // of it scores identically and the sort used to fall through to alphabetical. uib measured the
+        // result on `imatinib` after CHEBI's roles came back whole: ten roles, all support 0, ordered
+        // a-z, so `antihypertensive agent` (borne by 487 chemicals) led and `tyrosine kinase inhibitor`
+        // (44) -- the one role that identifies the compound -- sat tenth, behind a "+5 more".
+        //
+        // Specific-before-generic is the same advice we gave for reading roles at all, applied at the
+        // only place a client cannot apply it for itself: inside a `?limit=`. It cannot reorder rows
+        // the score separated, so an assertion still outranks an attestation and a well-supported row
+        // still outranks a thin one.
+        //
+        // Object breadth, not subject: a subject-seeded query is the shape this fixes. Seeded from the
+        // object side every row shares one object, breadth is constant, and the sort falls through to
+        // the alphabetical tiebreakers exactly as before.
         result.sort( Comparator.comparingDouble( RelationSummary::getScore ).reversed()
+                .thenComparingLong( RelationSummary::getObjectBreadth )
                 .thenComparing( RelationSummary::getSubjectValue )
                 .thenComparing( RelationSummary::getObjectValue ) );
         return q.getMaxResults() > 0 && result.size() > q.getMaxResults()
