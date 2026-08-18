@@ -551,6 +551,47 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     }
 
     /**
+     * 🛑 The breadth cut runs BEFORE the row cap, or a threshold thins the answer instead of improving
+     * it.
+     *
+     * <p>The cap used to be applied in SQL — with no {@code ORDER BY}, so an arbitrary N — and the
+     * breadth bar in Java afterwards. A caller asking for "the best N that clear the bar" got "an
+     * arbitrary N, minus the failures", which for a gate means missing a term that qualifies because
+     * something unqualified was fetched ahead of it. oganm found the identical shape in #1685's
+     * disease-model endpoint, where the specificity cut ran after the row cap.</p>
+     *
+     * <p>The fixture makes the two orders disagree: three broad objects and one specific one, with a
+     * cap of two. Cut-then-cap returns the specific one; cap-then-cut can lose it entirely.</p>
+     */
+    @Test
+    public void testTheBreadthCutRunsBeforeTheRowCap() {
+        String seed = "http://purl.obolibrary.org/obo/CLO_9100001";
+        String specific = "http://purl.obolibrary.org/obo/CHEBI_9100009";
+        // three broad objects: each is borne by three other subjects, so breadth 4
+        for ( int i = 0; i < 3; i++ ) {
+            String broad = "http://purl.obolibrary.org/obo/CHEBI_910000" + i;
+            annotationRelationDao.create( ontologyRow( seed, "seed", broad, "broad role " + i ) );
+            for ( int j = 0; j < 3; j++ ) {
+                // distinct VALUES, not just distinct URIs: breadth counts distinct SUBJECT_VALUE
+                annotationRelationDao.create( ontologyRow( seed + "_" + i + j, "other " + i + j, broad, "broad role " + i ) );
+            }
+        }
+        // and one the seed alone bears
+        annotationRelationDao.create( ontologyRow( seed, "seed", specific, "the specific role" ) );
+
+        List<String[]> kept = annotationRelationDao.findRelatedTerms(
+                Collections.singleton( seed ), Collections.emptySet(),
+                AnnotationRelationDao.Direction.SUBJECT_TO_OBJECT,
+                EnumSet.of( AnnotationRelationBasis.ONTOLOGY ), Collections.emptySet(),
+                null, Collections.emptySet(), 2, 2 );
+
+        assertThat( kept )
+                .as( "only the specific object clears a breadth bar of 2, whatever the cap fetched" )
+                .extracting( t -> t[1] )
+                .containsExactly( specific );
+    }
+
+    /**
      * 🛑 An asserted basis carries no support, so every row of it scores the same and the sort used to
      * fall through to alphabetical.
      *

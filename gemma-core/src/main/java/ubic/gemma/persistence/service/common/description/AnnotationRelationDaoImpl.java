@@ -318,7 +318,16 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         }
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         query.setCacheable( true );
-        if ( maxResults > 0 ) {
+        // 🛑 THE CAP GOES ON AFTER THE CUT, NEVER BEFORE IT. Capping in SQL and then dropping the rows
+        // that fail the breadth bar answers "an arbitrary N, minus the ones that failed" when what was
+        // asked for is "the best N that pass" -- so raising the bar THINNED the answer instead of
+        // filling it with better terms, which is the opposite of what a threshold is for, and a gate
+        // could miss a term that qualifies because an arbitrary cap had already excluded it. Arbitrary
+        // is literal: this query carries no ORDER BY, so which N came back was whatever the plan
+        // produced. (oganm found the same defect in the disease-model endpoint of #1685, where the
+        // specificity cut ran after the row cap. Same shape, different filter.)
+        boolean cutsBeforeCapping = maximumObjectBreadth > 0;
+        if ( maxResults > 0 && !cutsBeforeCapping ) {
             query.setMaxResults( maxResults );
         }
         //noinspection unchecked
@@ -326,16 +335,24 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         List<String[]> terms = rows.stream()
                 .map( r -> new String[] { ( String ) r[0], ( String ) r[1] } )
                 .collect( Collectors.toList() );
-        if ( maximumObjectBreadth <= 0 || terms.isEmpty() ) {
+        if ( !cutsBeforeCapping || terms.isEmpty() ) {
             return terms;
         }
         // Filtered after the fetch rather than as a correlated subquery per row: two indexed queries
-        // beat one that re-counts the whole relation set for every candidate.
+        // beat one that re-counts the whole relation set for every candidate. Unbounded here on
+        // purpose -- the query is seeded from a specific term, so the candidate set is that term's own
+        // relations, and it returns two columns.
         Map<String, Long> breadth = findObjectBreadth( terms.stream()
                 .map( t -> t[0] ).filter( Objects::nonNull ).distinct().collect( Collectors.toList() ) );
-        return terms.stream()
+        List<String[]> kept = terms.stream()
                 .filter( t -> breadth.getOrDefault( breadthKey( t[0] ), 0L ) <= maximumObjectBreadth )
+                // most specific first, so a cap that still bites takes the least identifying terms
+                // rather than whichever ones the plan happened to emit last
+                .sorted( Comparator.comparingLong( t -> breadth.getOrDefault( breadthKey( t[0] ), 0L ) ) )
                 .collect( Collectors.toList() );
+        return maxResults > 0 && kept.size() > maxResults
+                ? new ArrayList<>( kept.subList( 0, maxResults ) )
+                : kept;
     }
 
     @Override
