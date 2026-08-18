@@ -10,6 +10,8 @@ import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.ontology.providers.OntologyServiceResolver;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +37,18 @@ public class UpdateExternalRelationsCli extends AbstractAuthenticatedCLI {
      * identifiers are translated <i>out</i> of, so no disease relation can be stored without it.
      */
     private static final String XREF_ONTOLOGY = "MONDO";
+
+    /**
+     * Also not a source of relations: Cellosaurus gives an anatomic site as a UBERON identifier plus
+     * a free-text sentence, and the term's label — what a curator reads as the object's name — is
+     * only here. Without it every site row falls back to the sentence, which is the defect this was
+     * added to fix, so leaving it cold makes the whole run a no-op that reports success.
+     */
+    private static final String SITE_ONTOLOGY = "UBERON";
+
+    /** Both are read by identifier and never by text, which is why search indexing stays off. */
+    private static final List<String> REQUIRED_ONTOLOGIES =
+            Collections.unmodifiableList( Arrays.asList( XREF_ONTOLOGY, SITE_ONTOLOGY ) );
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
@@ -73,27 +87,39 @@ public class UpdateExternalRelationsCli extends AbstractAuthenticatedCLI {
     }
 
     /**
-     * MONDO only. Warming every ontology would spend the run on models this command never reads.
+     * {@link #REQUIRED_ONTOLOGIES} only. Warming every ontology would spend the run on models this
+     * command never reads.
+     *
+     * <p>A missing one is a warning rather than a stop, and the two fail differently: without MONDO
+     * no disease relation can be stored at all, while without UBERON the site rows are still correct
+     * and only carry the source's sentence where the term's name belongs.</p>
      */
     private void warmUp() throws InterruptedException {
         if ( ontologies == null || ontologies.isEmpty() ) {
-            log.warn( "No ontology services are wired; foreign disease identifiers cannot be translated." );
+            log.warn( "No ontology services are wired; foreign identifiers cannot be translated"
+                    + " and anatomic sites cannot be named." );
             return;
         }
-        Optional<ubic.gemma.core.ontology.providers.OntologyService> mondo =
-                OntologyServiceResolver.resolve( ontologies, XREF_ONTOLOGY );
-        if ( !mondo.isPresent() ) {
-            log.warn( "No ontology matched '" + XREF_ONTOLOGY + "'; nothing can be translated." );
-            return;
+        for ( String token : REQUIRED_ONTOLOGIES ) {
+            Optional<ubic.gemma.core.ontology.providers.OntologyService> match =
+                    OntologyServiceResolver.resolve( ontologies, token );
+            if ( !match.isPresent() ) {
+                log.warn( "No ontology matched '" + token + "'." );
+                continue;
+            }
+            warmUp( match.get() );
         }
-        ubic.gemma.core.ontology.providers.OntologyService ontology = mondo.get();
+    }
+
+    private void warmUp( ubic.gemma.core.ontology.providers.OntologyService ontology )
+            throws InterruptedException {
         if ( !ontology.isOntologyLoaded() ) {
             if ( autoLoadOntologies ) {
                 log.info( "Waiting for " + ontology + " to finish loading..." );
                 ontology.waitForInitializationThread();
             } else {
                 log.info( "Loading " + ontology + "..." );
-                // no search index: the cross-references are read by identifier, never by text
+                // no search index: both are read by identifier, never by text
                 ontology.setSearchEnabled( false );
                 ontology.initialize( true, false );
             }
