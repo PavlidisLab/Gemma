@@ -62,8 +62,6 @@
         <!-- Common: audit and security -->
         <mapping class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.AuditTrail"/>
-        <!-- AuditTrail.hbm.xml retained for <database-object> ON DELETE SET NULL DDL hooks (entity moved to JPA annotations) -->
-        <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.Contact"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.Person"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.User"/>
