@@ -771,6 +771,94 @@ public class AnnotationsWebService {
                 .collect( Collectors.toList() ) );
     }
 
+    /**
+     * Is a term already implied by the terms an experiment carries?
+     *
+     * <p>The inhibition question, and it is deliberately not the same endpoint as
+     * {@code /annotations/relations}. That one ranks and evidences, for a caller that has to CHOOSE a
+     * term; this one tests set membership, for a caller deciding whether to SUPPRESS one it was about
+     * to write. The distinction is what makes using this knowledge safe at all:</p>
+     *
+     * <ul>
+     * <li>Generating a disease from a genotype needs a unique answer. {@code SURF1} carries three
+     * germline disease axioms and {@code Trp53} pairs with fifteen diseases in our corpus, so a
+     * producer asked to emit one has to pick, and picking wrong writes a false assertion into the
+     * database. This is why the curation rule forbids it.</li>
+     * <li>Suppressing a redundant tag needs only membership. All three of SURF1's diseases go into
+     * the set, and the answer is right whichever one is meant.</li>
+     * </ul>
+     *
+     * <p>It also fails in the safe direction. A wrong association here suppresses a tag that should
+     * have been kept -- a recall miss, visible in scoring and recoverable. The same wrong association
+     * used generatively writes a wrong disease onto a dataset.</p>
+     */
+    @GET
+    @Path("/relations/implies")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Test whether terms are already implied by other terms",
+            description = "Set membership over the relations Gemma knows, for deciding whether an annotation "
+                    + "would be redundant. Give the terms an experiment already carries in 'from' and the "
+                    + "terms you are considering writing in 'to'; the response names the pairs that are "
+                    + "related and on what basis. Omit 'to' to get everything the 'from' terms imply. "
+                    + "Ambiguity is preserved rather than resolved: every candidate is returned, because a "
+                    + "membership test is right whichever one is meant.",
+            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+    public ResponseDataObject<List<AnnotationRelationValueObject>> getImpliedAnnotations(
+            @Parameter(description = "Comma-separated term URIs the experiment already carries.", required = true) @QueryParam("from") @Nullable String from,
+            @Parameter(description = "Comma-separated candidate term URIs to test. Omit to return everything implied.") @QueryParam("to") @Nullable String to,
+            @Parameter(description = "Comma-separated dataset ids to hold out of the evidence. 🛑 Pass the dataset "
+                    + "being curated. The curation pipeline is gold-blind -- it never sees the experiment's own "
+                    + "curation -- so a gate that counted the experiment's own annotations as evidence would be "
+                    + "reading the very thing under evaluation, and would report every redundancy as confirmed.") @QueryParam("excludeDatasets") @Nullable String excludeDatasets,
+            @Parameter(description = "Restrict to these bases: CURATED, ONTOLOGY, EXTERNAL, CORPUS. A gate that "
+                    + "should not act on co-occurrence alone can ask for the asserted bases only.") @QueryParam("basis") @Nullable String basis,
+            @Parameter(description = "Restrict to a taxon by id.") @QueryParam("taxonId") @Nullable Long taxonId,
+            @QueryParam("limit") @DefaultValue("100") int limit
+    ) {
+        if ( StringUtils.isBlank( from ) ) {
+            throw new BadRequestException( "'from' is required: the terms the experiment already carries." );
+        }
+        List<String> fromUris = Arrays.stream( from.split( "," ) ).map( String::trim )
+                .filter( StringUtils::isNotBlank ).collect( Collectors.toList() );
+        List<String> toUris = StringUtils.isNotBlank( to )
+                ? Arrays.stream( to.split( "," ) ).map( String::trim ).filter( StringUtils::isNotBlank ).collect( Collectors.toList() )
+                : Collections.emptyList();
+        Set<AnnotationRelationBasis> bases = StringUtils.isNotBlank( basis )
+                ? parseBases( basis ) : EnumSet.allOf( AnnotationRelationBasis.class );
+        List<Long> excluded = StringUtils.isNotBlank( excludeDatasets ) ? parseIds( excludeDatasets ) : Collections.emptyList();
+
+        // Both directions, because a curated statement puts the disease in the subject and the
+        // genotype in the object, and a caller holding either one is asking the same question.
+        List<AnnotationRelationValueObject> out = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for ( boolean fromIsSubject : new boolean[] { true, false } ) {
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery q =
+                    new ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery()
+                            .bases( bases )
+                            .excludedExperimentIds( excluded )
+                            .taxonId( taxonId )
+                            .maxResults( limit );
+            if ( fromIsSubject ) {
+                q.subjectValueUris( fromUris );
+                if ( !toUris.isEmpty() ) {
+                    q.objectValueUris( toUris );
+                }
+            } else {
+                q.objectValueUris( fromUris );
+                if ( !toUris.isEmpty() ) {
+                    q.subjectValueUris( toUris );
+                }
+            }
+            for ( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationSummary r
+                    : annotationRelationService.findRelations( q ) ) {
+                if ( seen.add( r.getTripleKey() + " " + r.getBasis() ) ) {
+                    out.add( new AnnotationRelationValueObject( r ) );
+                }
+            }
+        }
+        return respond( out );
+    }
+
     private Set<AnnotationRelationBasis> parseBases( String csv ) {
         Set<AnnotationRelationBasis> bases = EnumSet.noneOf( AnnotationRelationBasis.class );
         for ( String token : csv.split( "," ) ) {
