@@ -203,6 +203,38 @@ public class AnnotationRelation extends AbstractIdentifiable {
     private GOEvidenceCode evidenceCode;
 
     /**
+     * The one-line basis the source gives, meant to be shown — {@code PMID:11242117} for a statement
+     * MGI cites.
+     *
+     * <p>Distinct from {@link #evidenceCode}, which says what KIND of evidence this is. A code cannot
+     * be clicked, and for 94% of MGI's genotype-to-disease statements the citation was the only thing
+     * distinguishing a curated claim from an unattributable import.</p>
+     *
+     * <p>Null for most rows and legitimately so: an OWL restriction is asserted by its ontology and
+     * cites nothing, and a {@link AnnotationRelationBasis#CORPUS} co-occurrence <i>is</i> evidence
+     * rather than having any. Null rather than an empty string, which would be a second spelling of
+     * the same state.</p>
+     */
+    @Nullable
+    @Column(name = "EVIDENCE", columnDefinition = "VARCHAR(255)")
+    private String evidence;
+
+    /**
+     * Anything structured or too long for {@link #evidence}, stored opaquely — the same arrangement as
+     * {@link Characteristic#getSupportingEvidence()} and {@code PUBLICATION_ASSOCIATION}, so a reader
+     * meets one convention across all three rather than three.
+     *
+     * <p>Gemma does not interpret it. Whatever wrote it owns its schema, which is what keeps an agent
+     * free to record its reasoning without a migration each time that reasoning changes shape.</p>
+     *
+     * <p>🛑 Not a place to put the displayable basis. {@link #evidence} is what a UI renders verbatim;
+     * a payload there would be shown to a curator as-is.</p>
+     */
+    @Nullable
+    @Column(name = "SUPPORTING_EVIDENCE", columnDefinition = "TEXT")
+    private String supportingEvidence;
+
+    /**
      * The experiment attesting this row, for bases that are attested rather than asserted
      * ({@link AnnotationRelationBasis#CURATED}, {@link AnnotationRelationBasis#CORPUS}); null for
      * bases that hold independently of anything Gemma stores.
@@ -382,6 +414,24 @@ public class AnnotationRelation extends AbstractIdentifiable {
 
     public void setEvidenceCode( @Nullable GOEvidenceCode evidenceCode ) {
         this.evidenceCode = evidenceCode;
+    }
+
+    @Nullable
+    public String getEvidence() {
+        return evidence;
+    }
+
+    public void setEvidence( @Nullable String evidence ) {
+        this.evidence = evidence;
+    }
+
+    @Nullable
+    public String getSupportingEvidence() {
+        return supportingEvidence;
+    }
+
+    public void setSupportingEvidence( @Nullable String supportingEvidence ) {
+        this.supportingEvidence = supportingEvidence;
     }
 
     @Nullable

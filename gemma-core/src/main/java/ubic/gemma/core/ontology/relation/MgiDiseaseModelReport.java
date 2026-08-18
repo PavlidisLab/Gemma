@@ -71,7 +71,7 @@ class MgiDiseaseModelReport {
         private final String alleleId;
         private final String doid;
         private final String geneId;
-        private String pubMedId;
+        private final java.util.Set<String> citations = new java.util.LinkedHashSet<>();
         private int rows;
 
         Entry( String alleleSymbol, String alleleId, String doid, String geneId ) {
@@ -99,14 +99,39 @@ class MgiDiseaseModelReport {
         }
 
         /**
-         * A PubMed id MGI cites for this statement, if any of the collapsed rows carried one — 94% of
-         * pairs do.
+         * Every PubMed id MGI cites for this statement, in file order; empty when it cites none.
          *
-         * <p>It decides the evidence code: a cited statement is a traceable author statement, an
-         * uncited one is an imported annotation whose own basis we cannot see.</p>
+         * <p>🛑 Collected rather than taken once, from BOTH directions in which MGI supplies several:
+         * a single cell can hold {@code 7600971|8631247}, and the phenotype rows that collapse into one
+         * statement often cite different papers. Keeping the first would throw away most of the
+         * evidence for exactly the best-studied genotypes — the ones with the most phenotype rows.</p>
+         *
+         * <p>94% of real pairs carry at least one, and their presence also decides the evidence code:
+         * a cited statement is traceable to an author, an uncited one is an import whose own basis we
+         * cannot see.</p>
          */
-        String getPubMedId() {
-            return pubMedId;
+        java.util.Set<String> getCitations() {
+            return citations;
+        }
+
+        /**
+         * The citations as one quotable line for {@code ANNOTATION_RELATION.EVIDENCE}, or null when
+         * there are none. Truncated to fit the column rather than overflowing it.
+         */
+        @javax.annotation.Nullable
+        String getEvidence() {
+            if ( citations.isEmpty() ) {
+                return null;
+            }
+            StringBuilder sb = new StringBuilder();
+            for ( String c : citations ) {
+                String next = ( sb.length() == 0 ? "" : ";" ) + "PMID:" + c;
+                if ( sb.length() + next.length() > 255 ) {
+                    break;
+                }
+                sb.append( next );
+            }
+            return sb.length() > 0 ? sb.toString() : null;
         }
 
         /** How many report rows collapsed into this entry — i.e. how many phenotypes MGI recorded. */
@@ -143,8 +168,15 @@ class MgiDiseaseModelReport {
                 Entry e = byKey.computeIfAbsent( allele + '\t' + doid,
                         k -> new Entry( allele, alleleId, doid, StringUtils.trimToNull( f[6] ) ) );
                 e.rows++;
-                if ( e.pubMedId == null ) {
-                    e.pubMedId = StringUtils.trimToNull( f[5] );
+                // one cell can hold several, pipe-separated -- MGI really does emit `7600971|8631247`
+                String cited = StringUtils.trimToNull( f[5] );
+                if ( cited != null ) {
+                    for ( String id : cited.split( "\\|" ) ) {
+                        String t = StringUtils.trimToNull( id );
+                        if ( t != null ) {
+                            e.citations.add( t );
+                        }
+                    }
                 }
             }
         }

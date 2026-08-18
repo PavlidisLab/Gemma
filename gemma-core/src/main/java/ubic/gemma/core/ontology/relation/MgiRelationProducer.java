@@ -199,12 +199,11 @@ public class MgiRelationProducer {
         r.setBasis( AnnotationRelationBasis.EXTERNAL );
         r.setStatus( status );
         r.setSource( SOURCE );
-        // 🛑 The citation itself has nowhere to go -- this table records an evidence CODE and not an
-        // evidence string, unlike PUBLICATION_ASSOCIATION. So the PubMed id MGI gives for 94% of its
-        // statements survives only as the difference between these two codes: a cited statement is
-        // traceable to an author, an uncited one is an import whose own basis we cannot see. Carrying
-        // the id would need a column, and is worth one if anybody wants to click through.
-        r.setEvidenceCode( e.getPubMedId() != null ? GOEvidenceCode.TAS : GOEvidenceCode.IIA );
+        // The code says what KIND of evidence this is and EVIDENCE says what it actually was, because
+        // a curator cannot click a code. A cited statement is traceable to an author; an uncited one
+        // is an import whose own basis we cannot see.
+        r.setEvidenceCode( e.getCitations().isEmpty() ? GOEvidenceCode.IIA : GOEvidenceCode.TAS );
+        r.setEvidence( e.getEvidence() );
         r.setGeneratedAt( generatedAt );
         return r;
     }

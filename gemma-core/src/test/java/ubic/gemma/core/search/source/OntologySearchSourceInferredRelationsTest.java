@@ -229,7 +229,7 @@ public class OntologySearchSourceInferredRelationsTest {
                 objectValue, objectUri, null, null,
                 null, null, null, basis,
                 ubic.gemma.model.common.description.AnnotationRelationStatus.ASSERTED, null, null,
-                1, 1, 0, 0, null, 1, 1, 1 );
+                1, 1, 0, 0, null, 1, 1, 1, null );
     }
 
     private static SearchSettings settings( boolean inferRelations ) {

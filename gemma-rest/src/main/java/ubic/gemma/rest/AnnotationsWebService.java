@@ -1059,6 +1059,13 @@ public class AnnotationsWebService {
          */
         String status;
         /**
+         * The one-line basis the source gives, meant to be shown as-is -- {@code PMID:11242117} where
+         * MGI cites a paper. Null for rows that legitimately have none: an ontology axiom cites
+         * nothing, and a corpus co-occurrence is evidence rather than having any.
+         */
+        @Nullable
+        String evidence;
+        /**
          * Identifies the subject/predicate/object triple irrespective of basis, so a client can group
          * the side-by-side rows that one relation legitimately produces. Grouping on the rendered
          * labels instead would merge relations that only look alike.
@@ -1102,6 +1109,7 @@ public class AnnotationsWebService {
             this.impliedObjectUri = s.getImpliedObjectUri();
             this.impliedTripleKey = s.getImpliedTripleKey();
             this.status = s.getStatus().name();
+            this.evidence = s.getEvidence();
         }
     }
 

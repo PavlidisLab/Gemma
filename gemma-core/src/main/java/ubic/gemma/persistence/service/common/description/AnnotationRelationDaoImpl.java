@@ -137,7 +137,10 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                                 + "min(R.EXPRESSION_EXPERIMENT_FK) as EX, "
                                 // appended LAST on purpose: the row mapping below is positional, so a
                                 // column inserted mid-projection silently re-reads every field after it
-                                + "R.STATUS as ST "
+                                + "R.STATUS as ST, "
+                                // min() like the other non-grouped text columns: rows sharing a triple,
+                                // basis, source and status are one statement, so any of them will do
+                                + "min(R.EVIDENCE) as EV "
                                 + "from ANNOTATION_RELATION R "
                                 + "left join TAXON X on X.ID = R.TAXON_FK"
                                 + where
@@ -177,6 +180,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                 .addScalar( "NBM", StandardBasicTypes.LONG )
                 .addScalar( "EX", StandardBasicTypes.LONG )
                 .addScalar( "ST", StandardBasicTypes.STRING )
+                .addScalar( "EV", StandardBasicTypes.STRING )
                 .addSynchronizedEntityClass( AnnotationRelation.class )
                 .addSynchronizedEntityClass( ExpressionExperiment.class );
 
@@ -253,7 +257,8 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                     basis, AnnotationRelationStatus.valueOf( ( String ) r[21] ), ( String ) r[14], ( String ) r[15],
                     asLong( r[16] ), asLong( r[17] ), asLong( r[18] ), asLong( r[19] ),
                     ( Long ) r[20], total, breadth.getOrDefault( breadthKey( ( String ) r[6] ), 0L ),
-                    subjectBreadth.getOrDefault( breadthKey( ( String ) r[0] ), 0L ) );
+                    subjectBreadth.getOrDefault( breadthKey( ( String ) r[0] ), 0L ),
+                    ( String ) r[22] );
             if ( s.getNumberOfExperiments() < q.getMinimumSupport() && !basis.isSelfSufficient() ) {
                 continue;
             }

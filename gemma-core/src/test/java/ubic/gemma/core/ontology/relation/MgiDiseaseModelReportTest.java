@@ -22,7 +22,7 @@ class MgiDiseaseModelReportTest {
     private static final String REPORT = String.join( "\n",
             "# a comment line the report really does carry",
             row( "Ednra<tm1Ywa>/Ednra<tm1Ywa>", "Ednra<tm1Ywa>", "MGI:1857473", "MP:0002127", "9449664", "MGI:105923", "DOID:12583" ),
-            row( "Ednra<tm1Ywa>/Ednra<tm1Ywa>", "Ednra<tm1Ywa>", "MGI:1857473", "MP:0000452", "9449664", "MGI:105923", "DOID:12583" ),
+            row( "Ednra<tm1Ywa>/Ednra<tm1Ywa>", "Ednra<tm1Ywa>", "MGI:1857473", "MP:0000452", "7600971|8631247", "MGI:105923", "DOID:12583" ),
             row( "Ednra<tm1Ywa>/Ednra<tm1Ywa>", "Ednra<tm1Ywa>", "MGI:1857473", "MP:0002108", "9449664", "MGI:105923", "DOID:12583" ),
             row( "Pax3<Sp-2H>/Pax3<Sp-2H>", "Pax3<Sp-2H>", "MGI:1856293", "MP:0003054", "", "MGI:97487", "DOID:0110949" ),
             // a different disease on the same allele is a different statement
@@ -74,15 +74,32 @@ class MgiDiseaseModelReportTest {
      * The citation survives the collapse, since it decides whether this is a traceable author
      * statement or an import whose own basis we cannot see. 94% of real pairs carry one.
      */
+    /**
+     * 🛑 MGI supplies several citations in BOTH directions and keeping the first loses most of them:
+     * one cell can hold {@code 7600971|8631247}, and the phenotype rows collapsing into one statement
+     * often cite different papers. The genotypes with the most rows are the best-studied ones, so a
+     * first-only rule would discard the most evidence exactly where there is most.
+     */
+    @Test
+    void everyCitationIsCollectedFromBothDirections() throws Exception {
+        assertThat( parse().get( 0 ).getCitations() )
+                .containsExactlyInAnyOrder( "9449664", "7600971", "8631247" );
+        assertThat( parse().get( 0 ).getEvidence() )
+                .contains( "PMID:9449664" ).contains( "PMID:7600971" ).contains( "PMID:8631247" );
+    }
+
     @Test
     void theCitationSurvivesAndItsAbsenceIsRecorded() throws Exception {
         List<MgiDiseaseModelReport.Entry> entries = parse();
 
-        assertThat( entries.get( 0 ).getPubMedId() ).isEqualTo( "9449664" );
+        assertThat( entries.get( 0 ).getEvidence() ).startsWith( "PMID:9449664" );
         assertThat( entries )
                 .filteredOn( e -> e.getAlleleSymbol().equals( "Pax3<Sp-2H>" ) )
                 .singleElement()
-                .satisfies( e -> assertThat( e.getPubMedId() ).isNull() );
+                .satisfies( e -> {
+                    assertThat( e.getCitations() ).isEmpty();
+                    assertThat( e.getEvidence() ).isNull();
+                } );
     }
 
     /**

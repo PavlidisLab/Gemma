@@ -148,6 +148,22 @@ class MgiRelationProducerTest {
      * author statement and an import whose own basis is invisible. If that distinction stopped being
      * made, 94% of MGI's statements would silently lose the only trace of their evidence.
      */
+    /**
+     * The citation is stored, not merely counted. It is what a curator clicks; the code beside it only
+     * says what kind of thing it is.
+     */
+    @Test
+    void everyCitationIsStoredAsTheEvidenceLine() throws Exception {
+        List<AnnotationRelation> rows = produce(
+                report( row( "Mecp2<tm1.1Bird>", "MGI:1857444", "11242117|9662399", "DOID:1206" ) ), null );
+
+        assertThat( rows ).singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getEvidence() ).isEqualTo( "PMID:11242117;PMID:9662399" );
+                    assertThat( r.getEvidenceCode() ).isEqualTo( GOEvidenceCode.TAS );
+                } );
+    }
+
     @Test
     void theCitationDecidesTheEvidenceCode() throws Exception {
         List<AnnotationRelation> rows = produce(

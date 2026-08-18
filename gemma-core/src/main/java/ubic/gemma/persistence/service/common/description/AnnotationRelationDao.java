@@ -162,6 +162,14 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          */
         private final long subjectBreadth;
 
+        /**
+         * The one-line basis the source gives, meant to be shown — {@code PMID:11242117} where MGI
+         * cites a paper. Null for the many rows that legitimately have none: an ontology axiom cites
+         * nothing, and a corpus co-occurrence is evidence rather than having any.
+         */
+        @Nullable
+        private final String evidence;
+
         public RelationSummary( String subjectValue, @Nullable String subjectValueUri, @Nullable String subjectCategory,
                 @Nullable String subjectCategoryUri, @Nullable String predicate, @Nullable String predicateUri,
                 String objectValue, @Nullable String objectValueUri, @Nullable String objectCategory,
@@ -171,7 +179,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
                 @Nullable String sourceVersion, long numberOfExperiments, long numberOfExperimentsAtFactorValue,
                 long numberOfExperimentsAtTag, long numberOfExperimentsAtBioMaterial,
                 @Nullable Long exampleExperimentId, long numberOfExperimentsWithSubject, long objectBreadth,
-                long subjectBreadth ) {
+                long subjectBreadth, @Nullable String evidence ) {
             this.subjectValue = subjectValue;
             this.subjectValueUri = subjectValueUri;
             this.subjectCategory = subjectCategory;
@@ -197,6 +205,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
             this.numberOfExperimentsWithSubject = numberOfExperimentsWithSubject;
             this.objectBreadth = objectBreadth;
             this.subjectBreadth = subjectBreadth;
+            this.evidence = evidence;
         }
 
         /**
@@ -355,6 +364,14 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          */
         public long getSubjectBreadth() {
             return subjectBreadth;
+        }
+
+        /**
+         * @see #evidence
+         */
+        @Nullable
+        public String getEvidence() {
+            return evidence;
         }
 
         /**
