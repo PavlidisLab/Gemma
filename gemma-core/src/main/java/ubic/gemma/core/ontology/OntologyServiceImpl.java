@@ -327,8 +327,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         /*
          * URI input: just retrieve the term.
+         *
+         * 🛑 https as well as http, and it is not a tidy-up. Every OBO PURL is http, so this read as a
+         * complete test for years; Cellosaurus is the first source Gemma loads that mints https
+         * (`https://www.cellosaurus.org/CVCL_1234` — the PURL form 404s, so it cannot mint the other).
+         * Under the http-only test not one of its ~169k terms could be fetched by its own URI, and the
+         * query fell through to a lexical search that had nothing to match a bare accession on.
          */
-        if ( search.startsWith( "http://" ) ) {
+        if ( search.startsWith( "http://" ) || search.startsWith( "https://" ) ) {
             try {
                 OntologyTerm foundByUri = findFirst( ontology -> ontology.getTerm( search ), "terms matching " + search, timeUnit.toMillis( timeout ) );
                 if ( foundByUri != null ) {

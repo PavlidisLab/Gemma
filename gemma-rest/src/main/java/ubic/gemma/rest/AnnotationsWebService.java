@@ -1837,8 +1837,26 @@ public class AnnotationsWebService {
             // returns the canonical URI for both shapes, or null for plain free text.
             String termUri = expandTermQueryToUri( query );
             if ( termUri != null ) {
-                rawHits.addAll( characteristicService.loadValueObjects( characteristicService
-                        .findByUri( termUri, null, null, true, -1 ) ) );
+                List<CharacteristicValueObject> byUri = characteristicService.loadValueObjects(
+                        characteristicService.findByUri( termUri, null, null, true, -1 ) );
+                if ( byUri.isEmpty() ) {
+                    // 🛑 An identifier asks WHICH TERM IS THIS, not which datasets carry it, and the
+                    // corpus is the wrong place to answer that. CLO:0050868 is a real cell line that
+                    // nothing has been annotated with yet, and returning nothing said it did not
+                    // exist -- which is the opposite of the truth, and precisely wrong for the
+                    // curator who is looking it up in order to annotate something with it.
+                    //
+                    // Only on the identifier path, and only when the corpus came back empty: a
+                    // free-text query still means "find me tags in use", and a term that IS in use
+                    // still answers with its usage.
+                    CharacteristicValueObject fromOntology = lookUpTermInOntologies( termUri,
+                            Math.max( timeoutMs - timer.getTime(), 0 ) );
+                    if ( fromOntology != null ) {
+                        rawHits.add( fromOntology );
+                    }
+                } else {
+                    rawHits.addAll( byUri );
+                }
             } else if ( upstream ) {
                 // Delegate the ontology Lucene-index lookup; downstream pipeline runs locally
                 // against shared gemd. Failure here propagates as SearchException so the caller
@@ -4835,6 +4853,27 @@ public class AnnotationsWebService {
      *
      * @return the canonical URI string, or null if the query is neither a URI nor a known CURIE
      */
+    /**
+     * The term itself, for an identifier the corpus has never seen.
+     *
+     * <p>Returns null rather than throwing on a timeout or an unknown URI: this is a fallback on a
+     * path that has already failed to find anything, so the honest outcome of not finding it here
+     * either is the empty result the caller was going to get anyway.</p>
+     */
+    @Nullable
+    private CharacteristicValueObject lookUpTermInOntologies( String termUri, long timeoutMs ) {
+        try {
+            OntologyTerm term = ontologyService.getTerm( termUri, timeoutMs, TimeUnit.MILLISECONDS );
+            if ( term == null || StringUtils.isBlank( term.getLabel() ) ) {
+                return null;
+            }
+            return new CharacteristicValueObject( term.getLabel(), term.getUri() );
+        } catch ( TimeoutException e ) {
+            log.warn( "Timed out resolving " + termUri + " against the loaded ontologies." );
+            return null;
+        }
+    }
+
     @Nullable
     static String expandTermQueryToUri( String query ) {
         if ( query == null ) return null;
@@ -4847,6 +4886,14 @@ public class AnnotationsWebService {
         // free text is left for the free-text search path.
         if ( OntologyUtils.isTermId( stripped, true ) ) {
             return OntologyUtils.termIdToUri( stripped );
+        }
+        // The same identifier spelled the way a URI spells it. A term card renders
+        // CLO_0007606 and a CURIE column holds CLO:0007606; people paste whichever they were
+        // shown. localNameToTermId requires a KNOWN id space, so HLA_DRB1 and cell_type still
+        // reach the free-text search they were meant for.
+        String asTermId = OntologyUtils.localNameToTermId( stripped );
+        if ( asTermId != null ) {
+            return OntologyUtils.termIdToUri( asTermId );
         }
         return null;
     }
