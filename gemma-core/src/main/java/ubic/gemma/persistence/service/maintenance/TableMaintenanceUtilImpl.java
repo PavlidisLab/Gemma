@@ -23,6 +23,7 @@ import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -440,6 +441,98 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Override
     public void evictEe2CQueryCache() {
         sessionFactory.getCache().evictQueryRegion( EE2C_QUERY_SPACE );
+    }
+
+    /**
+     * Query space for {@code ANNOTATION_RELATION}, so reads over it are invalidated when a rebuild
+     * writes to it.
+     */
+    private static final String AR_QUERY_SPACE = "ANNOTATION_RELATION";
+
+    /**
+     * The harvest: every EE2C row that carries a predicate and an object is already a triple.
+     *
+     * <p>Predicate-agnostic on purpose. An allow-list would have to be maintained in step with the
+     * curators\' vocabulary and would silently drop whatever was added to it last -
+     * {@code GENO_0000222 has_genotype}, {@code RO_0002573 has modifier} and
+     * {@code TGEMO_00171 induced by} are the three that carry volume today, but the table is general
+     * and there is no reason for the harvest to be narrower than the thing it feeds.</p>
+     *
+     * <p>{@code OBJECT_CATEGORY} stays null: a statement has one category, which belongs to the
+     * subject. Inventing a category for the object would assert something the curator did not.</p>
+     */
+    private static final String AR_STATEMENT_QUERY =
+            "select C.`VALUE`, C.VALUE_URI, C.CATEGORY, C.CATEGORY_URI, "
+                    + "C.PREDICATE, C.PREDICATE_URI, C.OBJECT, C.OBJECT_URI, "
+                    + "I.TAXON_FK, 'CURATED', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
+                    + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
+                    + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
+                    + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
+                    + "where C.OBJECT is not null and (C.PREDICATE is not null or C.PREDICATE_URI is not null) "
+                    + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
+
+    /**
+     * The same harvest for the second leg of a two-clause statement.
+     *
+     * <p>A {@code Statement} can carry two predicate/object pairs, and the second is not decoration:
+     * a dose or a duration rides there, and so does the second half of anything a curator expressed as
+     * two clauses. Dropping it would lose a triple that is as asserted as the first one.</p>
+     */
+    private static final String AR_SECOND_STATEMENT_QUERY =
+            "select C.`VALUE`, C.VALUE_URI, C.CATEGORY, C.CATEGORY_URI, "
+                    + "C.SECOND_PREDICATE, C.SECOND_PREDICATE_URI, C.SECOND_OBJECT, C.SECOND_OBJECT_URI, "
+                    + "I.TAXON_FK, 'CURATED', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
+                    + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
+                    + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
+                    + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
+                    + "where C.SECOND_OBJECT is not null and (C.SECOND_PREDICATE is not null or C.SECOND_PREDICATE_URI is not null) "
+                    + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
+
+    private static final String AR_INSERT_COLUMNS =
+            "insert into ANNOTATION_RELATION (SUBJECT_VALUE, SUBJECT_VALUE_URI, SUBJECT_CATEGORY, SUBJECT_CATEGORY_URI, "
+                    + "PREDICATE, PREDICATE_URI, OBJECT_VALUE, OBJECT_VALUE_URI, "
+                    + "TAXON_FK, BASIS, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`, "
+                    + "ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, GENERATED_AT) ";
+
+    @Override
+    @Timed
+    @Transactional
+    public int updateAnnotationRelationEntries( @Nullable ExpressionExperiment ee ) {
+        StopWatch timer = StopWatch.createStarted();
+        String what = ee != null ? " for " + ee : "";
+        log.info( String.format( "Updating CURATED ANNOTATION_RELATION entries%s...", what ) );
+        Date now = new Date();
+
+        // Delete first, then insert. An upsert can only correct rows the new query still produces, so a
+        // row whose statement a curator has since deleted would outlive the annotation it came from --
+        // the failure mode that left 1,008 uncorrectable rows in EE2C.
+        NativeQuery<?> delete = sessionFactory.getCurrentSession()
+                .createNativeQuery( "delete from ANNOTATION_RELATION where BASIS = 'CURATED'"
+                        + ( ee != null ? " and EXPRESSION_EXPERIMENT_FK = :eeId" : "" ) )
+                .addSynchronizedQuerySpace( AR_QUERY_SPACE );
+        if ( ee != null ) {
+            delete.setParameter( "eeId", ee.getId() );
+        }
+        int removed = delete.executeUpdate();
+
+        int inserted = 0;
+        for ( String query : new String[] { AR_STATEMENT_QUERY, AR_SECOND_STATEMENT_QUERY } ) {
+            inserted += sessionFactory.getCurrentSession()
+                    .createNativeQuery( AR_INSERT_COLUMNS + query )
+                    .addSynchronizedQuerySpace( AR_QUERY_SPACE )
+                    .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                    .setParameter( "eeId", ee != null ? ee.getId() : null )
+                    .setParameter( "now", now )
+                    .executeUpdate();
+        }
+        log.info( String.format( "Done updating CURATED ANNOTATION_RELATION entries%s; %d removed, %d written in %d ms.",
+                what, removed, inserted, timer.getTime() ) );
+        return inserted;
+    }
+
+    @Override
+    public void evictAnnotationRelationQueryCache() {
+        sessionFactory.getCache().evictQueryRegion( AR_QUERY_SPACE );
     }
 
     @Override

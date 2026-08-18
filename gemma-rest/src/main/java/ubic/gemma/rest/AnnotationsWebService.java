@@ -45,6 +45,7 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.core.ontology.lexical.LexicalOntologyTerm;
 import ubic.gemma.core.ontology.lexical.LexicalTermMetadata;
+import ubic.gemma.model.common.description.AnnotationRelationBasis;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -150,6 +151,12 @@ public class AnnotationsWebService {
      * contexts and when {@code gemma.chembl.enabled} is false, in which case the negative evidence
      * simply carries no external identification.
      */
+    /**
+     * Injected as a field rather than through the constructor to keep this class's already long
+     * constructor from growing a tenth argument; the same reason the resolvers below are.
+     */
+    @Autowired
+    private ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService;
     @Autowired(required = false)
     private ubic.gemma.core.ontology.chembl.ChemblCodeResolver chemblCodeResolver;
     @Autowired(required = false)
@@ -674,6 +681,206 @@ public class AnnotationsWebService {
                 .map( p -> new OntologyTermSimpleValueObject( p.getUri(), p.getLabel() ) )
                 .collect( Collectors.toList() );
         return respond( vos );
+    }
+
+    /**
+     * Relations Gemma knows between annotation terms, with the basis for each.
+     *
+     * <p>Generic on purpose. "Which genotypes stand for Leigh syndrome?" and "which anatomical part
+     * does this cell line come from?" are the same query with different terms in it, so there is one
+     * endpoint rather than one per relation kind.</p>
+     *
+     * <p>Ask it from either end. {@code subject} and {@code object} both accept a term, and the row
+     * means the same thing whichever end seeded it.</p>
+     */
+    @GET
+    @Path("/relations")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve relations between annotation terms, with the basis for each",
+            description = "Answers what Gemma knows about how two annotation terms relate: a genotype "
+                    + "and the disease it stands for, a cell line and the tissue it came from, and so on. "
+                    + "Every row reports its BASIS -- CURATED (a curator wrote the statement), ONTOLOGY (a "
+                    + "loaded ontology asserts it), EXTERNAL (a third-party resource), or CORPUS (attested "
+                    + "only by co-occurrence in our own curation). An assertion outranks an attestation, and "
+                    + "a CORPUS-only row is reported as uncorroborated. Nothing here is an annotation: these "
+                    + "are derived facts, and none of them has been written onto any experiment.",
+            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+    public ResponseDataObject<List<AnnotationRelationValueObject>> getAnnotationRelations(
+            @Parameter(description = "Term on the subject side, as a URI or a plain value.") @QueryParam("subject") @Nullable String subject,
+            @Parameter(description = "Term on the object side, as a URI or a plain value.") @QueryParam("object") @Nullable String object,
+            @Parameter(description = "Restrict to these predicate URIs; omit for any.") @QueryParam("predicate") @Nullable String predicate,
+            @Parameter(description = "Restrict to these bases: CURATED, ONTOLOGY, EXTERNAL, CORPUS.") @QueryParam("basis") @Nullable String basis,
+            @Parameter(description = "Seed from every annotation a dataset carries, by dataset id, instead "
+                    + "of naming a term. This is the experiment-page question: what do this dataset's own "
+                    + "annotations stand for? The dataset is held out of its own evidence automatically.") @QueryParam("dataset") @Nullable Long datasetId,
+            @Parameter(description = "Which side a 'dataset' seed is matched on: SUBJECT_TO_OBJECT reads "
+                    + "the dataset's terms as subjects, OBJECT_TO_SUBJECT as objects. A curated statement "
+                    + "puts the disease in the subject and the gene in the object, so a dataset carrying a "
+                    + "genotype wants OBJECT_TO_SUBJECT.") @QueryParam("seedDirection") @DefaultValue("OBJECT_TO_SUBJECT") String seedDirection,
+            @Parameter(description = "Restrict to a taxon by id. Relations with no taxon answer for every taxon.") @QueryParam("taxonId") @Nullable Long taxonId,
+            @Parameter(description = "Hold these dataset ids out of the evidence. Pass the dataset being "
+                    + "examined so it is not shown its own annotation as support for itself.") @QueryParam("excludeDatasets") @Nullable String excludeDatasets,
+            @Parameter(description = "Minimum number of attesting experiments; ignored for asserted bases.") @QueryParam("minSupport") @DefaultValue("0") int minSupport,
+            @Parameter(description = "Minimum specificity in [0,1]; ignored for asserted bases. Off by "
+                    + "default -- no threshold has been tuned against curator judgement yet.") @QueryParam("minSpecificity") @DefaultValue("0") double minSpecificity,
+            @QueryParam("limit") @DefaultValue("50") int limit
+    ) {
+        if ( StringUtils.isBlank( subject ) && StringUtils.isBlank( object ) && datasetId == null ) {
+            throw new BadRequestException( "One of 'subject', 'object' or 'dataset' must be supplied; the whole relation table is not a question." );
+        }
+        ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery q = new ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery()
+                .taxonId( taxonId )
+                .minimumSupport( minSupport )
+                .minimumSpecificity( minSpecificity )
+                .maxResults( limit );
+        // A term is addressed by URI when it has one and by its value when it does not; rather than
+        // making the caller say which, both legs are seeded and the query ORs them.
+        if ( StringUtils.isNotBlank( subject ) ) {
+            q.subjectValueUris( Collections.singleton( subject ) ).subjectValues( Collections.singleton( subject ) );
+        }
+        if ( StringUtils.isNotBlank( object ) ) {
+            q.objectValueUris( Collections.singleton( object ) ).objectValues( Collections.singleton( object ) );
+        }
+        if ( StringUtils.isNotBlank( predicate ) ) {
+            q.predicateUris( Collections.singleton( predicate ) );
+        }
+        if ( StringUtils.isNotBlank( basis ) ) {
+            q.bases( parseBases( basis ) );
+        }
+        if ( StringUtils.isNotBlank( excludeDatasets ) ) {
+            q.excludedExperimentIds( parseIds( excludeDatasets ) );
+        }
+        if ( datasetId != null ) {
+            try {
+                q.seedFromExperimentId( datasetId )
+                        .seedDirection( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.Direction
+                                .valueOf( seedDirection.toUpperCase() ) );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown seedDirection '" + seedDirection
+                        + "'; expected SUBJECT_TO_OBJECT or OBJECT_TO_SUBJECT." );
+            }
+            if ( q.getExcludedExperimentIds().isEmpty() ) {
+                // A dataset shown its own annotation as support for what that annotation implies is
+                // reading a tautology as corroboration, so the default holds it out. An explicit
+                // excludeDatasets is left alone: the caller has said what it wants excluded.
+                q.excludedExperimentIds( Collections.singleton( datasetId ) );
+            }
+        }
+        return respond( annotationRelationService.findRelations( q ).stream()
+                .map( AnnotationRelationValueObject::new )
+                .collect( Collectors.toList() ) );
+    }
+
+    private Set<AnnotationRelationBasis> parseBases( String csv ) {
+        Set<AnnotationRelationBasis> bases = EnumSet.noneOf( AnnotationRelationBasis.class );
+        for ( String token : csv.split( "," ) ) {
+            String t = token.trim();
+            if ( t.isEmpty() ) {
+                continue;
+            }
+            try {
+                bases.add( AnnotationRelationBasis.valueOf( t.toUpperCase() ) );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown basis '" + t + "'; expected one of "
+                        + Arrays.toString( AnnotationRelationBasis.values() ) + "." );
+            }
+        }
+        return bases.isEmpty() ? EnumSet.allOf( AnnotationRelationBasis.class ) : bases;
+    }
+
+    private List<Long> parseIds( String csv ) {
+        List<Long> ids = new ArrayList<>();
+        for ( String token : csv.split( "," ) ) {
+            String t = token.trim();
+            if ( t.isEmpty() ) {
+                continue;
+            }
+            try {
+                ids.add( Long.parseLong( t ) );
+            } catch ( NumberFormatException e ) {
+                throw new BadRequestException( "'" + t + "' is not a dataset id." );
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * A relation on the wire.
+     *
+     * <p>{@code basis} is not metadata a client may skip: it is what separates somebody having stated
+     * the fact from our having noticed a co-occurrence. {@code numberOfExperiments} is zero for
+     * asserted bases because there is nothing to count, <b>not</b> because there is no evidence, so
+     * sorting on it without reading the basis buries the strongest rows.</p>
+     */
+    @Value
+    public static class AnnotationRelationValueObject {
+        String subject;
+        @Nullable
+        String subjectUri;
+        @Nullable
+        String subjectCategory;
+        @Nullable
+        String subjectCategoryUri;
+        @Nullable
+        String predicate;
+        @Nullable
+        String predicateUri;
+        String object;
+        @Nullable
+        String objectUri;
+        @Nullable
+        String objectCategory;
+        @Nullable
+        String objectCategoryUri;
+        @Nullable
+        Long taxonId;
+        @Nullable
+        String taxonName;
+        String basis;
+        @Nullable
+        String source;
+        @Nullable
+        String sourceVersion;
+        long numberOfExperiments;
+        long numberOfExperimentsAtFactorValue;
+        long numberOfExperimentsAtTag;
+        long numberOfExperimentsAtBioMaterial;
+        long numberOfExperimentsWithSubject;
+        double specificity;
+        @Nullable
+        Long exampleDatasetId;
+        /**
+         * Whether this row stands on its own. False only for a CORPUS row, whose co-occurrence
+         * establishes association and nothing more -- and whose supply of evidence stops growing the
+         * moment curators stop writing the redundant tag it is derived from.
+         */
+        boolean corroborated;
+
+        AnnotationRelationValueObject( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationSummary s ) {
+            this.subject = s.getSubjectValue();
+            this.subjectUri = s.getSubjectValueUri();
+            this.subjectCategory = s.getSubjectCategory();
+            this.subjectCategoryUri = s.getSubjectCategoryUri();
+            this.predicate = s.getPredicate();
+            this.predicateUri = s.getPredicateUri();
+            this.object = s.getObjectValue();
+            this.objectUri = s.getObjectValueUri();
+            this.objectCategory = s.getObjectCategory();
+            this.objectCategoryUri = s.getObjectCategoryUri();
+            this.taxonId = s.getTaxonId();
+            this.taxonName = s.getTaxonCommonName();
+            this.basis = s.getBasis().name();
+            this.source = s.getSource();
+            this.sourceVersion = s.getSourceVersion();
+            this.numberOfExperiments = s.getNumberOfExperiments();
+            this.numberOfExperimentsAtFactorValue = s.getNumberOfExperimentsAtFactorValue();
+            this.numberOfExperimentsAtTag = s.getNumberOfExperimentsAtTag();
+            this.numberOfExperimentsAtBioMaterial = s.getNumberOfExperimentsAtBioMaterial();
+            this.numberOfExperimentsWithSubject = s.getNumberOfExperimentsWithSubject();
+            this.specificity = s.getSpecificity();
+            this.exampleDatasetId = s.getExampleExperimentId();
+            this.corroborated = s.getBasis().isSelfSufficient();
+        }
     }
 
     private List<AnnotationSearchResultValueObject> getAnnotationsParentsOrChildren( String termUri, boolean direct, boolean parents ) {

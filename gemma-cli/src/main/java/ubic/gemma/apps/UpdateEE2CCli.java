@@ -25,7 +25,8 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
     private static final String
             LEVEL_OPTION = "l",
             SINCE_OPTION = "s",
-            TRUNCATE_OPTION = "truncate";
+            TRUNCATE_OPTION = "truncate",
+            RELATIONS_OPTION = "relations";
 
     @Getter
     private enum Level {
@@ -56,8 +57,10 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
     private Level level;
     private Date sinceLastUpdate;
     private boolean truncate;
+    private boolean relations;
 
     private int updated = 0;
+    private int relationsWritten = 0;
 
     @Nullable
     @Override
@@ -68,7 +71,7 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Update the EXPRESSION_EXPERIMENT2CHARACTERISTIC table";
+        return "Update the EXPRESSION_EXPERIMENT2CHARACTERISTIC table (and, with --relations, ANNOTATION_RELATION)";
     }
 
     @Override
@@ -76,6 +79,10 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
         addEnumOption( options, LEVEL_OPTION, "level", "Only update characteristic at the given level.", Level.class );
         addDateOption( SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date.", options );
         options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it." );
+        // Same CLI because the harvest READS EE2C: run separately and it either repeats the work or
+        // reads a table that is mid-rebuild. Ordering is the reason to keep them in one command.
+        options.addOption( RELATIONS_OPTION, "relations", false,
+                "Also rebuild ANNOTATION_RELATION from the curated statements EE2C carries." );
     }
 
     @Override
@@ -87,6 +94,7 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
             sinceLastUpdate = null;
         }
         truncate = commandLine.hasOption( TRUNCATE_OPTION );
+        relations = commandLine.hasOption( RELATIONS_OPTION );
     }
 
     @Override
@@ -96,16 +104,25 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
         } else {
             updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( sinceLastUpdate, truncate );
         }
+        if ( relations ) {
+            relationsWritten += tableMaintenanceUtil.updateAnnotationRelationEntries( null );
+        }
     }
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
         updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( expressionExperiment,
                 level != null ? level.getLevelClass() : null );
+        if ( relations ) {
+            relationsWritten += tableMaintenanceUtil.updateAnnotationRelationEntries( expressionExperiment );
+        }
     }
 
     @Override
     protected void postprocessExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
+        if ( relations ) {
+            log.info( "Wrote " + relationsWritten + " CURATED relation rows." );
+        }
         if ( updated > 0 ) {
             try {
                 gemmaRestApiClient.perform( "/datasets/annotations/refresh" );

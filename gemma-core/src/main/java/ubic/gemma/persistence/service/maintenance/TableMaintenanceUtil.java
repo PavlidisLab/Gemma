@@ -121,6 +121,35 @@ public interface TableMaintenanceUtil {
     int updateExpressionExperiment2ArrayDesignEntries( ExpressionExperiment ee );
 
     /**
+     * Rebuild the {@code ANNOTATION_RELATION} rows a curator already wrote.
+     *
+     * <p>This is a harvest, not an inference. A curator writing
+     * {@code disease model: autism spectrum disorder - has_genotype -> Mef2c} put a subject, a
+     * predicate and an object into {@code CHARACTERISTIC}, and 10,040 datasets carry such a statement.
+     * The knowledge has always been there; what has never existed is an index that can be read from
+     * the object end, so "which genotypes are asserted against this disease?" has no query. Copying
+     * those triples into a table keyed both ways is the whole operation.</p>
+     *
+     * <p>Read from {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} rather than {@code CHARACTERISTIC}
+     * because EE2C has already done the work of resolving every annotation to its experiment, at every
+     * level, with the anonymous ACL mask alongside. Harvesting from the normalized table would mean
+     * re-deriving all of that and getting a second, divergent copy of it.</p>
+     *
+     * <p>Deletes the basis before inserting rather than upserting - see {@code AnnotationRelation}.</p>
+     *
+     * @param ee restrict to one experiment, or null for the whole corpus
+     * @return how many relation rows were written
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateAnnotationRelationEntries( @Nullable ExpressionExperiment ee );
+
+    /**
+     * Evict the query cache for the {@code ANNOTATION_RELATION} table.
+     */
+    @Secured({ "GROUP_ADMIN" })
+    void evictAnnotationRelationQueryCache();
+
+    /**
      * Evict the query cache for the {@code GENE2CS} table.
      */
     @Secured({ "GROUP_ADMIN" })
