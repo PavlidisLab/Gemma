@@ -18,16 +18,21 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
+import org.apache.jena.vocabulary.RDFS;
 import ubic.gemma.core.ontology.model.OntologyXref;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Reads an ontology's cross-references off the Jena model, <b>keeping the mapping qualifier</b>.
@@ -74,6 +79,7 @@ class CrossReferences {
      */
     public static Collection<OntologyXref> list( Model model ) {
         Map<String, OntologyXref.Strength> qualifiers = readAxiomQualifiers( model );
+        Map<String, String> labels = readLabels( model );
         List<OntologyXref> result = new ArrayList<>();
 
         StmtIterator it = model.listStatements( null, OBO.hasDbXref, ( RDFNode ) null );
@@ -90,7 +96,7 @@ class CrossReferences {
                 }
                 OntologyXref.Strength strength = qualifiers.getOrDefault( key( termUri, curie ),
                         OntologyXref.Strength.UNSPECIFIED );
-                result.add( new OntologyXref( termUri, curie, strength ) );
+                result.add( new OntologyXref( termUri, curie, strength, labels.get( termUri ) ) );
             }
         } finally {
             it.close();
@@ -107,7 +113,7 @@ class CrossReferences {
                     }
                     String curie = OntologyXref.normalizeCurie( literalOrUri( st.getObject() ) );
                     if ( curie != null ) {
-                        result.add( new OntologyXref( termUri, curie, e.getValue() ) );
+                        result.add( new OntologyXref( termUri, curie, e.getValue(), labels.get( termUri ) ) );
                     }
                 }
             } finally {
@@ -116,6 +122,79 @@ class CrossReferences {
         }
 
         return result;
+    }
+
+    /**
+     * {@code rdfs:label} per named class, minus the obsolete ones.
+     *
+     * <p>Read whole-model in the same style as {@link #readAxiomQualifiers}, and for the same reason:
+     * what consumes this is a whole reverse index, so paying a per-term lookup 145,917 times to
+     * assemble the same map is precisely what to avoid.</p>
+     *
+     * <p>🛑 <b>Obsolete terms are dropped rather than labelled.</b> They keep their {@code rdfs:label}
+     * and their cross-references — MONDO and EFO both carry retired classes complete with both — so a
+     * consumer that stored whatever label came back would file a retired term as the object of a
+     * relation with nothing to mark it. The two conditions mirror {@code OntologyTermImpl.isObsolete()}
+     * read against a plain model: {@code owl:deprecated true}, or a subclass of
+     * {@code oboInOwl:ObsoleteClass}.</p>
+     */
+    private static Map<String, String> readLabels( Model model ) {
+        Set<String> obsolete = new HashSet<>();
+        StmtIterator dep = model.listStatements( null, OWL2.deprecated, ( RDFNode ) null );
+        try {
+            while ( dep.hasNext() ) {
+                Statement st = dep.next();
+                RDFNode object = st.getObject();
+                if ( st.getSubject().getURI() != null && object.isLiteral()
+                        && "true".equalsIgnoreCase( object.asLiteral().getLexicalForm() ) ) {
+                    obsolete.add( st.getSubject().getURI() );
+                }
+            }
+        } finally {
+            dep.close();
+        }
+        StmtIterator obs = model.listStatements( null, RDFS.subClassOf, OBO.ObsoleteClass );
+        try {
+            while ( obs.hasNext() ) {
+                Resource subject = obs.next().getSubject();
+                if ( subject.getURI() != null ) {
+                    obsolete.add( subject.getURI() );
+                }
+            }
+        } finally {
+            obs.close();
+        }
+
+        Map<String, String> labels = new HashMap<>();
+        // an English label, once found, is not displaced by a translation appearing later in the file
+        Set<String> settled = new HashSet<>();
+        StmtIterator it = model.listStatements( null, RDFS.label, ( RDFNode ) null );
+        try {
+            while ( it.hasNext() ) {
+                Statement st = it.next();
+                String uri = st.getSubject().getURI();
+                if ( uri == null || obsolete.contains( uri ) || settled.contains( uri )
+                        || !st.getObject().isLiteral() ) {
+                    continue;
+                }
+                String value = StringUtils.normalizeSpace( st.getObject().asLiteral().getString() );
+                if ( StringUtils.isBlank( value ) ) {
+                    continue;
+                }
+                String lang = st.getObject().asLiteral().getLanguage();
+                boolean english = StringUtils.isBlank( lang )
+                        || lang.toLowerCase( Locale.ROOT ).startsWith( "en" );
+                if ( english ) {
+                    settled.add( uri );
+                } else if ( labels.containsKey( uri ) ) {
+                    continue;
+                }
+                labels.put( uri, value );
+            }
+        } finally {
+            it.close();
+        }
+        return labels;
     }
 
     /**

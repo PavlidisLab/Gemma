@@ -29,6 +29,7 @@ class CrossReferencesTest {
     private static final String BREAST_ADENOCARCINOMA = "http://purl.obolibrary.org/obo/MONDO_0004988";
     private static final String ADENOCARCINOMA = "http://purl.obolibrary.org/obo/MONDO_0004970";
     private static final String LUNG_ADENOCARCINOMA = "http://purl.obolibrary.org/obo/MONDO_0005061";
+    private static final String RETIRED = "http://purl.obolibrary.org/obo/MONDO_0000001";
 
     private static final String RDF = "<?xml version=\"1.0\"?>\n"
             + "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n"
@@ -51,6 +52,13 @@ class CrossReferencesTest {
             + "  <owl:Class rdf:about=\"" + LUNG_ADENOCARCINOMA + "\">\n"
             + "    <rdfs:label>lung adenocarcinoma</rdfs:label>\n"
             + "    <skos:narrowMatch rdf:resource=\"http://purl.obolibrary.org/obo/DOID_3910\"/>\n"
+            + "  </owl:Class>\n"
+            // a retired class keeps its label AND its cross-references, which is what makes it
+            // dangerous: read naively it is indistinguishable from a live term
+            + "  <owl:Class rdf:about=\"" + RETIRED + "\">\n"
+            + "    <rdfs:label>obsolete adenocarcinoma of the breast</rdfs:label>\n"
+            + "    <owl:deprecated rdf:datatype=\"http://www.w3.org/2001/XMLSchema#boolean\">true</owl:deprecated>\n"
+            + "    <oboInOwl:hasDbXref>DOID:1612</oboInOwl:hasDbXref>\n"
             + "  </owl:Class>\n"
             // the qualifier: an owl:Axiom reifying the DOID:3458 assertion above
             + "  <owl:Axiom>\n"
@@ -141,6 +149,40 @@ class CrossReferencesTest {
     void everyCrossReferenceIsAttributedToTheTermThatDeclaredIt() {
         assertThat( read() )
                 .extracting( OntologyXref::getTermUri )
-                .containsOnly( BREAST_ADENOCARCINOMA, ADENOCARCINOMA, LUNG_ADENOCARCINOMA );
+                .containsOnly( BREAST_ADENOCARCINOMA, ADENOCARCINOMA, LUNG_ADENOCARCINOMA, RETIRED );
+    }
+
+    /**
+     * 🛑 The declaring term's label rides along with the mapping, because a caller inverting these to
+     * translate a foreign identifier has to <i>name</i> what it translated to, and the only other place
+     * to ask is the loaded model — which may be a corpus-seeded slim that omits precisely the terms a
+     * foreign identifier is being translated to reach. Read once, here, or the identifier resolves and
+     * the term stays nameless.
+     */
+    @Test
+    void theDeclaringTermsLabelRidesAlongWithTheMapping() {
+        assertThat( find( BREAST_ADENOCARCINOMA, "DOID:3458" ) )
+                .get()
+                .extracting( OntologyXref::getTermLabel )
+                .isEqualTo( "breast adenocarcinoma" );
+        // the SKOS form is read in a separate pass and must be labelled the same way
+        assertThat( find( LUNG_ADENOCARCINOMA, "DOID:3910" ) )
+                .get()
+                .extracting( OntologyXref::getTermLabel )
+                .isEqualTo( "lung adenocarcinoma" );
+    }
+
+    /**
+     * 🛑 A retired class keeps both its label and its cross-references, so handing back its label would
+     * let a consumer store a term MONDO has withdrawn as the object of a relation, with nothing marking
+     * it. The mapping itself is still reported — it is a real mapping, and a caller widening a query may
+     * want it — but it arrives unnamed, which is what stops it being stored.
+     */
+    @Test
+    void anObsoleteTermIsNotNamed() {
+        assertThat( find( RETIRED, "DOID:1612" ) )
+                .get()
+                .extracting( OntologyXref::getTermLabel )
+                .isNull();
     }
 }

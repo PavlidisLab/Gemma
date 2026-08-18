@@ -111,11 +111,18 @@ public class OntologyXref {
     private final String termUri;
     private final String curie;
     private final Strength strength;
+    @Nullable
+    private final String termLabel;
 
     public OntologyXref( String termUri, String curie, Strength strength ) {
+        this( termUri, curie, strength, null );
+    }
+
+    public OntologyXref( String termUri, String curie, Strength strength, @Nullable String termLabel ) {
         this.termUri = termUri;
         this.curie = curie;
         this.strength = strength;
+        this.termLabel = termLabel;
     }
 
     /**
@@ -142,6 +149,26 @@ public class OntologyXref {
 
     public Strength getStrength() {
         return strength;
+    }
+
+    /**
+     * The declaring term's label, as the read that produced this cross-reference had it; null when that
+     * read had no label to give.
+     *
+     * <p>Carried because a caller inverting these to translate a foreign identifier immediately needs to
+     * <i>name</i> what it translated to, and asking the loaded model for that name reintroduces the very
+     * artifact difference reading the source was meant to escape. Measured 2026-08-18: with the xrefs
+     * read from the full MONDO source, the DOID to MONDO translation succeeded for every CLO restriction
+     * and 977 rows were dropped anyway, because the labels were still coming from the corpus-seeded slim
+     * that by construction omits the diseases Gemma does not yet annotate. Whatever answers "which term"
+     * answers "called what" in the same pass.</p>
+     *
+     * <p>🛑 Deliberately not part of {@link #equals(Object)}: a label is how a mapping reads, not which
+     * mapping it is, and the same mapping read from a labelled and an unlabelled model is one mapping.</p>
+     */
+    @Nullable
+    public String getTermLabel() {
+        return termLabel;
     }
 
     @Override

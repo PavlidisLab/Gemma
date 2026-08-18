@@ -42,7 +42,8 @@ import java.util.TreeMap;
  */
 public class OntologyXrefIndex {
 
-    private static final OntologyXrefIndex EMPTY = new OntologyXrefIndex( Collections.emptyMap() );
+    private static final OntologyXrefIndex EMPTY =
+            new OntologyXrefIndex( Collections.emptyMap(), Collections.emptyMap() );
 
     public static OntologyXrefIndex empty() {
         return EMPTY;
@@ -57,6 +58,7 @@ public class OntologyXrefIndex {
      */
     public static OntologyXrefIndex build( Collection<OntologyXref> xrefs ) {
         Map<String, Map<String, OntologyXref.Strength>> index = new HashMap<>();
+        Map<String, String> labels = new HashMap<>();
         for ( OntologyXref xref : xrefs ) {
             String curie = OntologyXref.normalizeCurie( xref.getCurie() );
             if ( curie == null ) {
@@ -64,14 +66,20 @@ public class OntologyXrefIndex {
             }
             index.computeIfAbsent( curie, k -> new java.util.LinkedHashMap<>() )
                     .merge( xref.getTermUri(), xref.getStrength(), OntologyXrefIndex::strongest );
+            if ( xref.getTermLabel() != null ) {
+                labels.putIfAbsent( xref.getTermUri(), xref.getTermLabel() );
+            }
         }
-        return index.isEmpty() ? EMPTY : new OntologyXrefIndex( index );
+        return index.isEmpty() ? EMPTY : new OntologyXrefIndex( index, labels );
     }
 
     private final Map<String, Map<String, OntologyXref.Strength>> index;
+    private final Map<String, String> labels;
 
-    private OntologyXrefIndex( Map<String, Map<String, OntologyXref.Strength>> index ) {
+    private OntologyXrefIndex( Map<String, Map<String, OntologyXref.Strength>> index,
+            Map<String, String> labels ) {
         this.index = index;
+        this.labels = labels;
     }
 
     /**
@@ -122,6 +130,24 @@ public class OntologyXrefIndex {
         }
         Map<String, OntologyXref.Strength> hits = index.get( curie );
         return hits != null ? hits.get( termUri ) : null;
+    }
+
+    /**
+     * What a term resolved through this index is called, according to the same artifact that resolved
+     * it; null when that artifact carried no usable label for it.
+     *
+     * <p>🛑 <b>Resolving and naming have to come from the same read.</b> Splitting them is what made
+     * the fix to this index only half a fix: with the cross-references inverted from the full MONDO
+     * source, every DOID a CLO restriction names translated successfully, and 977 of those rows were
+     * then dropped because the <i>label</i> was still being looked up in the corpus-seeded slim, which
+     * omits the diseases Gemma does not yet annotate — the exact set a foreign identifier is being
+     * translated to reach. The identifier resolved and the term stayed nameless.</p>
+     *
+     * <p>Obsolete terms are already excluded upstream, when the labels are read.</p>
+     */
+    @Nullable
+    public String labelOf( @Nullable String termUri ) {
+        return termUri != null ? labels.get( termUri ) : null;
     }
 
     public boolean isEmpty() {

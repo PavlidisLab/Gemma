@@ -183,6 +183,14 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
         private int anonymousTargets = 0;
         private int untranslatable = 0;
         private int unlabelledTargets = 0;
+        /**
+         * Translated targets the loaded model could not name, that the source artifact could.
+         *
+         * <p>Reported rather than left silent because it measures exactly how far the loaded model has
+         * drifted from the source — a slim rebuild with different seeds moves this number, and nothing
+         * else in the run would show it.</p>
+         */
+        private int labelledFromSource = 0;
         private int readFailures = 0;
         /**
          * Restrictions on an allow-listed property that were rejected because they are not an
@@ -239,6 +247,10 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
                     .append( "\tuntranslatable foreign target\t" ).append( untranslatable )
                     .append( "\ttarget absent from the loaded model\t" ).append( unlabelledTargets )
                     .append( "\tunreadable class\t" ).append( readFailures ).append( '\n' );
+            if ( labelledFromSource > 0 ) {
+                sb.append( "recovered\ttarget absent from the loaded model, named from the source\t" )
+                        .append( labelledFromSource ).append( '\n' );
+            }
             if ( !unresolvedTargets.isEmpty() ) {
                 sb.append( "unresolved targets (identifier, restrictions affected):\n" );
                 unresolvedTargets.entrySet().stream()
@@ -372,6 +384,18 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
             List<AnnotationRelation> rows = new ArrayList<>( translated.size() );
             for ( String candidate : translated ) {
                 String label = labelOf( candidate, xrefOntology );
+                if ( label == null ) {
+                    // 🛑 The loaded model is not the authority on what a translated term is called, and
+                    // treating it as one is what left the xref fix half-done. It may be a corpus-seeded
+                    // slim, holding the diseases Gemma already annotates -- the complement of what a
+                    // foreign identifier is translated to reach. Measured 2026-08-18: every DOID
+                    // resolved and 977 restrictions were dropped here anyway, DOID_0050427 alone
+                    // accounting for 172. The artifact that resolved the identifier also names it.
+                    label = xrefs.labelOf( candidate );
+                    if ( label != null ) {
+                        reading.labelledFromSource++;
+                    }
+                }
                 if ( label == null ) {
                     reading.unlabelledTargets++;
                     continue;

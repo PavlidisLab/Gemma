@@ -60,6 +60,9 @@ class OntologyRelationProducerImplTest {
     private static final String DOID_UNMAPPED = OBO + "DOID_9999999";
     private static final String MONDO_BREAST_ADENOCARCINOMA = OBO + "MONDO_0004988";
     private static final String MONDO_ADENOCARCINOMA = OBO + "MONDO_0004970";
+    /** the identifier that cost the most rows in the 2026-08-18 run: 172 restrictions on its own */
+    private static final String DOID_MACULAR_DEGENERATION = OBO + "DOID_0050427";
+    private static final String MONDO_MACULAR_DEGENERATION = OBO + "MONDO_0005298";
 
     private static final String HUMAN = OBO + "NCBITaxon_9606";
     private static final String BREAST = OBO + "UBERON_0000310";
@@ -224,6 +227,49 @@ class OntologyRelationProducerImplTest {
         cloTerms.put( MCF7, term( MCF7, "MCF7 cell",
                 restriction( DERIVES_FROM_PATIENT_HAVING_DISEASE, "derives from patient having disease",
                         term( DOID_UNMAPPED, "some disease MONDO has no xref for" ) ) ) );
+
+        assertThat( produce( "CLO" ) ).isEmpty();
+    }
+
+    /**
+     * 🛑 <b>Resolving a foreign identifier and naming what it resolved to have to come from the same
+     * read.</b> The loaded MONDO may be a corpus-seeded slim — it holds the diseases Gemma already
+     * annotates, which is the complement of what a DOID is being translated to reach. On 2026-08-18 the
+     * translation succeeded for every CLO restriction and 977 rows were dropped anyway, because the
+     * label was still looked up in the slim: the identifier resolved and the term stayed nameless.
+     * {@code DOID_0050427} alone accounted for 172 of them, which is why it is the one here.
+     *
+     * <p>The term is deliberately absent from {@code mondoTerms} and present only in the
+     * cross-references, which is exactly the slim's shape.</p>
+     */
+    @Test
+    void aTargetTheLoadedModelOmitsIsNamedFromTheSourceInstead() {
+        xrefs.add( new OntologyXref( MONDO_MACULAR_DEGENERATION, "DOID:0050427",
+                OntologyXref.Strength.EXACT, "age-related macular degeneration" ) );
+        cloTerms.put( MCF7, term( MCF7, "MCF7 cell",
+                restriction( IS_DISEASE_MODEL_FOR, "is disease model for",
+                        term( DOID_MACULAR_DEGENERATION, "age related macular degeneration" ) ) ) );
+
+        assertThat( mondoTerms ).doesNotContainKey( MONDO_MACULAR_DEGENERATION );
+        List<AnnotationRelation> rows = produce( "CLO" );
+
+        assertThat( rows ).hasSize( 1 );
+        assertThat( rows.get( 0 ).getObjectValueUri() ).isEqualTo( MONDO_MACULAR_DEGENERATION );
+        assertThat( rows.get( 0 ).getObjectValue() ).isEqualTo( "age-related macular degeneration" );
+    }
+
+    /**
+     * The fallback names a term from the source; it does not invent a name. {@code OBJECT_VALUE} is
+     * {@code NOT NULL} and a URI's local name is not a label, so a target neither the model nor the
+     * source can name is still dropped.
+     */
+    @Test
+    void aTargetNeitherTheModelNorTheSourceCanNameIsStillDropped() {
+        xrefs.add( new OntologyXref( MONDO_MACULAR_DEGENERATION, "DOID:0050427",
+                OntologyXref.Strength.EXACT ) );
+        cloTerms.put( MCF7, term( MCF7, "MCF7 cell",
+                restriction( IS_DISEASE_MODEL_FOR, "is disease model for",
+                        term( DOID_MACULAR_DEGENERATION, "age related macular degeneration" ) ) ) );
 
         assertThat( produce( "CLO" ) ).isEmpty();
     }
