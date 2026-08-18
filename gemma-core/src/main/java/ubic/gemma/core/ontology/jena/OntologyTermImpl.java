@@ -204,6 +204,30 @@ class OntologyTermImpl extends AbstractOntologyResource implements OntologyTerm 
     }
 
     /**
+     * One pass over the DIRECT superclasses. See {@link OntologyTerm#getDirectRestrictions()} for why
+     * the closure walk is both unnecessary and unstable here.
+     */
+    @Override
+    public Collection<OntologyRestriction> getDirectRestrictions() {
+        Collection<OntologyRestriction> result = new HashSet<>();
+        ExtendedIterator<OntClass> it = ontResource.listSuperClasses( true );
+        try {
+            while ( it.hasNext() ) {
+                OntClass c = it.next();
+                // isRestriction() rather than catching what asRestriction() throws: most superclasses
+                // are not restrictions, and an exception per miss is what makes the other method cost
+                // what it costs
+                if ( c.isRestriction() ) {
+                    result.add( RestrictionFactory.asRestriction( c.asRestriction(), additionalRestrictions ) );
+                }
+            }
+        } finally {
+            it.close();
+        }
+        return result;
+    }
+
+    /**
      *
      */
     @Override

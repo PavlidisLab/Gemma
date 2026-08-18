@@ -93,6 +93,29 @@ public interface OntologyTerm extends OntologyResource {
     Collection<OntologyRestriction> getRestrictions();
 
     /**
+     * Restrictions asserted DIRECTLY on this term, without walking the superclass closure.
+     *
+     * <p>🛑 Prefer this for reading what a term itself states. {@link #getRestrictions()} walks
+     * {@code listSuperClasses(false)} — the full transitive closure — twice, and then walks each
+     * non-restriction superclass's own closure. Under an ontology loaded with
+     * {@code inferenceMode=TRANSITIVE} that is enormous, and it is not stable: two runs of the
+     * relation producer over the identical CLO 2026-06-19 artifact reported
+     * {@code CLO_0000179} at 441 and then at exactly 1000, and {@code CLO_0037207} at 166 and then
+     * at 5. A count that changes between runs of the same input is not a count.</p>
+     *
+     * <p>OBO asserts these on the class itself — {@code rdfs:subClassOf} → {@code owl:Restriction} —
+     * so the closure adds nothing here but cost and noise. One pass over the direct superclasses,
+     * testing {@code isRestriction()} rather than catching an exception from {@code asRestriction()}
+     * for every superclass that is not one.</p>
+     *
+     * <p>Defaults to {@link #getRestrictions()} so implementations that have no notion of directness
+     * keep working.</p>
+     */
+    default Collection<OntologyRestriction> getDirectRestrictions() {
+        return getRestrictions();
+    }
+
+    /**
      * The taxon this term is restricted to, when the ontology declares one, else {@code null}.
      * <p>
      * OBO writes this as {@code relationship: in_taxon NCBITaxon:9940}, which becomes an OWL

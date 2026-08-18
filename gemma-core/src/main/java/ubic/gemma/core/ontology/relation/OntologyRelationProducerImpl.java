@@ -278,7 +278,7 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
             }
             Collection<OntologyRestriction> restrictions;
             try {
-                restrictions = term.getRestrictions();
+                restrictions = term.getDirectRestrictions();
             } catch ( Exception e ) {
                 // getRestrictions() throws outright on a restriction shape it cannot convert, and one bad
                 // class must not end the pass over 40,000 good ones

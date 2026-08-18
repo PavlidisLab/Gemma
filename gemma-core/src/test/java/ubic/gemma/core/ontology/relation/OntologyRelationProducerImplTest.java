@@ -100,6 +100,11 @@ class OntologyRelationProducerImplTest {
         when( t.getUri() ).thenReturn( uri );
         when( t.getLabel() ).thenReturn( label );
         when( t.getRestrictions() ).thenReturn( Arrays.asList( restrictions ) );
+        // The producer reads DIRECT restrictions -- the closure walk that getRestrictions() performs is
+        // unstable under an inference-mode model, reporting CLO_0000179 at 441, then 1000, then 1899
+        // across three runs of one artifact. A mock returns empty for an unstubbed default method, so
+        // stubbing only the old one made every row silently disappear.
+        when( t.getDirectRestrictions() ).thenReturn( Arrays.asList( restrictions ) );
         return t;
     }
 
