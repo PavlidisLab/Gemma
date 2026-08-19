@@ -327,6 +327,28 @@ public interface ExpressionDataFileService {
     int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean excludeSampleIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
 
     /**
+     * Stream the processed expression data to the writer while populating the cache file in the same pass.
+     * <p>
+     * One matrix build feeds both consumers. This replaces the cold-path pattern of racing a fire-and-forget
+     * cache build against an in-band stream of the same data, which fetched the vectors, thawed the platforms
+     * and read the annotations twice per cold request. The two sides fail independently: a caller that goes
+     * away mid-stream does not abort the cache build, and a cache-file write error does not abort the stream.
+     * When another writer already holds the cache file, this degrades to a plain stream, exactly like
+     * {@link #writeProcessedExpressionData(ExpressionExperiment, boolean, ScaleType, boolean, boolean, boolean, Writer, boolean)};
+     * when the cache file turns out to be fresh by the time the lock is acquired, its content is streamed
+     * instead of being rebuilt.
+     *
+     * @param forceWrite rebuild the cache file even if it exists and is up to date
+     */
+    void streamAndWriteProcessedExpressionData( ExpressionExperiment ee, boolean filtered, boolean forceWrite, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
+
+    /**
+     * Raw sibling of
+     * {@link #streamAndWriteProcessedExpressionData(ExpressionExperiment, boolean, boolean, Writer, boolean)}.
+     */
+    void streamAndWriteRawExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, Writer writer, boolean autoFlush ) throws IOException;
+
+    /**
      * Writes out the experimental design for the given experiment.
      * <p>
      * The bioassays (col 0) matches the header row of the data matrix printed out by the {@link MatrixWriter}.

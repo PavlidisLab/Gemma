@@ -6881,19 +6881,18 @@ public class DatasetsWebService {
             // re-check defensively after the cache probe (cheap)
             throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
         }
-        // Kick the build onto the expression-data executor so the cache is populated for the next caller.
-        // Fire-and-forget: the returned Future is not awaited.
-        try {
-            expressionDataFileService.writeOrLocateProcessedDataFileAsync( ee, filtered, force );
-        } catch ( RejectedExecutionException e ) {
-            log.warn( "expressionDataFileTaskExecutor queue is full; streaming without populating cache for " + ee, e );
-        }
-        // Stream in-band so the caller doesn't block on the full matrix build.
+        // One build, two consumers: stream in-band so the caller doesn't block on the full matrix build,
+        // and populate the cache file for the next caller from the SAME pass. This replaces the
+        // fire-and-forget executor build that raced the in-band stream and did the whole matrix —
+        // vector fetch, platform thaw, annotation read — twice per cold request (2026-08-19 baseline:
+        // both builds visible in the DAO thaw warnings, two seconds apart). A caller that disconnects
+        // mid-stream does not abort the cache build, so the cold path still heals behind an impatient
+        // client; a concurrent builder degrades this to a plain stream, as before.
         String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
         return Response.ok( ( StreamingOutput ) output -> {
                     try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
-                        expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, false, false,
-                                false, writer, true );
+                        expressionDataFileService.streamAndWriteProcessedExpressionData( ee, filtered, force,
+                                writer, true );
                     } catch ( NoDesignElementsException ex ) {
                         // streaming has already started; we cannot downgrade to 204, just truncate the body
                         log.warn( "Processed data for " + ee + " is empty after filtering; truncating stream.", ex );
@@ -6963,16 +6962,12 @@ public class DatasetsWebService {
                 throw new InternalServerErrorException( e );
             }
         }
-        // Kick the build onto the expression-data executor so the cache is populated for the next caller.
-        try {
-            expressionDataFileService.writeOrLocateRawExpressionDataFileAsync( ee, qt, force );
-        } catch ( RejectedExecutionException e ) {
-            log.warn( "expressionDataFileTaskExecutor queue is full; streaming without populating cache for " + qt, e );
-        }
+        // One build, two consumers — same tee as the processed endpoint above: the in-band stream and
+        // the cache file are fed from a single pass instead of racing two full builds per cold request.
         String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
         return Response.ok( ( StreamingOutput ) output -> {
                     try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
-                        expressionDataFileService.writeRawExpressionData( ee, qt, null, false, false, false, writer, true );
+                        expressionDataFileService.streamAndWriteRawExpressionData( ee, qt, force, writer, true );
                     }
                 } )
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
