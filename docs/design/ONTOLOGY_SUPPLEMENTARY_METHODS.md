@@ -153,8 +153,7 @@ survey, and is precisely the class an external resolver is liable to emit when i
 between duplicate labels by file order; 49 of the 68 redirects map such a class, and exist to
 answer that caller rather than to repair any stored row.
 
-No comparable duplication was found in any other vocabulary: MONDO, UBERON, CHEBI, EFO, the
-Cell Ontology, the Gene Ontology, PATO and the phenotype ontologies each yielded no such
+No comparable duplication was found in any other vocabulary: MONDO, UBERON, CHEBI, EFO, the Cell Ontology, the Gene Ontology, PATO and the phenotype ontologies each yielded no such
 group. The Cellosaurus accession, which reconciles cell-line identity elsewhere, cannot be
 used to group these classes, because the Cell Line Ontology records it for 543 of its 40,851
 classes and for only one member of one of these groups; the accessions are present on the
@@ -227,12 +226,7 @@ correct rows its query no longer produces. Finally, one widely used category ter
 annotations still reference it; migrating them is outstanding. That count is stated
 approximately because it lies outside the survey reported above, which enumerates the three
 value slots of an annotation and not the category slot; category and predicate terms are
-excluded from canonicalization for the reasons given there, and are not counted by it. The canonicalization
-described above is applied at read time and the underlying rows are unchanged, so any
-analysis reading the database directly, rather than through the application, sees the
-uncorrected identifiers; the corresponding migration is written but deliberately unapplied,
-because the annotation pipeline is calibrated against an earlier snapshot of the corpus and
-rewriting the live rows would desynchronize the two.
+excluded from canonicalization for the reasons given there, and are not counted by it. The canonicalization described above is applied at read time and the underlying rows are unchanged, so any analysis reading the database directly, rather than through the application, sees the uncorrected identifiers; the corresponding migration is written but deliberately unapplied, because the annotation pipeline is calibrated against an earlier snapshot of the corpus and rewriting the live rows would desynchronize the two.
 
 Several properties of the duplicate-resolution procedure bound what may be concluded from
 it. It is incomplete by design: 194 of the 257 candidate groups are left undecided, and the
