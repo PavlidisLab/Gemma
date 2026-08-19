@@ -12,13 +12,19 @@ assuming nothing is built:
   `supportingEvidence` on all three sections; the two blind read VOs surface it.
 - ✅ **Snapshot / restore / compare** (§4a) — not in the original plan; it came out
   of "we want a backup before letting an agent apply everything it finds".
-- 🟡 **Run linkage** (§6 step 2) — half done. `RUN_SHA` and `AGENT_NAME` landed
-  (`8b8f6e1bb9`) and are on production, so the storage question CAB raised is
-  settled. What is still missing is the wiring: `RunProvenance` reaches only
-  `AnnotationSetsWebService`, so a *curation commit* still cannot say which agent
-  run made it. This is the remaining half of "which agent · when".
-- ⏳ **A read endpoint** (§6 step 3) — deliberately last, pending an agreed event
-  vocabulary.
+- ✅ **Run linkage** (§6 step 2) — done. Storage landed `8b8f6e1bb9` (applied to
+  production by hand); the wiring landed `73f74927d0`: `PUT /datasets/{id}/curation`
+  takes an optional `run` section and mints a `COMMIT` set inside the commit's
+  transaction, and `PUT /design?agentProposalId=` stops discarding the parameter
+  and records a COMMIT parented to the proposal. CAB ruled `COMMIT` in as the
+  fourth `AnnotationSetRole` and Paul approved it. "Which agent · when" is
+  answerable for any commit that names its run.
+- ⏳ **A read endpoint** (§6 step 3) — the remaining piece. No longer blocked:
+  CAB's event vocabulary is settled and shipped on their side (see §6). The
+  dataset-level half is queryable today — the cross-experiment
+  `GET /annotation-sets?role=commit` listing carries the run reference including
+  `runSha`/`agentName` — so what the endpoint would add is the per-annotation
+  trace, which is the one row of the §1 table still marked ❌.
 
 Driven by three documents that landed the same day:
 
@@ -49,7 +55,7 @@ the design point, not a gap.
 | where did this annotation come from | ✅ `supportingEvidence`, since 2026-08-16 | **annotation** |
 | what the value was before | ✅ via a SNAPSHOT (§4a) | dataset, at chosen instants |
 | which factor / factor value / tag changed | ❌ | — |
-| which agent made this change | ❌ — §6 step 2 | — |
+| which agent made this change | ✅ `COMMIT` sets, since `73f74927d0` — when the commit names its run | **commit** |
 | was a human involved | ⚠️ implicitly (the audit row's actor) | dataset |
 
 Note what the two ✅ additions do and don't buy. Evidence answers "where did this
@@ -316,10 +322,11 @@ consequences for everything below:
    `StatementCommit`, `TagCommit` and `SampleCharacteristicCommit`, plus the two
    read VOs. Landed 2026-08-16; see §3. CAB has matched the shape on their side
    and is unblocked.
-2. ⏳ **Stamp the commit with its run** — contract agreed, **blocked on a schema
-   decision**. Accept a run reference on the curation commit and open an
-   `AnnotationSet` for it in the same transaction. This is the only one of Paul's
-   three questions with no answer at all today.
+2. ✅ **Stamp the commit with its run** — done (`73f74927d0`). Accept a run
+   reference on the curation commit and open an `AnnotationSet` for it in the
+   same transaction — which is what shipped, as a `COMMIT`-role set minted inside
+   the commit's transaction so a rolled-back commit leaves no row claiming the
+   run applied something.
 
    CAB settled the key question (`CAB_TO_GEMBRO_2026_08_16_KEY_ON_YOUR_SET_ID_CARRY_OUR_RUN_ID.md`):
    **key on our set id, carry their run reference as attributes.** Never key on
@@ -356,20 +363,21 @@ consequences for everything below:
    and why no `db/migration` entry accompanies it. Test and dev get them from the
    Hibernate mapping.
 
-   ⏳ **What remains of this step is the wiring, not the schema.** `RunProvenance`
-   reaches only `AnnotationSetsWebService`. The curation commit
-   (`PUT /datasets/{id}/curation`) and `PUT /datasets/{id}/design` still accept no
-   run reference, so nothing on the curation path fills the columns.
+   ✅ **The wiring landed too (`73f74927d0`).** `PUT /datasets/{id}/curation`
+   accepts an optional `run` section (runId required when present — provenance
+   without a runId is a 400, not a silent drop) and mints the COMMIT row inside
+   the commit's transaction. Sparse on purpose: no runId, no row.
 
-   A second open question rides along: no `AnnotationSetRole` describes an
-   *applied write*. The vocabulary is PROPOSAL / DRAFT / SNAPSHOT, and a commit
-   is none of them. The column is `VARCHAR(32)` so a new value needs no DDL, but
-   it is a shared vocabulary CAB co-owns and should not be extended unilaterally.
+   The role question was settled the right way round: CAB ruled `COMMIT` in as
+   the fourth `AnnotationSetRole` rather than an overloaded PROPOSAL, and Paul
+   approved — proposed-versus-applied is the distinction the provenance surface
+   rests on.
 
-   Absorb rather than duplicate: `PUT /datasets/{id}/design` already accepts an
-   `agentProposalId` query param and **discards it**, logging a line and a TODO
-   pointing at a recce that has since been archived. That is the same idea
-   half-built; whatever lands here should replace it, not sit beside it.
+   And the absorb-rather-than-duplicate note was honoured: `PUT
+   /datasets/{id}/design?agentProposalId=` stops discarding the parameter — it
+   resolves the PROPOSAL up front (refusing another dataset's set or a non-
+   proposal), and on success records a COMMIT parented to it, copying the run
+   reference off the proposal rather than asking for it twice.
 3. ⏳ **A read endpoint** — **no longer blocked.** The deferral was pending an
    agreed event vocabulary; CAB reports it settled and shipped on their side,
    served at `POST /rest/v2/datasets/{eid}/provenance/lookup` with uib's client
