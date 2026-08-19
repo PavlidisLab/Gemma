@@ -135,33 +135,58 @@ truncated. Each repair was verified by resolving the repaired IRI against the lo
 and confirming that its label matched the label stored with the annotation; repairs that
 could not be verified in this way were not made.
 
-The second is duplication within the Cell Line Ontology, which supplies seventeen groups
-covering 84 annotations in which two live classes describe one cell line, generally differing
-only in the punctuation of the line's name. No comparable duplication was found in any other
-vocabulary: MONDO, UBERON, CHEBI, EFO, the Cell Ontology, the Gene Ontology, PATO and the
-phenotype ontologies each yielded no such group. The Cellosaurus accession, which reconciles
-cell-line identity elsewhere, cannot be used to group these classes, because the Cell Line
-Ontology records it for 543 of its 40,851 classes and for only one member of one of the
-seventeen groups; the accessions are present on the well-curated classes and absent from the
-duplicated ones.
+The second is duplication within the Cell Line Ontology, in which two live classes describe
+one cell line, generally differing only in the punctuation of the line's name. The ontology
+contains 262 groups of classes whose labels normalize identically. Five arise only from the
+normalization step that strips a trailing "cell" and pair an upper-level class with its own
+more specific form; these are excluded, leaving 257 candidate groups, of which 63 can be
+decided on the evidence available and 194 cannot. The decided groups yield 68 redirects
+covering 97 annotations.
 
-Selection among duplicates therefore proceeds by a fixed precedence. A class that the
-Experimental Factor Ontology cross-references is preferred, on the grounds that an external
-vocabulary's choice of one class over the other is an editorial judgement made independently
-of Gemma; this decides nine of the seventeen groups. Where the cross-reference is absent or
-names both members, a class carrying a textual definition is preferred over one that does
-not, which decides two further groups. The remainder are decided by usage within the corpus.
-Usage is used last and never overrides the preceding rules, because a term that has been
+The population is enumerated from the ontology rather than from the corpus, and the
+distinction is material. An earlier form of this survey formed groups from the terms the
+corpus uses, and so could see a group only where both of its members had been used at least
+once; that is true of seventeen groups. Seventeen is therefore a property of Gemma's curation
+history and not of the Cell Line Ontology, and the corpus in fact uses at least one member of
+81 groups. A class that no annotation has ever carried is invisible to a corpus-derived
+survey, and is precisely the class an external resolver is liable to emit when it selects
+between duplicate labels by file order; 49 of the 68 redirects map such a class, and exist to
+answer that caller rather than to repair any stored row.
+
+No comparable duplication was found in any other vocabulary: MONDO, UBERON, CHEBI, EFO, the
+Cell Ontology, the Gene Ontology, PATO and the phenotype ontologies each yielded no such
+group. The Cellosaurus accession, which reconciles cell-line identity elsewhere, cannot be
+used to group these classes, because the Cell Line Ontology records it for 543 of its 40,851
+classes and for only one member of one of these groups; the accessions are present on the
+well-curated classes and absent from the duplicated ones.
+
+Selection among duplicates proceeds by a fixed precedence. A class that the Experimental
+Factor Ontology cross-references is preferred, on the grounds that an external vocabulary's
+choice of one class over the other is an editorial judgement made independently of Gemma;
+this decides 29 groups. In 27 further groups that ontology cross-references both members,
+which is itself informative — it does not record that there are two — and those groups fall
+through. Where the cross-reference is absent or names both members, a class carrying a
+textual definition is preferred over one that does not, which decides two groups. The
+remaining 32 are decided by usage within the corpus.
+
+Usage is applied last and never overrides the preceding rules, because a term that has been
 obsoleted continues to accumulate annotations while its replacement does not, so usage is
-systematically biased toward the term that should be retired; no member of any of the
-seventeen groups is obsolete, and where the cross-reference signal is available it agrees
-with the usage ordering in all nine cases, so its use as a residual criterion is corroborated
-rather than arbitrary.
+systematically biased toward the term that should be retired; no member of any of these
+groups is obsolete, and where the cross-reference signal is available it agrees with the
+usage ordering in all nine groups in which both signals are present, so its use as a residual
+criterion is corroborated rather than arbitrary. Usage is additionally required to reach a
+threshold before it decides anything: the preferred class must carry at least two annotations
+and exceed its counterpart by at least two. Without that condition 24 groups are separated by
+a single annotation, which records one curator's choice of spelling on one occasion rather
+than a usage pattern. Groups that do not meet it are left undecided.
 
 Groups arising from label normalization alone are treated as candidates rather than
-conclusions and are inspected before use, since a clone and its parent line normalize
-identically. Two of the nineteen candidate groups were rejected on inspection: a stem-cell
-line class and its Cell Ontology counterpart, and a parent-child pair.
+conclusions, since a clone and its parent line normalize identically. Two candidate groups
+were rejected on inspection: a stem-cell line class and its Cell Ontology counterpart, and a
+parent-child pair. A further five are rejected mechanically, by requiring that the labels of
+a group's members agree without the removal of a trailing "cell"; this condition admits
+duplicates that differ in punctuation while excluding pairs in which an upper-level class
+collides with its own more specific form, for which a redirect would not be a repair.
 
 Resolution is applied when annotations are read rather than by rewriting the stored rows.
 Categories and predicates are excluded from this treatment, the former because a
@@ -199,9 +224,30 @@ category is evidence with a denominator rather than a verdict. The denormalized 
 table that supports anonymous access is refreshed on a schedule and by an upsert that cannot
 correct rows its query no longer produces. Finally, one widely used category term
 (`EFO_0000408`, "disease") has been obsoleted upstream while several thousand Gemma
-annotations still reference it; migrating them is outstanding. The canonicalization
+annotations still reference it; migrating them is outstanding. That count is stated
+approximately because it lies outside the survey reported above, which enumerates the three
+value slots of an annotation and not the category slot; category and predicate terms are
+excluded from canonicalization for the reasons given there, and are not counted by it. The canonicalization
 described above is applied at read time and the underlying rows are unchanged, so any
 analysis reading the database directly, rather than through the application, sees the
 uncorrected identifiers; the corresponding migration is written but deliberately unapplied,
 because the annotation pipeline is calibrated against an earlier snapshot of the corpus and
 rewriting the live rows would desynchronize the two.
+
+Several properties of the duplicate-resolution procedure bound what may be concluded from
+it. It is incomplete by design: 194 of the 257 candidate groups are left undecided, and the
+absence of a redirect for an identifier records that no mapping is known, not that the
+identifier is correct. Any consumer that reads a missing entry as an endorsement will be
+wrong in proportion to that residue. Of the groups that are decided, 32 rest on usage within
+Gemma's own corpus, which is a record of this project's curation history rather than an
+independent observation; the criterion can be corroborated only where an external
+cross-reference is also present, which is true of nine groups and agrees in all nine. The
+threshold applied to usage — two annotations and a margin of two — is a convention chosen to
+exclude decisions resting on a single annotation, not a principled cut, and groups just above
+it are supported by little more evidence than those just below. Forty-nine of the redirects
+concern classes the corpus has never used and so cannot be checked against it at all; they
+are asserted on the ontology-derived signals alone. The condition that excludes upper-level
+collisions also excludes one genuine duplicate pair, in which only one member's label carries
+the trailing "cell"; that pair is undecidable on the other signals in any case. Finally, all
+counts reported here are relative to one release of each ontology, and the number of
+duplicate groups in the Cell Line Ontology may change with any subsequent release.
