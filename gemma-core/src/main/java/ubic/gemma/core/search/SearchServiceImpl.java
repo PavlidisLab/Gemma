@@ -21,6 +21,8 @@ package ubic.gemma.core.search;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.HibernateException;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -131,6 +133,14 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
     @Autowired(required = false)
     private PlatformTransactionManager transactionManager;
+
+    /**
+     * Used only to ask whether a search result's entity is attached to the ambient session
+     * before attempting the entity-path VO conversion. Optional so unit-test contexts that
+     * wire no SessionFactory keep the pre-check-free behaviour.
+     */
+    @Autowired(required = false)
+    private SessionFactory sessionFactory;
 
     /** Composite source assembled from all registered {@link SearchSource} beans. */
     private CompositeSearchSource searchSource;
@@ -290,6 +300,25 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
     }
 
     /**
+     * Whether the entity is attached to the ambient Hibernate session, and can therefore
+     * attempt the entity-path VO conversion at all — see the partition in
+     * {@code loadValueObjects}. Answers "attached" when no SessionFactory is wired
+     * (unit-test contexts), preserving the pre-check-free behaviour there; answers
+     * "detached" when there is a SessionFactory but no ambient session, since nothing
+     * lazy could initialize in that situation either.
+     */
+    private boolean isAttachedToCurrentSession( Identifiable entity ) {
+        if ( sessionFactory == null ) {
+            return true;
+        }
+        try {
+            return sessionFactory.getCurrentSession().contains( entity );
+        } catch ( HibernateException e ) {
+            return false;
+        }
+    }
+
+    /**
      * Walk the cause chain to the deepest Throwable and return its message — used by the
      * VO-conversion fallback to surface "LazyInitializationException: AuditEvent#…" in the
      * log line instead of the wrapping ConversionFailedException's generic stringification.
@@ -334,7 +363,16 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
             List<Long> idsOnly = new ArrayList<>();
             for ( SearchResult<?> sr : group ) {
                 Identifiable entity = sr.getResultObject();
-                if ( entity != null ) {
+                // A detached entity cannot survive the entity path: its converter walks lazy
+                // associations (the audit events behind a curatable's status), and the
+                // HibernateSearch source returns DETACHED entities on the anonymous /search
+                // path. Before this check every such result attempted the entity path, failed
+                // on LazyInitializationException inside the sub-transaction, was retried once
+                // by the generic retry advice, and only then promoted — a WARN and three
+                // wasted steps on EVERY search (measured 6/6 on 2026-08-19). Detachment is
+                // knowable up front; asking is cheaper than failing. The catch below stays as
+                // the backstop for attached entities whose conversion fails anyway.
+                if ( entity != null && isAttachedToCurrentSession( entity ) ) {
                     entities.add( entity );
                 } else {
                     idsOnly.add( sr.getResultId() );
