@@ -1,0 +1,47 @@
+lane	from_uri	from_label	to_uri	to_label	n_annotations	rule
+malformed	http://purl.obolibrary.org/obo/CL:0000115	endothelial cell	http://purl.obolibrary.org/obo/CL_0000115	endothelial cell	39	repaired IRI resolves
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007365	LNCAP cell	http://purl.obolibrary.org/obo/CLO_0037116	LNCaP cell	38	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
+malformed	http://purl.obolibrary.org/obo/CL:0000128	oligodendrocyte	http://purl.obolibrary.org/obo/CL_0000128	oligodendrocyte	19	repaired IRI resolves
+clo_twin	http://purl.obolibrary.org/obo/CLO_0037291	MDAMB231 cell	http://purl.obolibrary.org/obo/CLO_0007634	MDA-MB-231 cell	16	R3 EFO xrefs it (an external ontology's editorial pick)
+malformed	http://purl.obolibrary.org/obo/CL_0000669000669	pericyte	http://purl.obolibrary.org/obo/CL_0000669	pericyte	11	label of the repaired id matches
+malformed	CL:0000236	B cell	http://purl.obolibrary.org/obo/CL_0000236	B cell	9	expanded IRI resolves
+malformed	CL:0000115	endothelial cell	http://purl.obolibrary.org/obo/CL_0000115	endothelial cell	9	expanded IRI resolves
+malformed	CL:0000129	microglial cell	http://purl.obolibrary.org/obo/CL_0000129	microglial cell	9	expanded IRI resolves
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007059	K-562 cell	http://purl.obolibrary.org/obo/CLO_0007050	K 562 cell	8	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
+malformed	CL:4023040	L2/3-6 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4023040	L2/3-6 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
+malformed	CL:4030067	L5/6 near-projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030067	L5/6 near-projecting glutamatergic neuron	8	expanded IRI resolves
+malformed	CL:0000192	smooth muscle cell	http://purl.obolibrary.org/obo/CL_0000192	smooth muscle cell	8	expanded IRI resolves
+malformed	CL:4023041	L5 extratelencephalic projecting glutamatergic cortical neuron	http://purl.obolibrary.org/obo/CL_4023041	L5 extratelencephalic projecting glutamatergic cortical neuron	8	expanded IRI resolves
+malformed	CL:0002453	oligodendrocyte precursor cell	http://purl.obolibrary.org/obo/CL_0002453	oligodendrocyte precursor cell	8	expanded IRI resolves
+malformed	CL:4023042	L6 corticothalamic-projecting glutamatergic cortical neuron	http://purl.obolibrary.org/obo/CL_4023042	L6 corticothalamic-projecting glutamatergic cortical neuron	8	expanded IRI resolves
+malformed	CL:0000084	T cell	http://purl.obolibrary.org/obo/CL_0000084	T cell	8	expanded IRI resolves
+malformed	CL:4023011	lamp5 GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023011	lamp5 GABAergic interneuron	8	expanded IRI resolves
+malformed	CL:0000617	GABAergic neuron	http://purl.obolibrary.org/obo/CL_0000617	GABAergic neuron	8	expanded IRI resolves
+malformed	CL:4023046	L6b glutamatergic neuron of the primary motor cortex	http://purl.obolibrary.org/obo/CL_4023046	L6b glutamatergic neuron of the primary motor cortex	8	expanded IRI resolves
+malformed	CL:4023016	VIP GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023016	VIP GABAergic interneuron	8	expanded IRI resolves
+malformed	CL:0000623	natural killer cell	http://purl.obolibrary.org/obo/CL_0000623	natural killer cell	8	expanded IRI resolves
+malformed	CL:4023051	vascular leptomeningeal cell	http://purl.obolibrary.org/obo/CL_4023051	vascular leptomeningeal cell	8	expanded IRI resolves
+malformed	CL:0000127	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	astrocyte	8	expanded IRI resolves
+malformed	CL:4023017	sst GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023017	sst GABAergic interneuron	8	expanded IRI resolves
+malformed	CL:0000669	pericyte	http://purl.obolibrary.org/obo/CL_0000669	pericyte	8	expanded IRI resolves
+malformed	CL:4030059	L2/3 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030059	L2/3 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
+malformed	CL:0000128	oligodendrocyte	http://purl.obolibrary.org/obo/CL_0000128	oligodendrocyte	8	expanded IRI resolves
+malformed	CL:4023018	pvalb GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023018	pvalb GABAergic interneuron	8	expanded IRI resolves
+malformed	CL:0000786	plasma cell	http://purl.obolibrary.org/obo/CL_0000786	plasma cell	8	expanded IRI resolves
+malformed	CL:4030065	L6 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030065	L6 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007377	LOVO cell	http://purl.obolibrary.org/obo/CLO_0007378	LoVo cell	4	R4 carries a definition; its twin does not
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009034	SK-BR-3 cell	http://purl.obolibrary.org/obo/CLO_0037295	SKBR3 cell	3	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009195	SW 480 cell	http://purl.obolibrary.org/obo/CLO_0009218	SW480 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0037015	HCC-827 cell	http://purl.obolibrary.org/obo/CLO_0003659	HCC827 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001777	b.End3 cell	http://purl.obolibrary.org/obo/CLO_0001928	bEnd.3 cell	2	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009196	SW 620 cell	http://purl.obolibrary.org/obo/CLO_0009221	SW620 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001606	A-673 cell	http://purl.obolibrary.org/obo/CLO_0001605	A673 cell	1	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008782	Reh cell	http://purl.obolibrary.org/obo/CLO_0008781	REH cell	1	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0004266	HT 1080 cell	http://purl.obolibrary.org/obo/CLO_0004276	HT-1080 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009450	U 937 cell	http://purl.obolibrary.org/obo/CLO_0009465	U-937 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001084	143 B cell	http://purl.obolibrary.org/obo/CLO_0001088	143B cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002165	Ca Ski cell	http://purl.obolibrary.org/obo/CLO_0002201	CaSki cell	1	R4 carries a definition; its twin does not
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001890	BC3 cell	http://purl.obolibrary.org/obo/CLO_0001891	BC-3 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0037155	KMH-2 cell	http://purl.obolibrary.org/obo/CLO_0007112	KM-H2 cell	1	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
+malformed	http://purl.obolibrary.org/obo/CL:4023017	sst GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023017	sst GABAergic interneuron	1	repaired IRI resolves
+malformed	http://purl.obolibrary.org/obo/CL:0000127	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	astrocyte	1	repaired IRI resolves

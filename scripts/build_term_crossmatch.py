@@ -47,10 +47,25 @@ usage is the wrong instrument:
       A catalogue number ('RCB0009 cell') is not an entity, whatever its usage count.
       🛑 But only when a named sibling EXISTS -- C2C12 has no named CLO class at all, and
       its 53 annotations sit on RCB0987; demoting that would leave the line with nothing.
-  R3  favoured ontology, per scripts/term_crossmatch_preferences.tsv (data, not code).
-  R4  usage, as the last tie-break among equals.
-  R5  otherwise ABSTAIN -- `needs_curator`.  A forced choice manufactures a confident wrong
+  R3  the term that carries a DEFINITION wins.  Paul's rule, 2026-08-18: *"the one with the
+      best xrefs should lead, or which has a definition"*.  The xref half is inert for CLO --
+      measured, every CLO cell-line class has zero -- so the definition half is what does the
+      work.  A defined term is one somebody curated; an undefined twin is usually the stub.
+  R4  favoured ontology, per scripts/term_crossmatch_preferences.tsv (data, not code).
+  R5  usage, as the last tie-break among equals.
+      🛑 Safe here ONLY because R1 has already removed every obsolete term.  cab's objection
+      to "most-used wins" is that an obsolete term accrues usage while its successor sits at
+      zero; that is real, and it is why usage is LAST and never overrides R1.  Measured on the
+      corpus: none of the 17 CLO twin groups contains an obsolete term, so R1 never fires on
+      them and R5 decides them all without ties.
+  R6  otherwise ABSTAIN -- `needs_curator`.  A forced choice manufactures a confident wrong
       answer; abstaining is a first-class outcome, not a failure.
+
+`--decide-label-collisions` promotes normalized-label collisions to real groups.  OFF by
+default, and it must stay that way: a clone and its parent line normalize alike, and the
+largest collision in the corpus by usage (`CLO_0037307` induced-pluripotent-stem-cell-line,
+663 annotations) is a legitimate class term, not a duplicate.  Turning it on is a decision a
+person makes with the candidate list in front of them, not a default.
 
 WHAT THE LOSER IS.  Never deleted and never refused: it is emitted as an alternative, and
 stays readable as a metadata source.  Resolution here means "show one, keep both".
@@ -206,7 +221,7 @@ def choose(members: list[dict], prefs: dict[tuple[str, str], int]) -> tuple[dict
             if successor is not None:
                 return successor, "R1 declared successor (obsolescence beats usage)"
     if not live:
-        return None, "R5 abstain: every member is obsolete and none names a successor here"
+        return None, "R6 abstain: every member is obsolete and none names a successor here"
     if len(live) == 1:
         return live[0], "R1 sole live member; the rest are obsolete"
 
@@ -217,7 +232,14 @@ def choose(members: list[dict], prefs: dict[tuple[str, str], int]) -> tuple[dict
         if len(live) == 1:
             return live[0], "R2 catalogue class demoted in favour of a named class"
 
-    # R3 -- favoured ontology, by category. Unknown category or namespace ranks last.
+    # R3 -- a defined term beats an undefined one (Paul's rule; the xref half is inert for CLO).
+    defined = [m for m in live if m.get("hasDefinition")]
+    if defined and len(defined) < len(live):
+        live = defined
+        if len(live) == 1:
+            return live[0], "R3 carries a definition; its twin does not"
+
+    # R4 -- favoured ontology, by category. Unknown category or namespace ranks last.
     cats = {c for m in live for c in m.get("categories", ())}
     ranked: list[tuple[int, dict]] = []
     for m in live:
@@ -226,13 +248,14 @@ def choose(members: list[dict], prefs: dict[tuple[str, str], int]) -> tuple[dict
     top = min(r for r, _ in ranked)
     finalists = [m for r, m in ranked if r == top]
     if top < 99 and len(finalists) == 1:
-        return finalists[0], f"R3 favoured ontology for {sorted(cats)}"
+        return finalists[0], f"R4 favoured ontology for {sorted(cats)}"
 
-    # R4 -- usage, and only among otherwise-equal members.
+    # R5 -- usage, and only among otherwise-equal members. Never reached by an obsolete term:
+    # R1 removed those, which is the whole reason this is safe to use at all.
     finalists.sort(key=lambda m: (-m.get("usage", 0), m["uri"]))
     if len(finalists) > 1 and finalists[0].get("usage", 0) == finalists[1].get("usage", 0):
-        return None, "R5 abstain: tie on every rule including usage"
-    return finalists[0], "R4 usage, among members equal on every stronger rule"
+        return None, "R6 abstain: tie on every rule including usage"
+    return finalists[0], "R5 usage, among members equal on every stronger rule"
 
 
 def main() -> int:
@@ -246,6 +269,9 @@ def main() -> int:
     ap.add_argument("--base", default=os.environ.get("GEMMA_BASE_URL") or DEFAULT_BASE)
     ap.add_argument("--namespace", help="comma-separated namespaces to restrict to, e.g. CLO,EFO")
     ap.add_argument("--cache", type=pathlib.Path, default=pathlib.Path(".term-cache"))
+    ap.add_argument("--decide-label-collisions", action="store_true",
+                    help="promote normalized-label collisions to groups and decide them "
+                         "(OFF by default -- a clone and its parent normalize alike)")
     ap.add_argument("--anonymous", action="store_true")
     ap.add_argument("--workers", type=int, default=8)
     args = ap.parse_args()
@@ -281,6 +307,7 @@ def main() -> int:
             "uri": uri, "label": t.get("label") or row["label"],
             "usage": row["usage"], "categories": row["categories"],
             "obsolete": bool(t.get("obsolete")),
+            "hasDefinition": bool((t.get("definition") or "").strip()),
             "termReplacedBy": t.get("termReplacedBy"),
             "consider": [c.get("uri") for c in (t.get("consider") or []) if c.get("uri")],
             "obsoletedInVersion": t.get("obsoletedInVersion"),
@@ -314,6 +341,21 @@ def main() -> int:
             for u in uris[1:]:
                 dsu.union(uris[0], u)
             edges[dsu.find(uris[0])].append(f"xref:{xref}={'+'.join(sorted(uris))}")
+
+    if args.decide_label_collisions:
+        by_norm_pre = collections.defaultdict(list)
+        for m in members.values():
+            if m["label"]:
+                by_norm_pre[normalize_label(m["label"])].append(m["uri"])
+        promoted = 0
+        for nl, uris in by_norm_pre.items():
+            if nl and len(uris) > 1 and len({dsu.find(u) for u in uris}) > 1:
+                for u in uris[1:]:
+                    dsu.union(uris[0], u)
+                edges[dsu.find(uris[0])].append(f"label:{nl}={'+'.join(sorted(uris))}")
+                promoted += 1
+        print(f"--decide-label-collisions: promoted {promoted} label collisions to groups",
+              file=sys.stderr)
 
     groups = collections.defaultdict(list)
     for uri in members:

@@ -7,6 +7,14 @@ import org.apache.commons.lang3.Strings;
 import ubic.gemma.model.expression.experiment.Statement;
 
 import org.springframework.lang.Nullable;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -18,6 +26,109 @@ public class CharacteristicUtils {
      * This is obtained by taking the value URI or value if the former is null and converting it to lowercase.
      */
     @Nullable
+    /**
+     * Classpath resource holding every URI Gemma resolves to a different one on read.
+     * <p>
+     * The same file generates {@code scripts/sql/term_uri_migration.sql}, so the shim and the
+     * migration cannot disagree about what the corpus contains.
+     */
+    private static final String MIGRATION_RESOURCE = "/ubic/gemma/core/ontology/TermUriMigration.tsv";
+
+    /** from-URI &rarr; [to-URI, to-label]. Empty if the resource is missing or unreadable. */
+    private static final Map<String, String[]> URI_MIGRATION = loadUriMigration();
+
+    private static Map<String, String[]> loadUriMigration() {
+        Map<String, String[]> m = new HashMap<>();
+        try ( InputStream in = CharacteristicUtils.class.getResourceAsStream( MIGRATION_RESOURCE ) ) {
+            if ( in == null ) {
+                return Collections.emptyMap();
+            }
+            try ( BufferedReader r = new BufferedReader( new InputStreamReader( in, StandardCharsets.UTF_8 ) ) ) {
+                String line;
+                boolean header = true;
+                while ( ( line = r.readLine() ) != null ) {
+                    if ( line.isEmpty() || line.charAt( 0 ) == '#' ) {
+                        continue;
+                    }
+                    String[] f = line.split( "\t" );
+                    if ( header ) {
+                        header = false;
+                        if ( f.length > 1 && "from_uri".equals( f[1] ) ) {
+                            continue;   // the column header, not a mapping
+                        }
+                    }
+                    // lane, from_uri, from_label, to_uri, to_label, n_annotations, rule
+                    if ( f.length >= 5 && !f[1].isEmpty() && !f[3].isEmpty() ) {
+                        m.put( f[1], new String[] { f[3], f[4] } );
+                    }
+                }
+            }
+        } catch ( IOException e ) {
+            // A missing or corrupt shim must not take the application down: without it Gemma
+            // returns the un-canonicalized term, which is what it returned yesterday.
+            return Collections.emptyMap();
+        }
+        return Collections.unmodifiableMap( m );
+    }
+
+    /**
+     * The URI Gemma should report for a term, which is not always the one stored.
+     * <p>
+     * Two populations are remapped, and neither is a judgement call made here &mdash; both were
+     * settled with evidence and written down in {@code TermUriMigration.tsv}:
+     * <ul>
+     *   <li><b>malformed URIs</b> &mdash; a bare CURIE ({@code CL:0000236}), a colon where OBO
+     *       uses an underscore, an id concatenated with itself. Each repair was verified by
+     *       resolving the repaired IRI against the live ontology.</li>
+     *   <li><b>CLO twins</b> &mdash; two live CLO classes for one cell line, decided by an EFO
+     *       inbound xref, else a definition, else usage.</li>
+     * </ul>
+     * <p>
+     * 🛑 This is a READ-TIME SHIM standing in for a database migration that is written and
+     * parked ({@code scripts/sql/term_uri_migration.sql}). It exists because the agent pipeline
+     * is calibrated against a May snapshot and migrating prod now would desynchronize them.
+     * When the migration runs, empty the resource &mdash; a shim left over a corrected corpus
+     * silently rewrites rows that are already right.
+     *
+     * @return the canonical URI, or {@code uri} unchanged when nothing maps it (the common case)
+     */
+    @Nullable
+    public static String canonicalUri( @Nullable String uri ) {
+        if ( uri == null ) {
+            return null;
+        }
+        String[] to = URI_MIGRATION.get( uri );
+        return to != null ? to[0] : uri;
+    }
+
+    /**
+     * The label that goes with {@link #canonicalUri(String)}.
+     * <p>
+     * The label has to move with the URI. Reporting the new URI beside the old label produces a
+     * row that says one thing and means another, and the label is what search matches and what
+     * every table renders.
+     *
+     * @return the canonical label when {@code uri} is remapped, otherwise {@code label} unchanged
+     */
+    @Nullable
+    public static String canonicalLabel( @Nullable String uri, @Nullable String label ) {
+        if ( uri == null ) {
+            return label;
+        }
+        String[] to = URI_MIGRATION.get( uri );
+        return to != null ? to[1] : label;
+    }
+
+    /** @return true if this URI is one the shim rewrites. */
+    public static boolean isRemappedUri( @Nullable String uri ) {
+        return uri != null && URI_MIGRATION.containsKey( uri );
+    }
+
+    /** @return how many mappings the shim carries; 0 once the migration has run. */
+    public static int remappedUriCount() {
+        return URI_MIGRATION.size();
+    }
+
     public static String getNormalizedValue( Characteristic characteristic ) {
         if ( characteristic.getValueUri() != null ) {
             return characteristic.getValueUri().toLowerCase();

@@ -121,6 +121,53 @@ This gate is deliberately confined to the composite curation endpoint. Bulk anno
 replacement, the sample-characteristic endpoints, experimental-design updates and data
 import do not run it, which is a limitation rather than a design goal.
 
+## Term canonicalization
+
+A survey of every ontology term in use across the corpus (249,339 annotations in the subject
+slot, 20,101 in the object slot and 1,656 in the second-object slot, over 18,449 distinct
+URIs) identified two populations in which more than one identifier denotes a single concept.
+
+The first is malformed identifiers: twenty-nine URIs, carrying 266 annotations, that are
+wrong on their face. These comprise bare compact identifiers recorded where a full IRI was
+expected, OBO IRIs punctuated with a colon rather than the underscore the format requires,
+and two identifiers in which the numeric portion had been concatenated with itself or
+truncated. Each repair was verified by resolving the repaired IRI against the loaded ontology
+and confirming that its label matched the label stored with the annotation; repairs that
+could not be verified in this way were not made.
+
+The second is duplication within the Cell Line Ontology, which supplies seventeen groups
+covering 84 annotations in which two live classes describe one cell line, generally differing
+only in the punctuation of the line's name. No comparable duplication was found in any other
+vocabulary: MONDO, UBERON, CHEBI, EFO, the Cell Ontology, the Gene Ontology, PATO and the
+phenotype ontologies each yielded no such group. The Cellosaurus accession, which reconciles
+cell-line identity elsewhere, cannot be used to group these classes, because the Cell Line
+Ontology records it for 543 of its 40,851 classes and for only one member of one of the
+seventeen groups; the accessions are present on the well-curated classes and absent from the
+duplicated ones.
+
+Selection among duplicates therefore proceeds by a fixed precedence. A class that the
+Experimental Factor Ontology cross-references is preferred, on the grounds that an external
+vocabulary's choice of one class over the other is an editorial judgement made independently
+of Gemma; this decides nine of the seventeen groups. Where the cross-reference is absent or
+names both members, a class carrying a textual definition is preferred over one that does
+not, which decides two further groups. The remainder are decided by usage within the corpus.
+Usage is used last and never overrides the preceding rules, because a term that has been
+obsoleted continues to accumulate annotations while its replacement does not, so usage is
+systematically biased toward the term that should be retired; no member of any of the
+seventeen groups is obsolete, and where the cross-reference signal is available it agrees
+with the usage ordering in all nine cases, so its use as a residual criterion is corroborated
+rather than arbitrary.
+
+Groups arising from label normalization alone are treated as candidates rather than
+conclusions and are inspected before use, since a clone and its parent line normalize
+identically. Two of the nineteen candidate groups were rejected on inspection: a stem-cell
+line class and its Cell Ontology counterpart, and a parent-child pair.
+
+Resolution is applied when annotations are read rather than by rewriting the stored rows.
+Categories and predicates are excluded from this treatment, the former because a
+concurrently deployed earlier version of Gemma reads them from the same database and the
+latter because the predicate vocabulary is separately constrained.
+
 ## Derived relations
 
 Alongside annotations, Gemma maintains a store of derived relations: subject-predicate-object
@@ -152,4 +199,9 @@ category is evidence with a denominator rather than a verdict. The denormalized 
 table that supports anonymous access is refreshed on a schedule and by an upsert that cannot
 correct rows its query no longer produces. Finally, one widely used category term
 (`EFO_0000408`, "disease") has been obsoleted upstream while several thousand Gemma
-annotations still reference it; migrating them is outstanding.
+annotations still reference it; migrating them is outstanding. The canonicalization
+described above is applied at read time and the underlying rows are unchanged, so any
+analysis reading the database directly, rather than through the application, sees the
+uncorrected identifiers; the corresponding migration is written but deliberately unapplied,
+because the annotation pipeline is calibrated against an earlier snapshot of the corpus and
+rewriting the live rows would desynchronize the two.

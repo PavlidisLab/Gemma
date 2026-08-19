@@ -176,9 +176,12 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         super( characteristic );
         this.category = characteristic.getCategory();
         this.categoryUri = characteristic.getCategoryUri();
-        this.value = characteristic.getValue();
-        this.valueUri = characteristic.getValueUri();
-        this.urlId = parseUrlId( characteristic.getValueUri() );
+        // Report the canonical term, not always the stored one -- a read-time stand-in for the
+        // parked migration (CharacteristicUtils#canonicalUri). The label moves with the URI:
+        // the new URI beside the old label is a row that says one thing and means another.
+        this.valueUri = CharacteristicUtils.canonicalUri( characteristic.getValueUri() );
+        this.value = CharacteristicUtils.canonicalLabel( characteristic.getValueUri(), characteristic.getValue() );
+        this.urlId = parseUrlId( this.valueUri );
         this.originalValue = characteristic.getOriginalValue();
         this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( characteristic.getSupportingEvidence() );
     }

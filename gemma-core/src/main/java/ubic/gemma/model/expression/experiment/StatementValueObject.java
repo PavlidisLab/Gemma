@@ -108,16 +108,20 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
         super( s );
         this.category = s.getCategory();
         this.categoryUri = s.getCategoryUri();
-        this.subject = s.getSubject();
-        this.subjectUri = s.getSubjectUri();
+        // All three value slots go through the canonicaliser (CharacteristicUtils#canonicalUri),
+        // a read-time stand-in for the parked migration. Predicates and categories deliberately
+        // do NOT: Gemma 1.0 reads categories while it is live, and the predicate vocabulary is
+        // already constrained by Relation.terms.txt, so neither is where duplicates live.
+        this.subjectUri = CharacteristicUtils.canonicalUri( s.getSubjectUri() );
+        this.subject = CharacteristicUtils.canonicalLabel( s.getSubjectUri(), s.getSubject() );
         this.predicate = s.getPredicate();
         this.predicateUri = s.getPredicateUri();
-        this.object = s.getObject();
-        this.objectUri = s.getObjectUri();
+        this.objectUri = CharacteristicUtils.canonicalUri( s.getObjectUri() );
+        this.object = CharacteristicUtils.canonicalLabel( s.getObjectUri(), s.getObject() );
         this.secondPredicate = s.getSecondPredicate();
         this.secondPredicateUri = s.getSecondPredicateUri();
-        this.secondObject = s.getSecondObject();
-        this.secondObjectUri = s.getSecondObjectUri();
+        this.secondObjectUri = CharacteristicUtils.canonicalUri( s.getSecondObjectUri() );
+        this.secondObject = CharacteristicUtils.canonicalLabel( s.getSecondObjectUri(), s.getSecondObject() );
         this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( s.getSupportingEvidence() );
     }
 

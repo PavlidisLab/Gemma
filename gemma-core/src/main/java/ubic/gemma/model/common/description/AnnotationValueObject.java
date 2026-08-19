@@ -121,19 +121,22 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
         super( c );
         classUri = c.getCategoryUri();
         className = c.getCategory();
-        termUri = c.getValueUri();
-        termName = c.getValue();
+        // See CharacteristicUtils#canonicalUri: a read-time stand-in for the parked migration.
+        termUri = CharacteristicUtils.canonicalUri( c.getValueUri() );
+        termName = CharacteristicUtils.canonicalLabel( c.getValueUri(), c.getValue() );
         evidenceCode = c.getEvidenceCode() != null ? c.getEvidenceCode().name() : null;
         if ( c instanceof Statement ) {
             Statement s = ( Statement ) c;
             predicate = s.getPredicate();
             predicateUri = s.getPredicateUri();
-            object = s.getObject();
-            objectUri = s.getObjectUri();
+            // A Statement has three annotatable value slots, and a term is as often in the
+            // object as the subject -- canonicalizing only the subject would fix a third of it.
+            objectUri = CharacteristicUtils.canonicalUri( s.getObjectUri() );
+            object = CharacteristicUtils.canonicalLabel( s.getObjectUri(), s.getObject() );
             secondPredicate = s.getSecondPredicate();
             secondPredicateUri = s.getSecondPredicateUri();
-            secondObject = s.getSecondObject();
-            secondObjectUri = s.getSecondObjectUri();
+            secondObjectUri = CharacteristicUtils.canonicalUri( s.getSecondObjectUri() );
+            secondObject = CharacteristicUtils.canonicalLabel( s.getSecondObjectUri(), s.getSecondObject() );
         }
         supportingEvidence = CharacteristicUtils.parseSupportingEvidence( c.getSupportingEvidence() );
     }
