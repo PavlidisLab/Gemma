@@ -115,6 +115,11 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService annotationSetService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService.class );
+        }
+
+        @Bean
         public ExpressionExperimentReadService expressionExperimentReadService() {
             return mock( ExpressionExperimentReadService.class );
         }

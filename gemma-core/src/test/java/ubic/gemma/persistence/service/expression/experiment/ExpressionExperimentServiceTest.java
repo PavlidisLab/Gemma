@@ -55,6 +55,11 @@ public class ExpressionExperimentServiceTest extends BaseTest5 {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService annotationSetService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService.class );
+        }
+
+        @Bean
         public org.hibernate.SessionFactory sessionFactory() {
             return mock( org.hibernate.SessionFactory.class );
         }
