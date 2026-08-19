@@ -2,7 +2,7 @@
 
 **Status 2026-08-18: read-time shim LIVE in code, database migration WRITTEN AND PARKED.**
 
-Gemma resolves 46 annotation URIs to a different URI when it reads them. This document says
+Gemma resolves 49 annotation URIs to a different URI when it reads them. This document says
 which, why, how they were chosen, and what has to happen for the shim to go away.
 
 ## 1. Why a shim and not the migration
@@ -33,8 +33,8 @@ what the corpus contains is the failure this arrangement exists to prevent — t
 | lane | URIs | annotations | basis |
 |---|---:|---:|---|
 | `malformed` | 29 | 266 | the URI is wrong on its face |
-| `clo_twin` | 17 | 84 | two live CLO classes, one cell line |
-| **total** | **46** | **350** | |
+| `clo_twin` | 20 | 101 | two live CLO classes, one cell line |
+| **total** | **49** | **367** | |
 
 **Malformed** — bare CURIEs (`CL:0000236`), OBO IRIs punctuated with a colon
 (`obo/CL:0000115`), an id concatenated with itself (`CL_0000669000669`) or truncated
@@ -56,7 +56,7 @@ Strict precedence. The first two rules exist because usage is the wrong instrume
 ```
 R1  an obsolete term loses to its declared successor, always
 R2  a catalogue class loses to a named class -- but only where a named one exists
-R3  the class EFO cross-references wins            -> decides 9 of 17
+R3  the class EFO cross-references wins            -> decides 12 of 20
 R4  else the class carrying a definition wins      -> decides 2
 R5  else usage                                     -> decides 6
 R6  else abstain (needs_curator)                   -> 0
@@ -88,6 +88,19 @@ ones — HeLa and MCF7, never duplicated, both have one.
 CLO also carries no `hasDbXref` for cell-line identity at all; its CVCLs are in `rdfs:seeAlso`,
 which Gemma does not read. Reading it would surface 543 classes and still not rescue the rule.
 
+## 4a. 🛑 Groups are anchored on the ontology, not on the corpus
+
+An earlier pass formed groups from the terms Gemma *uses*. That cannot see a pair whose twin
+has zero usage — `22Rv1` (`CLO_0001200` x19 vs `CLO_0001199` x0) was invisible to it. Re-running
+against CLO's own label collisions found **67** such groups; **3** had usage on the member that
+loses, and were added. In all three, R3 overrides usage: `Hep 3B` (10 uses) yields to `HEP-3B`
+(0 uses) because EFO cross-references the latter. That is the rule working, not a bug.
+
+🛑 **And it bounds what this table can ever be.** CLO has **262** label-collision groups; only
+**33** are decidable without corpus usage (30 by an EFO xref, 3 by a definition). The other 229
+have no Gemma usage to break the tie, so no rule we have decides them. **An absent URI means no
+mapping is known — never that the URI is correct.**
+
 ## 5. What the shim covers, and what it does not
 
 Applied in the three read VOs — `CharacteristicValueObject`, `AnnotationValueObject`,
@@ -108,6 +121,7 @@ table is non-empty, so it will go red and tell you.
 
 ## Related
 
+- `GET /annotations/canonicalUris` — the table, queryable, for clients that resolve before asking
 - `scripts/sql/term_uri_migration.sql` — the parked migration
 - `scripts/sql/annotation_uri_census.sql` — the census that found all of this
 - `scripts/build_term_crossmatch.py` — the grouping and precedence, as code

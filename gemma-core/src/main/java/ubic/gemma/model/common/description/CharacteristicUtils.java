@@ -124,6 +124,17 @@ public class CharacteristicUtils {
         return uri != null && URI_MIGRATION.containsKey( uri );
     }
 
+    /**
+     * The whole canonicalization table, from-URI &rarr; [to-URI, to-label].
+     * <p>
+     * Exposed so a client that resolves terms <em>before</em> asking Gemma can hold the same answer
+     * rather than a hand-copied subset: a local synonym table cannot be corrected by a server-side
+     * change, which is how two authorities on the same question come to disagree.
+     */
+    public static Map<String, String[]> getUriMigrations() {
+        return URI_MIGRATION;
+    }
+
     /** @return how many mappings the shim carries; 0 once the migration has run. */
     public static int remappedUriCount() {
         return URI_MIGRATION.size();

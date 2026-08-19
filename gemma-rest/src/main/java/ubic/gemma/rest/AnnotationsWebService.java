@@ -407,6 +407,72 @@ public class AnnotationsWebService {
     /**
      * Look up an ontology term by its URI.
      */
+    /**
+     * Every URI Gemma resolves to a different one on read, so a caller can hold the same answer
+     * we do instead of a hand-copied subset of it.
+     */
+    @GET
+    @Path("/canonicalUris")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "List the term URIs Gemma resolves to a different URI",
+            description = "Gemma stores some annotations under a URI it does not report: a malformed identifier "
+                    + "(a bare CURIE, an OBO IRI punctuated with a colon, an id concatenated with itself), or one "
+                    + "of two live Cell Line Ontology classes describing a single cell line. Reads are resolved "
+                    + "through this table, so `/datasets/{id}/annotations` already returns the canonical term; "
+                    + "this endpoint exposes the table itself for clients that resolve terms before asking Gemma "
+                    + "— a local synonym table cannot be corrected by a server-side change.\n\n"
+                    + "**Scope.** The mapping is derived from the terms this corpus actually uses, plus the "
+                    + "ontology-wide label collisions that a rule can decide without usage. It is NOT a complete "
+                    + "duplicate list for any ontology: CLO alone has 262 label-collision groups and only 33 are "
+                    + "decidable without corpus usage. An absent URI means *no mapping is known*, never *this URI "
+                    + "is correct*.\n\n"
+                    + "**Provisional.** These rows stand in for a database migration that is written and not yet "
+                    + "applied; when it runs this list becomes empty, and an empty list is the finished state, "
+                    + "not a failure.",
+            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+    public ResponseDataObject<List<CanonicalUriValueObject>> getCanonicalUris(
+            @Parameter(description = "Only return the mapping for this URI, if one exists.")
+            @QueryParam("uri") @Nullable String uri ) {
+        List<CanonicalUriValueObject> out = new ArrayList<>();
+        for ( Map.Entry<String, String[]> e : CharacteristicUtils.getUriMigrations().entrySet() ) {
+            if ( uri != null && !uri.equals( e.getKey() ) ) {
+                continue;
+            }
+            out.add( new CanonicalUriValueObject( e.getKey(), e.getValue()[0], e.getValue()[1] ) );
+        }
+        out.sort( Comparator.comparing( CanonicalUriValueObject::getFromUri ) );
+        return respond( out );
+    }
+
+    /** One row of the canonicalization table: the URI as stored, and the URI Gemma reports instead. */
+    @Schema(name = "CanonicalUriValueObject")
+    public static class CanonicalUriValueObject {
+        private final String fromUri;
+        private final String toUri;
+        private final String toLabel;
+
+        public CanonicalUriValueObject( String fromUri, String toUri, String toLabel ) {
+            this.fromUri = fromUri;
+            this.toUri = toUri;
+            this.toLabel = toLabel;
+        }
+
+        /** The URI as stored on the annotation. */
+        public String getFromUri() {
+            return fromUri;
+        }
+
+        /** The URI Gemma reports for it. */
+        public String getToUri() {
+            return toUri;
+        }
+
+        /** The label that goes with {@link #getToUri()}; it moves with the URI. */
+        public String getToLabel() {
+            return toLabel;
+        }
+    }
+
     @GET
     @Path("/term")
     @Produces(MediaType.APPLICATION_JSON)

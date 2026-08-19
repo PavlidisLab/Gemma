@@ -10,10 +10,10 @@
 --
 -- Until it runs, GEMMA RESOLVES THESE AT READ TIME instead -- see
 -- CharacteristicUtils#canonicalUri and docs/design/TERM_URI_CANONICALIZATION.md. The map
--- below and the map in that class are the SAME 46 rows and must not drift; the
+-- below and the map in that class are the SAME 49 rows and must not drift; the
 -- generator is scripts/sql/term_uri_migration.tsv, which produced both.
 --
--- 46 mappings, 350 annotations.
+-- 49 mappings, 367 annotations.
 --   malformed  -- a URI that is wrong on its face (bare CURIE, colon for underscore, an id
 --                 concatenated with itself). Every repair below was verified by resolving
 --                 the repaired IRI against the live ontology; none is a guess.
@@ -41,6 +41,7 @@ INSERT INTO TERM_URI_MIGRATION (FROM_URI, TO_URI, TO_LABEL, LANE) VALUES
   ('http://purl.obolibrary.org/obo/CL:0000128', 'http://purl.obolibrary.org/obo/CL_0000128', 'oligodendrocyte', 'malformed'),
   ('http://purl.obolibrary.org/obo/CLO_0037291', 'http://purl.obolibrary.org/obo/CLO_0007634', 'MDA-MB-231 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CL_0000669000669', 'http://purl.obolibrary.org/obo/CL_0000669', 'pericyte', 'malformed'),
+  ('http://purl.obolibrary.org/obo/CLO_0003702', 'http://purl.obolibrary.org/obo/CLO_0003710', 'HEP-3B cell', 'clo_twin'),
   ('CL:0000236', 'http://purl.obolibrary.org/obo/CL_0000236', 'B cell', 'malformed'),
   ('CL:0000115', 'http://purl.obolibrary.org/obo/CL_0000115', 'endothelial cell', 'malformed'),
   ('CL:0000129', 'http://purl.obolibrary.org/obo/CL_0000129', 'microglial cell', 'malformed'),
@@ -66,11 +67,13 @@ INSERT INTO TERM_URI_MIGRATION (FROM_URI, TO_URI, TO_LABEL, LANE) VALUES
   ('CL:4023018', 'http://purl.obolibrary.org/obo/CL_4023018', 'pvalb GABAergic interneuron', 'malformed'),
   ('CL:0000786', 'http://purl.obolibrary.org/obo/CL_0000786', 'plasma cell', 'malformed'),
   ('CL:4030065', 'http://purl.obolibrary.org/obo/CL_4030065', 'L6 intratelencephalic projecting glutamatergic neuron', 'malformed'),
+  ('http://purl.obolibrary.org/obo/CLO_0007529', 'http://purl.obolibrary.org/obo/CLO_0007530', 'Malme-3M cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0007377', 'http://purl.obolibrary.org/obo/CLO_0007378', 'LoVo cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0009034', 'http://purl.obolibrary.org/obo/CLO_0037295', 'SKBR3 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0009195', 'http://purl.obolibrary.org/obo/CLO_0009218', 'SW480 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0037015', 'http://purl.obolibrary.org/obo/CLO_0003659', 'HCC827 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0001777', 'http://purl.obolibrary.org/obo/CLO_0001928', 'bEnd.3 cell', 'clo_twin'),
+  ('http://purl.obolibrary.org/obo/CLO_0009325', 'http://purl.obolibrary.org/obo/CLO_0009326', 'TF-1 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0009196', 'http://purl.obolibrary.org/obo/CLO_0009221', 'SW620 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0001606', 'http://purl.obolibrary.org/obo/CLO_0001605', 'A673 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0008782', 'http://purl.obolibrary.org/obo/CLO_0008781', 'REH cell', 'clo_twin'),

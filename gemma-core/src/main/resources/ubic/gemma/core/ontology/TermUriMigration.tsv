@@ -13,6 +13,11 @@
 # WHEN THE MIGRATION RUNS, DELETE THIS FILE'S ROWS. A shim left in place after the data is
 # fixed is a second, silent rewrite of correct rows.
 #
+# 🛑 GROUPS ARE ANCHORED ON THE ONTOLOGY, NOT ON THE CORPUS. An earlier pass formed groups
+# from the terms Gemma uses, which cannot see a pair whose twin has zero usage -- 22Rv1
+# (CLO_0001200 x19 vs CLO_0001199 x0) was invisible that way. Re-running it against CLO's own
+# label collisions found 67 such groups; 3 of them had usage on the member that loses.
+#
 # lane      malformed = the URI is wrong on its face (bare CURIE, a colon where OBO uses an
 #                       underscore, an id concatenated with itself). Every repair was verified
 #                       by resolving the repaired IRI against the live ontology.
@@ -25,6 +30,7 @@ clo_twin	http://purl.obolibrary.org/obo/CLO_0007365	LNCAP cell	http://purl.oboli
 malformed	http://purl.obolibrary.org/obo/CL:0000128	oligodendrocyte	http://purl.obolibrary.org/obo/CL_0000128	oligodendrocyte	19	repaired IRI resolves
 clo_twin	http://purl.obolibrary.org/obo/CLO_0037291	MDAMB231 cell	http://purl.obolibrary.org/obo/CLO_0007634	MDA-MB-231 cell	16	R3 EFO xrefs it (an external ontology's editorial pick)
 malformed	http://purl.obolibrary.org/obo/CL_0000669000669	pericyte	http://purl.obolibrary.org/obo/CL_0000669	pericyte	11	label of the repaired id matches
+clo_twin	http://purl.obolibrary.org/obo/CLO_0003702	Hep 3B cell	http://purl.obolibrary.org/obo/CLO_0003710	HEP-3B cell	10	R3 EFO xrefs it (an external ontology's editorial pick)
 malformed	CL:0000236	B cell	http://purl.obolibrary.org/obo/CL_0000236	B cell	9	expanded IRI resolves
 malformed	CL:0000115	endothelial cell	http://purl.obolibrary.org/obo/CL_0000115	endothelial cell	9	expanded IRI resolves
 malformed	CL:0000129	microglial cell	http://purl.obolibrary.org/obo/CL_0000129	microglial cell	9	expanded IRI resolves
@@ -50,11 +56,13 @@ malformed	CL:0000128	oligodendrocyte	http://purl.obolibrary.org/obo/CL_0000128	o
 malformed	CL:4023018	pvalb GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023018	pvalb GABAergic interneuron	8	expanded IRI resolves
 malformed	CL:0000786	plasma cell	http://purl.obolibrary.org/obo/CL_0000786	plasma cell	8	expanded IRI resolves
 malformed	CL:4030065	L6 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030065	L6 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007529	MALME-3M cell	http://purl.obolibrary.org/obo/CLO_0007530	Malme-3M cell	5	R3 EFO xrefs it (an external ontology's editorial pick)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0007377	LOVO cell	http://purl.obolibrary.org/obo/CLO_0007378	LoVo cell	4	R4 carries a definition; its twin does not
 clo_twin	http://purl.obolibrary.org/obo/CLO_0009034	SK-BR-3 cell	http://purl.obolibrary.org/obo/CLO_0037295	SKBR3 cell	3	R3 EFO xrefs it (an external ontology's editorial pick)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0009195	SW 480 cell	http://purl.obolibrary.org/obo/CLO_0009218	SW480 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0037015	HCC-827 cell	http://purl.obolibrary.org/obo/CLO_0003659	HCC827 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0001777	b.End3 cell	http://purl.obolibrary.org/obo/CLO_0001928	bEnd.3 cell	2	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009325	TF1 cell	http://purl.obolibrary.org/obo/CLO_0009326	TF-1 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0009196	SW 620 cell	http://purl.obolibrary.org/obo/CLO_0009221	SW620 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0001606	A-673 cell	http://purl.obolibrary.org/obo/CLO_0001605	A673 cell	1	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0008782	Reh cell	http://purl.obolibrary.org/obo/CLO_0008781	REH cell	1	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)

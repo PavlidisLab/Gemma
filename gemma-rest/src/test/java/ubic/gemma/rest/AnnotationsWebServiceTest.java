@@ -2681,4 +2681,38 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         assertThat( captor.getAllValues() ).allSatisfy( q -> assertThat( q.isIncludeRefuted() ).isFalse() );
     }
 
+
+    /**
+     * The canonicalization table has to be reachable by a client that resolves terms before asking
+     * Gemma — cab seeded a two-row local redirect table because ours was not queryable, and two
+     * authorities on one question is the thing this endpoint exists to prevent.
+     */
+    @Test
+    public void testCanonicalUrisAreQueryable() {
+        AnnotationsWebService.CanonicalUriValueObject[] all =
+                annotationsWebService.getCanonicalUris( null ).getData()
+                        .toArray( new AnnotationsWebService.CanonicalUriValueObject[0] );
+        assertThat( all ).as( "an empty table is indistinguishable from a corpus with no duplicates" )
+                .isNotEmpty();
+        for ( AnnotationsWebService.CanonicalUriValueObject v : all ) {
+            assertThat( v.getFromUri() ).isNotBlank();
+            assertThat( v.getToUri() ).isNotBlank();
+            assertThat( v.getToUri() ).as( "a mapping to itself would be a no-op row" )
+                    .isNotEqualTo( v.getFromUri() );
+        }
+    }
+
+    /** Filtering by URI returns that one row, and an unmapped URI returns none rather than a guess. */
+    @Test
+    public void testCanonicalUrisFilterByUri() {
+        String bareCurie = "CL:0000236";
+        assertThat( annotationsWebService.getCanonicalUris( bareCurie ).getData() )
+                .singleElement()
+                .satisfies( v -> assertThat( v.getToUri() )
+                        .isEqualTo( "http://purl.obolibrary.org/obo/CL_0000236" ) );
+        assertThat( annotationsWebService.getCanonicalUris( "http://purl.obolibrary.org/obo/MONDO_0007254" ).getData() )
+                .as( "absent means no mapping is known, never that the URI is correct" )
+                .isEmpty();
+    }
+
 }
