@@ -473,6 +473,21 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
      * <p>{@code OBJECT_CATEGORY} stays null: a statement has one category, which belongs to the
      * subject. Inventing a category for the object would assert something the curator did not.</p>
      *
+     * <p>{@code EVIDENCE_CODE} defaults to {@code IC} when the statement carries none, for the same
+     * reason {@code SOURCE} is {@code 'Gemma'}. 1,630 of the 26,464 CURATED rows inherited a null,
+     * because several writers — the composite curation commit among them — never set the column on
+     * the characteristic. Every other source in the table answers for every row it has
+     * (CELLOSAURUS {@code IIA}, CHEBI and CLO {@code IEA}, MGI {@code TAS}/{@code IIA}), so a bare
+     * NULL under {@code GROUP BY EVIDENCE_CODE} is a question about the harvest rather than about
+     * the data.</p>
+     *
+     * <p>{@code IC} is the honest value rather than a filler: the row exists because a curator wrote
+     * the statement, which is what "inferred by curator" says, and it is what the 24,833 coded rows
+     * beside it already say. Defaulting here rather than backfilling the characteristics is
+     * deliberate — the table is rebuilt from scratch on every run, so this self-heals and cannot
+     * drift, and it does not put a value on the curator's own annotation that the curator did not
+     * write.</p>
+     *
      * <p>{@code SOURCE} is {@code 'Gemma'} rather than null. It used to be null on the reasoning that
      * a curated row's source is Gemma itself and therefore goes without saying — but it does not go
      * without saying to anyone reading the table. {@code GROUP BY SOURCE} returned a bare NULL for
@@ -482,7 +497,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private static final String AR_STATEMENT_QUERY =
             "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
                     + "C.PREDICATE, nullif(trim(C.PREDICATE_URI), ''), C.OBJECT, nullif(trim(C.OBJECT_URI), ''), "
-                    + "I.TAXON_FK, 'CURATED', 'Gemma', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
+                    + "I.TAXON_FK, 'CURATED', 'Gemma', coalesce(C.EVIDENCE_CODE, 'IC'), C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
                     + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
                     + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
                     + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
@@ -502,7 +517,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private static final String AR_SECOND_STATEMENT_QUERY =
             "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
                     + "C.SECOND_PREDICATE, nullif(trim(C.SECOND_PREDICATE_URI), ''), C.SECOND_OBJECT, nullif(trim(C.SECOND_OBJECT_URI), ''), "
-                    + "I.TAXON_FK, 'CURATED', 'Gemma', C.EVIDENCE_CODE, C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
+                    + "I.TAXON_FK, 'CURATED', 'Gemma', coalesce(C.EVIDENCE_CODE, 'IC'), C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
                     + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
                     + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
                     + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
