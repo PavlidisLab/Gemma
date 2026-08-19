@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.cli.util.RestCacheEviction;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import org.springframework.lang.Nullable;
@@ -130,6 +131,13 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
             } catch ( Exception e ) {
                 log.warn( "Failed to refresh EE2C from " + gemmaRestApiClient.getHostUrl(), e );
             }
+        }
+        if ( relations ) {
+            // That refresh evicts the EE2C query space only. The relation rows this run rewrote live
+            // in a different space, and the CURATED path does not even evict it locally -- it relies
+            // on addSynchronizedQuerySpace, which is scoped to this JVM and says nothing to the
+            // process actually serving the rows.
+            RestCacheEviction.evictAfterRebuild( gemmaRestApiClient, log );
         }
     }
 }
