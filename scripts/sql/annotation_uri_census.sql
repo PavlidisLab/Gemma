@@ -3,6 +3,11 @@
 --
 -- READ-ONLY. Nothing here writes. Safe against prod gemd.
 --
+-- 🛑 TARGET IS MySQL 5.7 (prod is 5.7.44). No CTEs, no window functions, and no
+-- REGEXP_REPLACE -- that one is 8.0.4+, and an earlier draft of Q3 used it and would have
+-- failed on prod. Q3's label normalization is a REPLACE chain for this reason; keep it that
+-- way until prod's MySQL upgrade lands.
+--
 -- OUTPUT DOES NOT BELONG IN THIS REPO. This repo is code. The census output is large and
 -- regenerable, so it lands in ~/Data/gemma-curation-agents-data/annotation_uri_census/
 -- (see its README for the invocation); small derived findings go in
@@ -58,7 +63,7 @@
 -- SURFACE: EXPRESSION_EXPERIMENT2CHARACTERISTIC, the denormalized table aggregating EE
 -- direct tags + BioMaterial characteristics + FactorValue characteristics uniformly. That
 -- is what the REST annotation endpoints read, so these counts are the ones uib and cab see
--- through the API. Q5 cross-checks it against CHARACTERISTIC (the source of truth): EE2C is
+-- through the API. Q4 cross-checks it against CHARACTERISTIC (the source of truth): EE2C is
 -- known to carry stale rows -- 1,008 survived a full updateEe2c on 2026-08-12, see
 -- resync_ee2c_from_characteristic.sql. Non-zero does not invalidate the census; it means
 -- say so when quoting it.
@@ -138,6 +143,11 @@ FROM (
 GROUP BY slot, uri, label
 ORDER BY n_annotations DESC;
 
+-- 🛑 GROUP_CONCAT defaults to 1024 bytes and TRUNCATES SILENTLY -- a three-member group
+-- with long URIs loses members with no warning, which reads as a two-member group. Raise it
+-- for the session before Q3. (Session-scoped, affects nothing outside this connection.)
+SET SESSION group_concat_max_len = 1048576;
+
 -- Q3 -- candidate twin groups: same normalized label, more than one URI in use. This is
 -- uib's axis-A "17 groups" recomputed from the database rather than the ontology index, so
 -- the two numbers can be compared. Restricted to CLO here; drop the LIKE to run corpus-wide.
@@ -155,7 +165,9 @@ SELECT norm_label,
        GROUP_CONCAT(CONCAT(uri, ' (', label, ') x', n) ORDER BY n DESC SEPARATOR '  |  ') AS members
 FROM (
   SELECT uri, label,
-         REGEXP_REPLACE(LOWER(REGEXP_REPLACE(label, ' cell$', '')), '[^a-z0-9]', '') AS norm_label,
+         LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+           CASE WHEN RIGHT(label, 5) = ' cell' THEN LEFT(label, CHAR_LENGTH(label) - 5) ELSE label END,
+           ' ',''), '-',''), '_',''), '.',''), '/',''), '(',''), ')',''), ',',''), '+','')) AS norm_label,
          COUNT(*) AS n
   FROM (
     SELECT VALUE_URI AS uri, `VALUE` AS label FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC
@@ -171,7 +183,7 @@ GROUP BY norm_label
 HAVING COUNT(DISTINCT uri) > 1
 ORDER BY n_annotations DESC;
 
--- Q5 -- EE2C staleness cross-check. Non-zero means the counts above are read through a
+-- Q4 -- EE2C staleness cross-check. Non-zero means the counts above are read through a
 -- surface that disagrees with CHARACTERISTIC; the census is still usable, but say so.
 SELECT 'ee2c rows whose URI disagrees with CHARACTERISTIC' AS chk, COUNT(*) AS n
 FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC e JOIN CHARACTERISTIC c ON c.ID = e.ID
