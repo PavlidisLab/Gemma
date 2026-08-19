@@ -13,6 +13,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
@@ -27,19 +28,28 @@ import java.util.stream.Stream;
 @Slf4j
 public class FileLockManagerImpl implements FileLockManager {
 
-    private static final Map<Path, ReadWriteFileLock> fileLocks = Collections.synchronizedMap( new WeakHashMap<>() );
+    /**
+     * 🛑 This map must NEVER evict an entry whose lock is still held. The JVM's file-lock table is
+     * global: two {@link ReadWriteFileLock} instances for the same file throw
+     * {@link java.nio.channels.OverlappingFileLockException} the moment both try to lock, which is
+     * exactly what a {@code WeakHashMap} produced here — its entry was reachable only through the
+     * FIRST acquirer's {@code Path} object, so when that caller closed (a cache probe, typically)
+     * while a LATER caller still held the lock through an equal-but-distinct {@code Path}, GC evicted
+     * the entry mid-hold and the next request minted a second instance against the held file
+     * (observed 2026-08-19: every {@code /data/raw} probe 500ing instantly while a disconnected
+     * caller's build still held the exclusive lock). The cost of never evicting is one small idle
+     * entry per distinct file path touched over the JVM's lifetime, which is bounded and inert; the
+     * cost of evicting wrongly was a deterministic 500.
+     */
+    private static final Map<Path, ReadWriteFileLock> fileLocks = new ConcurrentHashMap<>();
 
     @Override
     public Collection<FileLockInfo> getAllLockInfos() throws IOException {
         Map<Long, List<ubic.gemma.core.util.runtime.FileLockInfo>> lockMetadata = Arrays.stream( ExtendedRuntime.getRuntime().getFileLockInfo() )
                 .collect( Collectors.groupingBy( ubic.gemma.core.util.runtime.FileLockInfo::getInode, Collectors.toList() ) );
-        // Snapshot under explicit synchronization before iterating the synchronized-map view; see
-        // Collections.synchronizedMap javadoc. Writers (acquirePathLock / tryAcquirePathLock) can mutate
-        // fileLocks concurrently via computeIfAbsent from request threads.
-        List<Map.Entry<Path, ReadWriteFileLock>> snapshot;
-        synchronized ( fileLocks ) {
-            snapshot = new ArrayList<>( fileLocks.entrySet() );
-        }
+        // ConcurrentHashMap iteration is safe against concurrent computeIfAbsent from request
+        // threads; snapshot only so the stream sees one consistent moment.
+        List<Map.Entry<Path, ReadWriteFileLock>> snapshot = new ArrayList<>( fileLocks.entrySet() );
         return snapshot.stream()
                 // only display files with active locks
                 .filter( e -> e.getValue().getChannelHoldCount() > 0 )
