@@ -2702,6 +2702,44 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         }
     }
 
+    /**
+     * 🛑 The regression guard for the whole point of this endpoint: a twin the CORPUS HAS NEVER
+     * USED must still be answered for.
+     * <p>
+     * CLO_0001199 ('22RV1 cell') has zero annotations in Gemma; its twin CLO_0001200 ('22Rv1 cell')
+     * has 19. A table built from the terms the corpus uses cannot see the zero-usage member at all —
+     * and that is exactly the member cab's Tier-0 synonym table mints out of file order and asks us
+     * about. The first cut of this table was corpus-anchored, this row was missing, and following
+     * our own instruction to generate from it would have regressed the case that prompted it.
+     */
+    @Test
+    public void testCanonicalUrisAnswersForATwinTheCorpusNeverUsed() {
+        assertThat( annotationsWebService.getCanonicalUris( "http://purl.obolibrary.org/obo/CLO_0001199" ).getData() )
+                .as( "a zero-usage twin is invisible to a corpus-anchored table and is precisely "
+                        + "the one an outside resolver mints" )
+                .singleElement()
+                .satisfies( v -> {
+                    assertThat( v.getToUri() ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0001200" );
+                    assertThat( v.getToLabel() ).isEqualTo( "22Rv1 cell" );
+                } );
+    }
+
+    /**
+     * Every row says which rule decided it, so a consumer can tell an ontology-intrinsic answer
+     * (R3 xref, R4 definition) from one that rests on our curators' spelling habits (R5 usage).
+     */
+    @Test
+    public void testCanonicalUrisCarryTheDecidingRule() {
+        List<AnnotationsWebService.CanonicalUriValueObject> all = annotationsWebService.getCanonicalUris( null ).getData();
+        assertThat( all ).allSatisfy( v -> {
+            assertThat( v.getBasis() ).isNotBlank();
+            assertThat( v.getLane() ).isIn( "malformed", "clo_twin" );
+        } );
+        assertThat( all ).as( "the twin lane is decided by rules, and the rules have to be visible" )
+                .anySatisfy( v -> assertThat( v.getBasis() ).startsWith( "R3" ) )
+                .anySatisfy( v -> assertThat( v.getBasis() ).startsWith( "R5" ) );
+    }
+
     /** Filtering by URI returns that one row, and an unmapped URI returns none rather than a guess. */
     @Test
     public void testCanonicalUrisFilterByUri() {

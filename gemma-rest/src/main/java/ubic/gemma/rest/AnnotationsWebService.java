@@ -421,11 +421,16 @@ public class AnnotationsWebService {
                     + "through this table, so `/datasets/{id}/annotations` already returns the canonical term; "
                     + "this endpoint exposes the table itself for clients that resolve terms before asking Gemma "
                     + "— a local synonym table cannot be corrected by a server-side change.\n\n"
-                    + "**Scope.** The mapping is derived from the terms this corpus actually uses, plus the "
-                    + "ontology-wide label collisions that a rule can decide without usage. It is NOT a complete "
-                    + "duplicate list for any ontology: CLO alone has 262 label-collision groups and only 33 are "
-                    + "decidable without corpus usage. An absent URI means *no mapping is known*, never *this URI "
-                    + "is correct*.\n\n"
+                    + "**Scope.** Groups are anchored on the ontology, not on this corpus, so a twin the corpus "
+                    + "has never used still gets an answer — which matters because a client-side synonym table "
+                    + "mints exactly those. 49 of the rows here migrate nothing and exist only for callers like "
+                    + "you. It is NOT a complete duplicate list for any ontology: CLO has 262 label-collision "
+                    + "groups and the rules decide 63 of them. An absent URI means *no mapping is known*, never "
+                    + "*this URI is correct*.\n\n"
+                    + "**Check `basis` before you trust a row.** `R3`/`R4` are ontology-intrinsic (an external "
+                    + "cross-reference, or a definition one twin has and the other lacks). `R5` means the only "
+                    + "thing separating the twins was corpus usage, which is our evidence and not a property of "
+                    + "the ontology.\n\n"
                     + "**Provisional.** These rows stand in for a database migration that is written and not yet "
                     + "applied; when it runs this list becomes empty, and an empty list is the finished state, "
                     + "not a failure.",
@@ -438,7 +443,9 @@ public class AnnotationsWebService {
             if ( uri != null && !uri.equals( e.getKey() ) ) {
                 continue;
             }
-            out.add( new CanonicalUriValueObject( e.getKey(), e.getValue()[0], e.getValue()[1] ) );
+            String[] v = e.getValue();
+            out.add( new CanonicalUriValueObject( e.getKey(), v[0], v[1],
+                    v.length > 2 ? v[2] : null, v.length > 3 ? v[3] : null ) );
         }
         out.sort( Comparator.comparing( CanonicalUriValueObject::getFromUri ) );
         return respond( out );
@@ -450,11 +457,16 @@ public class AnnotationsWebService {
         private final String fromUri;
         private final String toUri;
         private final String toLabel;
+        private final String basis;
+        private final String lane;
 
-        public CanonicalUriValueObject( String fromUri, String toUri, String toLabel ) {
+        public CanonicalUriValueObject( String fromUri, String toUri, String toLabel,
+                @Nullable String basis, @Nullable String lane ) {
             this.fromUri = fromUri;
             this.toUri = toUri;
             this.toLabel = toLabel;
+            this.basis = basis;
+            this.lane = lane;
         }
 
         /** The URI as stored on the annotation. */
@@ -470,6 +482,29 @@ public class AnnotationsWebService {
         /** The label that goes with {@link #getToUri()}; it moves with the URI. */
         public String getToLabel() {
             return toLabel;
+        }
+
+        /**
+         * Why this row decides the way it does &mdash; the rule that picked the winner.
+         * <p>
+         * Read it before trusting a row. {@code R3}/{@code R4} are ontology-intrinsic: an outside
+         * ontology cross-references the winner, or the winner carries a definition and its twin does
+         * not. {@code R5} means the twins were separated by nothing but how often our curators typed
+         * each spelling, and it only fires when the winner has at least two annotations and leads by
+         * at least two &mdash; a one-annotation margin is one curator, once.
+         */
+        @Nullable
+        public String getBasis() {
+            return basis;
+        }
+
+        /**
+         * {@code malformed} (the stored URI is wrong on its face) or {@code clo_twin} (two live Cell
+         * Line Ontology classes for one cell line).
+         */
+        @Nullable
+        public String getLane() {
+            return lane;
         }
     }
 

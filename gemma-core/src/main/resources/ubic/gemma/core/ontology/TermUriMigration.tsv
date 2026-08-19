@@ -1,76 +1,136 @@
 # Terms Gemma resolves to a different URI on read, until the database migration runs.
 #
-# 🛑 THIS FILE IS THE SINGLE SOURCE. scripts/sql/term_uri_migration.sql is GENERATED from it,
-# and CharacteristicUtils#canonicalUri reads it at runtime. Editing one and not the other is
-# how the shim and the migration come to disagree about what the corpus contains, so there is
-# only one file to edit.
+# 🛑 THIS FILE IS THE SINGLE SOURCE. scripts/sql/term_uri_migration.sql is GENERATED from it by
+# scripts/gen_term_uri_migration.py, and CharacteristicUtils#canonicalUri reads it at runtime.
+# Edit here and regenerate; never edit the SQL by hand.
 #
 # WHY A READ-TIME SHIM RATHER THAN THE MIGRATION: the agent pipeline is calibrated against a
 # MAY snapshot of Gemma, and migrating prod now would put the corpus out of sync with it
 # (Paul, 2026-08-18). The Gemma 2.0 write path is separately held until PR #1667 merges and
 # 1.0 redeploys. So Gemma returns the right term today and the rows move later.
 #
-# WHEN THE MIGRATION RUNS, DELETE THIS FILE'S ROWS. A shim left in place after the data is
-# fixed is a second, silent rewrite of correct rows.
+# WHEN THE MIGRATION RUNS, DELETE THE ROWS THAT HAVE ANNOTATIONS. A shim left in place after
+# the data is fixed is a second, silent rewrite of correct rows. The n_annotations=0 rows are
+# NOT migration rows and stay -- see below.
 #
-# 🛑 GROUPS ARE ANCHORED ON THE ONTOLOGY, NOT ON THE CORPUS. An earlier pass formed groups
-# from the terms Gemma uses, which cannot see a pair whose twin has zero usage -- 22Rv1
-# (CLO_0001200 x19 vs CLO_0001199 x0) was invisible that way. Re-running it against CLO's own
-# label collisions found 67 such groups; 3 of them had usage on the member that loses.
+# 🛑 GROUPS ARE ANCHORED ON THE ONTOLOGY, NOT ON THE CORPUS, AND 49 ROWS MIGRATE NOTHING.
+# A corpus-anchored pass can only see a twin the corpus USES. cab's Tier-0 synonym table MINTS
+# CLO_0001199 (22RV1, zero uses) out of file order and asks us about it, so the twin we most
+# need to answer for is exactly the one no census can show. Those rows exist for the resolver,
+# not for the UPDATE: the generator drops n_annotations=0 from the SQL, where they would be
+# no-ops, and serves them from GET /annotations/canonicalUris, where they are the whole point.
+#
+# 🛑 AN ABSENT URI MEANS NO MAPPING IS KNOWN. It never means the URI is correct. CLO has 262
+# label-collision groups and this ladder decides 63 of them; the rest have no evidence that
+# separates the twins, and silence about them is not a pass.
+#
+# Regenerate:
+#   scripts/build_term_crossmatch.py --census <census>.tsv \
+#       --clo-owl clo.owl --efo-obo efo.obo --out twins.tsv
 #
 # lane      malformed = the URI is wrong on its face (bare CURIE, a colon where OBO uses an
 #                       underscore, an id concatenated with itself). Every repair was verified
 #                       by resolving the repaired IRI against the live ontology.
 #           clo_twin  = two live CLO classes for one cell line. R3 an EFO inbound xref, else
-#                       R4 whichever carries a definition, else R5 usage. See
-#                       docs/design/TERM_URI_CANONICALIZATION.md.
+#                       R4 whichever carries a definition, else R5 usage -- and R5 must clear
+#                       an evidence floor (winner >=2 annotations, leading by >=2) because a
+#                       one-annotation margin is a single curator's spelling, not a
+#                       measurement. See docs/design/TERM_URI_CANONICALIZATION.md.
 lane	from_uri	from_label	to_uri	to_label	n_annotations	rule
 malformed	http://purl.obolibrary.org/obo/CL:0000115	endothelial cell	http://purl.obolibrary.org/obo/CL_0000115	endothelial cell	39	repaired IRI resolves
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007365	LNCAP cell	http://purl.obolibrary.org/obo/CLO_0037116	LNCaP cell	38	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007365	LNCAP cell	http://purl.obolibrary.org/obo/CLO_0037116	LNCaP cell	38	R5 usage, among members equal on every stronger rule
 malformed	http://purl.obolibrary.org/obo/CL:0000128	oligodendrocyte	http://purl.obolibrary.org/obo/CL_0000128	oligodendrocyte	19	repaired IRI resolves
 clo_twin	http://purl.obolibrary.org/obo/CLO_0037291	MDAMB231 cell	http://purl.obolibrary.org/obo/CLO_0007634	MDA-MB-231 cell	16	R3 EFO xrefs it (an external ontology's editorial pick)
 malformed	http://purl.obolibrary.org/obo/CL_0000669000669	pericyte	http://purl.obolibrary.org/obo/CL_0000669	pericyte	11	label of the repaired id matches
 clo_twin	http://purl.obolibrary.org/obo/CLO_0003702	Hep 3B cell	http://purl.obolibrary.org/obo/CLO_0003710	HEP-3B cell	10	R3 EFO xrefs it (an external ontology's editorial pick)
-malformed	CL:0000236	B cell	http://purl.obolibrary.org/obo/CL_0000236	B cell	9	expanded IRI resolves
 malformed	CL:0000115	endothelial cell	http://purl.obolibrary.org/obo/CL_0000115	endothelial cell	9	expanded IRI resolves
 malformed	CL:0000129	microglial cell	http://purl.obolibrary.org/obo/CL_0000129	microglial cell	9	expanded IRI resolves
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007059	K-562 cell	http://purl.obolibrary.org/obo/CLO_0007050	K 562 cell	8	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
-malformed	CL:4023040	L2/3-6 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4023040	L2/3-6 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
-malformed	CL:4030067	L5/6 near-projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030067	L5/6 near-projecting glutamatergic neuron	8	expanded IRI resolves
-malformed	CL:0000192	smooth muscle cell	http://purl.obolibrary.org/obo/CL_0000192	smooth muscle cell	8	expanded IRI resolves
-malformed	CL:4023041	L5 extratelencephalic projecting glutamatergic cortical neuron	http://purl.obolibrary.org/obo/CL_4023041	L5 extratelencephalic projecting glutamatergic cortical neuron	8	expanded IRI resolves
-malformed	CL:0002453	oligodendrocyte precursor cell	http://purl.obolibrary.org/obo/CL_0002453	oligodendrocyte precursor cell	8	expanded IRI resolves
-malformed	CL:4023042	L6 corticothalamic-projecting glutamatergic cortical neuron	http://purl.obolibrary.org/obo/CL_4023042	L6 corticothalamic-projecting glutamatergic cortical neuron	8	expanded IRI resolves
+malformed	CL:0000236	B cell	http://purl.obolibrary.org/obo/CL_0000236	B cell	9	expanded IRI resolves
 malformed	CL:0000084	T cell	http://purl.obolibrary.org/obo/CL_0000084	T cell	8	expanded IRI resolves
-malformed	CL:4023011	lamp5 GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023011	lamp5 GABAergic interneuron	8	expanded IRI resolves
-malformed	CL:0000617	GABAergic neuron	http://purl.obolibrary.org/obo/CL_0000617	GABAergic neuron	8	expanded IRI resolves
-malformed	CL:4023046	L6b glutamatergic neuron of the primary motor cortex	http://purl.obolibrary.org/obo/CL_4023046	L6b glutamatergic neuron of the primary motor cortex	8	expanded IRI resolves
-malformed	CL:4023016	VIP GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023016	VIP GABAergic interneuron	8	expanded IRI resolves
-malformed	CL:0000623	natural killer cell	http://purl.obolibrary.org/obo/CL_0000623	natural killer cell	8	expanded IRI resolves
-malformed	CL:4023051	vascular leptomeningeal cell	http://purl.obolibrary.org/obo/CL_4023051	vascular leptomeningeal cell	8	expanded IRI resolves
 malformed	CL:0000127	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	astrocyte	8	expanded IRI resolves
-malformed	CL:4023017	sst GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023017	sst GABAergic interneuron	8	expanded IRI resolves
-malformed	CL:0000669	pericyte	http://purl.obolibrary.org/obo/CL_0000669	pericyte	8	expanded IRI resolves
-malformed	CL:4030059	L2/3 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030059	L2/3 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
 malformed	CL:0000128	oligodendrocyte	http://purl.obolibrary.org/obo/CL_0000128	oligodendrocyte	8	expanded IRI resolves
-malformed	CL:4023018	pvalb GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023018	pvalb GABAergic interneuron	8	expanded IRI resolves
+malformed	CL:0000192	smooth muscle cell	http://purl.obolibrary.org/obo/CL_0000192	smooth muscle cell	8	expanded IRI resolves
+malformed	CL:0000617	GABAergic neuron	http://purl.obolibrary.org/obo/CL_0000617	GABAergic neuron	8	expanded IRI resolves
+malformed	CL:0000623	natural killer cell	http://purl.obolibrary.org/obo/CL_0000623	natural killer cell	8	expanded IRI resolves
+malformed	CL:0000669	pericyte	http://purl.obolibrary.org/obo/CL_0000669	pericyte	8	expanded IRI resolves
 malformed	CL:0000786	plasma cell	http://purl.obolibrary.org/obo/CL_0000786	plasma cell	8	expanded IRI resolves
+malformed	CL:0002453	oligodendrocyte precursor cell	http://purl.obolibrary.org/obo/CL_0002453	oligodendrocyte precursor cell	8	expanded IRI resolves
+malformed	CL:4023011	lamp5 GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023011	lamp5 GABAergic interneuron	8	expanded IRI resolves
+malformed	CL:4023016	VIP GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023016	VIP GABAergic interneuron	8	expanded IRI resolves
+malformed	CL:4023017	sst GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023017	sst GABAergic interneuron	8	expanded IRI resolves
+malformed	CL:4023018	pvalb GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023018	pvalb GABAergic interneuron	8	expanded IRI resolves
+malformed	CL:4023040	L2/3-6 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4023040	L2/3-6 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
+malformed	CL:4023041	L5 extratelencephalic projecting glutamatergic cortical neuron	http://purl.obolibrary.org/obo/CL_4023041	L5 extratelencephalic projecting glutamatergic cortical neuron	8	expanded IRI resolves
+malformed	CL:4023042	L6 corticothalamic-projecting glutamatergic cortical neuron	http://purl.obolibrary.org/obo/CL_4023042	L6 corticothalamic-projecting glutamatergic cortical neuron	8	expanded IRI resolves
+malformed	CL:4023046	L6b glutamatergic neuron of the primary motor cortex	http://purl.obolibrary.org/obo/CL_4023046	L6b glutamatergic neuron of the primary motor cortex	8	expanded IRI resolves
+malformed	CL:4023051	vascular leptomeningeal cell	http://purl.obolibrary.org/obo/CL_4023051	vascular leptomeningeal cell	8	expanded IRI resolves
+malformed	CL:4030059	L2/3 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030059	L2/3 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
 malformed	CL:4030065	L6 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030065	L6 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
+malformed	CL:4030067	L5/6 near-projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030067	L5/6 near-projecting glutamatergic neuron	8	expanded IRI resolves
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007059	K-562 cell	http://purl.obolibrary.org/obo/CLO_0007050	K 562 cell	8	R4 carries a definition; its twin does not
 clo_twin	http://purl.obolibrary.org/obo/CLO_0007529	MALME-3M cell	http://purl.obolibrary.org/obo/CLO_0007530	Malme-3M cell	5	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007377	LOVO cell	http://purl.obolibrary.org/obo/CLO_0007378	LoVo cell	4	R4 carries a definition; its twin does not
 clo_twin	http://purl.obolibrary.org/obo/CLO_0009034	SK-BR-3 cell	http://purl.obolibrary.org/obo/CLO_0037295	SKBR3 cell	3	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001777	b.End3 cell	http://purl.obolibrary.org/obo/CLO_0001928	bEnd.3 cell	2	R5 usage, among members equal on every stronger rule
 clo_twin	http://purl.obolibrary.org/obo/CLO_0009195	SW 480 cell	http://purl.obolibrary.org/obo/CLO_0009218	SW480 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0037015	HCC-827 cell	http://purl.obolibrary.org/obo/CLO_0003659	HCC827 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001777	b.End3 cell	http://purl.obolibrary.org/obo/CLO_0001928	bEnd.3 cell	2	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0009325	TF1 cell	http://purl.obolibrary.org/obo/CLO_0009326	TF-1 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009196	SW 620 cell	http://purl.obolibrary.org/obo/CLO_0009221	SW620 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001606	A-673 cell	http://purl.obolibrary.org/obo/CLO_0001605	A673 cell	1	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0008782	Reh cell	http://purl.obolibrary.org/obo/CLO_0008781	REH cell	1	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0004266	HT 1080 cell	http://purl.obolibrary.org/obo/CLO_0004276	HT-1080 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009450	U 937 cell	http://purl.obolibrary.org/obo/CLO_0009465	U-937 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001084	143 B cell	http://purl.obolibrary.org/obo/CLO_0001088	143B cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0002165	Ca Ski cell	http://purl.obolibrary.org/obo/CLO_0002201	CaSki cell	1	R4 carries a definition; its twin does not
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001890	BC3 cell	http://purl.obolibrary.org/obo/CLO_0001891	BC-3 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0037155	KMH-2 cell	http://purl.obolibrary.org/obo/CLO_0007112	KM-H2 cell	1	R5 usage (validated: agrees with EFO in 9/9 groups where EFO has an opinion)
-malformed	http://purl.obolibrary.org/obo/CL:4023017	sst GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023017	sst GABAergic interneuron	1	repaired IRI resolves
+clo_twin	http://purl.obolibrary.org/obo/CLO_0037015	HCC-827 cell	http://purl.obolibrary.org/obo/CLO_0003659	HCC827 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
 malformed	http://purl.obolibrary.org/obo/CL:0000127	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	astrocyte	1	repaired IRI resolves
+malformed	http://purl.obolibrary.org/obo/CL:4023017	sst GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023017	sst GABAergic interneuron	1	repaired IRI resolves
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001084	143 B cell	http://purl.obolibrary.org/obo/CLO_0001088	143B cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001606	A-673 cell	http://purl.obolibrary.org/obo/CLO_0001605	A673 cell	1	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001890	BC3 cell	http://purl.obolibrary.org/obo/CLO_0001891	BC-3 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002165	Ca Ski cell	http://purl.obolibrary.org/obo/CLO_0002201	CaSki cell	1	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0004266	HT 1080 cell	http://purl.obolibrary.org/obo/CLO_0004276	HT-1080 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008782	Reh cell	http://purl.obolibrary.org/obo/CLO_0008781	REH cell	1	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009196	SW 620 cell	http://purl.obolibrary.org/obo/CLO_0009221	SW620 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009450	U 937 cell	http://purl.obolibrary.org/obo/CLO_0009465	U-937 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0037155	KMH-2 cell	http://purl.obolibrary.org/obo/CLO_0007112	KM-H2 cell	1	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001199	22RV1 cell	http://purl.obolibrary.org/obo/CLO_0001200	22Rv1 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001543	A 172 cell	http://purl.obolibrary.org/obo/CLO_0001560	A172 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001544	A 375 cell	http://purl.obolibrary.org/obo/CLO_0001582	A-375 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001559	A-172 cell	http://purl.obolibrary.org/obo/CLO_0001560	A172 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001592	A-431 cell	http://purl.obolibrary.org/obo/CLO_0001591	A431 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001596	A-498 cell	http://purl.obolibrary.org/obo/CLO_0009974	A498 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001766	AtT-20 cell	http://purl.obolibrary.org/obo/CLO_0001765	AtT20 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002031	BRL-3A cell	http://purl.obolibrary.org/obo/CLO_0002029	BRL 3A cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002129	C-4I cell	http://purl.obolibrary.org/obo/CLO_0002125	C-4 I cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002176	Caki-1 cell	http://purl.obolibrary.org/obo/CLO_0002175	CAKI-1 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002467	CHP 212 cell	http://purl.obolibrary.org/obo/CLO_0002473	CHP-212 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002722	DBTRG.05MG cell	http://purl.obolibrary.org/obo/CLO_0002723	DBTRG-05MG cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002802	DMS-79 cell	http://purl.obolibrary.org/obo/CLO_0002800	DMS 79 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002882	ECV-304 cell	http://purl.obolibrary.org/obo/CLO_0002881	ECV304 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0003581	H 9 cell	http://purl.obolibrary.org/obo/CLO_0003612	H9 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0003696	HeLa S3 cell	http://purl.obolibrary.org/obo/CLO_0003695	HeLa S 3 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0003699	HELA-S3 cell	http://purl.obolibrary.org/obo/CLO_0003695	HeLa S 3 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0004268	HT 1376 cell	http://purl.obolibrary.org/obo/CLO_0004279	HT-1376 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0006705	IM-9 cell	http://purl.obolibrary.org/obo/CLO_0006703	IM 9 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0006985	J.?1 cell	http://purl.obolibrary.org/obo/CLO_0006987	J1 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007068	KASUMI-1 cell	http://purl.obolibrary.org/obo/CLO_0007069	Kasumi-1 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007144	L 929 cell	http://purl.obolibrary.org/obo/CLO_0007219	L929 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007220	L-929 cell	http://purl.obolibrary.org/obo/CLO_0007219	L929 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007393	LS 174T cell	http://purl.obolibrary.org/obo/CLO_0007403	LS174T cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007394	LS 180 cell	http://purl.obolibrary.org/obo/CLO_0007404	LS180 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007687	MEWO cell	http://purl.obolibrary.org/obo/CLO_0007688	MeWo cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007920	N-18 cell	http://purl.obolibrary.org/obo/CLO_0007919	N18 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008282	P 3 HR 1 cell	http://purl.obolibrary.org/obo/CLO_0008331	P3HR-1 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008301	P-19 cell	http://purl.obolibrary.org/obo/CLO_0008302	P19 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008340	P-815 cell	http://purl.obolibrary.org/obo/CLO_0008341	P815 cell	0	R4 carries a definition; its twin does not
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008693	R D cell	http://purl.obolibrary.org/obo/CLO_0008770	RD cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008869	RPMI 2650 cell	http://purl.obolibrary.org/obo/CLO_0008876	RPMI-2650 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008874	RPMI 8402 cell	http://purl.obolibrary.org/obo/CLO_0009857	RPMI-8402 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009032	SK LU 1 cell	http://purl.obolibrary.org/obo/CLO_0009039	SK-LU-1 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009186	SW 1353 cell	http://purl.obolibrary.org/obo/CLO_0009210	SW1353 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009193	SW 403 cell	http://purl.obolibrary.org/obo/CLO_0009215	SW403 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009194	SW 48 cell	http://purl.obolibrary.org/obo/CLO_0009216	SW48 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009200	SW 837 cell	http://purl.obolibrary.org/obo/CLO_0009224	SW837 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009209	SW-13 cell	http://purl.obolibrary.org/obo/CLO_0009185	SW 13 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009214	SW-403 cell	http://purl.obolibrary.org/obo/CLO_0009215	SW403 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009217	SW-480 cell	http://purl.obolibrary.org/obo/CLO_0009218	SW480 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009235	T 24 cell	http://purl.obolibrary.org/obo/CLO_0009245	T24 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009236	T 98 G cell	http://purl.obolibrary.org/obo/CLO_0009258	T98G cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009461	U-373 MG cell	http://purl.obolibrary.org/obo/CLO_0009460	U373 MG cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009594	WI-38 cell	http://purl.obolibrary.org/obo/CLO_0009591	WI 38 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009615	WM-266-4 cell	http://purl.obolibrary.org/obo/CLO_0009612	WM 266-4 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009968	LS-411N cell	http://purl.obolibrary.org/obo/CLO_0007406	LS411N cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009969	LS-513 cell	http://purl.obolibrary.org/obo/CLO_0007407	LS513 cell	0	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0037050	DOHH-2 cell	http://purl.obolibrary.org/obo/CLO_0002805	DOHH2 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)

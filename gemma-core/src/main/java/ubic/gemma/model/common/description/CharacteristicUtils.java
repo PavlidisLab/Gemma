@@ -34,7 +34,13 @@ public class CharacteristicUtils {
      */
     private static final String MIGRATION_RESOURCE = "/ubic/gemma/core/ontology/TermUriMigration.tsv";
 
-    /** from-URI &rarr; [to-URI, to-label]. Empty if the resource is missing or unreadable. */
+    /**
+     * from-URI &rarr; [to-URI, to-label, rule, lane]. Empty if the resource is missing or unreadable.
+     * <p>
+     * Slots 0 and 1 are what the shim rewrites; slots 2 and 3 are why, and exist because an outside
+     * resolver consuming this table through {@code GET /annotations/canonicalUris} has to be able to
+     * tell an ontology-decided row from one decided by how often our curators typed a spelling.
+     */
     private static final Map<String, String[]> URI_MIGRATION = loadUriMigration();
 
     private static Map<String, String[]> loadUriMigration() {
@@ -59,7 +65,8 @@ public class CharacteristicUtils {
                     }
                     // lane, from_uri, from_label, to_uri, to_label, n_annotations, rule
                     if ( f.length >= 5 && !f[1].isEmpty() && !f[3].isEmpty() ) {
-                        m.put( f[1], new String[] { f[3], f[4] } );
+                        m.put( f[1], new String[] { f[3], f[4],
+                                f.length > 6 ? f[6] : "", f[0] } );
                     }
                 }
             }
@@ -125,7 +132,7 @@ public class CharacteristicUtils {
     }
 
     /**
-     * The whole canonicalization table, from-URI &rarr; [to-URI, to-label].
+     * The whole canonicalization table, from-URI &rarr; [to-URI, to-label, rule, lane].
      * <p>
      * Exposed so a client that resolves terms <em>before</em> asking Gemma can hold the same answer
      * rather than a hand-copied subset: a local synonym table cannot be corrected by a server-side

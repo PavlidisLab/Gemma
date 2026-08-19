@@ -47,12 +47,20 @@ usage is the wrong instrument:
       A catalogue number ('RCB0009 cell') is not an entity, whatever its usage count.
       🛑 But only when a named sibling EXISTS -- C2C12 has no named CLO class at all, and
       its 53 annotations sit on RCB0987; demoting that would leave the line with nothing.
-  R3  the term that carries a DEFINITION wins.  Paul's rule, 2026-08-18: *"the one with the
-      best xrefs should lead, or which has a definition"*.  The xref half is inert for CLO --
-      measured, every CLO cell-line class has zero -- so the definition half is what does the
-      work.  A defined term is one somebody curated; an undefined twin is usually the stub.
-  R4  favoured ontology, per scripts/term_crossmatch_preferences.tsv (data, not code).
-  R5  usage, as the last tie-break among equals.
+  R3  the term another ontology CROSS-REFERENCES wins.  Paul's rule, 2026-08-18: *"the one
+      with the best xrefs should lead, or which has a definition"*.  🛑 The OUTBOUND half is
+      inert for CLO -- measured, every CLO cell-line class carries zero dbXrefs -- so what does
+      the work is the INBOUND half: EFO had to point at one of the twins, and that is an outside
+      editor's judgement made without reference to us.  `--efo-obo` supplies it.
+  R4  the term that carries a DEFINITION wins.  A defined term is one somebody curated; an
+      undefined twin is usually the stub.
+      (Favoured ontology, per scripts/term_crossmatch_preferences.tsv, sits here unnumbered: it
+      can only discriminate a cross-ontology group, so it never reaches a CLO twin.)
+  R5  usage, as the last tie-break among equals, AND ONLY ABOVE AN EVIDENCE FLOOR.
+      🛑 The winner needs >=2 annotations and must lead by >=2.  Without the floor, 24 CLO groups
+      are decided by a SINGLE annotation -- one curator's spelling, typed once, promoted to the
+      answer an external consumer reads as settled.  `LOVO` x4 over `LoVo` x3 is the case that
+      proves it.  Below the floor: abstain.
       🛑 Safe here ONLY because R1 has already removed every obsolete term.  cab's objection
       to "most-used wins" is that an obsolete term accrues usage while its successor sits at
       zero; that is real, and it is why usage is LAST and never overrides R1.  Measured on the
@@ -61,8 +69,19 @@ usage is the wrong instrument:
   R6  otherwise ABSTAIN -- `needs_curator`.  A forced choice manufactures a confident wrong
       answer; abstaining is a first-class outcome, not a failure.
 
-`--decide-label-collisions` promotes normalized-label collisions to real groups.  OFF by
-default, and it must stay that way: a clone and its parent line normalize alike, and the
+TWO WAYS TO FORM GROUPS, AND THE DEFAULT IS THE NARROW ONE.
+
+  corpus-anchored (default) -- members come from the census, so a group is only visible if the
+      corpus USES its members.  Good for "what do we hold that needs repairing".
+  ontology-anchored (`--clo-owl` + `--efo-obo`) -- members come from CLO's own label collisions,
+      read off disk, with census usage joined afterwards as tie-break evidence only.  🛑 This is
+      the one that can see a twin with ZERO annotations, and that twin is not a curiosity: an
+      outside resolver MINTS `CLO_0001199` (22RV1, zero uses) out of its own file order and asks
+      Gemma which twin to keep.  The corpus-anchored pass is structurally blind to precisely the
+      row such a caller needs.  Writes TermUriMigration.tsv rows directly.
+
+`--decide-label-collisions` promotes normalized-label collisions to real groups in the
+corpus-anchored pass.  OFF by default, and it must stay that way: a clone and its parent line normalize alike, and the
 largest collision in the corpus by usage (`CLO_0037307` induced-pluripotent-stem-cell-line,
 663 annotations) is a legitimate class term, not a duplicate.  Turning it on is a decision a
 person makes with the candidate list in front of them, not a default.
@@ -156,7 +175,10 @@ class DSU:
 def read_census(path: pathlib.Path) -> dict[str, dict]:
     """Read the SQL census. Expects a header with at least uri, label, n_annotations."""
     rows: dict[str, dict] = {}
-    with path.open() as fh:
+    # The census comes out of MySQL with latin-1 bytes in a few labels; strict utf-8 dies on
+    # them and takes the whole run with it. Replace rather than fail -- a mangled character in
+    # a label never changes which URI a row is about.
+    with path.open(encoding="utf-8", errors="replace") as fh:
         sniff = fh.read(4096)
         fh.seek(0)
         delim = "\t" if "\t" in sniff.splitlines()[0] else ","
@@ -210,8 +232,14 @@ def load_preferences(path: pathlib.Path) -> dict[tuple[str, str], int]:
     return prefs
 
 
-def choose(members: list[dict], prefs: dict[tuple[str, str], int]) -> tuple[dict | None, str]:
-    """Apply R1-R5. Returns (favoured_or_None, reason)."""
+def choose(members: list[dict], prefs: dict[tuple[str, str], int],
+           efo_xref: frozenset[str] = frozenset(),
+           min_winner: int = 0, min_margin: int = 0) -> tuple[dict | None, str]:
+    """Apply R1-R5. Returns (favoured_or_None, reason).
+
+    `efo_xref` is the set of URIs an outside ontology (EFO) points at; `min_winner` /
+    `min_margin` are the evidence floor R5 must clear before usage is allowed to decide.
+    """
     live = [m for m in members if not m.get("obsolete")]
 
     # R1 -- an ontology-declared successor wins outright, whatever the usage says.
@@ -232,14 +260,26 @@ def choose(members: list[dict], prefs: dict[tuple[str, str], int]) -> tuple[dict
         if len(live) == 1:
             return live[0], "R2 catalogue class demoted in favour of a named class"
 
-    # R3 -- a defined term beats an undefined one (Paul's rule; the xref half is inert for CLO).
+    # R3 -- an INBOUND xref from another ontology: EFO had to pick one of the twins to point at,
+    # and that is an outside editor's judgement rather than ours. 🛑 Not to be confused with CLO's
+    # own OUTBOUND dbXrefs, which are empty for every cell-line class -- see project memory.
+    if efo_xref:
+        xrefed = [m for m in live if m["uri"] in efo_xref]
+        if xrefed and len(xrefed) < len(live):
+            live = xrefed
+            if len(live) == 1:
+                return live[0], "R3 EFO xrefs it (an external ontology's editorial pick)"
+
+    # R4 -- a defined term beats an undefined one (Paul's rule). A defined term is one somebody
+    # curated; an undefined twin is usually the stub.
     defined = [m for m in live if m.get("hasDefinition")]
     if defined and len(defined) < len(live):
         live = defined
         if len(live) == 1:
-            return live[0], "R3 carries a definition; its twin does not"
+            return live[0], "R4 carries a definition; its twin does not"
 
-    # R4 -- favoured ontology, by category. Unknown category or namespace ranks last.
+    # Favoured ontology, by category (data, not code). Deliberately unnumbered: it can only
+    # discriminate a cross-ontology group, so it never fires on a CLO twin.
     cats = {c for m in live for c in m.get("categories", ())}
     ranked: list[tuple[int, dict]] = []
     for m in live:
@@ -253,10 +293,129 @@ def choose(members: list[dict], prefs: dict[tuple[str, str], int]) -> tuple[dict
     # R5 -- usage, and only among otherwise-equal members. Never reached by an obsolete term:
     # R1 removed those, which is the whole reason this is safe to use at all.
     finalists.sort(key=lambda m: (-m.get("usage", 0), m["uri"]))
-    if len(finalists) > 1 and finalists[0].get("usage", 0) == finalists[1].get("usage", 0):
+    top, runner = finalists[0].get("usage", 0), finalists[1].get("usage", 0) if len(finalists) > 1 else 0
+    if len(finalists) > 1 and top == runner:
         return None, "R6 abstain: tie on every rule including usage"
+    # 🛑 THE EVIDENCE FLOOR. Without it, 24 of these groups are decided by a SINGLE annotation --
+    # one curator's spelling, typed once, becomes the answer we hand an external consumer as
+    # settled. A margin of one is not a measurement, and `LOVO` x4 over `LoVo` x3 is the case that
+    # proves it. Below the floor we abstain, which is a first-class outcome here (Paul, 2026-08-18).
+    if top < min_winner or (top - runner) < min_margin:
+        return None, (f"R6 abstain: usage margin too thin to decide "
+                      f"({top} vs {runner}; floor is winner>={min_winner}, margin>={min_margin})")
     return finalists[0], "R5 usage, among members equal on every stronger rule"
 
+
+
+# ---------------------------------------------------------------------------------------
+# Ontology-anchored mode.  The corpus path above can only see a group whose members the
+# corpus USES; a twin with zero annotations is invisible to it.  That is not a corner case:
+# cab's Tier-0 synonym table MINTS `CLO_0001199` (22RV1, zero uses) out of file order, so the
+# twin we most need to answer for is exactly the one no census can show us.  These read CLO
+# and EFO straight off disk instead, so the groups come from the ontology.
+# ---------------------------------------------------------------------------------------
+
+RDF_NS = "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}"
+RDFS_NS = "{http://www.w3.org/2000/01/rdf-schema#}"
+OWL_NS = "{http://www.w3.org/2002/07/owl#}"
+OBO_NS = "{http://purl.obolibrary.org/obo/}"
+
+
+def parse_clo_owl(path: pathlib.Path) -> dict[str, dict]:
+    """Every CLO class, with the three facts the ladder needs: definition, obsolescence, successor.
+
+    🛑 Clear ONLY the owl:Class elements.  A bare `el.clear()` on every end event wipes each
+    <rdfs:label> before its parent class closes, and you get 39,084 classes with empty labels
+    and zero collision groups -- which reads exactly like "CLO has no duplicates".
+    """
+    import xml.etree.ElementTree as ET
+    classes: dict[str, dict] = {}
+    for _, el in ET.iterparse(str(path), events=("end",)):
+        if el.tag != OWL_NS + "Class":
+            continue
+        uri = el.get(RDF_NS + "about")
+        if uri and "/CLO_" in uri:
+            label = el.find(RDFS_NS + "label")
+            defn = el.find(OBO_NS + "IAO_0000115")
+            dep = el.find(OWL_NS + "deprecated")
+            rb = el.find(OBO_NS + "IAO_0100001")
+            classes[uri] = {
+                "uri": uri,
+                "label": (label.text or "").strip() if label is not None and label.text else "",
+                "hasDefinition": bool(defn is not None and (defn.text or "").strip()),
+                "obsolete": bool(dep is not None and (dep.text or "").strip().lower() == "true"),
+                "termReplacedBy": (rb.get(RDF_NS + "resource") or (rb.text or "").strip())
+                                  if rb is not None else None,
+            }
+        el.clear()
+    return classes
+
+
+def parse_efo_clo_xrefs(path: pathlib.Path) -> frozenset[str]:
+    """CLO URIs that EFO points at -- the INBOUND half of the xref evidence (R3)."""
+    hits: set[str] = set()
+    with path.open(encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            if line.startswith("xref: CLO:"):
+                hits.add("http://purl.obolibrary.org/obo/CLO_"
+                         + line.split("CLO:", 1)[1].strip().split()[0])
+    return frozenset(hits)
+
+
+def strict_label_key(label: str) -> str:
+    """Normalize for case and punctuation ONLY -- deliberately NOT stripping a trailing ' cell'.
+
+    🛑 This is the guard on the twin lane.  `normalize_label` drops ' cell' so that `SW 480 cell`
+    and `SW480 cell` meet, which is right; but it also makes `cell line cell` collide with
+    `cell line`, and `immortal cell line` with `immortal cell line cell`.  Those are upper-level
+    CLO classes, not duplicate cell lines, and canonicalizing one onto the other is a corruption
+    dressed as a repair.  Requiring the labels to match WITHOUT the suffix strip admits every real
+    twin and the upper-ontology artifacts fail it.
+
+    KNOWN FALSE NEGATIVE, measured and accepted: a real twin pair where only ONE member carries
+    the ' cell' suffix is rejected too -- `SK-MEL-1 cell` / `SKMEL1` is the one such pair in CLO.
+    It is not worth a subtler rule: both its members have zero usage, no definition and no EFO
+    xref, so the ladder abstains on it anyway and a smarter guard would change no output.
+    """
+    return re.sub(r"[^a-z0-9]", "", label.strip().lower())
+
+
+def build_twin_rows(classes: dict[str, dict], efo_xref: frozenset[str],
+                    usage: dict[str, int], prefs: dict[tuple[str, str], int],
+                    min_winner: int, min_margin: int) -> tuple[list[list], dict[str, int]]:
+    """Ontology-anchored twin groups -> TermUriMigration.tsv rows, one per losing member."""
+    for c in classes.values():
+        c["usage"] = usage.get(c["uri"], 0)
+        c["categories"] = ()
+
+    by_norm: dict[str, list[dict]] = collections.defaultdict(list)
+    for c in classes.values():
+        if c["label"]:
+            by_norm[normalize_label(c["label"])].append(c)
+
+    rows: list[list] = []
+    tally = collections.Counter()
+    for norm, members in by_norm.items():
+        if not norm or len(members) < 2:
+            continue
+        tally["groups"] += 1
+        if len({strict_label_key(m["label"]) for m in members}) > 1:
+            tally["dropped_suffix_artifact"] += 1
+            continue
+        favoured, why = choose(members, prefs, efo_xref, min_winner, min_margin)
+        if favoured is None:
+            tally["undecided"] += 1
+            continue
+        tally["decided"] += 1
+        for m in sorted(members, key=lambda m: -m["usage"]):
+            if m["uri"] == favoured["uri"]:
+                continue
+            rows.append(["clo_twin", m["uri"], m["label"], favoured["uri"], favoured["label"],
+                         m["usage"], why])
+            tally["rows"] += 1
+            tally["rows_zero_usage" if m["usage"] == 0 else "rows_with_usage"] += 1
+    rows.sort(key=lambda r: (-r[5], r[1]))
+    return rows, tally
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
@@ -269,12 +428,57 @@ def main() -> int:
     ap.add_argument("--base", default=os.environ.get("GEMMA_BASE_URL") or DEFAULT_BASE)
     ap.add_argument("--namespace", help="comma-separated namespaces to restrict to, e.g. CLO,EFO")
     ap.add_argument("--cache", type=pathlib.Path, default=pathlib.Path(".term-cache"))
+    ap.add_argument("--clo-owl", type=pathlib.Path,
+                    help="CLO in RDF/XML. Switches to ONTOLOGY-ANCHORED twin mode: groups come "
+                         "from CLO's own label collisions rather than from the corpus, so a twin "
+                         "with zero annotations is visible. Writes TermUriMigration.tsv rows.")
+    ap.add_argument("--efo-obo", type=pathlib.Path,
+                    help="EFO in OBO format, for the R3 inbound-xref rule. Required with --clo-owl.")
+    ap.add_argument("--min-usage-winner", type=int, default=2,
+                    help="R5 evidence floor: the winner needs at least this many annotations (2).")
+    ap.add_argument("--min-usage-margin", type=int, default=2,
+                    help="R5 evidence floor: the winner must lead by at least this much (2).")
     ap.add_argument("--decide-label-collisions", action="store_true",
                     help="promote normalized-label collisions to groups and decide them "
                          "(OFF by default -- a clone and its parent normalize alike)")
     ap.add_argument("--anonymous", action="store_true")
     ap.add_argument("--workers", type=int, default=8)
     args = ap.parse_args()
+
+    if args.clo_owl:
+        if not args.efo_obo:
+            print("ERROR: --clo-owl needs --efo-obo (the R3 inbound-xref rule reads it).",
+                  file=sys.stderr)
+            return 2
+        census = read_census(args.census)
+        usage = {u: r["usage"] for u, r in census.items()}
+        print(f"census: {len(census)} distinct URIs", file=sys.stderr)
+        classes = parse_clo_owl(args.clo_owl)
+        print(f"CLO: {len(classes)} classes from {args.clo_owl}", file=sys.stderr)
+        efo_xref = parse_efo_clo_xrefs(args.efo_obo)
+        print(f"EFO: points at {len(efo_xref)} CLO classes", file=sys.stderr)
+        prefs = load_preferences(pathlib.Path(__file__).with_name("term_crossmatch_preferences.tsv"))
+        rows, tally = build_twin_rows(classes, efo_xref, usage, prefs,
+                                      args.min_usage_winner, args.min_usage_margin)
+        # lineterminator="\n": csv.writer defaults to CRLF, and the output of this script is
+        # meant to be diffed against -- and pasted into -- a LF file. A CRLF copy compares as
+        # 100% changed against an identical LF one, which reads as "nothing reproduces".
+        with args.out.open("w", newline="") as fh:
+            w = csv.writer(fh, delimiter="\t", lineterminator="\n")
+            w.writerow(["lane", "from_uri", "from_label", "to_uri", "to_label",
+                        "n_annotations", "rule"])
+            w.writerows(rows)
+        print(f"CLO label-collision groups: {tally['groups']} "
+              f"({tally['dropped_suffix_artifact']} dropped as ' cell'-suffix artifacts)",
+              file=sys.stderr)
+        print(f"  decided {tally['decided']}, undecided {tally['undecided']} "
+              f"(floor: winner>={args.min_usage_winner}, margin>={args.min_usage_margin})",
+              file=sys.stderr)
+        print(f"wrote {tally['rows']} clo_twin rows to {args.out} "
+              f"-- {tally['rows_with_usage']} the corpus uses, "
+              f"{tally['rows_zero_usage']} with zero usage (invisible to the corpus-anchored path)",
+              file=sys.stderr)
+        return 0
 
     auth = None
     if not args.anonymous:
