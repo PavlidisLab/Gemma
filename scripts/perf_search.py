@@ -95,7 +95,12 @@ def http_get(base: str, path: str, *, token: str | None = None, timeout: float =
     try:
         return elapsed, status, json.loads(raw)
     except Exception:
-        return elapsed, status, raw.decode(errors="replace")[:200]
+        # Not JSON: the data-matrix endpoints stream TSV. Keep the shape (line/byte counts,
+        # which row_count reads) rather than megabytes of matrix; the timing above already
+        # includes reading the full body, which is the number that matters.
+        text = raw.decode(errors="replace")
+        return elapsed, status, {"_text": text[:200],
+                                 "lines": text.count("\n"), "bytes": len(raw)}
 
 
 def http_post(base: str, path: str, *, token: str) -> int:
@@ -212,6 +217,55 @@ def diffex_cases() -> list[Case]:
     ]
 
 
+def vector_cases() -> list[Case]:
+    """
+    Vector retrieval / full data matrices -- Paul's top hotspot priorities (2026-08).
+
+    🛑 These are CACHE-SENSITIVE like nothing else in this file: on 2026-08-18 the ds26
+    matrix went 8.4s cold -> 0.17s warm on consecutive hits. min is the warm path, max is
+    the cold path, and a run against a freshly restarted server measures something different
+    from a run against a warm one -- say which when quoting.
+
+    Fixtures (all public, chosen 2026-08-18 from frink's own listing):
+      26     GSE1611     12 assays x 12,488 vectors -- small; the existing diffex fixture
+      4653   GSE10780   185 assays x 54,675 vectors -- wide microarray (U133+2), ~26 MB TSV
+      11138  GSE60862  1231 assays x 21,986 vectors -- many-sample extreme, ~69 MB TSV
+    Cold single-shot baselines the day they were picked: 8.4s / 57s / 80s. Note the shape:
+    4653 moves 10M values in 57s where 11138 moves 27M in 80s -- time does not track the
+    value count, which is the observation that makes this group worth keeping.
+    """
+    return [
+        Case("vectors-matrix", "ds26 processed (12 assays)",
+             "/rest/v2/datasets/26/data/processed"),
+        Case("vectors-matrix", "ds4653 processed (185 assays, wide)",
+             "/rest/v2/datasets/4653/data/processed"),
+        Case("vectors-matrix", "ds11138 processed (1231 assays)",
+             "/rest/v2/datasets/11138/data/processed"),
+        Case("vectors-matrix", "ds26 raw (12 assays)",
+             "/rest/v2/datasets/26/data/raw"),
+        # The gene-vector read behind expression visualization: one gene across datasets.
+        # 4.6s for 62KB on 2026-08-18 -- per-vector overhead, not payload.
+        Case("vectors-genes", "TP53 x 1 dataset",
+             "/rest/v2/datasets/4653/expressions/genes/7157"),
+        Case("vectors-genes", "TP53 x 4 datasets",
+             "/rest/v2/datasets/4653,4776,19374,34676/expressions/genes/7157"),
+    ]
+
+
+def viz_cases() -> list[Case]:
+    """Visualization backends: per-dataset diagnostics the UI renders directly."""
+    return [
+        Case("viz", "mean-variance ds4653",
+             "/rest/v2/datasets/4653/mean-variance"),
+        Case("viz", "sample-correlation ds4653",
+             "/rest/v2/datasets/4653/sample-correlation"),
+        Case("viz", "svd ds4653",
+             "/rest/v2/datasets/4653/svd"),
+        Case("viz", "pca ds4653+4776",
+             "/rest/v2/datasets/4653,4776/expressions/pca?component=1&limit=100"),
+    ]
+
+
 def relation_cases() -> list[Case]:
     """
     ANNOTATION_RELATION reads.
@@ -266,6 +320,8 @@ def all_cases(only: set[str] | None) -> list[Case]:
         "goterms":     goterm_cases,
         "datasets":    dataset_cases,
         "diffex":      diffex_cases,
+        "vectors":     vector_cases,
+        "viz":         viz_cases,
         "relations":   relation_cases,
     }
     if only:
@@ -312,6 +368,10 @@ def row_count(body: Any) -> int:
     """Best-effort 'how many results did the server return' for the response."""
     if not isinstance(body, dict):
         return 0
+    # TSV body (data-matrix endpoints): data lines, net of the comment/header preamble.
+    if "_text" in body and "lines" in body:
+        header = sum(1 for ln in body["_text"].splitlines() if ln.startswith("#")) + 1
+        return max(0, int(body["lines"]) - header)
     data = body.get("data")
     if isinstance(data, list):
         return len(data)
