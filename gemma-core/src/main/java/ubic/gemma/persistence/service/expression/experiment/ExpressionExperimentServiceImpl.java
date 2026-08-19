@@ -21,7 +21,10 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
@@ -97,6 +100,8 @@ public class ExpressionExperimentServiceImpl
 
     private final ExpressionExperimentDao expressionExperimentDao;
 
+    @Autowired
+    private AnnotationSetService annotationSetService;
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
@@ -2696,6 +2701,23 @@ public class ExpressionExperimentServiceImpl
             }
             log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") applied" );
         }
+        // ── run provenance: record WHICH agent run applied this, if the caller named one ──
+        // Minted here rather than in the web layer so it shares the commit's transaction: if the commit rolls back
+        // there must be no row claiming the run applied anything. Sparse by design — a curator commit names no run
+        // and mints nothing. A no-op commit that DID name a run still mints, so that an absent row means "no run
+        // was named" and never "the run did nothing"; those are different facts and identical bytes otherwise.
+        // The event is deliberately suppressed for COMMIT (see AnnotationSetServiceImpl#ATTACH_AUDIT_WHEN) — the
+        // sections above already emitted the trail entries and already moved lastUpdated.
+        if ( !dryRun && StringUtils.isNotBlank( request.getRunId() ) ) {
+            AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach( ee,
+                    AnnotationSetRole.COMMIT, AnnotationSetSource.AGENT, null,
+                    request.getRunId(), null, request.getRunProvenance(), null, request.getRunParentProposal() );
+            result.setCommitAnnotationSetId( attached.getAnnotationSet().getId() );
+            log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") stamped with run "
+                    + request.getRunId() + " as AnnotationSet#" + attached.getAnnotationSet().getId()
+                    + ( attached.isCreated() ? "" : " (already recorded — this run has committed here before)" ) );
+        }
+
         result.setNewLastUpdated( ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null );
         return result;
     }

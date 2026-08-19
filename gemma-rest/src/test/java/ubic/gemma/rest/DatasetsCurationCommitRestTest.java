@@ -12,6 +12,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.core.security.SecurityService;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
@@ -19,6 +21,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
@@ -53,6 +57,12 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
+
+    @Autowired
+    private AnnotationSetService annotationSetService;
+
+    @Autowired
+    private AuditEventService auditEventService;
 
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
@@ -989,4 +999,192 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         Set<AnnotationValueObject> annotations = expressionExperimentService.getAnnotations( expressionExperimentService.load( ee.getId() ) );
         return annotations.stream().filter( a -> termName.equals( a.getTermName() ) ).findFirst().orElse( null );
     }
+
+    // ── run provenance: which agent run applied this commit ───────────────────────────────────────────────
+
+    /** Naming a run mints a COMMIT annotation set carrying that run's build, and the report points at it. */
+    @Test
+    public void testCommitWithRunRefMintsCommitAnnotationSet() {
+        String body = "{"
+                + "\"basics\":{\"name\":\"renamed by a run\"},"
+                + "\"run\":{\"runId\":\"2026-08-18_allbells147\",\"agentName\":\"cell_type\","
+                + "\"model\":\"claude-sonnet-5\",\"runSha\":\"4d8fdbc\",\"agentVersion\":\"0.9.1\"}"
+                + "}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+
+        AnnotationSet set = annotationSetService.findLatestByInvestigation( ee, AnnotationSetRole.COMMIT );
+        assertThat( set ).as( "a named run mints a COMMIT row" ).isNotNull();
+        assertThat( set.getRunId() ).isEqualTo( "2026-08-18_allbells147" );
+        assertThat( set.getAgentName() ).as( "which specialist — 'the agent' is a fleet" ).isEqualTo( "cell_type" );
+        assertThat( set.getModel() ).isEqualTo( "claude-sonnet-5" );
+        assertThat( set.getRunSha() ).as( "the sha is not redundant with the model" ).isEqualTo( "4d8fdbc" );
+        assertThat( set.getAgentVersion() ).isEqualTo( "0.9.1" );
+    }
+
+    /** Provenance is sparse on purpose: an ordinary curator commit names no run and mints nothing. */
+    @Test
+    public void testCommitWithoutRunRefMintsNothing() {
+        String body = "{\"basics\":{\"name\":\"renamed by a curator\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.COMMIT ) )
+                .as( "no run named, no row" ).isZero();
+    }
+
+    /**
+     * Provenance with no run to hang it off cannot be stored. Accepting it would drop the fields silently while
+     * the caller believes it recorded them.
+     */
+    @Test
+    public void testRunProvenanceWithoutRunIdIsRejected() {
+        String body = "{\"basics\":{\"name\":\"x\"},\"run\":{\"agentName\":\"cell_type\",\"runSha\":\"4d8fdbc\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
+        }
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.COMMIT ) ).isZero();
+    }
+
+    /** A preflight writes nothing, so it mints no row either — the run reference is only shape-checked. */
+    @Test
+    public void testPreflightWithRunRefMintsNothing() {
+        String body = "{\"basics\":{\"name\":\"dry run\"},\"run\":{\"runId\":\"2026-08-18_dry\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/preflight" )
+                .request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.COMMIT ) )
+                .as( "a dry run leaves no trace" ).isZero();
+    }
+
+    /**
+     * One run committing the same dataset twice keeps one row. The unique key is
+     * (investigation, role, runId), and a resumed run reuses its id by design.
+     */
+    @Test
+    public void testSameRunCommittingTwiceKeepsOneRow() {
+        String run = "\"run\":{\"runId\":\"2026-08-18_resumed\",\"agentName\":\"disease\"}";
+        for ( String name : new String[] { "first pass", "second pass" } ) {
+            String body = "{\"basics\":{\"name\":\"" + name + "\"}," + run + "}";
+            try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+                assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+            }
+        }
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.COMMIT ) )
+                .as( "a resumed run is one run" ).isEqualTo( 1 );
+    }
+
+    /**
+     * A no-op commit that named a run still mints. Absence has to mean "no run was named", never "the run did
+     * nothing" — those are different facts and would otherwise have identical bytes.
+     */
+    @Test
+    public void testNoOpCommitNamingARunStillMints() {
+        String currentName = expressionExperimentService.load( ee.getId() ).getName();
+        String body = "{\"basics\":{\"name\":\"" + currentName + "\"},"
+                + "\"run\":{\"runId\":\"2026-08-18_noop\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.COMMIT ) )
+                .as( "the run ran, and said so, even though nothing changed" ).isEqualTo( 1 );
+    }
+
+    /**
+     * A COMMIT may only name a PROPOSAL as the thing it applied. Proposed-versus-applied is the distinction the
+     * provenance surface rests on, so a DRAFT or SNAPSHOT in that slot is a client bug, not a silent no-op.
+     */
+    @Test
+    public void testCommitNamingANonProposalParentIsRejected() {
+        AnnotationSet snapshot = annotationSetService.attach( ee, AnnotationSetRole.SNAPSHOT,
+                ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource.AGENT, null,
+                null, "tester", null, null, null ).getAnnotationSet();
+
+        String body = "{\"basics\":{\"name\":\"x\"},\"run\":{\"runId\":\"r1\",\"proposalSetId\":"
+                + snapshot.getId() + "}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
+        }
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.COMMIT ) ).isZero();
+    }
+
+
+    /**
+     * Naming a run must not cost an extra audit event.
+     * <p>
+     * Every audit event on a curatable sets {@code curationDetails.lastUpdated}
+     * ({@code AbstractCuratableDao#updateCurationDetailsFromAuditEvent}, unconditionally), and that is the
+     * optimistic-concurrency token the next commit checks. One commit already emits several events; an
+     * {@code AnnotationSetEvent} for the COMMIT row on top would be one more, saying nothing the section events
+     * did not — so {@code AnnotationSetServiceImpl#ATTACH_AUDIT_WHEN} suppresses it for COMMIT as it does for
+     * SNAPSHOT. This pins that: the same commit costs the same events whether or not it names a run.
+     */
+    @Test
+    public void testNamingARunCostsNoExtraAuditEvent() {
+        int before = auditEventService.getEvents( expressionExperimentService.load( ee.getId() ) ).size();
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request()
+                .put( Entity.json( "{\"basics\":{\"name\":\"unstamped\"}}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        int afterUnstamped = auditEventService.getEvents( expressionExperimentService.load( ee.getId() ) ).size();
+        int costOfAPlainCommit = afterUnstamped - before;
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request()
+                .put( Entity.json( "{\"basics\":{\"name\":\"stamped\"},"
+                        + "\"run\":{\"runId\":\"2026-08-18_quiet\",\"agentName\":\"cell_type\"}}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        int afterStamped = auditEventService.getEvents( expressionExperimentService.load( ee.getId() ) ).size();
+
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.COMMIT ) )
+                .as( "the run really was recorded" ).isEqualTo( 1 );
+        assertThat( afterStamped - afterUnstamped )
+                .as( "stamping a commit with its run is free in audit events" )
+                .isEqualTo( costOfAPlainCommit );
+    }
+
+
+    /**
+     * A preflight must not audit. cab describes their permitted set under the Gemma 1.0 hold as "reads and
+     * preflight only", and that phrase is only true if a dry run emits nothing: every audit event on a curatable
+     * sets {@code curationDetails.lastUpdated}, and {@code AnnotationSetEvent} / {@code DesignChangeEvent} are
+     * among the 21 discriminators Gemma 1.0 cannot load (PR #1667) — so an auditing preflight would both move the
+     * concurrency token and break the 1.0 experiment page.
+     * <p>
+     * Verified by reading the code once ({@code previewDesignChange} is {@code @Transactional(readOnly = true)}
+     * with no audit call in 300 lines); pinned here so it stays true.
+     */
+    @Test
+    public void testPreflightEmitsNoAuditEvent() {
+        ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
+        BioAssay ba = thawed.getBioAssays().iterator().next();
+        String gsm = ba.getAccession().getAccession();
+
+        int before = auditEventService.getEvents( expressionExperimentService.load( ee.getId() ) ).size();
+
+        // a preflight over every section a commit can touch, including a design change and a tag
+        String body = "{"
+                + "\"basics\":{\"name\":\"preflighted\"},"
+                + "\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"organism part\"},"
+                + "\"value\":{\"label\":\"liver\"}}]},"
+                + "\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"f1\",\"name\":\"preflight factor\","
+                + "\"type\":\"CATEGORICAL\",\"category\":{\"label\":\"treatment\"},"
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"fv1\",\"freeTextLabel\":\"treated\","
+                + "\"biomaterialShortNames\":[\"" + gsm + "\"]}]}}]}},"
+                + "\"curationDetails\":{\"curationNote\":\"a note that must not land\"},"
+                + "\"run\":{\"runId\":\"2026-08-18_preflight\"}"
+                + "}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/preflight" )
+                .request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+
+        int after = auditEventService.getEvents( expressionExperimentService.load( ee.getId() ) ).size();
+        assertThat( after ).as( "a preflight reads; it must emit no audit event" ).isEqualTo( before );
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.COMMIT ) )
+                .as( "and mints no annotation set" ).isZero();
+    }
+
 }

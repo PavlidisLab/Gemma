@@ -12,7 +12,7 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
 /**
- * Role discriminator on {@link AnnotationSet} rows. Distinguishes three
+ * Role discriminator on {@link AnnotationSet} rows. Distinguishes four
  * lifecycle shapes:
  *
  * <ul>
@@ -36,6 +36,18 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
  *       entity graph</b> (Characteristic, Statement, FactorValue, &hellip;);
  *       this row stores only a JSON description of that state for
  *       comparison / history.</li>
+ *   <li>{@link #COMMIT} &mdash; immutable record that a curation was
+ *       <em>applied</em> to the dataset, and by which run. Proposed-versus-
+ *       applied is the distinction the whole provenance surface rests on:
+ *       "an agent suggested this" and "this is what the data says" are
+ *       different claims about the world, and a curator reading a trace has
+ *       to know which one they are looking at. Overloading {@link #PROPOSAL}
+ *       would force every consumer that branches on role to re-derive
+ *       appliedness from somewhere else, and they would disagree about how.
+ *       Like SNAPSHOT, the applied annotations themselves live on the EE
+ *       entity graph; this row records <em>who applied them and from which
+ *       build</em>. Sparse on purpose &mdash; a commit with no run reference
+ *       mints no row at all.</li>
  * </ul>
  *
  * <p>Persisted as the enum {@link #name()} (uppercase). The
@@ -46,7 +58,8 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 public enum AnnotationSetRole {
     PROPOSAL,
     DRAFT,
-    SNAPSHOT;
+    SNAPSHOT,
+    COMMIT;
 
     /**
      * @return the lowercase external form, for use in JSON DTOs / API

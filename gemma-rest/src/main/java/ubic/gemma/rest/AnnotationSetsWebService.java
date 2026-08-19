@@ -145,7 +145,7 @@ public class AnnotationSetsWebService {
             throw new BadRequestException( "Request body is required." );
         }
         AnnotationSetRole role = parseRoleOrThrow( body.role,
-                "Request body must include `role` (proposal|draft|snapshot)." );
+                "Request body must include `role` (proposal|draft|snapshot|commit)." );
         AnnotationSetSource source = parseSourceOrThrow( body.source, defaultSourceForRole( role ) );
         AgentCurationKind kind = parseKindOrThrow( body.kind, role == AnnotationSetRole.PROPOSAL
                 ? AgentCurationKind.PROPOSAL : null );
@@ -252,7 +252,7 @@ public class AnnotationSetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Cross-experiment list of annotation sets (thin projection)")
     public PaginatedResponseDataObject<AnnotationSetSummaryResponse> listAnnotationSetsAcross(
-            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, or `all` (default).")
+            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, `commit`, or `all` (default).")
             @QueryParam("role") @Nullable String role,
             @Parameter(description = "Filter by source: `agent`, `curator`, `gemma_intake`, `external_import`, or `all` (default).")
             @QueryParam("source") @Nullable String source,
@@ -568,6 +568,7 @@ public class AnnotationSetsWebService {
                 return AnnotationSetSource.CURATOR;
             case PROPOSAL:
             case SNAPSHOT:
+            case COMMIT:
             default:
                 return AnnotationSetSource.AGENT;
         }
@@ -581,7 +582,7 @@ public class AnnotationSetsWebService {
             return AnnotationSetRole.fromDbValue( role.trim() );
         } catch ( IllegalArgumentException e ) {
             throw new BadRequestException( "Unknown role: " + role
-                    + " (expected 'proposal', 'draft', or 'snapshot')" );
+                    + " (expected 'proposal', 'draft', 'snapshot', or 'commit')" );
         }
     }
 
@@ -594,7 +595,7 @@ public class AnnotationSetsWebService {
             return AnnotationSetRole.fromDbValue( role );
         } catch ( IllegalArgumentException e ) {
             throw new BadRequestException( "Unknown role: " + role
-                    + " (expected 'proposal', 'draft', 'snapshot', or 'all')" );
+                    + " (expected 'proposal', 'draft', 'snapshot', 'commit', or 'all')" );
         }
     }
 

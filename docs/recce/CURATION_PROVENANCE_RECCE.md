@@ -12,8 +12,11 @@ assuming nothing is built:
   `supportingEvidence` on all three sections; the two blind read VOs surface it.
 - ✅ **Snapshot / restore / compare** (§4a) — not in the original plan; it came out
   of "we want a backup before letting an agent apply everything it finds".
-- ⏳ **Run linkage** (§6 step 2) — a commit still cannot say which agent run made
-  it. This is the remaining half of "which agent · when".
+- 🟡 **Run linkage** (§6 step 2) — half done. `RUN_SHA` and `AGENT_NAME` landed
+  (`8b8f6e1bb9`) and are on production, so the storage question CAB raised is
+  settled. What is still missing is the wiring: `RunProvenance` reaches only
+  `AnnotationSetsWebService`, so a *curation commit* still cannot say which agent
+  run made it. This is the remaining half of "which agent · when".
 - ⏳ **A read endpoint** (§6 step 3) — deliberately last, pending an agreed event
   vocabulary.
 
@@ -330,17 +333,33 @@ consequences for everything below:
    |---|---|---|
    | `runId` | `2026-08-15_allbells147` | ✅ `RUN_ID` |
    | `model` | `claude-sonnet-5` | ✅ `MODEL` |
-   | `runSha` | `4d8fdbc` | ❌ **no column** |
-   | `agentName` | `cell_type` | ❌ **no column** |
+   | `runSha` | `4d8fdbc` | ✅ `RUN_SHA` — landed `8b8f6e1bb9` |
+   | `agentName` | `cell_type` | ✅ `AGENT_NAME` — landed `8b8f6e1bb9` |
 
-   🛑 The two missing ones are the two that carry the answer. CAB: `runSha` is
-   "not optional in practice — we have measured behaviour differences between
-   shas at one model, so model alone does not identify the build", and
-   `agentName` is *which* agent, because "the agent" is a fleet and the useful
-   answer names the specialist. Storing the sha in `AGENT_VERSION` would be a
-   fudge that reads as done and answers the question wrongly, so this wants two
-   nullable `VARCHAR(255)` columns — **a Flyway migration, which needs Paul's
-   explicit ask before it is written.**
+   ✅ **The storage half is done (2026-08-16, `8b8f6e1bb9`).** The two columns CAB
+   called the ones that carry the answer are now on `ANNOTATION_SET`: `runSha`
+   because "we have measured behaviour differences between shas at one model, so
+   model alone does not identify the build", and `agentName` because "the agent"
+   is a fleet and the useful answer names the specialist. Folding the sha into
+   `AGENT_VERSION` was rejected for the reason it looks like — it would have read
+   as done while answering the question wrongly.
+
+   They are carried by a `RunProvenance` value object on a new
+   `AnnotationSetService.attach()` overload rather than by two more parameters:
+   that signature already took eleven arguments, and two more would have made six
+   ADJACENT nullable strings — runId, createdBy, agentVersion, model, runSha,
+   agentName — where transposing any two compiles silently. The twelve existing
+   callers are untouched.
+
+   Both columns were **applied to production by hand on 2026-08-16**;
+   `scripts/sql/annotation_set_run_provenance.sql` is the record of what was run
+   and why no `db/migration` entry accompanies it. Test and dev get them from the
+   Hibernate mapping.
+
+   ⏳ **What remains of this step is the wiring, not the schema.** `RunProvenance`
+   reaches only `AnnotationSetsWebService`. The curation commit
+   (`PUT /datasets/{id}/curation`) and `PUT /datasets/{id}/design` still accept no
+   run reference, so nothing on the curation path fills the columns.
 
    A second open question rides along: no `AnnotationSetRole` describes an
    *applied write*. The vocabulary is PROPOSAL / DRAFT / SNAPSHOT, and a commit

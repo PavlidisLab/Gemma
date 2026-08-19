@@ -84,6 +84,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetailsValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
@@ -2106,12 +2107,12 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "List AnnotationSets attached to a dataset, newest first.",
-            description = "`?role=` filters by role (`proposal`/`draft`/`snapshot`/`all`). "
+            description = "`?role=` filters by role (`proposal`/`draft`/`snapshot`/`commit`/`all`). "
                     + "`?source=` filters by source. `?createdBy=` filters by producer identity. "
                     + "`?shape=full|meta` selects response shape.")
     public Response listDatasetAnnotationSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, or `all` (default).")
+            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, `commit`, or `all` (default).")
             @QueryParam("role") @Nullable String role,
             @Parameter(description = "Filter by source.")
             @QueryParam("source") @Nullable String source,
@@ -2700,6 +2701,27 @@ public class DatasetsWebService {
             request.setCurationDetailsNote( cd.getCurationNote() );
         }
 
+        // ── run provenance: name the agent run applying this, if the caller gave one ──
+        // A preflight carries it too so the shape is validated on the dry run, but a dry run mints no row.
+        if ( body.getRun() != null ) {
+            CurationRunRef run = body.getRun();
+            if ( StringUtils.isNotBlank( run.getRunId() ) ) {
+                request.setRunId( run.getRunId().trim() );
+            } else if ( run.getAgentName() != null || run.getModel() != null || run.getRunSha() != null
+                    || run.getAgentVersion() != null || run.getRanAt() != null ) {
+                // Provenance with no run to hang it off cannot be stored and must not be dropped silently — the
+                // caller believes it recorded something. Say so rather than accepting a write that loses it.
+                throw new BadRequestException( "run.runId is required when any other run field is supplied: "
+                        + "the run reference is what a COMMIT annotation set is keyed on." );
+            }
+            request.setRunProvenance( new AnnotationSetService.RunProvenance(
+                    run.getAgentVersion(), run.getModel(), run.getRunSha(), run.getAgentName(),
+                    parseRanAt( run.getRanAt() ) ) );
+            if ( run.getProposalSetId() != null ) {
+                request.setRunParentProposal( requireProposalFor( run.getProposalSetId(), ee ) );
+            }
+        }
+
         // Every new/changed annotation has now been ground-checked; reject the whole commit if any term failed
         // (applies equally to preflight, so a client catches these on the dry run).
         if ( !termViolations.isEmpty() ) {
@@ -2718,6 +2740,17 @@ public class DatasetsWebService {
             throw new jakarta.ws.rs.ClientErrorException( e.getMessage(), jakarta.ws.rs.core.Response.Status.CONFLICT );
         }
         return CurationCommitReport.from( result, request, !dryRun, canonicalizations );
+    }
+
+    /**
+     * Parse a run's {@code ranAt} stamp. Same lenient contract as the baseline token — epoch millis or ISO-8601,
+     * with an unparseable value yielding null rather than failing the commit. Provenance is recorded, not
+     * enforced: refusing a whole curation because a timestamp was formatted oddly would trade a real write for a
+     * cosmetic field.
+     */
+    @Nullable
+    private static java.util.Date parseRanAt( @Nullable String token ) {
+        return parseBaselineToken( token );
     }
 
     /**
@@ -2764,6 +2797,8 @@ public class DatasetsWebService {
         private Section<SampleCharacteristicCommit> sampleCharacteristics;
         @Nullable
         private CurationDetailsCommit curationDetails;
+        @Nullable
+        private CurationRunRef run;
 
         @Nullable
         public CurationBaseline getBaseline() { return baseline; }
@@ -2786,6 +2821,65 @@ public class DatasetsWebService {
         @Nullable
         public CurationDetailsCommit getCurationDetails() { return curationDetails; }
         public void setCurationDetails( @Nullable CurationDetailsCommit n ) { this.curationDetails = n; }
+        @Nullable
+        public CurationRunRef getRun() { return run; }
+        public void setRun( @Nullable CurationRunRef run ) { this.run = run; }
+    }
+
+    /**
+     * Which agent run is applying this commit. Optional, and absent for an ordinary curator commit.
+     * <p>
+     * Keyed on Gemma's own AnnotationSet id, carrying the producing side's run reference as attributes — CAB's
+     * ruling, and the right one: their {@code runId} is a human-authored label in a foreign namespace, it is 1:N
+     * against a commit (one run writes many experiments), and it is not stable under resume.
+     * <p>
+     * Supplying {@code runId} mints a {@code COMMIT} AnnotationSet in the commit's own transaction; omitting it
+     * mints nothing. The other four fields are recorded verbatim and never interpreted. {@code runSha} is not
+     * redundant with {@code model}: behaviour differs between shas at one model, so the model alone does not
+     * identify the build that wrote an annotation.
+     */
+    public static class CurationRunRef {
+        @Nullable
+        private String runId;
+        @Nullable
+        private String agentName;
+        @Nullable
+        private String agentVersion;
+        @Nullable
+        private String model;
+        @Nullable
+        private String runSha;
+        @Nullable
+        private String ranAt;
+        /**
+         * Id of the PROPOSAL annotation set this commit is applying, if it is applying one. Becomes the COMMIT
+         * row's parent, so the trail reads proposal -> decision -> effect. Must belong to this dataset and be a
+         * PROPOSAL.
+         */
+        @Nullable
+        private Long proposalSetId;
+
+        @Nullable
+        public String getRunId() { return runId; }
+        public void setRunId( @Nullable String runId ) { this.runId = runId; }
+        @Nullable
+        public String getAgentName() { return agentName; }
+        public void setAgentName( @Nullable String agentName ) { this.agentName = agentName; }
+        @Nullable
+        public String getAgentVersion() { return agentVersion; }
+        public void setAgentVersion( @Nullable String agentVersion ) { this.agentVersion = agentVersion; }
+        @Nullable
+        public String getModel() { return model; }
+        public void setModel( @Nullable String model ) { this.model = model; }
+        @Nullable
+        public String getRunSha() { return runSha; }
+        public void setRunSha( @Nullable String runSha ) { this.runSha = runSha; }
+        @Nullable
+        public String getRanAt() { return ranAt; }
+        public void setRanAt( @Nullable String ranAt ) { this.ranAt = ranAt; }
+        @Nullable
+        public Long getProposalSetId() { return proposalSetId; }
+        public void setProposalSetId( @Nullable Long proposalSetId ) { this.proposalSetId = proposalSetId; }
     }
 
     public static class CurationBaseline {
@@ -3233,6 +3327,46 @@ public class DatasetsWebService {
         } catch ( com.fasterxml.jackson.core.JsonProcessingException e ) {
             throw new IllegalStateException( "Could not serialize the curation snapshot.", e );
         }
+    }
+
+    /**
+     * Resolve the PROPOSAL annotation set a write claims to be applying, refusing anything that is not this
+     * dataset's proposal.
+     * <p>
+     * Proposed-versus-applied is the distinction the provenance surface rests on, so a COMMIT must not be able to
+     * name a DRAFT or a SNAPSHOT as the thing it applied.
+     */
+    private AnnotationSet requireProposalFor( Long setId, ExpressionExperiment ee ) {
+        AnnotationSet set = annotationSetService.load( setId );
+        if ( set == null ) {
+            throw new NotFoundException( "No annotation set with id " + setId + "." );
+        }
+        if ( set.getInvestigation() == null || !ee.getId().equals( set.getInvestigation().getId() ) ) {
+            throw new NotFoundException( "Annotation set " + setId + " does not belong to dataset " + ee.getId() + "." );
+        }
+        if ( set.getRole() != AnnotationSetRole.PROPOSAL ) {
+            throw new BadRequestException( "Annotation set " + setId + " is a " + set.getRole()
+                    + ", not a PROPOSAL; only a proposal can be recorded as the source of an applied change." );
+        }
+        return set;
+    }
+
+    /**
+     * Record that a proposal was applied, as a COMMIT annotation set parented to it.
+     * <p>
+     * The run reference is copied off the proposal rather than asked for again: the proposal already carries the
+     * run that produced it, and a second copy on the wire is a second chance to disagree with the first.
+     */
+    private void recordAppliedFromProposal( AnnotationSet proposal ) {
+        AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
+                proposal.getInvestigation(), AnnotationSetRole.COMMIT, AnnotationSetSource.AGENT, null,
+                proposal.getRunId(), proposal.getCreatedBy(),
+                new AnnotationSetService.RunProvenance( proposal.getAgentVersion(), proposal.getModel(),
+                        proposal.getRunSha(), proposal.getAgentName(), proposal.getRanAt() ),
+                null, proposal );
+        log.info( "PUT /design: applied AnnotationSet#" + proposal.getId() + " (run " + proposal.getRunId()
+                + "); recorded as COMMIT AnnotationSet#" + attached.getAnnotationSet().getId()
+                + ( attached.isCreated() ? "" : " (already recorded)" ) );
     }
 
     /**
@@ -3815,15 +3949,23 @@ public class DatasetsWebService {
         private final Map<String, CurationSectionChange> changes;
         private final List<Long> auditEventIds;
         private final List<Canonicalization> canonicalizations;
+        /**
+         * The {@code COMMIT} AnnotationSet minted for this commit's run, or null when no run was named.
+         * Null on a preflight too: a dry run writes nothing, so there is no row to point at.
+         */
+        @Nullable
+        private final Long commitAnnotationSetId;
         private final String error;
 
         private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
-                Map<String, Long> idMap, List<Long> auditEventIds, List<Canonicalization> canonicalizations ) {
+                Map<String, Long> idMap, List<Long> auditEventIds, List<Canonicalization> canonicalizations,
+                @Nullable Long commitAnnotationSetId ) {
             this.applied = applied;
             this.idMap = idMap;
             this.changes = changes;
             this.auditEventIds = auditEventIds;
             this.canonicalizations = canonicalizations;
+            this.commitAnnotationSetId = commitAnnotationSetId;
             this.error = "";
         }
 
@@ -3862,10 +4004,13 @@ public class DatasetsWebService {
             if ( r.getTagsIdMap() != null ) idMap.putAll( r.getTagsIdMap() );
             if ( r.getSampleCharsIdMap() != null ) idMap.putAll( r.getSampleCharsIdMap() );
             List<Long> auditEventIds = r.getDesignAuditEventIds() != null ? r.getDesignAuditEventIds() : Collections.emptyList();
-            return new CurationCommitReport( applied, changes, idMap, auditEventIds, canonicalizations );
+            return new CurationCommitReport( applied, changes, idMap, auditEventIds, canonicalizations,
+                    r.getCommitAnnotationSetId() );
         }
 
         public boolean isApplied() { return applied; }
+        @Nullable
+        public Long getCommitAnnotationSetId() { return commitAnnotationSetId; }
         public Map<String, Long> getIdMap() { return idMap; }
         public Map<String, CurationSectionChange> getChanges() { return changes; }
         public List<Long> getAuditEventIds() { return auditEventIds; }
@@ -7078,22 +7223,29 @@ public class DatasetsWebService {
     public Response replaceDatasetDesign(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Set to true to consent to the change's consequences: deleting differential-expression analyses that depend on affected factors or factor values, and leaving subsets anchored on factor values that would no longer exist.") @QueryParam("force") @DefaultValue("false") Boolean force,
-            @Parameter(description = "Optional FK to an AgentProposal row driving this apply. Accepted by the endpoint; the link is not yet persisted (AgentProposal entity pending per AGENT_WRITEBACK_RECCE.md). Logged for audit-trail traceability once wired.") @QueryParam("agentProposalId") @Nullable Long agentProposalId,
+            @Parameter(description = "Optional id of the PROPOSAL annotation set driving this apply. On success the apply is recorded as a COMMIT annotation set carrying that proposal's run reference and parented to it, so the trail reads proposal -> decision -> effect. The set must belong to this dataset and must be a PROPOSAL.") @QueryParam("agentProposalId") @Nullable Long agentProposalId,
             ExperimentalDesignValueObject proposed
     ) {
-        // TODO(agent-proposal): once the AgentProposal entity lands (AGENT_WRITEBACK_RECCE.md "The model"),
-        // forward agentProposalId into the emitted DesignChangeEvent so the audit trail links
-        // proposal -> decision -> effect. For now the parameter is accepted (so clients can wire it
-        // immediately) and discarded.
-        if ( agentProposalId != null ) {
-            log.info( "PUT /datasets/" + datasetArg + "/design called with agentProposalId=" + agentProposalId
-                    + "; will be linked into DesignChangeEvent once AgentProposal entity is wired." );
-        }
+        // The AgentProposal entity this parameter was written for never landed under that name — AnnotationSet is
+        // it. So the proposal is validated up front, before anything is applied: naming a set that does not exist,
+        // belongs to another dataset, or is not a PROPOSAL is a client bug, and finding out after the design has
+        // been rewritten helps nobody.
+        AnnotationSet proposal = agentProposalId != null
+                ? requireProposalFor( agentProposalId, datasetArgService.getEntity( datasetArg ) )
+                : null;
+
         ubic.gemma.rest.util.args.DatasetArgService.DesignChangeResult result =
                 datasetArgService.applyDesignChange( datasetArg, proposed, force );
         if ( result.blockingReport != null ) {
             Response.Status status = result.forceRequired ? Response.Status.CONFLICT : Response.Status.BAD_REQUEST;
             return Response.status( status ).entity( respond( result.blockingReport ) ).build();
+        }
+        // Record WHICH run applied this, now that it has. Unlike the composite commit — which mints its COMMIT row
+        // inside its own transaction — the design apply's transaction closed in applyDesignChange, so the row is
+        // written after. The asymmetry only costs the benign direction: a failure here loses the provenance record
+        // of an apply that really happened, and can never leave a row claiming an apply that rolled back.
+        if ( proposal != null ) {
+            recordAppliedFromProposal( proposal );
         }
         return Response.ok( respond( result.updated ) ).build();
     }

@@ -65,9 +65,17 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
      * <p>
      * PROPOSAL and DRAFT keep their event: an agent attaching a hypothesis, or a curator opening a buffer, is
      * activity on the dataset worth a trail entry.
+     * <p>
+     * COMMIT is quiet for the same reason and one more. A COMMIT row is minted inside the curation commit's own
+     * transaction, and that commit has already emitted its own events and already moved {@code lastUpdated} — an
+     * {@code AnnotationSetEvent} on top would be one more event for a commit that emits too many already, saying
+     * nothing the design/tag events did not. The row records who applied the curation; the events record what was
+     * applied.
      */
     private static final String ATTACH_AUDIT_WHEN =
-            "#result != null and #result.created and #result.annotationSet.role.name() != 'SNAPSHOT'";
+            "#result != null and #result.created"
+                    + " and #result.annotationSet.role.name() != 'SNAPSHOT'"
+                    + " and #result.annotationSet.role.name() != 'COMMIT'";
 
     /**
      * Audit note for a newly-attached set, shared by both {@code attach} overloads.
@@ -359,7 +367,12 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
             case SNAPSHOT:
                 return UUID.randomUUID().toString();
             case PROPOSAL:
+            case COMMIT:
             default:
+                // PROPOSAL and COMMIT both name a run that really happened on the producing side.
+                // Synthesizing an id here would invent provenance rather than record it, and a
+                // synthesized id is indistinguishable from a real one once it is in the column.
+                // Any role added later lands here too, which is the safe direction to fail.
                 throw new IllegalArgumentException(
                         "runId must be supplied for role=" + role );
         }

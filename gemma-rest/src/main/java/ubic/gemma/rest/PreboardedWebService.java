@@ -366,7 +366,7 @@ public class PreboardedWebService {
             return AnnotationSetRole.fromDbValue( role.trim() );
         } catch ( IllegalArgumentException e ) {
             throw new BadRequestException( "Unknown role: " + role
-                    + " (expected 'proposal', 'draft', or 'snapshot')" );
+                    + " (expected 'proposal', 'draft', 'snapshot', or 'commit')" );
         }
     }
 
