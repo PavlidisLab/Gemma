@@ -48,6 +48,13 @@
 -- neither is where the duplicate problem lives. The three slots below are the annotation
 -- VALUES -- the ontology entities themselves.
 --
+-- Q5 is the one deliberate exception, and it is a COUNT, not a canonicalization: cab's
+-- obsolete-term sweep carves out terms obsolete upstream but live in Gemma, and its first
+-- listed case (EFO_0000408, `disease`) is used as a CATEGORY -- so it appears in none of
+-- Q0-Q4 and a count taken from them is a confident zero that reads as a clean corpus
+-- (GEMMA_BACKEND_TO_CAB 2026-08-18 21:43 sec.4; sweep plan sec.6 row 1b). Q5 counts the
+-- category slot so the carve-out has a real number; nothing here moves a category.
+--
 -- 🛑 WHY THIS READS THREE SLOTS AND NOT ONE
 --
 -- A Statement has THREE annotatable value slots, not one: the subject is the inherited
@@ -143,11 +150,6 @@ FROM (
 GROUP BY slot, uri, label
 ORDER BY n_annotations DESC;
 
--- 🛑 GROUP_CONCAT defaults to 1024 bytes and TRUNCATES SILENTLY -- a three-member group
--- with long URIs loses members with no warning, which reads as a two-member group. Raise it
--- for the session before Q3. (Session-scoped, affects nothing outside this connection.)
-SET SESSION group_concat_max_len = 1048576;
-
 -- Q3 -- candidate twin groups: same normalized label, more than one URI in use. This is
 -- uib's axis-A "17 groups" recomputed from the database rather than the ontology index, so
 -- the two numbers can be compared. Restricted to CLO here; drop the LIKE to run corpus-wide.
@@ -159,6 +161,16 @@ SET SESSION group_concat_max_len = 1048576;
 -- its declared successor CLO_0002949 has 0. That is the steady state, not an outlier --
 -- curators and resolvers keep reaching the familiar label -- so usage is systematically
 -- biased TOWARD the obsolete term, and "most-used wins" re-enshrines it.
+--
+-- 🛑 GROUP_CONCAT defaults to 1024 bytes and TRUNCATES SILENTLY -- a three-member group
+-- with long URIs loses members with no warning, which reads as a two-member group. Raise it
+-- for the session first. (Session-scoped, affects nothing outside this connection.)
+-- 🛑 The SET must sit BELOW the `-- Q3 --` marker: the runner splits this file into one
+-- mysql session per marker, so a SET placed above the marker runs in the PREVIOUS query's
+-- session and Q3 gets the 1024 default. It sat above the marker until 2026-08-18; the
+-- 08-18 census output was re-checked (longest members string 222 bytes) and was not bitten.
+SET SESSION group_concat_max_len = 1048576;
+
 SELECT norm_label,
        COUNT(DISTINCT uri) AS n_uris,
        SUM(n) AS n_annotations,
@@ -190,3 +202,26 @@ FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC e JOIN CHARACTERISTIC c ON c.ID = e.ID
 WHERE NOT (BINARY e.VALUE_URI         <=> BINARY c.VALUE_URI)
    OR NOT (BINARY e.OBJECT_URI        <=> BINARY c.OBJECT_URI)
    OR NOT (BINARY e.SECOND_OBJECT_URI <=> BINARY c.SECOND_OBJECT_URI);
+
+-- Q5 -- the CATEGORY slot, which Q0-Q4 deliberately do not read (see the scope note at the
+-- top). This is the sweep plan's row 1b: its carve-out is keyed on EFO_0000408 (`disease`),
+-- a term the corpus uses as a CATEGORY, so the value-slot census structurally cannot count
+-- it. Two surfaces, labelled: `ee2c` is what the REST endpoints read and carries an
+-- experiment count; `characteristic` is the source of truth and counts every row, including
+-- characteristics EE2C does not aggregate, so its total is expected to be LARGER -- the gap
+-- is coverage, not staleness (Q4 measures staleness). Rows with a free-text category
+-- (CATEGORY_URI NULL) are kept so the census is the whole slot; the sweep keys on the URI
+-- column and skips them.
+SELECT src, CATEGORY_URI, CATEGORY, n_annotations, n_experiments
+FROM (
+  SELECT 'ee2c' AS src, CATEGORY_URI, CATEGORY,
+         COUNT(*) AS n_annotations, COUNT(DISTINCT EXPRESSION_EXPERIMENT_FK) AS n_experiments
+    FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC
+   GROUP BY CATEGORY_URI, CATEGORY
+  UNION ALL
+  SELECT 'characteristic' AS src, CATEGORY_URI, CATEGORY,
+         COUNT(*) AS n_annotations, NULL AS n_experiments
+    FROM CHARACTERISTIC
+   GROUP BY CATEGORY_URI, CATEGORY
+) s
+ORDER BY src, n_annotations DESC;
