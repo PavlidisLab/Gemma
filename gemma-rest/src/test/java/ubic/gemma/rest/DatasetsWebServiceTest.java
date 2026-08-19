@@ -90,6 +90,7 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
+import java.io.Writer;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -1272,6 +1273,40 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasMediaType( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .hasEncoding( "gzip" )
                 .hasHeaderWithValue( "Content-Disposition", "attachment; filename=\"data.txt\"" );
+    }
+
+    /**
+     * Cold cache: the tabular single-cell data is generated ONCE, streaming to the caller and
+     * populating the cache file in the same pass — never by racing a fire-and-forget background
+     * build against an in-band stream of the same data, which on this endpoint meant two
+     * concurrent full scans of the largest payloads in the system.
+     */
+    @Test
+    public void testGetDatasetSingleCellDataWhenCacheIsCold() throws Exception {
+        ee.setShortName( "GSE1" ); // the cold path derives the cache filename from the EE short name...
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "counts" ); // ...and the QT name
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( new DummyLockedPath( Paths.get( "/nonexistent/sc-data.tsv.gz" ), true ) );
+        doAnswer( a -> {
+            Writer w = a.getArgument( 5 );
+            w.write( "probe\tvalue\ncs1\t1.0\n" );
+            return null;
+        } ).when( expressionDataFileService ).streamAndWriteTabularSingleCellExpressionData(
+                eq( ee ), eq( qt ), anyInt(), anyBoolean(), anyBoolean(), any(), anyBoolean() );
+
+        assertThat( target( "/datasets/1/data/singleCell" ).request()
+                .accept( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaType( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+
+        verify( expressionDataFileService ).streamAndWriteTabularSingleCellExpressionData(
+                eq( ee ), eq( qt ), anyInt(), anyBoolean(), eq( false ), any(), anyBoolean() );
+        // the point: no duplicate background build alongside the stream
+        verify( expressionDataFileService, never() ).writeOrLocateTabularSingleCellExpressionDataAsync(
+                any(), any(), anyInt(), anyBoolean(), anyBoolean() );
     }
 
     @Test
