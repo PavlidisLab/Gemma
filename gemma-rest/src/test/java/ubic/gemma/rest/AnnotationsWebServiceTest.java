@@ -68,6 +68,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.assertj.core.api.InstanceOfAssertFactories.map;
@@ -187,6 +190,9 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     private AnnotationsWebService annotationsWebService;
 
     @Autowired
+    private ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService;
+
+    @Autowired
     private SearchService searchService;
 
     @Autowired
@@ -217,7 +223,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService, geneService );
+        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService, geneService, annotationRelationService );
     }
 
     @Test
@@ -2610,4 +2616,69 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
         assertThat( captor.getValue().getSupportingEvidence() ).contains( "\"source\":\"paper\"" );
     }
+    /**
+     * 🛑 The gate reads {@code /relations/implies}. A refuted row arriving there would let the
+     * curation pipeline inhibit or license on a finding that says the opposite of what it appears to
+     * say — MGI reporting that a genotype does NOT model a disease, rendered as an assertion, because
+     * the predicate is stored assertively and the negation lives only in {@code status}.
+     *
+     * <p>{@code includeRefuted} is exposed on {@code /relations} for auditability. This pins the
+     * asymmetry: the parameter must not reach the implies query even when a caller sends it. The two
+     * handlers build their {@code RelationQuery} separately today, and this fails the moment someone
+     * refactors them onto a shared builder — which is the only way this protection would be lost, and
+     * it would be lost silently, since an unrecognized parameter is ignored rather than rejected.</p>
+     */
+    @Test
+    @WithMockUser
+    public void testImpliesRefusesRefutedEvenWhenTheParameterIsSent() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+
+        target( "/annotations/relations/implies" )
+                .queryParam( "from", "http://purl.obolibrary.org/obo/MONDO_0005148" )
+                .queryParam( "includeRefuted", "true" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() )
+                .isNotEmpty()
+                .allSatisfy( q -> assertThat( q.isIncludeRefuted() )
+                        .withFailMessage( "/relations/implies must never ask for refuted rows" )
+                        .isFalse() );
+    }
+
+    /** The other half: on /relations the parameter does reach the query, or it is decorative. */
+    @Test
+    @WithMockUser
+    public void testRelationsHonoursIncludeRefutedWhenAsked() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+
+        target( "/annotations/relations" )
+                .queryParam( "subject", "http://purl.obolibrary.org/obo/MONDO_0005148" )
+                .queryParam( "includeRefuted", "true" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() ).anySatisfy( q -> assertThat( q.isIncludeRefuted() ).isTrue() );
+    }
+
+    /** And it stays off unless asked, so exposing it changed no existing caller's results. */
+    @Test
+    @WithMockUser
+    public void testRelationsExcludesRefutedByDefault() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+
+        target( "/annotations/relations" )
+                .queryParam( "subject", "http://purl.obolibrary.org/obo/MONDO_0005148" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() ).allSatisfy( q -> assertThat( q.isIncludeRefuted() ).isFalse() );
+    }
+
 }
