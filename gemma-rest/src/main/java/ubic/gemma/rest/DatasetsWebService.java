@@ -1521,7 +1521,10 @@ public class DatasetsWebService {
                     + "refused, whereas a paper merely dropped from the lists can be re-attached by anyone. "
                     + "Precedence runs curator > geo_submitter_link / external_import > agent > legacy. "
                     + "An accepted publication that stands rejected by an authority the caller's `source` does "
-                    + "not outrank yields a 409.\n\n"
+                    + "not outrank yields a 409. **Omit the field entirely to leave the standing rejections "
+                    + "untouched**; send a list (an empty one included) to replace them wholesale. The default "
+                    + "is deliberate: rejections are not in what the plain GET returns, so a client writing "
+                    + "back what it read has not seen them and its silence must not delete them.\n\n"
                     + "Returns the dataset's publication list, same shape as the GET (rejections excluded — "
                     + "read them back with `?includeRejected=true`). Requires `ACL_SECURABLE_EDIT` on the "
                     + "dataset. Replaces the retired gemma-web `updatePubMed` / `removePrimaryPublication` "
@@ -1557,8 +1560,15 @@ public class DatasetsWebService {
             other.add( a );
         }
 
-        List<PublicationAssertion> rejected = new ArrayList<>();
+        // 🛑 Absent stays null all the way down; only a present list (including an empty one) replaces
+        // the standing rejections. Unlike 'otherRelevantPublications' this field is optional, and a
+        // rejection is not in what the plain GET returns -- so a client that reads a dataset and PUTs
+        // back what it read has never been shown them. Coercing its silence to an empty list deleted
+        // every ruling on the dataset: on GSE227854 that is Rachel's rejection of GEO's own wrong
+        // !Series_pubmed_id, and with it gone the next GEO refresh re-installs that paper unopposed.
+        List<PublicationAssertion> rejected = null;
         if ( body.getRejectedPublications() != null ) {
+            rejected = new ArrayList<>();
             for ( PublicationEntry entry : body.getRejectedPublications() ) {
                 PublicationAssertion a = resolveAssertion( entry, "rejectedPublications" );
                 if ( a == null ) {

@@ -2331,9 +2331,11 @@ public class ExpressionExperimentServiceImpl
         for ( BibliographicReference ref : otherRelevantPublications ) {
             other.add( new PublicationAssertion( ref, PublicationAssociationSource.CURATOR ) );
         }
+        // null, not emptyList: this form has no rejection argument, so it is not in a position to say
+        // anything about them and must not clear the ones on record.
         updatePublications( ee,
                 primaryPublication != null ? new PublicationAssertion( primaryPublication, PublicationAssociationSource.CURATOR ) : null,
-                other, Collections.emptyList() );
+                other, null );
     }
 
     /**
@@ -2354,9 +2356,8 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void updatePublications( ExpressionExperiment ee, @Nullable PublicationAssertion primaryPublication,
             Collection<PublicationAssertion> otherRelevantPublications,
-            Collection<PublicationAssertion> rejectedPublications ) {
+            @Nullable Collection<PublicationAssertion> rejectedPublications ) {
         Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
-        Assert.notNull( rejectedPublications, "The rejected-publication set must not be null (use an empty collection)." );
 
         ee = ensureInSession( ee );
 
@@ -2383,7 +2384,7 @@ public class ExpressionExperimentServiceImpl
         log.info( "updatePublications: " + ee.getShortName() + " (ID=" + ee.getId() + ") primary="
                 + ( primaryRef != null ? primaryRef.getId() : "none" )
                 + " otherRelevant=" + desiredOther.size()
-                + " rejected=" + rejectedPublications.size() );
+                + " rejected=" + ( rejectedPublications != null ? String.valueOf( rejectedPublications.size() ) : "untouched" ) );
     }
 
     @Override
@@ -2508,13 +2509,18 @@ public class ExpressionExperimentServiceImpl
                 // carries no evidence, so these are bare curator assertions: a publication the commit
                 // keeps holds on to whatever basis was already recorded for it, and one it adds gets
                 // an assertion with no stated reason.
+                //
+                // Rejections are passed as null -- untouched, not cleared. CurationPublications has no
+                // rejection field, so this section cannot express one, and a section that cannot say a
+                // thing must not be read as denying it. Committing an unrelated edit to a dataset is
+                // not a curator withdrawing a ruling about which paper is not theirs.
                 List<PublicationAssertion> otherAssertions = new ArrayList<>( desiredOther.size() );
                 for ( BibliographicReference ref : desiredOther ) {
                     otherAssertions.add( new PublicationAssertion( ref, PublicationAssociationSource.CURATOR ) );
                 }
                 publicationAssociationService.reconcile( ee,
                         primary != null ? new PublicationAssertion( primary, PublicationAssociationSource.CURATOR ) : null,
-                        otherAssertions, Collections.emptyList() );
+                        otherAssertions, null );
                 ee.setPrimaryPublication( primary );
                 ee.getOtherRelevantPublications().clear();
                 ee.getOtherRelevantPublications().addAll( desiredOther );

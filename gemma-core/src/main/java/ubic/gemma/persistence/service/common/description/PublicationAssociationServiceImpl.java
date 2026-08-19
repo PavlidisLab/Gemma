@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -56,10 +57,15 @@ public class PublicationAssociationServiceImpl implements PublicationAssociation
     public List<PublicationAssociation> reconcile( Investigation investigation,
             @Nullable PublicationAssertion primary,
             Collection<PublicationAssertion> otherRelevant,
-            Collection<PublicationAssertion> rejected ) {
+            @Nullable Collection<PublicationAssertion> rejected ) {
         Assert.notNull( investigation, "An investigation is required." );
         Assert.notNull( otherRelevant, "The other-relevant assertions must not be null (use an empty collection)." );
-        Assert.notNull( rejected, "The rejected assertions must not be null (use an empty collection)." );
+
+        // Null means "not speaking to rejections", which is not the same as "clear them" -- see the
+        // interface javadoc. Kept as a flag rather than by substituting an empty collection, because
+        // the two differ precisely in what the retraction sweep below is allowed to touch.
+        boolean replacingRejections = rejected != null;
+        Collection<PublicationAssertion> rejectedOrNone = rejected != null ? rejected : Collections.emptyList();
 
         // Desired end state, keyed by publication id. LinkedHashMap so the primary is processed first
         // and a duplicate entry in otherRelevant cannot demote it.
@@ -72,7 +78,7 @@ public class PublicationAssociationServiceImpl implements PublicationAssociation
             desired.putIfAbsent( requiredPublicationId( a ),
                     new DesiredAssertion( a, PublicationAssociationStatus.ACCEPTED, PublicationAssociationRole.OTHER_RELEVANT ) );
         }
-        for ( PublicationAssertion a : rejected ) {
+        for ( PublicationAssertion a : rejectedOrNone ) {
             Long pubId = requiredPublicationId( a );
             DesiredAssertion clash = desired.get( pubId );
             if ( clash != null ) {
@@ -127,17 +133,32 @@ public class PublicationAssociationServiceImpl implements PublicationAssociation
         // Anything previously asserted and not named in this reconcile is retracted, not silently
         // demoted: an ACCEPTED row whose link has just been removed would be a claim about a link that
         // no longer exists, which is exactly the kind of drift this table is meant to end.
+        //
+        // 🛑 A standing REJECTED row is only swept when the caller passed a rejected collection, i.e.
+        // actually said something about rejections. Silence is not a retraction. The caller's accepted
+        // sets came from a read that showed it every accepted row and no rejected one -- the GET hides
+        // them unless asked -- so its omissions are informative about one half and meaningless about
+        // the other. Sweeping both cost GSE227854 its curator ruling on any ordinary write-back, and
+        // with the ruling gone the GEO refresh re-installs the wrong paper unopposed.
         int retracted = 0;
+        int rejectionsKept = 0;
         for ( Map.Entry<Long, PublicationAssociation> e : held.entrySet() ) {
-            if ( !desired.containsKey( e.getKey() ) ) {
-                publicationAssociationDao.remove( e.getValue() );
-                retracted++;
+            if ( desired.containsKey( e.getKey() ) ) {
+                continue;
             }
+            if ( !replacingRejections && e.getValue().getStatus() == PublicationAssociationStatus.REJECTED ) {
+                rejectionsKept++;
+                continue;
+            }
+            publicationAssociationDao.remove( e.getValue() );
+            retracted++;
         }
 
         if ( !desired.isEmpty() || retracted > 0 ) {
             log.info( "Publication assertions for " + describe( investigation ) + ": " + desired.size()
-                    + " standing (" + rejected.size() + " rejected), " + retracted + " retracted." );
+                    + " standing (" + rejectedOrNone.size() + " rejected), " + retracted + " retracted"
+                    + ( rejectionsKept > 0 ? ", " + rejectionsKept + " standing rejection(s) left untouched" : "" )
+                    + "." );
         }
         return out;
     }

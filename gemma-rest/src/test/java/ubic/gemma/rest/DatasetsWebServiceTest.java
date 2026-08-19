@@ -3216,7 +3216,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         ArgumentCaptor<PublicationAssertion> primaryCaptor = ArgumentCaptor.forClass( PublicationAssertion.class );
         ArgumentCaptor<Collection<PublicationAssertion>> captor = ArgumentCaptor.forClass( Collection.class );
         verify( expressionExperimentService ).updatePublications( eq( ee ), primaryCaptor.capture(), captor.capture(),
-                argThat( Collection::isEmpty ) );
+                isNull() );
         assertThat( primaryCaptor.getValue().getPublication() ).isEqualTo( prim );
         // A body that states no source is the ordinary curator edit this endpoint exists for, and is
         // recorded as such -- which is exactly why an agent has to say "agent" out loud.
@@ -3244,7 +3244,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         ArgumentCaptor<PublicationAssertion> captor = ArgumentCaptor.forClass( PublicationAssertion.class );
         verify( expressionExperimentService ).updatePublications( eq( ee ), captor.capture(),
-                argThat( Collection::isEmpty ), argThat( Collection::isEmpty ) );
+                argThat( Collection::isEmpty ), isNull() );
         PublicationAssertion a = captor.getValue();
         assertThat( a.getSource() ).isEqualTo( PublicationAssociationSource.AGENT );
         assertThat( a.getEvidence() ).isEqualTo( "the series title names this paper almost verbatim" );
@@ -3279,6 +3279,44 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
             assertThat( a.getSource() ).isEqualTo( PublicationAssociationSource.CURATOR );
             assertThat( a.getEvidence() ).contains( "the series title names a different NAR 2024 paper" );
         } );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsOmittingRejectedLeavesThemUntouched() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
+        BibliographicReference right = new BibliographicReference();
+        right.setId( 41L );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "38165001" ) ).thenReturn( right );
+
+        // What a client sends after reading the dataset back: the plain GET does not return rejections,
+        // so this body is everything it saw. Coerced to an empty list it used to clear GSE227854's
+        // curator rejection of GEO's wrong !Series_pubmed_id -- a ruling this caller never laid eyes on.
+        String body = "{\"primaryPublication\":{\"pubMedId\":\"38165001\"},\"otherRelevantPublications\":[]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( expressionExperimentService ).updatePublications( eq( ee ), any( PublicationAssertion.class ),
+                argThat( Collection::isEmpty ), isNull() );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetPublicationsEmptyRejectedListStillClearsThem() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( 1L ) ).thenReturn( ee );
+
+        // Present-but-empty is a caller that has considered the rejections and wants none of them; it
+        // must still reach the service as a clear, or there is no way to overturn one through the API.
+        String body = "{\"primaryPublication\":null,\"otherRelevantPublications\":[],\"rejectedPublications\":[]}";
+        assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( expressionExperimentService ).updatePublications( eq( ee ), isNull(),
+                argThat( Collection::isEmpty ), argThat( Collection::isEmpty ) );
     }
 
     @Test
@@ -3328,7 +3366,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         verify( bibliographicReferenceService ).findOrCreateByDoi( "10.1101/2025.01.02.634567" );
         ArgumentCaptor<PublicationAssertion> preprintCaptor = ArgumentCaptor.forClass( PublicationAssertion.class );
-        verify( expressionExperimentService ).updatePublications( eq( ee ), preprintCaptor.capture(), argThat( Collection::isEmpty ), argThat( Collection::isEmpty ) );
+        verify( expressionExperimentService ).updatePublications( eq( ee ), preprintCaptor.capture(), argThat( Collection::isEmpty ), isNull() );
         assertThat( preprintCaptor.getValue().getPublication() ).isEqualTo( preprint );
     }
 
@@ -3355,7 +3393,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/publications" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
 
-        verify( expressionExperimentService ).updatePublications( eq( ee ), isNull(), argThat( Collection::isEmpty ), argThat( Collection::isEmpty ) );
+        // "Clear all" clears the dataset's publications, which is what this body names. It does not
+        // reach the rejections: those are cleared only by sending an explicit empty rejectedPublications
+        // (see testUpdateDatasetPublicationsEmptyRejectedListStillClearsThem).
+        verify( expressionExperimentService ).updatePublications( eq( ee ), isNull(), argThat( Collection::isEmpty ), isNull() );
         verifyNoInteractions( bibliographicReferenceService );
     }
 

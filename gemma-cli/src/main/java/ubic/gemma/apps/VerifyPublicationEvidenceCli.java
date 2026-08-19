@@ -319,10 +319,13 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
             }
         }
         try {
+            // Rejections passed as null -- untouched. This command reads GEO and fills a gap; it has no
+            // opinion about which papers a curator has ruled out, and clearing them here would delete
+            // the very rejections the catch below depends on to refuse a bad fill on the next run.
             eeService.updatePublications( ee,
                     new PublicationAssertion( primaryRef, PublicationAssociationSource.GEO_SUBMITTER_LINK,
                             geoEvidence( accession, geoIds.get( 0 ), true ), null, GOEvidenceCode.TAS, null, null ),
-                    other, Collections.emptyList() );
+                    other, null );
         } catch ( PublicationAssociationConflictException e ) {
             // ✅ The refusal the design exists to produce, and the reason this command can be pointed
             // at the whole corpus. GSE227854 is the case: it has no primary, GEO's !Series_pubmed_id

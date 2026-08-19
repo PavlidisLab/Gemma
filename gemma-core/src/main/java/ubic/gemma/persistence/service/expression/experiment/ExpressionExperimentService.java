@@ -1244,9 +1244,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      *                                  {@code null} to clear it.
      * @param otherRelevantPublications the desired other-relevant set with evidence (may be empty).
      *                                  Any entry naming the primary's reference is ignored.
-     * @param rejectedPublications      publications to record as ruled out for this experiment (may be
-     *                                  empty). A reference given both here and as accepted is an
-     *                                  {@link IllegalArgumentException}.
+     * @param rejectedPublications      publications to record as ruled out for this experiment,
+     *                                  replacing the standing set — an empty collection clears every
+     *                                  rejection. Pass {@code null} to leave the standing rejections
+     *                                  alone, which is what a caller that does not manage them wants:
+     *                                  a rejection is not returned by the plain publications read, so
+     *                                  a client that writes back what it read has not seen them and
+     *                                  its silence must not delete them. A reference given both here
+     *                                  and as accepted is an {@link IllegalArgumentException}.
      * @throws ubic.gemma.persistence.service.common.description.PublicationAssociationConflictException
      *         if an accepted publication stands rejected by an authority the asserting source does not
      *         outrank.
@@ -1254,7 +1259,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void updatePublications( ExpressionExperiment ee, @Nullable PublicationAssertion primaryPublication,
             Collection<PublicationAssertion> otherRelevantPublications,
-            Collection<PublicationAssertion> rejectedPublications );
+            @Nullable Collection<PublicationAssertion> rejectedPublications );
 
     /**
      * Update the curator-editable "basics" of {@code ee}: its {@code name} (title) and/or

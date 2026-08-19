@@ -69,6 +69,22 @@ public interface PublicationAssociationService {
      *       in {@code rejected} instead — that is the difference between forgetting and deciding.</li>
      * </ul>
      *
+     * <p><b>🛑 A null {@code rejected} leaves the standing rejections alone; an empty one clears
+     * them.</b> The distinction exists because the two halves of this call are read back through
+     * different doors. A caller assembling {@code primary} / {@code otherRelevant} has necessarily
+     * seen the dataset's publications — they are what the plain GET returns. Its rejections are not:
+     * they are behind {@code ?includeRejected=true}, off by default because a rejection is not one of
+     * the dataset's publications. So a client that reads the dataset and writes back what it read
+     * knows the accepted set exactly and knows nothing whatever about the rejected one, and treating
+     * its silence as "clear them" deletes rulings it was never shown.</p>
+     *
+     * <p>GSE227854 is the case, and it is the same case this table was built for. Rachel's rejection
+     * of PMID 38088204 — GEO's own {@code !Series_pubmed_id}, which names the wrong one of the
+     * submitter's two NAR 2024 papers — is the only thing standing between the nightly GEO refresh
+     * and re-installing that paper as the primary. Retract it on a caller's silence and the refresh
+     * wins at rank 30 against nothing at all: precisely the 2026-08-13 correction reverted by the
+     * 08-14 rebuild, one layer up from where that was fixed.</p>
+     *
      * <p><b>Scope of the refusal.</b> Rank blocks <em>accepting</em> a publication that stands
      * rejected, and blocks <em>overwriting the stated basis</em> of a higher-ranked assertion. It does
      * not block retraction or re-decision through this method: reaching it at all means passing
@@ -79,8 +95,14 @@ public interface PublicationAssociationService {
      * @param investigation the experiment. Required.
      * @param primary       the publication to hold as primary, or {@code null} for none.
      * @param otherRelevant the publications to hold as other-relevant; may be empty.
-     * @param rejected      publications to record as ruled out; may be empty.
-     * @return the assertions now standing for this investigation, accepted first.
+     * @param rejected      publications to record as ruled out, replacing the standing set — an empty
+     *                      collection clears every rejection. {@code null} means the caller is not
+     *                      speaking to rejections at all and the standing ones are left untouched,
+     *                      which is what every writer that does not manage them should pass.
+     * @return the assertions now standing for this investigation, accepted first. Rejections left
+     *         untouched by a {@code null} {@code rejected} are not included — the return describes
+     *         what this call asserted, and read them back with
+     *         {@link #findByInvestigation(Investigation, PublicationAssociationStatus)}.
      * @throws PublicationAssociationConflictException if an accepted publication stands rejected by an
      *                                                 authority the incoming source does not outrank.
      * @throws IllegalArgumentException                if a publication appears both as accepted and as
@@ -89,7 +111,7 @@ public interface PublicationAssociationService {
     List<PublicationAssociation> reconcile( Investigation investigation,
             @Nullable PublicationAssertion primary,
             Collection<PublicationAssertion> otherRelevant,
-            Collection<PublicationAssertion> rejected );
+            @Nullable Collection<PublicationAssertion> rejected );
 
     /**
      * Record a single acceptance without disturbing the investigation's other assertions.

@@ -235,6 +235,63 @@ public class PublicationAssociationPersistenceIT extends BaseIntegrationTest5 {
     }
 
     @Test
+    @DisplayName("a reconcile that says nothing about rejections leaves the standing ones alone")
+    public void nullRejectedLeavesStandingRejectionsAlone() {
+        // GSE227854, in miniature. paperB is the primary a curator reasoned out; paperA is GEO's own
+        // !Series_pubmed_id, ruled out because it names a different paper by the same lab.
+        publicationAssociationService.reconcile( experiment,
+                new PublicationAssertion( paperB, PublicationAssociationSource.CURATOR,
+                        "the series title names this paper almost verbatim", null, GOEvidenceCode.IC, null, "rachel" ),
+                Collections.emptyList(),
+                Collections.singletonList( new PublicationAssertion( paperA, PublicationAssociationSource.CURATOR,
+                        "GEO cross-linked the wrong one of the submitter's two papers", null, GOEvidenceCode.IC, null, "rachel" ) ) );
+        flushAndClear();
+        assertEquals( 1, publicationAssociationService
+                .findByInvestigation( experiment, PublicationAssociationStatus.REJECTED ).size() );
+
+        // A client re-sends the accepted set it just read back. It cannot have seen the rejection --
+        // the read path hides rejections unless asked -- so its silence carries no information about
+        // them and must not be read as a retraction.
+        publicationAssociationService.reconcile( experiment,
+                new PublicationAssertion( paperB, PublicationAssociationSource.CURATOR ),
+                Collections.emptyList(), null );
+        flushAndClear();
+
+        List<PublicationAssociation> stillRejected = publicationAssociationService
+                .findByInvestigation( experiment, PublicationAssociationStatus.REJECTED );
+        assertEquals( 1, stillRejected.size(),
+                "a write that never mentioned rejections must not delete one" );
+        assertEquals( paperA.getId(), stillRejected.get( 0 ).getPublication().getId() );
+        assertEquals( "GEO cross-linked the wrong one of the submitter's two papers",
+                stillRejected.get( 0 ).getEvidence(), "and must not blank its reasoning either" );
+
+        // The point of keeping it: the standing rejection is the only thing that refuses the next GEO
+        // refresh. Deleting it above would let rank 30 install the wrong paper against no opposition.
+        assertThrows( PublicationAssociationConflictException.class,
+                () -> publicationAssociationService.assertAccepted( experiment,
+                        new PublicationAssertion( paperA, PublicationAssociationSource.GEO_SUBMITTER_LINK ),
+                        PublicationAssociationRole.PRIMARY ) );
+    }
+
+    @Test
+    @DisplayName("an empty rejected list still clears them, so a curator can change their mind")
+    public void emptyRejectedStillClearsStandingRejections() {
+        publicationAssociationService.assertRejected( experiment,
+                new PublicationAssertion( paperA, PublicationAssociationSource.CURATOR,
+                        "wrong paper", null, GOEvidenceCode.IC, null, "rachel" ) );
+        flushAndClear();
+
+        // Present-but-empty is the caller speaking: it has considered the rejections and wants none.
+        // Absent is the caller silent. Only the first retracts, or there would be no way back.
+        publicationAssociationService.reconcile( experiment, null,
+                Collections.emptyList(), Collections.emptyList() );
+        flushAndClear();
+
+        assertTrue( publicationAssociationService
+                .findByInvestigation( experiment, PublicationAssociationStatus.REJECTED ).isEmpty() );
+    }
+
+    @Test
     @DisplayName("a publication cannot be accepted and rejected in the same request")
     public void acceptedAndRejectedTogetherIsRejected() {
         assertThrows( IllegalArgumentException.class,
