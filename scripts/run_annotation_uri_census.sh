@@ -32,18 +32,17 @@ for arg in "$@"; do
         --dry-run) DRY_RUN=1 ;;
         --on-frink)
             cat <<'FRINK'
-Run this on frink (it reaches prod-db directly, no tunnel needed):
+Copy this script and the SQL to frink and run it there -- it detects ~/Gemma2.0/env.gemma
+and uses the deployment's own database coordinates, so no tunnel is involved:
 
-    ssh -p 22000 paul@frink.msl.ubc.ca
-    cd ~/Gemma2.0
-    set -a; . ./env.gemma; set +a          # picks up GEMMA_DB_PASSWORD without echoing it
-    mysql -h "$GEMMA_DB_HOST" -P "$GEMMA_DB_PORT" -u "$GEMMA_DB_USER" \
-          -p"$GEMMA_DB_PASSWORD" --batch --raw "$GEMMA_DB_NAME" \
-          < ~/sql/annotation_uri_census.sql > ~/annotation_uri_census_$(date +%Y%m%d).tsv
+    scp -P 22000 scripts/run_annotation_uri_census.sh \
+                 scripts/sql/annotation_uri_census.sql paul@frink.msl.ubc.ca:~/sql/
+    ssh -p 22000 paul@frink.msl.ubc.ca \
+        'SQL_FILE=~/sql/annotation_uri_census.sql ~/sql/run_annotation_uri_census.sh'
 
-Then bring it back:
+Then bring the results back to where the assembler expects them:
 
-    scp -P 22000 paul@frink.msl.ubc.ca:~/annotation_uri_census_*.tsv \
+    scp -P 22000 'paul@frink.msl.ubc.ca:~/census_out/*.tsv' \
         ~/Data/gemma-curation-agents-data/annotation_uri_census/
 FRINK
             exit 0 ;;
@@ -94,6 +93,31 @@ assert_read_only() {
 assert_read_only
 echo "read-only check passed: $(basename "$SQL_FILE")"
 
+# Where are we? On frink the deployment env file holds the credentials and prod-db is
+# directly reachable; on a Mac the credentials are in the Keychain and prod is only reachable
+# through the :8000 forward. Same script, so there is one recipe to keep correct rather than
+# two that drift.
+ENV_GEMMA="$HOME/Gemma2.0/env.gemma"
+if [ -r "$ENV_GEMMA" ]; then
+    echo "found $ENV_GEMMA -- using the deployment's own database coordinates"
+    # 🛑 Do NOT `source` this file. It is a DOCKER env-file, not a shell script: its
+    # JAVA_OPTS value continues across several lines, so sourcing it makes bash try to
+    # execute `-Dgemma.load.gemmaOntology=true` as a command. Read the four keys we need
+    # and execute nothing.
+    env_gemma_get() { sed -n "s/^$1=//p" "$ENV_GEMMA" | head -1; }
+    DB_HOST="$(env_gemma_get GEMMA_DB_HOST)"
+    DB_PORT="$(env_gemma_get GEMMA_DB_PORT)"
+    DB_NAME="$(env_gemma_get GEMMA_DB_NAME)"
+    DB_USER="$(env_gemma_get GEMMA_DB_USER)"
+    DB_PASSWORD="$(env_gemma_get GEMMA_DB_PASSWORD)"
+    OUT_DIR="${OUT_DIR_OVERRIDE:-$HOME/census_out}"
+    mkdir -p "$OUT_DIR"
+    ON_FRINK=1
+else
+    ON_FRINK=0
+fi
+
+
 if [ "$DRY_RUN" -eq 1 ]; then
     echo "would connect: $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME"
     echo "would write:   $OUT_DIR/*_$STAMP.tsv"
@@ -104,7 +128,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
 fi
 
 # Is the tunnel actually up? A refused connection here is far clearer than mysql's.
-if ! nc -z "$DB_HOST" "$DB_PORT" 2>/dev/null; then
+if [ "$ON_FRINK" -eq 0 ] && ! nc -z "$DB_HOST" "$DB_PORT" 2>/dev/null; then
     cat >&2 <<TUNNEL
 ERROR: nothing is listening on $DB_HOST:$DB_PORT -- the prod port-forward is not up.
 
@@ -117,8 +141,12 @@ TUNNEL
     exit 1
 fi
 
-keychain_export DB_PASSWORD "${GEMMA_DB_KEYCHAIN_ENTRY:-}" "mysql-gemd-pavlab-8000" \
-    || { echo "ERROR: no password for $DB_USER in keychain (tried mysql-gemd-pavlab-8000). Set GEMMA_DB_KEYCHAIN_ENTRY." >&2; exit 1; }
+if [ "$ON_FRINK" -eq 1 ]; then
+    [ -n "${DB_PASSWORD:-}" ] || { echo "ERROR: env.gemma has no GEMMA_DB_PASSWORD." >&2; exit 1; }
+else
+    keychain_export DB_PASSWORD "${GEMMA_DB_KEYCHAIN_ENTRY:-}" "mysql-gemd-pavlab-8000" \
+        || { echo "ERROR: no password for $DB_USER in keychain (tried mysql-gemd-pavlab-8000). Set GEMMA_DB_KEYCHAIN_ENTRY." >&2; exit 1; }
+fi
 
 # An option file rather than -p on the command line: a password in argv is visible in ps.
 CNF=$(mktemp); chmod 600 "$CNF"
