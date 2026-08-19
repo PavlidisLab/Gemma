@@ -529,6 +529,17 @@ public class AnnotationSetsWebService {
         @JsonProperty("model")
         @Nullable
         public String model;
+        /**
+         * Present on the thin shape too: the cross-experiment {@code role=commit} listing is the
+         * "which agent applied this, from which build" query, and answering it must not require an
+         * N+1 into the full endpoint for the two fields that carry the answer.
+         */
+        @JsonProperty("runSha")
+        @Nullable
+        public String runSha;
+        @JsonProperty("agentName")
+        @Nullable
+        public String agentName;
         @JsonProperty("ranAt")
         @Nullable
         public Date ranAt;
@@ -708,6 +719,8 @@ public class AnnotationSetsWebService {
         r.finalizedBy = s.getFinalizedBy();
         r.agentVersion = s.getAgentVersion();
         r.model = s.getModel();
+        r.runSha = s.getRunSha();
+        r.agentName = s.getAgentName();
         r.ranAt = s.getRanAt();
         r.payloadSize = s.getPayloadSize();
         return r;

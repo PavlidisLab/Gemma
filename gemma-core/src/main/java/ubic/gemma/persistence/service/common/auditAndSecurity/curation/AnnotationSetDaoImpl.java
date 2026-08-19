@@ -37,7 +37,7 @@ public class AnnotationSetDaoImpl extends AbstractDao<AnnotationSet>
             "select new ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSummaryValueObject("
                     + " a.id, a.role, a.source, a.kind, a.runId, a.createdBy,"
                     + " a.createdAt, a.updatedAt, a.finalizedAt, a.finalizedBy,"
-                    + " a.agentVersion, a.model, a.ranAt,"
+                    + " a.agentVersion, a.model, a.runSha, a.agentName, a.ranAt,"
                     + " a.investigation.id, a.parent.id,"
                     + " cast(length(a.payloadJson) as long) )";
 

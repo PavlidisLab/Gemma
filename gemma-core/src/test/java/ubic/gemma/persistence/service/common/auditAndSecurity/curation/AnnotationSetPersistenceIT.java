@@ -209,7 +209,7 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         annotationSetService.attach(
                 preboarded, AnnotationSetRole.PROPOSAL, AnnotationSetSource.AGENT,
                 AgentCurationKind.PROPOSAL, "run-summary", "agent-1",
-                "1.0", "claude-x", null,
+                new AnnotationSetService.RunProvenance( "1.0", "claude-x", "4d8fdbc", "cell_type", null ),
                 "{\"payload\":\"long enough\"}", null );
         annotationSetService.upsertDraft(
                 preboarded, "alice", "{\"draft\":1}", null, null );
@@ -231,6 +231,11 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         assertEquals( "agent-1", sum.getCreatedBy() );
         assertEquals( "1.0", sum.getAgentVersion() );
         assertEquals( "claude-x", sum.getModel() );
+        // The two fields that identify the run's build and specialist must survive into the thin
+        // projection: the role=commit listing is the "which agent, from which build" query, and it
+        // must not need an N+1 into the full payload endpoint to answer it.
+        assertEquals( "4d8fdbc", sum.getRunSha() );
+        assertEquals( "cell_type", sum.getAgentName() );
         assertEquals( preboarded.getId(), sum.getInvestigationId() );
         assertNotNull( sum.getPayloadSize(),
                 "payloadSize projection should be non-null when payloadJson is non-null" );
