@@ -45,8 +45,21 @@ usage is the wrong instrument:
       "most-used wins" rule re-enshrines obsolete terms.
   R2  a catalogue class loses to a named class in the same group.
       A catalogue number ('RCB0009 cell') is not an entity, whatever its usage count.
-      🛑 But only when a named sibling EXISTS -- C2C12 has no named CLO class at all, and
-      its 53 annotations sit on RCB0987; demoting that would leave the line with nothing.
+      🛑 But only when a named sibling exists IN THE GROUP. C2C12's named CLO class does
+      exist -- CLO_0002071, labelled 'C subscript(2) C subscript(12) cell', a broken
+      subscript ingest with no definition (verified in clo.owl, 2026-08-18) -- but no
+      string a submitter types reaches that label, so within any group RCB0987 (53
+      annotations) has no named sibling and demoting it would leave the line with nothing.
+      🛑 R2 HAS DECIDED ZERO GROUPS, and structurally cannot on this group-former: groups
+      form on normalized-LABEL collisions, and a catalogue label ('rcb0987') never
+      collides with a line name ('c2c12').  It is a guard for a wider group-former that
+      does not exist yet.  If grouping ever widens to synonyms/aliases -- where cab
+      measured 92 catalogue-vs-named pairs -- DO NOT inherit this preference unexamined:
+      cab measured the catalogue class carrying the textual definition in 92/92 against
+      33/92 for the named class, and strictly MORE specific parents in 8 of 92
+      (CAB_TO_UIB_AND_GEMMA_BACKEND 2026-08-18).  Their SLVL case, where "prefer the
+      named class" lands on an obsolete disease term, is caught here by R1 outranking
+      R2; the specificity losses would not be.
   R3  the term another ontology CROSS-REFERENCES wins.  Paul's rule, 2026-08-18: *"the one
       with the best xrefs should lead, or which has a definition"*.  🛑 The OUTBOUND half is
       inert for CLO -- measured, every CLO cell-line class carries zero dbXrefs -- so what does
