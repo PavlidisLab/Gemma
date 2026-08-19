@@ -749,6 +749,12 @@ public class AnnotationsWebService {
                     + "'24 h' to 448 and 'induced pluripotent stem cell line cell' to 81, while MPTP and "
                     + "5xFAD sit in the low single digits. Not a quality judgement -- a dose is a good "
                     + "statement and a very broad object. 0 (the default) does not filter.") @QueryParam("maxObjectBreadth") @DefaultValue("0") int maxObjectBreadth,
+            @Parameter(description = "Also return relations a source states do NOT hold, alongside the "
+                    + "asserted ones. Off by default, and deliberately absent from /relations/implies: a "
+                    + "refuted row must never reach a caller asking what a term entails. Distinguish them "
+                    + "by `status` -- REFUTED rather than ASSERTED -- because the predicate is stored "
+                    + "assertively and carries no negation of its own. Today only MGI writes them, from its "
+                    + "not-disease report.") @QueryParam("includeRefuted") @DefaultValue("false") boolean includeRefuted,
             @QueryParam("limit") @DefaultValue("50") int limit
     ) {
         if ( StringUtils.isBlank( subject ) && StringUtils.isBlank( object ) && datasetId == null ) {
@@ -757,6 +763,7 @@ public class AnnotationsWebService {
         ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery q = new ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery()
                 .taxonId( taxonId )
                 .minimumSupport( minSupport )
+                .includeRefuted( includeRefuted )
                 .minimumSpecificity( minSpecificity )
                 .maximumObjectBreadth( maxObjectBreadth )
                 .termLevelOnly( !includeExperimentLevel )
