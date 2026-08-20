@@ -51,7 +51,7 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     private double sScorePublication;
     @JsonProperty("sScorePlatformAmount")
     private double sScorePlatformAmount;
-    @JsonProperty("sScorePlatformTechMulti")
+    @JsonProperty("sScorePlatformsTechMulti")
     private double sScorePlatformsTechMulti;
     @JsonProperty("sScoreAvgPlatformPopularity")
     private double sScoreAvgPlatformPopularity;
