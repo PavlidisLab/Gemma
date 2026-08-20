@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -53,9 +54,10 @@ import static org.junit.jupiter.api.Assertions.fail;
  * check passes while the data is on the wire. That is precisely what all 17 {@code GeeqValueObject}
  * per-factor score getters were doing, undetected, when this class was first written. See
  * {@link #aMemberClaimedWithheldIsActuallyWithheld()}.</li>
- * <li><b>The ratchet.</b> {@link Reason#UNTRIAGED} is migration debt, so its population may only
- * shrink. {@link #UNTRIAGED_CEILING} is a separate constant on purpose: regenerating the inventory
- * would hide a new untriaged member, and this would not.</li>
+ * <li><b>The ratchets.</b> {@link Reason#UNTRIAGED} is migration debt, so its population may only
+ * shrink; {@link #UNTRIAGED_CEILING} is a separate constant on purpose, because regenerating the
+ * inventory would hide a new untriaged member and this would not. {@link #DEFEATED_SUPPRESSIONS} is
+ * the same idea for suppressions known not to work.</li>
  * </ol>
  *
  * When you legitimately change a suppression, update the inventory file and — if you retired an
@@ -79,6 +81,58 @@ class WithheldFromApiInventoryTest {
     private static final int UNTRIAGED_CEILING = 0;
 
     private static final Set<Reason> MUST_NEVER_SERIALIZE = EnumSet.of( Reason.CALLER_IDENTITY, Reason.DISCLOSURE );
+
+    /**
+     * Members where a <em>different</em> member legitimately owns the wire name, so the name-based
+     * half of {@link #aMemberClaimedWithheldIsActuallyWithheld()} reports a collision that is not a
+     * defeated suppression. The annotated member really is withheld; something else answers to its
+     * name. Reviewed one at a time — the value says who owns it.
+     * <p>
+     * This replaced a blanket exemption for {@link Reason#REDUNDANT}. A whole-bucket exemption also
+     * excused the 17 genuinely broken Geeq suppressions below, which is how the check ended up blind
+     * to the very defect it was written for.
+     */
+    private static final Map<String, String> NAME_OWNED_ELSEWHERE = Map.of(
+            "ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject#getTaxon",
+            "the taxonObject field carries @JsonProperty(\"taxon\"); this getter is a flattened common name",
+            "ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject#getTaxon",
+            "the taxonObject field carries @JsonProperty(\"taxon\"); this getter is a flattened common name",
+            "ubic.gemma.model.genome.gene.GeneValueObject#getTaxonId",
+            "getTaxonIdForGemmaRest() carries @JsonProperty(\"taxonId\")",
+            "ubic.gemma.model.expression.biomaterial.BioMaterialValueObject#factorValues",
+            "getFactorValues() carries @JsonProperty(\"factorValues\") and returns the basic VOs" );
+
+    /**
+     * Suppressions that genuinely do not work: each backing field carries an explicit
+     * {@code @JsonProperty} that Jackson keeps over the {@code @JsonIgnore} on the parallel getter, so
+     * the value is published regardless. Accepted for now rather than hidden — the annotation there
+     * neither withholds nor documents anything true, and the fix is to drop it or to drop the field's
+     * {@code @JsonProperty}.
+     * <p>
+     * {@link #DEFEATED_CEILING} may only ever go down. Fixing one and leaving it listed here fails
+     * too, so the list cannot rot.
+     */
+    private static final Set<String> DEFEATED_SUPPRESSIONS = Set.of(
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreBatchInfo",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreOutliers",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScorePlatformsTech",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScorePublicBatchConfound",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScorePublicBatchEffect",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreReplicates",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleCorrelationVariance",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleMeanCorrelation",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleMedianCorrelation",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreAvgPlatformPopularity",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreAvgPlatformSize",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreMissingValues",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScorePlatformAmount",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScorePlatformsTechMulti",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScorePublication",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreRawData",
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreSampleSize" );
+
+    /** Size of {@link #DEFEATED_SUPPRESSIONS}. Lower it as they are fixed; never raise it. */
+    private static final int DEFEATED_CEILING = 17;
 
     /** One application of the annotation: the member it is on, and the reason it claims. */
     private record Site(Class<?> owner, AnnotatedElementRef member, Reason reason) {
@@ -268,42 +322,44 @@ class WithheldFromApiInventoryTest {
     }
 
     /**
-     * The invariant {@link #nothingInTheInventoryReachesTheWire()} was too weak to catch: a member
-     * whose reason <em>claims</em> the data is withheld must actually be off the wire.
+     * The invariant {@link #nothingInTheInventoryReachesTheWire()} was too weak to catch: a member the
+     * annotation claims is withheld must actually be withheld.
      * <p>
-     * {@link Reason#REDUNDANT} is exempt by design — it asserts that nothing is being withheld, so a
-     * property of the same name serializing elsewhere confirms the reason instead of contradicting it.
-     * That is the state of the four flattened taxon / factor-value accessors, where a sibling member
-     * legitimately owns the name.
+     * Applied to <b>every</b> reason. The effect of the annotation is identical whatever reason it
+     * carries, so the guarantee is too — an earlier version exempted {@link Reason#REDUNDANT} wholesale,
+     * which excused 21 members at once and left the check blind to exactly the defect it was written
+     * for. Exceptions are now per member, named, and justified: {@link #NAME_OWNED_ELSEWHERE} for the
+     * four where a sibling legitimately owns the wire name, {@link #DEFEATED_SUPPRESSIONS} for the 17
+     * that are genuinely broken and knowingly tolerated.
      * <p>
-     * Every other reason is enforced, {@link Reason#INTERNAL_ONLY} very much included: a member that
-     * nothing populates, or whose shape is lossy, publishes a falsehood if it reaches the wire, so the
-     * suppression there is doing real work. That split is the whole point of having the two reasons —
-     * before it existed, all 62 of these sat under REDUNDANT and none of them were checked.
+     * An exception that is no longer needed fails as loudly as a missing one, so fixing a member
+     * forces its entry out of the list instead of leaving a lie behind.
      */
     @Test
     void aMemberClaimedWithheldIsActuallyWithheld() {
         ObjectMapper mapper = new ObjectMapper();
         List<String> defeated = new ArrayList<>();
+        List<String> staleExceptions = new ArrayList<>();
+        Set<String> seen = new TreeSet<>();
 
         for ( Site s : scan() ) {
-            if ( s.reason() == Reason.REDUNDANT ) {
-                continue;
-            }
+            seen.add( s.key() );
             BeanDescription desc = mapper.getSerializationConfig()
                     .introspect( mapper.constructType( s.owner() ) );
             List<BeanPropertyDefinition> props = desc.findProperties();
+            assertFalse( props.isEmpty(), "Jackson introspected no properties on " + s.owner().getName() );
             Set<String> serializedNames = props.stream()
                     .map( BeanPropertyDefinition::getName )
                     .collect( Collectors.toCollection( LinkedHashSet::new ) );
 
+            List<String> findings = new ArrayList<>();
             for ( String implied : s.member().impliedPropertyNames() ) {
                 if ( serializedNames.contains( implied ) ) {
-                    defeated.add( s.key() + " claims " + s.reason() + " but \"" + implied + "\" serializes" );
+                    findings.add( "\"" + implied + "\" serializes" );
                 }
-                // a suppressed getter whose backing field serializes under ANY name — the exact shape
-                // of the GeeqValueObject case, where @JsonProperty renamed the field just enough that
-                // the name check above would not have noticed
+                // a suppressed getter whose backing field serializes under ANY name — the shape that
+                // made the Geeq case invisible, where @JsonProperty renamed the field just enough
+                // that the name check above would not have noticed
                 if ( s.member().method() == null ) {
                     continue;
                 }
@@ -315,13 +371,47 @@ class WithheldFromApiInventoryTest {
                 }
                 for ( BeanPropertyDefinition p : props ) {
                     if ( p.getField() != null && backing.equals( p.getField().getMember() ) ) {
-                        defeated.add( s.key() + " claims " + s.reason() + " but its backing field "
-                                + implied + " serializes as \"" + p.getName() + "\"" );
+                        findings.add( "its backing field " + implied + " serializes as \"" + p.getName() + "\"" );
                     }
                 }
             }
+
+            String owner = NAME_OWNED_ELSEWHERE.get( s.key() );
+            boolean tolerated = DEFEATED_SUPPRESSIONS.contains( s.key() );
+            if ( !findings.isEmpty() ) {
+                if ( owner == null && !tolerated ) {
+                    defeated.add( s.key() + " claims " + s.reason() + " but " + String.join( "; ", findings ) );
+                }
+            } else if ( owner != null ) {
+                staleExceptions.add( s.key() + " is listed in NAME_OWNED_ELSEWHERE (" + owner
+                        + ") but no longer collides — drop the entry" );
+            } else if ( tolerated ) {
+                staleExceptions.add( s.key() + " is listed in DEFEATED_SUPPRESSIONS but is now genuinely"
+                        + " suppressed — drop the entry and lower DEFEATED_CEILING" );
+            }
         }
-        assertTrue( defeated.isEmpty(), "suppression is defeated for:\n  " + String.join( "\n  ", defeated ) );
+
+        List<String> problems = new ArrayList<>( defeated );
+        problems.addAll( staleExceptions );
+        for ( String k : NAME_OWNED_ELSEWHERE.keySet() ) {
+            if ( !seen.contains( k ) ) {
+                problems.add( k + " is in NAME_OWNED_ELSEWHERE but carries no @WithheldFromApi" );
+            }
+        }
+        for ( String k : DEFEATED_SUPPRESSIONS ) {
+            if ( !seen.contains( k ) ) {
+                problems.add( k + " is in DEFEATED_SUPPRESSIONS but carries no @WithheldFromApi" );
+            }
+        }
+        assertTrue( problems.isEmpty(), "suppression enforcement:\n  " + String.join( "\n  ", problems ) );
+    }
+
+    /** The tolerated-breakage list is debt, so it may only shrink. */
+    @Test
+    void theDefeatedSuppressionListOnlyShrinks() {
+        assertTrue( DEFEATED_SUPPRESSIONS.size() <= DEFEATED_CEILING,
+                "DEFEATED_SUPPRESSIONS is tolerated breakage, not a place to add to: found "
+                        + DEFEATED_SUPPRESSIONS.size() + ", ceiling " + DEFEATED_CEILING );
     }
 
     @Test
