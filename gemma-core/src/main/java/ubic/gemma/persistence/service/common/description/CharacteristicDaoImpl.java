@@ -255,6 +255,97 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         return result2;
     }
 
+    @Override
+    public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
+        if ( uris.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // The URI columns collate case-insensitively, so two spellings of one URI form a single
+        // group in the database. Collapse them here too: left alone they could be split across two
+        // batches and come back as two rows carrying the same key, which the loop below would then
+        // resolve by overwriting rather than by adding.
+        Set<String> distinctUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+        distinctUris.addAll( uris );
+        String qs = buildCountExperimentsByUrisUnionAll( includeSubjects, includePredicates, includeObjects, taxon, !excludedExperimentIds.isEmpty() );
+
+        Query query = getSessionFactory().getCurrentSession().createNativeQuery( qs )
+                .addScalar( "URI", StandardBasicTypes.STRING )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                // invalidate the cache when the EE2C table is updated
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                // invalidate the cache when EEs are added/removed
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                // invalidate the cache when new characteristics are added/removed
+                .addSynchronizedEntityClass( Characteristic.class );
+
+        if ( taxon != null ) {
+            query.setParameter( "taxonId", taxon.getId() );
+        }
+
+        if ( !excludedExperimentIds.isEmpty() ) {
+            // padding repeats the largest id, which a NOT IN cannot be changed by
+            query.setParameterList( "excludedEeIds", optimizeParameterList( excludedExperimentIds ) );
+        }
+
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+
+        query.setCacheable( true );
+
+        // Batching is safe for an aggregate here only because the grouping key IS the batching key:
+        // every row for a given URI is produced by the batch that URI belongs to, so each group is
+        // complete within its batch. Do not reuse this shape for an aggregate grouped by anything
+        // else.
+        Map<String, Long> counts = new HashMap<>();
+        QueryUtils.<String, Object[]>streamByBatch( query, "uris", distinctUris, 2048 )
+                .forEach( row -> counts.put( ( String ) row[0], ( Long ) row[1] ) );
+        return counts;
+    }
+
+    /**
+     * Build the {@code countExperimentsByUris} query: the same {@code UNION ALL} of per-column range
+     * scans as {@link #buildFindExperimentsByUrisUnionAll}, projecting only the matched URI and the
+     * experiment id, wrapped in a {@code group by} that counts distinct experiments per URI.
+     * <p>
+     * The {@code count(distinct ...)} sits OUTSIDE the union so an EE2C row whose URI appears in
+     * more than one column contributes once, which is what the caller-side {@code Set<Long>} of
+     * experiment ids used to guarantee.
+     */
+    private String buildCountExperimentsByUrisUnionAll( boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, boolean excludeExperiments ) {
+        Assert.isTrue( includeSubjects || includePredicates || includeObjects, "At least one of the source URIs must be included." );
+        List<String> uriColumns = new ArrayList<>( 5 );
+        if ( includeSubjects ) {
+            uriColumns.add( "VALUE_URI" );
+        }
+        if ( includePredicates ) {
+            uriColumns.add( "PREDICATE_URI" );
+            uriColumns.add( "SECOND_PREDICATE_URI" );
+        }
+        if ( includeObjects ) {
+            uriColumns.add( "OBJECT_URI" );
+            uriColumns.add( "SECOND_OBJECT_URI" );
+        }
+        String aclWhere = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.EXPRESSION_EXPERIMENT_FK", "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        String taxonJoin = taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "";
+        String taxonWhere = taxon != null ? " and I.TAXON_FK = :taxonId" : "";
+        String excludedWhere = excludeExperiments ? " and T.EXPRESSION_EXPERIMENT_FK not in (:excludedEeIds)" : "";
+        StringBuilder sb = new StringBuilder();
+        sb.append( "select U.URI as URI, count(distinct U.EE) as N from (" );
+        for ( int i = 0; i < uriColumns.size(); i++ ) {
+            if ( i > 0 ) {
+                sb.append( " union all " );
+            }
+            sb.append( "select T." ).append( uriColumns.get( i ) ).append( " as URI, T.EXPRESSION_EXPERIMENT_FK as EE" )
+                    .append( " from EXPRESSION_EXPERIMENT2CHARACTERISTIC T" )
+                    .append( taxonJoin )
+                    .append( " where T." ).append( uriColumns.get( i ) ).append( " in (:uris)" )
+                    .append( taxonWhere )
+                    .append( aclWhere )
+                    .append( excludedWhere );
+        }
+        sb.append( ") U group by U.URI" );
+        return sb.toString();
+    }
+
     private Map<Class<? extends Identifiable>, Map<String, Set<Long>>> findExperimentsByUrisInternal( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, boolean rankByLevel, int limit ) {
         // Use UNION ALL of per-column range scans instead of a 5-column OR.
         // MySQL gives up on index_merge once the per-column row estimate exceeds a threshold

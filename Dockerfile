@@ -56,10 +56,20 @@ COPY gemma-core/src   gemma-core/src
 COPY gemma-rest/src   gemma-rest/src
 COPY gemma-cli/src    gemma-cli/src
 
-# Skip the git-commit-id plugin inside the build container; we don't COPY .git
-# (it's 800 MB), and the gitHash field on /rest/v2/info isn't load-bearing for
-# the dev image. Production deploy through the Jenkins pipeline still resolves
-# .git normally and populates gitHash.
+# The commit this image was built from. Passed by the publish-image workflow as
+# ${{ github.sha }}; empty on a bare `docker build`, which reproduces the old
+# blank-gitHash behaviour rather than failing the build.
+ARG GIT_COMMIT=""
+
+# The git-commit-id plugin stays skipped — we don't COPY .git (it's 800 MB), so
+# it has nothing to read. Supply the value it would have produced instead: the
+# -D user property satisfies the ${git.commit.id} reference in gemma-core's
+# manifestEntries, which is what BuildInfo reads back as gemma.build.gitHash and
+# /rest/v2/info reports as buildInfo.gitHash.
+#
+# This matters because frink's update.sh pulls the moving :2.0.0-alpha tag, whose
+# name carries no commit. Without this, identifying what is deployed means
+# matching the running image's digest against a per-commit tag in GHCR.
 #
 # Re-seed hdf5 here too — this RUN's layer cache invalidates on every source
 # change, so the seeding step inside it always actually executes (the prime
@@ -67,7 +77,8 @@ COPY gemma-cli/src    gemma-cli/src
 RUN --mount=type=cache,target=/root/.m2/repository \
     cp -rn /opt/local-mvn-repo/* /root/.m2/repository/ 2>/dev/null || true && \
     mvn -B -ntp -P gemma-rest-war clean package -pl gemma-rest,gemma-cli -am -DskipTests \
-        -Dmaven.gitcommitid.skip=true
+        -Dmaven.gitcommitid.skip=true \
+        -Dgit.commit.id="${GIT_COMMIT}"
 
 # Sanity: WAR + CLI launcher must exist before we move to the runtime stages.
 RUN ls -lh /build/gemma-rest/target/gemma-rest.war \

@@ -12,6 +12,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.rest.util.Assertions;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -73,9 +74,17 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest5 {
         assertThat( response.getHeaderString( "Content-Type" ) ).isEqualTo( MediaType.APPLICATION_JSON );
     }
 
+    /**
+     * The spec is ~600 kB, so it is gzipped — but only when the client asks. {@code OpenApiWebService} sets
+     * {@code Content-Encoding} from the request's {@code Accept-Encoding}, which is what triggers Jersey's
+     * {@code GZipEncoder}; the decorator it replaced used to set that header unconditionally. This test was left
+     * behind by that change: it never advertised gzip, so it asserted a header the server was right not to send.
+     */
     @Test
     public void testOpenApiEndpoint() {
-        Response response = target( "/openapi.json" ).request().get();
+        Response response = target( "/openapi.json" ).request()
+                .header( HttpHeaders.ACCEPT_ENCODING, "gzip" )
+                .get();
         Assertions.assertThat( response )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -85,6 +94,16 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest5 {
                     OpenAPI openAPI = Json.mapper().readValue( payload, OpenAPI.class );
                     assertThat( openAPI.getInfo().getTitle() ).isEqualTo( "Gemma RESTful API" );
                 } );
+    }
+
+    /** The other half of the contract: a client that does not advertise gzip is not sent a gzipped body. */
+    @Test
+    public void testOpenApiEndpointIsNotCompressedWhenTheClientDoesNotAskForIt() throws Exception {
+        Response response = target( "/openapi.json" ).request().get();
+        assertThat( response.getStatus() ).isEqualTo( 200 );
+        assertThat( response.getHeaderString( HttpHeaders.CONTENT_ENCODING ) ).isNull();
+        OpenAPI openAPI = Json.mapper().readValue( response.readEntity( String.class ), OpenAPI.class );
+        assertThat( openAPI.getInfo().getTitle() ).isEqualTo( "Gemma RESTful API" );
     }
 
     @Test

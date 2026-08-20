@@ -1,7 +1,7 @@
 # docs/ index
 
 Working design docs, recces, audits, plans, and session notes for Gemma, sorted into subfolders (2026-07-05 cleanup). `README.md` and `CLAUDE.md` stay at the repo root.
-Total: 150 docs.
+Total: 151 docs.
 
 
 ## Pipeline / compute / job-management (Nextflow) — `docs/pipeline-compute/` (1)
@@ -12,7 +12,7 @@ Total: 150 docs.
 
   <sub>archived sources (`pipeline-compute/archive/`): EXTERNAL_PIPELINE_HANDOFF_RECCE.md, PIPELINES_AND_SCHEDULER_RECCE.md, PIPELINE_COMPUTE_TEST_AND_CONTROL_RECCE.md, WORKFLOW_AND_COMPUTE_ARCHITECTURE.md</sub>
 
-## Recces — `docs/recce/` (19 live, 16 archived)
+## Recces — `docs/recce/` (20 live, 16 archived)
 
 16 recces whose subject shipped, whose premise is gone, or that a live doc supersedes were moved to [`docs/recce/archive/`](recce/archive/README.md) on 2026-08-11 — that README lists each one with the evidence checked.
 
@@ -21,6 +21,7 @@ Total: 150 docs.
 - [`AUDIT_AS_WORKFLOW_RECCE.md`](recce/AUDIT_AS_WORKFLOW_RECCE.md) — Audit-system as workflow / ticket tracker — Phase 3 recce
 - [`AUDIT_PHASE_C_RECCE.md`](recce/AUDIT_PHASE_C_RECCE.md) — AUDIT_PHASE_C_RECCE.md
 - [`COEXPRESSION_ORPHAN_RECCE.md`](recce/COEXPRESSION_ORPHAN_RECCE.md) — Coexpression-tables orphan recce
+- [`CURATION_PROVENANCE_RECCE.md`](recce/CURATION_PROVENANCE_RECCE.md) — what Gemma can answer today about where an annotation came from, and what it would take
 - [`DEA_FINDBYGENE_COLDCACHE_RECCE.md`](recce/DEA_FINDBYGENE_COLDCACHE_RECCE.md) — DEA findByGene cold-cache — fix recce
 - [`GEMMA_WEB_ONLY_AUDIT.md`](recce/GEMMA_WEB_ONLY_AUDIT.md) — what `@GemmaWebOnly` is really hiding: all 79 sites bucketed, and why a bulk removal is a security question
 - [`HEATMAP_REWRITE_RECCE.md`](recce/HEATMAP_REWRITE_RECCE.md) — Heatmap data generation — client-side rewrite recce
@@ -89,7 +90,7 @@ Total: 150 docs.
 - [`WORKTREE_CLEANUP_PLAN_v2.md`](plans/WORKTREE_CLEANUP_PLAN_v2.md) — Worktree cleanup plan — v2
 - [`WORKTREE_CLEANUP_PLAN_v3.md`](plans/WORKTREE_CLEANUP_PLAN_v3.md) — Worktree cleanup plan v3
 
-## Other design docs — `docs/design/` (58)
+## Other design docs — `docs/design/` (60)
 
 - [`ACL_ENTRY_VOTER_MIGRATION.md`](design/ACL_ENTRY_VOTER_MIGRATION.md) — ACL AclEntryVoter family migration plan
 - [`AFTER_INVOCATION_MIGRATION.md`](design/AFTER_INVOCATION_MIGRATION.md) — AfterInvocation → Spring Security 6 Modern API Migration Roadmap
@@ -97,6 +98,7 @@ Total: 150 docs.
 - [`CELLOSAURUS_CELL_LINE_SEARCH.md`](design/CELLOSAURUS_CELL_LINE_SEARCH.md) — Cellosaurus as a lexical cell-line name-resolution source (backup for CLO's coverage gaps)
 - [`CONTAINER_CONFIG.md`](design/CONTAINER_CONFIG.md) — Container Config — Env-Var-Only Gemma Configuration
 - [`CRUFT_INVENTORY.md`](design/CRUFT_INVENTORY.md) — Phase 3 cruft inventory + LoC endstate projection
+- [`GENOTYPE_DISEASE_MODEL_EXPANSION.md`](design/GENOTYPE_DISEASE_MODEL_EXPANSION.md) — deriving what a genotype models; spec for the unbuilt CORPUS + EXTERNAL relation bases (PR #1685's mechanism is superseded)
 - [`CURATION_COMMIT_SPEC.md`](design/CURATION_COMMIT_SPEC.md) — Curation commit — composite all-or-none write (`PUT /datasets/{id}/curation`)
 - [`CURATION_DETAILS_RETIREMENT.md`](design/CURATION_DETAILS_RETIREMENT.md) — CurationDetails write-path retirement — phase 1
 - [`EXECUTOR_VIRTUAL_THREAD_PREP.md`](design/EXECUTOR_VIRTUAL_THREAD_PREP.md) — Executor centralization audit + virtual-thread prep
@@ -123,6 +125,9 @@ Total: 150 docs.
 - [`MAVEN_MODERNIZATION.md`](design/MAVEN_MODERNIZATION.md) — Maven Plugin + Dependency Modernization
 - [`MGI_MOUSE_STRAIN_GENOTYPE.md`](design/MGI_MOUSE_STRAIN_GENOTYPE.md) — MGI as a mouse-strain resolution source + rule-aware allele→gene disambiguation for complicated genotypes
 - [`MOCKITO_MODERNIZATION.md`](design/MOCKITO_MODERNIZATION.md) — Mockito Modernization Recce (Phase 3)
+- [`ONTOLOGY_SUBSYSTEM.md`](design/ONTOLOGY_SUBSYSTEM.md) — manifest of the ontology subsystem: what is loaded, what the resolver does step by step, and every switch
+- `design/TERM_URI_CANONICALIZATION.md` — the 46 URIs Gemma resolves on read, why, and the parked migration that retires the shim.
+- [`ONTOLOGY_SUPPLEMENTARY_METHODS.md`](design/ONTOLOGY_SUPPLEMENTARY_METHODS.md) — the same subsystem as paper Methods prose, for the Gemma 2.0 manuscript
 - [`PERF_PROBE_ANNOTATIONS.md`](design/PERF_PROBE_ANNOTATIONS.md) — Perf probe — Annotations + Characteristic (live gemd, 2026-05-20)
 - [`PERF_PROBE_DATA_EXPORTS.md`](design/PERF_PROBE_DATA_EXPORTS.md) — Perf probe — TSV/data-export + DEA-run paths (live gemd)
 - [`PERF_PROBE_REPORT.md`](design/PERF_PROBE_REPORT.md) — Live-gemd perf probe (2026-05-20 phase2-acl-migrate)
@@ -133,6 +138,7 @@ Total: 150 docs.
 - [`PERSISTER_SHRINK_S2_DETAIL.md`](design/PERSISTER_SHRINK_S2_DETAIL.md) — PERSISTER_SHRINK_S2_DETAIL.md — promote the abstract persister chain to @Component beans
 - [`PERSISTER_SHRINK_S4_PROGRESS.md`](design/PERSISTER_SHRINK_S4_PROGRESS.md) — PERSISTER_SHRINK_S4_PROGRESS.md — recce for retiring `Persister` / `PersisterHelper` / `PersisterHelperImpl`
 - [`PHASE3_TEST_TRIAGE.md`](design/PHASE3_TEST_TRIAGE.md) — Phase 3 — `@Ignore` Test Audit
+- [`PUBLICATION_LINK_EVIDENCE.md`](design/PUBLICATION_LINK_EVIDENCE.md) — evidence and rejections on the experiment↔publication link (V25); precedence by rank replaces the exclusion file
 - [`PHASE3_TEST_TRIAGE_FAILURES.md`](design/PHASE3_TEST_TRIAGE_FAILURES.md) — Phase 3 Test Triage — Pre-existing Failure Batch (2026-05-18)
 - [`PHASE_3_VISION.md`](design/PHASE_3_VISION.md) — Phase 3 — vision
 - [`RELEASING.md`](design/RELEASING.md) — Releasing Gemma

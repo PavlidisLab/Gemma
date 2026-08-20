@@ -67,8 +67,204 @@ class AnnotationsWebServiceSolidMatchTest {
         assertThat( AnnotationsWebService.isDesignationQuery( "  " ) ).isFalse();
         assertThat( AnnotationsWebService.isDesignationQuery( "7" ) ).isFalse();
         assertThat( AnnotationsWebService.isDesignationQuery( "2206" ) ).isFalse();  // no letter
-        // Multi-token: a designation is one coined token, even when it contains digits.
+        // A code plus a descriptive word is a description of the code, not a designation.
         assertThat( AnnotationsWebService.isDesignationQuery( "MK-2206 treatment" ) ).isFalse();
+    }
+
+    /**
+     * The space in {@code BAY 43-9006} is the author's (and CHEBI's — it stores {@code pd 0325901}
+     * and {@code sb 431542} spaced), not evidence of a description. Before this, the whitespace
+     * bail left {@code BAY 43-9006} returning {@code (s)-bay-k-8644} and an MGI mouse strain with
+     * {@code suppress_near_matches=true} on.
+     */
+    @Test
+    void splitVendorCodesAreDesignations() {
+        assertThat( AnnotationsWebService.isDesignationQuery( "BAY 43-9006" ) ).isTrue();
+        assertThat( AnnotationsWebService.isDesignationQuery( "SCH 900776" ) ).isTrue();
+        assertThat( AnnotationsWebService.isDesignationQuery( "CP 690550" ) ).isTrue();
+        assertThat( AnnotationsWebService.isDesignationQuery( "GW 501516" ) ).isTrue();
+        assertThat( AnnotationsWebService.isDesignationQuery( "PD 0325901" ) ).isTrue();
+    }
+
+    /**
+     * The widening has to stay narrower than "two tokens and a digit somewhere", or ordinary
+     * phrasing starts getting its near-matches suppressed — which empties the result set and pushes
+     * the caller onto exactly the fuzzy fallback that fabricates groundings.
+     */
+    @Test
+    void ordinaryPhrasingIsNotASplitDesignation() {
+        // Single digits: a count or a subtype, never a vendor code.
+        assertThat( AnnotationsWebService.isDesignationQuery( "type 2" ) ).isFalse();
+        assertThat( AnnotationsWebService.isDesignationQuery( "IL 6" ) ).isFalse();
+        // Digitless second token that is a word rather than a prefix.
+        assertThat( AnnotationsWebService.isDesignationQuery( "BAY leaf" ) ).isFalse();
+        assertThat( AnnotationsWebService.isDesignationQuery( "vitamin D3" ) ).isFalse();
+        // Three tokens is a phrase whatever the digits look like.
+        assertThat( AnnotationsWebService.isDesignationQuery( "high fat diet 2" ) ).isFalse();
+        assertThat( AnnotationsWebService.isDesignationQuery( "type 2 diabetes" ) ).isFalse();
+        // Two code-shaped tokens is a pair of designations, not one designation.
+        assertThat( AnnotationsWebService.isDesignationQuery( "MK-2206 GSK2879552" ) ).isFalse();
+    }
+
+    // ---- unused-derivative demotion ------------------------------------------------------
+
+    private static ubic.gemma.model.common.description.CharacteristicValueObject hit( String label, String uri ) {
+        return new ubic.gemma.model.common.description.CharacteristicValueObject( label, uri, "treatment", null );
+    }
+
+    private static List<String> labels( List<ubic.gemma.model.common.description.CharacteristicValueObject> hits ) {
+        return hits.stream().map( ubic.gemma.model.common.description.CharacteristicValueObject::getValue )
+                .collect( Collectors.toList() );
+    }
+
+    /**
+     * CHEBI hangs a trial code on the parent compound and on its salts alike, so a code query gets
+     * both and the ranker had no reason to prefer either. It chose the formulation nobody used.
+     */
+    @Test
+    void unusedSaltFallsBelowTheCompoundItself() {
+        List<ubic.gemma.model.common.description.CharacteristicValueObject> ranked = List.of(
+                hit( "selumetinib sulfate", "u:sulfate" ),
+                hit( "selumetinib", "u:base" ) );
+        java.util.Map<String, Integer> counts = java.util.Map.of( "u:sulfate", 0, "u:base", 7 );
+
+        assertThat( labels( AnnotationsWebService.demoteUnusedDerivatives( ranked, counts, "AZD6244" ) ) )
+                .containsExactly( "selumetinib", "selumetinib sulfate" );
+    }
+
+    /**
+     * Where the corpus HAS used the more specific form, that usage is the curator's answer and
+     * outranks our guess about what the caller meant.
+     */
+    @Test
+    void aUsedDerivativeKeepsItsPlace() {
+        List<ubic.gemma.model.common.description.CharacteristicValueObject> ranked = List.of(
+                hit( "trametinib dimethyl sulfoxide", "u:solvate" ),
+                hit( "trametinib", "u:base" ) );
+        java.util.Map<String, Integer> counts = java.util.Map.of( "u:solvate", 1, "u:base", 21 );
+
+        assertThat( labels( AnnotationsWebService.demoteUnusedDerivatives( ranked, counts, "GSK1120212" ) ) )
+                .containsExactly( "trametinib dimethyl sulfoxide", "trametinib" );
+    }
+
+    /**
+     * Scoped to designations. A caller who typed {@code brain stem} asked for the brain stem, and
+     * demoting it under {@code brain} would answer a question they did not ask.
+     */
+    @Test
+    void descriptiveQueriesNeverDemoteTheMoreSpecificTerm() {
+        List<ubic.gemma.model.common.description.CharacteristicValueObject> ranked = List.of(
+                hit( "brain stem", "u:stem" ),
+                hit( "brain", "u:brain" ) );
+        java.util.Map<String, Integer> counts = java.util.Map.of( "u:stem", 0, "u:brain", 400 );
+
+        assertThat( labels( AnnotationsWebService.demoteUnusedDerivatives( ranked, counts, "brain stem" ) ) )
+                .containsExactly( "brain stem", "brain" );
+    }
+
+    @Test
+    void unrelatedTermsSharingAPrefixAreNotDerivatives() {
+        // "selumetinibX" is not "selumetinib" + qualifier; the space is what makes it a derivative.
+        List<ubic.gemma.model.common.description.CharacteristicValueObject> ranked = List.of(
+                hit( "selumetinibxyz", "u:other" ),
+                hit( "selumetinib", "u:base" ) );
+        java.util.Map<String, Integer> counts = java.util.Map.of( "u:other", 0, "u:base", 7 );
+
+        assertThat( labels( AnnotationsWebService.demoteUnusedDerivatives( ranked, counts, "AZD6244" ) ) )
+                .containsExactly( "selumetinibxyz", "selumetinib" );
+    }
+
+    // ---- external identification is not an annotation ------------------------------------
+
+    /**
+     * The bridge case, and the reason the feature is worth having: the compound was already in
+     * CHEBI under a name nobody wrote on the sample. Only the bridged term is committable.
+     */
+    @Test
+    void aBridgedIdentificationOffersTheLoadedTermNotTheChemblId() {
+        AnnotationsWebService.ExternalIdentificationValueObject vo =
+                new AnnotationsWebService.ExternalIdentificationValueObject( "ChEMBL", "CHEMBL295416",
+                        "PIRINIXIC ACID", "wy-14643", "ChEMBL_37",
+                        "https://www.ebi.ac.uk/chembl/compound_report_card/CHEMBL295416/",
+                        "http://purl.obolibrary.org/obo/CHEBI_32509", "pirinixic acid" );
+
+        assertThat( vo.getGroundedTermUri() ).isEqualTo( "http://purl.obolibrary.org/obo/CHEBI_32509" );
+        assertThat( vo.getGroundedTermLabel() ).isEqualTo( "pirinixic acid" );
+        // Provenance sufficient to trace the claim: who said it, from which release, on what evidence.
+        assertThat( vo.getSource() ).isEqualTo( "ChEMBL" );
+        assertThat( vo.getSourceRelease() ).isEqualTo( "ChEMBL_37" );
+        assertThat( vo.getMatchedSynonym() ).isEqualTo( "wy-14643" );
+        assertThat( vo.getSourceUrl() ).contains( "CHEMBL295416" );
+    }
+
+    /**
+     * An identification that could not be bridged names the compound and offers nothing to commit.
+     * That is the honest outcome — a ChEMBL accession in valueUri would be a vocabulary Gemma does
+     * not load and cannot resolve later.
+     */
+    @Test
+    void anUnbridgedIdentificationHasNoCommittableUri() {
+        AnnotationsWebService.ExternalIdentificationValueObject vo =
+                new AnnotationsWebService.ExternalIdentificationValueObject( "ChEMBL", "CHEMBL4168754",
+                        null, "lly-283", "ChEMBL_37",
+                        "https://www.ebi.ac.uk/chembl/compound_report_card/CHEMBL4168754/", null, null );
+
+        assertThat( vo.getGroundedTermUri() ).isNull();
+        assertThat( vo.getIdentifier() ).isEqualTo( "CHEMBL4168754" );
+    }
+
+    /** Negative evidence without an external lookup is unchanged — the field is additive. */
+    @Test
+    void negativeEvidenceCarriesNoIdentificationByDefault() {
+        AnnotationsWebService.NegativeEvidenceValueObject ne =
+                new AnnotationsWebService.NegativeEvidenceValueObject( "nsc80997", false,
+                        java.util.Collections.emptyList(), false );
+
+        assertThat( ne.getExternalIdentification() ).isNull();
+        assertThat( ne.isSolidMatch() ).isFalse();
+    }
+
+    // ---- suppression keeps declared names, drops overlap ---------------------------------
+
+    /**
+     * CHEBI files developmental compound codes under {@code hasRelatedSynonym} as a curation
+     * convention. Sharing one predicate between the relevance tier and the suppression filter made
+     * every one of those a near-match to be deleted: over 60 real corpus treatment codes, 34
+     * resolved without suppression and 15 with it.
+     */
+    @Test
+    void aDeclaredSynonymSurvivesSuppressionAtAnyScope() {
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.PREFERRED_LABEL ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.EXACT_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.NARROW_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.ALT_LABEL ) ).isTrue();
+    }
+
+    /**
+     * The near-matches the flag exists to kill are all overlap rather than equality, so widening
+     * survival to every declared synonym scope does not let any of them back in.
+     */
+    @Test
+    void overlapIsStillNotAName() {
+        // MK-8353 for MK-2206, (s)-bay-k-8644 for BAY 43-9006, gdc-0941-resistant cell lines.
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.LABEL_PREFIX ) ).isFalse();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.LABEL_TOKENS ) ).isFalse();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.SYNONYM_TOKENS ) ).isFalse();
+        assertThat( AnnotationsWebService.namesTheQuery( null ) ).isFalse();
+    }
+
+    /**
+     * The two predicates have to stay different, or the H1 complaint comes back: RELATED must be
+     * kept (suppression) AND demoted (ranking) at the same time.
+     */
+    @Test
+    void rankingAndSuppressionDisagreeOnRelatedByDesign() {
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.RELATED_SYNONYM ) ).isFalse();
+        assertThat( AnnotationsWebService.namesTheQuery( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isTrue();
+        assertThat( AnnotationsWebService.isExactAttribution( AnnotationsWebService.MatchedVia.BROAD_SYNONYM ) ).isFalse();
     }
 
     // ---- exact vs near attribution -------------------------------------------------------

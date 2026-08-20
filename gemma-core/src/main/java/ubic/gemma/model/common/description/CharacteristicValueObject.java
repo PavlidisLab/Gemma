@@ -16,6 +16,8 @@ package ubic.gemma.model.common.description;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +25,7 @@ import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.WithheldFromApi;
 import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -78,6 +81,26 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     @GemmaRestOnly
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public String valueId;
+
+    /**
+     * Verbatim provenance backing a curated characteristic — a JSON array of
+     * {@code {quote, source, location, …}} items the curation agents emitted. Gemma stores and serves it
+     * opaquely; the agents repo owns the schema.
+     * <p>
+     * This is the field that answers "where did this come from" for an {@link ExperimentalFactor}'s
+     * <em>category</em>, which is a {@link Characteristic} like any other and therefore already has the
+     * storage. Null means "nothing recorded", which is the expected reading for most rows — it is not an
+     * error and must not be rendered as one.
+     * <p>
+     * Provenance rather than identity, so it is excluded from equals/hashCode for the same reason
+     * {@link #supplementary} is: the same term reached with and without recorded evidence is the same term,
+     * and including it here would break the de-duplication the search paths rely on.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @EqualsAndHashCode.Exclude
+    @Schema(description = "Verbatim provenance backing a curated characteristic — a JSON array of {quote, source, location} items the curation agents emitted. Null when none is recorded.")
+    private JsonNode supportingEvidence;
 
     // TODO: all the following fields are Phenocarta-specific and should be relocated FIXME it's not clear which fields are referred to by this comment. I've marked some candidates
 
@@ -165,10 +188,14 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
         super( characteristic );
         this.category = characteristic.getCategory();
         this.categoryUri = characteristic.getCategoryUri();
-        this.value = characteristic.getValue();
-        this.valueUri = characteristic.getValueUri();
-        this.urlId = parseUrlId( characteristic.getValueUri() );
+        // Report the canonical term, not always the stored one -- a read-time stand-in for the
+        // parked migration (CharacteristicUtils#canonicalUri). The label moves with the URI:
+        // the new URI beside the old label is a row that says one thing and means another.
+        this.valueUri = CharacteristicUtils.canonicalUri( characteristic.getValueUri() );
+        this.value = CharacteristicUtils.canonicalLabel( characteristic.getValueUri(), characteristic.getValue() );
+        this.urlId = parseUrlId( this.valueUri );
         this.originalValue = characteristic.getOriginalValue();
+        this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( characteristic.getSupportingEvidence() );
     }
 
     public CharacteristicValueObject( String value, @Nullable String valueUri ) {

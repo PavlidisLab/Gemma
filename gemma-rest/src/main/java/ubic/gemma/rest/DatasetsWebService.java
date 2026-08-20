@@ -82,6 +82,9 @@ import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetailsValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
@@ -110,11 +113,15 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEv
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.DatasetPublicationValueObject;
+import ubic.gemma.model.common.description.PublicationAssociationSource;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
@@ -138,9 +145,12 @@ import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationConflictException;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -267,6 +277,9 @@ public class DatasetsWebService {
     private AuditTrailService auditTrailService;
     @Autowired
     private AnnotationSetsWebService annotationSetsWebService;
+    /** Used by the snapshot/restore pair to load a stored payload; the delegating routes go through the web service above. */
+    @Autowired
+    private AnnotationSetService annotationSetService;
     @Autowired
     private SecurityService securityService;
     @Autowired
@@ -1458,15 +1471,27 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/publications")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all publications associated with a dataset", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<List<BibliographicReferenceValueObject>> getDatasetAllPublications(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+    @Operation(summary = "Retrieve all publications associated with a dataset",
+            description = "Each publication carries an `association` object recording why it is attached: "
+                    + "the authority behind the claim (`curator`, `geo_submitter_link`, `agent`, …), the "
+                    + "one-line evidence, an evidence code, and when it was asserted. A null `association` "
+                    + "means the link exists but nothing was recorded about where it came from. "
+                    + "Set `includeRejected=true` to also list the publications ruled out for this dataset — "
+                    + "the \"do not re-propose\" set a publication finder should read before it starts. They "
+                    + "are excluded by default because a rejection is a record of a decision, not a "
+                    + "publication of the dataset.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<DatasetPublicationValueObject>> getDatasetAllPublications(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Also list the publications that were considered for this dataset and ruled out.")
+            @QueryParam("includeRejected") @DefaultValue("false") Boolean includeRejected
     ) {
 
-        List<BibliographicReferenceValueObject> out = datasetArgService.getPublications( datasetArg );
+        List<DatasetPublicationValueObject> out = datasetArgService.getPublications( datasetArg,
+                Boolean.TRUE.equals( includeRejected ) );
         return respond( out );
 
     }
@@ -1476,8 +1501,8 @@ public class DatasetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Replace the publications associated with a dataset",
-            description = "Idempotent set-replace for the dataset's primary and other-relevant publications. "
-                    + "Each publication is a typed identifier object carrying exactly one of `pubMedId` or "
+            description = "Idempotent set-replace for the dataset's primary, other-relevant and rejected "
+                    + "publications. Each publication is an object carrying exactly one of `pubMedId` or "
                     + "`doi`, e.g. `{\"pubMedId\":\"22438826\"}` or `{\"doi\":\"10.1101/2025.01.02.634567\"}`. "
                     + "`primaryPublication` sets the primary publication, or clears it when null/omitted; "
                     + "`otherRelevantPublications` replaces the other-relevant set (an empty list clears it, "
@@ -1486,20 +1511,36 @@ public class DatasetsWebService {
                     + "from PubMed; DOIs via PubMed-by-DOI then CrossRef (which covers bioRxiv / medRxiv "
                     + "preprints PubMed doesn't index). An identifier that resolves nowhere yields a 400. "
                     + "A publication given both as the primary and in the other-relevant list is kept only as "
-                    + "the primary. Returns the dataset's full publication list, same shape as the GET. "
-                    + "Requires `ACL_SECURABLE_EDIT` on the dataset. Replaces the retired gemma-web "
-                    + "`updatePubMed` / `removePrimaryPublication` controller methods, and the workaround of "
-                    + "noting a preprint in a curation comment.",
+                    + "the primary; one given as both accepted and rejected is a 400.\n\n"
+                    + "Every entry may carry the evidence behind it — `source`, `evidence`, "
+                    + "`supportingEvidence`, `evidenceCode`, `confidence`, `assertedBy` — which is stored "
+                    + "against the (dataset, publication) pair and returned under `association` by the GET.\n\n"
+                    + "`rejectedPublications` records the papers considered for this dataset and ruled out. "
+                    + "This is not the same as leaving them out: a rejection is enforced, so a later writer "
+                    + "of lower authority (a GEO re-fetch, a publication finder) that re-proposes the paper is "
+                    + "refused, whereas a paper merely dropped from the lists can be re-attached by anyone. "
+                    + "Precedence runs curator > geo_submitter_link / external_import > agent > legacy. "
+                    + "An accepted publication that stands rejected by an authority the caller's `source` does "
+                    + "not outrank yields a 409. **Omit the field entirely to leave the standing rejections "
+                    + "untouched**; send a list (an empty one included) to replace them wholesale. The default "
+                    + "is deliberate: rejections are not in what the plain GET returns, so a client writing "
+                    + "back what it read has not seen them and its silence must not delete them.\n\n"
+                    + "Returns the dataset's publication list, same shape as the GET (rejections excluded — "
+                    + "read them back with `?includeRejected=true`). Requires `ACL_SECURABLE_EDIT` on the "
+                    + "dataset. Replaces the retired gemma-web `updatePubMed` / `removePrimaryPublication` "
+                    + "controller methods, and the workaround of noting a preprint in a curation comment.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed, or a PubMed id could not be resolved.",
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed, a PubMed id could not be resolved, or a publication was given as both accepted and rejected.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "A publication being accepted was rejected for this dataset by an authority the caller's source does not outrank.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<List<BibliographicReferenceValueObject>> updateDatasetPublications(
+    public ResponseDataObject<List<DatasetPublicationValueObject>> updateDatasetPublications(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable PublicationsUpdateRequest body
     ) {
@@ -1508,29 +1549,93 @@ public class DatasetsWebService {
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
 
-        BibliographicReference primary = resolvePublication( body.getPrimaryPublication() );
+        PublicationAssertion primary = resolveAssertion( body.getPrimaryPublication(), "primaryPublication" );
 
-        List<BibliographicReference> other = new ArrayList<>();
-        for ( PublicationIdentifier id : body.getOtherRelevantPublications() ) {
-            BibliographicReference ref = resolvePublication( id );
-            if ( ref == null ) {
+        List<PublicationAssertion> other = new ArrayList<>();
+        for ( PublicationEntry entry : body.getOtherRelevantPublications() ) {
+            PublicationAssertion a = resolveAssertion( entry, "otherRelevantPublications" );
+            if ( a == null ) {
                 throw new BadRequestException( "Each entry in 'otherRelevantPublications' must carry a non-blank 'pubMedId' or 'doi'." );
             }
-            other.add( ref );
+            other.add( a );
         }
 
-        expressionExperimentService.updatePublications( ee, primary, other );
+        // 🛑 Absent stays null all the way down; only a present list (including an empty one) replaces
+        // the standing rejections. Unlike 'otherRelevantPublications' this field is optional, and a
+        // rejection is not in what the plain GET returns -- so a client that reads a dataset and PUTs
+        // back what it read has never been shown them. Coercing its silence to an empty list deleted
+        // every ruling on the dataset: on GSE227854 that is Rachel's rejection of GEO's own wrong
+        // !Series_pubmed_id, and with it gone the next GEO refresh re-installs that paper unopposed.
+        List<PublicationAssertion> rejected = null;
+        if ( body.getRejectedPublications() != null ) {
+            rejected = new ArrayList<>();
+            for ( PublicationEntry entry : body.getRejectedPublications() ) {
+                PublicationAssertion a = resolveAssertion( entry, "rejectedPublications" );
+                if ( a == null ) {
+                    throw new BadRequestException( "Each entry in 'rejectedPublications' must carry a non-blank 'pubMedId' or 'doi'." );
+                }
+                rejected.add( a );
+            }
+        }
+
+        try {
+            expressionExperimentService.updatePublications( ee, primary, other, rejected );
+        } catch ( PublicationAssociationConflictException e ) {
+            // A refusal, not a malformed request: the caller asked for something coherent and was
+            // outranked. 409 so a client can tell "you got this wrong" from "someone else decided".
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+        }
         return respond( datasetArgService.getPublications( datasetArg ) );
     }
 
     /**
-     * Resolve a wire {@link PublicationIdentifier} to a persistent {@link BibliographicReference}, fetching
+     * Resolve a wire {@link PublicationEntry} into a {@link PublicationAssertion}: the persistent
+     * reference plus the evidence given for it.
+     * <p>
+     * {@code source} defaults to {@link PublicationAssociationSource#CURATOR}, which is right for the
+     * endpoint's normal user — a human with edit rights on the dataset — and is why an automated
+     * client has to say so explicitly. An unrecognised value is a 400 rather than a silent fallback to
+     * the highest authority in the ranking.
+     */
+    @Nullable
+    private PublicationAssertion resolveAssertion( @Nullable PublicationEntry entry, String field ) {
+        BibliographicReference ref = resolvePublication( entry );
+        if ( ref == null ) {
+            return null;
+        }
+        PublicationAssociationSource source = PublicationAssociationSource.CURATOR;
+        if ( StringUtils.isNotBlank( entry.getSource() ) ) {
+            try {
+                source = PublicationAssociationSource.fromDbValue( entry.getSource().trim() );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown 'source' " + entry.getSource() + " in '" + field
+                        + "'. Use one of: curator, geo_submitter_link, external_import, agent." );
+            }
+        }
+        GOEvidenceCode evidenceCode = null;
+        if ( StringUtils.isNotBlank( entry.getEvidenceCode() ) ) {
+            try {
+                evidenceCode = GOEvidenceCode.valueOf( entry.getEvidenceCode().trim().toUpperCase() );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown 'evidenceCode' " + entry.getEvidenceCode() + " in '" + field + "'." );
+            }
+        }
+        if ( entry.getConfidence() != null && ( entry.getConfidence() < 0.0 || entry.getConfidence() > 1.0 ) ) {
+            throw new BadRequestException( "'confidence' in '" + field + "' must be between 0 and 1." );
+        }
+        return new PublicationAssertion( ref, source, StringUtils.stripToNull( entry.getEvidence() ),
+                StringUtils.stripToNull( entry.getSupportingEvidence() ), evidenceCode, entry.getConfidence(),
+                StringUtils.stripToNull( entry.getAssertedBy() ) );
+    }
+
+    /**
+     * Resolve a wire {@link PublicationEntry} to a persistent {@link BibliographicReference}, fetching
      * from PubMed or CrossRef when necessary. A null / empty identifier resolves to {@code null} (i.e. "no
      * publication"). An identifier that names both a PubMed id and a DOI, or one whose id can't be resolved,
      * is surfaced as a {@code 400} rather than a {@code 500}.
      */
     @Nullable
-    private BibliographicReference resolvePublication( @Nullable PublicationIdentifier id ) {
+    private BibliographicReference resolvePublication( @Nullable PublicationEntry id ) {
         if ( id == null ) {
             return null;
         }
@@ -1555,47 +1660,88 @@ public class DatasetsWebService {
 
     /**
      * Request body for {@link #updateDatasetPublications}. Publications are addressed by
-     * {@link PublicationIdentifier} (PubMed id or DOI); {@code primaryPublication} may be null (clears the
-     * primary), {@code otherRelevantPublications} may be an empty list (clears the other-relevant set).
-     * Symmetric with the {@link #getDatasetAllPublications} read, which returns full
-     * {@link BibliographicReferenceValueObject}s (the identifier is on each VO's {@code pubAccession}).
+     * {@link PublicationEntry} (PubMed id or DOI, plus the evidence for the claim);
+     * {@code primaryPublication} may be null (clears the primary), {@code otherRelevantPublications} may
+     * be an empty list (clears the other-relevant set), and {@code rejectedPublications} records the
+     * papers ruled out for this dataset. Symmetric with the {@link #getDatasetAllPublications} read,
+     * which returns full {@link DatasetPublicationValueObject}s (the identifier is on each VO's
+     * {@code pubAccession}, the evidence under {@code association}).
      */
     public static class PublicationsUpdateRequest {
         @Nullable
-        private PublicationIdentifier primaryPublication;
+        private PublicationEntry primaryPublication;
         @Nullable
-        private List<PublicationIdentifier> otherRelevantPublications;
+        private List<PublicationEntry> otherRelevantPublications;
+        @Schema(description = "Publications considered for this dataset and ruled out. Recorded rather than merely omitted, so a later automated writer that re-finds one of them is refused instead of quietly re-attaching it. Omit or send an empty list to clear the rejections.")
+        @Nullable
+        private List<PublicationEntry> rejectedPublications;
 
         @Nullable
-        public PublicationIdentifier getPrimaryPublication() {
+        public PublicationEntry getPrimaryPublication() {
             return primaryPublication;
         }
 
-        public void setPrimaryPublication( @Nullable PublicationIdentifier primaryPublication ) {
+        public void setPrimaryPublication( @Nullable PublicationEntry primaryPublication ) {
             this.primaryPublication = primaryPublication;
         }
 
         @Nullable
-        public List<PublicationIdentifier> getOtherRelevantPublications() {
+        public List<PublicationEntry> getOtherRelevantPublications() {
             return otherRelevantPublications;
         }
 
-        public void setOtherRelevantPublications( @Nullable List<PublicationIdentifier> otherRelevantPublications ) {
+        public void setOtherRelevantPublications( @Nullable List<PublicationEntry> otherRelevantPublications ) {
             this.otherRelevantPublications = otherRelevantPublications;
+        }
+
+        @Nullable
+        public List<PublicationEntry> getRejectedPublications() {
+            return rejectedPublications;
+        }
+
+        public void setRejectedPublications( @Nullable List<PublicationEntry> rejectedPublications ) {
+            this.rejectedPublications = rejectedPublications;
         }
     }
 
     /**
-     * A single publication on the {@link #updateDatasetPublications} wire, carrying exactly one of
-     * {@code pubMedId} or {@code doi}. DOIs may be given bare ({@code 10.x/…}), as a {@code doi.org} URL, or
-     * {@code doi:}-prefixed; a DOI not indexed by PubMed is resolved via CrossRef (covers bioRxiv / medRxiv
-     * preprints). Manual metadata entry (title/authors) is intentionally not accepted here yet.
+     * A single publication on the {@link #updateDatasetPublications} wire: which paper, and why.
+     * <p>
+     * Identity is exactly one of {@code pubMedId} or {@code doi}. DOIs may be given bare
+     * ({@code 10.x/…}), as a {@code doi.org} URL, or {@code doi:}-prefixed; a DOI not indexed by PubMed
+     * is resolved via CrossRef (covers bioRxiv / medRxiv preprints). Manual metadata entry
+     * (title/authors) is intentionally not accepted here yet.
+     * <p>
+     * Everything after the identity is the evidence, and it is optional in the sense that a request
+     * without it still works — but {@code source} is what decides precedence between writers, so a
+     * caller that leaves it out is recorded as {@code curator}, the highest authority. An agent must
+     * set {@code "source": "agent"} rather than let it default, or its proposals will outrank the
+     * curators they are meant to defer to.
      */
-    public static class PublicationIdentifier {
+    public static class PublicationEntry {
         @Nullable
         private String pubMedId;
         @Nullable
         private String doi;
+        @Schema(description = "Who is making this claim: `curator`, `agent`, `geo_submitter_link`, `external_import`. Defaults to `curator`, which outranks everything — an automated caller must set this explicitly.",
+                allowableValues = { "curator", "agent", "geo_submitter_link", "external_import" })
+        @Nullable
+        private String source;
+        @Schema(description = "The one-line quotable basis, e.g. \"the series title names this paper almost verbatim\" or \"the paper cites this accession under Data Availability\".")
+        @Nullable
+        private String evidence;
+        @Schema(description = "Structured evidence items backing the one-line basis, as a JSON array in the curation agents' FindingEvidence shape. Stored verbatim and never parsed by Gemma.")
+        @Nullable
+        private String supportingEvidence;
+        @Schema(description = "How the claim was arrived at, in the vocabulary annotations use: IC (curator inference), TAS (stated in a traceable source), IEA (software, unchecked), IIA (carried in from imported data).")
+        @Nullable
+        private String evidenceCode;
+        @Schema(description = "Self-reported confidence in [0,1], for machine claims.")
+        @Nullable
+        private Double confidence;
+        @Schema(description = "Username or agent run identifier behind the claim. Defaults to the authenticated user.")
+        @Nullable
+        private String assertedBy;
 
         @Nullable
         public String getPubMedId() {
@@ -1613,6 +1759,60 @@ public class DatasetsWebService {
 
         public void setDoi( @Nullable String doi ) {
             this.doi = doi;
+        }
+
+        @Nullable
+        public String getSource() {
+            return source;
+        }
+
+        public void setSource( @Nullable String source ) {
+            this.source = source;
+        }
+
+        @Nullable
+        public String getEvidence() {
+            return evidence;
+        }
+
+        public void setEvidence( @Nullable String evidence ) {
+            this.evidence = evidence;
+        }
+
+        @Nullable
+        public String getSupportingEvidence() {
+            return supportingEvidence;
+        }
+
+        public void setSupportingEvidence( @Nullable String supportingEvidence ) {
+            this.supportingEvidence = supportingEvidence;
+        }
+
+        @Nullable
+        public String getEvidenceCode() {
+            return evidenceCode;
+        }
+
+        public void setEvidenceCode( @Nullable String evidenceCode ) {
+            this.evidenceCode = evidenceCode;
+        }
+
+        @Nullable
+        public Double getConfidence() {
+            return confidence;
+        }
+
+        public void setConfidence( @Nullable Double confidence ) {
+            this.confidence = confidence;
+        }
+
+        @Nullable
+        public String getAssertedBy() {
+            return assertedBy;
+        }
+
+        public void setAssertedBy( @Nullable String assertedBy ) {
+            this.assertedBy = assertedBy;
         }
     }
 
@@ -1841,17 +2041,88 @@ public class DatasetsWebService {
         return annotationSetsWebService.submitAnnotationSet( datasetArg, body );
     }
 
+    @POST
+    @Path("/{dataset}/annotation-sets/snapshot")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Capture the dataset's current curation as an immutable SNAPSHOT AnnotationSet.",
+            description = "Takes the backup for you: the server reads the current design, tags, sample "
+                    + "characteristics and curation note and stores them as the AnnotationSet's `payloadJson`. "
+                    + "Deliberate and append-only — nothing snapshots on its own, so this is what you call before "
+                    + "letting an agent apply a batch of changes.\n\n"
+                    + "The payload is a `CurationDocument`, the same shape `PUT /datasets/{id}/curation` accepts. "
+                    + "That is what makes the two companion operations free: "
+                    + "`POST /datasets/{id}/annotation-sets/{setId}/restore?dryRun=true` compares the snapshot "
+                    + "with the present, and the same call without `dryRun` puts it back.\n\n"
+                    + "Emits no audit event, so the dataset's `lastUpdated` does not move: a backup must not "
+                    + "modify what it backs up, and `lastUpdated` is the optimistic-concurrency token the "
+                    + "curation commit checks. The AnnotationSet row is its own record of the capture, carrying "
+                    + "`createdAt`, `createdBy` and `runId`. (PROPOSAL and DRAFT do emit an `AnnotationSetEvent`.)",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "The snapshot was captured.",
+                            content = @Content(schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response snapshotDatasetCuration(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Optional note recorded as the snapshot's producer identity, e.g. why the backup was taken.")
+            @QueryParam("createdBy") @Nullable String createdBy
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        AnnotationSetsWebService.AnnotationSetRequest body = new AnnotationSetsWebService.AnnotationSetRequest();
+        body.role = "snapshot";
+        body.createdBy = createdBy;
+        body.payloadJson = writeSnapshotPayload( buildCurationSnapshot( ee ) );
+        return annotationSetsWebService.submitAnnotationSet( datasetArg, body );
+    }
+
+    @POST
+    @Path("/{dataset}/annotation-sets/{setId}/restore")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Restore a dataset's curation from a SNAPSHOT, or compare it with the present.",
+            description = "Replays the snapshot's `CurationDocument` through the ordinary all-or-none commit, so "
+                    + "there is no second diff implementation that could disagree with the first.\n\n"
+                    + "`?dryRun=true` is the compare: it reports exactly what would change to get back to the "
+                    + "snapshot, and writes nothing.\n\n"
+                    + "🛑 A restore returns the curation's CONTENT, not its IDENTITY. Entities whose ids no longer "
+                    + "exist — because an intervening run deleted and recreated them — come back as new rows with "
+                    + "new ids, and any differential-expression analysis that survived that run is cascaded again "
+                    + "on the way back. Run with `dryRun=true` first and read `requiresForce`.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Restored, or (dryRun) the predicted changes."),
+                    @ApiResponse(responseCode = "400", description = "The set is not a SNAPSHOT, or its payload is not a CurationDocument.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "The restore would delete analyses or strand a subset; retry with ?force=true.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<CurationCommitReport> restoreDatasetCurationFromSnapshot(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("setId") Long setId,
+            @Parameter(description = "Predict the changes without writing. This is the 'compare with the snapshot' mode.")
+            @QueryParam("dryRun") @DefaultValue("false") Boolean dryRun,
+            @Parameter(description = "Consent to the restore's consequences (analysis cascade, stranded subsets).")
+            @QueryParam("force") @DefaultValue("false") Boolean force
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        CurationDocument snapshot = readSnapshotPayload( setId, ee );
+        reconcileSnapshotForRestore( snapshot, ee );
+        // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
+        // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
+        snapshot.setBaseline( null );
+        return respond( doCommitCuration( datasetArg, snapshot, dryRun, force ) );
+    }
+
     @GET
     @Path("/{dataset}/annotation-sets")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "List AnnotationSets attached to a dataset, newest first.",
-            description = "`?role=` filters by role (`proposal`/`draft`/`snapshot`/`all`). "
+            description = "`?role=` filters by role (`proposal`/`draft`/`snapshot`/`commit`/`all`). "
                     + "`?source=` filters by source. `?createdBy=` filters by producer identity. "
                     + "`?shape=full|meta` selects response shape.")
     public Response listDatasetAnnotationSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, or `all` (default).")
+            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, `commit`, or `all` (default).")
             @QueryParam("role") @Nullable String role,
             @Parameter(description = "Filter by source.")
             @QueryParam("source") @Nullable String source,
@@ -2331,7 +2602,7 @@ public class DatasetsWebService {
             // Resolve identifiers -> references BEFORE the commit transaction (PubMed/CrossRef fetch is slow).
             request.setPrimaryPublication( resolvePublication( pubs.getPrimary() ) );
             List<BibliographicReference> other = new ArrayList<>();
-            for ( PublicationIdentifier id : pubs.getOtherRelevant() ) {
+            for ( PublicationEntry id : pubs.getOtherRelevant() ) {
                 BibliographicReference ref = resolvePublication( id );
                 if ( ref == null ) {
                     throw new BadRequestException( "Each publications.otherRelevant entry needs a non-blank 'pubMedId' or 'doi'." );
@@ -2363,17 +2634,16 @@ public class DatasetsWebService {
             // need to be threaded into mapStatements' VO build, which is out of scope for this gate.
             collectDesignTermViolations( dc, termViolations );
 
-            // Gate on the same preflight the standalone PUT /design uses: blockers → 400; a change that would delete
-            // differential-expression analyses → 409 unless force (admin). A dry run predicts, so it never 409s.
+            // Gate on the same preflight the standalone PUT /design uses: blockers → 400; a change with
+            // consequences the curator has to agree to → 409 unless force (admin). A dry run predicts, so it
+            // never 409s.
             DesignPreflightReport report = datasetArgService.previewDesignChange( datasetArg, proposed );
             if ( !report.getBlockers().isEmpty() ) {
                 throw new BadRequestException( "The proposed design has validation blockers: " + summarizeDesignBlockers( report ) );
             }
-            if ( !dryRun && !report.getDifferentialExpressionAnalysesToDelete().isEmpty()
-                    && !( force && SecurityUtil.isUserAdmin() ) ) {
-                throw new jakarta.ws.rs.ClientErrorException( "This design change would delete "
-                        + report.getDifferentialExpressionAnalysesToDelete().size()
-                        + " differential-expression analysis/analyses; retry with ?force=true (admin only) to consent.",
+            if ( !dryRun && report.requiresForce() && !( force && SecurityUtil.isUserAdmin() ) ) {
+                throw new jakarta.ws.rs.ClientErrorException( summarizeDesignConsequences( report )
+                        + "; retry with ?force=true (admin only) to consent.",
                         jakarta.ws.rs.core.Response.Status.CONFLICT );
             }
         }
@@ -2441,6 +2711,27 @@ public class DatasetsWebService {
             request.setCurationDetailsNote( cd.getCurationNote() );
         }
 
+        // ── run provenance: name the agent run applying this, if the caller gave one ──
+        // A preflight carries it too so the shape is validated on the dry run, but a dry run mints no row.
+        if ( body.getRun() != null ) {
+            CurationRunRef run = body.getRun();
+            if ( StringUtils.isNotBlank( run.getRunId() ) ) {
+                request.setRunId( run.getRunId().trim() );
+            } else if ( run.getAgentName() != null || run.getModel() != null || run.getRunSha() != null
+                    || run.getAgentVersion() != null || run.getRanAt() != null ) {
+                // Provenance with no run to hang it off cannot be stored and must not be dropped silently — the
+                // caller believes it recorded something. Say so rather than accepting a write that loses it.
+                throw new BadRequestException( "run.runId is required when any other run field is supplied: "
+                        + "the run reference is what a COMMIT annotation set is keyed on." );
+            }
+            request.setRunProvenance( new AnnotationSetService.RunProvenance(
+                    run.getAgentVersion(), run.getModel(), run.getRunSha(), run.getAgentName(),
+                    parseRanAt( run.getRanAt() ) ) );
+            if ( run.getProposalSetId() != null ) {
+                request.setRunParentProposal( requireProposalFor( run.getProposalSetId(), ee ) );
+            }
+        }
+
         // Every new/changed annotation has now been ground-checked; reject the whole commit if any term failed
         // (applies equally to preflight, so a client catches these on the dry run).
         if ( !termViolations.isEmpty() ) {
@@ -2459,6 +2750,17 @@ public class DatasetsWebService {
             throw new jakarta.ws.rs.ClientErrorException( e.getMessage(), jakarta.ws.rs.core.Response.Status.CONFLICT );
         }
         return CurationCommitReport.from( result, request, !dryRun, canonicalizations );
+    }
+
+    /**
+     * Parse a run's {@code ranAt} stamp. Same lenient contract as the baseline token — epoch millis or ISO-8601,
+     * with an unparseable value yielding null rather than failing the commit. Provenance is recorded, not
+     * enforced: refusing a whole curation because a timestamp was formatted oddly would trade a real write for a
+     * cosmetic field.
+     */
+    @Nullable
+    private static java.util.Date parseRanAt( @Nullable String token ) {
+        return parseBaselineToken( token );
     }
 
     /**
@@ -2505,6 +2807,8 @@ public class DatasetsWebService {
         private Section<SampleCharacteristicCommit> sampleCharacteristics;
         @Nullable
         private CurationDetailsCommit curationDetails;
+        @Nullable
+        private CurationRunRef run;
 
         @Nullable
         public CurationBaseline getBaseline() { return baseline; }
@@ -2527,6 +2831,65 @@ public class DatasetsWebService {
         @Nullable
         public CurationDetailsCommit getCurationDetails() { return curationDetails; }
         public void setCurationDetails( @Nullable CurationDetailsCommit n ) { this.curationDetails = n; }
+        @Nullable
+        public CurationRunRef getRun() { return run; }
+        public void setRun( @Nullable CurationRunRef run ) { this.run = run; }
+    }
+
+    /**
+     * Which agent run is applying this commit. Optional, and absent for an ordinary curator commit.
+     * <p>
+     * Keyed on Gemma's own AnnotationSet id, carrying the producing side's run reference as attributes — CAB's
+     * ruling, and the right one: their {@code runId} is a human-authored label in a foreign namespace, it is 1:N
+     * against a commit (one run writes many experiments), and it is not stable under resume.
+     * <p>
+     * Supplying {@code runId} mints a {@code COMMIT} AnnotationSet in the commit's own transaction; omitting it
+     * mints nothing. The other four fields are recorded verbatim and never interpreted. {@code runSha} is not
+     * redundant with {@code model}: behaviour differs between shas at one model, so the model alone does not
+     * identify the build that wrote an annotation.
+     */
+    public static class CurationRunRef {
+        @Nullable
+        private String runId;
+        @Nullable
+        private String agentName;
+        @Nullable
+        private String agentVersion;
+        @Nullable
+        private String model;
+        @Nullable
+        private String runSha;
+        @Nullable
+        private String ranAt;
+        /**
+         * Id of the PROPOSAL annotation set this commit is applying, if it is applying one. Becomes the COMMIT
+         * row's parent, so the trail reads proposal -> decision -> effect. Must belong to this dataset and be a
+         * PROPOSAL.
+         */
+        @Nullable
+        private Long proposalSetId;
+
+        @Nullable
+        public String getRunId() { return runId; }
+        public void setRunId( @Nullable String runId ) { this.runId = runId; }
+        @Nullable
+        public String getAgentName() { return agentName; }
+        public void setAgentName( @Nullable String agentName ) { this.agentName = agentName; }
+        @Nullable
+        public String getAgentVersion() { return agentVersion; }
+        public void setAgentVersion( @Nullable String agentVersion ) { this.agentVersion = agentVersion; }
+        @Nullable
+        public String getModel() { return model; }
+        public void setModel( @Nullable String model ) { this.model = model; }
+        @Nullable
+        public String getRunSha() { return runSha; }
+        public void setRunSha( @Nullable String runSha ) { this.runSha = runSha; }
+        @Nullable
+        public String getRanAt() { return ranAt; }
+        public void setRanAt( @Nullable String ranAt ) { this.ranAt = ranAt; }
+        @Nullable
+        public Long getProposalSetId() { return proposalSetId; }
+        public void setProposalSetId( @Nullable Long proposalSetId ) { this.proposalSetId = proposalSetId; }
     }
 
     public static class CurationBaseline {
@@ -2558,15 +2921,15 @@ public class DatasetsWebService {
     /** Publications section — same identifier shape and set-replace semantics as {@code PUT /publications}. */
     public static class CurationPublications {
         @Nullable
-        private PublicationIdentifier primary;
+        private PublicationEntry primary;
         @Nullable
-        private List<PublicationIdentifier> otherRelevant;
+        private List<PublicationEntry> otherRelevant;
         @Nullable
-        public PublicationIdentifier getPrimary() { return primary; }
-        public void setPrimary( @Nullable PublicationIdentifier primary ) { this.primary = primary; }
+        public PublicationEntry getPrimary() { return primary; }
+        public void setPrimary( @Nullable PublicationEntry primary ) { this.primary = primary; }
         @Nullable
-        public List<PublicationIdentifier> getOtherRelevant() { return otherRelevant; }
-        public void setOtherRelevant( @Nullable List<PublicationIdentifier> otherRelevant ) { this.otherRelevant = otherRelevant; }
+        public List<PublicationEntry> getOtherRelevant() { return otherRelevant; }
+        public void setOtherRelevant( @Nullable List<PublicationEntry> otherRelevant ) { this.otherRelevant = otherRelevant; }
     }
 
     // ── Design section DTOs (mirror CAB's curation_commit.py: DesignCommit / FactorCommit / … ) ──
@@ -2670,6 +3033,19 @@ public class DatasetsWebService {
         private OntologyTermRef predicate;
         @Nullable
         private OntologyTermRef object;
+        /**
+         * Verbatim provenance for this statement — a JSON array of {@code {quote, source, location, …}} items.
+         * Stored and served opaquely; the agents repo owns the schema.
+         * <p>
+         * The statement is the level that matters most for composed patterns, where the operative claim lives in
+         * the triple rather than in the parent factor value: two factor values whose labels are byte-identical
+         * and differ only by a zygosity statement cannot be told apart by evidence hung on the value.
+         * <p>
+         * Null / omitted leaves any evidence already recorded untouched, so a client that does not carry
+         * provenance cannot wipe provenance somebody else recorded.
+         */
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
     }
 
     /** One experiment-level tag (CAB {@code TagCommit}); a statement-shaped tag rides its {@code statements}. */
@@ -2681,6 +3057,13 @@ public class DatasetsWebService {
         @Nullable
         private OntologyTermRef value;
         private Section<StatementCommit> statements = new Section<>();
+        /**
+         * Verbatim provenance for this tag. Same shape and same null = "no change" convention as
+         * {@link StatementCommit#getSupportingEvidence()}. When the tag rides a statement, evidence set on the
+         * statement wins; this is the fallback for a plain category/value tag.
+         */
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
     }
 
     /** One per-sample characteristic (CAB {@code SampleCharacteristicCommit}); the sample is a GSM short name. */
@@ -2693,6 +3076,12 @@ public class DatasetsWebService {
         private OntologyTermRef category;
         @Nullable
         private OntologyTermRef value;
+        /**
+         * Verbatim provenance for this sample characteristic. Same shape and same null = "no change" convention
+         * as {@link StatementCommit#getSupportingEvidence()}.
+         */
+        @Nullable
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
     }
 
     /** curationDetails section. Only {@code curationNote} commits here; the flags go through the ticket layer. */
@@ -2890,6 +3279,7 @@ public class DatasetsWebService {
                 svo.setObject( sc.getObject().getLabel() );
                 svo.setObjectUri( sc.getObject().getUri() );
             }
+            svo.setSupportingEvidence( sc.getSupportingEvidence() );
             out.add( svo );
         }
         // Carry forward untouched current statements — the design apply replaces statements wholesale on a kept FV,
@@ -2931,6 +3321,407 @@ public class DatasetsWebService {
     }
 
     /** GSM accession → biomaterial id for one dataset (no findByAccession exists; index the bioassays). */
+    /**
+     * Mapper for snapshot payloads. Configured to omit nulls so a snapshot records what the dataset has rather
+     * than a wall of empty fields, and to ignore unknown properties on read so a payload taken by an older build
+     * still restores after the document grows a field.
+     */
+    private static final com.fasterxml.jackson.databind.ObjectMapper SNAPSHOT_MAPPER =
+            new com.fasterxml.jackson.databind.ObjectMapper()
+                    .setSerializationInclusion( com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL )
+                    .configure( com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false );
+
+    private static String writeSnapshotPayload( CurationDocument doc ) {
+        try {
+            return SNAPSHOT_MAPPER.writeValueAsString( doc );
+        } catch ( com.fasterxml.jackson.core.JsonProcessingException e ) {
+            throw new IllegalStateException( "Could not serialize the curation snapshot.", e );
+        }
+    }
+
+    /**
+     * Resolve the PROPOSAL annotation set a write claims to be applying, refusing anything that is not this
+     * dataset's proposal.
+     * <p>
+     * Proposed-versus-applied is the distinction the provenance surface rests on, so a COMMIT must not be able to
+     * name a DRAFT or a SNAPSHOT as the thing it applied.
+     */
+    private AnnotationSet requireProposalFor( Long setId, ExpressionExperiment ee ) {
+        AnnotationSet set = annotationSetService.load( setId );
+        if ( set == null ) {
+            throw new NotFoundException( "No annotation set with id " + setId + "." );
+        }
+        if ( set.getInvestigation() == null || !ee.getId().equals( set.getInvestigation().getId() ) ) {
+            throw new NotFoundException( "Annotation set " + setId + " does not belong to dataset " + ee.getId() + "." );
+        }
+        if ( set.getRole() != AnnotationSetRole.PROPOSAL ) {
+            throw new BadRequestException( "Annotation set " + setId + " is a " + set.getRole()
+                    + ", not a PROPOSAL; only a proposal can be recorded as the source of an applied change." );
+        }
+        return set;
+    }
+
+    /**
+     * Record that a proposal was applied, as a COMMIT annotation set parented to it.
+     * <p>
+     * The run reference is copied off the proposal rather than asked for again: the proposal already carries the
+     * run that produced it, and a second copy on the wire is a second chance to disagree with the first.
+     */
+    private void recordAppliedFromProposal( AnnotationSet proposal ) {
+        AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
+                proposal.getInvestigation(), AnnotationSetRole.COMMIT, AnnotationSetSource.AGENT, null,
+                proposal.getRunId(), proposal.getCreatedBy(),
+                new AnnotationSetService.RunProvenance( proposal.getAgentVersion(), proposal.getModel(),
+                        proposal.getRunSha(), proposal.getAgentName(), proposal.getRanAt() ),
+                null, proposal );
+        log.info( "PUT /design: applied AnnotationSet#" + proposal.getId() + " (run " + proposal.getRunId()
+                + "); recorded as COMMIT AnnotationSet#" + attached.getAnnotationSet().getId()
+                + ( attached.isCreated() ? "" : " (already recorded)" ) );
+    }
+
+    /**
+     * Load a SNAPSHOT annotation set and parse its payload back into a {@link CurationDocument}, refusing
+     * anything that is not this dataset's snapshot. A DRAFT or PROPOSAL payload is some other tool's shape;
+     * replaying it as a commit would write whatever happened to parse.
+     */
+    private CurationDocument readSnapshotPayload( Long setId, ExpressionExperiment ee ) {
+        AnnotationSet set = annotationSetService.load( setId );
+        if ( set == null ) {
+            throw new NotFoundException( "No annotation set with id " + setId + "." );
+        }
+        if ( set.getInvestigation() == null || !ee.getId().equals( set.getInvestigation().getId() ) ) {
+            throw new NotFoundException( "Annotation set " + setId + " does not belong to dataset " + ee.getId() + "." );
+        }
+        if ( set.getRole() != AnnotationSetRole.SNAPSHOT ) {
+            throw new BadRequestException( "Annotation set " + setId + " is a " + set.getRole()
+                    + ", not a SNAPSHOT; only a snapshot can be restored." );
+        }
+        if ( StringUtils.isBlank( set.getPayloadJson() ) ) {
+            throw new BadRequestException( "Annotation set " + setId + " has no payload to restore." );
+        }
+        try {
+            return SNAPSHOT_MAPPER.readValue( set.getPayloadJson(), CurationDocument.class );
+        } catch ( com.fasterxml.jackson.core.JsonProcessingException e ) {
+            throw new BadRequestException( "Annotation set " + setId
+                    + " payload is not a CurationDocument: " + e.getOriginalMessage() );
+        }
+    }
+
+    /**
+     * Capture a dataset's current curation as a {@link CurationDocument} — the same shape
+     * {@code PUT /datasets/{id}/curation} accepts.
+     * <p>
+     * The shape is the point. A snapshot that is itself a commit document means "restore" is the commit path
+     * we already have and "compare with the snapshot" is the preflight we already have; neither needs a second
+     * diff implementation that could disagree with the first.
+     * <p>
+     * Every captured entity carries its {@code gemmaId}, so a snapshot replayed against an unchanged structure
+     * updates in place rather than duplicating. Ids that no longer exist at restore time are reconciled by
+     * {@link #reconcileSnapshotForRestore}, not here — a snapshot records what was true, not what to do about it.
+     */
+    private CurationDocument buildCurationSnapshot( ExpressionExperiment ee ) {
+        CurationDocument doc = new CurationDocument();
+
+        CurationBasics basics = new CurationBasics();
+        basics.setName( ee.getName() );
+        basics.setDescription( ee.getDescription() );
+        doc.setBasics( basics );
+
+        ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
+        Map<Long, String> gsmByBmId = new HashMap<>();
+        for ( BioAssay ba : thawed.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm == null || bm.getId() == null ) continue;
+            String name = ba.getAccession() != null && ba.getAccession().getAccession() != null
+                    ? ba.getAccession().getAccession() : ba.getShortName();
+            if ( name != null ) {
+                gsmByBmId.putIfAbsent( bm.getId(), name );
+            }
+        }
+
+        ExperimentalDesignValueObject design = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        if ( design != null ) {
+            Map<Long, List<String>> samplesByFvId = new HashMap<>();
+            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : nullSafe( design.getBioMaterialAssignments() ) ) {
+                String gsm = gsmByBmId.get( a.getBioMaterialId() );
+                if ( gsm == null ) continue;
+                for ( Long fvId : nullSafe( a.getFactorValueIds() ) ) {
+                    samplesByFvId.computeIfAbsent( fvId, k -> new ArrayList<>() ).add( gsm );
+                }
+            }
+            DesignCommit dc = new DesignCommit();
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : nullSafe( design.getExperimentalFactors() ) ) {
+                FactorCommit fc = new FactorCommit();
+                fc.setGemmaId( f.getId() );
+                fc.setName( f.getName() );
+                fc.setDescription( f.getDescription() );
+                fc.setType( f.getType() );
+                fc.setCategory( termRef( f.getCategory() ) );
+                for ( FactorValueBasicValueObject v : nullSafe( f.getValues() ) ) {
+                    FactorValueCommit fvc = new FactorValueCommit();
+                    fvc.setGemmaId( v.getId() );
+                    //noinspection deprecation
+                    fvc.setFreeTextLabel( v.getValue() );
+                    fvc.setBaseline( v.getBaseline() );
+                    fvc.setMeasurement( snapshotMeasurement( v.getMeasurementObject() ) );
+                    // an explicit (possibly empty) list, so a restore re-asserts membership rather than
+                    // leaving whatever the intervening run assigned
+                    fvc.setBiomaterialShortNames( samplesByFvId.getOrDefault( v.getId(), new ArrayList<>() ) );
+                    for ( StatementValueObject s : nullSafe( v.getStatements() ) ) {
+                        StatementCommit sc = new StatementCommit();
+                        sc.setGemmaId( s.getId() );
+                        sc.setCategory( termRef( s.getCategory(), s.getCategoryUri() ) );
+                        sc.setSubject( termRef( s.getSubject(), s.getSubjectUri() ) );
+                        sc.setPredicate( termRef( s.getPredicate(), s.getPredicateUri() ) );
+                        sc.setObject( termRef( s.getObject(), s.getObjectUri() ) );
+                        sc.setSupportingEvidence( s.getSupportingEvidence() );
+                        fvc.getStatements().getItems().add( sc );
+                    }
+                    fc.getFactorValues().getItems().add( fvc );
+                }
+                dc.getFactors().getItems().add( fc );
+            }
+            doc.setDesign( dc );
+        }
+
+        Section<TagCommit> tags = new Section<>();
+        for ( AnnotationValueObject a : experimentLevelTags( ee ) ) {
+            TagCommit tc = new TagCommit();
+            tc.setGemmaId( a.getId() );
+            tc.setCategory( termRef( a.getClassName(), a.getClassUri() ) );
+            tc.setValue( termRef( a.getTermName(), a.getTermUri() ) );
+            tc.setSupportingEvidence( a.getSupportingEvidence() );
+            tags.getItems().add( tc );
+        }
+        doc.setTags( tags );
+
+        Section<SampleCharacteristicCommit> sampleChars = new Section<>();
+        for ( BioAssay ba : thawed.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm == null ) continue;
+            String gsm = gsmByBmId.get( bm.getId() );
+            if ( gsm == null ) continue;
+            for ( AnnotationValueObject a : sampleAnnotationVos( bm ) ) {
+                SampleCharacteristicCommit scc = new SampleCharacteristicCommit();
+                scc.setGemmaId( a.getId() );
+                scc.setBioassayShortName( gsm );
+                scc.setCategory( termRef( a.getClassName(), a.getClassUri() ) );
+                scc.setValue( termRef( a.getTermName(), a.getTermUri() ) );
+                scc.setSupportingEvidence( a.getSupportingEvidence() );
+                sampleChars.getItems().add( scc );
+            }
+        }
+        doc.setSampleCharacteristics( sampleChars );
+
+        if ( ee.getCurationDetails() != null && ee.getCurationDetails().getCurationNote() != null ) {
+            CurationDetailsCommit cd = new CurationDetailsCommit();
+            cd.setCurationNote( ee.getCurationDetails().getCurationNote() );
+            doc.setCurationDetails( cd );
+        }
+        return doc;
+    }
+
+    /**
+     * Turn a captured snapshot into a document that can actually be committed against the dataset as it stands
+     * now. Two reconciliations, both of which exist because a snapshot is replayed after something changed:
+     * <ol>
+     *     <li><b>Vanished ids become creates.</b> An entity whose {@code gemmaId} is gone (an intervening run
+     *         deleted and recreated its factor, say) is re-sent under a {@code clientRef}. The content comes
+     *         back; the identity does not, and cannot — the row it named no longer exists.</li>
+     *     <li><b>Entities absent from the snapshot become deletions.</b> Restoring means "make it look like the
+     *         snapshot", and the commit is declared-delete, so anything added since has to be named in
+     *         {@code deletedIds} or it would silently survive the restore.</li>
+     * </ol>
+     * Consequence worth stating plainly to callers: a restore returns the curation's <em>content</em>, not its
+     * <em>identity</em>. Recreated factor values get fresh ids, and any analysis that survived the intervening
+     * run is cascaded again on the way back.
+     */
+    private void reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee ) {
+        ExperimentalDesignValueObject current = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        Set<Long> liveFactorIds = new HashSet<>();
+        Set<Long> liveFvIds = new HashSet<>();
+        Set<Long> liveStatementIds = new HashSet<>();
+        if ( current != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : nullSafe( current.getExperimentalFactors() ) ) {
+                liveFactorIds.add( f.getId() );
+                for ( FactorValueBasicValueObject v : nullSafe( f.getValues() ) ) {
+                    liveFvIds.add( v.getId() );
+                    for ( StatementValueObject s : nullSafe( v.getStatements() ) ) {
+                        liveStatementIds.add( s.getId() );
+                    }
+                }
+            }
+        }
+
+        int seq = 0;
+        Set<Long> snapshotFactorIds = new HashSet<>();
+        Set<Long> snapshotFvIds = new HashSet<>();
+        Set<Long> snapshotStatementIds = new HashSet<>();
+        if ( snapshot.getDesign() != null ) {
+            for ( FactorCommit fc : nullSafe( snapshot.getDesign().getFactors().getItems() ) ) {
+                if ( fc.getGemmaId() != null && liveFactorIds.contains( fc.getGemmaId() ) ) {
+                    snapshotFactorIds.add( fc.getGemmaId() );
+                } else {
+                    fc.setGemmaId( null );
+                    fc.setClientRef( "restore-f-" + ( seq++ ) );
+                }
+                for ( FactorValueCommit fvc : nullSafe( fc.getFactorValues().getItems() ) ) {
+                    // a factor value cannot keep its id under a factor that is being recreated
+                    if ( fc.getGemmaId() != null && fvc.getGemmaId() != null && liveFvIds.contains( fvc.getGemmaId() ) ) {
+                        snapshotFvIds.add( fvc.getGemmaId() );
+                    } else {
+                        fvc.setGemmaId( null );
+                        fvc.setClientRef( "restore-fv-" + ( seq++ ) );
+                    }
+                    for ( StatementCommit sc : nullSafe( fvc.getStatements().getItems() ) ) {
+                        if ( fvc.getGemmaId() != null && sc.getGemmaId() != null && liveStatementIds.contains( sc.getGemmaId() ) ) {
+                            snapshotStatementIds.add( sc.getGemmaId() );
+                        } else {
+                            sc.setGemmaId( null );
+                            sc.setClientRef( "restore-s-" + ( seq++ ) );
+                        }
+                    }
+                    // statements present now but not in the snapshot were added since: drop them
+                    if ( fvc.getGemmaId() != null ) {
+                        for ( Long liveId : statementIdsOf( current, fvc.getGemmaId() ) ) {
+                            if ( !snapshotStatementIds.contains( liveId ) ) {
+                                fvc.getStatements().getDeletedIds().add( liveId );
+                            }
+                        }
+                    }
+                }
+                // factor values present now but not in the snapshot were added since
+                if ( fc.getGemmaId() != null ) {
+                    for ( Long liveId : factorValueIdsOf( current, fc.getGemmaId() ) ) {
+                        if ( !snapshotFvIds.contains( liveId ) ) {
+                            fc.getFactorValues().getDeletedIds().add( liveId );
+                        }
+                    }
+                }
+            }
+            for ( Long liveId : liveFactorIds ) {
+                if ( !snapshotFactorIds.contains( liveId ) ) {
+                    snapshot.getDesign().getFactors().getDeletedIds().add( liveId );
+                }
+            }
+        }
+
+        reconcileIdSection( snapshot.getTags(), currentTagIds( ee ), "restore-t-" );
+        reconcileIdSection( snapshot.getSampleCharacteristics(), currentSampleCharacteristicIds( ee ), "restore-sc-" );
+    }
+
+    /**
+     * Shared id reconciliation for the two flat, id-addressed sections (tags and sample characteristics):
+     * a snapshot id that no longer resolves is re-sent as a create, and a live id the snapshot never mentioned
+     * is added to {@code deletedIds}.
+     */
+    private static <T extends EntityRef> void reconcileIdSection( @Nullable Section<T> section, Set<Long> liveIds,
+            String clientRefPrefix ) {
+        if ( section == null ) {
+            return;
+        }
+        int seq = 0;
+        Set<Long> kept = new HashSet<>();
+        for ( T item : nullSafe( section.getItems() ) ) {
+            if ( item.getGemmaId() != null && liveIds.contains( item.getGemmaId() ) ) {
+                kept.add( item.getGemmaId() );
+            } else {
+                item.setGemmaId( null );
+                item.setClientRef( clientRefPrefix + ( seq++ ) );
+            }
+        }
+        for ( Long liveId : liveIds ) {
+            if ( !kept.contains( liveId ) ) {
+                section.getDeletedIds().add( liveId );
+            }
+        }
+    }
+
+    /**
+     * The experiment's OWN tags — the rows the commit's {@code tags} section writes.
+     * <p>
+     * {@code getAnnotations} deliberately aggregates three sources: experiment-level tags, experimental-design
+     * tags, and sample-level tags. That is right for a reader and wrong for a snapshot: replaying the aggregate
+     * through the {@code tags} section would re-create every design and sample annotation a second time as an
+     * experiment-level tag. {@code objectClass} is what separates them.
+     */
+    private List<AnnotationValueObject> experimentLevelTags( ExpressionExperiment ee ) {
+        return expressionExperimentService.getAnnotations( ee, true ).stream()
+                .filter( a -> "ExperimentTag".equals( a.getObjectClass() ) )
+                .collect( Collectors.toList() );
+    }
+
+    private Set<Long> currentTagIds( ExpressionExperiment ee ) {
+        return experimentLevelTags( ee ).stream()
+                .map( AnnotationValueObject::getId )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+    }
+
+    private Set<Long> currentSampleCharacteristicIds( ExpressionExperiment ee ) {
+        Set<Long> ids = new HashSet<>();
+        for ( BioAssay ba : expressionExperimentService.thawBioAssays( ee ).getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm == null ) continue;
+            for ( AnnotationValueObject a : sampleAnnotationVos( bm ) ) {
+                if ( a.getId() != null ) {
+                    ids.add( a.getId() );
+                }
+            }
+        }
+        return ids;
+    }
+
+    private static List<Long> factorValueIdsOf( @Nullable ExperimentalDesignValueObject design, Long factorId ) {
+        if ( design == null ) return Collections.emptyList();
+        return nullSafe( design.getExperimentalFactors() ).stream()
+                .filter( f -> factorId.equals( f.getId() ) )
+                .flatMap( f -> nullSafe( f.getValues() ).stream() )
+                .map( FactorValueBasicValueObject::getId )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+    }
+
+    private static List<Long> statementIdsOf( @Nullable ExperimentalDesignValueObject design, Long factorValueId ) {
+        if ( design == null ) return Collections.emptyList();
+        return nullSafe( design.getExperimentalFactors() ).stream()
+                .flatMap( f -> nullSafe( f.getValues() ).stream() )
+                .filter( v -> factorValueId.equals( v.getId() ) )
+                .flatMap( v -> nullSafe( v.getStatements() ).stream() )
+                .map( StatementValueObject::getId )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+    }
+
+    @Nullable
+    private static OntologyTermRef termRef( @Nullable CharacteristicValueObject c ) {
+        return c == null ? null : termRef( c.getCategory(), c.getCategoryUri() );
+    }
+
+    @Nullable
+    private static OntologyTermRef termRef( @Nullable String label, @Nullable String uri ) {
+        if ( label == null && uri == null ) {
+            return null;
+        }
+        OntologyTermRef ref = new OntologyTermRef();
+        ref.setLabel( label );
+        ref.setUri( uri );
+        return ref;
+    }
+
+    @Nullable
+    private static Measurement snapshotMeasurement( @Nullable MeasurementValueObject m ) {
+        if ( m == null || m.getValue() == null ) {
+            return null;
+        }
+        Measurement out = new Measurement();
+        out.setValue( m.getValue() );
+        out.setUnit( m.getUnit() );
+        out.setType( m.getType() );
+        out.setRepresentation( m.getRepresentation() );
+        return out;
+    }
+
     private Map<String, Long> buildGsmToBioMaterialIdIndex( ExpressionExperiment ee ) {
         ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
         Map<String, Long> index = new HashMap<>();
@@ -3002,6 +3793,9 @@ public class DatasetsWebService {
                 s.setObject( sc.getObject().getLabel() );
                 s.setObjectUri( sc.getObject().getUri() );
             }
+            // Evidence on the statement wins; the tag-level field is the fallback for a plain tag.
+            s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence(
+                    sc.getSupportingEvidence() != null ? sc.getSupportingEvidence() : tc.getSupportingEvidence() ) );
             return s;
         }
         if ( tc.getValue() == null || StringUtils.isBlank( tc.getValue().getLabel() ) ) {
@@ -3014,6 +3808,7 @@ public class DatasetsWebService {
         }
         c.setValue( tc.getValue().getLabel() );
         c.setValueUri( tc.getValue().getUri() );
+        c.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( tc.getSupportingEvidence() ) );
         return c;
     }
 
@@ -3110,6 +3905,7 @@ public class DatasetsWebService {
         }
         c.setValue( sc.getValue().getLabel() );
         c.setValueUri( sc.getValue().getUri() );
+        c.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( sc.getSupportingEvidence() ) );
         return c;
     }
 
@@ -3130,6 +3926,28 @@ public class DatasetsWebService {
                 .collect( Collectors.joining( "; " ) );
     }
 
+    /**
+     * Human-readable summary of the consequences a caller is being asked to consent to, for the 409 body. Names
+     * each cause separately rather than collapsing them into a count, because "would delete 2 analyses" and
+     * "would strand 1 subset" call for different curator judgment — and the stranded subset is the one that
+     * survives the change still looking valid.
+     */
+    private static String summarizeDesignConsequences( DesignPreflightReport report ) {
+        List<String> parts = new ArrayList<>();
+        int analyses = report.getDifferentialExpressionAnalysesToDelete().size();
+        if ( analyses > 0 ) {
+            parts.add( "delete " + analyses + " differential-expression analysis/analyses" );
+        }
+        int subsets = report.getSubsetsWithStaleAnchor().size();
+        if ( subsets > 0 ) {
+            parts.add( "leave " + subsets + " subset(s) anchored on factor values that would no longer exist ("
+                    + report.getSubsetsWithStaleAnchor().stream()
+                    .map( s -> s.getName() != null ? s.getName() : String.valueOf( s.getId() ) )
+                    .collect( Collectors.joining( ", " ) ) + ")" );
+        }
+        return "This design change would " + String.join( " and ", parts );
+    }
+
     private static <X> List<X> nullSafe( @Nullable List<X> l ) {
         return l != null ? l : Collections.emptyList();
     }
@@ -3141,15 +3959,23 @@ public class DatasetsWebService {
         private final Map<String, CurationSectionChange> changes;
         private final List<Long> auditEventIds;
         private final List<Canonicalization> canonicalizations;
+        /**
+         * The {@code COMMIT} AnnotationSet minted for this commit's run, or null when no run was named.
+         * Null on a preflight too: a dry run writes nothing, so there is no row to point at.
+         */
+        @Nullable
+        private final Long commitAnnotationSetId;
         private final String error;
 
         private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
-                Map<String, Long> idMap, List<Long> auditEventIds, List<Canonicalization> canonicalizations ) {
+                Map<String, Long> idMap, List<Long> auditEventIds, List<Canonicalization> canonicalizations,
+                @Nullable Long commitAnnotationSetId ) {
             this.applied = applied;
             this.idMap = idMap;
             this.changes = changes;
             this.auditEventIds = auditEventIds;
             this.canonicalizations = canonicalizations;
+            this.commitAnnotationSetId = commitAnnotationSetId;
             this.error = "";
         }
 
@@ -3188,10 +4014,13 @@ public class DatasetsWebService {
             if ( r.getTagsIdMap() != null ) idMap.putAll( r.getTagsIdMap() );
             if ( r.getSampleCharsIdMap() != null ) idMap.putAll( r.getSampleCharsIdMap() );
             List<Long> auditEventIds = r.getDesignAuditEventIds() != null ? r.getDesignAuditEventIds() : Collections.emptyList();
-            return new CurationCommitReport( applied, changes, idMap, auditEventIds, canonicalizations );
+            return new CurationCommitReport( applied, changes, idMap, auditEventIds, canonicalizations,
+                    r.getCommitAnnotationSetId() );
         }
 
         public boolean isApplied() { return applied; }
+        @Nullable
+        public Long getCommitAnnotationSetId() { return commitAnnotationSetId; }
         public Map<String, Long> getIdMap() { return idMap; }
         public Map<String, CurationSectionChange> getChanges() { return changes; }
         public List<Long> getAuditEventIds() { return auditEventIds; }
@@ -5456,10 +6285,7 @@ public class DatasetsWebService {
      */
     @Nullable
     static String serializeEvidence( @Nullable com.fasterxml.jackson.databind.JsonNode evidence ) {
-        if ( evidence == null || evidence.isNull() || evidence.isEmpty() ) {
-            return null;
-        }
-        return evidence.toString();
+        return CharacteristicUtils.serializeSupportingEvidence( evidence );
     }
 
     /**
@@ -6071,19 +6897,18 @@ public class DatasetsWebService {
             // re-check defensively after the cache probe (cheap)
             throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
         }
-        // Kick the build onto the expression-data executor so the cache is populated for the next caller.
-        // Fire-and-forget: the returned Future is not awaited.
-        try {
-            expressionDataFileService.writeOrLocateProcessedDataFileAsync( ee, filtered, force );
-        } catch ( RejectedExecutionException e ) {
-            log.warn( "expressionDataFileTaskExecutor queue is full; streaming without populating cache for " + ee, e );
-        }
-        // Stream in-band so the caller doesn't block on the full matrix build.
+        // One build, two consumers: stream in-band so the caller doesn't block on the full matrix build,
+        // and populate the cache file for the next caller from the SAME pass. This replaces the
+        // fire-and-forget executor build that raced the in-band stream and did the whole matrix —
+        // vector fetch, platform thaw, annotation read — twice per cold request (2026-08-19 baseline:
+        // both builds visible in the DAO thaw warnings, two seconds apart). A caller that disconnects
+        // mid-stream does not abort the cache build, so the cold path still heals behind an impatient
+        // client; a concurrent builder degrades this to a plain stream, as before.
         String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
         return Response.ok( ( StreamingOutput ) output -> {
                     try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
-                        expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, false, false,
-                                false, writer, true );
+                        expressionDataFileService.streamAndWriteProcessedExpressionData( ee, filtered, force,
+                                writer, true );
                     } catch ( NoDesignElementsException ex ) {
                         // streaming has already started; we cannot downgrade to 204, just truncate the body
                         log.warn( "Processed data for " + ee + " is empty after filtering; truncating stream.", ex );
@@ -6153,16 +6978,12 @@ public class DatasetsWebService {
                 throw new InternalServerErrorException( e );
             }
         }
-        // Kick the build onto the expression-data executor so the cache is populated for the next caller.
-        try {
-            expressionDataFileService.writeOrLocateRawExpressionDataFileAsync( ee, qt, force );
-        } catch ( RejectedExecutionException e ) {
-            log.warn( "expressionDataFileTaskExecutor queue is full; streaming without populating cache for " + qt, e );
-        }
+        // One build, two consumers — same tee as the processed endpoint above: the in-band stream and
+        // the cache file are fed from a single pass instead of racing two full builds per cold request.
         String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
         return Response.ok( ( StreamingOutput ) output -> {
                     try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
-                        expressionDataFileService.writeRawExpressionData( ee, qt, null, false, false, false, writer, true );
+                        expressionDataFileService.streamAndWriteRawExpressionData( ee, qt, force, writer, true );
                     }
                 } )
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
@@ -6391,8 +7212,10 @@ public class DatasetsWebService {
      * <p>
      * The same validation pass performed by {@code POST /datasets/{id}/designPreflight} is re-run server-side. If
      * blockers are present, returns 400 with a {@link DesignPreflightReport} payload — fix the body and retry.
-     * If the change would delete one or more differential-expression analyses and {@code force=false}, returns 409
-     * with the report; admins may re-issue the request with {@code ?force=true} to consent to the cascade.
+     * If the change carries consequences needing consent — it would delete differential-expression analyses, or
+     * leave a subset anchored on factor values that no longer exist — and {@code force=false}, returns 409 with
+     * the report; admins may re-issue with {@code ?force=true}. The 409 body is the report itself, so the client
+     * can show the curator exactly which analyses and which subsets they are agreeing to.
      * On success, returns 200 with the freshly-rebuilt design.
      */
     @PUT
@@ -6404,29 +7227,36 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))),
             @ApiResponse(responseCode = "400", description = "The proposed design has validation blockers; see the report in the response body.",
                     content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
-            @ApiResponse(responseCode = "409", description = "The proposed change would delete differential-expression analyses; retry with ?force=true to consent.",
+            @ApiResponse(responseCode = "409", description = "The proposed change would delete differential-expression analyses, or strand a subset on deleted factor values; retry with ?force=true to consent.",
                     content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response replaceDatasetDesign(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Set to true to consent to deleting differential-expression analyses that depend on factors or factor values affected by the change.") @QueryParam("force") @DefaultValue("false") Boolean force,
-            @Parameter(description = "Optional FK to an AgentProposal row driving this apply. Accepted by the endpoint; the link is not yet persisted (AgentProposal entity pending per AGENT_WRITEBACK_RECCE.md). Logged for audit-trail traceability once wired.") @QueryParam("agentProposalId") @Nullable Long agentProposalId,
+            @Parameter(description = "Set to true to consent to the change's consequences: deleting differential-expression analyses that depend on affected factors or factor values, and leaving subsets anchored on factor values that would no longer exist.") @QueryParam("force") @DefaultValue("false") Boolean force,
+            @Parameter(description = "Optional id of the PROPOSAL annotation set driving this apply. On success the apply is recorded as a COMMIT annotation set carrying that proposal's run reference and parented to it, so the trail reads proposal -> decision -> effect. The set must belong to this dataset and must be a PROPOSAL.") @QueryParam("agentProposalId") @Nullable Long agentProposalId,
             ExperimentalDesignValueObject proposed
     ) {
-        // TODO(agent-proposal): once the AgentProposal entity lands (AGENT_WRITEBACK_RECCE.md "The model"),
-        // forward agentProposalId into the emitted DesignChangeEvent so the audit trail links
-        // proposal -> decision -> effect. For now the parameter is accepted (so clients can wire it
-        // immediately) and discarded.
-        if ( agentProposalId != null ) {
-            log.info( "PUT /datasets/" + datasetArg + "/design called with agentProposalId=" + agentProposalId
-                    + "; will be linked into DesignChangeEvent once AgentProposal entity is wired." );
-        }
+        // The AgentProposal entity this parameter was written for never landed under that name — AnnotationSet is
+        // it. So the proposal is validated up front, before anything is applied: naming a set that does not exist,
+        // belongs to another dataset, or is not a PROPOSAL is a client bug, and finding out after the design has
+        // been rewritten helps nobody.
+        AnnotationSet proposal = agentProposalId != null
+                ? requireProposalFor( agentProposalId, datasetArgService.getEntity( datasetArg ) )
+                : null;
+
         ubic.gemma.rest.util.args.DatasetArgService.DesignChangeResult result =
                 datasetArgService.applyDesignChange( datasetArg, proposed, force );
         if ( result.blockingReport != null ) {
             Response.Status status = result.forceRequired ? Response.Status.CONFLICT : Response.Status.BAD_REQUEST;
             return Response.status( status ).entity( respond( result.blockingReport ) ).build();
+        }
+        // Record WHICH run applied this, now that it has. Unlike the composite commit — which mints its COMMIT row
+        // inside its own transaction — the design apply's transaction closed in applyDesignChange, so the row is
+        // written after. The asymmetry only costs the benign direction: a failure here loses the provenance record
+        // of an apply that really happened, and can never leave a row claiming an apply that rolled back.
+        if ( proposal != null ) {
+            recordAppliedFromProposal( proposal );
         }
         return Response.ok( respond( result.updated ) ).build();
     }

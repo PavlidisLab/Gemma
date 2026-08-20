@@ -46,9 +46,6 @@ public class ObjectIdentityRetrievalStrategyImpl implements ObjectIdentityRetrie
         } else {
             oi = new AclObjectIdentity( ( Securable ) domainObject );
         }
-        if ( oi.getType() != null && oi.getType().contains( "UserGroup" ) ) {
-            System.out.println( "OID-FOR " + domainObject.getClass().getName() + " -> " + oi );
-        }
         return oi;
     }
 }

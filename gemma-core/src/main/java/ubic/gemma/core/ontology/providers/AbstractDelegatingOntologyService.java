@@ -144,6 +144,16 @@ public class AbstractDelegatingOntologyService implements OntologyService {
     }
 
     @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferences() {
+        return delegate.getCrossReferences();
+    }
+
+    @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferencesFromSource() {
+        return delegate.getCrossReferencesFromSource();
+    }
+
+    @Override
     public OntologyResource getResource( String uri ) {
         return delegate.getResource( uri );
     }

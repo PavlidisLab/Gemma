@@ -213,6 +213,11 @@ public class OntologyConfig {
         return createOntologyFactory( NeuroBehaviorOntologyService.class, "http://purl.obolibrary.org/obo/NBO_" );
     }
 
+    @Bean
+    public FactoryBean<GenotypeOntologyService> genotypeOntologyService() {
+        return createOntologyFactory( GenotypeOntologyService.class, "http://purl.obolibrary.org/obo/GENO_" );
+    }
+
     /**
      * Extra search strings for MONDO disease terms, not a vocabulary of its own — the URI prefix is
      * MONDO's, which also fences the table to MONDO URIs should the builder ever emit anything else.
@@ -273,6 +278,68 @@ public class OntologyConfig {
             @Value("${gemma.ontology.unified.tdb.dir}") Path tdbDir
     ) {
         return new JenaTextOntologySearchService( tdbDir, enabled );
+    }
+
+    /**
+     * Writes the {@code ONTOLOGY} rows of {@code ANNOTATION_RELATION} — the relations CLO and CHEBI
+     * already assert and nothing has ever read.
+     *
+     * <p>Declared here rather than component-scanned so it lives and dies with the ontologies it reads:
+     * a context with no ontology services has nothing for it to do, and {@code TableMaintenanceUtil}
+     * takes it optionally for exactly that reason.</p>
+     *
+     * <p>The ontologies arrive as the whole list and are matched by name through
+     * {@link ubic.gemma.core.ontology.providers.OntologyServiceResolver}, so the producer holds no
+     * bean-level dependency on any one of them and a disabled ontology is a warning rather than a
+     * startup failure.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.OntologyRelationProducer ontologyRelationProducer(
+            @Autowired(required = false) java.util.List<OntologyService> ontologies,
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager,
+            @Autowired(required = false) ubic.gemma.persistence.service.genome.taxon.TaxonService taxonService,
+            @Autowired(required = false) ubic.gemma.core.ontology.OntologyService ontologyService ) {
+        return new ubic.gemma.core.ontology.relation.OntologyRelationProducerImpl( ontologies, annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ), taxonService,
+                ontologyService );
+    }
+
+    /**
+     * MGI's genotype-to-disease reports as {@code EXTERNAL} relations.
+     *
+     * <p>Declared here beside {@link #ontologyRelationProducer} because it shares the one thing that
+     * makes either work: MONDO, which is what MGI's {@code DOID:} identifiers are translated out of.
+     * It reads no other ontology — the statements themselves come off MGI's download server.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.MgiRelationProducer mgiRelationProducer(
+            @Autowired(required = false) java.util.List<OntologyService> ontologies,
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager,
+            @Autowired(required = false) ubic.gemma.persistence.service.genome.taxon.TaxonService taxonService ) {
+        return new ubic.gemma.core.ontology.relation.MgiRelationProducer( ontologies, annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ),
+                taxonService );
+    }
+
+    /**
+     * Cellosaurus as {@code EXTERNAL} relations — donor disease and derived-from site.
+     *
+     * <p>Beside {@link #mgiRelationProducer} and for the same reason: MONDO is what its {@code NCIt:}
+     * disease identifiers are translated out of. It reads no ontology model otherwise; the statements
+     * come from the cached Cellosaurus artifact the lexical service already downloads.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.CellosaurusRelationProducer cellosaurusRelationProducer(
+            @Autowired(required = false) java.util.List<OntologyService> ontologies,
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager,
+            @Autowired(required = false) ubic.gemma.persistence.service.genome.taxon.TaxonService taxonService ) {
+        return new ubic.gemma.core.ontology.relation.CellosaurusRelationProducer( ontologies,
+                annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ),
+                taxonService );
     }
 
     private <T extends OntologyService> OntologyServiceFactory<T> createOntologyFactory( Class<T> ontologyClass, String... allowedUriPrefixes ) {

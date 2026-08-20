@@ -1,11 +1,15 @@
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.annotations.GemmaRestOnly;
 import ubic.gemma.model.annotations.WithheldFromApi;
 import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -82,6 +86,25 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
     @GemmaRestOnly
     private String objectId;
 
+    /**
+     * Verbatim provenance backing this statement — a JSON array of {@code {quote, source, location, …}} items
+     * the curation agents emitted. Gemma stores and serves it opaquely; the agents repo owns the schema.
+     * <p>
+     * A {@link Statement} is a {@link ubic.gemma.model.common.description.Characteristic}, so the storage
+     * (the {@code SUPPORTING_EVIDENCE} column) has always existed — it was simply never surfaced here, which
+     * left the design read path unable to answer "where did this factor value's term come from" even for rows
+     * that recorded it. Null means "nothing recorded", the expected reading for most rows.
+     * <p>
+     * Provenance rather than identity, so it is excluded from equals/hashCode and from {@link #COMPARATOR}:
+     * the same statement with and without recorded evidence is the same statement, and the comparator's
+     * ordering is relied upon to assign annotation ids.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @EqualsAndHashCode.Exclude
+    @Schema(description = "Verbatim provenance backing this statement — a JSON array of {quote, source, location} items the curation agents emitted. Null when none is recorded.")
+    private JsonNode supportingEvidence;
+
     public StatementValueObject() {
         super();
     }
@@ -90,16 +113,21 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
         super( s );
         this.category = s.getCategory();
         this.categoryUri = s.getCategoryUri();
-        this.subject = s.getSubject();
-        this.subjectUri = s.getSubjectUri();
+        // All three value slots go through the canonicaliser (CharacteristicUtils#canonicalUri),
+        // a read-time stand-in for the parked migration. Predicates and categories deliberately
+        // do NOT: Gemma 1.0 reads categories while it is live, and the predicate vocabulary is
+        // already constrained by Relation.terms.txt, so neither is where duplicates live.
+        this.subjectUri = CharacteristicUtils.canonicalUri( s.getSubjectUri() );
+        this.subject = CharacteristicUtils.canonicalLabel( s.getSubjectUri(), s.getSubject() );
         this.predicate = s.getPredicate();
         this.predicateUri = s.getPredicateUri();
-        this.object = s.getObject();
-        this.objectUri = s.getObjectUri();
+        this.objectUri = CharacteristicUtils.canonicalUri( s.getObjectUri() );
+        this.object = CharacteristicUtils.canonicalLabel( s.getObjectUri(), s.getObject() );
         this.secondPredicate = s.getSecondPredicate();
         this.secondPredicateUri = s.getSecondPredicateUri();
-        this.secondObject = s.getSecondObject();
-        this.secondObjectUri = s.getSecondObjectUri();
+        this.secondObjectUri = CharacteristicUtils.canonicalUri( s.getSecondObjectUri() );
+        this.secondObject = CharacteristicUtils.canonicalLabel( s.getSecondObjectUri(), s.getSecondObject() );
+        this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( s.getSupportingEvidence() );
     }
 
     @Override

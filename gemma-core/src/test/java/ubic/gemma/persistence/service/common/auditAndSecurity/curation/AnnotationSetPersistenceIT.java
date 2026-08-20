@@ -209,7 +209,7 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         annotationSetService.attach(
                 preboarded, AnnotationSetRole.PROPOSAL, AnnotationSetSource.AGENT,
                 AgentCurationKind.PROPOSAL, "run-summary", "agent-1",
-                "1.0", "claude-x", null,
+                new AnnotationSetService.RunProvenance( "1.0", "claude-x", "4d8fdbc", "cell_type", null ),
                 "{\"payload\":\"long enough\"}", null );
         annotationSetService.upsertDraft(
                 preboarded, "alice", "{\"draft\":1}", null, null );
@@ -231,6 +231,11 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         assertEquals( "agent-1", sum.getCreatedBy() );
         assertEquals( "1.0", sum.getAgentVersion() );
         assertEquals( "claude-x", sum.getModel() );
+        // The two fields that identify the run's build and specialist must survive into the thin
+        // projection: the role=commit listing is the "which agent, from which build" query, and it
+        // must not need an N+1 into the full payload endpoint to answer it.
+        assertEquals( "4d8fdbc", sum.getRunSha() );
+        assertEquals( "cell_type", sum.getAgentName() );
         assertEquals( preboarded.getId(), sum.getInvestigationId() );
         assertNotNull( sum.getPayloadSize(),
                 "payloadSize projection should be non-null when payloadJson is non-null" );
@@ -254,5 +259,47 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         assertTrue( byRole.getOrDefault( AnnotationSetRole.PROPOSAL, 0L ) >= 1L );
         assertTrue( byRole.getOrDefault( AnnotationSetRole.DRAFT, 0L ) >= 1L );
         assertTrue( byRole.getOrDefault( AnnotationSetRole.SNAPSHOT, 0L ) >= 1L );
+    }
+
+    @Test
+    @DisplayName("run provenance (sha + agent name) survives a persist/reload")
+    public void runProvenance_roundTrips() {
+        String runId = "run-" + UUID.randomUUID();
+        AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
+                preboarded, AnnotationSetRole.PROPOSAL, AnnotationSetSource.AGENT,
+                AgentCurationKind.PROPOSAL, runId, "agent-1",
+                new AnnotationSetService.RunProvenance( "0.9.0", "claude-sonnet-5", "4d8fdbc", "cell_type", null ),
+                "{\"factors\":[]}", null );
+        assertTrue( attached.isCreated() );
+        Long id = attached.getAnnotationSet().getId();
+        flushAndClear();
+
+        AnnotationSet reloaded = annotationSetService.load( id );
+        assertNotNull( reloaded );
+        // The sha is what identifies the build; the model alone does not, which is why both are stored.
+        assertEquals( "4d8fdbc", reloaded.getRunSha() );
+        assertEquals( "cell_type", reloaded.getAgentName() );
+        assertEquals( "claude-sonnet-5", reloaded.getModel() );
+        assertEquals( "0.9.0", reloaded.getAgentVersion() );
+    }
+
+    @Test
+    @DisplayName("the pre-provenance attach overload still works and leaves the new columns null")
+    public void legacyAttachOverload_leavesRunProvenanceNull() {
+        String runId = "run-" + UUID.randomUUID();
+        AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
+                preboarded, AnnotationSetRole.PROPOSAL, AnnotationSetSource.AGENT,
+                AgentCurationKind.PROPOSAL, runId, "agent-1",
+                "0.8.0", "claude-opus-4-7", null,
+                "{\"factors\":[]}", null );
+        Long id = attached.getAnnotationSet().getId();
+        flushAndClear();
+
+        AnnotationSet reloaded = annotationSetService.load( id );
+        assertNotNull( reloaded );
+        assertEquals( "0.8.0", reloaded.getAgentVersion(), "the old overload still records what it always did" );
+        // Null means "not recorded", never "none" — a producer that predates run provenance says nothing.
+        assertNull( reloaded.getRunSha() );
+        assertNull( reloaded.getAgentName() );
     }
 }

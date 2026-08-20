@@ -100,6 +100,41 @@ public class ExpressionExperimentBibRefFinderTest {
         assertEquals( 38064339, parse( soft ) );
     }
 
+    private static java.util.List<Integer> parseAll( String soft ) throws IOException {
+        return ExpressionExperimentBibRefFinder.parseSeriesPubMedIds( new BufferedReader( new StringReader( soft ) ), "GSE99114" );
+    }
+
+    /**
+     * A series listing two papers has a primary and a follow-up, and the second one has somewhere to
+     * go: the other-relevant slot. The single-id form counted them and warned "a curator should
+     * confirm which is primary", which described work no caller could act on because the id was
+     * already gone by the time the warning was written.
+     */
+    @Test
+    public void testEveryPubMedIdIsReadableNotJustTheFirst() throws IOException {
+        String soft = "^SERIES = GSE99114\n"
+                + "!Series_pubmed_id = 38064339\n"
+                + "!Series_pubmed_id = 30255127\n";
+        assertEquals( java.util.Arrays.asList( 38064339, 30255127 ), parseAll( soft ) );
+        // the single-id form still answers exactly as it did
+        assertEquals( 38064339, parse( soft ) );
+    }
+
+    @Test
+    public void testARepeatedIdIsOnePaper() throws IOException {
+        // GEO does list the same id more than once in a record; that is one paper, not two
+        String soft = "^SERIES = GSE99114\n"
+                + "!Series_pubmed_id = 38064339\n"
+                + "!Series_pubmed_id = 38064339\n";
+        assertEquals( java.util.Collections.singletonList( 38064339 ), parseAll( soft ) );
+    }
+
+    @Test
+    public void testNoPublicationIsAnEmptyListNotAZero() throws IOException {
+        String soft = "^SERIES = GSE99114\n!Series_title = A dataset with no publication\n";
+        assertTrue( parseAll( soft ).isEmpty() );
+    }
+
     @Test
     public void testParseSeriesPubMedIdAbsent() throws IOException {
         // a series with no linked paper (or a bad accession's error page) yields -1

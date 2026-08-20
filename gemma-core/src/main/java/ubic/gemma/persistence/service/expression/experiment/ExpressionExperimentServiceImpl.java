@@ -21,7 +21,10 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
@@ -41,6 +44,11 @@ import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
+import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -56,6 +64,9 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
+import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -90,6 +101,8 @@ public class ExpressionExperimentServiceImpl
     private final ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
+    private AnnotationSetService annotationSetService;
+    @Autowired
     private AuditEventService auditEventService;
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
@@ -107,8 +120,21 @@ public class ExpressionExperimentServiceImpl
     private ExperimentalDesignService experimentalDesignService;
     @Autowired
     private FactorValueService factorValueService;
+    /**
+     * Resolves a curated measurement's unit to a persistent {@link Unit}. {@code Measurement.unit} does not cascade
+     * on a factor-value persist, so a transient one would be silently dropped.
+     */
+    @Autowired
+    private UnitDao unitDao;
     @Autowired
     private OntologyService ontologyService;
+    /**
+     * Keeps the publication assertions in step with the publication links. The two are one record
+     * split across two tables (Gemma 1.32.x shares the database and reads only the links), so every
+     * write to either goes through {@link #updatePublications} and reaches both.
+     */
+    @Autowired
+    private PublicationAssociationService publicationAssociationService;
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
     @Autowired
@@ -1074,6 +1100,12 @@ public class ExpressionExperimentServiceImpl
         if ( hasKeptFactorValueEdits( ee, proposed ) ) {
             return false;
         }
+        // Same blind spot one level up: renaming a kept factor, rewriting its description, or re-terming its
+        // category leaves every structural counter at zero and touches no factor value at all. Without this the
+        // PUT is swallowed and readers keep seeing the old category with nothing to signal otherwise.
+        if ( hasKeptFactorMetadataEdits( ee, proposed ) ) {
+            return false;
+        }
         ExperimentalDesign ed = ee.getExperimentalDesign();
         if ( ed == null ) {
             // current design is null; proposal that introduces any non-null metadata is not a no-op
@@ -1090,10 +1122,48 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
+     * Whether {@code proposed} carries an in-place edit to an existing (kept) <em>factor</em>: its name, its
+     * description, or its category. None of these move a structural counter, and none of them live on a factor
+     * value, so {@link #hasKeptFactorValueEdits} cannot see them either. Mirrors the fields
+     * {@link #updateFactorMetadata} writes and its {@code null = "no change"} convention, including the rule that
+     * a category is only applied when the factor already has one.
+     */
+    private boolean hasKeptFactorMetadataEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null || proposed.getExperimentalFactors() == null ) {
+            return false;
+        }
+        Map<Long, ExperimentalFactor> currentFactorsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            currentFactorsById.put( ef.getId(), ef );
+        }
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+            if ( pf.getId() == null ) continue; // creations are already counted in the summary
+            ExperimentalFactor cur = currentFactorsById.get( pf.getId() );
+            if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
+            if ( pf.getName() != null && !Objects.equals( pf.getName(), cur.getName() ) ) {
+                return true;
+            }
+            if ( pf.getDescription() != null && !Objects.equals( pf.getDescription(), cur.getDescription() ) ) {
+                return true;
+            }
+            if ( pf.getCategory() != null && cur.getCategory() != null
+                    && ( !Objects.equals( pf.getCategory().getCategory(), cur.getCategory().getCategory() )
+                    || !Objects.equals( pf.getCategory().getCategoryUri(), cur.getCategory().getCategoryUri() )
+                    || !Objects.equals( pf.getCategory().getValue(), cur.getCategory().getValue() )
+                    || !Objects.equals( pf.getCategory().getValueUri(), cur.getCategory().getValueUri() ) ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Whether {@code proposed} carries an in-place edit to an existing (kept) factor value that the structural
-     * preflight summary does not count: a baseline-flag change or a deprecated-{@code value} change. Both honour the
-     * {@code null = "no change"} convention used by {@link #applyFactorValueChanges}. Used by
-     * {@link #isNoOpDesignApply} so such edits are not short-circuited away.
+     * preflight summary does not count: a baseline-flag change, a deprecated-{@code value} change, a statement
+     * edit, or a measurement edit on a continuous factor value. All honour the {@code null = "no change"}
+     * convention used by {@link #applyFactorValueChanges}. Used by {@link #isNoOpDesignApply} so such edits are
+     * not short-circuited away.
      */
     private boolean hasKeptFactorValueEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();
@@ -1125,9 +1195,73 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getStatements() != null && statementsChanged( cur, pv.getStatements() ) ) {
                     return true;
                 }
+                // Attaching provenance to an otherwise-unchanged statement leaves the content keys identical, so
+                // statementsChanged cannot see it. Without this an evidence-only write is swallowed exactly the
+                // way a factor description-only write used to be.
+                if ( pv.getStatements() != null && statementEvidenceChanged( cur, pv.getStatements() ) ) {
+                    return true;
+                }
+                // A continuous factor value's measurement is the field its whole meaning rests on; retiming a
+                // timepoint from 7 to 37 days moves no structural counter.
+                if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
+                    return true;
+                }
             }
         }
         return false;
+    }
+
+    /**
+     * Whether any proposed statement carries supporting evidence that differs from what the statement it refers
+     * to already holds. Resolution mirrors {@link #updateFactorValueStatements}: by id when the payload supplies
+     * one, otherwise by content key. A proposed statement matching nothing is a creation, which
+     * {@link #statementsChanged} already counts, so it is not considered here.
+     * <p>
+     * Only non-null proposed evidence is compared, honouring the {@code null = "no change"} convention that
+     * {@link #applyStatementFields} writes under.
+     */
+    private static boolean statementEvidenceChanged( FactorValue cur, List<StatementValueObject> proposed ) {
+        Map<Long, Statement> byId = new HashMap<>();
+        Map<String, Statement> byContent = new HashMap<>();
+        for ( Statement s : cur.getCharacteristics() ) {
+            if ( s.getId() != null ) {
+                byId.put( s.getId(), s );
+            }
+            byContent.putIfAbsent( statementContentKey( s ), s );
+        }
+        for ( StatementValueObject ps : proposed ) {
+            if ( ps.getSupportingEvidence() == null ) {
+                continue;
+            }
+            Statement match = ps.getId() != null ? byId.get( ps.getId() ) : byContent.get( statementContentKey( ps ) );
+            if ( match == null ) {
+                continue; // a creation; statementsChanged covers it
+            }
+            String proposedEvidence = CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() );
+            if ( !Objects.equals( proposedEvidence, match.getSupportingEvidence() ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the proposed measurement differs from the one the factor value currently carries. A factor value
+     * that has no measurement yet and is given one counts as changed. Compares the four fields
+     * {@link #applyMeasurementFields} writes, so a verbatim round-trip stays a no-op.
+     */
+    private static boolean measurementChanged( FactorValue cur, MeasurementValueObject proposed ) {
+        Measurement m = cur.getMeasurement();
+        if ( m == null ) {
+            return true;
+        }
+        String currentUnit = m.getUnit() != null ? m.getUnit().getUnitNameCV() : null;
+        String currentType = m.getType() != null ? m.getType().name() : null;
+        String currentRepresentation = m.getRepresentation() != null ? m.getRepresentation().name() : null;
+        return !Objects.equals( m.getValue(), proposed.getValue() )
+                || !Objects.equals( currentUnit, proposed.getUnit() )
+                || !Objects.equals( currentType, proposed.getType() )
+                || !Objects.equals( currentRepresentation, proposed.getRepresentation() );
     }
 
     /**
@@ -1254,6 +1388,10 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getBaseline() != null ) {
                     existing.setIsBaseline( pv.getBaseline() );
                 }
+                // Measurement on a continuous factor value: same null = "no change" convention.
+                if ( pv.getMeasurementObject() != null ) {
+                    applyMeasurementFields( existing, pv.getMeasurementObject() );
+                }
                 target = existing;
             }
             if ( Boolean.TRUE.equals( pv.getBaseline() ) ) {
@@ -1322,17 +1460,38 @@ public class ExpressionExperimentServiceImpl
             }
         }
         if ( pv.getMeasurementObject() != null ) {
-            ubic.gemma.model.common.measurement.Measurement m = ubic.gemma.model.common.measurement.Measurement.Factory.newInstance();
-            m.setValue( pv.getMeasurementObject().getValue() );
-            if ( pv.getMeasurementObject().getRepresentation() != null ) {
-                m.setRepresentation( ubic.gemma.model.common.quantitationtype.PrimitiveType.valueOf( pv.getMeasurementObject().getRepresentation() ) );
-            }
-            if ( pv.getMeasurementObject().getType() != null ) {
-                m.setType( ubic.gemma.model.common.measurement.MeasurementType.valueOf( pv.getMeasurementObject().getType() ) );
-            }
-            fv.setMeasurement( m );
+            applyMeasurementFields( fv, pv.getMeasurementObject() );
         }
         return factorValueService.create( fv );
+    }
+
+    /**
+     * Write a proposed measurement onto a factor value, creating the {@link Measurement} if the factor value does
+     * not have one yet. Shared by the create and update halves of the design apply so a continuous factor value
+     * carries the same fields however it was reached.
+     * <p>
+     * The unit is resolved through {@link UnitDao} rather than attached transiently: {@code FactorValue.measurement}
+     * cascades on persist but {@code Measurement.unit} does not, so a fresh {@link Unit} would be dropped and the
+     * measurement would land as a bare number. Mirrors {@code EeWriteServiceImpl#findOrCreateUnit}.
+     */
+    private void applyMeasurementFields( FactorValue fv, MeasurementValueObject pm ) {
+        Measurement m = fv.getMeasurement();
+        if ( m == null ) {
+            m = Measurement.Factory.newInstance();
+            fv.setMeasurement( m );
+        }
+        m.setValue( pm.getValue() );
+        if ( pm.getRepresentation() != null ) {
+            m.setRepresentation( PrimitiveType.valueOf( pm.getRepresentation() ) );
+        }
+        if ( pm.getType() != null ) {
+            m.setType( MeasurementType.valueOf( pm.getType() ) );
+        }
+        if ( StringUtils.isNotBlank( pm.getUnit() ) ) {
+            Unit unit = Unit.Factory.newInstance( pm.getUnit() );
+            Unit existing = unitDao.find( unit );
+            m.setUnit( existing != null ? existing : unitDao.create( unit ) );
+        }
     }
 
     private void updateFactorValueStatements( FactorValue existing, FactorValueBasicValueObject pv ) {
@@ -1482,6 +1641,11 @@ public class ExpressionExperimentServiceImpl
         s.setSecondPredicateUri( ps.getSecondPredicateUri() );
         s.setSecondObject( ps.getSecondObject() );
         s.setSecondObjectUri( ps.getSecondObjectUri() );
+        // Supporting evidence follows the same null = "no change" convention as the rest of the payload, so a
+        // client that doesn't carry provenance cannot wipe provenance somebody else recorded.
+        if ( ps.getSupportingEvidence() != null ) {
+            s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
+        }
     }
 
     @Override
@@ -2155,38 +2319,72 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * Replace an EE's primary + other-relevant publications. See the interface javadoc.
-     * <p>
-     * Set-replace: the other-relevant set is cleared and repopulated from {@code otherRelevantPublications}
-     * (skipping any entry that equals the incoming primary, so the primary never doubles as an other-relevant
-     * row), and the primary is set to {@code primaryPublication} (or cleared when null). Persisted through the
-     * inherited {@code update(ee)}, which carries the audit event — matching the legacy
-     * {@code setPrimaryPublication(...) + update(ee)} flow the gemma-web controller and the CLI used.
+     * Replace an EE's primary + other-relevant publications, recording every one as a bare curator
+     * assertion. See the interface javadoc.
      */
     @Override
     @Transactional
     public void updatePublications( ExpressionExperiment ee, BibliographicReference primaryPublication,
             Collection<BibliographicReference> otherRelevantPublications ) {
         Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
+        List<PublicationAssertion> other = new ArrayList<>( otherRelevantPublications.size() );
+        for ( BibliographicReference ref : otherRelevantPublications ) {
+            other.add( new PublicationAssertion( ref, PublicationAssociationSource.CURATOR ) );
+        }
+        // null, not emptyList: this form has no rejection argument, so it is not in a position to say
+        // anything about them and must not clear the ones on record.
+        updatePublications( ee,
+                primaryPublication != null ? new PublicationAssertion( primaryPublication, PublicationAssociationSource.CURATOR ) : null,
+                other, null );
+    }
+
+    /**
+     * Replace an EE's publications and the evidence behind them. See the interface javadoc.
+     * <p>
+     * Set-replace: the other-relevant set is cleared and repopulated from {@code otherRelevantPublications}
+     * (skipping any entry that equals the incoming primary, so the primary never doubles as an other-relevant
+     * row), and the primary is set to {@code primaryPublication} (or cleared when null). Persisted through the
+     * inherited {@code update(ee)}, which carries the audit event — matching the legacy
+     * {@code setPrimaryPublication(...) + update(ee)} flow the gemma-web controller and the CLI used.
+     * <p>
+     * The assertions are reconciled first, on purpose. It is the step that can refuse — a publication
+     * standing rejected by an authority the caller does not outrank throws — and doing it before the
+     * links are touched means the refusal happens with the experiment unmodified rather than relying
+     * on the transaction to undo a half-applied change.
+     */
+    @Override
+    @Transactional
+    public void updatePublications( ExpressionExperiment ee, @Nullable PublicationAssertion primaryPublication,
+            Collection<PublicationAssertion> otherRelevantPublications,
+            @Nullable Collection<PublicationAssertion> rejectedPublications ) {
+        Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
 
         ee = ensureInSession( ee );
 
-        ee.setPrimaryPublication( primaryPublication );
+        BibliographicReference primaryRef = primaryPublication != null ? primaryPublication.getPublication() : null;
 
         Set<BibliographicReference> desiredOther = new HashSet<>();
-        for ( BibliographicReference ref : otherRelevantPublications ) {
-            if ( primaryPublication != null && Objects.equals( ref.getId(), primaryPublication.getId() ) ) {
+        List<PublicationAssertion> otherAssertions = new ArrayList<>();
+        for ( PublicationAssertion a : otherRelevantPublications ) {
+            if ( primaryRef != null && Objects.equals( a.getPublication().getId(), primaryRef.getId() ) ) {
                 continue;
             }
-            desiredOther.add( ref );
+            if ( desiredOther.add( a.getPublication() ) ) {
+                otherAssertions.add( a );
+            }
         }
+
+        publicationAssociationService.reconcile( ee, primaryPublication, otherAssertions, rejectedPublications );
+
+        ee.setPrimaryPublication( primaryRef );
         ee.getOtherRelevantPublications().clear();
         ee.getOtherRelevantPublications().addAll( desiredOther );
 
         update( ee );
         log.info( "updatePublications: " + ee.getShortName() + " (ID=" + ee.getId() + ") primary="
-                + ( primaryPublication != null ? primaryPublication.getId() : "none" )
-                + " otherRelevant=" + desiredOther.size() );
+                + ( primaryRef != null ? primaryRef.getId() : "none" )
+                + " otherRelevant=" + desiredOther.size()
+                + " rejected=" + ( rejectedPublications != null ? String.valueOf( rejectedPublications.size() ) : "untouched" ) );
     }
 
     @Override
@@ -2306,6 +2504,23 @@ public class ExpressionExperimentServiceImpl
             result.setPublicationsDeleted( deleted );
             result.setPublicationsUnchanged( unchanged );
             if ( !dryRun && ( created > 0 || deleted > 0 ) ) {
+                // Through the same reconcile the standalone write path uses, so a commit cannot leave
+                // an ACCEPTED assertion pointing at a link it has just removed. The composite request
+                // carries no evidence, so these are bare curator assertions: a publication the commit
+                // keeps holds on to whatever basis was already recorded for it, and one it adds gets
+                // an assertion with no stated reason.
+                //
+                // Rejections are passed as null -- untouched, not cleared. CurationPublications has no
+                // rejection field, so this section cannot express one, and a section that cannot say a
+                // thing must not be read as denying it. Committing an unrelated edit to a dataset is
+                // not a curator withdrawing a ruling about which paper is not theirs.
+                List<PublicationAssertion> otherAssertions = new ArrayList<>( desiredOther.size() );
+                for ( BibliographicReference ref : desiredOther ) {
+                    otherAssertions.add( new PublicationAssertion( ref, PublicationAssociationSource.CURATOR ) );
+                }
+                publicationAssociationService.reconcile( ee,
+                        primary != null ? new PublicationAssertion( primary, PublicationAssociationSource.CURATOR ) : null,
+                        otherAssertions, null );
                 ee.setPrimaryPublication( primary );
                 ee.getOtherRelevantPublications().clear();
                 ee.getOtherRelevantPublications().addAll( desiredOther );
@@ -2492,6 +2707,23 @@ public class ExpressionExperimentServiceImpl
             }
             log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") applied" );
         }
+        // ── run provenance: record WHICH agent run applied this, if the caller named one ──
+        // Minted here rather than in the web layer so it shares the commit's transaction: if the commit rolls back
+        // there must be no row claiming the run applied anything. Sparse by design — a curator commit names no run
+        // and mints nothing. A no-op commit that DID name a run still mints, so that an absent row means "no run
+        // was named" and never "the run did nothing"; those are different facts and identical bytes otherwise.
+        // The event is deliberately suppressed for COMMIT (see AnnotationSetServiceImpl#ATTACH_AUDIT_WHEN) — the
+        // sections above already emitted the trail entries and already moved lastUpdated.
+        if ( !dryRun && StringUtils.isNotBlank( request.getRunId() ) ) {
+            AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach( ee,
+                    AnnotationSetRole.COMMIT, AnnotationSetSource.AGENT, null,
+                    request.getRunId(), null, request.getRunProvenance(), null, request.getRunParentProposal() );
+            result.setCommitAnnotationSetId( attached.getAnnotationSet().getId() );
+            log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") stamped with run "
+                    + request.getRunId() + " as AnnotationSet#" + attached.getAnnotationSet().getId()
+                    + ( attached.isCreated() ? "" : " (already recorded — this run has committed here before)" ) );
+        }
+
         result.setNewLastUpdated( ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null );
         return result;
     }

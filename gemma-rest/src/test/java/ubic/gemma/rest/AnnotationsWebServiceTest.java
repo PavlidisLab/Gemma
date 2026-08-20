@@ -68,6 +68,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.apache.commons.lang3.concurrent.ConcurrentUtils.constantFuture;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.assertj.core.api.InstanceOfAssertFactories.map;
@@ -102,6 +105,16 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             return mock( OntologyService.class );
         }
 
+        /**
+         * Required by {@code AnnotationsWebService} since the relation endpoints landed; without it
+         * every test here fails on context init rather than on anything it asserts. A mock, because
+         * nothing in this class exercises a relation — {@code AnnotationRelationDaoTest} does.
+         */
+        @Bean
+        public ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService() {
+            return mock( ubic.gemma.persistence.service.common.description.AnnotationRelationService.class );
+        }
+
         @Bean
         public SearchService searchService() {
             return mock( SearchService.class );
@@ -124,7 +137,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
         @Bean
         public DatasetArgService datasetRestService( ExpressionExperimentService service, SearchService searchService ) {
-            return new DatasetArgService( service, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ) );
+            return new DatasetArgService( service, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ),
+                    mock( ubic.gemma.persistence.service.common.description.PublicationAssociationService.class ) );
         }
 
         @Bean
@@ -176,6 +190,9 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     private AnnotationsWebService annotationsWebService;
 
     @Autowired
+    private ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService;
+
+    @Autowired
     private SearchService searchService;
 
     @Autowired
@@ -206,7 +223,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService, geneService );
+        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService, geneService, annotationRelationService );
     }
 
     @Test
@@ -560,17 +577,11 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getParents( eq( Collections.singleton( queried ) ), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( parents );
 
-        ExpressionExperiment ee1 = ExpressionExperiment.Factory.newInstance();
-        ee1.setId( 1L );
-        ExpressionExperiment ee2 = ExpressionExperiment.Factory.newInstance();
-        ee2.setId( 2L );
-        Map<String, Set<ExpressionExperiment>> perUri = new HashMap<>();
-        perUri.put( "http://example.com/parentA", new HashSet<>( Arrays.asList( ee1, ee2 ) ) );
-        perUri.put( "http://example.com/parentB", Collections.singleton( ee1 ) );
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = new HashMap<>();
-        hits.put( ExpressionExperiment.class, perUri );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
-                .thenReturn( hits );
+        Map<String, Long> counts = new HashMap<>();
+        counts.put( "http://example.com/parentA", 2L );
+        counts.put( "http://example.com/parentB", 1L );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( counts );
 
         assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -585,9 +596,9 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                                 .containsEntry( "valueUri", "http://example.com/parentB" )
                                 .containsEntry( "usageCount", 1 ) );
 
-        verify( characteristicService ).findExperimentsByUris(
+        verify( characteristicService ).countExperimentsByUris(
                 argThat( ( Set<String> s ) -> s.containsAll( Arrays.asList( "http://example.com/parentA", "http://example.com/parentB" ) ) ),
-                eq( true ), eq( true ), eq( true ), isNull(), eq( -1 ), eq( false ), eq( false ) );
+                eq( true ), eq( true ), eq( true ), isNull(), eq( Collections.emptySet() ) );
     }
 
     @Test
@@ -600,13 +611,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getChildren( eq( Collections.singleton( queried ) ), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singleton( child ) );
 
-        ExpressionExperiment ee1 = ExpressionExperiment.Factory.newInstance();
-        ee1.setId( 1L );
-        // Two entries with same EE id across different Identifiable classes should still count once.
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = new HashMap<>();
-        hits.put( ExpressionExperiment.class, Collections.singletonMap( "http://example.com/child", Collections.singleton( ee1 ) ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
-                .thenReturn( hits );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.singletonMap( "http://example.com/child", 1L ) );
 
         assertThat( target( "/annotations/children" ).queryParam( "uri", "http://example.com/test" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -628,8 +634,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getTerm( eq( "http://example.com/test" ), anyLong(), any() ) ).thenReturn( queried );
         when( ontologyService.getParents( eq( Collections.singleton( queried ) ), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singleton( parent ) );
-        // findExperimentsByUris returns empty per-class map → usageCount falls back to 0
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        // the tally reports nothing for this URI → usageCount falls back to 0
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
@@ -660,7 +666,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .satisfies( a -> assertThat( a ).containsEntry( "usageCount", null ) );
 
         // No URIs to count → no DB call.
-        verify( characteristicService, never() ).findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() );
+        verify( characteristicService, never() ).countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() );
     }
 
     @Test
@@ -669,14 +675,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
 
-        ExpressionExperiment ee1 = ExpressionExperiment.Factory.newInstance();
-        ee1.setId( 1L );
-        ExpressionExperiment ee2 = ExpressionExperiment.Factory.newInstance();
-        ee2.setId( 2L );
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = new HashMap<>();
-        hits.put( ExpressionExperiment.class, Collections.singletonMap( "http://example.com/diabetes", new HashSet<>( Arrays.asList( ee1, ee2 ) ) ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
-                .thenReturn( hits );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.singletonMap( "http://example.com/diabetes", 2L ) );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -950,6 +950,57 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     /**
+     * The exact tier has the same problem the category promotion had: it is established on the
+     * candidate list and then thrown away by {@code strategy.rank()}, which re-sorts everything on
+     * its own score. Measured on frink 2026-08-16 before the fix, {@code Myelopathy} returned
+     * {@code spinal cord injury} above {@code myelopathy} — the latter matched on its PREFERRED
+     * LABEL and lost anyway, because the former carries far more corpus usage and composite weights
+     * usage. An exact match losing to a lexical neighbour is not a ranking preference, it is the
+     * ranking being wrong.
+     */
+    @Test
+    public void testExactMatchTierSurvivesTheRankingStrategy() throws Exception {
+        // The neighbour reaches the query through a RELATED synonym, so it scores full token
+        // coverage like the exact hit does -- coverage cannot separate them -- and it carries heavy
+        // corpus usage, which is what lets composite put it on top. RELATED is deliberately not an
+        // exact attribution, so only the tier distinguishes these two.
+        CharacteristicValueObject neighbour = new CharacteristicValueObject( "spinal cord injury",
+                "http://purl.obolibrary.org/obo/MONDO_0002542", "disease", null );
+        // The answer: the query IS its label, and it has no corpus usage to trade on.
+        CharacteristicValueObject exact = new CharacteristicValueObject( "myelopathy",
+                "http://purl.obolibrary.org/obo/HP_0002196", "phenotype", null );
+        when( ontologyService.findExperimentsCharacteristicTags( eq( "myelopathy" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Arrays.asList( neighbour, exact ) );
+
+        OntologyTerm neighbourTerm = mock( OntologyTerm.class );
+        when( neighbourTerm.getLabel() ).thenReturn( "spinal cord injury" );
+        when( neighbourTerm.getAnnotations( anyString() ) ).thenReturn( Collections.emptyList() );
+        AnnotationProperty related = mock( AnnotationProperty.class );
+        when( related.getContents() ).thenReturn( "myelopathy" );
+        when( neighbourTerm.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym" ) )
+                .thenReturn( Collections.singletonList( related ) );
+        when( ontologyService.getTerm( eq( "http://purl.obolibrary.org/obo/MONDO_0002542" ), anyLong(), any() ) )
+                .thenReturn( neighbourTerm );
+
+        // Corpus usage for the neighbour only, which is what composite's usage term rewards.
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.singletonMap( "http://purl.obolibrary.org/obo/MONDO_0002542", 60L ) );
+
+        assertThat( target( "/annotations/search" )
+                .queryParam( "query", "myelopathy" )
+                .queryParam( "rank", "composite" )
+                .queryParam( "includeGenes", "false" )
+                .request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .first()
+                .satisfies( top -> assertThat( top )
+                        .as( "an exact label match must not lose to a high-usage token overlap" )
+                        .containsEntry( "valueUri", "http://purl.obolibrary.org/obo/HP_0002196" ) );
+    }
+
+    /**
      * An excluded namespace leaves {@code data} but is REPORTED, not deleted — a gene symbol
      * answered with the disease it causes is the measured failure, and an over-firing rule has to
      * be visible rather than silent.
@@ -1127,14 +1178,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getDefinition( eq( "http://example.com/diabetes" ), anyLong(), any() ) )
                 .thenReturn( "a metabolic disease" );
 
-        ExpressionExperiment ee1 = ExpressionExperiment.Factory.newInstance();
-        ee1.setId( 1L );
-        ExpressionExperiment ee2 = ExpressionExperiment.Factory.newInstance();
-        ee2.setId( 2L );
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = new HashMap<>();
-        hits.put( ExpressionExperiment.class, Collections.singletonMap( "http://example.com/diabetes", new HashSet<>( Arrays.asList( ee1, ee2 ) ) ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
-                .thenReturn( hits );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.singletonMap( "http://example.com/diabetes", 2L ) );
 
         assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/diabetes" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -1148,9 +1193,9 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
         verify( ontologyService ).getTerm( eq( "http://example.com/diabetes" ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getDefinition( eq( "http://example.com/diabetes" ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
-        verify( characteristicService ).findExperimentsByUris(
+        verify( characteristicService ).countExperimentsByUris(
                 eq( Collections.singleton( "http://example.com/diabetes" ) ),
-                eq( true ), eq( true ), eq( true ), isNull(), eq( -1 ), eq( false ), eq( false ) );
+                eq( true ), eq( true ), eq( true ), isNull(), eq( Collections.emptySet() ) );
     }
 
     @Test
@@ -1175,7 +1220,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .thenReturn( Arrays.asList( xrefMesh, xrefUmls ) );
         when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
         when( ontologyService.getVersion( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( "2024-05-29" );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         Response response = target( "/annotations/term" ).queryParam( "uri", "http://example.com/diabetes" ).request().get();
@@ -1200,13 +1245,217 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .containsExactlyInAnyOrder( "MESH:D003920", "UMLS:C0011860" );
     }
 
+    /**
+     * 🛑 Literature citations are withheld from {@code dbXrefs} unless asked for, and always counted.
+     *
+     * <p>Measured on {@code CHEBI_45783 imatinib}: 63 cross-references, of which 51 are {@code pubmed:}
+     * and every identifier that names a record — {@code cas}, {@code drugbank}, {@code drugcentral},
+     * {@code kegg.drug} — appears exactly once. The citations push the clickable ones off any bounded
+     * view, so uib was capping the list client-side and every other consumer would have written the
+     * same rule.</p>
+     *
+     * <p>Counted rather than dropped silently: a caller has to be able to tell "cites nothing" from
+     * "cites fifty-one things you did not ask for".</p>
+     */
+    @Test
+    public void testGetAnnotationTermWithholdsLiteratureCitationsUnlessAsked() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CHEBI_45783";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.getLabel() ).thenReturn( "imatinib" );
+        List<AnnotationProperty> xrefs = new ArrayList<>();
+        for ( String x : Arrays.asList( "drugbank:DB00619", "cas:152459-95-5", "pubmed:22891806",
+                "pubmed:17457302", "doi:10.1021/jm9903837" ) ) {
+            AnnotationProperty ap = mock( AnnotationProperty.class );
+            when( ap.getContents() ).thenReturn( x );
+            xrefs.add( ap );
+        }
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#hasDbXref" ) ).thenReturn( xrefs );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        Response byDefault = target( "/annotations/term" ).queryParam( "uri", uri ).request().get();
+        assertThat( byDefault ).hasStatus( Response.Status.OK );
+        assertThat( byDefault ).entity()
+                .extracting( "data.dbXrefs", list( String.class ) )
+                .as( "the identifiers a curator would click, and nothing else" )
+                .containsExactlyInAnyOrder( "drugbank:DB00619", "cas:152459-95-5" );
+        assertThat( byDefault ).entity()
+                .hasFieldOrPropertyWithValue( "data.citationXrefCount", 3 );
+
+        Response asked = target( "/annotations/term" ).queryParam( "uri", uri )
+                .queryParam( "includeCitationXrefs", "true" ).request().get();
+        assertThat( asked ).entity()
+                .extracting( "data.dbXrefs", list( String.class ) )
+                .hasSize( 5 );
+        assertThat( asked ).entity()
+                .as( "the count reports what there is, whether or not it was returned" )
+                .hasFieldOrPropertyWithValue( "data.citationXrefCount", 3 );
+    }
+
+    /**
+     * The EFO case that motivated the field (uib, 2026-08-16): {@code EFO_0000408 obsolete_disease}
+     * names {@code MONDO_0000001} as its successor, and EFO's OWL carries a label for that class, so
+     * no second lookup is needed.
+     */
+    @Test
+    public void testGetAnnotationTermExposesReplacementForObsoleteTerm() throws TimeoutException {
+        String uri = "http://www.ebi.ac.uk/efo/EFO_0000408";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.getLabel() ).thenReturn( "obsolete_disease" );
+        when( term.isObsolete() ).thenReturn( true );
+        AnnotationProperty replacedBy = mock( AnnotationProperty.class );
+        when( replacedBy.getValueUri() ).thenReturn( "http://purl.obolibrary.org/obo/MONDO_0000001" );
+        when( replacedBy.getContents() ).thenReturn( "disease" );
+        when( term.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0100001" ) ).thenReturn( replacedBy );
+        AnnotationProperty obsoletedIn = mock( AnnotationProperty.class );
+        when( obsoletedIn.getContents() ).thenReturn( "3.88.0" );
+        when( term.getAnnotation( "http://www.ebi.ac.uk/efo/obsoleted_in_version" ) ).thenReturn( obsoletedIn );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getVersion( eq( uri ), anyLong(), any() ) ).thenReturn( "3.92.0" );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.obsolete", true )
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", "http://purl.obolibrary.org/obo/MONDO_0000001" )
+                .hasFieldOrPropertyWithValue( "data.termReplacedByLabel", "disease" )
+                .hasFieldOrPropertyWithValue( "data.obsoletedInVersion", "3.88.0" )
+                .hasFieldOrPropertyWithValue( "data.ontologyVersion", "3.92.0" );
+
+        // the deprecating model had the label, so no successor lookup was needed
+        verify( ontologyService, times( 1 ) ).getTerm( anyString(), anyLong(), any() );
+    }
+
+    /**
+     * Same axiom written as a literal rather than an {@code rdf:resource} — the OBO→OWL conversions
+     * disagree on this, and reading only the resource form empties the field for whole ontologies.
+     * With no in-model label, the successor's label comes from resolving it through the service.
+     */
+    @Test
+    public void testGetAnnotationTermResolvesLiteralReplacementAndItsLabel() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0000021";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.getLabel() ).thenReturn( "obsolete immortal cat cell line cell" );
+        when( term.isObsolete() ).thenReturn( true );
+        AnnotationProperty replacedBy = mock( AnnotationProperty.class );
+        // literal-valued: no value URI, and getContents() hands back the IRI itself, not a label
+        when( replacedBy.getValueUri() ).thenReturn( null );
+        when( replacedBy.getContents() ).thenReturn( "http://purl.obolibrary.org/obo/CLO_0000457" );
+        when( term.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0100001" ) ).thenReturn( replacedBy );
+        OntologyTerm successor = mock( OntologyTerm.class );
+        when( successor.getLabel() ).thenReturn( "immortal cat cell line cell" );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( ontologyService.getTerm( eq( "http://purl.obolibrary.org/obo/CLO_0000457" ), anyLong(), any() ) )
+                .thenReturn( successor );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", "http://purl.obolibrary.org/obo/CLO_0000457" )
+                .hasFieldOrPropertyWithValue( "data.termReplacedByLabel", "immortal cat cell line cell" )
+                // CLO declares no release stamp; null rather than invented
+                .hasFieldOrPropertyWithValue( "data.obsoletedInVersion", null );
+    }
+
+    /** A CURIE-valued literal ({@code CLO:0000457}) is canonicalised, not dropped. */
+    @Test
+    public void testGetAnnotationTermExpandsCurieValuedReplacement() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0000021";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.isObsolete() ).thenReturn( true );
+        AnnotationProperty replacedBy = mock( AnnotationProperty.class );
+        when( replacedBy.getContents() ).thenReturn( "CLO:0000457" );
+        when( term.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0100001" ) ).thenReturn( replacedBy );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", "http://purl.obolibrary.org/obo/CLO_0000457" );
+    }
+
+    /** A term that was split rather than merged names candidates, not a replacement. */
+    @Test
+    public void testGetAnnotationTermExposesConsiderCandidates() throws TimeoutException {
+        String uri = "http://www.ebi.ac.uk/efo/EFO_0000001";
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( uri );
+        when( term.isObsolete() ).thenReturn( true );
+        AnnotationProperty first = mock( AnnotationProperty.class );
+        when( first.getValueUri() ).thenReturn( "http://www.ebi.ac.uk/efo/EFO_0000002" );
+        when( first.getContents() ).thenReturn( "first candidate" );
+        AnnotationProperty second = mock( AnnotationProperty.class );
+        when( second.getValueUri() ).thenReturn( "http://www.ebi.ac.uk/efo/EFO_0000003" );
+        when( term.getAnnotations( "http://www.geneontology.org/formats/oboInOwl#consider" ) )
+                .thenReturn( Arrays.asList( first, second ) );
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( term );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        Response response = target( "/annotations/term" ).queryParam( "uri", uri ).request().get();
+        assertThat( response ).hasStatus( Response.Status.OK );
+        assertThat( response )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", null );
+        assertThat( response )
+                .entity()
+                .extracting( "data.consider", list( Map.class ) )
+                .satisfiesExactlyInAnyOrder(
+                        c -> assertThat( c ).containsEntry( "uri", "http://www.ebi.ac.uk/efo/EFO_0000002" )
+                                .containsEntry( "label", "first candidate" ),
+                        // no label in the model; the URI is the identity, the label is decoration
+                        c -> assertThat( c ).containsEntry( "uri", "http://www.ebi.ac.uk/efo/EFO_0000003" )
+                                .containsEntry( "label", null ) );
+    }
+
+    /**
+     * A live term is never probed for obsolescence axioms — it declares none, and probing would cost a
+     * successor lookup per call for a field that is always null.
+     */
+    @Test
+    public void testGetAnnotationTermSkipsObsolescenceLookupForLiveTerm() throws TimeoutException {
+        OntologyTerm term = mock( OntologyTerm.class );
+        when( term.getUri() ).thenReturn( "http://example.com/diabetes" );
+        when( term.getLabel() ).thenReturn( "diabetes" );
+        when( term.isObsolete() ).thenReturn( false );
+        when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        Response response = target( "/annotations/term" ).queryParam( "uri", "http://example.com/diabetes" ).request().get();
+        assertThat( response ).hasStatus( Response.Status.OK );
+        assertThat( response )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.termReplacedBy", null )
+                .hasFieldOrPropertyWithValue( "data.termReplacedByLabel", null )
+                .hasFieldOrPropertyWithValue( "data.obsoletedInVersion", null );
+        assertThat( response )
+                .entity()
+                .extracting( "data.consider", list( Map.class ) )
+                .isEmpty();
+
+        verify( term, never() ).getAnnotation( anyString() );
+        verify( term, never() ).getAnnotations( "http://www.geneontology.org/formats/oboInOwl#consider" );
+    }
+
     @Test
     public void testGetAnnotationTermReportsZeroWhenNoExperimentsMatch() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
         when( term.getUri() ).thenReturn( "http://example.com/orphan" );
         when( term.getLabel() ).thenReturn( "orphan" );
         when( ontologyService.getTerm( eq( "http://example.com/orphan" ), anyLong(), any() ) ).thenReturn( term );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/orphan" ).request().get() )
@@ -1227,7 +1476,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .entity()
                 .hasFieldOrPropertyWithValue( "data.usageCount", null );
 
-        verify( characteristicService, never() ).findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() );
+        verify( characteristicService, never() ).countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() );
     }
 
     @Test
@@ -1240,7 +1489,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
         verify( ontologyService ).getTerm( eq( "http://example.com/missing" ), anyLong(), any() );
         verifyNoMoreInteractions( ontologyService );
-        verify( characteristicService, never() ).findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() );
+        verify( characteristicService, never() ).countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() );
     }
 
     @Test
@@ -1268,7 +1517,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.SERVICE_UNAVAILABLE )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
 
-        verify( characteristicService, never() ).findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() );
+        verify( characteristicService, never() ).countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() );
     }
 
     @Test
@@ -1305,7 +1554,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                     return Collections.singleton( parent );
                 } );
         // No usage-count contribution needed for this test; mock returns empty.
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" )
@@ -1352,7 +1601,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( parent.getLabel() ).thenReturn( "disease" );
         when( ontologyService.getParents( eq( Collections.singleton( term ) ), eq( true ), eq( true ), anyLong(), any() ) )
                 .thenReturn( Collections.singleton( parent ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/term" ).queryParam( "uri", "http://example.com/diabetes" ).request().get() )
@@ -1381,7 +1630,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         }
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
@@ -1403,7 +1652,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         }
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( raw );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" )
@@ -1455,7 +1704,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getTerm( eq( "http://example.com/diabetes" ), anyLong(), any() ) ).thenReturn( term );
         when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
                 .thenReturn( Collections.emptySet() );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes mellitus" ).request().get() )
@@ -1489,7 +1738,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
         when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
                 .thenReturn( Collections.emptySet() );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "pancreatic cell" ).request().get() )
@@ -1533,7 +1782,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
         when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
                 .thenReturn( Collections.emptySet() );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "ammon horn" ).request().get() )
@@ -1564,7 +1813,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getTerm( anyString(), anyLong(), any() ) ).thenReturn( term );
         when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
                 .thenReturn( Collections.emptySet() );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "alzhei" ).request().get() )
@@ -1594,7 +1843,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( geneService.findByAlias( "haptoglobin" ) ).thenReturn( Collections.emptyList() );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "haptoglobin" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.emptyList() );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "haptoglobin" ).request().get() )
@@ -1624,7 +1873,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( geneService.findByAlias( "tp53" ) ).thenReturn( Collections.singletonList( tp53 ) );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "tp53" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.emptyList() );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "tp53" ).request().get() )
@@ -1662,7 +1911,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( geneService.findByAlias( "il10" ) ).thenReturn( Collections.emptyList() );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "il10" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( ontologyHit ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
         OntologyTerm term = mock( OntologyTerm.class );
         when( term.getUri() ).thenReturn( "http://purl.org/commons/record/ncbi_gene/16153" );
@@ -1699,7 +1948,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( geneService.findByAlias( "HP" ) ).thenReturn( Collections.singletonList( hp ) );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "HP" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.emptyList() );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "HP" ).request().get() )
@@ -1724,7 +1973,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 "age", "http://www.ebi.ac.uk/efo/EFO_0000246", null, null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "age" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( pato, efo ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
         ubic.gemma.model.genome.Gene renbp = mock( ubic.gemma.model.genome.Gene.class );
         when( renbp.getId() ).thenReturn( 19703L );
@@ -1757,7 +2006,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( clo ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
         Map<String, Map<String, Long>> priorByUri = new HashMap<>();
         Map<String, Long> mec2Categories = new HashMap<>();
@@ -1791,7 +2040,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "MEC2" ).request().get() )
@@ -1815,7 +2064,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         CharacteristicValueObject clo = new CharacteristicValueObject( "mec-2 cell", "http://purl.obolibrary.org/obo/CLO_0037182", null, null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC-2" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "MEC-2" ).request().get() )
@@ -1840,7 +2089,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         CharacteristicValueObject unrelated = new CharacteristicValueObject( "mec2-related thing", "http://example.com/x", null, null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "MEC2" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo, unrelated ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" )
@@ -1869,7 +2118,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 "diabetes mellitus", "http://www.ebi.ac.uk/efo/EFO_0000400", null, null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( diabetes ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
@@ -1899,7 +2148,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 "STAT5B related thing", "http://example.com/foo", null, null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "STAT5B" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( incidental ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "STAT5B" ).request().get() )
@@ -1943,7 +2192,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getTerm( eq( "http://example.com/UBERON_0002421" ), anyLong(), any() ) ).thenReturn( term );
         when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
                 .thenReturn( Collections.emptySet() );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "ammon's horn" ).request().get() )
@@ -1991,7 +2240,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 } );
         when( ontologyService.getParents( anySet(), eq( true ), eq( true ), anyLong(), any() ) )
                 .thenReturn( Collections.emptySet() );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" )
@@ -2042,7 +2291,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 "N2a", null, "cell line", "http://purl.obolibrary.org/obo/CLO_0000031" );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "N2a" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( freeText ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "N2a" ).request().get() )
@@ -2069,31 +2318,34 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         verify( ontologyService, never() ).findExperimentsCharacteristicTags( anyString(), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() );
     }
 
+    /**
+     * Counting one experiment once, however many annotation rows or levels carry the term, is now
+     * the database's job — {@code countExperimentsByUris} does it with a {@code count(distinct ...)}
+     * over the union of URI columns, so there is no per-class map left for this layer to collapse.
+     * The dedup itself is pinned by
+     * {@code CharacteristicDaoTest#testCountExperimentsByUrisCountsAnExperimentOnceAcrossColumns},
+     * which exercises it against a real schema; what remains testable here is that the endpoint
+     * asks for exactly the candidate URIs and reports the tally it is handed, unmodified.
+     */
     @Test
-    public void testSearchAnnotationsCollapsesDuplicateEeIdsAcrossClasses() throws SearchException, TimeoutException {
+    public void testSearchAnnotationsReportsTheTallyItIsGiven() throws SearchException, TimeoutException {
         CharacteristicValueObject hit = new CharacteristicValueObject( "diabetes", "http://example.com/diabetes", "disease", "http://example.com/disease" );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "diabetes" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Collections.singletonList( hit ) );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.singletonMap( "http://example.com/diabetes", 1L ) );
 
-        ExpressionExperiment ee1 = ExpressionExperiment.Factory.newInstance();
-        ee1.setId( 1L );
-        ExpressionExperiment ee1Dup = ExpressionExperiment.Factory.newInstance();
-        ee1Dup.setId( 1L );
-        // Same EE id surfaces in two Identifiable buckets; should collapse to a distinct count of 1.
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = new HashMap<>();
-        hits.put( ExpressionExperiment.class, Collections.singletonMap( "http://example.com/diabetes", Collections.singleton( ee1 ) ) );
-        // Use a second concrete Identifiable class for the second bucket key.
-        hits.put( CharacteristicValueObject.class, Collections.singletonMap( "http://example.com/diabetes", Collections.singleton( ee1Dup ) ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
-                .thenReturn( hits );
-
-        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).request().get() )
+        assertThat( target( "/annotations/search" ).queryParam( "query", "diabetes" ).queryParam( "rank", "composite" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .extracting( "data", list( Map.class ) )
                 .hasSize( 1 )
                 .first()
                 .satisfies( a -> assertThat( a ).containsEntry( "usageCount", 1 ) );
+
+        verify( characteristicService ).countExperimentsByUris(
+                eq( Collections.singleton( "http://example.com/diabetes" ) ),
+                eq( true ), eq( true ), eq( true ), isNull(), eq( Collections.emptySet() ) );
     }
 
     @Test
@@ -2107,7 +2359,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         CharacteristicValueObject mike = new CharacteristicValueObject( "mike term", "http://example.com/mike", "cat", null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "stable" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( zeta, mike, alpha ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "stable" ).request().get() )
@@ -2136,7 +2388,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         mixed.add( new CharacteristicValueObject( "CL_2", "http://purl.obolibrary.org/obo/CL_0000002", "cell", null ) );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "myeloid" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( mixed );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" )
@@ -2184,7 +2436,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         }
         when( ontologyService.findExperimentsCharacteristicTags( eq( "scoped" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( mixed );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" )
@@ -2213,7 +2465,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         CharacteristicValueObject clo = new CharacteristicValueObject( "A549 cell", "http://purl.obolibrary.org/obo/CLO_0001601", "cell line", null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "A549" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "A549" ).request().get() )
@@ -2235,7 +2487,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         CharacteristicValueObject clo = new CharacteristicValueObject( "A549 cell", "http://purl.obolibrary.org/obo/CLO_0001601", "cell line", null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "A549 cell" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, clo ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "A549 cell" ).request().get() )
@@ -2258,7 +2510,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         CharacteristicValueObject mondo = new CharacteristicValueObject( "lung cancer", "http://purl.obolibrary.org/obo/MONDO_0008903", "disease", null );
         when( ontologyService.findExperimentsCharacteristicTags( eq( "lung cancer" ), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( Arrays.asList( efo, mondo ) );
-        when( characteristicService.findExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anyInt(), anyBoolean(), anyBoolean() ) )
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
                 .thenReturn( Collections.emptyMap() );
 
         assertThat( target( "/annotations/search" ).queryParam( "query", "lung cancer" ).request().get() )
@@ -2364,4 +2616,141 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
         assertThat( captor.getValue().getSupportingEvidence() ).contains( "\"source\":\"paper\"" );
     }
+    /**
+     * 🛑 The gate reads {@code /relations/implies}. A refuted row arriving there would let the
+     * curation pipeline inhibit or license on a finding that says the opposite of what it appears to
+     * say — MGI reporting that a genotype does NOT model a disease, rendered as an assertion, because
+     * the predicate is stored assertively and the negation lives only in {@code status}.
+     *
+     * <p>{@code includeRefuted} is exposed on {@code /relations} for auditability. This pins the
+     * asymmetry: the parameter must not reach the implies query even when a caller sends it. The two
+     * handlers build their {@code RelationQuery} separately today, and this fails the moment someone
+     * refactors them onto a shared builder — which is the only way this protection would be lost, and
+     * it would be lost silently, since an unrecognized parameter is ignored rather than rejected.</p>
+     */
+    @Test
+    @WithMockUser
+    public void testImpliesRefusesRefutedEvenWhenTheParameterIsSent() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+
+        target( "/annotations/relations/implies" )
+                .queryParam( "from", "http://purl.obolibrary.org/obo/MONDO_0005148" )
+                .queryParam( "includeRefuted", "true" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() )
+                .isNotEmpty()
+                .allSatisfy( q -> assertThat( q.isIncludeRefuted() )
+                        .withFailMessage( "/relations/implies must never ask for refuted rows" )
+                        .isFalse() );
+    }
+
+    /** The other half: on /relations the parameter does reach the query, or it is decorative. */
+    @Test
+    @WithMockUser
+    public void testRelationsHonoursIncludeRefutedWhenAsked() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+
+        target( "/annotations/relations" )
+                .queryParam( "subject", "http://purl.obolibrary.org/obo/MONDO_0005148" )
+                .queryParam( "includeRefuted", "true" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() ).anySatisfy( q -> assertThat( q.isIncludeRefuted() ).isTrue() );
+    }
+
+    /** And it stays off unless asked, so exposing it changed no existing caller's results. */
+    @Test
+    @WithMockUser
+    public void testRelationsExcludesRefutedByDefault() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+
+        target( "/annotations/relations" )
+                .queryParam( "subject", "http://purl.obolibrary.org/obo/MONDO_0005148" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() ).allSatisfy( q -> assertThat( q.isIncludeRefuted() ).isFalse() );
+    }
+
+
+    /**
+     * The canonicalization table has to be reachable by a client that resolves terms before asking
+     * Gemma — cab seeded a two-row local redirect table because ours was not queryable, and two
+     * authorities on one question is the thing this endpoint exists to prevent.
+     */
+    @Test
+    public void testCanonicalUrisAreQueryable() {
+        AnnotationsWebService.CanonicalUriValueObject[] all =
+                annotationsWebService.getCanonicalUris( null ).getData()
+                        .toArray( new AnnotationsWebService.CanonicalUriValueObject[0] );
+        assertThat( all ).as( "an empty table is indistinguishable from a corpus with no duplicates" )
+                .isNotEmpty();
+        for ( AnnotationsWebService.CanonicalUriValueObject v : all ) {
+            assertThat( v.getFromUri() ).isNotBlank();
+            assertThat( v.getToUri() ).isNotBlank();
+            assertThat( v.getToUri() ).as( "a mapping to itself would be a no-op row" )
+                    .isNotEqualTo( v.getFromUri() );
+        }
+    }
+
+    /**
+     * 🛑 The regression guard for the whole point of this endpoint: a twin the CORPUS HAS NEVER
+     * USED must still be answered for.
+     * <p>
+     * CLO_0001199 ('22RV1 cell') has zero annotations in Gemma; its twin CLO_0001200 ('22Rv1 cell')
+     * has 19. A table built from the terms the corpus uses cannot see the zero-usage member at all —
+     * and that is exactly the member cab's Tier-0 synonym table mints out of file order and asks us
+     * about. The first cut of this table was corpus-anchored, this row was missing, and following
+     * our own instruction to generate from it would have regressed the case that prompted it.
+     */
+    @Test
+    public void testCanonicalUrisAnswersForATwinTheCorpusNeverUsed() {
+        assertThat( annotationsWebService.getCanonicalUris( "http://purl.obolibrary.org/obo/CLO_0001199" ).getData() )
+                .as( "a zero-usage twin is invisible to a corpus-anchored table and is precisely "
+                        + "the one an outside resolver mints" )
+                .singleElement()
+                .satisfies( v -> {
+                    assertThat( v.getToUri() ).isEqualTo( "http://purl.obolibrary.org/obo/CLO_0001200" );
+                    assertThat( v.getToLabel() ).isEqualTo( "22Rv1 cell" );
+                } );
+    }
+
+    /**
+     * Every row says which rule decided it, so a consumer can tell an ontology-intrinsic answer
+     * (R3 xref, R4 definition) from one that rests on our curators' spelling habits (R5 usage).
+     */
+    @Test
+    public void testCanonicalUrisCarryTheDecidingRule() {
+        List<AnnotationsWebService.CanonicalUriValueObject> all = annotationsWebService.getCanonicalUris( null ).getData();
+        assertThat( all ).allSatisfy( v -> {
+            assertThat( v.getBasis() ).isNotBlank();
+            assertThat( v.getLane() ).isIn( "malformed", "clo_twin" );
+        } );
+        assertThat( all ).as( "the twin lane is decided by rules, and the rules have to be visible" )
+                .anySatisfy( v -> assertThat( v.getBasis() ).startsWith( "R3" ) )
+                .anySatisfy( v -> assertThat( v.getBasis() ).startsWith( "R5" ) );
+    }
+
+    /** Filtering by URI returns that one row, and an unmapped URI returns none rather than a guess. */
+    @Test
+    public void testCanonicalUrisFilterByUri() {
+        String bareCurie = "CL:0000236";
+        assertThat( annotationsWebService.getCanonicalUris( bareCurie ).getData() )
+                .singleElement()
+                .satisfies( v -> assertThat( v.getToUri() )
+                        .isEqualTo( "http://purl.obolibrary.org/obo/CL_0000236" ) );
+        assertThat( annotationsWebService.getCanonicalUris( "http://purl.obolibrary.org/obo/MONDO_0007254" ).getData() )
+                .as( "absent means no mapping is known, never that the URI is correct" )
+                .isEmpty();
+    }
+
 }

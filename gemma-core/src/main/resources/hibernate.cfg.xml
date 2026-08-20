@@ -62,8 +62,6 @@
         <!-- Common: audit and security -->
         <mapping class="ubic.gemma.model.common.auditAndSecurity.AuditEvent"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.AuditTrail"/>
-        <!-- AuditTrail.hbm.xml retained for <database-object> ON DELETE SET NULL DDL hooks (entity moved to JPA annotations) -->
-        <mapping resource="ubic/gemma/model/common/auditAndSecurity/AuditTrail.hbm.xml"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.Contact"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.Person"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.User"/>
@@ -196,6 +194,8 @@
         <mapping class="ubic.gemma.model.common.description.Keyword"/>
         <mapping class="ubic.gemma.model.common.description.MedicalSubjectHeading"/>
         <mapping class="ubic.gemma.model.common.description.BibliographicReference"/>
+        <mapping class="ubic.gemma.model.common.description.PublicationAssociation"/>
+        <mapping class="ubic.gemma.model.common.description.AnnotationRelation"/>
         <mapping class="ubic.gemma.model.common.description.Characteristic"/>
         <mapping class="ubic.gemma.model.expression.experiment.Statement"/>
         <mapping class="ubic.gemma.model.common.description.DatabaseEntry"/>

@@ -11,6 +11,10 @@ import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.DatasetPublicationValueObject;
+import ubic.gemma.model.common.description.PublicationAssociation;
+import ubic.gemma.model.common.description.PublicationAssociationStatus;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchResult;
@@ -54,14 +58,17 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     private final ArrayDesignService adService;
     private final BioAssayService baService;
     private final OutlierDetectionService outlierDetectionService;
+    private final PublicationAssociationService publicationAssociationService;
 
     @Autowired
-    public DatasetArgService( ExpressionExperimentService service, SearchService searchService, ArrayDesignService adService, BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
+    public DatasetArgService( ExpressionExperimentService service, SearchService searchService, ArrayDesignService adService, BioAssayService baService, OutlierDetectionService outlierDetectionService,
+            PublicationAssociationService publicationAssociationService ) {
         super( service );
         this.searchService = searchService;
         this.adService = adService;
         this.baService = baService;
         this.outlierDetectionService = outlierDetectionService;
+        this.publicationAssociationService = publicationAssociationService;
     }
 
     /**
@@ -356,10 +363,11 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * Validate and apply a proposed design replacement.
      * <p>
      * When the preflight report carries blockers, returns {@link DesignChangeResult#blocked} without
-     * mutating state. When the preflight report has no blockers but predicts differential-expression analyses
-     * to be deleted and {@code force} is false, returns {@link DesignChangeResult#forceRequired} (the cascade
-     * needs explicit consent). Otherwise applies the change and returns {@link DesignChangeResult#ok} with the
-     * fresh design VO.
+     * mutating state. When the preflight report has no blockers but
+     * {@link DesignPreflightReport#requiresForce() requires consent} — it would delete differential-expression
+     * analyses, or strand a subset on deleted factor values — and {@code force} is false, returns
+     * {@link DesignChangeResult#forceRequired}. Otherwise applies the change and returns
+     * {@link DesignChangeResult#ok} with the fresh design VO.
      */
     public DesignChangeResult applyDesignChange( DatasetArg<?> arg, ExperimentalDesignValueObject proposed, boolean force ) {
         if ( proposed == null ) {
@@ -370,7 +378,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         if ( !report.getBlockers().isEmpty() ) {
             return DesignChangeResult.blocked( report );
         }
-        if ( !report.getDifferentialExpressionAnalysesToDelete().isEmpty() && !force ) {
+        if ( report.requiresForce() && !force ) {
             return DesignChangeResult.forceRequired( report );
         }
         DesignApplyOutcome outcome = service.applyDesignChange( ee, proposed );
@@ -492,7 +500,20 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                 .orElseThrow( () -> new NotFoundException( "No preferred quantitation type found for dataset with ID " + datasetArg + "." ) );
     }
 
-    public List<BibliographicReferenceValueObject> getPublications( DatasetArg<?> datasetArg ) {
+    public List<DatasetPublicationValueObject> getPublications( DatasetArg<?> datasetArg ) {
+        return getPublications( datasetArg, false );
+    }
+
+    /**
+     * A dataset's publications, each carrying the evidenced claim that attaches it.
+     *
+     * @param includeRejected also emit the publications that were considered and ruled out for this
+     *                        dataset. Off by default: a rejection is a record of a decision, not a
+     *                        publication of the dataset, and anything listing "the dataset's papers"
+     *                        must not pick them up by accident. Turn it on to see what a publication
+     *                        finder should not re-propose.
+     */
+    public List<DatasetPublicationValueObject> getPublications( DatasetArg<?> datasetArg, boolean includeRejected ) {
         Long eeId = getEntityId( datasetArg );
         if ( eeId == null ) {
             throw new NotFoundException( "Dataset " + datasetArg + " does not exist." );
@@ -503,18 +524,33 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
         BibliographicReference prim_ref = ee.getPrimaryPublication();
         Set<BibliographicReference> other_refs = ee.getOtherRelevantPublications();
-        List<BibliographicReferenceValueObject> out = new ArrayList<>();
+
+        List<BibliographicReference> linked = new ArrayList<>();
         if ( prim_ref != null ) {
-            out.add( new BibliographicReferenceValueObject( prim_ref ) );
+            linked.add( prim_ref );
         }
         for ( BibliographicReference ref : other_refs ) {
-            if ( prim_ref != null && Objects.equals( ref.getId(), prim_ref.getId() ) ) {
-                continue;
+            if ( prim_ref == null || !Objects.equals( ref.getId(), prim_ref.getId() ) ) {
+                linked.add( ref );
             }
-            out.add( new BibliographicReferenceValueObject( ref ) );
         }
 
+        // One query for the whole list rather than one per publication.
+        Map<Long, PublicationAssociation> assertions = publicationAssociationService.findByPublications( ee, linked );
+
+        List<DatasetPublicationValueObject> out = new ArrayList<>();
+        for ( BibliographicReference ref : linked ) {
+            out.add( new DatasetPublicationValueObject( ref, assertions.get( ref.getId() ) ) );
+        }
         out.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
+
+        if ( includeRejected ) {
+            // Appended after the sort, not merged into it: a rejected paper is not one of the
+            // dataset's publications and should not be interleaved with them as though it were.
+            for ( PublicationAssociation pa : publicationAssociationService.findByInvestigation( ee, PublicationAssociationStatus.REJECTED ) ) {
+                out.add( new DatasetPublicationValueObject( pa.getPublication(), pa ) );
+            }
+        }
 
         return out;
     }

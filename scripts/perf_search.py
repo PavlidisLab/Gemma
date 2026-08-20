@@ -23,6 +23,7 @@ Usage:
     scripts/perf_search.py --runs 5 --out perf.md   # write markdown report
     scripts/perf_search.py --base http://localhost:8080 --evict
     scripts/perf_search.py --only annotations,goterms
+    scripts/perf_search.py --only relations   # ANNOTATION_RELATION reads + the search-widening A/B
 
 --evict re-runs /annotations/search/cache/evict (admin) before each query so
 each timing is "warm Lucene, cold response cache" rather than memoised noise.
@@ -94,7 +95,12 @@ def http_get(base: str, path: str, *, token: str | None = None, timeout: float =
     try:
         return elapsed, status, json.loads(raw)
     except Exception:
-        return elapsed, status, raw.decode(errors="replace")[:200]
+        # Not JSON: the data-matrix endpoints stream TSV. Keep the shape (line/byte counts,
+        # which row_count reads) rather than megabytes of matrix; the timing above already
+        # includes reading the full body, which is the number that matters.
+        text = raw.decode(errors="replace")
+        return elapsed, status, {"_text": text[:200],
+                                 "lines": text.count("\n"), "bytes": len(raw)}
 
 
 def http_post(base: str, path: str, *, token: str) -> int:
@@ -211,6 +217,102 @@ def diffex_cases() -> list[Case]:
     ]
 
 
+def vector_cases() -> list[Case]:
+    """
+    Vector retrieval / full data matrices -- Paul's top hotspot priorities (2026-08).
+
+    🛑 These are CACHE-SENSITIVE like nothing else in this file: on 2026-08-18 the ds26
+    matrix went 8.4s cold -> 0.17s warm on consecutive hits. min is the warm path, max is
+    the cold path, and a run against a freshly restarted server measures something different
+    from a run against a warm one -- say which when quoting.
+
+    Fixtures (all public, chosen 2026-08-18 from frink's own listing):
+      26     GSE1611     12 assays x 12,488 vectors -- small; the existing diffex fixture
+      4653   GSE10780   185 assays x 54,675 vectors -- wide microarray (U133+2), ~26 MB TSV
+      11138  GSE60862  1231 assays x 21,986 vectors -- many-sample extreme, ~69 MB TSV
+    Cold single-shot baselines the day they were picked: 8.4s / 57s / 80s. Note the shape:
+    4653 moves 10M values in 57s where 11138 moves 27M in 80s -- time does not track the
+    value count, which is the observation that makes this group worth keeping.
+    """
+    return [
+        Case("vectors-matrix", "ds26 processed (12 assays)",
+             "/rest/v2/datasets/26/data/processed"),
+        Case("vectors-matrix", "ds4653 processed (185 assays, wide)",
+             "/rest/v2/datasets/4653/data/processed"),
+        Case("vectors-matrix", "ds11138 processed (1231 assays)",
+             "/rest/v2/datasets/11138/data/processed"),
+        Case("vectors-matrix", "ds26 raw (12 assays)",
+             "/rest/v2/datasets/26/data/raw"),
+        # The gene-vector read behind expression visualization: one gene across datasets.
+        # 4.6s for 62KB on 2026-08-18 -- per-vector overhead, not payload.
+        Case("vectors-genes", "TP53 x 1 dataset",
+             "/rest/v2/datasets/4653/expressions/genes/7157"),
+        Case("vectors-genes", "TP53 x 4 datasets",
+             "/rest/v2/datasets/4653,4776,19374,34676/expressions/genes/7157"),
+    ]
+
+
+def viz_cases() -> list[Case]:
+    """Visualization backends: per-dataset diagnostics the UI renders directly."""
+    return [
+        Case("viz", "mean-variance ds4653",
+             "/rest/v2/datasets/4653/mean-variance"),
+        Case("viz", "sample-correlation ds4653",
+             "/rest/v2/datasets/4653/sample-correlation"),
+        Case("viz", "svd ds4653",
+             "/rest/v2/datasets/4653/svd"),
+        Case("viz", "pca ds4653+4776",
+             "/rest/v2/datasets/4653,4776/expressions/pca?component=1&limit=100"),
+    ]
+
+
+def relation_cases() -> list[Case]:
+    """
+    ANNOTATION_RELATION reads.
+
+    The claim being tested is that moving the derivation into the maintenance job turned an
+    interactive request into an indexed lookup. That claim is currently unmeasured, and "should be
+    fast" is not a measurement -- these are the cases that would falsify it.
+
+    Four shapes, chosen because each stresses a different part of the read:
+
+    * asserted lookup -- the common path. One indexed seek, no specificity denominator, because a
+      CURATED row has nothing to divide by. Should be the fastest thing here.
+    * background value -- the denominator's worst case. A value carried by hundreds of experiments
+      makes the CORPUS specificity query count over all of them; C57BL/6J is the value that broke
+      the ranking in the first place and it is the right stress case for the counting.
+    * dataset-seeded -- the experiment page. Exercises the `exists` against EE2C that exists
+      precisely so this is one query rather than a round trip to collect the dataset's annotations.
+    * widened search -- the only case that puts the relation read on an already-interactive path.
+      Compare it against the same query with the flag off; the difference IS the feature's cost, and
+      it is the number that decides whether the browse checkboxes can turn this on.
+    """
+    # Chosen because it HAS curated relations. A seed with none times an empty result and
+    # reports it as a win.
+    alz = "http%3A%2F%2Fpurl.obolibrary.org%2Fobo%2FMONDO_0004975"
+    return [
+        Case("relations", "implies (gate, asserted)",
+             f"/rest/v2/annotations/relations/implies?from={alz}&basis=CURATED,ONTOLOGY&limit=100"),
+        Case("relations", "by subject (disease)",
+             f"/rest/v2/annotations/relations?subject={alz}&limit=50"),
+        # Background strain: the specificity denominator has to count every experiment carrying the
+        # value, and this value is carried by a great many of them.
+        Case("relations", "background value C57BL/6J",
+             "/rest/v2/annotations/relations?object=C57BL%2F6J&limit=50"),
+        Case("relations", "dataset-seeded (experiment page)",
+             "/rest/v2/annotations/relations?dataset=27325&limit=50"),
+        # The A/B that matters. Same query twice; the delta is what widening costs.
+        Case("relations", "search, widening OFF",
+             "/rest/v2/search?query=Alzheimer+disease"
+             "&resultTypes=ubic.gemma.model.expression.experiment.ExpressionExperiment&limit=20",
+             expected_nonzero=False),
+        Case("relations", "search, widening ON",
+             "/rest/v2/search?query=Alzheimer+disease"
+             "&resultTypes=ubic.gemma.model.expression.experiment.ExpressionExperiment&limit=20&inferRelations=true",
+             expected_nonzero=False),
+    ]
+
+
 def all_cases(only: set[str] | None) -> list[Case]:
     matrix = {
         "genes":       gene_cases,
@@ -218,6 +320,9 @@ def all_cases(only: set[str] | None) -> list[Case]:
         "goterms":     goterm_cases,
         "datasets":    dataset_cases,
         "diffex":      diffex_cases,
+        "vectors":     vector_cases,
+        "viz":         viz_cases,
+        "relations":   relation_cases,
     }
     if only:
         unknown = only - set(matrix)
@@ -263,6 +368,10 @@ def row_count(body: Any) -> int:
     """Best-effort 'how many results did the server return' for the response."""
     if not isinstance(body, dict):
         return 0
+    # TSV body (data-matrix endpoints): data lines, net of the comment/header preamble.
+    if "_text" in body and "lines" in body:
+        header = sum(1 for ln in body["_text"].splitlines() if ln.startswith("#")) + 1
+        return max(0, int(body["lines"]) - header)
     data = body.get("data")
     if isinstance(data, list):
         return len(data)
@@ -373,7 +482,7 @@ def main() -> int:
     ap.add_argument("--runs", type=int, default=3,
                     help="Number of runs per case (default 3).")
     ap.add_argument("--only", default="",
-                    help="Comma-separated groups to include: genes,annotations,goterms,datasets,diffex.")
+                    help="Comma-separated groups to include: genes,annotations,goterms,datasets,diffex,relations.")
     ap.add_argument("--evict", action="store_true",
                     help="Evict /annotations/search response cache before each annotations probe.")
     ap.add_argument("--anonymous", action="store_true",

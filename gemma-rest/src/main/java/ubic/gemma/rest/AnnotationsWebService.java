@@ -39,11 +39,13 @@ import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.*;
+import ubic.gemma.core.security.util.SecurityUtil;
 import ubic.gemma.core.security.concurrent.DelegatingSecurityContextExecutorService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.core.ontology.lexical.LexicalOntologyTerm;
 import ubic.gemma.core.ontology.lexical.LexicalTermMetadata;
+import ubic.gemma.model.common.description.AnnotationRelationBasis;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -144,6 +146,19 @@ public class AnnotationsWebService {
     private DatasetArgService datasetArgService;
     private TaxonArgService taxonArgService;
     private ubic.gemma.persistence.service.genome.gene.GeneService geneService;
+    /**
+     * Optional: identifies a trial code against ChEMBL when nothing loaded names it. Absent in test
+     * contexts and when {@code gemma.chembl.enabled} is false, in which case the negative evidence
+     * simply carries no external identification.
+     */
+    /**
+     * Injected as a field rather than through the constructor to keep this class's already long
+     * constructor from growing a tenth argument; the same reason the resolvers below are.
+     */
+    @Autowired
+    private ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService;
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.chembl.ChemblCodeResolver chemblCodeResolver;
     @Autowired(required = false)
     private ubic.gemma.persistence.service.association.Gene2GOAssociationService gene2GOAssociationService;
     @Autowired(required = false)
@@ -154,8 +169,49 @@ public class AnnotationsWebService {
 
     private static final String PRIOR_CURATION_CACHE_NAME = "AnnotationsPriorCurationCache";
 
+    /**
+     * Spring-registered cache for per-URI corpus usage counts, keyed by the caller's read scope and
+     * one URI. Unlike the two caches above this one holds a single number per entry rather than a
+     * whole result, which is what lets a typeahead share it: consecutive keystrokes propose
+     * overlapping candidate sets, so only the URIs nobody has asked about yet reach the database.
+     * <p>
+     * Configured in {@code EhcacheConfig#APP_CACHES}, so it is listed and flushable through the
+     * unified {@code /admin/caches} surface.
+     */
+    private static final String USAGE_COUNT_CACHE_NAME = "AnnotationsUsageCountCache";
+
     private volatile org.springframework.cache.Cache stringPriorCache;
     private volatile org.springframework.cache.Cache priorCurationCache;
+    private volatile org.springframework.cache.Cache usageCountCache;
+
+    private org.springframework.cache.Cache usageCountCache() {
+        org.springframework.cache.Cache c = usageCountCache;
+        if ( c == null && cacheManager != null ) {
+            c = cacheManager.getCache( USAGE_COUNT_CACHE_NAME );
+            usageCountCache = c;
+        }
+        return c;
+    }
+
+    /**
+     * Identify the set of experiments the caller may read, for use as a cache-key prefix.
+     * <p>
+     * Anonymous and admin are each one shared scope — every anonymous caller sees the public corpus,
+     * every admin sees all of it. A logged-in non-admin gets their own, because what they may read
+     * is the union of public data, what they own and what has been granted to them or their groups,
+     * and no two curators need share that. Getting this wrong in the sharing direction would serve
+     * one curator a count computed over another's unpublished data, so the default when the identity
+     * is not recognisable is a scope of its own rather than a shared one.
+     */
+    private static String readScopeKey() {
+        if ( SecurityUtil.isUserAnonymous() ) {
+            return "anon";
+        }
+        if ( SecurityUtil.isUserAdmin() ) {
+            return "admin";
+        }
+        return "u:" + SecurityUtil.getCurrentUsername();
+    }
 
     private org.springframework.cache.Cache priorCurationCache() {
         org.springframework.cache.Cache c = priorCurationCache;
@@ -351,16 +407,124 @@ public class AnnotationsWebService {
     /**
      * Look up an ontology term by its URI.
      */
+    /**
+     * Every URI Gemma resolves to a different one on read, so a caller can hold the same answer
+     * we do instead of a hand-copied subset of it.
+     */
+    @GET
+    @Path("/canonicalUris")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "List the term URIs Gemma resolves to a different URI",
+            description = "Gemma stores some annotations under a URI it does not report: a malformed identifier "
+                    + "(a bare CURIE, an OBO IRI punctuated with a colon, an id concatenated with itself), or one "
+                    + "of two live Cell Line Ontology classes describing a single cell line. Reads are resolved "
+                    + "through this table, so `/datasets/{id}/annotations` already returns the canonical term; "
+                    + "this endpoint exposes the table itself for clients that resolve terms before asking Gemma "
+                    + "— a local synonym table cannot be corrected by a server-side change.\n\n"
+                    + "**Scope.** Groups are anchored on the ontology, not on this corpus, so a twin the corpus "
+                    + "has never used still gets an answer — which matters because a client-side synonym table "
+                    + "mints exactly those. 49 of the rows here migrate nothing and exist only for callers like "
+                    + "you. It is NOT a complete duplicate list for any ontology: CLO has 262 label-collision "
+                    + "groups and the rules decide 63 of them. An absent URI means *no mapping is known*, never "
+                    + "*this URI is correct*.\n\n"
+                    + "**Check `basis` before you trust a row.** `R3`/`R4` are ontology-intrinsic (an external "
+                    + "cross-reference, or a definition one twin has and the other lacks). `R5` means the only "
+                    + "thing separating the twins was corpus usage, which is our evidence and not a property of "
+                    + "the ontology.\n\n"
+                    + "**Provisional.** These rows stand in for a database migration that is written and not yet "
+                    + "applied; when it runs this list becomes empty, and an empty list is the finished state, "
+                    + "not a failure.",
+            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+    public ResponseDataObject<List<CanonicalUriValueObject>> getCanonicalUris(
+            @Parameter(description = "Only return the mapping for this URI, if one exists.")
+            @QueryParam("uri") @Nullable String uri ) {
+        List<CanonicalUriValueObject> out = new ArrayList<>();
+        for ( Map.Entry<String, String[]> e : CharacteristicUtils.getUriMigrations().entrySet() ) {
+            if ( uri != null && !uri.equals( e.getKey() ) ) {
+                continue;
+            }
+            String[] v = e.getValue();
+            out.add( new CanonicalUriValueObject( e.getKey(), v[0], v[1],
+                    v.length > 2 ? v[2] : null, v.length > 3 ? v[3] : null ) );
+        }
+        out.sort( Comparator.comparing( CanonicalUriValueObject::getFromUri ) );
+        return respond( out );
+    }
+
+    /** One row of the canonicalization table: the URI as stored, and the URI Gemma reports instead. */
+    @Schema(name = "CanonicalUriValueObject")
+    public static class CanonicalUriValueObject {
+        private final String fromUri;
+        private final String toUri;
+        private final String toLabel;
+        private final String basis;
+        private final String lane;
+
+        public CanonicalUriValueObject( String fromUri, String toUri, String toLabel,
+                @Nullable String basis, @Nullable String lane ) {
+            this.fromUri = fromUri;
+            this.toUri = toUri;
+            this.toLabel = toLabel;
+            this.basis = basis;
+            this.lane = lane;
+        }
+
+        /** The URI as stored on the annotation. */
+        public String getFromUri() {
+            return fromUri;
+        }
+
+        /** The URI Gemma reports for it. */
+        public String getToUri() {
+            return toUri;
+        }
+
+        /** The label that goes with {@link #getToUri()}; it moves with the URI. */
+        public String getToLabel() {
+            return toLabel;
+        }
+
+        /**
+         * Why this row decides the way it does &mdash; the rule that picked the winner.
+         * <p>
+         * Read it before trusting a row. {@code R3}/{@code R4} are ontology-intrinsic: an outside
+         * ontology cross-references the winner, or the winner carries a definition and its twin does
+         * not. {@code R5} means the twins were separated by nothing but how often our curators typed
+         * each spelling, and it only fires when the winner has at least two annotations and leads by
+         * at least two &mdash; a one-annotation margin is one curator, once.
+         */
+        @Nullable
+        public String getBasis() {
+            return basis;
+        }
+
+        /**
+         * {@code malformed} (the stored URI is wrong on its face) or {@code clo_twin} (two live Cell
+         * Line Ontology classes for one cell line).
+         */
+        @Nullable
+        public String getLane() {
+            return lane;
+        }
+    }
+
     @GET
     @Path("/term")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve an ontology term by its URI", responses = {
+    @Operation(summary = "Retrieve an ontology term by its URI",
+            description = "For a term the ontology has deprecated (`obsolete: true`), the response also carries where to go next: `termReplacedBy` (the successor's full IRI, `IAO:0100001`) with `termReplacedByLabel`, the weaker `consider` candidates, and `obsoletedInVersion`. These are absent/empty for live terms.",
+            responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             @ApiResponse(responseCode = "503", description = "Ontology lookup timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<OntologyTermValueObject> getAnnotationTerm(
-            @Parameter(description = "Term URI") @QueryParam("uri") String termUri ) {
+            @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
+            @Parameter(description = "Include literature citations (pubmed, doi, …) among the cross-references. "
+                    + "Off by default: they are provenance for the definition rather than records about the "
+                    + "term, and on a CHEBI compound they outnumber the resolvable identifiers 51 to 12. "
+                    + "citationXrefCount always reports how many there are either way.")
+            @QueryParam("includeCitationXrefs") @DefaultValue("false") boolean includeCitationXrefs ) {
         if ( StringUtils.isBlank( termUri ) ) {
             throw new BadRequestException( "The 'uri' parameter must not be blank." );
         }
@@ -391,11 +555,41 @@ public class AnnotationsWebService {
             List<String> alternativeIds = term.getAlternativeIds() != null
                     ? new ArrayList<>( term.getAlternativeIds() )
                     : Collections.emptyList();
-            List<String> dbXrefs = collectDbXrefs( term );
+            List<String> allXrefs = collectDbXrefs( term );
+            int citationXrefCount = ( int ) allXrefs.stream().filter( AnnotationsWebService::isCitationXref ).count();
+            List<String> dbXrefs = includeCitationXrefs
+                    ? allXrefs
+                    : allXrefs.stream().filter( x -> !isCitationXref( x ) ).collect( Collectors.toList() );
             String ontologyVersion = term.getUri() != null
                     ? ontologyService.getVersion( term.getUri(), Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS )
                     : null;
-            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, ontologyVersion, sourceMetadataOf( term ) ) );
+            // Where the ontology says to go next. Read only for terms it has actually deprecated: a
+            // live term declares none of these, so probing it would buy a successor lookup per call
+            // for a field that is always null.
+            String termReplacedBy = null;
+            String termReplacedByLabel = null;
+            List<OntologyTermSimpleValueObject> consider = Collections.emptyList();
+            String obsoletedInVersion = null;
+            if ( term.isObsolete() ) {
+                AnnotationProperty replacedBy = term.getAnnotation( IAO_TERM_REPLACED_BY );
+                if ( replacedBy != null ) {
+                    termReplacedBy = valueIriOf( replacedBy );
+                    termReplacedByLabel = valueLabelOf( replacedBy, termReplacedBy );
+                }
+                consider = termsNamedBy( term, OBO_CONSIDER );
+                obsoletedInVersion = literalAnnotationOf( term, EFO_OBSOLETED_IN_VERSION );
+                if ( termReplacedBy != null && termReplacedByLabel == null ) {
+                    // The successor routinely crosses ontologies — EFO_0000408 → MONDO_0000001 — so
+                    // the deprecating model may carry the IRI without a label for it. Resolve through
+                    // the service, which sees every loaded ontology. Null label if none of them has it.
+                    OntologyTerm successor = ontologyService.getTerm( termReplacedBy,
+                            Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+                    if ( successor != null ) {
+                        termReplacedByLabel = successor.getLabel();
+                    }
+                }
+            }
+            return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, citationXrefCount, ontologyVersion, sourceMetadataOf( term ), termReplacedBy, termReplacedByLabel, consider, obsoletedInVersion ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
@@ -418,7 +612,13 @@ public class AnnotationsWebService {
                     List<String> prefs = label != null
                             ? prefixesByKey.getOrDefault( categoryKey( label ), Collections.emptyList() )
                             : Collections.emptyList();
-                    return new AnnotationCategoryValueObject( t.getUri(), label, prefs );
+                    // resolved, not read straight off the map, so the wildcard denial and any
+                    // per-category opt-out are already folded in -- a client sees what the server
+                    // will actually enforce, not the raw config.
+                    List<String> excluded = label != null
+                            ? resolveCategoryExcludedPrefixes( label )
+                            : Collections.emptyList();
+                    return new AnnotationCategoryValueObject( t.getUri(), label, prefs, excluded );
                 } )
                 .collect( Collectors.toList() );
         return respond( vos );
@@ -444,6 +644,13 @@ public class AnnotationsWebService {
      * property may be written in whichever spelling reads best ({@code cellLine}, {@code cell line},
      * {@code cell_line}) and still meets every spelling a caller sends.
      */
+    /**
+     * Exclusion-table key meaning "every category". Only meaningful in
+     * {@code annotation.category.excludedPrefixes}; a category opts back out by naming the prefix in
+     * its {@code annotation.category.prefixes} list.
+     */
+    static final String WILDCARD_KEY = "*";
+
     static Map<String, List<String>> parseCategoryPrefixProperty( @Nullable String raw ) {
         Map<String, List<String>> out = new LinkedHashMap<>();
         if ( raw != null && !raw.trim().isEmpty() ) {
@@ -452,7 +659,10 @@ public class AnnotationsWebService {
                 if ( e.isEmpty() ) continue;
                 int colon = e.indexOf( ':' );
                 if ( colon <= 0 ) continue;
-                String key = categoryKey( e.substring( 0, colon ).trim() );
+                String rawKey = e.substring( 0, colon ).trim();
+                // `*` is a key, not a category, so it must skip the fold -- categoryKey strips every
+                // non-alphanumeric and would collapse it to "".
+                String key = WILDCARD_KEY.equals( rawKey ) ? WILDCARD_KEY : categoryKey( rawKey );
                 String prefixList = e.substring( colon + 1 );
                 List<String> prefixes = new ArrayList<>();
                 for ( String p : prefixList.split( "," ) ) {
@@ -539,7 +749,7 @@ public class AnnotationsWebService {
      * Namespaces that are categorically impossible for a caller-supplied {@code category}.
      * Empty when nothing is configured, which is the default for every category.
      */
-    private List<String> resolveCategoryExcludedPrefixes( @Nullable String category ) {
+    List<String> resolveCategoryExcludedPrefixes( @Nullable String category ) {
         if ( category == null || category.trim().isEmpty() ) {
             return Collections.emptyList();
         }
@@ -548,7 +758,23 @@ public class AnnotationsWebService {
             cached = parseCategoryPrefixProperty( categoryExcludedPrefixesRaw );
             categoryExcludedPrefixesByKey = cached;
         }
-        return cached.getOrDefault( categoryKey( resolveCategoryLabel( category ) ), Collections.emptyList() );
+        String label = resolveCategoryLabel( category );
+        List<String> wildcard = cached.getOrDefault( WILDCARD_KEY, Collections.emptyList() );
+        List<String> specific = cached.getOrDefault( categoryKey( label ), Collections.emptyList() );
+        if ( wildcard.isEmpty() ) {
+            return specific;
+        }
+        // A category opts out of a wildcard denial by PREFERRING that namespace. Without this the
+        // only way to say "GO is impossible everywhere except biological process" would be to list
+        // every other category by hand, which silently fails open the day a category is added.
+        List<String> preferred = resolveCategoryPreferredPrefixes( label );
+        List<String> out = new ArrayList<>( specific );
+        for ( String p : wildcard ) {
+            if ( !preferred.contains( p ) && !out.contains( p ) ) {
+                out.add( p );
+            }
+        }
+        return out;
     }
 
     /**
@@ -565,6 +791,434 @@ public class AnnotationsWebService {
                 .map( p -> new OntologyTermSimpleValueObject( p.getUri(), p.getLabel() ) )
                 .collect( Collectors.toList() );
         return respond( vos );
+    }
+
+    /**
+     * Relations Gemma knows between annotation terms, with the basis for each.
+     *
+     * <p>Generic on purpose. "Which genotypes stand for Leigh syndrome?" and "which anatomical part
+     * does this cell line come from?" are the same query with different terms in it, so there is one
+     * endpoint rather than one per relation kind.</p>
+     *
+     * <p>Ask it from either end. {@code subject} and {@code object} both accept a term, and the row
+     * means the same thing whichever end seeded it.</p>
+     */
+    @GET
+    @Path("/relations")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve relations between annotation terms, with the basis for each",
+            description = "Answers what Gemma knows about how two annotation terms relate: a genotype "
+                    + "and the disease it stands for, a cell line and the tissue it came from, and so on. "
+                    + "Every row reports its BASIS -- CURATED (a curator wrote the statement), ONTOLOGY (a "
+                    + "loaded ontology asserts it), EXTERNAL (a third-party resource), or CORPUS (attested "
+                    + "only by co-occurrence in our own curation). An assertion outranks an attestation, and "
+                    + "a CORPUS-only row is reported as uncorroborated. Nothing here is an annotation: these "
+                    + "are derived facts, and none of them has been written onto any experiment.",
+            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+    public ResponseDataObject<List<AnnotationRelationValueObject>> getAnnotationRelations(
+            @Parameter(description = "Term on the subject side, as a URI or a plain value.") @QueryParam("subject") @Nullable String subject,
+            @Parameter(description = "Term on the object side, as a URI or a plain value.") @QueryParam("object") @Nullable String object,
+            @Parameter(description = "Restrict to these predicate URIs; omit for any.") @QueryParam("predicate") @Nullable String predicate,
+            @Parameter(description = "Restrict the subject side to these category URIs, e.g. "
+                    + "EFO_0000408 (disease) or TGEMO_00101 (disease model). Useful with 'dataset', where "
+                    + "the seed is every annotation the dataset carries and structural terms -- roles, "
+                    + "doses, units -- are terms like any other.") @QueryParam("subjectCategory") @Nullable String subjectCategory,
+            @Parameter(description = "Restrict the object side to these category URIs. Note that a curated "
+                    + "statement has ONE category and it belongs to the subject, so object categories are "
+                    + "populated only for relations produced from an ontology.") @QueryParam("objectCategory") @Nullable String objectCategory,
+            @Parameter(description = "Restrict to these bases: CURATED, ONTOLOGY, EXTERNAL, CORPUS.") @QueryParam("basis") @Nullable String basis,
+            @Parameter(description = "Seed from every annotation a dataset carries, by dataset id, instead "
+                    + "of naming a term. This is the experiment-page question: what do this dataset's own "
+                    + "annotations stand for? The dataset is held out of its own evidence automatically.") @QueryParam("dataset") @Nullable Long datasetId,
+            @Parameter(description = "Which side a 'dataset' seed is matched on: SUBJECT_TO_OBJECT reads "
+                    + "the dataset's terms as subjects, OBJECT_TO_SUBJECT as objects. A curated statement "
+                    + "puts the disease in the subject and the gene in the object, so a dataset carrying a "
+                    + "genotype wants OBJECT_TO_SUBJECT.") @QueryParam("seedDirection") @DefaultValue("OBJECT_TO_SUBJECT") String seedDirection,
+            @Parameter(description = "Restrict to a taxon by id. Relations with no taxon answer for every taxon.") @QueryParam("taxonId") @Nullable Long taxonId,
+            @Parameter(description = "Hold these dataset ids out of the evidence. Pass the dataset being "
+                    + "examined so it is not shown its own annotation as support for itself.") @QueryParam("excludeDatasets") @Nullable String excludeDatasets,
+            @Parameter(description = "Minimum number of attesting experiments; ignored for asserted bases.") @QueryParam("minSupport") @DefaultValue("0") int minSupport,
+            @Parameter(description = "Minimum specificity in [0,1]; ignored for asserted bases. Off by "
+                    + "default -- no threshold has been tuned against curator judgement yet.") @QueryParam("minSpecificity") @DefaultValue("0") double minSpecificity,
+            @Parameter(description = "Include per-experiment parameters (dose, duration, developmental "
+                    + "stage, a sample's sex) alongside relations that say what the term is. Off by default: "
+                    + "the bookkeeping is roughly four rows in five and none of it is what a reader of a term "
+                    + "wants. Nothing is dropped from the store -- this is a read-time filter.") @QueryParam("includeExperimentLevel") @DefaultValue("false") boolean includeExperimentLevel,
+            @Parameter(description = "Drop relations whose object relates to more than this many distinct "
+                    + "subjects. An object shared by hundreds of subjects identifies none of them: measured "
+                    + "on the corpus, 'Homozygous negative' relates to 2,898, 'Overexpression' to 1,839, "
+                    + "'24 h' to 448 and 'induced pluripotent stem cell line cell' to 81, while MPTP and "
+                    + "5xFAD sit in the low single digits. Not a quality judgement -- a dose is a good "
+                    + "statement and a very broad object. 0 (the default) does not filter.") @QueryParam("maxObjectBreadth") @DefaultValue("0") int maxObjectBreadth,
+            @Parameter(description = "Also return relations a source states do NOT hold, alongside the "
+                    + "asserted ones. Off by default, and deliberately absent from /relations/implies: a "
+                    + "refuted row must never reach a caller asking what a term entails. Distinguish them "
+                    + "by `status` -- REFUTED rather than ASSERTED -- because the predicate is stored "
+                    + "assertively and carries no negation of its own. Today only MGI writes them, from its "
+                    + "not-disease report.") @QueryParam("includeRefuted") @DefaultValue("false") boolean includeRefuted,
+            @QueryParam("limit") @DefaultValue("50") int limit
+    ) {
+        if ( StringUtils.isBlank( subject ) && StringUtils.isBlank( object ) && datasetId == null ) {
+            throw new BadRequestException( "One of 'subject', 'object' or 'dataset' must be supplied; the whole relation table is not a question." );
+        }
+        ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery q = new ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery()
+                .taxonId( taxonId )
+                .minimumSupport( minSupport )
+                .includeRefuted( includeRefuted )
+                .minimumSpecificity( minSpecificity )
+                .maximumObjectBreadth( maxObjectBreadth )
+                .termLevelOnly( !includeExperimentLevel )
+                .maxResults( limit );
+        // A term is addressed by URI when it has one and by its value when it does not; rather than
+        // making the caller say which, both legs are seeded and the query ORs them.
+        if ( StringUtils.isNotBlank( subject ) ) {
+            q.subjectValueUris( Collections.singleton( subject ) ).subjectValues( Collections.singleton( subject ) );
+        }
+        if ( StringUtils.isNotBlank( object ) ) {
+            q.objectValueUris( Collections.singleton( object ) ).objectValues( Collections.singleton( object ) );
+        }
+        if ( StringUtils.isNotBlank( predicate ) ) {
+            q.predicateUris( Collections.singleton( predicate ) );
+        }
+        if ( StringUtils.isNotBlank( subjectCategory ) ) {
+            q.subjectCategoryUris( Arrays.asList( subjectCategory.split( "," ) ) );
+        }
+        if ( StringUtils.isNotBlank( objectCategory ) ) {
+            q.objectCategoryUris( Arrays.asList( objectCategory.split( "," ) ) );
+        }
+        if ( StringUtils.isNotBlank( basis ) ) {
+            q.bases( parseBases( basis ) );
+        }
+        if ( StringUtils.isNotBlank( excludeDatasets ) ) {
+            q.excludedExperimentIds( parseIds( excludeDatasets ) );
+        }
+        if ( datasetId != null ) {
+            try {
+                q.seedFromExperimentId( datasetId )
+                        .seedDirection( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.Direction
+                                .valueOf( seedDirection.toUpperCase() ) );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown seedDirection '" + seedDirection
+                        + "'; expected SUBJECT_TO_OBJECT or OBJECT_TO_SUBJECT." );
+            }
+            if ( q.getExcludedExperimentIds().isEmpty() ) {
+                // A dataset shown its own annotation as support for what that annotation implies is
+                // reading a tautology as corroboration, so the default holds it out. An explicit
+                // excludeDatasets is left alone: the caller has said what it wants excluded.
+                q.excludedExperimentIds( Collections.singleton( datasetId ) );
+            }
+        }
+        return respond( annotationRelationService.findRelations( q ).stream()
+                .map( AnnotationRelationValueObject::new )
+                .collect( Collectors.toList() ) );
+    }
+
+    /**
+     * Is a term already implied by the terms an experiment carries?
+     *
+     * <p>The inhibition question, and it is deliberately not the same endpoint as
+     * {@code /annotations/relations}. That one ranks and evidences, for a caller that has to CHOOSE a
+     * term; this one tests set membership, for a caller deciding whether to SUPPRESS one it was about
+     * to write. The distinction is what makes using this knowledge safe at all:</p>
+     *
+     * <ul>
+     * <li>Generating a disease from a genotype needs a unique answer. {@code SURF1} carries three
+     * germline disease axioms and {@code Trp53} pairs with fifteen diseases in our corpus, so a
+     * producer asked to emit one has to pick, and picking wrong writes a false assertion into the
+     * database. This is why the curation rule forbids it.</li>
+     * <li>Suppressing a redundant tag needs only membership. All three of SURF1's diseases go into
+     * the set, and the answer is right whichever one is meant.</li>
+     * </ul>
+     *
+     * <p>It also fails in the safe direction. A wrong association here suppresses a tag that should
+     * have been kept -- a recall miss, visible in scoring and recoverable. The same wrong association
+     * used generatively writes a wrong disease onto a dataset.</p>
+     */
+    @GET
+    @Path("/relations/implies")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Test whether terms are already implied by other terms",
+            description = "Set membership over the relations Gemma knows, for deciding whether an annotation "
+                    + "would be redundant. Give the terms an experiment already carries in 'from' and the "
+                    + "terms you are considering writing in 'to'; the response names the pairs that are "
+                    + "related and on what basis. Omit 'to' to get everything the 'from' terms imply. "
+                    + "Ambiguity is preserved rather than resolved: every candidate is returned, because a "
+                    + "membership test is right whichever one is meant.",
+            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+    public ResponseDataObject<List<AnnotationRelationValueObject>> getImpliedAnnotations(
+            @Parameter(description = "Comma-separated term URIs the experiment already carries.", required = true) @QueryParam("from") @Nullable String from,
+            @Parameter(description = "Comma-separated candidate term URIs to test. Omit to return everything implied.") @QueryParam("to") @Nullable String to,
+            @Parameter(description = "Comma-separated dataset ids to hold out of the evidence. 🛑 Pass the dataset "
+                    + "being curated. The curation pipeline is gold-blind -- it never sees the experiment's own "
+                    + "curation -- so a gate that counted the experiment's own annotations as evidence would be "
+                    + "reading the very thing under evaluation, and would report every redundancy as confirmed.") @QueryParam("excludeDatasets") @Nullable String excludeDatasets,
+            @Parameter(description = "Restrict to these bases: CURATED, ONTOLOGY, EXTERNAL, CORPUS. A gate that "
+                    + "should not act on co-occurrence alone can ask for the asserted bases only.") @QueryParam("basis") @Nullable String basis,
+            @Parameter(description = "Restrict to a taxon by id.") @QueryParam("taxonId") @Nullable Long taxonId,
+            @Parameter(description = "Drop relations whose object relates to more than this many distinct "
+                    + "subjects. For a suppression gate this wants to be small -- an object shared by "
+                    + "hundreds of diseases implies all of them and cannot say whether one is redundant. "
+                    + "0 (the default) does not filter.") @QueryParam("maxObjectBreadth") @DefaultValue("0") int maxObjectBreadth,
+            @Parameter(description = "Include per-experiment parameters. Off by default -- a dose or a "
+                    + "duration cannot imply an annotation, so a gate has no use for them.") @QueryParam("includeExperimentLevel") @DefaultValue("false") boolean includeExperimentLevel,
+            @QueryParam("limit") @DefaultValue("100") int limit
+    ) {
+        if ( StringUtils.isBlank( from ) ) {
+            throw new BadRequestException( "'from' is required: the terms the experiment already carries." );
+        }
+        List<String> fromUris = Arrays.stream( from.split( "," ) ).map( String::trim )
+                .filter( StringUtils::isNotBlank ).collect( Collectors.toList() );
+        List<String> toUris = StringUtils.isNotBlank( to )
+                ? Arrays.stream( to.split( "," ) ).map( String::trim ).filter( StringUtils::isNotBlank ).collect( Collectors.toList() )
+                : Collections.emptyList();
+        Set<AnnotationRelationBasis> bases = StringUtils.isNotBlank( basis )
+                ? parseBases( basis ) : EnumSet.allOf( AnnotationRelationBasis.class );
+        List<Long> excluded = StringUtils.isNotBlank( excludeDatasets ) ? parseIds( excludeDatasets ) : Collections.emptyList();
+
+        // Both directions, because a curated statement puts the disease in the subject and the
+        // genotype in the object, and a caller holding either one is asking the same question.
+        List<AnnotationRelationValueObject> out = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for ( boolean fromIsSubject : new boolean[] { true, false } ) {
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery q =
+                    new ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery()
+                            .bases( bases )
+                            .excludedExperimentIds( excluded )
+                            .taxonId( taxonId )
+                            .maximumObjectBreadth( maxObjectBreadth )
+                            .termLevelOnly( !includeExperimentLevel )
+                            .maxResults( limit );
+            if ( fromIsSubject ) {
+                q.subjectValueUris( fromUris );
+                if ( !toUris.isEmpty() ) {
+                    q.objectValueUris( toUris );
+                }
+            } else {
+                q.objectValueUris( fromUris );
+                if ( !toUris.isEmpty() ) {
+                    q.subjectValueUris( toUris );
+                }
+            }
+            for ( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationSummary r
+                    : annotationRelationService.findRelations( q ) ) {
+                // 🛑 Only the licensed direction. The store is symmetric and the INFERENCE is not:
+                // `Alzheimer disease --has_genotype--> APP/PS1` lets APP/PS1 imply an Alzheimer model,
+                // and does NOT let Alzheimer imply APP/PS1, because not every Alzheimer model is
+                // APP/PS1. Following both would let this endpoint suppress a correct
+                // `genotype: APP/PS1` tag because the dataset also said `disease: Alzheimer`.
+                if ( !r.getInferenceDirection().licenses( fromIsSubject ) ) {
+                    continue;
+                }
+                if ( seen.add( r.getTripleKey() + " " + r.getBasis() ) ) {
+                    out.add( new AnnotationRelationValueObject( r ) );
+                }
+            }
+        }
+        return respond( out );
+    }
+
+    private Set<AnnotationRelationBasis> parseBases( String csv ) {
+        Set<AnnotationRelationBasis> bases = EnumSet.noneOf( AnnotationRelationBasis.class );
+        for ( String token : csv.split( "," ) ) {
+            String t = token.trim();
+            if ( t.isEmpty() ) {
+                continue;
+            }
+            try {
+                bases.add( AnnotationRelationBasis.valueOf( t.toUpperCase() ) );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown basis '" + t + "'; expected one of "
+                        + Arrays.toString( AnnotationRelationBasis.values() ) + "." );
+            }
+        }
+        return bases.isEmpty() ? EnumSet.allOf( AnnotationRelationBasis.class ) : bases;
+    }
+
+    private List<Long> parseIds( String csv ) {
+        List<Long> ids = new ArrayList<>();
+        for ( String token : csv.split( "," ) ) {
+            String t = token.trim();
+            if ( t.isEmpty() ) {
+                continue;
+            }
+            try {
+                ids.add( Long.parseLong( t ) );
+            } catch ( NumberFormatException e ) {
+                throw new BadRequestException( "'" + t + "' is not a dataset id." );
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * A relation on the wire.
+     *
+     * <p>{@code basis} is not metadata a client may skip: it is what separates somebody having stated
+     * the fact from our having noticed a co-occurrence. {@code numberOfExperiments} is zero for
+     * asserted bases because there is nothing to count, <b>not</b> because there is no evidence, so
+     * sorting on it without reading the basis buries the strongest rows.</p>
+     */
+    @Value
+    public static class AnnotationRelationValueObject {
+        String subject;
+        @Nullable
+        String subjectUri;
+        @Nullable
+        String subjectCategory;
+        @Nullable
+        String subjectCategoryUri;
+        @Nullable
+        String predicate;
+        @Nullable
+        String predicateUri;
+        String object;
+        @Nullable
+        String objectUri;
+        @Nullable
+        String objectCategory;
+        @Nullable
+        String objectCategoryUri;
+        @Nullable
+        Long taxonId;
+        @Nullable
+        String taxonName;
+        String basis;
+        @Nullable
+        String source;
+        @Nullable
+        String sourceVersion;
+        long numberOfExperiments;
+        long numberOfExperimentsAtFactorValue;
+        long numberOfExperimentsAtTag;
+        long numberOfExperimentsAtBioMaterial;
+        long numberOfExperimentsWithSubject;
+        /**
+         * How many distinct subjects this object relates to. High means the object identifies nothing
+         * -- it is not a quality judgement, since a dose is a perfectly good statement and a very broad
+         * object.
+         */
+        long objectBreadth;
+        /**
+         * How many distinct objects this SUBJECT relates to -- the mirror of {@link #objectBreadth}.
+         * High means the term is enumerating a list rather than saying something about itself: an
+         * {@code induced pluripotent stem cell line cell} naming seventeen cell lines it was derived
+         * into is a heading, not a fact about the term on the card.
+         */
+        long subjectBreadth;
+        double specificity;
+        @Nullable
+        Long exampleDatasetId;
+        /**
+         * Whether this row stands on its own. False only for a CORPUS row, whose co-occurrence
+         * establishes association and nothing more -- and whose supply of evidence stops growing the
+         * moment curators stop writing the redundant tag it is derived from.
+         */
+        boolean corroborated;
+        /**
+         * {@code TERM_LEVEL} when the relation says what the subject term is or where it came from;
+         * {@code EXPERIMENT_LEVEL} when it records how one experiment was run (a dose, a duration, a
+         * sample's sex). Both are real curation; only the first belongs on a term card.
+         */
+        String topicality;
+        /**
+         * {@code SUBJECT_IMPLIES_OBJECT}, {@code OBJECT_IMPLIES_SUBJECT} or {@code NEITHER}. A
+         * relation is readable from both ends and inferable from only one: the store holds
+         * {@code Alzheimer disease --has_genotype--> APP/PS1}, and APP/PS1 implies an Alzheimer model
+         * while Alzheimer implies nothing about APP/PS1 — not every Alzheimer model is APP/PS1.
+         */
+        String inferenceDirection;
+        /**
+         * The claim the relation licenses, phrased as its own triple rather than left as the stored row
+         * for a client to invert. Null when nothing is implied.
+         *
+         * <p>{@code Alzheimer disease --has_genotype--> APP/PS1} is stored; what follows from it is
+         * {@code APP/PS1 --is model of--> Alzheimer disease}. Taxon picks the verb — a human subject
+         * gets {@code has disease}, because a human line carrying a variant is not modelling the
+         * disease, it has it.</p>
+         */
+        @Nullable
+        String impliedSubject;
+        @Nullable
+        String impliedSubjectUri;
+        @Nullable
+        String impliedPredicate;
+        @Nullable
+        String impliedPredicateUri;
+        @Nullable
+        String impliedObject;
+        @Nullable
+        String impliedObjectUri;
+        /**
+         * Identity of the CLAIM, for deduplicating a card. Two different stored relations can derive
+         * one claim -- {@code BRCA1 --has disease--> breast cancer} and
+         * {@code breast cancer --has_genotype--> BRCA1} both yield
+         * {@code BRCA1 has disease breast cancer} -- and {@code tripleKey}, which identifies the row as
+         * stored, cannot group them. Null when the row licenses no claim.
+         */
+        @Nullable
+        String impliedTripleKey;
+        /**
+         * {@code ASSERTED} or {@code REFUTED} — whether the source states this relation holds, or
+         * states that it does not.
+         *
+         * <p>Effectively always {@code ASSERTED} unless the caller asked for refutations, which are
+         * excluded by default and never license an inference. Present on every row so a client that
+         * does ask cannot mistake one for support.</p>
+         */
+        String status;
+        /**
+         * The one-line basis the source gives, meant to be shown as-is -- {@code PMID:11242117} where
+         * MGI cites a paper. Null for rows that legitimately have none: an ontology axiom cites
+         * nothing, and a corpus co-occurrence is evidence rather than having any.
+         */
+        @Nullable
+        String evidence;
+        /**
+         * Identifies the subject/predicate/object triple irrespective of basis, so a client can group
+         * the side-by-side rows that one relation legitimately produces. Grouping on the rendered
+         * labels instead would merge relations that only look alike.
+         */
+        String tripleKey;
+
+        AnnotationRelationValueObject( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationSummary s ) {
+            this.subject = s.getSubjectValue();
+            this.subjectUri = s.getSubjectValueUri();
+            this.subjectCategory = s.getSubjectCategory();
+            this.subjectCategoryUri = s.getSubjectCategoryUri();
+            this.predicate = s.getPredicate();
+            this.predicateUri = s.getPredicateUri();
+            this.object = s.getObjectValue();
+            this.objectUri = s.getObjectValueUri();
+            this.objectCategory = s.getObjectCategory();
+            this.objectCategoryUri = s.getObjectCategoryUri();
+            this.taxonId = s.getTaxonId();
+            this.taxonName = s.getTaxonCommonName();
+            this.basis = s.getBasis().name();
+            this.source = s.getSource();
+            this.sourceVersion = s.getSourceVersion();
+            this.numberOfExperiments = s.getNumberOfExperiments();
+            this.numberOfExperimentsAtFactorValue = s.getNumberOfExperimentsAtFactorValue();
+            this.numberOfExperimentsAtTag = s.getNumberOfExperimentsAtTag();
+            this.numberOfExperimentsAtBioMaterial = s.getNumberOfExperimentsAtBioMaterial();
+            this.numberOfExperimentsWithSubject = s.getNumberOfExperimentsWithSubject();
+            this.objectBreadth = s.getObjectBreadth();
+            this.subjectBreadth = s.getSubjectBreadth();
+            this.specificity = s.getSpecificity();
+            this.exampleDatasetId = s.getExampleExperimentId();
+            this.corroborated = s.getBasis().isSelfSufficient();
+            this.tripleKey = s.getTripleKey();
+            this.topicality = s.getTopicality().name();
+            this.inferenceDirection = s.getInferenceDirection().name();
+            this.impliedSubject = s.getImpliedSubject();
+            this.impliedSubjectUri = s.getImpliedSubjectUri();
+            this.impliedPredicate = s.getImpliedPredicate();
+            this.impliedPredicateUri = s.getImpliedPredicateUri();
+            this.impliedObject = s.getImpliedObject();
+            this.impliedObjectUri = s.getImpliedObjectUri();
+            this.impliedTripleKey = s.getImpliedTripleKey();
+            this.status = s.getStatus().name();
+            this.evidence = s.getEvidence();
+        }
     }
 
     private List<AnnotationSearchResultValueObject> getAnnotationsParentsOrChildren( String termUri, boolean direct, boolean parents ) {
@@ -589,7 +1243,7 @@ public class AnnotationsWebService {
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
                             null, null, null, null, null, null, null, null, null, null, null,
-                            sourceMetadataOf( t ) ) )
+                            sourceMetadataOf( t ), taxonConstraintVo( t ) ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -1291,8 +1945,26 @@ public class AnnotationsWebService {
             // returns the canonical URI for both shapes, or null for plain free text.
             String termUri = expandTermQueryToUri( query );
             if ( termUri != null ) {
-                rawHits.addAll( characteristicService.loadValueObjects( characteristicService
-                        .findByUri( termUri, null, null, true, -1 ) ) );
+                List<CharacteristicValueObject> byUri = characteristicService.loadValueObjects(
+                        characteristicService.findByUri( termUri, null, null, true, -1 ) );
+                if ( byUri.isEmpty() ) {
+                    // 🛑 An identifier asks WHICH TERM IS THIS, not which datasets carry it, and the
+                    // corpus is the wrong place to answer that. CLO:0050868 is a real cell line that
+                    // nothing has been annotated with yet, and returning nothing said it did not
+                    // exist -- which is the opposite of the truth, and precisely wrong for the
+                    // curator who is looking it up in order to annotate something with it.
+                    //
+                    // Only on the identifier path, and only when the corpus came back empty: a
+                    // free-text query still means "find me tags in use", and a term that IS in use
+                    // still answers with its usage.
+                    CharacteristicValueObject fromOntology = lookUpTermInOntologies( termUri,
+                            Math.max( timeoutMs - timer.getTime(), 0 ) );
+                    if ( fromOntology != null ) {
+                        rawHits.add( fromOntology );
+                    }
+                } else {
+                    rawHits.addAll( byUri );
+                }
             } else if ( upstream ) {
                 // Delegate the ontology Lucene-index lookup; downstream pipeline runs locally
                 // against shared gemd. Failure here propagates as SearchException so the caller
@@ -1414,8 +2086,34 @@ public class AnnotationsWebService {
         // re-break `FTC`. Do not change one without re-measuring the other.
         java.util.function.ToIntFunction<CharacteristicValueObject> sourceDemotionFn =
                 h -> h.isSupplementary() ? 1 : 0;
+        // ---- A hit with no URI can never beat one that has a URI ------------------------------
+        //
+        // A null-`valueUri` row is free text from the corpus: no client can store it, compare it or
+        // dedup it, so as an ANSWER it is unusable regardless of how well its label matches. Ranking
+        // it above a URI-bearing hit costs the caller its best answer whenever it takes the top hit,
+        // which is what a resolver does.
+        //
+        // Reported by CAB 2026-08-15: `Lewis lung carcinoma` returned the free-text
+        // `lewis lung carcinoma cell` (valueUri=null) at rank 1, ahead of EFO_1001770
+        // `carcinoma, lewis lung` — the gold answer, carrying usageCount=4, priorCategories
+        // {disease, disease model} and a definition naming 3LL, the very cell line in the
+        // experiment. The subagent took rank 1, got nothing usable, and ended up tagging a mouse
+        // experiment with `sheep lung adenocarcinoma`.
+        //
+        // Ordered AHEAD of the tier key rather than folded into it the way the supplementary
+        // demotion is, because this is not a statement about relevance: one tier of demotion still
+        // lets a null-URI row outrank a usable hit sitting one tier below it. It is a different KIND
+        // of row, so it sorts as a separate, dominant key.
+        //
+        // Safe by construction for grounding metrics: every gold answer has a URI, and this key can
+        // only move URI-LESS rows downward — it never reorders two URI-bearing hits with respect to
+        // each other. Fold MRR / recall can therefore improve or stay flat, never regress. Free-text
+        // rows are still returned, just below the usable ones.
+        java.util.function.ToIntFunction<CharacteristicValueObject> usableFn =
+                h -> StringUtils.isNotBlank( h.getValueUri() ) ? 0 : 1;
         rawHits.sort( Comparator
-                .<CharacteristicValueObject>comparingInt( h -> tierFn.applyAsInt( h ) + sourceDemotionFn.applyAsInt( h ) )
+                .<CharacteristicValueObject>comparingInt( usableFn::applyAsInt )
+                .thenComparingInt( h -> tierFn.applyAsInt( h ) + sourceDemotionFn.applyAsInt( h ) )
                 .thenComparingInt( sourceDemotionFn::applyAsInt )
                 .thenComparingInt( prefixRankFn::applyAsInt )
                 .thenComparingInt( cellLinePreferenceFn::applyAsInt )
@@ -1446,6 +2144,15 @@ public class AnnotationsWebService {
                 ? Collections.emptyMap()
                 : attributeCandidates( rawHits, joinedRelevanceQuery,
                         CANDIDATE_ATTRIBUTION_CAP, Math.max( timeoutMs - timer.getTime(), 0 ) );
+        // Hoisted for the same reason the category promotion below is hoisted: the ranking strategy
+        // re-sorts the whole list on its own score and has no idea this tier was established, so
+        // the sort here is discarded unless it is RE-APPLIED afterwards. Measured on frink
+        // 2026-08-16, that is not hypothetical -- `Myelopathy` put `spinal cord injury` above
+        // `myelopathy` (HP_0002196, matched on its PREFERRED LABEL), and `Gorlin Goltz Syndrome`
+        // put `focal dermal hypoplasia` above `nevoid basal cell carcinoma syndrome`, which is the
+        // term the query actually names, matched on an exact synonym. In both cases an exact match
+        // lost to a token-overlap match with more corpus usage.
+        java.util.function.ToIntFunction<CharacteristicValueObject> exactTierFn = null;
         if ( !candidateMatches.isEmpty() ) {
             java.util.function.ToIntFunction<CharacteristicValueObject> synonymExactFn = h -> {
                 if ( tierFn.applyAsInt( h ) == 0 ) {
@@ -1455,6 +2162,7 @@ public class AnnotationsWebService {
                 MatchAttribution m = uri != null ? candidateMatches.get( uri ) : null;
                 return isExactAttribution( m != null ? m.via : null ) ? 0 : 1;
             };
+            exactTierFn = synonymExactFn;
             // Same one-tier demotion as the relevance sort above, for the same reason: without it
             // this lift would hand a catalogue hit the exact tier and undo the demotion two sorts
             // later, which is precisely how the distinction got lost the first time.
@@ -1526,7 +2234,11 @@ public class AnnotationsWebService {
             java.util.function.Predicate<CharacteristicValueObject> solid = h -> {
                 String uri = h.getValueUri();
                 MatchAttribution m = uri != null ? candidateMatches.get( uri ) : null;
-                if ( isExactAttribution( m != null ? m.via : null ) ) {
+                // namesTheQuery, not isExactAttribution: surviving suppression asks whether the
+                // ontology declared this string as a name for the term, while the tier asks how
+                // strongly to rank it. A RELATED synonym is a weaker ORDERING signal and still a
+                // name — dropping it cost 19 of 34 resolvable drug codes.
+                if ( namesTheQuery( m != null ? m.via : null ) ) {
                     return true;
                 }
                 return !relevanceQueryCanon.isEmpty()
@@ -1603,8 +2315,16 @@ public class AnnotationsWebService {
                 rawHits = keptInCategory;
             }
             if ( suppress || excludedAny ) {
+                // Nothing loaded names this string. Before reporting a bare negative, ask a naming
+                // authority what the code is — the compound is often already in CHEBI under a name
+                // nobody wrote on the sample (WY-14643 is pirinixic acid, CHEBI_32509, used 17
+                // times in the corpus). Only on this path, which is already narrow: the caller
+                // asked for suppression AND the query is designation-shaped AND we found nothing.
+                ExternalIdentificationValueObject external = rawHits.isEmpty() && suppress
+                        ? identifyExternally( designationProbe, Math.max( timeoutMs - timer.getTime(), 0 ) )
+                        : null;
                 negativeEvidence = new NegativeEvidenceValueObject( joinedRelevanceQuery,
-                        !rawHits.isEmpty(), ruledOut, nearMissTruncated );
+                        !rawHits.isEmpty(), ruledOut, nearMissTruncated, external );
             }
             if ( !preferredPrefixes.isEmpty() ) {
                 // Promote solid hits sitting in the category's preferred namespaces, in the
@@ -1735,13 +2455,33 @@ public class AnnotationsWebService {
         }
         List<CharacteristicValueObject> ranked = strategy.rank( joinedQuery, rawHits, countsByUri,
                 stringPriorByUri, matchedTextByUri );
+        // Re-apply the constraints the ranking strategy is not aware of, outermost first: a stated
+        // category outranks relevance, and an exact match outranks a lexical neighbour with more
+        // corpus usage. Both were established on the candidate list and both are otherwise
+        // discarded by the strategy's own sort. One comparator rather than two passes, so the
+        // precedence is written down instead of depending on the order the sorts happen to run in.
+        // Stable, so the strategy's ordering survives inside each tier, and idempotent for the
+        // default lucene strategy whose input was already in this order.
+        Comparator<CharacteristicValueObject> postRank = null;
         if ( categoryRankFn != null ) {
-            // Stable, so the strategy's ordering survives inside each tier. Idempotent for the
-            // default lucene strategy, whose input was already in this order.
             final java.util.function.ToIntFunction<CharacteristicValueObject> promote = categoryRankFn;
-            ranked = new ArrayList<>( ranked );
-            ranked.sort( Comparator.<CharacteristicValueObject>comparingInt( promote::applyAsInt ) );
+            postRank = Comparator.comparingInt( promote::applyAsInt );
         }
+        if ( exactTierFn != null ) {
+            final java.util.function.ToIntFunction<CharacteristicValueObject> exact = exactTierFn;
+            // Carries the supplementary demotion, exactly as the candidate-stage sort does: without
+            // it, lifting a catalogue hit into the exact tier would undo that demotion here.
+            Comparator<CharacteristicValueObject> byExactness = Comparator.comparingInt(
+                    h -> exact.applyAsInt( h ) + sourceDemotionFn.applyAsInt( h ) );
+            postRank = postRank == null ? byExactness : postRank.thenComparing( byExactness );
+        }
+        if ( postRank != null ) {
+            ranked = new ArrayList<>( ranked );
+            ranked.sort( postRank );
+        }
+        // Runs after the promotion (a stated category constraint still outranks this) and before
+        // truncation, so a demoted salt can fall out of the window and let its parent in.
+        ranked = demoteUnusedDerivatives( ranked, countsByUri, designationProbe );
 
         // Truncate to the requested limit BEFORE enrichment, so per-URI definition + parents
         // lookups only fire for hits the client will actually see.
@@ -1806,9 +2546,10 @@ public class AnnotationsWebService {
         // Cell-line / strain metadata for hits that came from a flat lexical source. Same enrichment
         // pass and same top-N budget as definitions — it is read off the term that pass already resolves.
         Map<String, LexicalTermMetadataValueObject> sourceMetadataByUri = new HashMap<>();
+        Map<String, TaxonConstraintValueObject> taxonByUri = new HashMap<>();
         if ( !topUris.isEmpty() ) {
             try {
-                enrichTopHits( topUris, defByUri, parentsByUri, matchByUri, sourceMetadataByUri, joinedQuery,
+                enrichTopHits( topUris, defByUri, parentsByUri, matchByUri, sourceMetadataByUri, taxonByUri, joinedQuery,
                         Math.max( timeoutMs - timer.getTime(), 0 ) );
             } catch ( TimeoutException e ) {
                 // Budget exhausted mid-enrichment; surface whatever did resolve and leave the rest null.
@@ -1859,7 +2600,8 @@ public class AnnotationsWebService {
             vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
                     vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories,
                     null, null, null, null, priorCountFor( vo.getValueUri(), stringPriorByUri ),
-                    sourceMetadataByUri.get( vo.getValueUri() ) ) );
+                    sourceMetadataByUri.get( vo.getValueUri() ),
+                    uri != null ? taxonByUri.get( uri ) : null ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -2032,7 +2774,7 @@ public class AnnotationsWebService {
             String taxonScientificName = taxon != null ? taxon.getScientificName() : null;
             out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
                     0, null, null, matchedViaToken, label, null, null,
-                    taxonId, taxonCommonName, taxonScientificName, null, null, null ) );
+                    taxonId, taxonCommonName, taxonScientificName, null, null, null, null ) );
         }
     }
 
@@ -2124,7 +2866,7 @@ public class AnnotationsWebService {
                         r.getUsageCount(), r.getDefinition(), r.getParents(),
                         r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories(),
                         r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(), r.getExampleUsage(),
-                        r.getPriorCurationCount(), r.getSourceMetadata() ) );
+                        r.getPriorCurationCount(), r.getSourceMetadata(), r.getTaxonConstraint() ) );
             }
         }
         return out;
@@ -2169,7 +2911,8 @@ public class AnnotationsWebService {
                     r.getUsageCount(), r.getDefinition(), r.getParents(),
                     r.getMatchedVia(), r.getMatchedText(), r.getGeneCount(), r.getPriorCategories(),
                     r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(),
-                    toExampleUsageVo( ex ), r.getPriorCurationCount(), r.getSourceMetadata() ) );
+                    toExampleUsageVo( ex ), r.getPriorCurationCount(), r.getSourceMetadata(),
+                    r.getTaxonConstraint() ) );
         }
     }
 
@@ -2287,6 +3030,7 @@ public class AnnotationsWebService {
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
             Map<String, MatchAttribution> matchByUri,
             Map<String, LexicalTermMetadataValueObject> sourceMetaByUri,
+            Map<String, TaxonConstraintValueObject> taxonByUri,
             String originalQuery,
             long budgetMs ) throws TimeoutException {
         StopWatch local = StopWatch.createStarted();
@@ -2297,7 +3041,7 @@ public class AnnotationsWebService {
         // locks under burst load.
         int parallelism = Math.min( topUris.size(), 8 );
         if ( parallelism <= 1 ) {
-            enrichOne( topUris.iterator().next(), defByUri, parentsByUri, matchByUri, sourceMetaByUri,
+            enrichOne( topUris.iterator().next(), defByUri, parentsByUri, matchByUri, sourceMetaByUri, taxonByUri,
                     originalQuery, Math.max( budgetMs - local.getTime(), 0 ) );
             return;
         }
@@ -2308,7 +3052,7 @@ public class AnnotationsWebService {
                 tasks.add( pool.submit( () -> {
                     long remaining = Math.max( budgetMs - local.getTime(), 0 );
                     if ( remaining <= 0 ) return;
-                    enrichOne( uri, defByUri, parentsByUri, matchByUri, sourceMetaByUri, originalQuery, remaining );
+                    enrichOne( uri, defByUri, parentsByUri, matchByUri, sourceMetaByUri, taxonByUri, originalQuery, remaining );
                 } ) );
             }
             long deadline = System.currentTimeMillis() + budgetMs;
@@ -2459,6 +3203,7 @@ public class AnnotationsWebService {
             Map<String, List<OntologyTermSimpleValueObject>> parentsByUri,
             Map<String, MatchAttribution> matchByUri,
             Map<String, LexicalTermMetadataValueObject> sourceMetaByUri,
+            Map<String, TaxonConstraintValueObject> taxonByUri,
             String originalQuery,
             long remaining ) {
         if ( remaining <= 0 ) return;
@@ -2490,6 +3235,23 @@ public class AnnotationsWebService {
             if ( meta != null ) {
                 synchronized ( sourceMetaByUri ) { sourceMetaByUri.put( uri, meta ); }
             }
+            // Species constraint, read off the term this pass already resolved — no extra lookup and
+            // no extra fan-out, the same deal sourceMetadataOf gets. MONDO declares `in_taxon` on
+            // 3,201 terms and only 30 are human, so it is overwhelmingly a marker for "this term is
+            // NOT about your organism". Without it a client cannot tell MONDO:0700199
+            // `sheep lung adenocarcinoma` from a mouse disease: same namespace, same organ, and the
+            // category table cannot catch it because the namespace is right. See
+            // handoffs/CAB_TO_GEMBRO_2026_08_15_SPECIES_CONSTRAINT_AND_A_SECOND_SATURATION_CASE.md.
+            // Recorded for EVERY enriched hit, declared or not: presence is the signal that we
+            // looked. A gate that cannot tell "no constraint declared" from "not checked" has to
+            // treat both as unknown, which makes the field useless outside the top-N.
+            OntologyTerm.TaxonConstraint taxon = term.getTaxonConstraint();
+            List<OntologyTermSimpleValueObject> xspecies = crossSpeciesExactMatchesOf( term );
+            TaxonConstraintValueObject taxonVo = taxon != null
+                    ? new TaxonConstraintValueObject( true, taxon.getUri(), taxon.getNcbiTaxonId(),
+                            taxon.getLabel(), xspecies )
+                    : new TaxonConstraintValueObject( false, null, null, null, xspecies );
+            synchronized ( taxonByUri ) { taxonByUri.put( uri, taxonVo ); }
             MatchAttribution attribution = computeMatchAttribution( term, originalQuery );
             if ( attribution != null ) {
                 synchronized ( matchByUri ) { matchByUri.put( uri, attribution ); }
@@ -2540,6 +3302,27 @@ public class AnnotationsWebService {
     private static final String OBO_DB_XREF = "http://www.geneontology.org/formats/oboInOwl#hasDbXref";
 
     /**
+     * {@code IAO:0100001 term replaced by} — the successor a deprecated class names. Universal across
+     * OBO ontologies: EFO writes it on its tombstone classes, CLO likewise
+     * ({@code CLO:0000021 → CLO:0000457}).
+     */
+    private static final String IAO_TERM_REPLACED_BY = "http://purl.obolibrary.org/obo/IAO_0100001";
+
+    /**
+     * {@code oboInOwl#consider} — the weaker hint, naming candidates rather than a replacement. Used
+     * where a term was split rather than merged, so no single successor exists.
+     */
+    private static final String OBO_CONSIDER = "http://www.geneontology.org/formats/oboInOwl#consider";
+
+    /**
+     * {@code obsoleted_in_version} — the release that retired the term, e.g. {@code 3.88.0}. EFO's own
+     * predicate, in EFO's namespace rather than IAO's; OBO ontologies largely declare nothing
+     * equivalent (CLO's deprecated classes carry only {@code IAO:0000231 has obsolescence reason}), so
+     * expect this to be null outside EFO.
+     */
+    private static final String EFO_OBSOLETED_IN_VERSION = "http://www.ebi.ac.uk/efo/obsoleted_in_version";
+
+    /**
      * Whether {@code query} has the shape of a designation — a coined identifier for one specific
      * entity, rather than a description of one. Operationally: a single token carrying at least one
      * letter AND at least one digit.
@@ -2555,6 +3338,22 @@ public class AnnotationsWebService {
      * return nothing and push the caller onto a fuzzy fallback — which is where fabricated
      * groundings come from in the first place. Suppression has to be narrower than "be strict",
      * or it manufactures the very failure it exists to prevent.</p>
+     *
+     * <p><b>The separator is the author's, not the compound's.</b> This used to bail on the first
+     * whitespace, on the reasoning that multi-token ⇒ descriptive. That dropped a whole spelling of
+     * the same designations: {@code BAY 43-9006}, {@code SCH 900776}, {@code CP 690550},
+     * {@code GW 501516}. The space is not evidence of a description — CHEBI itself stores several
+     * of these spaced ({@code pd 0325901}, {@code sb 431542}), so it is the ontology's own
+     * spelling as much as the submitter's. {@code BAY 43-9006} was left returning
+     * {@code (s)-bay-k-8644} and an MGI mouse strain under {@code suppress_near_matches}, which is
+     * the exact failure this predicate gates.</p>
+     *
+     * <p>So a second token is admitted under a deliberately tight rule: at most two tokens, one
+     * carrying a run of at least {@link #MIN_DESIGNATION_DIGITS} digits, and any digitless token
+     * being a short vendor prefix (≤ {@link #MAX_VENDOR_PREFIX_LENGTH} characters).
+     * {@code type 2 diabetes} fails on token count AND on {@code diabetes} being a word rather than
+     * a prefix; {@code high fat diet} carries no digit at all; {@code type 2} and {@code IL 6} fail
+     * the digit floor. The single-token contract is untouched.</p>
      */
     static boolean isDesignationQuery( @Nullable String query ) {
         if ( query == null ) {
@@ -2564,20 +3363,205 @@ public class AnnotationsWebService {
         if ( q.length() < 2 ) {
             return false;
         }
-        boolean hasLetter = false, hasDigit = false;
-        for ( int i = 0; i < q.length(); i++ ) {
-            char c = q.charAt( i );
-            if ( Character.isWhitespace( c ) ) {
-                return false;   // multi-token ⇒ descriptive, not a designation
-            }
-            if ( Character.isLetter( c ) ) {
-                hasLetter = true;
-            } else if ( Character.isDigit( c ) ) {
-                hasDigit = true;
+        String[] tokens = q.split( "\\s+" );
+        if ( tokens.length > MAX_DESIGNATION_TOKENS ) {
+            return false;
+        }
+        if ( tokens.length == 1 ) {
+            // Unchanged single-token contract: at least one letter AND at least one digit.
+            return countLetters( q ) > 0 && countDigits( q ) > 0;
+        }
+        // Multi-token. Exactly one token may be a digitless vendor prefix; the other has to carry a
+        // real code number. The digit-run floor is what keeps ordinary phrasing out: `type 2` and
+        // `IL 6` have a single digit and are not designations, while every split vendor code we
+        // have seen carries at least three (43-9006, 900776, 690550, 501516, 0325901).
+        int codeTokens = 0;
+        for ( String token : tokens ) {
+            int digits = countDigits( token );
+            if ( digits >= MIN_DESIGNATION_DIGITS ) {
+                codeTokens++;
+            } else if ( digits > 0 || countLetters( token ) == 0
+                    || token.length() > MAX_VENDOR_PREFIX_LENGTH ) {
+                // A digitless token is only tolerable as the vendor prefix of a split code
+                // ("BAY" of "BAY 43-9006"). Anything longer is a word, and words describe.
+                return false;
             }
         }
-        return hasLetter && hasDigit;
+        // Exactly one code, exactly one prefix. Two code-shaped tokens ("MK-2206 GSK2879552") is a
+        // caller naming two entities, and answering it as one designation would be a guess about
+        // which of the two they meant.
+        return codeTokens == 1;
     }
+
+    private static int countLetters( String s ) {
+        int n = 0;
+        for ( int i = 0; i < s.length(); i++ ) {
+            if ( Character.isLetter( s.charAt( i ) ) ) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    private static int countDigits( String s ) {
+        int n = 0;
+        for ( int i = 0; i < s.length(); i++ ) {
+            if ( Character.isDigit( s.charAt( i ) ) ) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * Order a compound's unused derivative below the compound itself, for designation queries only.
+     *
+     * <p>CHEBI carries a trial code on the parent compound and on its salts and solvates alike, so
+     * a code query returns both and the ranker has no reason to prefer either. It picked wrong:
+     * {@code AZD6244} led with {@code selumetinib sulfate}, used zero times in the corpus, above
+     * {@code selumetinib}, used seven. {@code OSI-774} led with {@code erlotinib hydrochloride}
+     * (zero) over {@code erlotinib} (nine), and {@code GSK1120212} with
+     * {@code trametinib dimethyl sulfoxide} (one) over {@code trametinib} (twenty-one). A curator
+     * annotating "treated with AZD6244" means the compound; the sulfate is a formulation detail
+     * nobody asked about, and annotating it fragments the corpus across two URIs.</p>
+     *
+     * <p>The test is a label prefix rather than the hierarchy, because <b>CHEBI does not make the
+     * free base a parent of its salt</b> — {@code selumetinib sulfate} has {@code antineoplastic
+     * agent} and {@code benzimidazoles} as parents, and no edge at all to {@code selumetinib}. A
+     * parent-graph implementation would not fire on a single one of these. Ranking also runs before
+     * enrichment resolves parents, so that graph is not in hand here anyway.</p>
+     *
+     * <p>Two guards keep it from touching anything else. It applies only when the query is a
+     * {@link #isDesignationQuery designation}, so {@code brain stem} is never demoted under
+     * {@code brain} for a caller who asked for the brain stem. And it demotes only a derivative
+     * with zero corpus usage beneath a parent that has some — where the corpus has actually used
+     * the more specific form, that usage is the curator's answer, not ours.</p>
+     */
+    static List<CharacteristicValueObject> demoteUnusedDerivatives(
+            List<CharacteristicValueObject> ranked, @Nullable Map<String, Integer> countsByUri,
+            @Nullable String query ) {
+        if ( ranked.size() < 2 || countsByUri == null || !isDesignationQuery( query ) ) {
+            return ranked;
+        }
+        // Labels that are present with real corpus usage; a derivative is only demoted under one.
+        Map<String, Integer> usedLabels = new HashMap<>();
+        for ( int i = 0; i < ranked.size(); i++ ) {
+            CharacteristicValueObject hit = ranked.get( i );
+            if ( hit.getValue() == null || hit.getValueUri() == null ) {
+                continue;
+            }
+            Integer usage = countsByUri.get( hit.getValueUri() );
+            if ( usage != null && usage > 0 ) {
+                usedLabels.putIfAbsent( hit.getValue().trim().toLowerCase( Locale.ROOT ), i );
+            }
+        }
+        if ( usedLabels.isEmpty() ) {
+            return ranked;
+        }
+        List<CharacteristicValueObject> out = new ArrayList<>( ranked );
+        // Stable partition: unused derivatives keep their relative order, appended after the rest.
+        out.sort( Comparator.comparingInt( hit -> isUnusedDerivativeOf( hit, countsByUri, usedLabels ) ? 1 : 0 ) );
+        return out;
+    }
+
+    private static boolean isUnusedDerivativeOf( CharacteristicValueObject hit,
+            Map<String, Integer> countsByUri, Map<String, Integer> usedLabels ) {
+        if ( hit.getValue() == null || hit.getValueUri() == null ) {
+            return false;
+        }
+        Integer usage = countsByUri.get( hit.getValueUri() );
+        if ( usage != null && usage > 0 ) {
+            return false;
+        }
+        String label = hit.getValue().trim().toLowerCase( Locale.ROOT );
+        for ( String used : usedLabels.keySet() ) {
+            // A derivative names its parent and then qualifies it: "selumetinib" + " sulfate".
+            // The space matters — it keeps "selumetinib" from swallowing an unrelated term that
+            // merely starts with the same characters.
+            if ( label.length() > used.length() + 1 && label.startsWith( used + " " ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Ask ChEMBL what a code is, and try to turn its answer back into a term Gemma already has.
+     *
+     * <p>Two steps, and the second is the one that matters. ChEMBL identifies {@code WY-14643} as
+     * pirinixic acid; Gemma's own search then finds pirinixic acid is CHEBI_32509, already loaded
+     * and already used 17 times in the corpus. The compound was never missing — nothing connected
+     * the code the submitter wrote to the name CHEBI files it under. When that bridge lands, the
+     * caller gets an ordinary CHEBI URI to commit and no new vocabulary enters the corpus.</p>
+     *
+     * <p>When it does not land, the identification is still reported, and still carries no URI. It
+     * tells a curator what they are looking at ({@code LLY-283} is a real ChEMBL compound with no
+     * CHEBI counterpart) without inviting them to annotate with something Gemma cannot resolve.</p>
+     *
+     * <p>The bridged term has to NAME the ChEMBL name, not merely resemble it. Skipping that check
+     * would reintroduce near-match fabrication one step further out, where it would be harder to
+     * see because a plausible compound name is doing the vouching.</p>
+     */
+    @Nullable
+    private ExternalIdentificationValueObject identifyExternally( @Nullable String code, long budgetMs ) {
+        if ( chemblCodeResolver == null || code == null || budgetMs <= 0 ) {
+            return null;
+        }
+        ubic.gemma.core.ontology.chembl.ChemblCompound compound;
+        try {
+            compound = chemblCodeResolver.identify( code );
+        } catch ( RuntimeException e ) {
+            // Advisory enrichment must never be the reason a search fails.
+            log.debug( "ChEMBL identification failed for '{}'; reporting a bare negative", code, e );
+            return null;
+        }
+        if ( compound == null || !compound.isFound() ) {
+            return null;
+        }
+        String name = compound.getSearchableName();
+        String groundedUri = null, groundedLabel = null;
+        if ( name != null ) {
+            try {
+                String canonicalName = canonicaliseForExactMatch( name );
+                for ( CharacteristicValueObject hit : ontologyService.findExperimentsCharacteristicTags(
+                        name, EXTERNAL_BRIDGE_MAX_HITS, false, false, budgetMs, TimeUnit.MILLISECONDS ) ) {
+                    if ( hit.getValueUri() != null
+                            && canonicaliseForExactMatch( hit.getValue() ).equals( canonicalName ) ) {
+                        groundedUri = hit.getValueUri();
+                        groundedLabel = hit.getValue();
+                        break;
+                    }
+                }
+            } catch ( Exception e ) {
+                log.debug( "bridging ChEMBL name '{}' back into the ontologies failed", name, e );
+            }
+        }
+        return new ExternalIdentificationValueObject( "ChEMBL", compound.getChemblId(), name,
+                compound.getMatchedSynonym(), compound.getRelease(), compound.getSourceUrl(),
+                groundedUri, groundedLabel );
+    }
+
+    /** How deep to look when turning a ChEMBL name back into a loaded term. An exact name match ranks early or not at all. */
+    private static final int EXTERNAL_BRIDGE_MAX_HITS = 25;
+
+    /**
+     * Upper bound on tokens in a designation. Two covers every split vendor code we have seen
+     * ({@code BAY 43-9006}); three would start admitting short descriptive phrases.
+     */
+    private static final int MAX_DESIGNATION_TOKENS = 2;
+
+    /**
+     * Digits required in the code-bearing token of a split designation. Three is the smallest value
+     * that excludes {@code type 2} / {@code IL 6} while admitting every vendor code observed.
+     */
+    private static final int MIN_DESIGNATION_DIGITS = 3;
+
+    /**
+     * Longest all-letter token accepted as a vendor prefix rather than read as a word. Covers
+     * {@code BAY} / {@code SCH} / {@code GSK} / {@code BIBW}; {@code diet} (4) is the reason the
+     * token count is capped at two as well, since either guard alone leaks.
+     */
+    private static final int MAX_VENDOR_PREFIX_LENGTH = 4;
 
     /**
      * Whether an attribution represents string EQUALITY against one of the term's own names — its
@@ -2602,10 +3586,57 @@ public class AnnotationsWebService {
      * specific answer, not a different one. ALT_LABEL stays because it is a label, not a
      * neighbourhood claim.</p>
      *
-     * <p>This also tightens {@code suppress_near_matches}, deliberately: a hit reachable only
-     * through a related or broad synonym is now DROPPED rather than kept, and reported under
-     * {@code negativeEvidence.ruledOut} so the caller can see what went and why.</p>
+     * <p><b>This governs ORDERING only.</b> It used to govern {@code suppress_near_matches} as
+     * well, which conflated two different decisions — see {@link #namesTheQuery} for why they
+     * split, and why RELATED being demoted is right while RELATED being dropped was not.</p>
      */
+    /**
+     * Whether the query equals a name the ontology actually declared for the term — its label or
+     * any synonym, whatever the synonym's scope — as opposed to overlapping it.
+     *
+     * <p>This is the line {@code suppress_near_matches} cuts on, and it is a different line from
+     * {@link #isExactAttribution}. That predicate answers "should this rank in the top tier"; this
+     * one answers "is this a lexical accident". Sharing one predicate for both silently made
+     * every RELATED and BROAD synonym hit a near-match to be DELETED, which is a much harsher
+     * claim than the demotion the H1 case called for.</p>
+     *
+     * <p><b>What that cost, measured.</b> CHEBI files developmental compound codes under
+     * {@code hasRelatedSynonym} as a matter of curation convention — AZD6244→selumetinib,
+     * CP-690550→tofacitinib, PLX4032→vemurafenib, INCB018424→ruxolitinib, RAD001→everolimus,
+     * AZD2281→olaparib all resolve that way. Over 60 real ungrounded treatment codes taken from
+     * the corpus, 34 resolved without suppression and only 15 with it: suppression was throwing
+     * away 19 correct compounds, every one of them a term whose declared synonym IS the string
+     * the caller typed. For the drug axis, related-synonym is the naming relation, not a
+     * neighbourhood hint.</p>
+     *
+     * <p>The near-matches the flag exists to kill are untouched, because they are all overlap
+     * rather than equality: {@code MK-8353} for {@code MK-2206}, {@code (s)-bay-k-8644} for
+     * {@code BAY 43-9006}, and the {@code gdc-0941-resistant} cell lines for {@code GDC-0941}
+     * reach their hits through {@link MatchedVia#LABEL_PREFIX}, {@link MatchedVia#LABEL_TOKENS}
+     * and {@link MatchedVia#SYNONYM_TOKENS}, none of which is a declared name.</p>
+     *
+     * <p>The H1 case stays fixed, because it was a ranking complaint and ranking still uses
+     * {@link #isExactAttribution}: {@code h1 horizontal cell} survives suppression now, but sits
+     * below {@code H1-hESC} rather than beside it.</p>
+     */
+    static boolean namesTheQuery( @Nullable MatchedVia via ) {
+        if ( via == null ) {
+            return false;
+        }
+        switch ( via ) {
+            case PREFERRED_LABEL:
+            case EXACT_SYNONYM:
+            case NARROW_SYNONYM:
+            case RELATED_SYNONYM:
+            case BROAD_SYNONYM:
+            case ALT_LABEL:
+                return true;
+            default:
+                // LABEL_PREFIX / LABEL_TOKENS / SYNONYM_TOKENS — overlap, not a name.
+                return false;
+        }
+    }
+
     static boolean isExactAttribution( @Nullable MatchedVia via ) {
         if ( via == null ) {
             return false;
@@ -2619,6 +3650,31 @@ public class AnnotationsWebService {
             default:
                 return false;
         }
+    }
+
+    /**
+     * Prefixes naming a piece of LITERATURE rather than a record about the term.
+     *
+     * <p>🛑 The distinction is what the xref resolves TO, not how common it is. {@code drugbank:DB00619}
+     * names a record about imatinib; {@code pubmed:22891806} names a paper that says something about
+     * imatinib. A curator clicks the first and never the second, and only the second arrives in bulk —
+     * measured on {@code CHEBI_45783}: 51 {@code pubmed:} against exactly one each of {@code cas},
+     * {@code drugbank}, {@code drugcentral}, {@code kegg.drug}, {@code hmdb}, {@code reaxys},
+     * {@code pdb-ccd}, {@code beilstein}, {@code lincs.smallmolecule} and {@code wikipedia.en}.</p>
+     *
+     * <p>{@code patent:} is deliberately NOT here. It reads like provenance but it names a document you
+     * can look up about the compound, and it does not arrive in floods — two on imatinib.</p>
+     */
+    private static final Set<String> CITATION_XREF_PREFIXES = Collections.unmodifiableSet( new HashSet<>(
+            Arrays.asList( "pubmed", "pmid", "pmcid", "doi", "isbn" ) ) );
+
+    /**
+     * @see #CITATION_XREF_PREFIXES
+     */
+    private static boolean isCitationXref( String xref ) {
+        int colon = xref.indexOf( ':' );
+        return colon > 0 && CITATION_XREF_PREFIXES.contains(
+                xref.substring( 0, colon ).trim().toLowerCase( java.util.Locale.ROOT ) );
     }
 
     /**
@@ -2643,6 +3699,92 @@ public class AnnotationsWebService {
             }
         }
         return out;
+    }
+
+    /**
+     * The IRI an annotation's value names, whichever way the OWL happened to write it: an
+     * {@code rdf:resource} (→ {@link AnnotationProperty#getValueUri()}), a literal holding the full
+     * IRI, or a literal holding an OBO CURIE (→ expanded by {@link #expandTermQueryToUri}). Null when
+     * the value names nothing resolvable — a free-text literal, a blank node, an unknown ID space.
+     * <p>
+     * All three spellings are in live use for {@code IAO:0100001}, and which one a given ontology
+     * emits is an artifact of its OBO→OWL conversion, not of what it means. Reading only the resource
+     * form yields an empty field for half the population and no signal that anything was missed.
+     */
+    @Nullable
+    private static String valueIriOf( AnnotationProperty a ) {
+        String uri = a.getValueUri();
+        if ( StringUtils.isNotBlank( uri ) ) {
+            return uri;
+        }
+        String contents = StringUtils.strip( a.getContents() );
+        return StringUtils.isNotBlank( contents ) ? expandTermQueryToUri( contents ) : null;
+    }
+
+    /**
+     * The label an annotation's value carries in the SAME model, or null when there is none to read.
+     * <p>
+     * {@link AnnotationProperty#getContents()} resolves a resource value to its {@code rdfs:label} but
+     * hands back the literal itself when the value was written as a literal — which for a term-naming
+     * annotation is the IRI or CURIE, not a label. Comparing against the resolved IRI is what tells
+     * the two apart.
+     */
+    @Nullable
+    private static String valueLabelOf( AnnotationProperty a, @Nullable String resolvedUri ) {
+        String contents = StringUtils.strip( a.getContents() );
+        if ( StringUtils.isBlank( contents ) || contents.equals( resolvedUri ) ) {
+            return null;
+        }
+        return contents;
+    }
+
+    /**
+     * Every term named by {@code predicateUri} on an already-resolved term, as (uri, label) pairs.
+     * Empty, never null — an empty list means "checked, none declared".
+     * <p>
+     * 🛑 Keyed on the value's IRI, NOT on {@link AnnotationProperty#getContents()}. The latter resolves
+     * a resource annotation to its {@code rdfs:label}, and a label is not an identity: MONDO's
+     * {@code crossSpeciesExactMatch} first shipped as {@code ["lung adenocarcinoma"]}, a string naming
+     * both {@code MONDO:0005061} (the disease) and {@code HP:0030078} (the phenotype). A client
+     * repairing an annotation from that string can silently land on the phenotype — worse than not
+     * repairing, because it looks like it worked, and it is the same HP-beats-MONDO confusion the
+     * category table exists to prevent. Values naming nothing resolvable are dropped rather than
+     * downgraded to their label.
+     */
+    private static List<OntologyTermSimpleValueObject> termsNamedBy( OntologyTerm term, String predicateUri ) {
+        try {
+            Map<String, String> byUri = new LinkedHashMap<>();
+            for ( AnnotationProperty a : term.getAnnotations( predicateUri ) ) {
+                String uri = valueIriOf( a );
+                if ( StringUtils.isNotBlank( uri ) ) {
+                    // label is decoration; absent whenever the referenced term is in an ontology
+                    // that is not loaded, which is exactly when the URI matters most
+                    byUri.putIfAbsent( uri, valueLabelOf( a, uri ) );
+                }
+            }
+            List<OntologyTermSimpleValueObject> out = new ArrayList<>( byUri.size() );
+            for ( Map.Entry<String, String> e : byUri.entrySet() ) {
+                out.add( new OntologyTermSimpleValueObject( e.getKey(), e.getValue() ) );
+            }
+            return out;
+        } catch ( RuntimeException e ) {
+            // Same contract as the rest of enrichment: decoration must not cost the caller the row.
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * The single literal value of {@code predicateUri} on an already-resolved term, or null when the
+     * term declares none.
+     */
+    @Nullable
+    private static String literalAnnotationOf( OntologyTerm term, String predicateUri ) {
+        try {
+            AnnotationProperty a = term.getAnnotation( predicateUri );
+            return a != null ? StringUtils.stripToNull( a.getContents() ) : null;
+        } catch ( RuntimeException e ) {
+            return null;
+        }
     }
 
     /**
@@ -2673,7 +3815,7 @@ public class AnnotationsWebService {
                 if ( StringUtils.isBlank( text ) ) {
                     continue;
                 }
-                if ( seen.add( probe[1] + ' ' + text ) ) {
+                if ( seen.add( probe[1] + '\0' + text ) ) {
                     out.add( new OntologyTermSynonymValueObject( text, probe[1] ) );
                 }
             }
@@ -2988,31 +4130,63 @@ public class AnnotationsWebService {
     }
 
     /**
+     * The tally is formed by the database rather than by loading the matching experiments and
+     * counting them here. The distinction decides whether this method is usable on a full candidate
+     * set: the row-returning lookup emits one row per matching EE2C row, so its cost follows how
+     * much of the corpus the candidates cover, not how many numbers come back. Measured on gemma2
+     * 2026-08-16, this phase was 3.7s of a 4.1s {@code rank=composite} response for 1000 candidate
+     * URIs — an answer of 1000 numbers.
+     *
      * @param excludedExperimentIds experiments to leave out of the tally, for leave-one-out
-     *                              evaluation. Filtered here rather than in the query: the lookup
-     *                              already returns the experiments themselves, so dropping them
-     *                              costs a set membership test and needs no second query shape.
+     *                              evaluation. Applied inside the query, since an aggregate never
+     *                              returns the experiment ids there would be nothing to filter here.
      */
     private Map<String, Integer> getDistinctEeCountsByUri( Set<String> uris, Set<Long> excludedExperimentIds ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits =
-                characteristicService.findExperimentsByUris( uris, true, true, true, null, -1, false, false );
-        Map<String, Set<Long>> distinctIdsByUri = new HashMap<>();
-        for ( Map<String, Set<ExpressionExperiment>> perClass : hits.values() ) {
-            for ( Map.Entry<String, Set<ExpressionExperiment>> entry : perClass.entrySet() ) {
-                Set<Long> bucket = distinctIdsByUri.computeIfAbsent( entry.getKey(), k -> new HashSet<>() );
-                for ( ExpressionExperiment ee : entry.getValue() ) {
-                    if ( excludedExperimentIds.contains( ee.getId() ) ) {
-                        continue;
-                    }
-                    bucket.add( ee.getId() );
+        org.springframework.cache.Cache cache = usageCountCache();
+        // A leave-one-out tally answers a different question per hold-out set and is asked by the
+        // evaluation harness, not by a curator, so it neither reads nor fills the shared cache.
+        if ( cache == null || !excludedExperimentIds.isEmpty() ) {
+            return toIntCounts( characteristicService.countExperimentsByUris( uris, true, true, true, null, excludedExperimentIds ) );
+        }
+
+        String scope = readScopeKey();
+        Map<String, Integer> counts = new HashMap<>( uris.size() );
+        Set<String> misses = new HashSet<>();
+        for ( String uri : uris ) {
+            org.springframework.cache.Cache.ValueWrapper hit = cache.get( scope + '\0' + uri );
+            if ( hit == null ) {
+                misses.add( uri );
+            } else if ( hit.get() instanceof Integer && ( Integer ) hit.get() > 0 ) {
+                counts.put( uri, ( Integer ) hit.get() );
+            }
+            // a cached zero is a real answer -- nobody uses this term -- and stays out of the result
+            // for the same reason an uncached zero does: the caller reads an absent key as no usage.
+        }
+
+        if ( !misses.isEmpty() ) {
+            Map<String, Long> fresh = characteristicService.countExperimentsByUris( misses, true, true, true, null, Collections.emptySet() );
+            for ( String uri : misses ) {
+                Long n = fresh.get( uri );
+                int value = n != null ? n.intValue() : 0;
+                // Cache the zeroes too. They are the bulk of a broad candidate set -- most of what
+                // an ontology proposes for a partial word is used by nothing -- so leaving them out
+                // would send every one of them back to the database on the next keystroke, which is
+                // the cost this cache exists to remove.
+                cache.put( scope + '\0' + uri, value );
+                if ( value > 0 ) {
+                    counts.put( uri, value );
                 }
             }
         }
-        Map<String, Integer> counts = new HashMap<>( distinctIdsByUri.size() );
-        distinctIdsByUri.forEach( ( k, v ) -> counts.put( k, v.size() ) );
+        return counts;
+    }
+
+    private static Map<String, Integer> toIntCounts( Map<String, Long> byUri ) {
+        Map<String, Integer> counts = new HashMap<>( byUri.size() );
+        byUri.forEach( ( k, v ) -> counts.put( k, v.intValue() ) );
         return counts;
     }
 
@@ -3163,6 +4337,40 @@ public class AnnotationsWebService {
      * Project the descriptive metadata of a flat lexical term (Cellosaurus / MGI) onto the wire, or null
      * for terms from a real ontology, which carry none.
      */
+    /**
+     * Read a term's {@code in_taxon} constraint straight off the term, for the paths that hold one
+     * (e.g. {@code /annotations/parents}). The enrichment path uses {@link #toTaxonConstraintVo}
+     * instead, because it has already resolved the term once and passes the result through a map.
+     */
+    @Nullable
+    static TaxonConstraintValueObject taxonConstraintVo( @Nullable OntologyTerm term ) {
+        if ( term == null ) {
+            return null;
+        }
+        OntologyTerm.TaxonConstraint c = term.getTaxonConstraint();
+        List<OntologyTermSimpleValueObject> xspecies = crossSpeciesExactMatchesOf( term );
+        return c != null
+                ? new TaxonConstraintValueObject( true, c.getUri(), c.getNcbiTaxonId(), c.getLabel(), xspecies )
+                : new TaxonConstraintValueObject( false, null, null, null, xspecies );
+    }
+
+    /**
+     * {@code semapv:crossSpeciesExactMatch} — the same disease in another species. MONDO writes it
+     * as {@code property_value: vocab:crossSpeciesExactMatch MONDO:0005061}, where {@code vocab:}
+     * expands to the SSSOM/semapv namespace.
+     */
+    private static final String CROSS_SPECIES_EXACT_MATCH =
+            "https://w3id.org/semapv/vocab/crossSpeciesExactMatch";
+
+    /**
+     * Empty, never null, so an enriched hit's empty list means "checked, none declared". Keyed on the
+     * value's IRI rather than its label — see {@link #termsNamedBy} for why that distinction is not
+     * cosmetic here.
+     */
+    static List<OntologyTermSimpleValueObject> crossSpeciesExactMatchesOf( OntologyTerm term ) {
+        return termsNamedBy( term, CROSS_SPECIES_EXACT_MATCH );
+    }
+
     @Nullable
     static LexicalTermMetadataValueObject sourceMetadataOf( @Nullable OntologyTerm term ) {
         if ( !( term instanceof LexicalOntologyTerm ) ) {
@@ -3184,7 +4392,24 @@ public class AnnotationsWebService {
     public static class AnnotationSearchResultValueObject {
         String value;
         String valueUri;
+        /**
+         * The category a curator has already applied to this URI in the corpus — NOT what kind of
+         * thing the term is. It is carried over from the {@code Characteristic} rows the search
+         * matched, so a term nobody has tagged yet is null however obvious its kind: CLO's
+         * {@code ahl-1 cell} is as uncategorised as any Cellosaurus row, because neither has ever
+         * been used. That makes absent mean "unused", never "conflicts with the category you asked
+         * for" — a client that filters rows on category equality discards every term it would be
+         * the first to apply, which is most of a freshly loaded vocabulary. CAB lost two weeks to
+         * exactly that reading (2026-08-18): one previously-curated CLO row suppressed every other
+         * registration of the same cell line.
+         * <p>
+         * {@code priorCategories} is the same signal unflattened, with the per-category counts, and
+         * is the better one to resolve on. For "what kind of thing is this", walk {@code parents} on
+         * an ontology term, or read {@code sourceMetadata.cellLineType} / {@code strainType} on a
+         * flat catalogue — those are declared by the source rather than inferred from curation.
+         */
         String category;
+        /** URI of {@link #category}, on the same terms: the curated category's URI, null when unused. */
         String categoryUri;
         Integer usageCount;
         /**
@@ -3294,6 +4519,80 @@ public class AnnotationsWebService {
          * {@code ncbiTaxonId} in hand.</p>
          */
         @Nullable LexicalTermMetadataValueObject sourceMetadata;
+        /**
+         * The taxon this ONTOLOGY TERM is restricted to, when the ontology declares one — OBO's
+         * {@code in_taxon}. Null for the overwhelming majority of terms, which declare no constraint.
+         *
+         * <p>🛑 This is NOT {@link #taxonId} and the two must not be conflated. {@code taxonId} says
+         * "this hit IS a gene belonging to that species"; this says "this term only APPLIES to that
+         * species". Different claims about different things, which is why it is a separate field
+         * rather than a second meaning loaded onto an existing one.</p>
+         *
+         * <p>Why it matters: MONDO declares {@code in_taxon} on 3,201 terms and only 30 of them are
+         * human, so it is overwhelmingly a marker for "this term is not about your organism". Without
+         * it, {@code MONDO:0700199 sheep lung adenocarcinoma} is indistinguishable from a mouse
+         * disease — right namespace, right organ, wrong species — and the category→namespace table
+         * structurally cannot catch that class, because the namespace is correct. A tag of exactly
+         * that shape reached a C57BL/6 mouse experiment on 2026-08-15.</p>
+         *
+         * <p>Populated for the top-N enriched hits only, like {@link #definition}. Gemma does not act
+         * on it: whether a species mismatch is a reject or a repair is the caller's decision, and
+         * MONDO's {@code crossSpeciesExactMatch} often supplies the counterpart to repair TO.</p>
+         */
+        @Nullable TaxonConstraintValueObject taxonConstraint;
+    }
+
+    /**
+     * What the ontology says about this term's species applicability.
+     *
+     * <p>🛑 <b>Presence means "we looked."</b> The object is emitted for every enriched hit,
+     * including the overwhelming majority that declare no constraint — those carry
+     * {@code declared: false} and null taxon fields. A null {@code taxonConstraint} on the hit means
+     * only "not enriched" (outside the top-N), never "no constraint".</p>
+     *
+     * <p>That split exists because a species gate has to tell "MONDO says this is human-applicable,
+     * pass it" from "we did not check, so it could be the sheep term". One sentinel for both forces
+     * the safe reading to always be the second, which costs a
+     * {@code /annotations/term?uri=…} round trip per candidate and defeats the point of putting the
+     * field in the search response. Raised by CAB 2026-08-15, and it is the same defect as an absent
+     * value standing in for a failed one — absent evidence is not failed evidence.</p>
+     */
+    @Value
+    public static class TaxonConstraintValueObject {
+        /**
+         * Whether the ontology declares an {@code in_taxon} constraint for this term. False means
+         * checked and none declared — a term with no species restriction, i.e. normally applicable.
+         */
+        boolean declared;
+        /** Full NCBITaxon URI, e.g. {@code http://purl.obolibrary.org/obo/NCBITaxon_9940}. Null when {@code declared} is false. */
+        @Nullable String uri;
+        /**
+         * NCBI taxon id, e.g. 9940 for {@code Ovis aries}. The field to key on: the label is absent
+         * whenever NCBITaxon is not loaded (Gemma does not load it) and the referencing ontology
+         * declared none of its own, so a client keying on the name stops matching the day that changes.
+         */
+        @Nullable Integer ncbiTaxonId;
+        /** Scientific name when the loaded model carries one, e.g. {@code Ovis aries}; often null. */
+        @Nullable String label;
+        /**
+         * MONDO's {@code crossSpeciesExactMatch} targets — the same disease in another species,
+         * typically the human counterpart.
+         *
+         * <p>This is the difference between a species gate DROPPING a tag and REPAIRING it:
+         * {@code MONDO:0700199 sheep lung adenocarcinoma → MONDO:0005061 lung adenocarcinoma} is a
+         * defensible annotation, where a bare rejection leaves the experiment with no disease tag at
+         * all. MONDO carries 2,279 of these.</p>
+         *
+         * <p>Carries the URI, not just the label. {@code "lung adenocarcinoma"} names both
+         * {@code MONDO:0005061} and {@code HP:0030078}, so a client repairing from the string can
+         * land on the phenotype instead of the disease — the exact HP-beats-MONDO confusion the
+         * category table exists to prevent. {@code label} is null whenever the referenced term's
+         * ontology is not loaded, which is precisely when the identifier matters most.</p>
+         *
+         * <p>Empty rather than null when the term declares none, since the object is only ever
+         * emitted for hits we actually inspected.</p>
+         */
+        List<OntologyTermSimpleValueObject> crossSpeciesExactMatch;
     }
 
     /**
@@ -3350,8 +4649,25 @@ public class AnnotationsWebService {
          * Database cross-references for this term (OBO {@code hasDbXref}) — pointers into other resources
          * such as MESH, OMIM, UMLS, ICD, SNOMED, etc. (e.g. {@code "MESH:D003920"}, {@code "OMIM:222100"}).
          * Empty when the term declares none. This is the OBO "xref" most consumers mean.
+         *
+         * <p>🛑 <b>Literature citations are withheld unless asked for</b> — see
+         * {@link #citationXrefCount} and the {@code includeCitationXrefs} parameter. They are a
+         * different kind of thing from the identifiers around them: a {@code pubmed:} xref is
+         * provenance for what the term's definition asserts, not a record about the term you can
+         * resolve and click.</p>
          */
         List<String> dbXrefs;
+        /**
+         * How many literature citations {@link #dbXrefs} is holding back, or would be holding back if
+         * they had not been asked for.
+         *
+         * <p>Reported rather than dropped silently, because a caller that needs them has to be able to
+         * tell "this term cites nothing" from "this term cites fifty-one things you did not ask for".
+         * On {@code imatinib}, 51 of 63 cross-references are {@code pubmed:} while every identifier
+         * that names a record — {@code cas}, {@code drugbank}, {@code drugcentral}, {@code kegg.drug} —
+         * appears exactly once, so the citations push the useful ones off any bounded view.</p>
+         */
+        int citationXrefCount;
         /**
          * Version (release) of the ontology this term came from — {@code owl:versionInfo} (often a release
          * date), falling back to {@code owl:versionIRI}. Null when the owning ontology declares no version.
@@ -3370,6 +4686,41 @@ public class AnnotationsWebService {
          * {@link #definition} — NOT something to annotate an experiment with.
          */
         @Nullable LexicalTermMetadataValueObject sourceMetadata;
+        /**
+         * The successor this term names, {@code IAO:0100001 term replaced by} — where a curator holding
+         * the deprecated URI should re-bind to. Null unless {@link #obsolete} is true, and null then too
+         * for the terms whose ontology deprecated them without naming a replacement.
+         * <p>
+         * A full IRI, never an id scoped to the queried ontology: the successor routinely crosses
+         * ontologies, e.g. {@code EFO:0000408 obsolete_disease → MONDO:0000001 disease}.
+         * <p>
+         * This is the one field the {@code .obo} distributions cannot supply — obsolete classes are
+         * dropped at OBO parse time, so a consumer reading {@code efo.obo} never sees the tombstone at
+         * all. Gemma loads the OWL, which keeps them, which is why this is here.
+         */
+        @Nullable String termReplacedBy;
+        /**
+         * Preferred label of {@link #termReplacedBy}, so a client can render the re-bind without a
+         * second round trip. Read from the deprecating model when it carries a label for the successor,
+         * otherwise resolved through the loaded ontologies. Null when neither has it — the IRI is the
+         * identity, the label is decoration.
+         */
+        @Nullable String termReplacedByLabel;
+        /**
+         * {@code oboInOwl:consider} — candidates rather than a replacement, which is what a term that
+         * was SPLIT rather than merged leaves behind. Advisory: where {@link #termReplacedBy} is also
+         * present, that one is the answer and these are context. Empty when the term names none.
+         */
+        List<OntologyTermSimpleValueObject> consider;
+        /**
+         * Ontology release that retired this term, e.g. {@code 3.88.0} — the difference between "your
+         * curation was wrong" and "the ontology moved under you". Compare against
+         * {@link #ontologyVersion}, which is the release currently loaded.
+         * <p>
+         * EFO-specific ({@code efo:obsoleted_in_version}); expect null for terms from ontologies that
+         * declare no equivalent, which is most of them.
+         */
+        @Nullable String obsoletedInVersion;
     }
 
     /**
@@ -3443,12 +4794,20 @@ public class AnnotationsWebService {
      * {@code annotation.category.prefixes}). Curation-ui passes the listed prefixes as
      * {@code ?prefixes=} on a downstream {@code /annotations/search} when the curator
      * scopes the search to this category. Empty list = no preference; client decides.
+     * <p>
+     * {@code excludedPrefixes} is the other half and a different KIND of statement: a preference
+     * only reorders, an exclusion says the namespace is categorically impossible and its hits leave
+     * {@code data} for {@code negativeEvidence.ruledOut}. It is published because consumers were
+     * hand-rolling their own category→namespace tables and getting them wrong — CAB hand-wrote one
+     * to audit gold and 20 of its 26 flags were the table's error, not the data's. A client that
+     * reads this cannot silently disagree with the server about what is possible.
      */
     @Value
     public static class AnnotationCategoryValueObject {
         String uri;
         String label;
         List<String> preferredPrefixes;
+        List<String> excludedPrefixes;
     }
 
     /**
@@ -3619,6 +4978,27 @@ public class AnnotationsWebService {
      *
      * @return the canonical URI string, or null if the query is neither a URI nor a known CURIE
      */
+    /**
+     * The term itself, for an identifier the corpus has never seen.
+     *
+     * <p>Returns null rather than throwing on a timeout or an unknown URI: this is a fallback on a
+     * path that has already failed to find anything, so the honest outcome of not finding it here
+     * either is the empty result the caller was going to get anyway.</p>
+     */
+    @Nullable
+    private CharacteristicValueObject lookUpTermInOntologies( String termUri, long timeoutMs ) {
+        try {
+            OntologyTerm term = ontologyService.getTerm( termUri, timeoutMs, TimeUnit.MILLISECONDS );
+            if ( term == null || StringUtils.isBlank( term.getLabel() ) ) {
+                return null;
+            }
+            return new CharacteristicValueObject( term.getLabel(), term.getUri() );
+        } catch ( TimeoutException e ) {
+            log.warn( "Timed out resolving " + termUri + " against the loaded ontologies." );
+            return null;
+        }
+    }
+
     @Nullable
     static String expandTermQueryToUri( String query ) {
         if ( query == null ) return null;
@@ -3631,6 +5011,14 @@ public class AnnotationsWebService {
         // free text is left for the free-text search path.
         if ( OntologyUtils.isTermId( stripped, true ) ) {
             return OntologyUtils.termIdToUri( stripped );
+        }
+        // The same identifier spelled the way a URI spells it. A term card renders
+        // CLO_0007606 and a CURIE column holds CLO:0007606; people paste whichever they were
+        // shown. localNameToTermId requires a KNOWN id space, so HLA_DRB1 and cell_type still
+        // reach the free-text search they were meant for.
+        String asTermId = OntologyUtils.localNameToTermId( stripped );
+        if ( asTermId != null ) {
+            return OntologyUtils.termIdToUri( asTermId );
         }
         return null;
     }
@@ -3950,18 +5338,143 @@ public class AnnotationsWebService {
      * the rest of what it is not" does. Free text is a valid annotation; a wrong CHEBI id is a
      * fabricated fact, and the whole point of this block is to make the first choice available.
      */
+    /**
+     * What an external naming authority says a query string is, when nothing Gemma has loaded names
+     * it — plus enough provenance to check the claim.
+     *
+     * <p>🛑 <b>{@link #getIdentifier()} is not an annotation.</b> The only URI here a curator may
+     * commit is {@link #getGroundedTermUri()}, and it is present precisely when the identification
+     * could be bridged back to a term Gemma already has: ChEMBL says {@code WY-14643} is pirinixic
+     * acid, Gemma's own search says pirinixic acid is CHEBI_32509 with 17 corpus uses, and that
+     * CHEBI URI is the answer. When the bridge does not land the identification still tells a
+     * curator what they are looking at, and there is nothing to annotate with — which is the honest
+     * outcome, not a gap to paper over.</p>
+     *
+     * <p>The provenance fields are the point of the object as much as the name is. An
+     * identification a curator cannot trace back to a source, a release and a matched string is an
+     * unsourced assertion, and those are what the curation pipeline is trying to stop emitting.</p>
+     */
+    public static class ExternalIdentificationValueObject {
+        private final String source;
+        @Nullable
+        private final String identifier;
+        @Nullable
+        private final String name;
+        @Nullable
+        private final String matchedSynonym;
+        @Nullable
+        private final String sourceRelease;
+        @Nullable
+        private final String sourceUrl;
+        @Nullable
+        private final String groundedTermUri;
+        @Nullable
+        private final String groundedTermLabel;
+
+        public ExternalIdentificationValueObject( String source, @Nullable String identifier,
+                @Nullable String name, @Nullable String matchedSynonym, @Nullable String sourceRelease,
+                @Nullable String sourceUrl, @Nullable String groundedTermUri,
+                @Nullable String groundedTermLabel ) {
+            this.source = source;
+            this.identifier = identifier;
+            this.name = name;
+            this.matchedSynonym = matchedSynonym;
+            this.sourceRelease = sourceRelease;
+            this.sourceUrl = sourceUrl;
+            this.groundedTermUri = groundedTermUri;
+            this.groundedTermLabel = groundedTermLabel;
+        }
+
+        /** Which authority answered, e.g. {@code ChEMBL}. */
+        public String getSource() {
+            return source;
+        }
+
+        /** The authority's accession, e.g. {@code CHEMBL295416}. NOT a term URI — do not annotate with it. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        /** The authority's preferred name, e.g. {@code PIRINIXIC ACID}. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getName() {
+            return name;
+        }
+
+        /** The synonym string that matched — the evidence for the identification, not decoration. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getMatchedSynonym() {
+            return matchedSynonym;
+        }
+
+        /** Release the identification was read from, e.g. {@code ChEMBL_37}. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getSourceRelease() {
+            return sourceRelease;
+        }
+
+        /** Link to the authority's record, for a curator who wants to check it. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getSourceUrl() {
+            return sourceUrl;
+        }
+
+        /**
+         * A term Gemma already has whose name equals {@link #getName()} — the one URI here that is
+         * safe to commit. Null when the identification could not be bridged.
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getGroundedTermUri() {
+            return groundedTermUri;
+        }
+
+        /** Label of {@link #getGroundedTermUri()}. */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public String getGroundedTermLabel() {
+            return groundedTermLabel;
+        }
+    }
+
     public static class NegativeEvidenceValueObject {
         private final String query;
         private final boolean solidMatch;
         private final List<RuledOutTermValueObject> ruledOut;
         private final boolean ruledOutTruncated;
+        @Nullable
+        private final ExternalIdentificationValueObject externalIdentification;
 
         public NegativeEvidenceValueObject( String query, boolean solidMatch,
                 List<RuledOutTermValueObject> ruledOut, boolean ruledOutTruncated ) {
+            this( query, solidMatch, ruledOut, ruledOutTruncated, null );
+        }
+
+        public NegativeEvidenceValueObject( String query, boolean solidMatch,
+                List<RuledOutTermValueObject> ruledOut, boolean ruledOutTruncated,
+                @Nullable ExternalIdentificationValueObject externalIdentification ) {
             this.query = query;
             this.solidMatch = solidMatch;
             this.ruledOut = ruledOut;
             this.ruledOutTruncated = ruledOutTruncated;
+            this.externalIdentification = externalIdentification;
+        }
+
+        /**
+         * What an external naming authority says this string is, when nothing loaded named it.
+         * Present only on that path, and never a substitute for a term: see
+         * {@link ExternalIdentificationValueObject}.
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Nullable
+        public ExternalIdentificationValueObject getExternalIdentification() {
+            return externalIdentification;
         }
 
         /** The designation that was identity-matched. */

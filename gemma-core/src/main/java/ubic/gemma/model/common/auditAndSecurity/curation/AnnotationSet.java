@@ -156,6 +156,25 @@ public class AnnotationSet extends AbstractIdentifiable {
     @Column(name = "MODEL", columnDefinition = "VARCHAR(255)")
     private String model;
 
+    /**
+     * The producing repository's git head sha for the run.
+     * <p>
+     * Not redundant with {@link #model}: the curation side has measured behaviour differences between shas at
+     * one model, so the model alone does not identify the build that wrote an annotation. Deliberately separate
+     * from {@link #agentVersion}, which names a release rather than a commit.
+     */
+    @Column(name = "RUN_SHA", columnDefinition = "VARCHAR(255)")
+    private String runSha;
+
+    /**
+     * Which specialist agent produced this — {@code cell_type}, {@code disease}, {@code strain}, and so on.
+     * <p>
+     * "The agent" is a fleet, and the useful answer to "which agent proposed this?" names the member rather than
+     * the fleet. Null for curator-authored rows and for producers that do not report one.
+     */
+    @Column(name = "AGENT_NAME", columnDefinition = "VARCHAR(255)")
+    private String agentName;
+
     @Column(name = "RAN_AT", columnDefinition = "DATETIME")
     private Date ranAt;
 
@@ -287,6 +306,22 @@ public class AnnotationSet extends AbstractIdentifiable {
 
     public void setModel( String model ) {
         this.model = model;
+    }
+
+    public String getRunSha() {
+        return runSha;
+    }
+
+    public void setRunSha( String runSha ) {
+        this.runSha = runSha;
+    }
+
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public void setAgentName( String agentName ) {
+        this.agentName = agentName;
     }
 
     public Date getRanAt() {

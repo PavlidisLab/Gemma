@@ -212,6 +212,22 @@ public class SearchSettings {
     private boolean useFullTextIndex = true;
 
     /**
+     * Widen the search into terms Gemma knows are related to the ones matched -- so that ticking
+     * "Leigh syndrome" still returns a dataset annotated only as a {@code SURF1} mutant.
+     *
+     * <p><b>Off by default, and that is a deliberate choice rather than caution.</b> Turning it on
+     * changes every existing disease result set and every count derived from one, and no specificity
+     * threshold has yet been tuned against curator judgement. A wrong threshold shipped as a default
+     * does not look like a wrong threshold; it looks like a search bug. The browse UI opts in
+     * explicitly, which also means the client knows which terms it added and why, and can keep the
+     * two classes of hit distinguishable instead of merging them behind the user's back.</p>
+     *
+     * <p>Inferred hits are scored below direct ones and carry their own provenance string.</p>
+     */
+    @Builder.Default
+    private boolean useInferredRelations = false;
+
+    /**
      * Limit for the number of results per result type.
      * <p>
      * The default is relatively large and given by {@link #DEFAULT_MAX_RESULTS_PER_RESULT_TYPE}. Any value less than

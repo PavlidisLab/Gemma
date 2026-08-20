@@ -1,0 +1,274 @@
+/*
+ * The Gemma project
+ *
+ * Copyright (c) 2026 University of British Columbia
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ */
+package ubic.gemma.model.common.description;
+
+import org.springframework.lang.Nullable;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Which end of a relation implies the other.
+ *
+ * <p>🛑 <b>A relation is readable from both ends; it is not INFERABLE from both ends.</b> This is the
+ * distinction the whole gate depends on and it is easy to lose, because the store is deliberately
+ * symmetric — {@code findRelations} answers from either side, and that is right for browsing. Applying
+ * a relation as an inference is not symmetric:</p>
+ *
+ * <pre>
+ * stored:  Alzheimer disease  -- has_genotype -->  APP/PS1
+ *
+ *   APP/PS1  =>  an Alzheimer disease model     ✅  the specific implies the general
+ *   Alzheimer disease  =>  APP/PS1              🛑  NOT all Alzheimer models are APP/PS1
+ * </pre>
+ *
+ * <p>A gate that followed the second direction would suppress a perfectly correct
+ * {@code genotype: APP/PS1} tag because the dataset also said {@code disease: Alzheimer} — deleting
+ * curation on the strength of an inference nobody made.</p>
+ *
+ * <p><b>And the valid direction is not the same for every predicate</b>, because Gemma's curation
+ * does not put the specific end on the same side each time:</p>
+ *
+ * <pre>
+ * disease model: Alzheimer  -- has_genotype -->  APP/PS1        specific is the OBJECT
+ * MCF7 cell  -- derives from patient having disease -->  DOID   specific is the SUBJECT
+ * </pre>
+ *
+ * <p>So the direction is read off which end carries the narrower thing, and it is never a property of
+ * the direction a caller happened to query from.</p>
+ *
+ * <p><b>The predicate alone does not always settle it.</b> It did when this class was written; it does
+ * not now, and each exception was measured rather than anticipated. {@link RelationTopicality} decides
+ * first, because a predicate that does two jobs licenses on only one of them. And one predicate —
+ * {@code RO_0001000 derives from} — needs the OBJECT as well, because it carries both directions under
+ * a single subject category. See {@link #TYPED_OBJECT_REQUIRED}.</p>
+ */
+public enum RelationInferenceDirection {
+
+    /**
+     * The subject is the specific end: knowing the subject tells you the object. A cell line implies
+     * the disease it derives from; a compound implies the role it plays.
+     */
+    SUBJECT_IMPLIES_OBJECT,
+
+    /**
+     * The object is the specific end: knowing the object tells you the subject. A genotype implies the
+     * disease it models, because Gemma writes the disease as the subject of the statement.
+     */
+    OBJECT_IMPLIES_SUBJECT,
+
+    /**
+     * Neither end implies the other. Per-experiment parameters live here — a dose implies nothing
+     * about a disease and a disease implies no dose — as does any predicate not classified.
+     */
+    NEITHER;
+
+    /**
+     * Predicates where the SUBJECT is the narrower thing.
+     *
+     * <p>These are the cell-line and compound provenance relations: the subject is a specific line or
+     * substance and the object is the general class it belongs to or came from. {@code MCF7} implies
+     * adenocarcinoma; adenocarcinoma implies nothing about MCF7.</p>
+     */
+    private static final Set<String> SUBJECT_SIDE = unmodifiable(
+            "http://purl.obolibrary.org/obo/CLO_0000015",      // derives from patient having disease
+            "http://purl.obolibrary.org/obo/CLO_0000179",      // is disease model for
+            "http://purl.obolibrary.org/obo/CLO_0037207",      // derives from organism
+            "http://purl.obolibrary.org/obo/CLO_0037208",      // derives from anatomic part
+            "http://purl.obolibrary.org/obo/CLO_0037209",      // derived from cell
+            "http://purl.obolibrary.org/obo/CLO_0037210",      // derived from cell line
+            "http://purl.obolibrary.org/obo/CLO_0037227",
+            "http://purl.obolibrary.org/obo/CLO_0037229",
+            "http://purl.obolibrary.org/obo/ENVO_01003004",    // derives from part of
+            "http://purl.obolibrary.org/obo/RO_0001000",       // derives from -- TYPED OBJECT ONLY, see below
+            "http://purl.obolibrary.org/obo/RO_0000087",       // has role -- imatinib implies antineoplastic
+            "http://purl.obolibrary.org/obo/RO_0003301",       // is model of
+            "http://purl.obolibrary.org/obo/RO_0016002",       // has disease -- SNCA implies Parkinson
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00201"          // has child with disease
+    );
+
+    /**
+     * Predicates where the OBJECT is the narrower thing.
+     *
+     * <p>Gemma's curated disease-model statements put the disease in the SUBJECT and the genotype or
+     * the inducer in the OBJECT, so the implication runs backwards along the arrow. This is the set
+     * the motivating case lives in: {@code APP/PS1} implies an Alzheimer model, and
+     * {@code MPTP} implies a Parkinson model.</p>
+     */
+    private static final Set<String> OBJECT_SIDE = unmodifiable(
+            "http://purl.obolibrary.org/obo/GENO_0000222",     // has_genotype
+            "http://purl.obolibrary.org/obo/GENO_0000413",     // has_allele
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00171",         // induced by -- MPTP => Parkinson model
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00169",         // positive for product of gene
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00170"          // negative for product of gene
+    );
+
+    /**
+     * Predicates that license nothing unless some source has said what KIND of thing the object is.
+     *
+     * <p>🛑 <b>{@code RO_0001000 derives from} is the whole reason this set exists, and the subject
+     * side cannot settle it.</b> It genuinely carries both directions, on the same subject category:</p>
+     *
+     * <pre>
+     * refractory anemia with excess blasts -- derives from --> myelodysplastic syndrome   specific is the SUBJECT
+     * influenza                            -- derives from --> H3N2                       specific is the OBJECT
+     * </pre>
+     *
+     * <p>Both are curated, both filed under {@code disease}, and reading the second one subject-to-object
+     * asserts that influenza implies H3N2. Measured over the 666 curated {@code derives from} rows,
+     * 2026-08-18: {@link RelationTopicality} admits 250 of them and they are the wrong 250 —
+     * {@code Cachexia -> melanoma} (10 rows; cachexia is secondary to many cancers),
+     * {@code infectious disease -> Borrellia burgdorferi}, {@code brain ischemia -> light} (a
+     * photothrombotic model), {@code MYC [human] -> primary tumor sample}. The clearest disproof is
+     * {@code partial duplication of chromosome 7}, which derives from {@code maternal duplication} AND
+     * from {@code paternal duplication}: a subject implying two contradictory objects is recording what
+     * happened in one experiment, not a property of the term.</p>
+     *
+     * <p>The provenance sense sits in the 416 rows topicality already excludes —
+     * {@code hematopoietic stem cell -> liver}, {@code EGb 761 -> Ginkgo biloba} — so widening the
+     * subject gate would admit more of the bad rows before it reached any of the good ones. That is why
+     * the discriminator is the OBJECT.</p>
+     *
+     * <p><b>An object category is only ever set by a producer</b> —
+     * {@code OntologyRelationProducerImpl}, {@code MgiRelationProducer},
+     * {@code CellosaurusRelationProducer} — and never by the curated harvest, which has one category and
+     * it belongs to the subject. Of those three only CLO emits this predicate (Cellosaurus writes
+     * {@code CLO_0000015} / {@code CLO_0037208}, MGI the GENO ones), so requiring a typed object selects
+     * exactly CLO's flat {@code derives from} rows: {@code MCF7 -> breast},
+     * {@code MCF7 -> epithelial cell}, where the subject is a cell line by construction and the sense is
+     * provenance every time.</p>
+     *
+     * <p>It is the rule this class already applies, one column over. A predicate nobody has reasoned
+     * about licenses nothing; so does a row whose object nobody has typed.</p>
+     */
+    private static final Set<String> TYPED_OBJECT_REQUIRED = unmodifiable(
+            "http://purl.obolibrary.org/obo/RO_0001000"        // derives from
+    );
+
+    /**
+     * Which way the implication runs for this predicate, or {@link #NEITHER}.
+     *
+     * <p>Unclassified predicates are {@link #NEITHER}, closed by default: a predicate nobody has
+     * reasoned about must not silently license a suppression.</p>
+     */
+    private static RelationInferenceDirection byPredicate( @Nullable String predicateUri ) {
+        if ( predicateUri == null ) {
+            return NEITHER;
+        }
+        if ( SUBJECT_SIDE.contains( predicateUri ) ) {
+            return SUBJECT_IMPLIES_OBJECT;
+        }
+        if ( OBJECT_SIDE.contains( predicateUri ) ) {
+            return OBJECT_IMPLIES_SUBJECT;
+        }
+        return NEITHER;
+    }
+
+    /**
+     * Which way the implication runs for this row.
+     *
+     * <p>🛑 <b>The predicate alone is not enough, and taking it as enough is what shipped nonsense to a
+     * curator.</b> Half these predicates do two jobs depending on what the subject is — that is the
+     * whole premise of {@link RelationTopicality} — and the two jobs do not license the same
+     * inference. {@code TGEMO_00171 induced by} on a disease is a disease model and on a cell type is a
+     * differentiation protocol; read as the former, the latter yields
+     * <i>iPSC line has disease lower motor neuron</i>. {@code GENO_0000222 has_genotype} on
+     * {@code female} is the same failure with a different predicate.</p>
+     *
+     * <p>So an {@link RelationTopicality#EXPERIMENT_LEVEL} row licenses nothing, whatever its
+     * predicate. That is one rule rather than a second subject-category list maintained beside the
+     * first, and it closes the same hole for every subject-dependent predicate at once instead of for
+     * the one that happened to be reported.</p>
+     */
+    public static RelationInferenceDirection of( @Nullable String predicateUri,
+            @Nullable String subjectCategoryUri ) {
+        return of( predicateUri, subjectCategoryUri, null );
+    }
+
+    /**
+     * @param subjectValueUri the subject's own URI. Needed because the claim an
+     *                        {@link #OBJECT_IMPLIES_SUBJECT} predicate licenses is a claim ABOUT
+     *                        DISEASE, so it may only run where the subject is one.
+     * @deprecated by omission rather than by policy: a {@link #TYPED_OBJECT_REQUIRED} predicate
+     * cannot be answered without the object's category and comes back {@link #NEITHER} here. That
+     * fails closed, which is the right way for it to fail, but a caller holding a whole row should
+     * pass the fourth argument and get the real answer.
+     */
+    public static RelationInferenceDirection of( @Nullable String predicateUri,
+            @Nullable String subjectCategoryUri, @Nullable String subjectValueUri ) {
+        return of( predicateUri, subjectCategoryUri, subjectValueUri, null );
+    }
+
+    /**
+     * @param objectCategoryUri what kind of thing the object is, where a source has said. Only a
+     *                          producer sets it; the curated harvest never does. See
+     *                          {@link #TYPED_OBJECT_REQUIRED} for the predicate this decides.
+     */
+    public static RelationInferenceDirection of( @Nullable String predicateUri,
+            @Nullable String subjectCategoryUri, @Nullable String subjectValueUri,
+            @Nullable String objectCategoryUri ) {
+        if ( RelationTopicality.of( predicateUri, subjectCategoryUri, subjectValueUri )
+                != RelationTopicality.TERM_LEVEL ) {
+            return NEITHER;
+        }
+        RelationInferenceDirection direction = byPredicate( predicateUri );
+        if ( direction == OBJECT_IMPLIES_SUBJECT
+                && !RelationTopicality.subjectIsADisease( subjectCategoryUri, subjectValueUri ) ) {
+            // 🛑 Every predicate on this side resolves to `is model of` or `has disease`, so the
+            // licence only makes sense when the SUBJECT names a disease. Where it does not, the arrow
+            // is simply pointing the other way and inverting it asserts something nobody said:
+            //   strain: C10 Congenic (A.B6chr10) --has_genotype--> C57BL/6
+            //     => C57BL/6 is model of C10 Congenic          -- backwards; C57BL/6 is its BACKGROUND
+            //   genotype: Myrf [mouse] --has_genotype--> C57BL/6
+            //     => C57BL/6 is model of Myrf                  -- a strain is not a model of a gene
+            // Both reported by uib 2026-08-18, from a curator's screen on GSE99114. Topicality keeps
+            // these rows on the card, which is right -- they are facts about the term -- and this
+            // stops them being turned into a claim.
+            return NEITHER;
+        }
+        if ( direction == SUBJECT_IMPLIES_OBJECT && objectCategoryUri == null
+                && predicateUri != null && TYPED_OBJECT_REQUIRED.contains( predicateUri ) ) {
+            return NEITHER;
+        }
+        return direction;
+    }
+
+    /**
+     * Whether this predicate names an INDUCER rather than something that can bear the disease itself.
+     *
+     * <p>🛑 The taxon rule — organism models the disease, human line has it — is right for a genotype
+     * and unsatisfiable for a compound. uib measured it on one subject: {@code MPTP},
+     * {@code alpha-synuclein inclusion body} and {@code methamphetamine} were reported
+     * <i>is model of Parkinson disease</i> and {@code oxidopamine} <i>has disease Parkinson
+     * disease</i> — same relation, and the only thing that differed was which taxon the attesting
+     * experiment happened to carry. A compound is never the thing that has the disease, so for these
+     * predicates the verb is settled by the predicate and taxon is not consulted.</p>
+     */
+    public static boolean impliesAnInducer( @Nullable String predicateUri ) {
+        return "http://gemma.msl.ubc.ca/ont/TGEMO_00171".equals( predicateUri );
+    }
+
+    /**
+     * Whether a term sitting on the given end may be used to infer the other end.
+     *
+     * @param seedIsSubject true when the caller holds the subject and wants the object
+     */
+    public boolean licenses( boolean seedIsSubject ) {
+        return seedIsSubject ? this == SUBJECT_IMPLIES_OBJECT : this == OBJECT_IMPLIES_SUBJECT;
+    }
+
+    private static Set<String> unmodifiable( String... uris ) {
+        return Collections.unmodifiableSet( new HashSet<>( Arrays.asList( uris ) ) );
+    }
+}

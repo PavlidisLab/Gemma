@@ -41,11 +41,17 @@ import ubic.gemma.core.util.locking.FileLockManager;
 import java.nio.file.Path;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.model.common.description.PublicationAssociation;
+import ubic.gemma.model.common.description.PublicationAssociationRole;
+import ubic.gemma.model.common.description.PublicationAssociationSource;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -114,6 +120,8 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     private BioMaterialService bioMaterialService;
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private PublicationAssociationService publicationAssociationService;
     @Autowired
     private GeoUpdateAuditService geoUpdateAuditService;
 
@@ -333,6 +341,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             persistedResult.add( ee );
             GeoServiceImpl.log.debug( "Persisted " + seriesAccession );
             this.storeSourceMetadata( ee, series, split, harvestedAt );
+            this.recordGeoPublicationProvenance( ee );
         }
         this.updateReports( persistedResult );
 
@@ -351,6 +360,50 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
      * Never fails the import. The payload is a rebuildable cache of what GEO said; losing it costs a
      * re-harvest, whereas failing here would cost the entire ingest.
      */
+    /**
+     * Record where a freshly imported experiment's publications came from.
+     *
+     * <p>The links are set by {@link GeoConverterImpl#convertPubMedIds} straight from the series'
+     * {@code !Series_pubmed_id} values — the first becomes the primary, the rest other-relevant — and
+     * until now that provenance was lost the moment the experiment was persisted. Stating it here
+     * gives a later curator something to disagree with, and gives the rank rule something to compare
+     * against: a link recorded as GEO's can be overruled by a curator, whereas a link with no recorded
+     * authority at all is just a number in a column.</p>
+     *
+     * <p>Best-effort, like {@link #storeSourceMetadata}: an import that succeeded is not failed
+     * because the provenance note did not land.</p>
+     */
+    private void recordGeoPublicationProvenance( ExpressionExperiment ee ) {
+        String geoAccession = ee.getAccession() != null ? ee.getAccession().getAccession() : ee.getShortName();
+        try {
+            if ( ee.getPrimaryPublication() != null ) {
+                publicationAssociationService.assertAccepted( ee,
+                        geoSubmitterLinkAssertion( ee.getPrimaryPublication(), geoAccession ),
+                        PublicationAssociationRole.PRIMARY );
+            }
+            for ( BibliographicReference other : ee.getOtherRelevantPublications() ) {
+                publicationAssociationService.assertAccepted( ee,
+                        geoSubmitterLinkAssertion( other, geoAccession ),
+                        PublicationAssociationRole.OTHER_RELEVANT );
+            }
+        } catch ( Exception e ) {
+            GeoServiceImpl.log.warn( "Failed to record publication provenance for " + ee.getShortName()
+                    + "; the import and its publication links are unaffected.", e );
+        }
+    }
+
+    /**
+     * The claim GEO's own cross-link amounts to: the submitter said so in the series record.
+     * {@link GOEvidenceCode#TAS} rather than {@link GOEvidenceCode#IEA} because there is a traceable
+     * statement behind it — it is just not one anybody checked.
+     */
+    private PublicationAssertion geoSubmitterLinkAssertion( BibliographicReference ref, @Nullable String geoAccession ) {
+        return new PublicationAssertion( ref, PublicationAssociationSource.GEO_SUBMITTER_LINK,
+                "GEO !Series_pubmed_id" + ( geoAccession != null ? " on " + geoAccession : "" )
+                        + ", as written by the submitter; not independently checked against the paper.",
+                null, GOEvidenceCode.TAS, null, null );
+    }
+
     private void storeSourceMetadata( ExpressionExperiment ee, GeoSeries series, boolean split, Date harvestedAt ) {
         try {
             Set<String> sampleAccessions = new HashSet<>();
@@ -472,10 +525,26 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         if ( geoUpdateConfig.publications ) {
             BibliographicReference primaryPublication = freshFromGEO.getPrimaryPublication();
             if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
-                log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
                 primaryPublication = bibliographicReferenceService.findOrCreate( primaryPublication );
-                ee.setPrimaryPublication( primaryPublication ); // persist first?
-                pubUpdate = true;
+                // GEO's !Series_pubmed_id is usually right and occasionally is the wrong one of the
+                // submitter's own papers. When a curator has already read both and ruled this one out,
+                // taking it here is how the correction gets silently undone on the next refresh — so
+                // ask first. A rejection by an authority GEO does not outrank stands.
+                PublicationAssociation blocked = publicationAssociationService.findBlockingRejection(
+                        ee, primaryPublication, PublicationAssociationSource.GEO_SUBMITTER_LINK );
+                if ( blocked != null ) {
+                    log.info( "Leaving " + geoAccession + " without a primary publication: GEO links "
+                            + primaryPublication.getPubAccession() + ", which was rejected by "
+                            + blocked.getSource().getDbValue() + " on " + blocked.getAssertedAt()
+                            + ( blocked.getEvidence() != null ? " — " + blocked.getEvidence() : "" ) );
+                } else {
+                    log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
+                    ee.setPrimaryPublication( primaryPublication ); // persist first?
+                    publicationAssociationService.assertAccepted( ee,
+                            geoSubmitterLinkAssertion( primaryPublication, geoAccession ),
+                            PublicationAssociationRole.PRIMARY );
+                    pubUpdate = true;
+                }
             }
         }
 

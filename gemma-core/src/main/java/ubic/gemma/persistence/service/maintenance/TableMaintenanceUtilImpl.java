@@ -23,6 +23,7 @@ import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.mail.MailEngine;
+import ubic.gemma.core.ontology.relation.OntologyRelationProducer;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -55,6 +58,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
@@ -440,6 +445,227 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Override
     public void evictEe2CQueryCache() {
         sessionFactory.getCache().evictQueryRegion( EE2C_QUERY_SPACE );
+    }
+
+    /**
+     * Query space for {@code ANNOTATION_RELATION}, so reads over it are invalidated when a rebuild
+     * writes to it.
+     */
+    private static final String AR_QUERY_SPACE = "ANNOTATION_RELATION";
+
+    /**
+     * The harvest: every EE2C row that carries a predicate and an object is already a triple.
+     *
+     * <p>🛑 One carve-out, and only one: predicates whose object is a QUANTITY rather than a concept
+     * ({@code delivered at dose} 6,039 rows, {@code delivered for duration} 3,231,
+     * {@code sampled after} 334, {@code timepoint} 2 — 9,606 of 36,073, a quarter of the harvest).
+     * Their objects are {@code 10 uM} and {@code 10 mg/kg}: nothing can be read from the object end,
+     * corroborated, or inferred. See
+     * {@link ubic.gemma.model.common.description.RelationTopicality#getQuantityValuedPredicateUris()},
+     * which owns the list so the read side and the harvest cannot disagree about it.</p>
+     *
+     * <p>Otherwise predicate-agnostic on purpose. An allow-list would have to be maintained in step with the
+     * curators\' vocabulary and would silently drop whatever was added to it last -
+     * {@code GENO_0000222 has_genotype}, {@code RO_0002573 has modifier} and
+     * {@code TGEMO_00171 induced by} are the three that carry volume today, but the table is general
+     * and there is no reason for the harvest to be narrower than the thing it feeds.</p>
+     *
+     * <p>{@code OBJECT_CATEGORY} stays null: a statement has one category, which belongs to the
+     * subject. Inventing a category for the object would assert something the curator did not.</p>
+     *
+     * <p>{@code EVIDENCE_CODE} defaults to {@code IC} when the statement carries none, for the same
+     * reason {@code SOURCE} is {@code 'Gemma'}. 1,630 of the 26,464 CURATED rows inherited a null,
+     * because several writers — the composite curation commit among them — never set the column on
+     * the characteristic. Every other source in the table answers for every row it has
+     * (CELLOSAURUS {@code IIA}, CHEBI and CLO {@code IEA}, MGI {@code TAS}/{@code IIA}), so a bare
+     * NULL under {@code GROUP BY EVIDENCE_CODE} is a question about the harvest rather than about
+     * the data.</p>
+     *
+     * <p>{@code IC} is the honest value rather than a filler: the row exists because a curator wrote
+     * the statement, which is what "inferred by curator" says, and it is what the 24,833 coded rows
+     * beside it already say. Defaulting here rather than backfilling the characteristics is
+     * deliberate — the table is rebuilt from scratch on every run, so this self-heals and cannot
+     * drift, and it does not put a value on the curator's own annotation that the curator did not
+     * write.</p>
+     *
+     * <p>{@code SOURCE} is {@code 'Gemma'} rather than null. It used to be null on the reasoning that
+     * a curated row's source is Gemma itself and therefore goes without saying — but it does not go
+     * without saying to anyone reading the table. {@code GROUP BY SOURCE} returned a bare NULL for
+     * 36,073 rows and the first question anybody asked of it was what those were. A column that means
+     * "who asserted this" should answer for every row it has.</p>
+     */
+    private static final String AR_STATEMENT_QUERY =
+            "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
+                    + "C.PREDICATE, nullif(trim(C.PREDICATE_URI), ''), C.OBJECT, nullif(trim(C.OBJECT_URI), ''), "
+                    + "I.TAXON_FK, 'CURATED', 'Gemma', coalesce(C.EVIDENCE_CODE, 'IC'), C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
+                    + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
+                    + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
+                    + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
+                    + "where nullif(trim(C.OBJECT), '') is not null and (nullif(trim(C.PREDICATE), '') is not null or nullif(trim(C.PREDICATE_URI), '') is not null) and C.OBJECT not in (:baselineValues) and (C.OBJECT_URI is null or C.OBJECT_URI not in (:baselineUris)) "
+                    + "and (C.PREDICATE_URI is null or C.PREDICATE_URI not in (:quantityUris)) "
+                    + "and (C.PREDICATE is null or trim(C.PREDICATE) not in (:quantityLabels)) "
+                    + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
+
+    /**
+     * The same harvest for the second leg of a two-clause statement.
+     *
+     * <p>A {@code Statement} can carry two predicate/object pairs, and the second is not decoration:
+     * the second half of anything a curator expressed as two clauses rides there. Dropping it would
+     * lose a triple that is as asserted as the first one. (A dose or a duration often rides there too,
+     * and is excluded by the same quantity filter as the first clause.)</p>
+     */
+    private static final String AR_SECOND_STATEMENT_QUERY =
+            "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
+                    + "C.SECOND_PREDICATE, nullif(trim(C.SECOND_PREDICATE_URI), ''), C.SECOND_OBJECT, nullif(trim(C.SECOND_OBJECT_URI), ''), "
+                    + "I.TAXON_FK, 'CURATED', 'Gemma', coalesce(C.EVIDENCE_CODE, 'IC'), C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
+                    + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
+                    + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
+                    + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
+                    + "where nullif(trim(C.SECOND_OBJECT), '') is not null and (nullif(trim(C.SECOND_PREDICATE), '') is not null or nullif(trim(C.SECOND_PREDICATE_URI), '') is not null) and C.SECOND_OBJECT not in (:baselineValues) and (C.SECOND_OBJECT_URI is null or C.SECOND_OBJECT_URI not in (:baselineUris)) "
+                    + "and (C.SECOND_PREDICATE_URI is null or C.SECOND_PREDICATE_URI not in (:quantityUris)) "
+                    + "and (C.SECOND_PREDICATE is null or trim(C.SECOND_PREDICATE) not in (:quantityLabels)) "
+                    + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
+
+    private static final String AR_INSERT_COLUMNS =
+            "insert into ANNOTATION_RELATION (SUBJECT_VALUE, SUBJECT_VALUE_URI, SUBJECT_CATEGORY, SUBJECT_CATEGORY_URI, "
+                    + "PREDICATE, PREDICATE_URI, OBJECT_VALUE, OBJECT_VALUE_URI, "
+                    + "TAXON_FK, BASIS, SOURCE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`, "
+                    + "ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, GENERATED_AT) ";
+
+    @Override
+    @Timed
+    @Transactional
+    public int updateAnnotationRelationEntries( @Nullable ExpressionExperiment ee ) {
+        StopWatch timer = StopWatch.createStarted();
+        String what = ee != null ? " for " + ee : "";
+        log.info( String.format( "Updating CURATED ANNOTATION_RELATION entries%s...", what ) );
+        Date now = new Date();
+
+        // Delete first, then insert. An upsert can only correct rows the new query still produces, so a
+        // row whose statement a curator has since deleted would outlive the annotation it came from --
+        // the failure mode that left 1,008 uncorrectable rows in EE2C.
+        NativeQuery<?> delete = sessionFactory.getCurrentSession()
+                .createNativeQuery( "delete from ANNOTATION_RELATION where BASIS = 'CURATED'"
+                        + ( ee != null ? " and EXPRESSION_EXPERIMENT_FK = :eeId" : "" ) )
+                .addSynchronizedQuerySpace( AR_QUERY_SPACE );
+        if ( ee != null ) {
+            delete.setParameter( "eeId", ee.getId() );
+        }
+        int removed = delete.executeUpdate();
+
+        int inserted = 0;
+        for ( String query : new String[] { AR_STATEMENT_QUERY, AR_SECOND_STATEMENT_QUERY } ) {
+            inserted += sessionFactory.getCurrentSession()
+                    .createNativeQuery( AR_INSERT_COLUMNS + query )
+                    .addSynchronizedQuerySpace( AR_QUERY_SPACE )
+                    .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                    .setParameter( "eeId", ee != null ? ee.getId() : null )
+                    .setParameter( "now", now )
+                    .setParameterList( "baselineValues", BaselineSelection.getControlGroupTerms() )
+                    .setParameterList( "baselineUris", BaselineSelection.getControlGroupUris() )
+                    .setParameterList( "quantityUris",
+                            ubic.gemma.model.common.description.RelationTopicality.getQuantityValuedPredicateUris() )
+                    .setParameterList( "quantityLabels",
+                            ubic.gemma.model.common.description.RelationTopicality.getQuantityValuedPredicateLabels() )
+                    .executeUpdate();
+        }
+        log.info( String.format( "Done updating CURATED ANNOTATION_RELATION entries%s; %d removed, %d written in %d ms.",
+                what, removed, inserted, timer.getTime() ) );
+        return inserted;
+    }
+
+    /**
+     * Absent from ontology-free contexts (tests, and any deployment with the ontologies switched off),
+     * which is why this is optional rather than required: {@code TableMaintenanceUtil} must still start.
+     */
+    @Autowired(required = false)
+    private OntologyRelationProducer ontologyRelationProducer;
+
+    /**
+     * Optional for the same reason as the ontology producer: a context without ontologies must still
+     * start, and this one additionally needs MONDO loaded to translate MGI's DOIDs.
+     */
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.relation.MgiRelationProducer mgiRelationProducer;
+
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.relation.CellosaurusRelationProducer cellosaurusRelationProducer;
+
+    /**
+     * Not {@code @Transactional}: the producer spends minutes walking Jena models before it has a row to
+     * write, and its own transaction wraps only the delete-and-insert. Holding a connection open across
+     * the read would be a maintenance job contending with the application for no reason.
+     */
+    @Override
+    @Timed
+    public int updateOntologyRelationEntries( @Nullable Collection<String> sources ) {
+        if ( ontologyRelationProducer == null ) {
+            log.warn( "No ontology relation producer is wired; ONTOLOGY ANNOTATION_RELATION entries are not updated." );
+            return 0;
+        }
+        StopWatch timer = StopWatch.createStarted();
+        String what = sources != null && !sources.isEmpty() ? " for " + sources : "";
+        log.info( String.format( "Updating ONTOLOGY ANNOTATION_RELATION entries%s...", what ) );
+        int written = ontologyRelationProducer.produce( sources );
+        evictAnnotationRelationQueryCache();
+        log.info( String.format( "Done updating ONTOLOGY ANNOTATION_RELATION entries%s; %d written in %d ms.",
+                what, written, timer.getTime() ) );
+        return written;
+    }
+
+    /**
+     * Not {@code @Transactional}, for the same reason as the ontology pass: the fetch and the parse
+     * happen before there is a row to write, and the producer's own transaction wraps only the
+     * delete-and-insert.
+     */
+    @Override
+    @Timed
+    public int updateExternalRelationEntries() {
+        if ( mgiRelationProducer == null ) {
+            log.warn( "No MGI relation producer is wired; EXTERNAL ANNOTATION_RELATION entries are not updated." );
+            return 0;
+        }
+        StopWatch timer = StopWatch.createStarted();
+        log.info( "Updating EXTERNAL ANNOTATION_RELATION entries..." );
+        int written = 0;
+        // 🛑 Each source stands or falls alone. Both deletes are scoped to their own SOURCE, so one
+        // failing download must not cost the other its rows -- and a failure leaves the existing rows
+        // in place rather than emptying them, since rebuilding from nothing is indistinguishable from
+        // the source having retracted everything it ever said.
+        List<String> failed = new ArrayList<>();
+        try {
+            written += mgiRelationProducer.produce();
+        } catch ( java.io.IOException e ) {
+            log.error( "Could not read MGI's reports; its EXTERNAL relation rows are left as they are.", e );
+            failed.add( "MGI: " + e.getMessage() );
+        }
+        if ( cellosaurusRelationProducer != null ) {
+            try {
+                written += cellosaurusRelationProducer.produce();
+            } catch ( java.io.IOException e ) {
+                log.error( "Could not read Cellosaurus; its EXTERNAL relation rows are left as they are.", e );
+                failed.add( "Cellosaurus: " + e.getMessage() );
+            }
+        }
+        evictAnnotationRelationQueryCache();
+        log.info( String.format( "Done updating EXTERNAL ANNOTATION_RELATION entries; %d written in %d ms.",
+                written, timer.getTime() ) );
+        // 🛑 Both sources are attempted before this throws, which is the point -- isolation is about
+        // one source not costing the other its rows, and it says nothing about what the CALLER should
+        // be told. On 2026-08-18 MGI failed on a read-only cache path and the command logged
+        // "Wrote 243212 EXTERNAL relation rows" and exited 0. Half the job had not run, and the only
+        // way to find out was to go and count the table.
+        if ( !failed.isEmpty() ) {
+            throw new IllegalStateException( "EXTERNAL relation update finished with "
+                    + failed.size() + " of its sources failing, and their existing rows untouched: "
+                    + String.join( "; ", failed ) + ". " + written + " rows were written by the rest." );
+        }
+        return written;
+    }
+
+    @Override
+    public void evictAnnotationRelationQueryCache() {
+        sessionFactory.getCache().evictQueryRegion( AR_QUERY_SPACE );
     }
 
     @Override

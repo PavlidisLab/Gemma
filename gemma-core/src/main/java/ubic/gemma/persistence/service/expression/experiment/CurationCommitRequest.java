@@ -17,6 +17,8 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
@@ -95,6 +97,18 @@ public class CurationCommitRequest {
     private boolean curationDetailsPresent;
     @Nullable
     private String curationDetailsNote;
+
+    // ── run provenance: which agent run is applying this commit ──
+    // Both null for an ordinary curator commit, which mints no AnnotationSet at all. Provenance is expected to be
+    // sparse — Paul: "I don't expect this to be populated by default" — so absence here means "no run was named",
+    // never "no run happened".
+    @Nullable
+    private String runId;
+    @Nullable
+    private AnnotationSetService.RunProvenance runProvenance;
+    /** The PROPOSAL this commit is applying, if any; becomes the COMMIT row's parent. */
+    @Nullable
+    private AnnotationSet runParentProposal;
 
     /** A tag to create, paired with the document {@code clientRef} so the report can echo its new id. */
     public static class TagAdd {
@@ -341,4 +355,40 @@ public class CurationCommitRequest {
     public void setCurationDetailsNote( @Nullable String curationDetailsNote ) {
         this.curationDetailsNote = curationDetailsNote;
     }
+
+    /**
+     * The producing side's run identifier, if this commit is being applied by an agent run.
+     * <p>
+     * Null for a curator commit. When non-null the commit mints a {@code COMMIT} AnnotationSet in its own
+     * transaction, so the row exists only if the commit itself succeeded.
+     */
+    @Nullable
+    public String getRunId() {
+        return runId;
+    }
+
+    public void setRunId( @Nullable String runId ) {
+        this.runId = runId;
+    }
+
+    /** Which build produced the run named by {@link #getRunId()}. Null when no run was named. */
+    @Nullable
+    public AnnotationSetService.RunProvenance getRunProvenance() {
+        return runProvenance;
+    }
+
+    public void setRunProvenance( @Nullable AnnotationSetService.RunProvenance runProvenance ) {
+        this.runProvenance = runProvenance;
+    }
+
+    /** The PROPOSAL annotation set this commit applies, if it applies one. Null for an unsolicited commit. */
+    @Nullable
+    public AnnotationSet getRunParentProposal() {
+        return runParentProposal;
+    }
+
+    public void setRunParentProposal( @Nullable AnnotationSet runParentProposal ) {
+        this.runParentProposal = runParentProposal;
+    }
+
 }

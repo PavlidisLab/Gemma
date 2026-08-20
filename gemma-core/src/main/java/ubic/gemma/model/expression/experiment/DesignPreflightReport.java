@@ -12,6 +12,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.Getter;
@@ -29,11 +30,10 @@ import java.util.List;
  * Contract:
  * <ul>
  *     <li>{@link #blockers} non-empty &rArr; the corresponding PUT would return 4xx. Caller must fix the payload.</li>
- *     <li>{@link #blockers} empty AND {@link #differentialExpressionAnalysesToDelete} empty
+ *     <li>{@link #blockers} empty AND {@link #requiresForce()} false
  *         &rArr; PUT would succeed without {@code ?force=true}.</li>
- *     <li>{@link #blockers} empty AND {@link #differentialExpressionAnalysesToDelete} non-empty
- *         &rArr; PUT needs {@code ?force=true} (admin) to consent to the cascade.</li>
- *     <li>{@link #subsetsWithStaleAnchor} is informational; never blocks, never forces.</li>
+ *     <li>{@link #blockers} empty AND {@link #requiresForce()} true
+ *         &rArr; PUT needs {@code ?force=true} (admin) to consent to the consequences.</li>
  * </ul>
  *
  * @author ogan
@@ -57,9 +57,31 @@ public class DesignPreflightReport implements Serializable {
 
     /**
      * Subsets whose definitional factor-value anchors would be deleted. These are not blockers (subsets
-     * carry no FK to FactorValue), but their semantics drift after the change.
+     * carry no FK to FactorValue), but their semantics drift after the change, so they require the same
+     * explicit consent as the analysis cascade — see {@link #requiresForce()}.
      */
     private List<SubsetRef> subsetsWithStaleAnchor = new ArrayList<>();
+
+    /**
+     * Whether applying this change needs explicit consent ({@code ?force=true}, admin) rather than proceeding
+     * silently. True when the change would delete differential-expression analyses, or would leave a subset
+     * defined by factor values that no longer exist.
+     * <p>
+     * Subsets are included deliberately. A cascade-deleted analysis is <em>gone</em>, and gone announces
+     * itself — somebody re-runs it. An orphaned subset is still there, still named, still listed, and now
+     * anchored on factor values that were deleted out from under it: it reads as valid. A false prompt costs a
+     * curator one {@code force=true}; a false silence costs a subset that nobody notices is wrong until it
+     * produces a wrong answer.
+     * <p>
+     * Consent is per-request, not per-consequence: a caller that forces past an analysis cascade also forces
+     * past a stale anchor. Callers should therefore surface {@link #differentialExpressionAnalysesToDelete}
+     * and {@link #subsetsWithStaleAnchor} separately so the curator sees which they are agreeing to.
+     */
+    @JsonProperty("requiresForce")
+    @Schema(description = "True when applying this change needs ?force=true (admin) to consent — it would delete differential-expression analyses, or leave a subset anchored on factor values that no longer exist. Computed server-side so a client never has to re-derive the rule.")
+    public boolean requiresForce() {
+        return !differentialExpressionAnalysesToDelete.isEmpty() || !subsetsWithStaleAnchor.isEmpty();
+    }
 
     /**
      * One reason the proposed payload cannot be applied. Each blocker is self-describing.

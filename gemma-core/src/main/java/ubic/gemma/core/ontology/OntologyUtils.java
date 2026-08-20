@@ -51,6 +51,17 @@ public class OntologyUtils {
      */
     public static final String BASE_EFO_URI = "http://www.ebi.ac.uk/efo/";
 
+    /**
+     * Cellosaurus, which is not on an OBO PURL.
+     *
+     * <p>🛑 It is {@code https}, and it is the only base here that is. The OBO PURL form
+     * {@code http://purl.obolibrary.org/obo/CVCL_1234} 404s, so Cellosaurus mints this instead — see
+     * {@code CellosaurusOntologyService.URI_PREFIX}, which this must agree with. Defaulting a
+     * {@code CVCL:} id to the PURL base would produce a URI that resolves nowhere and matches no term,
+     * which is worse than refusing to expand it.</p>
+     */
+    public static final String BASE_CELLOSAURUS_URI = "https://www.cellosaurus.org/";
+
     // FIXME: digits are not allowed in the LOCALID part, but there are ontologies that violate this such as the protein
     //        ontology (e.g. PR:Q6PL45)
     private static final Pattern termIdPattern = Pattern.compile( "([A-Za-z]+):([A-Za-z0-9]+)" );
@@ -67,6 +78,8 @@ public class OntologyUtils {
         OBO_ID_SPACES.put( "tgfvo", BASE_GEMMA_ONTOLOGY_URI );
         // EFO
         OBO_ID_SPACES.put( "efo", BASE_EFO_URI );
+        // Cellosaurus -- a catalogue rather than an OBO ontology, and off the PURL
+        OBO_ID_SPACES.put( "cvcl", BASE_CELLOSAURUS_URI );
         // OBO Foundry ontologies
         try ( InputStream is = OntologyUtils.class.getResourceAsStream( "/ubic/gemma/core/ontology/ontology.idspaces.txt" ) ) {
             for ( String line : IOUtils.readLines( requireNonNull( is ), StandardCharsets.UTF_8 ) ) {
@@ -189,6 +202,33 @@ public class OntologyUtils {
     }
 
     /**
+     * Convert an OBO local name ({@code CLO_0007606}) to the term-ID form ({@code CLO:0007606}).
+     *
+     * <p>The two spellings of the same identifier: {@code CLO:0007606} is what a CURIE looks like and
+     * {@code CLO_0007606} is what the tail of the URI looks like. People paste both, because both are
+     * what they were shown — a term card renders the URI, a spreadsheet column holds the CURIE — and
+     * only the first was recognized anywhere.</p>
+     *
+     * <p>🛑 <b>The ID space must be known, and that is what keeps this off free text.</b>
+     * {@code HLA_DRB1} and {@code cell_type} both match the shape; neither has a registered ID space,
+     * so both fall through to the search they were meant for. Deliberately separate from
+     * {@link #isTermId}, which stays strictly colon-form: {@code LuceneQueryUtils} builds a candidate
+     * out of a Lucene {@code field:text} pair and asks that question, and an underscore means something
+     * else there.</p>
+     *
+     * @return the {@code {IDSPACE}:{LOCALID}} form, or null when this is not a local name with a known
+     * ID space
+     */
+    @Nullable
+    public static String localNameToTermId( String s ) {
+        Matcher match = localNamePattern.matcher( StringUtils.strip( s ) );
+        if ( !match.matches() || !isKnownIdSpace( match.group( 1 ) ) ) {
+            return null;
+        }
+        return match.group( 1 ) + ":" + match.group( 2 );
+    }
+
+    /**
      * Obtain the ontology term ID, also known as the OBO ID, for a given term.
      */
     @Nullable
@@ -247,6 +287,8 @@ public class OntologyUtils {
             localName = uri.substring( BASE_GEMMA_ONTOLOGY_URI.length() );
         } else if ( uri.startsWith( BASE_EFO_URI ) ) {
             localName = uri.substring( BASE_EFO_URI.length() );
+        } else if ( uri.startsWith( BASE_CELLOSAURUS_URI ) ) {
+            localName = uri.substring( BASE_CELLOSAURUS_URI.length() );
         } else {
             throw new IllegalArgumentException( "URI does not start with expected base PURL, Gemma nor EFO ontology prefix." );
         }

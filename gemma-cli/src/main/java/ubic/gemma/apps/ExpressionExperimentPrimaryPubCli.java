@@ -28,9 +28,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.PublicationAssociation;
+import ubic.gemma.model.common.description.PublicationAssociationRole;
+import ubic.gemma.model.common.description.PublicationAssociationSource;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
@@ -52,6 +58,8 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     private ExpressionExperimentService ees;
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private PublicationAssociationService publicationAssociationService;
     private PubMedSearch fetcher;
     private ExpressionExperimentBibRefFinder finder;
 
@@ -146,6 +154,12 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
             // get from GEO or get from a file
             BibliographicReference ref = fetcher.retrieve( pubmedIds.get( experiment.getShortName() ) );
+            // Which authority is speaking depends on where the id came from, and the two are not
+            // interchangeable: an id a curator put in the input file outranks GEO's own cross-link,
+            // and GEO's must not be recorded as though a human had chosen it.
+            PublicationAssociationSource source = ref != null
+                    ? PublicationAssociationSource.CURATOR
+                    : PublicationAssociationSource.GEO_SUBMITTER_LINK;
 
             if ( ref == null ) {
                 if ( this.pubmedIdFilename != null ) {
@@ -180,7 +194,28 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
             log.info( "Found pubAccession " + ref.getPubAccession().getAccession() + " for " + experiment );
             ref = bibliographicReferenceService.findOrCreate( ref );
+
+            PublicationAssociation blocked = publicationAssociationService.findBlockingRejection( experiment, ref, source );
+            if ( blocked != null ) {
+                String why = "Not setting " + ref.getPubAccession().getAccession() + " as the primary publication of "
+                        + experiment.getShortName() + ": rejected by " + blocked.getSource().getDbValue()
+                        + " on " + blocked.getAssertedAt()
+                        + ( blocked.getEvidence() != null ? " — " + blocked.getEvidence() : "" );
+                log.info( why );
+                addErrorObject( experiment, why );
+                return;
+            }
+
             experiment.setPrimaryPublication( ref );
+            publicationAssociationService.assertAccepted( experiment,
+                    new PublicationAssertion( ref, source,
+                            source == PublicationAssociationSource.CURATOR
+                                    ? "Supplied in the input file to updateEEPrimaryPub" + ( pubmedIdFilename != null ? " (" + pubmedIdFilename + ")" : "" ) + "."
+                                    : "GEO !Series_pubmed_id, located by updateEEPrimaryPub; not independently checked against the paper.",
+                            null,
+                            source == PublicationAssociationSource.CURATOR ? GOEvidenceCode.IC : GOEvidenceCode.TAS,
+                            null, null ),
+                    PublicationAssociationRole.PRIMARY );
             ees.update( experiment );
             addSuccessObject( experiment, "Updated primary publication." );
         } catch ( Exception e ) {

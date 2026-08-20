@@ -70,6 +70,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import static java.util.Objects.requireNonNull;
@@ -904,6 +905,190 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             return null;
         } );
+    }
+
+    @Override
+    public void streamAndWriteProcessedExpressionData( ExpressionExperiment ee, boolean filtered, boolean forceWrite, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
+        String filename = getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX );
+        Date invalidatedBefore = expressionExperimentService.getLastArrayDesignUpdate( ee );
+        this.<FilteringException>streamAndPopulateCache( filename, invalidatedBefore, forceWrite, writer,
+                w -> writeProcessedExpressionData( ee, filtered, null, false, false, false, w, autoFlush ) );
+    }
+
+    @Override
+    public void streamAndWriteRawExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, Writer writer, boolean autoFlush ) throws IOException {
+        String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
+        // no staleness date: mirrors writeOrLocateRawExpressionDataFile, which regenerates on absence only
+        this.<IOException>streamAndPopulateCache( filename, null, forceWrite, writer,
+                w -> writeRawExpressionData( ee, qt, null, false, false, false, w, autoFlush ) );
+    }
+
+    /** The expensive single-pass producer a {@link #streamAndPopulateCache} call tees into two consumers. */
+    @FunctionalInterface
+    private interface DataWriter<E extends Exception> {
+        int writeTo( Writer writer ) throws E, IOException;
+    }
+
+    /**
+     * Run one data build, streaming its output to {@code dest} while writing the cache file at
+     * {@code filename} — the tee that replaces racing a fire-and-forget cache build against an
+     * in-band stream of the same data.
+     * <p>
+     * The exclusive lock is attempted without blocking: if another writer holds the file, this
+     * degrades to a plain stream to {@code dest} and touches no file. Under the lock, the file may
+     * turn out to have become fresh since the caller's cache probe — then it is streamed from disk
+     * rather than rebuilt. Otherwise the build runs once against a {@link ResilientTeeWriter}: the
+     * caller going away mid-stream does not abort the cache build (the next visitor still gets a
+     * warm file), a cache-write failure does not abort the stream (the partial file is deleted),
+     * and only both legs failing aborts the build. A build failure deletes the partial file —
+     * a half-written gzip served as complete is a corruption, not a cache.
+     */
+    private <E extends Exception> void streamAndPopulateCache( String filename, @Nullable Date invalidatedBefore,
+            boolean forceWrite, Writer dest, DataWriter<E> build ) throws E, IOException {
+        LockedPath lockedPath = null;
+        try {
+            lockedPath = getOutputFile( filename, true, 0, TimeUnit.MILLISECONDS );
+        } catch ( TimeoutException e ) {
+            log.info( "Another writer is generating " + filename + "; streaming to the caller without touching the cache." );
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new IOException( "Interrupted while acquiring the lock on " + filename + ".", e );
+        }
+        if ( lockedPath == null ) {
+            build.writeTo( dest );
+            return;
+        }
+        try ( LockedPath p = lockedPath ) {
+            if ( checkFileOkToReturn( forceWrite, p.getPath(), invalidatedBefore ) ) {
+                // became fresh between the caller's cache probe and this lock: serve it, don't rebuild
+                try ( Reader r = new InputStreamReader( new GZIPInputStream( Files.newInputStream( p.getPath() ) ), StandardCharsets.UTF_8 ) ) {
+                    char[] buf = new char[8192];
+                    for ( int n; ( n = r.read( buf ) ) != -1; ) {
+                        dest.write( buf, 0, n );
+                    }
+                }
+                return;
+            }
+            log.info( "Creating new expression data file: " + p.getPath() );
+            Writer cacheWriter = openCompressedFile( p.getPath() );
+            ResilientTeeWriter tee = new ResilientTeeWriter( dest, cacheWriter );
+            int written;
+            try {
+                written = build.writeTo( tee );
+            } catch ( Exception e ) {
+                // the BUILD failed; a partial cache file must not survive to be served as complete
+                try {
+                    cacheWriter.close();
+                } catch ( IOException suppressed ) {
+                    e.addSuppressed( suppressed );
+                }
+                Files.deleteIfExists( p.getPath() );
+                throw e;
+            }
+            boolean cacheGood = !tee.isCacheFileDead();
+            if ( cacheGood ) {
+                try {
+                    cacheWriter.close(); // writes the gzip trailer
+                } catch ( IOException e ) {
+                    log.warn( "Failed to finalize " + p.getPath() + "; deleting the partial cache file.", e );
+                    cacheGood = false;
+                }
+            } else {
+                try {
+                    cacheWriter.close();
+                } catch ( IOException ignored ) {
+                    // the leg already failed; this close is best-effort resource release
+                }
+            }
+            if ( cacheGood ) {
+                log.info( "Wrote " + written + " vectors to " + p.getPath() + "." );
+            } else {
+                Files.deleteIfExists( p.getPath() );
+            }
+            if ( tee.isCallerDead() ) {
+                log.info( "The caller went away while streaming " + filename + "; the cache file was "
+                        + ( cacheGood ? "still completed" : "abandoned" ) + "." );
+            }
+        }
+    }
+
+    /**
+     * A tee whose legs fail independently: a dead leg is dropped and writing continues on the
+     * other; only both legs failing raises. {@link #close()} closes neither leg — the caller
+     * (the servlet container for the stream, {@link #streamAndPopulateCache} for the cache
+     * file) owns each close, because keeping or deleting the cache file is a decision made
+     * after the build's outcome is known. {@link #flush()} reaches the caller leg only; the
+     * cache file is finalized once, at close.
+     */
+    static final class ResilientTeeWriter extends Writer {
+
+        private final Writer caller;
+        private final Writer cacheFile;
+        @Nullable
+        private IOException callerFailure;
+        @Nullable
+        private IOException cacheFileFailure;
+
+        ResilientTeeWriter( Writer caller, Writer cacheFile ) {
+            this.caller = caller;
+            this.cacheFile = cacheFile;
+        }
+
+        @Override
+        public void write( char[] cbuf, int off, int len ) throws IOException {
+            if ( callerFailure == null ) {
+                try {
+                    caller.write( cbuf, off, len );
+                } catch ( IOException e ) {
+                    callerFailure = e;
+                    log.info( "The caller's stream failed; continuing for the cache file. Cause: " + e.getMessage() );
+                }
+            }
+            if ( cacheFileFailure == null ) {
+                try {
+                    cacheFile.write( cbuf, off, len );
+                } catch ( IOException e ) {
+                    cacheFileFailure = e;
+                    log.warn( "The cache-file write failed; continuing for the caller.", e );
+                }
+            }
+            failIfBothDead();
+        }
+
+        @Override
+        public void flush() throws IOException {
+            if ( callerFailure == null ) {
+                try {
+                    caller.flush();
+                } catch ( IOException e ) {
+                    callerFailure = e;
+                    log.info( "The caller's stream failed on flush; continuing for the cache file. Cause: " + e.getMessage() );
+                }
+            }
+            failIfBothDead();
+        }
+
+        @Override
+        public void close() throws IOException {
+            flush();
+        }
+
+        private void failIfBothDead() throws IOException {
+            if ( callerFailure != null && cacheFileFailure != null ) {
+                IOException e = new IOException( "Both the caller's stream and the cache-file writer have failed." );
+                e.addSuppressed( callerFailure );
+                e.addSuppressed( cacheFileFailure );
+                throw e;
+            }
+        }
+
+        boolean isCallerDead() {
+            return callerFailure != null;
+        }
+
+        boolean isCacheFileDead() {
+            return cacheFileFailure != null;
+        }
     }
 
     @Override

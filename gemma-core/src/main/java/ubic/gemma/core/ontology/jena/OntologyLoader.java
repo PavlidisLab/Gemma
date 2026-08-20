@@ -89,11 +89,39 @@ public class OntologyLoader {
      * @param spec           spec to use as a basis
      */
     static OntModel createMemoryModel( String url, String name, @Nullable String cacheName, boolean processImports, OntModelSpec spec ) throws JenaException, IOException {
+        return createMemoryModel( url, name, cacheName, processImports, spec, true );
+    }
+
+    /**
+     * @param allowRemote when false, load the cached copy without contacting the remote at all.
+     *                    See {@link #isCachePinned()}.
+     */
+    static OntModel createMemoryModel( String url, String name, @Nullable String cacheName, boolean processImports, OntModelSpec spec, boolean allowRemote ) throws JenaException, IOException {
         StopWatch timer = StopWatch.createStarted();
         OntModel model = getModel( name, processImports, spec );
-        readModelFromUrl( model, url, cacheName );
+        readModelFromUrl( model, url, cacheName, allowRemote );
         log.debug( "Loading ontology model for {} took {} ms", url, timer.getTime() );
         return model;
+    }
+
+    /**
+     * Whether the on-disk ontology cache is pinned: the cached bytes are the source of truth and a
+     * startup load must not go to the network.
+     * <p>
+     * Off by default. The conditional-GET path below already avoids re-downloading an unchanged
+     * source, so this is not a performance switch — it is a <em>reproducibility</em> one. When an
+     * ontology publishes a new release, a plain restart silently swaps the vocabulary underneath a
+     * corpus that was annotated against the old one, and the results of anything measured across
+     * that boundary are no longer comparable. Observed on frink 2026-08-15: CHEBI's cached
+     * validator no longer matched upstream, so a routine restart began pulling 866 MB at ~174 KB/s
+     * — 73 minutes of boot, and a different CHEBI at the end of it.
+     * <p>
+     * Pinning does not remove the ability to update, it moves it under control:
+     * {@code POST /admin/ontologies/{name}/refresh} passes {@code forceLoad=true}, which bypasses
+     * the pin. Update when you choose to, not when a restart happens to coincide with a release.
+     */
+    static boolean isCachePinned() {
+        return Boolean.TRUE.equals( Configuration.getBoolean( "ontology.cache.pinned" ) );
     }
 
     /**
@@ -106,7 +134,29 @@ public class OntologyLoader {
         return getModel( maker, base, processImports, spec );
     }
 
-    private static void readModelFromUrl( OntModel model, String url, @Nullable String cacheName ) throws IOException {
+    private static void readModelFromUrl( OntModel model, String url, @Nullable String cacheName, boolean allowRemote ) throws IOException {
+        // Pinned: the bytes on disk ARE the ontology. Return before any connection is opened --
+        // not a conditional GET, not a HEAD. A conditional request is cheap in bytes but it is
+        // still the thing that decides to replace the vocabulary, and that decision is what
+        // pinning exists to take away from a restart.
+        if ( !allowRemote && cacheName != null ) {
+            File cached = getDiskCachePath( cacheName );
+            if ( cached.isFile() && cached.length() > 0 ) {
+                StopWatch timer = StopWatch.createStarted();
+                try ( InputStream is = Files.newInputStream( cached.toPath() ) ) {
+                    model.read( is, url );
+                }
+                log.info( "{} cache is pinned; loaded {} bytes from {} in {} ms without contacting {}.",
+                        cacheName, cached.length(), cached, timer.getTime(), url );
+                return;
+            }
+            // Nothing cached yet, so there is nothing to pin to. Seed it this once rather than
+            // failing the boot, and say so loudly -- a silent fetch here is exactly the surprise
+            // pinning is meant to prevent.
+            log.warn( "{} cache is pinned but no cached copy exists at {}; fetching once to seed it. "
+                            + "Subsequent loads will use the cached bytes.",
+                    cacheName, getDiskCachePath( cacheName ) );
+        }
         boolean attemptToLoadFromDisk = false;
         // Set when the server answered 304: the cached copy is current, so there is nothing to
         // download and nothing to rotate. Distinct from attemptToLoadFromDisk, which means the

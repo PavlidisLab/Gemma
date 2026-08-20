@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.ontology.model.OntologyProperty;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.ols.OlsTerm;
 import ubic.gemma.core.ontology.ols.OlsTermResolver;
@@ -137,6 +138,44 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
     }
 
     /**
+     * Whether a resolver actually told us what a term is called.
+     * <p>
+     * A resolver that hands back the term's own accession as its label ({@code RO_0002573} for
+     * {@code .../obo/RO_0002573}) has not resolved anything — it has said "I don't know this term" in the one
+     * form that looks like an answer. Both sources do it: a loaded ontology with no {@code rdfs:label} falls
+     * back to the local name, and OLS echoes the id for terms outside the ontologies it serves.
+     * <p>
+     * Treating that as authoritative is worse than useless, because the caller then gets a LABEL_MISMATCH:
+     * "this vocabulary is not loaded" is reported as "your label is wrong". On gemma2 that rejected a design
+     * read straight out of Gemma and offered back unchanged — the RO predicates on GSE11630 are not loaded, so
+     * Gemma refused to accept its own stored data, which also made a snapshot of an unmodified dataset
+     * impossible to restore.
+     * <p>
+     * Falling through instead yields URI_UNRESOLVED, which is both true and actionable: load the vocabulary,
+     * or drop the URI.
+     */
+    private static boolean isRealLabel( String uri, @Nullable String label ) {
+        if ( StringUtils.isBlank( label ) ) {
+            return false;
+        }
+        String localName = localName( uri );
+        // Both conditions are needed. "equals the local name" alone is too broad: plenty of URIs end in the
+        // word they mean (.../obo/asthma labelled "asthma"), and calling those unresolved would reject real
+        // terms. The degenerate case is specifically an ACCESSION echoed back as prose -- RO_0002573, GO:0008150
+        // -- which no ontology uses as a human label.
+        return !( label.equals( localName ) && ACCESSION_SHAPED.matcher( localName ).matches() );
+    }
+
+    /** An OBO-style accession: a short alphabetic prefix, a separator, and digits. Never a real label. */
+    private static final Pattern ACCESSION_SHAPED = Pattern.compile( "[A-Za-z]{2,}[_:]\\d+" );
+
+    /** The trailing id of a term URI — everything after the last {@code /} or {@code #}. */
+    private static String localName( String uri ) {
+        int cut = Math.max( uri.lastIndexOf( '/' ), uri.lastIndexOf( '#' ) );
+        return cut >= 0 && cut < uri.length() - 1 ? uri.substring( cut + 1 ) : uri;
+    }
+
+    /**
      * Rewrite a URI carrying a Gemma-owned ontology id ({@code TGEMO_<n>}) onto Gemma's canonical ontology base
      * regardless of the base it arrived on (the OBO PURL base, or a double-mangled
      * {@code .../obo/http_//gemma…/TGEMO_…} form) — the server-side mirror of the curation-UI's {@code curieToUrl}.
@@ -158,11 +197,51 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
      * Resolve a URI's canonical label: Gemma's loaded ontologies first, then OLS. Records a violation and
      * returns {@code null} when the URI resolves nowhere or OLS is unreachable.
      */
+    /**
+     * Gemma's own answer for the two slots where Gemma has rules, or {@code null} for the slots where it does not.
+     * <p>
+     * Predicates and categories are constrained vocabularies Gemma ships and owns — {@code Relation.terms.txt}
+     * (22 relations) and the category terms — so for those slots the local list is the authority and there is
+     * nothing to ask an ontology or OLS about. Subjects, objects and values are deliberately unconstrained:
+     * curators legitimately use terms from ontologies Gemma has never loaded, and blocking those would be wrong.
+     * <p>
+     * Consulting the loaded ontologies instead of this list is what rejected {@code RO_0002573} — a predicate
+     * that IS in {@code Relation.terms.txt}, labelled exactly {@code "has modifier"}, and that Gemma had itself
+     * stored on GSE11630. RO is not among the loadable ontologies, so the generic path found nothing and the
+     * commit refused Gemma's own sanctioned relation.
+     */
+    @Nullable
+    private String resolveFromGemmaVocabulary( String slot, String uri ) {
+        if ( "predicate".equals( slot ) || "secondPredicate".equals( slot ) ) {
+            for ( OntologyProperty p : ontologyService.getRelationTerms() ) {
+                if ( uri.equals( p.getUri() ) ) {
+                    return p.getLabel();
+                }
+            }
+            return null;
+        }
+        if ( "category".equals( slot ) ) {
+            for ( OntologyTerm t : ontologyService.getCategoryTerms() ) {
+                if ( uri.equals( t.getUri() ) ) {
+                    return t.getLabel();
+                }
+            }
+            return null;
+        }
+        return null;
+    }
+
     @Nullable
     private String resolveLabel( String uri, String slot, @Nullable String submittedLabel, List<TermViolation> violations ) {
+        // Gemma's own vocabularies first: for a predicate or a category they are definitive, offline, and cannot
+        // be second-guessed by whatever an external service happens to know.
+        String own = resolveFromGemmaVocabulary( slot, uri );
+        if ( own != null ) {
+            return own;
+        }
         try {
             OntologyTerm local = ontologyService.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );
-            if ( local != null && local.getLabel() != null ) {
+            if ( local != null && isRealLabel( uri, local.getLabel() ) ) {
                 return local.getLabel();
             }
         } catch ( TimeoutException e ) {
@@ -170,7 +249,7 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
         }
         try {
             OlsTerm ols = olsTermResolver.resolve( uri );
-            if ( ols != null && ols.getLabel() != null ) {
+            if ( ols != null && isRealLabel( uri, ols.getLabel() ) ) {
                 return ols.getLabel();
             }
         } catch ( OlsUnavailableException e ) {

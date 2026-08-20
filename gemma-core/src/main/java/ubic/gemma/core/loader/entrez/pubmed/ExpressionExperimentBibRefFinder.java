@@ -29,6 +29,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.List;
+import java.util.Collections;
+import java.util.ArrayList;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -115,8 +118,43 @@ public class ExpressionExperimentBibRefFinder {
      * eutils is the wrong tool here despite being the nicer API. The {@code &targ=self&form=text}
      * view gives the same {@code !Series_pubmed_id} field the importer ({@code GeoFamilyParser})
      * already trusts.
+     *
+     * <p>Public because verification needs this and nothing else. {@code locatePrimaryReference} spends
+     * a second PubMed round trip building a {@link BibliographicReference}, which a caller that only
+     * wants to know whether GEO still says the same id has no use for.</p>
+     *
+     * @return GEO's current {@code !Series_pubmed_id}, or -1 when the accession is not a series or GEO
+     * states no publication for it
      */
-    private int locatePubMedId( String geoSeries ) throws IOException {
+    /**
+     * As {@link #locatePubMedId(String)}, but every id the series lists rather than only the first.
+     *
+     * @return GEO's {@code !Series_pubmed_id} values in order, first being the primary; empty when the
+     * accession is not a GEO series or GEO states no publication for it
+     */
+    public List<Integer> locatePubMedIds( String geoSeries ) throws IOException {
+        if ( !geoSeries.matches( "GSE\\d+" ) ) {
+            ExpressionExperimentBibRefFinder.log.warn( geoSeries + " is not a GEO Series Accession" );
+            return Collections.emptyList();
+        }
+        URL url;
+        URLConnection conn;
+        try {
+            url = new URL( ExpressionExperimentBibRefFinder.GEO_SERIES_URL_BASE + geoSeries
+                    + ExpressionExperimentBibRefFinder.GEO_SERIES_SOFT_SUFFIX );
+            conn = url.openConnection();
+            conn.connect();
+        } catch ( IOException e1 ) {
+            ExpressionExperimentBibRefFinder.log.error( e1, e1 );
+            throw new RuntimeException( "Could not get data from remote server", e1 );
+        }
+        try ( InputStream is = conn.getInputStream();
+                BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) ) ) {
+            return parseSeriesPubMedIds( br, geoSeries );
+        }
+    }
+
+    public int locatePubMedId( String geoSeries ) throws IOException {
         if ( !geoSeries.matches( "GSE\\d+" ) ) {
             ExpressionExperimentBibRefFinder.log.warn( geoSeries + " is not a GEO Series Accession" );
             return -1;
@@ -147,8 +185,28 @@ public class ExpressionExperimentBibRefFinder {
      * a curator. Returns {@code -1} when no numeric {@code !Series_pubmed_id} is present.
      */
     static int parseSeriesPubMedId( BufferedReader br, String geoSeries ) throws IOException {
-        int firstPubMedId = -1;
-        int count = 0;
+        List<Integer> ids = parseSeriesPubMedIds( br, geoSeries );
+        if ( ids.size() > 1 ) {
+            ExpressionExperimentBibRefFinder.log.warn( geoSeries + " lists " + ids.size()
+                    + " PubMed ids in GEO; using the first (" + ids.get( 0 )
+                    + ") as the primary reference. A curator should confirm which is primary." );
+        }
+        return ids.isEmpty() ? -1 : ids.get( 0 );
+    }
+
+    /**
+     * Every {@code !Series_pubmed_id} the record carries, in the order GEO lists them.
+     *
+     * <p>The single-id form above always READ all of them — it counted them and warned that "a curator
+     * should confirm which is primary" — and then discarded everything after the first. A series
+     * listing two papers is a series with a primary and a follow-up, which is what the other-relevant
+     * slot is for, so that warning described work the caller had no way to act on.</p>
+     *
+     * <p>First is primary, matching {@code GeoConverterImpl}'s convention; the rest are
+     * other-relevant. Empty when GEO states no publication for the series.</p>
+     */
+    static List<Integer> parseSeriesPubMedIds( BufferedReader br, String geoSeries ) throws IOException {
+        List<Integer> ids = new ArrayList<>();
         String line;
         while ( ( line = br.readLine() ) != null ) {
             if ( !StringUtils.startsWithIgnoreCase( StringUtils.stripStart( line, null ), SERIES_PUBMED_ID_TAG ) ) {
@@ -164,16 +222,12 @@ public class ExpressionExperimentBibRefFinder {
                         + SERIES_PUBMED_ID_TAG + " value '" + value + "'" );
                 continue;
             }
-            count++;
-            if ( firstPubMedId < 0 ) {
-                firstPubMedId = Integer.parseInt( value );
+            Integer id = Integer.valueOf( value );
+            // the same id can appear more than once in a record; one paper listed twice is one paper
+            if ( !ids.contains( id ) ) {
+                ids.add( id );
             }
         }
-        if ( count > 1 ) {
-            ExpressionExperimentBibRefFinder.log.warn( geoSeries + " lists " + count
-                    + " PubMed ids in GEO; using the first (" + firstPubMedId
-                    + ") as the primary reference. A curator should confirm which is primary." );
-        }
-        return firstPubMedId;
+        return ids;
     }
 }

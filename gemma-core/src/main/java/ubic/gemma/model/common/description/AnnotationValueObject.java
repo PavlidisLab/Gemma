@@ -19,7 +19,6 @@
 package ubic.gemma.model.common.description;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -110,8 +109,6 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Schema(description = "Verbatim provenance backing a curated tag — a JSON array of {quote, source, location} items the curation agents emitted. Null when the tag has no recorded evidence.")
     private JsonNode supportingEvidence;
 
-    private static final ObjectMapper SUPPORTING_EVIDENCE_MAPPER = new ObjectMapper();
-
     public AnnotationValueObject() {
         super();
     }
@@ -132,38 +129,24 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
         super( c );
         classUri = c.getCategoryUri();
         className = c.getCategory();
-        termUri = c.getValueUri();
-        termName = c.getValue();
+        // See CharacteristicUtils#canonicalUri: a read-time stand-in for the parked migration.
+        termUri = CharacteristicUtils.canonicalUri( c.getValueUri() );
+        termName = CharacteristicUtils.canonicalLabel( c.getValueUri(), c.getValue() );
         evidenceCode = c.getEvidenceCode() != null ? c.getEvidenceCode().name() : null;
         if ( c instanceof Statement ) {
             Statement s = ( Statement ) c;
             predicate = s.getPredicate();
             predicateUri = s.getPredicateUri();
-            object = s.getObject();
-            objectUri = s.getObjectUri();
+            // A Statement has three annotatable value slots, and a term is as often in the
+            // object as the subject -- canonicalizing only the subject would fix a third of it.
+            objectUri = CharacteristicUtils.canonicalUri( s.getObjectUri() );
+            object = CharacteristicUtils.canonicalLabel( s.getObjectUri(), s.getObject() );
             secondPredicate = s.getSecondPredicate();
             secondPredicateUri = s.getSecondPredicateUri();
-            secondObject = s.getSecondObject();
-            secondObjectUri = s.getSecondObjectUri();
+            secondObjectUri = CharacteristicUtils.canonicalUri( s.getSecondObjectUri() );
+            secondObject = CharacteristicUtils.canonicalLabel( s.getSecondObjectUri(), s.getSecondObject() );
         }
-        supportingEvidence = parseSupportingEvidence( c.getSupportingEvidence() );
-    }
-
-    /**
-     * Parse the opaque stored JSON into a tree for serialization. Writes always store a serialized
-     * {@code JsonNode}, so this round-trips cleanly; a null/blank or (defensively) unparseable value
-     * yields {@code null} rather than propagating a parse failure into the read response.
-     */
-    @Nullable
-    private static JsonNode parseSupportingEvidence( @Nullable String json ) {
-        if ( json == null || json.isEmpty() ) {
-            return null;
-        }
-        try {
-            return SUPPORTING_EVIDENCE_MAPPER.readTree( json );
-        } catch ( Exception e ) {
-            return null;
-        }
+        supportingEvidence = CharacteristicUtils.parseSupportingEvidence( c.getSupportingEvidence() );
     }
 
     public AnnotationValueObject( Characteristic c, Class<?> objectClass ) {

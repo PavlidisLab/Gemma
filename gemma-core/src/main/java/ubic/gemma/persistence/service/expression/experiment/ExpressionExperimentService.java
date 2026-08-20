@@ -43,6 +43,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -1203,6 +1204,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * to persistent references first (see
      * {@link ubic.gemma.persistence.service.common.description.BibliographicReferenceService#findOrCreateByPubMedId(String)}).
      *
+     * Evidence-free form of {@link #updatePublications(ExpressionExperiment, PublicationAssertion,
+     * Collection, Collection)}: every publication is recorded as asserted by
+     * {@link ubic.gemma.model.common.description.PublicationAssociationSource#CURATOR} with no stated
+     * basis, which is what reaching this method through an {@code ACL_SECURABLE_EDIT} write amounts
+     * to. Prefer the four-argument form wherever the caller knows why.
+     *
      * @param ee                          the experiment whose publications are being replaced.
      * @param primaryPublication          the desired primary publication, or {@code null} to clear it.
      * @param otherRelevantPublications   the desired other-relevant-publication set (may be empty). Any
@@ -1212,6 +1219,47 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void updatePublications( ExpressionExperiment ee, @Nullable BibliographicReference primaryPublication,
             Collection<BibliographicReference> otherRelevantPublications );
+
+    /**
+     * Replace {@code ee}'s publications and the evidence behind them in one transaction, including the
+     * record of which publications have been ruled out.
+     * <p>
+     * The links and the assertions describing them are two halves of one record — Gemma 1.32.x shares
+     * this database and reads only the links, so the assertions live in their own table — and this is
+     * the method that keeps them in step. It writes the links
+     * ({@link ExpressionExperiment#getPrimaryPublication()} /
+     * {@link ExpressionExperiment#getOtherRelevantPublications()}) and delegates the assertions to
+     * {@link ubic.gemma.persistence.service.common.description.PublicationAssociationService#reconcile},
+     * so neither can be updated without the other.
+     * <p>
+     * {@code rejectedPublications} is the addition that lets a "not this one, because…" be recorded at
+     * all. A rejected publication is not linked, and a lower authority — a nightly GEO refresh, a
+     * publication finder — cannot subsequently link it: precedence is enforced by rank at write time,
+     * so the ruling holds without anyone maintaining a list of exceptions. Dropping a publication from
+     * the accepted sets without naming it here retracts its assertion instead, which records that the
+     * link is gone but not why.
+     *
+     * @param ee                        the experiment whose publications are being replaced.
+     * @param primaryPublication        the desired primary publication and its evidence, or
+     *                                  {@code null} to clear it.
+     * @param otherRelevantPublications the desired other-relevant set with evidence (may be empty).
+     *                                  Any entry naming the primary's reference is ignored.
+     * @param rejectedPublications      publications to record as ruled out for this experiment,
+     *                                  replacing the standing set — an empty collection clears every
+     *                                  rejection. Pass {@code null} to leave the standing rejections
+     *                                  alone, which is what a caller that does not manage them wants:
+     *                                  a rejection is not returned by the plain publications read, so
+     *                                  a client that writes back what it read has not seen them and
+     *                                  its silence must not delete them. A reference given both here
+     *                                  and as accepted is an {@link IllegalArgumentException}.
+     * @throws ubic.gemma.persistence.service.common.description.PublicationAssociationConflictException
+     *         if an accepted publication stands rejected by an authority the asserting source does not
+     *         outrank.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void updatePublications( ExpressionExperiment ee, @Nullable PublicationAssertion primaryPublication,
+            Collection<PublicationAssertion> otherRelevantPublications,
+            @Nullable Collection<PublicationAssertion> rejectedPublications );
 
     /**
      * Update the curator-editable "basics" of {@code ee}: its {@code name} (title) and/or

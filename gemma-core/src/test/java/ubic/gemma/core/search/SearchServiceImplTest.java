@@ -216,6 +216,59 @@ public class SearchServiceImplTest {
     }
 
     /**
+     * A DETACHED entity must go straight to the id-path, without attempting the entity path
+     * at all: the entity-path converter walks lazy associations, so on a detached entity it
+     * can only fail — and before the up-front check, every anonymous /search result did
+     * exactly that (sub-transaction, LazyInitException, one retry by the generic retry
+     * advice, a WARN, and then the id-path anyway; 6/6 requests in the 2026-08-19 perf
+     * baseline). Detachment is knowable before converting; this pins that we ask first.
+     */
+    @Test
+    public void detachedEntitySkipsEntityPathEntirely() {
+        SearchServiceImpl svc = new SearchServiceImpl();
+        ConversionService conversionService = mock( ConversionService.class );
+        when( conversionService.canConvert( any( Class.class ), any( Class.class ) ) ).thenReturn( true );
+        when( conversionService.canConvert( any( TypeDescriptor.class ), any( TypeDescriptor.class ) ) ).thenReturn( true );
+
+        PlatformTransactionManager txManager = mock( PlatformTransactionManager.class );
+
+        // The session knows nothing of this entity: it is detached.
+        org.hibernate.SessionFactory sessionFactory = mock( org.hibernate.SessionFactory.class );
+        org.hibernate.Session session = mock( org.hibernate.Session.class );
+        when( sessionFactory.getCurrentSession() ).thenReturn( session );
+        when( session.contains( any( Object.class ) ) ).thenReturn( false );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ReflectionTestUtils.setField( ee, "id", 42L );
+        ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject( 42L );
+        when( conversionService.convert( any( Collection.class ),
+                argThat( ( TypeDescriptor td ) -> td != null && td.getElementTypeDescriptor() != null
+                        && Long.class.equals( td.getElementTypeDescriptor().getType() ) ),
+                any( TypeDescriptor.class ) ) )
+                .thenReturn( new ArrayList<>( Collections.singletonList( vo ) ) );
+
+        ReflectionTestUtils.setField( svc, "searchSources", Collections.<SearchSource>emptyList() );
+        ReflectionTestUtils.setField( svc, "valueObjectConversionService", conversionService );
+        ReflectionTestUtils.setField( svc, "transactionManager", txManager );
+        ReflectionTestUtils.setField( svc, "sessionFactory", sessionFactory );
+        svc.afterPropertiesSet();
+
+        SearchResult<ExpressionExperiment> sr = SearchResult.from( ExpressionExperiment.class, ee, 1.0, null, "test" );
+        List<SearchResult<? extends IdentifiableValueObject<?>>> out =
+                svc.loadValueObjects( Collections.<SearchResult<?>>singletonList( sr ) );
+
+        assertThat( out ).hasSize( 1 );
+        assertThat( out.get( 0 ).getResultObject() ).isSameAs( vo );
+
+        // The entity path was never attempted: no entity-collection convert, no sub-transaction.
+        verify( conversionService, never() ).convert( any( Collection.class ),
+                argThat( ( TypeDescriptor td ) -> td != null && td.getElementTypeDescriptor() != null
+                        && ExpressionExperiment.class.equals( td.getElementTypeDescriptor().getType() ) ),
+                any( TypeDescriptor.class ) );
+        verify( txManager, never() ).getTransaction( any() );
+    }
+
+    /**
      * When no PlatformTransactionManager is wired (existing unit-test contexts), the entity
      * path falls back to an inline convert. The catch+id-promote still applies.
      */

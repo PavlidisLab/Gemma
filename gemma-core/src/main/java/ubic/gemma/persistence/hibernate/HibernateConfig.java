@@ -159,6 +159,7 @@ public class HibernateConfig {
         HibernateSessionFactoryBean factory = new HibernateSessionFactoryBean();
         factory.setDataSource( dataSource );
         factory.setConfigLocation( new ClassPathResource( "hibernate.cfg.xml" ) );
+        factory.setAuxiliaryDatabaseObjects( auditTrailLastEventForeignKey() );
 
         Properties props = new Properties();
         props.setProperty( "hibernate.hbm2ddl.auto", hbm2ddlAuto );
@@ -297,6 +298,43 @@ public class HibernateConfig {
      * otherwise {@code readAclById} immediately after {@code createAcl} cannot see the just-inserted
      * row.
      */
+    /**
+     * {@code AUDIT_TRAIL.LAST_EVENT_FK} needs {@code ON DELETE SET NULL}, and nothing in the mapping
+     * can say so.
+     *
+     * <p>HBM XML's {@code <many-to-one on-delete>} accepts only {@code cascade} or {@code noaction},
+     * and JPA has no portable equivalent at all. Under {@code hibernate.hbm2ddl.auto=create} the
+     * generated FK therefore defaults to RESTRICT, and deleting an {@code AuditEvent} that a trail
+     * still points at fails with a ConstraintViolation — while the Flyway path
+     * ({@code V8__audit_trail_last_event_id.sql}) declares {@code ON DELETE SET NULL} and behaves
+     * correctly. The two schemas disagreed, and only the built-from-scratch one was wrong.</p>
+     *
+     * <p>This replays V8's FK shape against an hbm2ddl-built schema: drop the generated constraint,
+     * re-add it with the delete rule. Two statements rather than one because Hibernate issues each
+     * array element as its own JDBC statement. Dialect-scoped to MySQL, Gemma's only production and
+     * test dialect (see the {@code hibernate.dialect} property above).</p>
+     *
+     * <p>🛑 <b>This is why {@code AuditTrail.hbm.xml} existed.</b> The entity itself moved to JPA
+     * annotations long ago; the file survived purely to carry these two {@code <database-object>}
+     * elements, and with it the {@code HHH90000028} deprecation warning on every single boot and a
+     * mapping migration that read as unfinished when only this hook was left. Expressed here, the last
+     * {@code .hbm.xml} in the repository is gone.</p>
+     *
+     * <p>No drop statements: dropping {@code AUDIT_TRAIL} takes its constraints with it, and the old
+     * XML's {@code <drop>select 1</drop>} was there only because the schema required the element.</p>
+     */
+    private static org.hibernate.boot.model.relational.AuxiliaryDatabaseObject auditTrailLastEventForeignKey() {
+        return new org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject(
+                java.util.Collections.singleton( "ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect" ),
+                null, null,
+                new String[] {
+                        "ALTER TABLE AUDIT_TRAIL DROP FOREIGN KEY FK_AUDIT_TRAIL_LAST_EVENT",
+                        "ALTER TABLE AUDIT_TRAIL ADD CONSTRAINT FK_AUDIT_TRAIL_LAST_EVENT"
+                                + " FOREIGN KEY (LAST_EVENT_FK) REFERENCES AUDIT_EVENT(ID) ON DELETE SET NULL"
+                },
+                new String[0] );
+    }
+
     @Bean(name = "transactionManager")
     public HibernateTransactionManager transactionManager( SessionFactory sessionFactory, DataSource dataSource ) {
         HibernateTransactionManager tm = new HibernateTransactionManager();

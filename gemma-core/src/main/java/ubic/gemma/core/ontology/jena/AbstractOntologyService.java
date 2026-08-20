@@ -1,6 +1,7 @@
 package ubic.gemma.core.ontology.jena;
 
 import org.apache.jena.ontology.*;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
@@ -14,6 +15,7 @@ import org.apache.jena.reasoner.rulesys.OWLMicroReasonerFactory;
 import org.apache.jena.reasoner.rulesys.OWLMiniReasonerFactory;
 import org.apache.jena.reasoner.transitiveReasoner.TransitiveReasonerFactory;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.DC_11;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
@@ -203,18 +205,35 @@ public abstract class AbstractOntologyService implements OntologyService {
 
     @Override
     public String getName() {
-        return getState().map( state -> {
-            NodeIterator it = state.model.listObjectsOfProperty( DC_11.title );
-            return it.hasNext() ? it.next().asLiteral().getString() : null;
-        } ).orElse( null );
+        return getState().map( state -> firstLiteral( state.model, DC_11.title, DCTerms.title ) ).orElse( null );
     }
 
     @Override
     public String getDescription() {
-        return getState().map( state -> {
-            NodeIterator it = state.model.listObjectsOfProperty( DC_11.description );
-            return it.hasNext() ? it.next().asLiteral().getString() : null;
-        } ).orElse( null );
+        return getState().map( state -> firstLiteral( state.model, DC_11.description, DCTerms.description ) ).orElse( null );
+    }
+
+    /**
+     * First literal found under any of {@code properties}, in order, or {@code null}.
+     *
+     * <p>Dublin Core has two namespaces and ontologies do not agree on which to use: the older
+     * {@code purl.org/dc/elements/1.1/} (GO, OBI) and DCTerms at {@code purl.org/dc/terms/}
+     * (CHEBI, and increasingly the OBO reissues). Reading only the 1.1 spelling reported a null
+     * name and description for every ontology on the modern namespace even though both were
+     * sitting in the model.
+     */
+    @Nullable
+    private static String firstLiteral( Model model, Property... properties ) {
+        for ( Property p : properties ) {
+            NodeIterator it = model.listObjectsOfProperty( p );
+            while ( it.hasNext() ) {
+                RDFNode n = it.next();
+                if ( n.isLiteral() ) {
+                    return n.asLiteral().getString();
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -311,6 +330,18 @@ public abstract class AbstractOntologyService implements OntologyService {
         this.additionalPropertyUris = additionalPropertyUris;
     }
 
+    /** Whether the load currently running was asked for explicitly (admin refresh) rather than by startup. */
+    private volatile boolean forceLoadInProgress = false;
+
+    /**
+     * True when the in-flight load came from an explicit {@code forceLoad} request — the admin
+     * refresh endpoint — as opposed to startup. A subclass that fetches remotely consults this to
+     * decide whether a pinned cache may be bypassed; see {@link OntologyLoader#isCachePinned()}.
+     */
+    protected boolean isForceLoadInProgress() {
+        return forceLoadInProgress;
+    }
+
     public void initialize( boolean forceLoad, boolean forceIndexing ) {
         initialize( null, forceLoad, forceIndexing );
     }
@@ -320,6 +351,11 @@ public abstract class AbstractOntologyService implements OntologyService {
     }
 
     private synchronized void initialize( @Nullable InputStream stream, boolean forceLoad, boolean forceIndexing ) {
+        // Visible to loadModel() on this same thread, which is how a subclass learns whether the
+        // caller asked for a real re-fetch. Safe as a plain field because initialize() is
+        // synchronized, so exactly one load runs per service at a time; threading the flag through
+        // loadModel() instead would change an abstract signature and all five of its overriders.
+        this.forceLoadInProgress = forceLoad;
         if ( !forceLoad && state != null ) {
             log.warn( "{} is already loaded, and force=false, not restarting", this );
             return;
@@ -573,6 +609,51 @@ public abstract class AbstractOntologyService implements OntologyService {
         } ).orElseGet( () -> {
             log.warn( "Ontology {} is not ready, no term  URIs will be returned.", this );
             return Collections.emptySet();
+        } );
+    }
+
+    /**
+     * Read cross-references from the cached SOURCE artifact instead of the loaded model.
+     *
+     * <p>A PLAIN model, deliberately: no {@code OntModel}, no inference, no imports — just the
+     * triples {@link CrossReferences} needs. That is strictly lighter than the model this service
+     * already builds at boot, so it cannot be the thing that runs the host out of memory, and it
+     * reuses the existing qualifier logic rather than growing a second parser that could disagree
+     * with it about exact-versus-narrow.</p>
+     *
+     * <p>Falls back to the loaded model when there is no cached source — better a smaller index than
+     * none.</p>
+     */
+    @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferencesFromSource() {
+        String cacheName = getCacheName();
+        if ( cacheName == null ) {
+            return getCrossReferences();
+        }
+        java.io.File cached = OntologyLoader.getDiskCachePath( cacheName );
+        if ( !cached.isFile() || cached.length() == 0 ) {
+            log.warn( "No cached source for {} at {}; falling back to the loaded model's cross-references, "
+                    + "which under-cover if that model is a slim.", cacheName, cached );
+            return getCrossReferences();
+        }
+        org.apache.jena.rdf.model.Model model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel();
+        try ( java.io.InputStream in = java.nio.file.Files.newInputStream( cached.toPath() ) ) {
+            model.read( in, getOntologyUrl() );
+            return CrossReferences.list( model );
+        } catch ( Exception e ) {
+            log.warn( "Could not read cross-references from the cached source " + cached
+                    + "; falling back to the loaded model.", e );
+            return getCrossReferences();
+        } finally {
+            model.close();
+        }
+    }
+
+    @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferences() {
+        return getState().map( state -> CrossReferences.list( state.model ) ).orElseGet( () -> {
+            log.warn( "Ontology {} is not ready, no cross-references will be returned.", this );
+            return Collections.emptyList();
         } );
     }
 

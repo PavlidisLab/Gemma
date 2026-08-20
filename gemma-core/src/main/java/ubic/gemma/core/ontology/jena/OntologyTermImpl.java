@@ -15,13 +15,16 @@
 package ubic.gemma.core.ontology.jena;
 
 import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.ontology.OntResource;
 import org.apache.jena.ontology.Restriction;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.RDFS;
 import ubic.gemma.core.ontology.model.AnnotationProperty;
 import ubic.gemma.core.ontology.model.OntologyIndividual;
 import ubic.gemma.core.ontology.model.OntologyRestriction;
@@ -120,7 +123,7 @@ class OntologyTermImpl extends AbstractOntologyResource implements OntologyTerm 
      */
     @Override
     public String getComment() {
-        String comment = this.ontResource.getComment( null );
+        String comment = JenaUtils.getFirstLiteral( this.ontResource, RDFS.comment );
         return comment == null ? "" : comment;
     }
 
@@ -139,6 +142,89 @@ class OntologyTermImpl extends AbstractOntologyResource implements OntologyTerm 
             .map( o -> new OntologyTermImpl( o, additionalRestrictions ) )
             .filter( o -> keepObsoletes || !o.isObsolete() )
             .collect( Collectors.toSet() );
+    }
+
+    /** {@code RO:0002162 in_taxon} — the OBO relation MONDO uses to declare a species constraint. */
+    private static final String IN_TAXON_URI = "http://purl.obolibrary.org/obo/RO_0002162";
+
+    /** {@code http://purl.obolibrary.org/obo/NCBITaxon_9940} → 9940. */
+    private static final java.util.regex.Pattern NCBI_TAXON_URI =
+            java.util.regex.Pattern.compile( ".*/NCBITaxon_(\\d+)$" );
+
+    /**
+     * One pass over the DIRECT superclasses, testing {@code isRestriction()} rather than catching an
+     * exception from {@code asRestriction()}, and stopping at the first {@code in_taxon}.
+     * <p>
+     * {@code in_taxon} is asserted directly on the term in MONDO, so there is nothing to gain by
+     * walking to the grandparents the way {@link #getRestrictions()} does — and a great deal to lose:
+     * that method's second pass throws and catches an exception for every superclass that is not a
+     * restriction, which is most of them. This runs per search hit during top-N enrichment, so it
+     * has to cost roughly nothing.
+     */
+    @Nullable
+    @Override
+    public TaxonConstraint getTaxonConstraint() {
+        ExtendedIterator<OntClass> it = ontResource.listSuperClasses( true );
+        try {
+            while ( it.hasNext() ) {
+                OntClass c = it.next();
+                if ( !c.isRestriction() ) {
+                    continue;
+                }
+                Restriction r = c.asRestriction();
+                OntProperty on = r.getOnProperty();
+                if ( on == null || !IN_TAXON_URI.equals( on.getURI() ) || !r.isSomeValuesFromRestriction() ) {
+                    continue;
+                }
+                Resource filler = r.asSomeValuesFromRestriction().getSomeValuesFrom();
+                if ( filler == null || filler.getURI() == null ) {
+                    continue;
+                }
+                String uri = filler.getURI();
+                Integer id = null;
+                java.util.regex.Matcher m = NCBI_TAXON_URI.matcher( uri );
+                if ( m.matches() ) {
+                    try {
+                        id = Integer.valueOf( m.group( 1 ) );
+                    } catch ( NumberFormatException ignored ) {
+                        // an NCBITaxon id too large for an int is not a thing; leave it null
+                    }
+                }
+                // Null whenever NCBITaxon is not loaded and the referencing ontology declared no
+                // label for the class. The id carries the meaning; the label is decoration.
+                String label = filler.canAs( OntClass.class )
+                        ? filler.as( OntClass.class ).getLabel( null )
+                        : null;
+                return new TaxonConstraint( uri, id, label );
+            }
+        } finally {
+            it.close();
+        }
+        return null;
+    }
+
+    /**
+     * One pass over the DIRECT superclasses. See {@link OntologyTerm#getDirectRestrictions()} for why
+     * the closure walk is both unnecessary and unstable here.
+     */
+    @Override
+    public Collection<OntologyRestriction> getDirectRestrictions() {
+        Collection<OntologyRestriction> result = new HashSet<>();
+        ExtendedIterator<OntClass> it = ontResource.listSuperClasses( true );
+        try {
+            while ( it.hasNext() ) {
+                OntClass c = it.next();
+                // isRestriction() rather than catching what asRestriction() throws: most superclasses
+                // are not restrictions, and an exception per miss is what makes the other method cost
+                // what it costs
+                if ( c.isRestriction() ) {
+                    result.add( RestrictionFactory.asRestriction( c.asRestriction(), additionalRestrictions ) );
+                }
+            }
+        } finally {
+            it.close();
+        }
+        return result;
     }
 
     /**

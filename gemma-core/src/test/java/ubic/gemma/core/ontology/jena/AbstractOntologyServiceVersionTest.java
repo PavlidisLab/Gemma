@@ -20,7 +20,9 @@ class AbstractOntologyServiceVersionTest {
         return "<?xml version=\"1.0\"?>\n" +
                 "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n" +
                 "         xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"\n" +
-                "         xmlns:owl=\"http://www.w3.org/2002/07/owl#\">\n" +
+                "         xmlns:owl=\"http://www.w3.org/2002/07/owl#\"\n" +
+                "         xmlns:dc=\"http://purl.org/dc/elements/1.1/\"\n" +
+                "         xmlns:terms=\"http://purl.org/dc/terms/\">\n" +
                 "  <owl:Ontology rdf:about=\"http://example.org/test\">\n" +
                 headerBody +
                 "  </owl:Ontology>\n" +
@@ -54,5 +56,36 @@ class AbstractOntologyServiceVersionTest {
     void versionIsNullWhenNeitherDeclared() {
         OntologyService svc = load( owl( "" ) );
         assertThat( svc.getVersion() ).isNull();
+    }
+
+    /**
+     * Dublin Core has two namespaces and ontologies do not agree on which to use. Reading only the
+     * older {@code purl.org/dc/elements/1.1/} spelling reported a null name and description for
+     * every ontology using DCTerms — CHEBI writes {@code terms:title} / {@code terms:description}
+     * and showed blank in {@code /admin/ontologies} while both sat in the loaded model.
+     */
+    @Test
+    void nameAndDescriptionReadTheDcTermsNamespaceToo() {
+        OntologyService svc = load( owl(
+                "    <terms:title>ChEBI Ontology</terms:title>\n"
+                        + "    <terms:description>A chemical database and ontology.</terms:description>\n" ) );
+        assertThat( svc.getName() ).isEqualTo( "ChEBI Ontology" );
+        assertThat( svc.getDescription() ).isEqualTo( "A chemical database and ontology." );
+    }
+
+    @Test
+    void nameAndDescriptionStillReadTheLegacyDcNamespace() {
+        OntologyService svc = load( owl(
+                "    <dc:title>Gene Ontology</dc:title>\n"
+                        + "    <dc:description>An ontology of gene function.</dc:description>\n" ) );
+        assertThat( svc.getName() ).isEqualTo( "Gene Ontology" );
+        assertThat( svc.getDescription() ).isEqualTo( "An ontology of gene function." );
+    }
+
+    @Test
+    void nameAndDescriptionAreNullWhenNeitherNamespaceDeclaresThem() {
+        OntologyService svc = load( owl( "" ) );
+        assertThat( svc.getName() ).isNull();
+        assertThat( svc.getDescription() ).isNull();
     }
 }

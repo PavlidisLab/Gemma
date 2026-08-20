@@ -52,6 +52,10 @@ public class AnnotationSetSummaryValueObject extends IdentifiableValueObject<Ann
     @Nullable
     private String model;
     @Nullable
+    private String runSha;
+    @Nullable
+    private String agentName;
+    @Nullable
     private Date ranAt;
     private Long investigationId;
     @Nullable
@@ -77,7 +81,8 @@ public class AnnotationSetSummaryValueObject extends IdentifiableValueObject<Ann
             @Nullable AgentCurationKind kind, String runId, @Nullable String createdBy,
             Date createdAt, Date updatedAt,
             @Nullable Date finalizedAt, @Nullable String finalizedBy,
-            @Nullable String agentVersion, @Nullable String model, @Nullable Date ranAt,
+            @Nullable String agentVersion, @Nullable String model,
+            @Nullable String runSha, @Nullable String agentName, @Nullable Date ranAt,
             Long investigationId, @Nullable Long parentId, @Nullable Long payloadSize ) {
         super( id );
         this.role = role;
@@ -91,6 +96,8 @@ public class AnnotationSetSummaryValueObject extends IdentifiableValueObject<Ann
         this.finalizedBy = finalizedBy;
         this.agentVersion = agentVersion;
         this.model = model;
+        this.runSha = runSha;
+        this.agentName = agentName;
         this.ranAt = ranAt;
         this.investigationId = investigationId;
         this.parentId = parentId;

@@ -1,7 +1,8 @@
 package ubic.gemma.core.ontology.lexical;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.CharArraySet;
+import ubic.gemma.core.ontology.search.OntologyAnalyzers;
+import ubic.gemma.core.ontology.search.OntologyQueries;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -28,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -96,10 +96,13 @@ public class LexicalOntologyIndex implements AutoCloseable {
                 throw new IOException( "Failed to parse lexical ontology query: " + queryString, e2 );
             }
         }
+        // Same OR-default problem as the Jena index: without this a catalogue of 118k strain names
+        // answers any multi-word query on a single shared token.
+        textQuery = OntologyQueries.withMinimumShouldMatch( textQuery, OntologyQueries.DEFAULT_MIN_SHOULD_MATCH );
         // Combine an analyzed-text clause (recall) with a heavily-boosted exact name/synonym clause
         // (precision), so an exact match of the whole query against a name or synonym ranks first.
         Query exactQuery = new BoostQuery(
-                new TermQuery( new Term( NAME_FIELD, queryString.trim().toLowerCase( Locale.ROOT ) ) ),
+                new TermQuery( new Term( NAME_FIELD, normalizeExactName( queryString ) ) ),
                 EXACT_MATCH_BOOST );
         Query query = new BooleanQuery.Builder()
                 .add( textQuery, BooleanClause.Occur.SHOULD )
@@ -140,11 +143,7 @@ public class LexicalOntologyIndex implements AutoCloseable {
      */
     public static LexicalOntologyIndex build( Iterable<LexicalTerm> terms, Set<String> excludedFromStemming ) throws IOException {
         Directory dir = new ByteBuffersDirectory();
-        CharArraySet stemExclusion = new CharArraySet(
-                excludedFromStemming == null ? Collections.emptySet() : excludedFromStemming,
-                false /* not case-sensitive */
-        );
-        EnglishAnalyzer analyzer = new EnglishAnalyzer( EnglishAnalyzer.getDefaultStopSet(), stemExclusion );
+        Analyzer analyzer = OntologyAnalyzers.english( excludedFromStemming );
         IndexWriterConfig cfg = new IndexWriterConfig( analyzer );
         cfg.setOpenMode( IndexWriterConfig.OpenMode.CREATE );
         int docCount = 0;
@@ -181,9 +180,24 @@ public class LexicalOntologyIndex implements AutoCloseable {
 
     /** Index a name/synonym verbatim (lower-cased, un-analyzed) for exact-match boosting. */
     private static void addExactName( Document doc, String value ) {
-        String norm = value.trim().toLowerCase( Locale.ROOT );
+        String norm = normalizeExactName( value );
         if ( !norm.isEmpty() ) {
             doc.add( new StringField( NAME_FIELD, norm, Field.Store.NO ) );
         }
+    }
+
+    /**
+     * Normalisation for the un-analyzed {@link #NAME_FIELD}, applied identically when indexing a
+     * name and when building the exact-match clause for a query.
+     *
+     * <p>This field bypasses the analyzer by design — it exists to compare whole strings — which
+     * means it also bypasses the separator folding {@link OntologyAnalyzers} applies to
+     * {@link #TEXT_FIELD}. Left alone, the two halves of this index would disagree: a query of
+     * {@code SU 11248} would fold into the text clause but not the exact clause, so the term it
+     * names would lose its {@link #EXACT_MATCH_BOOST} and sink under partial neighbours. Folding
+     * both sides here keeps the boost aligned with what the analyzed path already matches.</p>
+     */
+    private static String normalizeExactName( String value ) {
+        return OntologyAnalyzers.foldCodeRuns( value.trim().toLowerCase( Locale.ROOT ) );
     }
 }

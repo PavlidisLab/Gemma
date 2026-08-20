@@ -23,6 +23,8 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchResultSet;
+import ubic.gemma.model.common.description.AnnotationRelationBasis;
+import ubic.gemma.persistence.service.common.description.AnnotationRelationDao;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -35,6 +37,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -87,6 +90,71 @@ public class OntologySearchSource implements SearchSource {
     private static final double INDIRECT_HIT_PENALTY = 0.9;
 
     /**
+     * Penalty for a hit reached through an inferred relation rather than through the annotation
+     * itself.
+     *
+     * <p>Steeper than {@link #INDIRECT_HIT_PENALTY} on purpose. An indirect hit is still the term the
+     * user asked for, sitting at a different level of the same dataset; an inferred hit is a
+     * <i>different term</i> that Gemma believes stands for the one asked about. That is a weaker claim
+     * and it should never outrank a dataset that is actually annotated with the query.</p>
+     */
+    private static final double INFERRED_RELATION_SCORE_PENALTY = 0.5;
+
+    /**
+     * Ceiling on how many terms one query may be widened by, across all seeds.
+     *
+     * <p>A runaway guard, not a working limit: a disease with a large sub-term fan-out could otherwise
+     * turn one search into a query over thousands of URIs. When it bites, it is logged rather than
+     * applied silently -- a search that quietly stopped widening looks identical to one that found
+     * nothing to widen into.</p>
+     */
+    private static final int MAX_INFERRED_EXPANSION_TERMS = 200;
+
+    /**
+     * How many related terms any ONE matched term may contribute.
+     *
+     * <p>🛑 This is the limit that matters, and it is the difference between the two uses of the same
+     * relations. Asking "is the disease I am about to tag among those this gene is associated with?"
+     * is set membership, and every candidate belongs in the set. Widening a <i>search</i> is not: some
+     * genes carry a great many diseases -- {@code Trp53} pairs with 15 in our corpus, and a null in it
+     * genuinely models lung adenocarcinoma, medulloblastoma and breast cancer among others -- so
+     * expanding through all of them turns a search for one of those into a search for every dataset
+     * that ever mutated {@code Trp53}. The user asked a specific question and would get a
+     * gene-shaped answer.</p>
+     *
+     * <p>A per-seed cap on the RANKED list is used rather than a specificity threshold, deliberately.
+     * A threshold is an absolute number nobody has tuned against curator judgement yet, and the wrong
+     * one silently changes what search returns; a cap is relative, so a gene with fifteen diseases
+     * contributes its best few and a gene with one contributes its one.</p>
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.search.inferredRelations.maxTermsPerSeed:5}")
+    private int maxInferredTermsPerSeed = 5;
+
+    /**
+     * Minimum specificity a {@link AnnotationRelationBasis#CORPUS} relation must clear to widen a
+     * search. Ignored for asserted bases, which are not counted.
+     *
+     * <p>Zero by default: no threshold has been tuned against curator judgement, and the honest
+     * default is the one that does not quietly filter. The per-seed cap above is what keeps the
+     * widening bounded in the meantime; this is here so the bar can be raised once the distribution
+     * has been looked at.</p>
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.search.inferredRelations.minSpecificity:0}")
+    private double minInferredSpecificity = 0d;
+
+    /**
+     * Widen only through objects that relate to at most this many distinct subjects.
+     *
+     * <p>Unlike the specificity threshold, this one HAS a default, because the distribution has been
+     * looked at and it is not close: {@code Homozygous negative} relates to 2,898 subjects,
+     * {@code Overexpression} to 1,839, {@code 24 h} to 448, while {@code MPTP} and {@code 5xFAD} sit
+     * in the low single digits. Widening a search through a dose or a zygosity reaches most of the
+     * corpus and returns it as though it answered the question.</p>
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.search.inferredRelations.maxObjectBreadth:25}")
+    private int maxInferredObjectBreadth = 25;
+
+    /**
      * Special indicator for exact matches. Those are stripped out when computing summary statistics and then assigned
      * the value of exactly 1.0.
      */
@@ -107,6 +175,13 @@ public class OntologySearchSource implements SearchSource {
 
     @Autowired
     private CharacteristicService characteristicService;
+
+    /**
+     * Optional so that the several test contexts wiring this source by hand keep booting without it;
+     * when absent, {@link SearchSettings#isUseInferredRelations()} simply has nothing to widen with.
+     */
+    @Autowired(required = false)
+    private ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService;
 
     @Override
     public boolean accepts( SearchSettings settings ) {
@@ -285,10 +360,99 @@ public class OntologySearchSource implements SearchSource {
             }
         }
 
-        findExpressionExperimentsByUris( uris, uri2value, uri2score, settings, context, results );
+        Set<String> inferredUris = expandByInferredRelations( uris, uri2value, uri2score, settings );
+
+        findExpressionExperimentsByUris( uris, uri2value, uri2score, inferredUris, settings, context, results );
     }
 
-    private void findExpressionExperimentsByUris( Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, SearchContext context, SearchResultSet<ExpressionExperiment> results ) {
+    /**
+     * Widen the query into terms Gemma knows stand in some relation to the ones matched.
+     *
+     * <p>This is what makes a curation rule safe. If a redundant {@code disease} tag is dropped on the
+     * grounds that the genotype beside it already implies the disease, the fact only stays findable if
+     * something recovers the implication at search time. Storage without this is the failure case that
+     * looks identical to success in any spot check of the database.</p>
+     *
+     * <p>Widened in <b>both</b> directions, because which end the user typed is not something to
+     * assume: a curated statement puts the disease in the subject and the genotype in the object, so
+     * searching the disease has to reach objects and searching the gene has to reach subjects.</p>
+     *
+     * <p>Ambiguity is kept rather than resolved. {@code SURF1} is associated with three diseases and
+     * all three go into the set; a search matches if any of them does, which is the right answer
+     * whichever one the dataset means. That is only true because this is set membership -- the same
+     * ambiguity would be fatal to anything that had to pick one.</p>
+     *
+     * @return the URIs added, so a hit reached through one can say so
+     */
+    // package-private rather than private so the widening can be tested for what it does to the URI
+    // set and the scores without standing up the whole ontology search path around it
+    Set<String> expandByInferredRelations( Collection<String> uris, Map<String, String> uri2value,
+            Map<String, Double> uri2score, SearchSettings settings ) {
+        if ( !settings.isUseInferredRelations() || annotationRelationService == null || uris.isEmpty() ) {
+            return Collections.emptySet();
+        }
+        StopWatch watch = StopWatch.createStarted();
+        Set<String> seeds = new HashSet<>( uris );
+        Set<String> added = new LinkedHashSet<>();
+        Long taxonId = settings.getTaxonConstraint() != null ? settings.getTaxonConstraint().getId() : null;
+
+        // Ranked, not raw. findRelatedTerms is the right primitive for a membership test and the wrong
+        // one here: it returns the whole candidate set with nothing to order it by, which is exactly
+        // what a search must not do when one seed has fifteen candidates and another has one.
+        for ( AnnotationRelationDao.Direction direction : AnnotationRelationDao.Direction.values() ) {
+            boolean seedIsSubject = direction == AnnotationRelationDao.Direction.SUBJECT_TO_OBJECT;
+            AnnotationRelationDao.RelationQuery q = new AnnotationRelationDao.RelationQuery()
+                    .taxonId( taxonId )
+                    .minimumSpecificity( minInferredSpecificity )
+                    .maximumObjectBreadth( maxInferredObjectBreadth )
+                    // unlimited here, then capped per seed below: cutting the ranked list globally
+                    // would let one prolific seed spend the whole budget
+                    .maxResults( -1 );
+            if ( seedIsSubject ) {
+                q.subjectValueUris( seeds );
+            } else {
+                q.objectValueUris( seeds );
+            }
+
+            Map<String, Integer> perSeed = new HashMap<>();
+            for ( AnnotationRelationDao.RelationSummary r : annotationRelationService.findRelations( q ) ) {
+                String seedUri = seedIsSubject ? r.getSubjectValueUri() : r.getObjectValueUri();
+                String relatedUri = seedIsSubject ? r.getObjectValueUri() : r.getSubjectValueUri();
+                String relatedValue = seedIsSubject ? r.getObjectValue() : r.getSubjectValue();
+                if ( relatedUri == null || seedUri == null || seeds.contains( relatedUri ) ) {
+                    // an ungrounded related term cannot be matched against VALUE_URI, and a term the
+                    // query already carries is a direct hit that must keep its undiminished score
+                    continue;
+                }
+                if ( perSeed.merge( seedUri, 1, Integer::sum ) > maxInferredTermsPerSeed ) {
+                    continue;
+                }
+                if ( added.size() >= MAX_INFERRED_EXPANSION_TERMS ) {
+                    log.warn( String.format( "Inferred-relation widening for '%s' hit the %d-term ceiling; it is incomplete.",
+                            settings.getQuery(), MAX_INFERRED_EXPANSION_TERMS ) );
+                    break;
+                }
+                if ( !added.add( relatedUri ) ) {
+                    continue;
+                }
+                uris.add( relatedUri );
+                uri2value.put( relatedUri, relatedValue );
+                uri2score.put( relatedUri, INFERRED_RELATION_SCORE_PENALTY );
+            }
+            int dropped = perSeed.values().stream().mapToInt( n -> Math.max( 0, n - maxInferredTermsPerSeed ) ).sum();
+            if ( dropped > 0 ) {
+                // said out loud rather than silently truncated: a seed whose tail was cut looks
+                // identical to one that had nothing else to give
+                log.debug( String.format( "Widening '%s' %s: %d related terms beyond the %d-per-term cap were not used.",
+                        settings.getQuery(), direction, dropped, maxInferredTermsPerSeed ) );
+            }
+        }
+        log.debug( String.format( "Widened '%s' by %d inferred terms in %d ms.",
+                settings.getQuery(), added.size(), watch.getTime() ) );
+        return added;
+    }
+
+    private void findExpressionExperimentsByUris( Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score, Set<String> inferredUris, SearchSettings settings, SearchContext context, SearchResultSet<ExpressionExperiment> results ) {
         if ( isFilled( results, settings ) )
             return;
 
@@ -299,26 +463,33 @@ public class OntologySearchSource implements SearchSource {
                 getLimit( results, settings ), settings.isFillResults(), rankByLevel );
 
         if ( hits.containsKey( ExpressionExperiment.class ) ) {
-            addExperimentsByUrisHits( hits.get( ExpressionExperiment.class ), "characteristics.valueUri", 1.0, uri2value, uri2score, context.getHighlighter(), results );
+            addExperimentsByUrisHits( hits.get( ExpressionExperiment.class ), "characteristics.valueUri", 1.0, uri2value, uri2score, inferredUris, context.getHighlighter(), results );
         }
 
         if ( hits.containsKey( ExperimentalDesign.class ) ) {
-            addExperimentsByUrisHits( hits.get( ExperimentalDesign.class ), "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", 0.9, uri2value, uri2score, context.getHighlighter(), results );
+            addExperimentsByUrisHits( hits.get( ExperimentalDesign.class ), "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", 0.9, uri2value, uri2score, inferredUris, context.getHighlighter(), results );
         }
 
         if ( hits.containsKey( BioMaterial.class ) ) {
-            addExperimentsByUrisHits( hits.get( BioMaterial.class ), "bioAssays.sampleUsed.characteristics.valueUri", 0.9, uri2value, uri2score, context.getHighlighter(), results );
+            addExperimentsByUrisHits( hits.get( BioMaterial.class ), "bioAssays.sampleUsed.characteristics.valueUri", 0.9, uri2value, uri2score, inferredUris, context.getHighlighter(), results );
         }
     }
 
-    private void addExperimentsByUrisHits( Map<String, Set<ExpressionExperiment>> hits, String field, double scoreMultiplier, Map<String, String> uri2value, Map<String, Double> uri2score, @Nullable Highlighter highlighter, SearchResultSet<ExpressionExperiment> results ) {
+    private void addExperimentsByUrisHits( Map<String, Set<ExpressionExperiment>> hits, String field, double scoreMultiplier, Map<String, String> uri2value, Map<String, Double> uri2score, Set<String> inferredUris, @Nullable Highlighter highlighter, SearchResultSet<ExpressionExperiment> results ) {
         for ( Map.Entry<String, Set<ExpressionExperiment>> entry : hits.entrySet() ) {
             String uri = entry.getKey();
             String value = uri2value.get( uri );
+            // The provenance string says which of the two it was. A dataset returned because it is
+            // annotated with the query and one returned because Gemma thinks a term it carries stands
+            // for the query are different claims, and a UI that cannot tell them apart will present
+            // the second as though it were the first.
+            String provenance = inferredUris.contains( uri )
+                    ? String.format( "CharacteristicService.findExperimentsByUris with inferred term [%s](%s)", value, uri )
+                    : String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
                 results.add( SearchResult.from( ExpressionExperiment.class, ee, scoreMultiplier * uri2score.getOrDefault( uri, 0.0 ),
                         highlightTerm( highlighter, uri, value, field ),
-                        String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
+                        provenance ) );
             }
         }
     }

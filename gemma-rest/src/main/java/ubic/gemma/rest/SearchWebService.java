@@ -111,7 +111,13 @@ public class SearchWebService {
             @Parameter(description = "Expand a gene search through Gene Ontology terms (GO term → annotated genes). "
                     + "Off by default: a gene search hits only the gene services (symbol/name/alias). GO→gene is a "
                     + "function search, not a gene search, and scanning GO on every query is slow — opt in explicitly.")
-            @QueryParam("useGeneOntology") @DefaultValue("false") boolean useGeneOntology
+            @QueryParam("useGeneOntology") @DefaultValue("false") boolean useGeneOntology,
+            @Parameter(description = "Widen the search into terms Gemma knows are related to the ones matched, "
+                    + "so that a search for a disease also returns datasets annotated only with a genotype that "
+                    + "stands for it. Off by default: turning it on changes every existing result set and every "
+                    + "count derived from one, and no specificity threshold has been tuned against curator "
+                    + "judgement yet. Inferred hits score below direct ones and say so in their provenance.")
+            @QueryParam("inferRelations") @DefaultValue("false") boolean inferRelations
     ) {
         if ( query == null ) {
             throw new BadRequestException( "A query must be supplied." );
@@ -152,6 +158,7 @@ public class SearchWebService {
                 // (it is a function search, and scanning GO on every gene query was a ~25s hot spot
                 // that pinned a DB connection and starved the pool).
                 .useGeneOntology( useGeneOntology )
+                .useInferredRelations( inferRelations )
                 .build();
 
         List<SearchResult<?>> searchResults;

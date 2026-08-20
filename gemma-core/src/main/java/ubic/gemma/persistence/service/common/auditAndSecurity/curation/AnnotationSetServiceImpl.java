@@ -50,17 +50,56 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         this.annotationSetDao = annotationSetDao;
     }
 
+    /**
+     * When a newly-attached set earns an audit event.
+     * <p>
+     * Not for a SNAPSHOT. Every audit event on a curatable sets {@code curationDetails.lastUpdated} to the event
+     * date — see {@code AbstractCuratableDao#updateCurationDetailsFromAuditEvent}, which does it unconditionally
+     * for every event type. A snapshot captures existing state and changes nothing, so an event there would make
+     * a dataset look edited by the act of backing it up.
+     * <p>
+     * That is not cosmetic: {@code lastUpdated} is the optimistic-concurrency token the curation commit checks,
+     * so taking a backup would 409 every in-flight curator draft on that dataset. The AnnotationSet row is
+     * already its own record, carrying {@code createdAt}, {@code createdBy} and {@code runId}, so nothing is
+     * lost by staying quiet.
+     * <p>
+     * PROPOSAL and DRAFT keep their event: an agent attaching a hypothesis, or a curator opening a buffer, is
+     * activity on the dataset worth a trail entry.
+     * <p>
+     * COMMIT is quiet for the same reason and one more. A COMMIT row is minted inside the curation commit's own
+     * transaction, and that commit has already emitted its own events and already moved {@code lastUpdated} — an
+     * {@code AnnotationSetEvent} on top would be one more event for a commit that emits too many already, saying
+     * nothing the design/tag events did not. The row records who applied the curation; the events record what was
+     * applied.
+     */
+    private static final String ATTACH_AUDIT_WHEN =
+            "#result != null and #result.created"
+                    + " and #result.annotationSet.role.name() != 'SNAPSHOT'"
+                    + " and #result.annotationSet.role.name() != 'COMMIT'";
+
+    /**
+     * Audit note for a newly-attached set, shared by both {@code attach} overloads.
+     * <p>
+     * Extracted to a constant so the two cannot drift: the deprecated overload self-invokes the other, which
+     * means the aspect fires on whichever method the caller entered through (a same-class call bypasses the
+     * proxy), so BOTH need the annotation and both must say the same thing. Reads everything off
+     * {@code #result} rather than the parameters, so one expression fits both signatures.
+     */
+    private static final String ATTACH_AUDIT_MESSAGE = "'AnnotationSet#' + #result.annotationSet.id"
+            + " + ' role=' + #result.annotationSet.role.dbValue"
+            + " + ' source=' + #result.annotationSet.source.dbValue"
+            + " + (#result.annotationSet.kind != null ? ' kind=' + #result.annotationSet.kind.dbValue : '')"
+            + " + ' run=' + #result.annotationSet.runId"
+            + " + (#result.annotationSet.agentName != null ? ' agent=' + #result.annotationSet.agentName : '')"
+            + " + (#result.annotationSet.agentVersion != null ? ' version=' + #result.annotationSet.agentVersion : '')"
+            + " + (#result.annotationSet.model != null ? ' model=' + #result.annotationSet.model : '')"
+            + " + (#result.annotationSet.runSha != null ? ' sha=' + #result.annotationSet.runSha : '')";
+
     @Override
     @Transactional
     @AuditedConditional(value = AnnotationSetEvent.class,
-            when = "#result != null and #result.created",
-            messageSpel = "'AnnotationSet#' + #result.annotationSet.id"
-                    + " + ' role=' + #result.annotationSet.role.dbValue"
-                    + " + ' source=' + #result.annotationSet.source.dbValue"
-                    + " + (#result.annotationSet.kind != null ? ' kind=' + #result.annotationSet.kind.dbValue : '')"
-                    + " + ' run=' + #result.annotationSet.runId"
-                    + " + (#agentVersion != null ? ' agent=' + #agentVersion : '')"
-                    + " + (#model != null ? ' model=' + #model : '')")
+            when = ATTACH_AUDIT_WHEN,
+            messageSpel = ATTACH_AUDIT_MESSAGE)
     public AttachedAnnotationSet attach( Investigation investigation,
             AnnotationSetRole role,
             AnnotationSetSource source,
@@ -72,9 +111,30 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
             @Nullable Date ranAt,
             @Nullable String payloadJson,
             @Nullable AnnotationSet parent ) {
+        return attach( investigation, role, source, kind, runId, createdBy,
+                new RunProvenance( agentVersion, model, null, null, ranAt ), payloadJson, parent );
+    }
+
+    @Override
+    @Transactional
+    @AuditedConditional(value = AnnotationSetEvent.class,
+            when = ATTACH_AUDIT_WHEN,
+            messageSpel = ATTACH_AUDIT_MESSAGE)
+    public AttachedAnnotationSet attach( Investigation investigation,
+            AnnotationSetRole role,
+            AnnotationSetSource source,
+            @Nullable AgentCurationKind kind,
+            @Nullable String runId,
+            @Nullable String createdBy,
+            @Nullable RunProvenance runProvenance,
+            @Nullable String payloadJson,
+            @Nullable AnnotationSet parent ) {
         Assert.notNull( investigation, "Investigation must not be null." );
         Assert.notNull( role, "role must not be null." );
         Assert.notNull( source, "source must not be null." );
+        String agentVersion = runProvenance != null ? runProvenance.getAgentVersion() : null;
+        String model = runProvenance != null ? runProvenance.getModel() : null;
+        Date ranAt = runProvenance != null ? runProvenance.getRanAt() : null;
         String effectiveRunId = resolveRunId( role, runId, createdBy );
         AnnotationSet existing = annotationSetDao.findByInvestigationAndRoleAndRunId(
                 investigation, role, effectiveRunId );
@@ -93,6 +153,10 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         a.setUpdatedAt( now );
         a.setAgentVersion( agentVersion );
         a.setModel( model );
+        if ( runProvenance != null ) {
+            a.setRunSha( runProvenance.getRunSha() );
+            a.setAgentName( runProvenance.getAgentName() );
+        }
         a.setRanAt( ranAt != null ? ranAt : ( source == AnnotationSetSource.AGENT ? now : null ) );
         a.setPayloadJson( payloadJson );
         a.setParent( parent );
@@ -303,7 +367,12 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
             case SNAPSHOT:
                 return UUID.randomUUID().toString();
             case PROPOSAL:
+            case COMMIT:
             default:
+                // PROPOSAL and COMMIT both name a run that really happened on the producing side.
+                // Synthesizing an id here would invent provenance rather than record it, and a
+                // synthesized id is indistinguishable from a real one once it is in the column.
+                // Any role added later lands here too, which is the safe direction to fail.
                 throw new IllegalArgumentException(
                         "runId must be supplied for role=" + role );
         }

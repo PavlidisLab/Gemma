@@ -145,7 +145,7 @@ public class AnnotationSetsWebService {
             throw new BadRequestException( "Request body is required." );
         }
         AnnotationSetRole role = parseRoleOrThrow( body.role,
-                "Request body must include `role` (proposal|draft|snapshot)." );
+                "Request body must include `role` (proposal|draft|snapshot|commit)." );
         AnnotationSetSource source = parseSourceOrThrow( body.source, defaultSourceForRole( role ) );
         AgentCurationKind kind = parseKindOrThrow( body.kind, role == AnnotationSetRole.PROPOSAL
                 ? AgentCurationKind.PROPOSAL : null );
@@ -156,8 +156,9 @@ public class AnnotationSetsWebService {
         AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
                 ee, role, source, kind,
                 body.runId, body.createdBy,
-                body.agentVersion, body.model, body.ranAt, body.payloadJson,
-                parent );
+                new AnnotationSetService.RunProvenance( body.agentVersion, body.model, body.runSha,
+                        body.agentName, body.ranAt ),
+                body.payloadJson, parent );
         Response.Status status = attached.isCreated()
                 ? Response.Status.CREATED : Response.Status.OK;
         return Response.status( status )
@@ -251,7 +252,7 @@ public class AnnotationSetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Cross-experiment list of annotation sets (thin projection)")
     public PaginatedResponseDataObject<AnnotationSetSummaryResponse> listAnnotationSetsAcross(
-            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, or `all` (default).")
+            @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, `commit`, or `all` (default).")
             @QueryParam("role") @Nullable String role,
             @Parameter(description = "Filter by source: `agent`, `curator`, `gemma_intake`, `external_import`, or `all` (default).")
             @QueryParam("source") @Nullable String source,
@@ -388,6 +389,19 @@ public class AnnotationSetsWebService {
         @JsonProperty("model")
         @Nullable
         public String model;
+        /**
+         * The producing repository's git head sha. Not redundant with {@link #model} — behaviour differs
+         * between shas at one model, so the model alone does not identify the build.
+         */
+        @JsonProperty("runSha")
+        @JsonAlias("run_sha")
+        @Nullable
+        public String runSha;
+        /** Which specialist produced it ({@code cell_type}, {@code disease}, …); "the agent" is a fleet. */
+        @JsonProperty("agentName")
+        @JsonAlias("agent_name")
+        @Nullable
+        public String agentName;
         @JsonProperty("ranAt")
         @JsonAlias("ran_at")
         @Nullable
@@ -458,6 +472,13 @@ public class AnnotationSetsWebService {
         @JsonProperty("model")
         @Nullable
         public String model;
+        /** Round-tripped so a trace does not stop at Gemma's boundary; see the request DTO for why it matters. */
+        @JsonProperty("runSha")
+        @Nullable
+        public String runSha;
+        @JsonProperty("agentName")
+        @Nullable
+        public String agentName;
         @JsonProperty("ranAt")
         @Nullable
         public Date ranAt;
@@ -508,6 +529,17 @@ public class AnnotationSetsWebService {
         @JsonProperty("model")
         @Nullable
         public String model;
+        /**
+         * Present on the thin shape too: the cross-experiment {@code role=commit} listing is the
+         * "which agent applied this, from which build" query, and answering it must not require an
+         * N+1 into the full endpoint for the two fields that carry the answer.
+         */
+        @JsonProperty("runSha")
+        @Nullable
+        public String runSha;
+        @JsonProperty("agentName")
+        @Nullable
+        public String agentName;
         @JsonProperty("ranAt")
         @Nullable
         public Date ranAt;
@@ -547,6 +579,7 @@ public class AnnotationSetsWebService {
                 return AnnotationSetSource.CURATOR;
             case PROPOSAL:
             case SNAPSHOT:
+            case COMMIT:
             default:
                 return AnnotationSetSource.AGENT;
         }
@@ -560,7 +593,7 @@ public class AnnotationSetsWebService {
             return AnnotationSetRole.fromDbValue( role.trim() );
         } catch ( IllegalArgumentException e ) {
             throw new BadRequestException( "Unknown role: " + role
-                    + " (expected 'proposal', 'draft', or 'snapshot')" );
+                    + " (expected 'proposal', 'draft', 'snapshot', or 'commit')" );
         }
     }
 
@@ -573,7 +606,7 @@ public class AnnotationSetsWebService {
             return AnnotationSetRole.fromDbValue( role );
         } catch ( IllegalArgumentException e ) {
             throw new BadRequestException( "Unknown role: " + role
-                    + " (expected 'proposal', 'draft', 'snapshot', or 'all')" );
+                    + " (expected 'proposal', 'draft', 'snapshot', 'commit', or 'all')" );
         }
     }
 
@@ -662,6 +695,8 @@ public class AnnotationSetsWebService {
         r.finalizedBy = a.getFinalizedBy();
         r.agentVersion = a.getAgentVersion();
         r.model = a.getModel();
+        r.runSha = a.getRunSha();
+        r.agentName = a.getAgentName();
         r.ranAt = a.getRanAt();
         r.payloadJson = a.getPayloadJson();
         r.parkedElements = a.getParkedElements();
@@ -684,6 +719,8 @@ public class AnnotationSetsWebService {
         r.finalizedBy = s.getFinalizedBy();
         r.agentVersion = s.getAgentVersion();
         r.model = s.getModel();
+        r.runSha = s.getRunSha();
+        r.agentName = s.getAgentName();
         r.ranAt = s.getRanAt();
         r.payloadSize = s.getPayloadSize();
         return r;
