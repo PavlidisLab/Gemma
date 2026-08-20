@@ -180,6 +180,18 @@ public class CharacteristicReadServiceImpl implements CharacteristicReadService 
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Characteristic> findByUriInAnySlot( String uri ) {
+        return this.characteristicDao.findByUriInAnySlot( uri );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> findExperimentIdsByUriInAnySlot( String uri ) {
+        return this.characteristicDao.findExperimentIdsByUriInAnySlot( uri );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents ) {
         Map<Characteristic, Identifiable> charToParent = characteristicDao.getParents( characteristics, parentClasses, includeNoParents );
         if ( thawParents ) {

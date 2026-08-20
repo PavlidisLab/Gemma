@@ -146,6 +146,27 @@ public interface CharacteristicDao
     Collection<Characteristic> findByUri( String uri, @Nullable String category, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
+     * Find characteristics carrying the given URI in ANY slot: category, value, predicate, second predicate,
+     * object or second object.
+     * <p>
+     * 🛑 Deliberately not {@link #findByUri(String, String, Collection, boolean, int)}, which matches
+     * {@code VALUE_URI} alone. That is the right question for "what is annotated with this term" and the wrong one
+     * for "everywhere this term appears" — a caller that has to rewrite or retire a URI and uses the value-only
+     * finder silently leaves the same URI standing in the other five columns.
+     */
+    Collection<Characteristic> findByUriInAnySlot( String uri );
+
+    /**
+     * Ids of the experiments carrying the given URI in any slot, read from the EE2C denormalization.
+     * <p>
+     * EE2C is used rather than a walk up from each characteristic because it already flattens every level —
+     * experiment, biomaterial, factor value — to an experiment id, and it carries the category column too. The
+     * cost is that a stale EE2C can under-report; it is rebuilt nightly, and the caller here rebuilds the rows it
+     * touches immediately afterwards, so the window is small and self-closing.
+     */
+    Collection<Long> findExperimentIdsByUriInAnySlot( String uri );
+
+    /**
      * Return the characteristic with the most frequently used non-null value by URI.
      */
     Characteristic findBestByUri( String uri );

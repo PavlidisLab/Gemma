@@ -62,6 +62,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
 import ubic.gemma.core.ontology.ObsoleteTermUsage;
+import ubic.gemma.core.tasks.maintenance.ObsoleteTermCorrectionTaskCommand;
 import ubic.gemma.core.ontology.providers.OntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceResolver;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
@@ -1279,6 +1280,71 @@ public class AdminWebService {
             throw new ServiceUnavailableException( "Timed out resolving terms against the loaded ontologies after "
                     + timeoutSeconds + "s; they may still be loading. Check /admin/ontologies." );
         }
+    }
+
+    /**
+     * Rewrite annotations that use an obsolete ontology term to the successor its ontology asserts.
+     * <p>
+     * <b>Dry run unless {@code dryRun=false} is passed explicitly.</b> The default is the safe one because this
+     * writes to production annotations, and a dry run returns the counts a live run would produce, so there is no
+     * reason to skip the rehearsal.
+     * <p>
+     * Only {@code autoCorrectable} terms are touched — those whose replacement was derived from the ontology
+     * rather than decided by a person. Terms offering only {@code oboInOwl:consider} candidates are never
+     * corrected here; see {@code GET /admin/ontologies/obsolete-terms} for what they are and why.
+     */
+    @POST
+    @Path("/ontologies/obsolete-terms/apply")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Correct annotations using obsolete ontology terms (dry run by default)",
+            description = "Rewrites every slot the obsolete term occupies — category, value, predicate, object — to "
+                    + "the successor asserted by `IAO:0100001` or by a merge record, and records the correction in "
+                    + "each characteristic's `supportingEvidence` with an `assertedBy` naming the rule that derived "
+                    + "it. Afterwards it rebuilds EE2C and ANNOTATION_RELATION for each affected experiment and "
+                    + "writes one `AutomatedAnnotationEvent` per experiment.\n\n"
+                    + "**Runs as a task**: returns 202 with a task id; poll `/tasks/{taskId}`.\n\n"
+                    + "**`dryRun` defaults to true.** Pass `dryRun=false` to write.\n\n"
+                    + "`uris` restricts the run to specific obsolete terms; omit it to take every auto-correctable "
+                    + "term. Two terms are deferred and are skipped by a blanket run — EFO_0000408 (the `disease` "
+                    + "category, ~7,600 experiments) and OBI_0003109 (single-nucleus, whose successor discards the "
+                    + "nuclei/cells distinction) — naming one explicitly in `uris` overrides that.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "202", description = "Correction task submitted.",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))) })
+    public Response applyObsoleteTermCorrections(
+            @Parameter(description = "Set false to actually write. Defaults to a dry run.")
+            @QueryParam("dryRun") @DefaultValue("true") Boolean dryRun,
+            @Parameter(description = "Restrict to these obsolete term URIs; omit for every auto-correctable term.")
+            @QueryParam("uris") List<String> uris,
+            @Parameter(description = "Budget in seconds for resolving terms against the loaded ontologies.")
+            @QueryParam("timeoutSeconds") @DefaultValue("600") Integer timeoutSeconds
+    ) {
+        ObsoleteTermCorrectionTaskCommand cmd = new ObsoleteTermCorrectionTaskCommand(
+                uris != null ? uris : Collections.emptyList(),
+                !Boolean.FALSE.equals( dryRun ),
+                timeoutSeconds );
+        String jobId = taskRunningService.submitTaskCommand( cmd );
+        ObsoleteTermCorrectionSubmission body = new ObsoleteTermCorrectionSubmission();
+        body.submittedJobId = jobId;
+        body.dryRun = !Boolean.FALSE.equals( dryRun );
+        body.uris = uris != null ? uris : Collections.emptyList();
+        return Response.status( Response.Status.ACCEPTED )
+                .location( URI.create( "/tasks/" + jobId ) )
+                .entity( respond( body ) )
+                .build();
+    }
+
+    @Schema(description = "Accepted obsolete-term correction task.")
+    public static class ObsoleteTermCorrectionSubmission {
+        public String submittedJobId;
+        @Schema(description = "True when the submitted run will write nothing.")
+        public boolean dryRun;
+        public List<String> uris;
     }
 
     /* ===== Database connection pool ===== */

@@ -515,6 +515,39 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
+    public Collection<Characteristic> findByUriInAnySlot( String uri ) {
+        if ( StringUtils.isBlank( uri ) ) {
+            return new HashSet<>();
+        }
+        Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select C.ID from CHARACTERISTIC as C where "
+                        + "C.VALUE_URI = :uri or C.CATEGORY_URI = :uri or C.PREDICATE_URI = :uri "
+                        + "or C.SECOND_PREDICATE_URI = :uri or C.OBJECT_URI = :uri or C.SECOND_OBJECT_URI = :uri" )
+                .addScalar( "ID", StandardBasicTypes.LONG )
+                .setParameter( "uri", uri );
+        //noinspection unchecked
+        return loadByIds( ( List<Long> ) q.list() );
+    }
+
+    @Override
+    public Collection<Long> findExperimentIdsByUriInAnySlot( String uri ) {
+        if ( StringUtils.isBlank( uri ) ) {
+            return new HashSet<>();
+        }
+        //noinspection unchecked
+        List<Long> ids = ( List<Long> ) this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select distinct T.EXPRESSION_EXPERIMENT_FK as ID "
+                        + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC T where T.EXPRESSION_EXPERIMENT_FK is not null "
+                        + "and (T.VALUE_URI = :uri or T.CATEGORY_URI = :uri or T.PREDICATE_URI = :uri "
+                        + "or T.SECOND_PREDICATE_URI = :uri or T.OBJECT_URI = :uri or T.SECOND_OBJECT_URI = :uri)" )
+                .addScalar( "ID", StandardBasicTypes.LONG )
+                .setParameter( "uri", uri )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .list();
+        return new LinkedHashSet<>( ids );
+    }
+
+    @Override
     public Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris ) {
         if ( valueUris == null || valueUris.isEmpty() ) {
             return Collections.emptyMap();

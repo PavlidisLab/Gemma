@@ -1,6 +1,6 @@
 # Correcting obsolete ontology terms in place
 
-Status: **step 1 landed (read-only report), step 2 proposed and not built.**
+Status: **step 1 landed (read-only report), step 2 landed (correction path, dry-run by default).**
 
 ## What exists now
 
@@ -52,12 +52,14 @@ So the correction splits cleanly, and the split is the whole design:
 not itself obsolete. Everything else carries a `blockedReason` naming what a human has to settle. On the numbers we
 have, this is not a formality: the terms with the largest usage are exactly the ones EFO/MONDO retired cleanly.
 
-## Step 2 — the proposal
+## Step 2 — built
 
 `POST /admin/ontologies/obsolete-terms/apply`, **dry-run by default**, applying only `autoCorrectable` rows.
+Runs as a task; poll `/tasks/{taskId}`. `dryRun=false` is required to write anything.
 
 1. **Select.** Take the report; keep `autoCorrectable` rows. Accept an explicit `uris` list so a curator can apply
-   one term rather than the world, and an `experimentIds` scope for a rehearsal on a handful of datasets.
+   one term rather than the world. (An `experimentIds` scope was proposed and is NOT built; the dry run covers
+   the rehearsal need.)
 2. **Rewrite the annotation.** For each affected characteristic, set `valueUri`/`objectUri`/`secondObjectUri` to the
    replacement and the matching label to the replacement's. All three slots, per the Statement shape — a pass that
    only rewrites `VALUE_URI` silently leaves two thirds of the surface obsolete.
@@ -70,14 +72,14 @@ have, this is not a formality: the terms with the largest usage are exactly the 
       "fromLabel": "disease",
       "to": "http://purl.obolibrary.org/obo/MONDO_0000001",
       "assertedBy": "IAO:0100001",
-      "sourceOntology": "EFO",
       "ontologyVersion": "3.88.0",
       "appliedAt": "2026-08-19T…"}}
    ```
 
    The point of `assertedBy` is that a later reader can tell a derived correction from a curator's decision, and
    `ontologyVersion` says which release made the claim. Without those two fields this is indistinguishable from
-   someone having retyped the annotation.
+   someone having retyped the annotation. Both are written; `sourceOntology` was dropped as redundant with the URI
+   prefix.
 4. **Resync the denormalizations,** per affected experiment, reusing `TableMaintenanceUtil`:
    - `updateExpressionExperiment2CharacteristicEntries(ee, null)` — EE2C.
    - `updateAnnotationRelationEntries(ee)` — ANNOTATION_RELATION, which is derived from the curated statements EE2C

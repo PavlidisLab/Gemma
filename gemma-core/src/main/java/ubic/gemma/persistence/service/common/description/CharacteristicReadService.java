@@ -151,6 +151,16 @@ public interface CharacteristicReadService {
     Map<String, String> findCategoryGroupedByCategoryUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     /**
+     * @see CharacteristicDao#findByUriInAnySlot(String)
+     */
+    Collection<Characteristic> findByUriInAnySlot( String uri );
+
+    /**
+     * @see CharacteristicDao#findExperimentIdsByUriInAnySlot(String)
+     */
+    Collection<Long> findExperimentIdsByUriInAnySlot( String uri );
+
+    /**
      * @param thawParents if true, the parents will be initialized if they are proxies
      * @see CharacteristicDao#getParents(Collection, Collection, boolean)
      */
