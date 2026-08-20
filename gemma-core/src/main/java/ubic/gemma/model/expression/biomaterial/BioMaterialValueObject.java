@@ -64,7 +64,31 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     private Collection<Long> bioAssayIds = new HashSet<>();
     private Collection<CharacteristicValueObject> characteristics = new HashSet<>();
 
+    /**
+     * The BioMaterial this one was derived from, or {@code null} if this is a sample in its own right.
+     * <p>
+     * This is <b>always null</b> on {@code GET /datasets/{dataset}/samples}, for every dataset including
+     * single-cell ones, and that is the correct answer rather than missing data: that route returns the
+     * dataset's own assays, whose samples are the biological samples themselves and so derive from nothing.
+     * Derived samples are created only by single-cell aggregation, which files each {sample, cell type}
+     * population as a BioMaterial pointing back at the sample it came from, and hangs it off an
+     * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet} rather than the parent
+     * dataset. So the populated values are reached through
+     * {@code GET /datasets/{dataset}/subSets/{subSet}/samples}, where each value is the id of a sample the
+     * parent route returned.
+     * <p>
+     * Do not read this field to decide whether a dataset is single-cell: it is null on single-cell datasets
+     * too, so the test silently answers "no" everywhere. Use the pre-added {@code assay} ExperimentTag
+     * (OBI_0002631 / OBI_0003109), or {@code GET /datasets/{dataset}/singleCellDimension}, which 404s for
+     * datasets that have no single-cell data.
+     */
     @Nullable
+    @Schema(description = "The BioMaterial this sample was derived from, or null if it derives from nothing. "
+            + "Always null on /datasets/{dataset}/samples, which returns the dataset's own samples — these "
+            + "are biological samples and have no source. Derived samples come from single-cell aggregation "
+            + "and are reached via /datasets/{dataset}/subSets/{subSet}/samples, where this holds the id of a "
+            + "sample listed by the parent route. Not a single-cell indicator: it is null for single-cell "
+            + "datasets too — use the assay ExperimentTag or /datasets/{dataset}/singleCellDimension.")
     private Long sourceBioMaterialId;
 
     /*
