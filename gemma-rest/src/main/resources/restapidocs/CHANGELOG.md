@@ -2,6 +2,18 @@
 
 ### Update 2.9.4
 
+Remove the GEEQ suitability score. The `publicSuitabilityScore` and the eight `sScore*` fields it averaged
+(`sScorePublication`, `sScorePlatformAmount`, `sScorePlatformsTechMulti`, `sScoreAvgPlatformPopularity`,
+`sScoreAvgPlatformSize`, `sScoreSampleSize`, `sScoreRawData`, `sScoreMissingValues`) are gone from the
+`GeeqValueObject` model, along with `detectedSuitabilityScore` / `manualSuitabilityScore` /
+`manualSuitabilityOverride` on the admin model. The `geeq.publicSuitabilityScore` filter and sort property is
+withdrawn — it was the only property that required `GROUP_ADMIN`, so no filterable property is authority-gated
+any more. `pub` is no longer an accepted GEEQ scoring mode.
+
+The suitability score was scored from platform and publication properties, which do not discriminate for
+sequencing data: processed RNA-seq lands on a `GENELIST` platform, which pins platform amount, technology
+consistency, popularity and size. The quality score, its `qScore*` breakdown and every GEEQ endpoint remain.
+
 Add a `useProcessedQuantitationType` option to the `getDatasetDesign` endpoint to generate a design matrix that is
 tailored to the processed data vectors.
 

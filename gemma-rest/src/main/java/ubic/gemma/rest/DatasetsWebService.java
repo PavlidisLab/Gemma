@@ -4756,7 +4756,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Retrieve the GEEQ scores of a dataset",
-            description = "Returns the administrative GEEQ view exposing the underlying suitability and quality "
+            description = "Returns the administrative GEEQ view exposing the underlying quality "
                     + "score factors, plus a `lastComputed` timestamp from the most recent `GeeqEvent`. Returns "
                     + "404 when GEEQ has never been computed for this dataset (use `PUT /geeq` to compute it).",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
@@ -4799,8 +4799,8 @@ public class DatasetsWebService {
     @Path("/{dataset}/geeq/public")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the public per-factor GEEQ breakdown of a dataset",
-            description = "Returns the per-factor suitability and quality scores plus the aggregate "
-                    + "`publicQualityScore` / `publicSuitabilityScore` already exposed inline on "
+            description = "Returns the per-factor quality scores plus the aggregate "
+                    + "`publicQualityScore` already exposed inline on "
                     + "`GET /datasets/{dataset}`. Admin-only fields (detected/manual override scores, "
                     + "`otherIssues`) are omitted. Returns 404 when GEEQ has never been computed for "
                     + "the dataset.",
@@ -4831,7 +4831,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Recompute GEEQ scores for a dataset",
-            description = "Synchronously recomputes the GEEQ quality and suitability scores for the dataset and "
+            description = "Synchronously recomputes the GEEQ quality scores for the dataset and "
                     + "writes a `GeeqEvent` to the audit log. The optional `mode` query parameter selects which "
                     + "subset of scores to recompute (`all`, `batch`, `reps`, `pub`); defaults to `all`. The "
                     + "returned object includes the updated scores and the `lastComputed` timestamp. Because the "
@@ -5204,7 +5204,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Recompute GEEQ quality scores for a dataset (async)",
-            description = "Submits an async task that recomputes the GEEQ quality and suitability scores for the "
+            description = "Submits an async task that recomputes the GEEQ quality scores for the "
                     + "dataset and writes a `GeeqEvent` to the audit log. The optional `mode` query parameter "
                     + "selects which subset of scores to recompute (`all`, `batch`, `reps`, `pub`); defaults to "
                     + "`all`. Returns 202 with a `Location` header pointing at `/tasks/{taskId}`. The companion "

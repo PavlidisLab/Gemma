@@ -121,18 +121,10 @@ class WithheldFromApiInventoryTest {
             "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreReplicates",
             "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleCorrelationVariance",
             "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleMeanCorrelation",
-            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleMedianCorrelation",
-            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreAvgPlatformPopularity",
-            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreAvgPlatformSize",
-            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreMissingValues",
-            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScorePlatformAmount",
-            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScorePlatformsTechMulti",
-            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScorePublication",
-            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreRawData",
-            "ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreSampleSize" );
+            "ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleMedianCorrelation" );
 
     /** Size of {@link #DEFEATED_SUPPRESSIONS}. Lower it as they are fixed; never raise it. */
-    private static final int DEFEATED_CEILING = 17;
+    private static final int DEFEATED_CEILING = 9;
 
     /** One application of the annotation: the member it is on, and the reason it claims. */
     private record Site(Class<?> owner, AnnotatedElementRef member, Reason reason) {

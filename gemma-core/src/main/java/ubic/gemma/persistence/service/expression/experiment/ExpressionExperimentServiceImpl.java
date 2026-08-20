@@ -27,8 +27,6 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.ConfigAttribute;
-import org.springframework.security.access.SecurityConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -2993,18 +2991,5 @@ public class ExpressionExperimentServiceImpl
     @Override
     public long countBioMaterials( @Nullable Filters filters ) {
         return readService.countBioMaterials( filters );
-    }
-
-    /**
-     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String property ) {
-        if ( property.equals( "geeq.publicSuitabilityScore" ) ) {
-            return SecurityConfig.createList( "GROUP_ADMIN" );
-        } else {
-            return null;
-        }
     }
 }

@@ -32,18 +32,13 @@ import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
-import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import org.springframework.lang.Nullable;
@@ -72,7 +67,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private static final int MAX_EFS_REPLICATE_CHECK = 3;
 
     private static final String LOG_PREFIX = "|G|E|E|Q|";
-    private static final String ERR_MSG_MISSING_VALS = "Can not calculate missing values: ";
     private static final String ERR_MSG_CORMAT = "Can not create cormat: ";
     private static final String ERR_MSG_CORMAT_MISSING_VALS = "Cormat retrieval failed because of missing missing values for ee id ";
     private static final String ERR_W_MEAN_BAD_ARGS = "Can not calculate weighted arithmetic mean from null or unequal length arrays.";
@@ -81,13 +75,9 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     private static final double P_00 = 0.0;
     public static final double BATCH_EFF_WEAK = GeeqServiceImpl.P_00;
-    private static final double P_03 = 0.3;
-    private static final double P_05 = 0.5;
     private static final double P_10 = 1.0;
     public static final double BATCH_CONF_NO_HAS = GeeqServiceImpl.P_10;
     public static final double BATCH_EFF_NONE = GeeqServiceImpl.P_10;
-    private static final double N_03 = -GeeqServiceImpl.P_03;
-    private static final double N_05 = -GeeqServiceImpl.P_05;
     private static final double N_10 = -GeeqServiceImpl.P_10;
     public static final double BATCH_CONF_HAS = GeeqServiceImpl.N_10;
     public static final double BATCH_EFF_STRONG = GeeqServiceImpl.N_10;
@@ -95,22 +85,17 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
     private final ExpressionExperimentService expressionExperimentService;
     private final ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
-    private final ArrayDesignService arrayDesignService;
-    private final ExpressionDataMatrixService expressionDataMatrixService;
     private final OutlierDetectionService outlierDetectionService;
     private final GeeqAuditService geeqAuditService;
     private final SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
 
     @Autowired
     public GeeqServiceImpl( GeeqDao geeqDao, ExpressionExperimentService expressionExperimentService, ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService,
-            ArrayDesignService arrayDesignService, ExpressionDataMatrixService expressionDataMatrixService,
             OutlierDetectionService outlierDetectionService, GeeqAuditService geeqAuditService,
             SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService ) {
         super( geeqDao );
         this.expressionExperimentService = expressionExperimentService;
         this.expressionExperimentBatchInformationService = expressionExperimentBatchInformationService;
-        this.arrayDesignService = arrayDesignService;
-        this.expressionDataMatrixService = expressionDataMatrixService;
         this.outlierDetectionService = outlierDetectionService;
         this.geeqAuditService = geeqAuditService;
         this.sampleCoexpressionAnalysisService = sampleCoexpressionAnalysisService;
@@ -146,10 +131,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
                     log.info( GeeqServiceImpl.LOG_PREFIX + " Starting replicates geeq re-scoring for " + ee );
                     this.scoreOnlyReplicates( ee );
                     break;
-                case pub:
-                    log.info( GeeqServiceImpl.LOG_PREFIX + " Starting publication geeq re-scoring for " + ee );
-                    this.scoreOnlyPublication( ee );
-                    break;
                 default:
                     throw new IllegalArgumentException( "Unsupported mode: " + mode + " for " + ee );
             }
@@ -160,9 +141,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             gq.addOtherIssues( e.getMessage() );
         }
 
-        // Recalculate final scores
+        // Recalculate final score
         this.updateQualityScore( gq );
-        this.updateSuitabilityScore( gq );
 
         // Add note if experiment curation not finished
         if ( ee.getCurationDetails().getNeedsAttention() ) {
@@ -181,13 +161,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     }
 
 
-    private void updateSuitabilityScore( Geeq gq ) {
-        double[] suitability = gq.getSuitabilityScoreArray();
-        double[] weights = gq.getSuitabilityScoreWeightsArray();
-        double score = this.getWeightedMean( suitability, weights );
-        gq.setDetectedSuitabilityScore( score );
-    }
-
     private void updateQualityScore( Geeq gq ) {
         double[] quality = gq.getQualityScoreArray();
         double[] weights = gq.getQualityScoreWeightsArray();
@@ -202,15 +175,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         // Reset description of scoring problems
         gq.setOtherIssues( "" );
 
-        // Suitability score calculation
-        this.scorePublication( ee, gq );
-        this.scorePlatformAmount( ads, gq );
-        this.scorePlatformsTechMulti( ads, gq );
-        this.scoreAvgPlatformPopularity( ads, gq );
-        this.scoreAvgPlatformSize( ads, gq );
-        this.scoreSampleSize( ee, gq );
-        boolean hasRawData = this.scoreRawData( ee, gq );
-        this.scoreMissingValues( ee, gq, hasRawData );
+        // Not a score, but a data-availability fact the retired suitability pass used to record on its way past.
+        gq.setNoVectors( !expressionExperimentService.hasProcessedExpressionData( ee ) );
 
         // Quality score calculation
         DoubleMatrix<BioAssay, BioAssay> cormat = this.getCormat( ee, gq );
@@ -237,180 +203,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private void scoreOnlyReplicates( ExpressionExperiment ee ) {
         Geeq gq = ee.getGeeq();
         this.scoreReplicates( ee, gq );
-    }
-
-    private void scoreOnlyPublication( ExpressionExperiment ee ) {
-        Geeq gq = ee.getGeeq();
-        this.scorePublication( ee, gq );
-    }
-
-    /*
-     * Suitability scoring methods
-     */
-
-    private void scorePublication( ExpressionExperiment ee, Geeq gq ) {
-        double score;
-        boolean hasBib;
-        BibliographicReference bib = null;
-
-        if ( ee.getPrimaryPublication() != null ) {
-            bib = ee.getPrimaryPublication();
-        } else if ( ee.getOtherRelevantPublications() != null && ee.getOtherRelevantPublications().size() > 0 ) {
-            bib = ee.getOtherRelevantPublications().iterator().next();
-        }
-
-        hasBib = bib != null;
-
-        score = !hasBib ? GeeqServiceImpl.N_10 : GeeqServiceImpl.P_10;
-        gq.setsScorePublication( score );
-
-    }
-
-    private void scorePlatformAmount( Collection<ArrayDesign> ads, Geeq gq ) {
-        double score;
-        score = ads.size() > 2 ? GeeqServiceImpl.N_10 : ads.size() > 1 ? GeeqServiceImpl.N_05 : GeeqServiceImpl.P_10;
-        gq.setsScorePlatformAmount( score );
-    }
-
-    private void scorePlatformsTechMulti( Collection<ArrayDesign> ads, Geeq gq ) {
-        double score;
-        boolean mismatch = false;
-
-        ArrayDesign prev = null;
-        for ( ArrayDesign ad : ads ) {
-            if ( prev == null ) {
-                prev = ad;
-            } else {
-                mismatch = !ad.getTechnologyType().equals( prev.getTechnologyType() );
-            }
-        }
-
-        score = mismatch ? GeeqServiceImpl.N_10 : GeeqServiceImpl.P_10;
-        gq.setsScorePlatformsTechMulti( score );
-    }
-
-    private void scoreAvgPlatformPopularity( Collection<ArrayDesign> ads, Geeq gq ) {
-        double score;
-        double[] scores = new double[ads.size()];
-
-        // FIXME factor out magic numbers. Rationale: rarely used platforms are less favored
-        int i = 0;
-        for ( ArrayDesign ad : ads ) {
-            long cnt = arrayDesignService.countExpressionExperiments( ad );
-            scores[i++] = cnt < 10 ? GeeqServiceImpl.N_10
-                    : cnt < 20 ? GeeqServiceImpl.N_05 : cnt < 50 ? GeeqServiceImpl.P_00 : cnt < 100 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
-        }
-
-        score = this.getMean( scores );
-        gq.setsScoreAvgPlatformPopularity( score );
-    }
-
-    /**
-     *
-     */
-    private void scoreAvgPlatformSize( Collection<ArrayDesign> ads, Geeq gq ) {
-        double score;
-        double[] scores = new double[ads.size()];
-
-        int i = 0;
-        for ( ArrayDesign ad : ads ) {
-
-            Taxon taxon = ad.getPrimaryTaxon();
-            long cnt = arrayDesignService.countGenes( ad, true );
-
-            /*
-             * FIXME we don't deal with miRNA platforms correctly
-             */
-
-            // human, rat, mouse, zebrafish and worm all have on the order 20k protein-coding genes.
-            switch ( taxon.getCommonName() ) {
-                case "human":
-                case "rat":
-                case "mouse":
-                case "zebrafish":
-                case "worm":
-                    scores[i++] = cnt < 5000 ? GeeqServiceImpl.N_10
-                            : cnt < 10000 ? GeeqServiceImpl.N_05
-                            : cnt < 15000 ? GeeqServiceImpl.P_00 : cnt < 18000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
-                    break;
-                case "yeast":
-                    // Yeast has about 6k protein-coding genes
-                    scores[i++] = cnt < 1000 ? GeeqServiceImpl.N_10
-                            : cnt < 2500 ? GeeqServiceImpl.N_05
-                            : cnt < 4000 ? GeeqServiceImpl.P_00 : cnt < 5000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
-                    break;
-                case "fly":
-                    // Fly has about 14k protein coding genes
-                    scores[i++] = cnt < 2000 ? GeeqServiceImpl.N_10
-                            : cnt < 5000 ? GeeqServiceImpl.N_05
-                            : cnt < 8000 ? GeeqServiceImpl.P_00 : cnt < 10000 ? GeeqServiceImpl.P_05 : GeeqServiceImpl.P_10;
-                    break;
-            }
-
-        }
-
-        score = this.getMean( scores );
-        gq.setsScoreAvgPlatformSize( score );
-    }
-
-    /**
-     *
-     */
-    private void scoreSampleSize( ExpressionExperiment ee, Geeq gq ) {
-        double score;
-
-        int cnt = ee.getBioAssays().size();
-
-        // FIXME factor out these magic numbers. Rationale: >500 is "too big"; 5 is "very small" and 20-500 is just fine.
-        if ( cnt > 500 ) {
-            score = GeeqServiceImpl.N_10;
-        } else {
-            if ( cnt < 6 ) {
-                score = GeeqServiceImpl.N_10;
-            } else if ( cnt < 10 ) {
-                score = GeeqServiceImpl.N_03;
-            } else if ( cnt < 20 ) {
-                score = GeeqServiceImpl.P_00;
-            } else {
-                score = GeeqServiceImpl.P_10;
-            }
-        }
-        gq.setsScoreSampleSize( score );
-    }
-
-    private boolean scoreRawData( ExpressionExperiment ee, Geeq gq ) {
-        double score;
-
-        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
-
-        boolean dataReprocessedFromRaw = false;
-        for ( QuantitationType qt : quantitationTypes ) {
-            if ( qt.getIsRecomputedFromRawData() ) {
-                dataReprocessedFromRaw = true;
-                break;
-            }
-        }
-
-        score = dataReprocessedFromRaw ? GeeqServiceImpl.P_10 : GeeqServiceImpl.N_10;
-        gq.setsScoreRawData( score );
-        return dataReprocessedFromRaw;
-    }
-
-    private void scoreMissingValues( ExpressionExperiment ee, Geeq gq, boolean hasRawData ) {
-        double score;
-        boolean hasProcessedVectors = true;
-        boolean hasMissingValues = false;
-        String problems = "";
-
-        if ( !hasRawData ) {
-            hasProcessedVectors = expressionExperimentService.hasProcessedExpressionData( ee );
-            hasMissingValues = hasProcessedVectors && expressionDataMatrixService.getProcessedExpressionDataMatrix( ee ).hasMissingValues();
-        }
-
-        score = hasRawData || ( !hasMissingValues && hasProcessedVectors ) ? GeeqServiceImpl.P_10 : GeeqServiceImpl.N_10;
-        gq.setNoVectors( !hasProcessedVectors );
-        gq.addOtherIssues( problems );
-        gq.setsScoreMissingValues( score );
     }
 
     /*

@@ -23,7 +23,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.security.SecurityService;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -508,23 +507,6 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .hasFieldOrPropertyWithValue( "requiredValue", 0.9 )
                 .hasFieldOrPropertyWithValue( "originalProperty", "geeq.publicQualityScore" );
         expressionExperimentService.load( Filters.by( f ), null );
-    }
-
-    @Test
-    public void testFilterBySuitabilityScoreAsAdmin() {
-        expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
-    }
-
-    @Test
-    public void testFilterBySuitabilityScoreAsNonAdmin() {
-        assertThrows( AccessDeniedException.class, () -> {
-            try {
-                runAsAnonymous();
-                expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
-            } finally {
-                runAsAdmin(); // for cleanups
-            }
-        } );
     }
 
     @Test

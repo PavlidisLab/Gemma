@@ -54,14 +54,6 @@ ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreReplicates REDUN
 ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleCorrelationVariance REDUNDANT
 ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleMeanCorrelation REDUNDANT
 ubic.gemma.model.expression.experiment.GeeqValueObject#getqScoreSampleMedianCorrelation REDUNDANT
-ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreAvgPlatformPopularity REDUNDANT
-ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreAvgPlatformSize REDUNDANT
-ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreMissingValues REDUNDANT
-ubic.gemma.model.expression.experiment.GeeqValueObject#getsScorePlatformAmount REDUNDANT
-ubic.gemma.model.expression.experiment.GeeqValueObject#getsScorePlatformsTechMulti REDUNDANT
-ubic.gemma.model.expression.experiment.GeeqValueObject#getsScorePublication REDUNDANT
-ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreRawData REDUNDANT
-ubic.gemma.model.expression.experiment.GeeqValueObject#getsScoreSampleSize REDUNDANT
 ubic.gemma.model.expression.experiment.StatementValueObject#secondObject REDUNDANT
 ubic.gemma.model.expression.experiment.StatementValueObject#secondObjectUri REDUNDANT
 ubic.gemma.model.expression.experiment.StatementValueObject#secondPredicate REDUNDANT

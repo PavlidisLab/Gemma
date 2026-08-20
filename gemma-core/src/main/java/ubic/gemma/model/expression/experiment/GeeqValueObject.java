@@ -41,28 +41,6 @@ import java.util.Date;
 public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     private double publicQualityScore;
-    private double publicSuitabilityScore;
-
-    /*
-     * Suitability score factors
-     */
-
-    @JsonProperty("sScorePublication")
-    private double sScorePublication;
-    @JsonProperty("sScorePlatformAmount")
-    private double sScorePlatformAmount;
-    @JsonProperty("sScorePlatformsTechMulti")
-    private double sScorePlatformsTechMulti;
-    @JsonProperty("sScoreAvgPlatformPopularity")
-    private double sScoreAvgPlatformPopularity;
-    @JsonProperty("sScoreAvgPlatformSize")
-    private double sScoreAvgPlatformSize;
-    @JsonProperty("sScoreSampleSize")
-    private double sScoreSampleSize;
-    @JsonProperty("sScoreRawData")
-    private double sScoreRawData;
-    @JsonProperty("sScoreMissingValues")
-    private double sScoreMissingValues;
 
     /*
      * Quality score factors
@@ -116,16 +94,6 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         super( g );
         this.setPublicQualityScore( g.getDetectedQualityScore(), g.getManualQualityScore(),
                 g.isManualQualityOverride() );
-        this.setPublicSuitabilityScore( g.getDetectedSuitabilityScore(), g.getManualSuitabilityScore(),
-                g.isManualSuitabilityOverride() );
-        this.sScorePublication = g.getsScorePublication();
-        this.sScorePlatformAmount = g.getsScorePlatformAmount();
-        this.sScorePlatformsTechMulti = g.getsScorePlatformsTechMulti();
-        this.sScoreAvgPlatformPopularity = g.getsScoreAvgPlatformPopularity();
-        this.sScoreAvgPlatformSize = g.getsScoreAvgPlatformSize();
-        this.sScoreSampleSize = g.getsScoreSampleSize();
-        this.sScoreRawData = g.getsScoreRawData();
-        this.sScoreMissingValues = g.getsScoreMissingValues();
         this.qScoreOutliers = g.getqScoreOutliers();
         this.qScoreSampleMeanCorrelation = g.getqScoreSampleMeanCorrelation();
         this.qScoreSampleMedianCorrelation = g.getqScoreSampleMedianCorrelation();
@@ -145,59 +113,6 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     public double getPublicQualityScore() {
         return publicQualityScore;
-    }
-
-    public double getPublicSuitabilityScore() {
-        return publicSuitabilityScore;
-    }
-
-
-    @WithheldFromApi(value = Reason.REDUNDANT,
-            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
-    public double getsScorePublication() {
-        return sScorePublication;
-    }
-
-    @WithheldFromApi(value = Reason.REDUNDANT,
-            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
-    public double getsScorePlatformAmount() {
-        return sScorePlatformAmount;
-    }
-
-    @WithheldFromApi(value = Reason.REDUNDANT,
-            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
-    public double getsScorePlatformsTechMulti() {
-        return sScorePlatformsTechMulti;
-    }
-
-    @WithheldFromApi(value = Reason.REDUNDANT,
-            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
-    public double getsScoreAvgPlatformPopularity() {
-        return sScoreAvgPlatformPopularity;
-    }
-
-    @WithheldFromApi(value = Reason.REDUNDANT,
-            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
-    public double getsScoreAvgPlatformSize() {
-        return sScoreAvgPlatformSize;
-    }
-
-    @WithheldFromApi(value = Reason.REDUNDANT,
-            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
-    public double getsScoreSampleSize() {
-        return sScoreSampleSize;
-    }
-
-    @WithheldFromApi(value = Reason.REDUNDANT,
-            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
-    public double getsScoreRawData() {
-        return sScoreRawData;
-    }
-
-    @WithheldFromApi(value = Reason.REDUNDANT,
-            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
-    public double getsScoreMissingValues() {
-        return sScoreMissingValues;
     }
 
     @WithheldFromApi(value = Reason.REDUNDANT,
@@ -277,10 +192,6 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     private void setPublicQualityScore( double detected, double manual, boolean override ) {
         this.publicQualityScore = override ? manual : detected;
-    }
-
-    private void setPublicSuitabilityScore( double detected, double manual, boolean override ) {
-        this.publicSuitabilityScore = override ? manual : detected;
     }
 
     private void setQScorePublicBatchEffect( double detected, boolean manualStrong, boolean manualNone,

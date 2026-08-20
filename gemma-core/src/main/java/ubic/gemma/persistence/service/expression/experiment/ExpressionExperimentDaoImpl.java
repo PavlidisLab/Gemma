@@ -4440,7 +4440,6 @@ public class ExpressionExperimentDaoImpl
         // only expose selected fields for GEEQ
         configurer.unregisterEntity( "geeq.", Geeq.class );
         configurer.registerProperty( "geeq.publicQualityScore" );
-        configurer.registerProperty( "geeq.publicSuitabilityScore" );
 
         // the primary publication is not very useful, but its attached database entry is
         configurer.unregisterEntity( "primaryPublication.", BibliographicReference.class );
@@ -4534,10 +4533,6 @@ public class ExpressionExperimentDaoImpl
             case "geeq.publicQualityScore":
                 return FilterablePropertyMeta.builder()
                         .propertyName( "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)" )
-                        .propertyType( Double.class );
-            case "geeq.publicSuitabilityScore":
-                return FilterablePropertyMeta.builder()
-                        .propertyName( "(case when geeq.manualSuitabilityOverride = true then geeq.manualSuitabilityScore else geeq.detectedSuitabilityScore end)" )
                         .propertyType( Double.class );
             default:
                 return super.resolveFilterablePropertyMeta( propertyName );
