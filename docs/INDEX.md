@@ -70,7 +70,7 @@ Total: 151 docs.
 - [`STATIC_ANALYSIS_AUDIT.md`](audit/STATIC_ANALYSIS_AUDIT.md) — Static Analysis Audit — Phase 3 Spring 6+ Infrastructure
 - [`VALIDATION_AUDIT.md`](audit/VALIDATION_AUDIT.md) — Jakarta Validation Audit (Bean Validation 3.0 / JSR-380)
 
-## Plans & roadmaps — `docs/plans/` (17)
+## Plans & roadmaps — `docs/plans/` (18)
 
 - [`AFTER_INVOCATION_PHASE_C_PLAN.md`](plans/AFTER_INVOCATION_PHASE_C_PLAN.md) — AfterInvocation Phase C: @EnableMethodSecurity migration plan
 - [`BRANCH_MERGE_PLAN.md`](plans/BRANCH_MERGE_PLAN.md) — Phase 3 Branch Merge Plan
@@ -78,6 +78,7 @@ Total: 151 docs.
 - [`EE_SERVICE_DECOMPOSITION_ROADMAP.md`](plans/EE_SERVICE_DECOMPOSITION_ROADMAP.md) — `ExpressionExperimentService` Decomposition Roadmap
 - [`EXPERIMENT_DELETION_REMEDIATION_PLAN.md`](plans/EXPERIMENT_DELETION_REMEDIATION_PLAN.md) — Experiment deletion under dual-version operation — incident summary + remediation plan (2026-08-04)
 - [`EXPRESSIONPERSISTER_MIGRATION_PLAN.md`](plans/EXPRESSIONPERSISTER_MIGRATION_PLAN.md) — ExpressionPersister retirement: migration plan (risk-5 recce)
+- [`GEEQ_IMPROVEMENT_PLAN.md`](plans/GEEQ_IMPROVEMENT_PLAN.md) — widening the metrics that feed GEEQ, calibrating "bad" against a labelled set, and deciding suitability at scrape time
 - [`GEMMA_REST_STANDALONE_ROADMAP.md`](plans/GEMMA_REST_STANDALONE_ROADMAP.md) — gemma-rest standalone packaging — roadmap
 - [`GEMMA_WEB_RETIREMENT_PLAN.md`](plans/GEMMA_WEB_RETIREMENT_PLAN.md) — gemma-web retirement plan
 - [`GENOMEPERSISTER_MIGRATION_PLAN.md`](plans/GENOMEPERSISTER_MIGRATION_PLAN.md) — GenomePersister retirement: migration plan (risk-5 recce)
