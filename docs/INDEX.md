@@ -1,7 +1,7 @@
 # docs/ index
 
 Working design docs, recces, audits, plans, and session notes for Gemma, sorted into subfolders (2026-07-05 cleanup). `README.md` and `CLAUDE.md` stay at the repo root.
-Total: 151 docs.
+Total: 152 docs.
 
 
 ## Pipeline / compute / job-management (Nextflow) — `docs/pipeline-compute/` (1)
@@ -90,7 +90,7 @@ Total: 151 docs.
 - [`WORKTREE_CLEANUP_PLAN_v2.md`](plans/WORKTREE_CLEANUP_PLAN_v2.md) — Worktree cleanup plan — v2
 - [`WORKTREE_CLEANUP_PLAN_v3.md`](plans/WORKTREE_CLEANUP_PLAN_v3.md) — Worktree cleanup plan v3
 
-## Other design docs — `docs/design/` (60)
+## Other design docs — `docs/design/` (61)
 
 - [`ACL_ENTRY_VOTER_MIGRATION.md`](design/ACL_ENTRY_VOTER_MIGRATION.md) — ACL AclEntryVoter family migration plan
 - [`AFTER_INVOCATION_MIGRATION.md`](design/AFTER_INVOCATION_MIGRATION.md) — AfterInvocation → Spring Security 6 Modern API Migration Roadmap
@@ -101,6 +101,7 @@ Total: 151 docs.
 - [`GENOTYPE_DISEASE_MODEL_EXPANSION.md`](design/GENOTYPE_DISEASE_MODEL_EXPANSION.md) — deriving what a genotype models; spec for the unbuilt CORPUS + EXTERNAL relation bases (PR #1685's mechanism is superseded)
 - [`CURATION_COMMIT_SPEC.md`](design/CURATION_COMMIT_SPEC.md) — Curation commit — composite all-or-none write (`PUT /datasets/{id}/curation`)
 - [`CURATION_DETAILS_RETIREMENT.md`](design/CURATION_DETAILS_RETIREMENT.md) — CurationDetails write-path retirement — phase 1
+- [`CURATION_TASK_TICKETS.md`](design/CURATION_TASK_TICKETS.md) — spec (unbuilt): a `CURATION_RECORD` ticket type recording curation work performed; obsolete-term correction is the first producer
 - [`EXECUTOR_VIRTUAL_THREAD_PREP.md`](design/EXECUTOR_VIRTUAL_THREAD_PREP.md) — Executor centralization audit + virtual-thread prep
 - [`EXPRESSION_PERSISTER_DELETION.md`](design/EXPRESSION_PERSISTER_DELETION.md) — ExpressionPersister Final Deletion Tracker
 - [`EXTERNAL_URL_REACHABILITY.md`](design/EXTERNAL_URL_REACHABILITY.md) — External URL reachability probe
