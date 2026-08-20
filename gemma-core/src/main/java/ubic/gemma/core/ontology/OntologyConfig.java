@@ -239,18 +239,32 @@ public class OntologyConfig {
     }
 
     /**
-     * MONDO with slim-cache wiring, parallel to {@link #chebiOntologyService}. Uses the
-     * pre-built {@link OntologyServiceFactory#OntologyServiceFactory(OntologyService)}
-     * constructor so the slim plumbing lands BEFORE the factory's auto-load thread runs.
+     * MONDO, parallel to {@link #chebiOntologyService}. Uses the pre-built
+     * {@link OntologyServiceFactory#OntologyServiceFactory(OntologyService)} constructor so any slim plumbing
+     * lands BEFORE the factory's auto-load thread runs.
+     * <p>
+     * 🛑 <b>The slim is OFF for MONDO by default, and the seeding is why.</b>
+     * {@link MondoSeedResolver#resolveCorpusSeeds()} seeds from MONDO terms the corpus ALREADY uses, so the slim
+     * holds what we have annotated and nothing else. That is fine for looking up a term we already applied and
+     * wrong for every question about a term we have not: notably, when EFO obsoletes a term and names a MONDO
+     * successor, that successor is by definition a term we do not use yet, so the slim cannot contain it. Measured
+     * 2026-08-19: the slim served 9,989 classes against 36,083 in the release, and 22 obsolete terms were
+     * unfixable purely because their named replacement was missing.
+     * <p>
+     * Loading the full source costs a ~250 MB parse at startup (the slim loaded in ~15s). Set
+     * {@code gemma.ontology.mondo.slim.enabled=true} to go back to the slim on a host that cannot afford it.
      */
     @Bean
     public FactoryBean<MondoOntologyService> mondoOntologyServiceOntologyService(
             @Autowired(required = false) OntologySlimExtractor slimExtractor,
-            @Autowired(required = false) MondoSeedResolver seedResolver ) {
+            @Autowired(required = false) MondoSeedResolver seedResolver,
+            @Value("${gemma.ontology.mondo.slim.enabled:false}") boolean mondoSlimEnabled ) {
         MondoOntologyService service = new MondoOntologyService();
         service.setSlimExtractor( slimExtractor );
         service.setSeedResolver( seedResolver );
-        if ( slimExtractor != null && seedResolver != null ) {
+        // Leaving the slim cache dir unset is what disables the slim: resolveSlimFile() then yields null and
+        // loadModel falls through to the full source. An already-cached slim file is left on disk, never read.
+        if ( mondoSlimEnabled && slimExtractor != null && seedResolver != null ) {
             File cacheDir = OntologyLoader.getDiskCachePath( "mondoOntology" ).getParentFile();
             service.setSlimCacheDir( cacheDir );
         }
