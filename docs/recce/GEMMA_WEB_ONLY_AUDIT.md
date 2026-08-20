@@ -89,28 +89,22 @@ is acted on, keep these hidden.
 > `"sScorePlatformTechMulti"`, so the wire name matches neither field nor getter.
 >
 > The 17 are therefore recorded as `REDUNDANT` ("the suppression is inert"), not
-> `PUBLIC_PROJECTION_EXISTS`. `PublicGeeqValueObject` adds no reach that
-> `GeeqValueObject` does not already give, which makes its existence an open question rather
-> than the justification this section treated it as. `GeeqValueObject`'s own class javadoc says
-> "Represents publicly available geeq information", which points at retiring the duplicate
-> rather than suppressing the originals — but that is a decision, not a finding.
+> `PUBLIC_PROJECTION_EXISTS`. `PublicGeeqValueObject` added no reach that
+> `GeeqValueObject` does not already give, so it was retired — see below.
 
 Every per-factor `sScore*` / `qScore*` getter on `GeeqValueObject`.
 
-This is not a Gemma Web artifact. `PublicGeeqValueObject` exists precisely to answer
-the REST need, and says so:
+The section originally argued that `PublicGeeqValueObject` existed precisely to answer
+the REST need, and quoted its javadoc as evidence. That javadoc was itself describing a
+suppression that did not work, so it evidenced nothing.
 
-> Public per-factor GEEQ breakdown. Mirrors `GeeqValueObject` but without the
-> `@GemmaWebOnly` JSON-suppression on the per-factor sScore* / qScore* getters, so
-> the decomposed scores reach REST clients. Admin-only fields exposed by
-> `GeeqAdminValueObject` (detected/manual override scores, free-text `otherIssues`)
-> are deliberately omitted.
-
-So the decomposed scores **are** reachable, through a VO built to expose exactly the
-safe subset. Removing the annotation on `GeeqValueObject` would not add a capability;
-it would duplicate one and bypass the admin-field exclusion that the public VO makes
-explicit. A three-tier design (`Geeq` / `PublicGeeq` / `GeeqAdmin`) is doing real
-work here.
+Probing the two VOs showed they serialized **identical 25-key payloads**, so the
+"public projection" projected nothing. `PublicGeeqValueObject` was retired and
+`GET /datasets/{dataset}/geeq/public` now returns `GeeqValueObject` directly — a
+byte-identical response. The surviving split is two-tier, not three: `Geeq` for everyone
+and `GeeqAdmin` for the detected/manual override scores and `otherIssues`, which are
+genuinely admin-only because they are declared on the subclass rather than hidden on the
+parent.
 
 ## C — dead VO (12 sites) — THE ANNOTATION IS MOOT
 
