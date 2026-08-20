@@ -22,8 +22,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.lang.Nullable;
-import ubic.gemma.model.annotations.WithheldFromApi;
-import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -81,13 +79,6 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
     private Integer numberOfGenesAnalyzed;
 
     private Integer numberOfProbesAnalyzed;
-
-    /**
-     * This is used once in the frontend, but never filled, so please ignore.
-     */
-    @WithheldFromApi(value = Reason.UNTRIAGED,
-            comment = "check whether it duplicates the exposed corrected p-value shape")
-    private Double qValue;
 
     /**
      * Threshold applied to the hitlist.
@@ -241,14 +232,5 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
 
     public Integer getNumberOfDownregulatedProbes() {
         return downregulatedCount;
-    }
-
-    /**
-     * Alias for {@link #getId()} kept for backward-compatibility in the Gemma Web frontend.
-     */
-    @WithheldFromApi(value = Reason.UNTRIAGED,
-            comment = "a result-set id clients cannot see is suspicious; check whether it duplicates id")
-    public Long getResultSetId() {
-        return id;
     }
 }

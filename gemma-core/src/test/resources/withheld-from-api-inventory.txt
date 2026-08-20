@@ -1,5 +1,3 @@
-ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject#getResultSetId UNTRIAGED
-ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject#qValue UNTRIAGED
 ubic.gemma.model.common.description.AnnotationValueObject#description INTERNAL_ONLY
 ubic.gemma.model.common.description.AnnotationValueObject#parentDescription INTERNAL_ONLY
 ubic.gemma.model.common.description.AnnotationValueObject#parentLink INTERNAL_ONLY

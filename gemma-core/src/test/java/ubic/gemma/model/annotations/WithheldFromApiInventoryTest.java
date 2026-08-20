@@ -70,7 +70,7 @@ class WithheldFromApiInventoryTest {
      * Number of {@link Reason#UNTRIAGED} members left over from the {@code @GemmaWebOnly} migration.
      * This may only ever go down. Do not raise it — a new suppression has a real reason available.
      */
-    private static final int UNTRIAGED_CEILING = 13;
+    private static final int UNTRIAGED_CEILING = 11;
 
     private static final Set<Reason> MUST_NEVER_SERIALIZE = EnumSet.of( Reason.CALLER_IDENTITY, Reason.DISCLOSURE );
 
