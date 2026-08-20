@@ -47,7 +47,12 @@ public abstract class BibRefAnnotation extends AbstractIdentifiable {
     @Column(name = "IS_MAJOR_TOPIC", columnDefinition = "TINYINT")
     private Boolean isMajorTopic;
 
-    @Column(name = "TERM", nullable = false, columnDefinition = "VARCHAR(255)")
+    /**
+     * Publisher-supplied keyword lists are free text and are not bounded by any NLM convention: some journals
+     * file a whole abbreviations glossary as a single keyword (PMID 37094356 uses 1417 characters). This is
+     * {@code text} rather than a fixed width so such a record loads instead of aborting the insert.
+     */
+    @Column(name = "TERM", nullable = false, columnDefinition = "text")
     private String term;
 
     @Override
