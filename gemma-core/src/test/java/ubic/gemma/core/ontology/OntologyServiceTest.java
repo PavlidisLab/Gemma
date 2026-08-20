@@ -568,6 +568,69 @@ public class OntologyServiceTest extends BaseTest5 {
     }
 
     /**
+     * EFO writes {@code IAO:0100001} as a LITERAL whose text is the URI, where MONDO/OBI/CL/CLO write a RESOURCE.
+     * Reading only the resource spelling made all 100 obsolete EFO terms on prod look like they had no successor,
+     * when EFO had named one for each.
+     */
+    @Test
+    public void testReplacementWrittenAsALiteralIsRead() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "obesity" ) );
+
+        AnnotationProperty asLiteral = mock();
+        when( asLiteral.getValueUri() ).thenReturn( null );       // no resource: it is a plain literal
+        when( asLiteral.getContents() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( asLiteral );
+
+        OntologyTerm replacement = mock();
+        when( replacement.getLabel() ).thenReturn( "disease" );
+        when( replacement.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( replacement );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertTrue( usage.isAutoCorrectable() );
+        assertEquals( MONDO_DISEASE, usage.getReplacedByUri() );
+        assertEquals( "IAO:0100001", usage.getResolvedVia() );
+    }
+
+    /**
+     * The literal branch must not turn arbitrary annotation text into a replacement — only something shaped like a
+     * term URI counts.
+     */
+    @Test
+    public void testFreeTextLiteralIsNotMistakenForAReplacement() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty prose = mock();
+        when( prose.getValueUri() ).thenReturn( null );
+        when( prose.getContents() ).thenReturn( "see the release notes" );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( prose );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertFalse( usage.isAutoCorrectable() );
+        assertNull( usage.getReplacedByUri() );
+    }
+
+    /**
      * A term replaced by a term that was itself replaced is ordinary ontology housekeeping. Following the chain to
      * a current terminus stays mechanical — every hop is an assertion the ontology made.
      */

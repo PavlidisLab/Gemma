@@ -882,9 +882,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         usage.setExperimentCount( experimentCount );
 
         for ( AnnotationProperty consider : term.getAnnotations( OntologyUtils.CONSIDER_URI ) ) {
-            // getValue() would hand back the resource's rdfs:label; identity has to come from the URI.
-            String considerUri = consider.getValueUri();
-            if ( StringUtils.isNotBlank( considerUri ) ) {
+            String considerUri = referencedTermUri( consider );
+            if ( considerUri != null ) {
                 usage.getConsiderUris().add( considerUri );
             }
         }
@@ -914,6 +913,33 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     private static final int MAX_REPLACEMENT_HOPS = 5;
 
     /**
+     * Read the term URI an annotation points at, whichever of the two ways the ontology wrote it.
+     * <p>
+     * 🛑 Ontologies disagree here, and reading only one spelling silently loses the other. MONDO, OBI, CL and CLO
+     * write {@code IAO:0100001} as a RESOURCE, so {@link AnnotationProperty#getValueUri()} is the accessor and
+     * {@code getContents()} would return the target's label instead. EFO writes it as a LITERAL whose text IS the
+     * URI:
+     * <pre>{@code <obo:IAO_0100001>http://purl.obolibrary.org/obo/MONDO_0011122</obo:IAO_0100001>}</pre>
+     * so {@code getValueUri()} is null and the URI is in the contents. Reading resources only made every EFO term
+     * look like it had been obsoleted with no successor named — 100 of them, when EFO had said what to use.
+     * <p>
+     * The literal branch is gated on {@link OntologyUtils#isTermUri}, which keeps free-text annotation values from
+     * being mistaken for a replacement.
+     */
+    @Nullable
+    private static String referencedTermUri( @Nullable AnnotationProperty annotation ) {
+        if ( annotation == null ) {
+            return null;
+        }
+        String uri = annotation.getValueUri();
+        if ( StringUtils.isNotBlank( uri ) ) {
+            return uri;
+        }
+        String contents = StringUtils.strip( annotation.getContents() );
+        return StringUtils.isNotBlank( contents ) && OntologyUtils.isTermUri( contents ) ? contents : null;
+    }
+
+    /**
      * Follow {@code IAO:0100001} to a term that is not itself obsolete.
      *
      * @return true if the usage was resolved or definitively blocked by this rule
@@ -922,10 +948,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Set<String> visited = new HashSet<>();
         OntologyTerm current = term;
         for ( int hop = 1; hop <= MAX_REPLACEMENT_HOPS; hop++ ) {
-            AnnotationProperty replacedBy = current.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI );
-            // getValue() would hand back the resource's rdfs:label; identity has to come from the URI.
-            String replacementUri = replacedBy != null ? replacedBy.getValueUri() : null;
-            if ( StringUtils.isBlank( replacementUri ) ) {
+            String replacementUri = referencedTermUri( current.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) );
+            if ( replacementUri == null ) {
                 if ( hop > 1 ) {
                     // We did follow an assertion; it just landed on an obsolete term that names no successor. Say
                     // that, because "obsoleted without naming a replacement" would describe the wrong term. Still
