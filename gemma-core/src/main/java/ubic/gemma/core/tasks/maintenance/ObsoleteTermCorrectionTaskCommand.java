@@ -32,11 +32,21 @@ public class ObsoleteTermCorrectionTaskCommand extends TaskCommand {
     private final boolean dryRun;
     private final int timeoutSeconds;
 
+    /**
+     * Six hours. {@link TaskCommand#MAX_RUNTIME_MILLIS} defaults to 60 seconds and
+     * {@code SubmittedTasksMaintenance} cancels anything that overruns — which this task would, comfortably. A
+     * single-term dry run measured 27 s on the live corpus; a blanket run covers 105 terms and rewrites
+     * annotations across ~9,200 experiments, resyncing EE2C and ANNOTATION_RELATION per experiment. Left at the
+     * default it would be killed part-way, and a cancelled run reports nothing about what it had already written.
+     */
+    private static final long MAX_RUNTIME = 6 * 60 * 60 * 1000L;
+
     public ObsoleteTermCorrectionTaskCommand( Collection<String> uris, boolean dryRun, int timeoutSeconds ) {
         super();
         this.uris = uris != null ? new LinkedHashSet<>( uris ) : new LinkedHashSet<>();
         this.dryRun = dryRun;
         this.timeoutSeconds = timeoutSeconds;
+        setMaxRuntimeMillis( MAX_RUNTIME );
     }
 
     @Override
