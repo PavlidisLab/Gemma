@@ -138,8 +138,8 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated")
     private boolean child = false;
-    @WithheldFromApi(value = Reason.UNTRIAGED,
-            comment = "populated by OntologyServiceImpl; a real usage tally no client can read")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "usageCount that is made available provides the number of experiments that a term is used in. this instead counts the number of samples a term appears in which is less useful to the end user")
     private int numTimesUsed = 0;
     /**
      * what Ontology uses this term

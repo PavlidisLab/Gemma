@@ -77,8 +77,8 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
      * This is unnecessary in the context of the RESTful API because vector types are always retrieved when the
      * associated ExpressionExperiment is known.
      */
-    @WithheldFromApi(value = Reason.UNTRIAGED,
-            comment = "back-pointer; check for a redundant path before exposing")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "Any serialized use of QuantitationTypeValueObjects rely on already having the experiment ID on hand")
     private Long expressionExperimentId = null;
 
     /**

@@ -69,8 +69,14 @@ class WithheldFromApiInventoryTest {
     /**
      * Number of {@link Reason#UNTRIAGED} members left over from the {@code @GemmaWebOnly} migration.
      * This may only ever go down. Do not raise it — a new suppression has a real reason available.
+     * <p>
+     * The backlog is drained: all 13 were closed without a single speculative exposure — some deleted
+     * once nothing turned out to write them, the rest re-reasoned once the stated reason proved wrong
+     * about the data. At zero this is no longer a burn-down target but a prohibition: any new
+     * {@code UNTRIAGED} fails this test, which is what the reason's javadoc asks for when it says the
+     * value "should never be chosen for a new member".
      */
-    private static final int UNTRIAGED_CEILING = 11;
+    private static final int UNTRIAGED_CEILING = 0;
 
     private static final Set<Reason> MUST_NEVER_SERIALIZE = EnumSet.of( Reason.CALLER_IDENTITY, Reason.DISCLOSURE );
 

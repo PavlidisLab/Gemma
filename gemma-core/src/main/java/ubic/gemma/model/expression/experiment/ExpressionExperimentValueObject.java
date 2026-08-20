@@ -133,8 +133,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Set<CharacteristicValueObject> characteristics;
 
     @Nullable
-    @WithheldFromApi(value = Reason.UNTRIAGED,
-            comment = "check whether it is meaningful without the analysis context")
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "nothing originates it: the copy constructor propagates it but no constructor, setter call site, HQL projection or alias transformer ever sets a value, and there is no MIN_PVALUE column — so it would serialize a permanent null")
     private Double minPvalue;
 
     /**
