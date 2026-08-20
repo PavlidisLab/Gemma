@@ -269,6 +269,11 @@ class WithheldFromApiInventoryTest {
      * property of the same name serializing elsewhere confirms the reason instead of contradicting it.
      * That is the state of the four flattened taxon / factor-value accessors, where a sibling member
      * legitimately owns the name.
+     * <p>
+     * Every other reason is enforced, {@link Reason#INTERNAL_ONLY} very much included: a member that
+     * nothing populates, or whose shape is lossy, publishes a falsehood if it reaches the wire, so the
+     * suppression there is doing real work. That split is the whole point of having the two reasons —
+     * before it existed, all 62 of these sat under REDUNDANT and none of them were checked.
      */
     @Test
     void aMemberClaimedWithheldIsActuallyWithheld() {

@@ -41,6 +41,13 @@ import java.lang.annotation.Target;
  * </pre>
  *
  * The bucketing that produced the initial reasons is in {@code docs/recce/GEMMA_WEB_ONLY_AUDIT.md}.
+ * <p>
+ * There was briefly a {@code PUBLIC_PROJECTION_EXISTS} reason, for a member whose safe subset a
+ * parallel value object published. It was removed: its only claimed instance,
+ * {@code PublicGeeqValueObject}, turned out to serialize a payload identical to the VO it was
+ * supposedly projecting, and once the "unfiltered internal form" half of its meaning moved to
+ * {@link Reason#INTERNAL_ONLY}, what remained said only "the data is published elsewhere" —
+ * which is {@link Reason#REDUNDANT}.
  *
  * @author paul
  * @see GemmaRestOnly for the inverse — properties exclusive to Gemma REST
@@ -82,21 +89,41 @@ public @interface WithheldFromApi {
          */
         DISCLOSURE,
         /**
-         * A separate value object already publishes the safe subset of this data, and this member is
-         * the unfiltered internal form. Removing the suppression would not add a capability — it
-         * would duplicate one, and bypass whatever the public projection deliberately excludes.
+         * Nothing is being withheld: this datum is already on the wire under another name, or is
+         * trivially derivable from what is. A denormalized copy, a flattened convenience accessor
+         * beside the object it flattens, or a member whose content a separate projection already
+         * publishes.
          * <p>
-         * Name the projection in {@link #comment()}.
-         */
-        PUBLIC_PROJECTION_EXISTS,
-        /**
-         * Nothing is actually being withheld. The member is a denormalized copy of data already on
-         * the wire, a derived convenience accessor, defunct UI render state, or a field that no code
-         * populates — so exposing it would add noise, a duplicate, or a constant.
+         * This is the one reason that asserts <em>no</em> hazard, so it is deliberately exempt from
+         * the suppression enforcement in {@code WithheldFromApiInventoryTest} — a property of the
+         * same name serializing elsewhere confirms the claim rather than contradicting it. Do not
+         * reach for it when the member is merely useless; that is {@link #INTERNAL_ONLY}, and the
+         * distinction is what decides whether the guard watches the member or ignores it.
          * <p>
-         * Safe to delete outright; the annotation is only here to record that the question was asked.
+         * Safe to delete outright. Name the member or projection that carries the data in
+         * {@link #comment()}, so the claim can be rechecked.
          */
         REDUNDANT,
+        /**
+         * The member cannot mean anything to a client, so publishing it would mislead rather than
+         * inform. Three shapes recur:
+         * <ul>
+         * <li>nothing populates it, so it would serialize a permanent {@code 0} / {@code null} /
+         * {@code ""} that reads as data;</li>
+         * <li>its shape is lossy — a category-keyed map that silently drops colliding entries, say —
+         * so the honest form of the same data is elsewhere;</li>
+         * <li>it lives on a value object nothing serves, or exists purely as scaffolding for an
+         * editor that is gone.</li>
+         * </ul>
+         * Unlike {@link #REDUNDANT}, the suppression here is doing real work, so it <em>is</em>
+         * enforced: exposing one of these publishes a falsehood, not a duplicate.
+         * <p>
+         * "Nothing populates it" is a claim about today's code and can quietly stop being true. Say
+         * in {@link #comment()} which shape applies and how it was established, and prefer deleting
+         * the member over annotating it — for a field nobody writes, this annotation is a placeholder
+         * for that deletion.
+         */
+        INTERNAL_ONLY,
         /**
          * Withheld by curation or editorial policy rather than by a technical hazard. The data is not
          * dangerous; we have decided not to publish it. Say whose decision in {@link #comment()} so

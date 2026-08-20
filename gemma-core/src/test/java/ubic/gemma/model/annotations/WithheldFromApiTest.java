@@ -29,7 +29,7 @@ class WithheldFromApiTest {
         @WithheldFromApi(Reason.CALLER_IDENTITY)
         public boolean currentUserIsOwner = true;
 
-        @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS, comment = "use SomePublicProjectionVo")
+        @WithheldFromApi(value = Reason.INTERNAL_ONLY, comment = "nothing populates it")
         public double qScoreOutliers = 0.5;
 
         @WithheldFromApi(Reason.DISCLOSURE)
@@ -61,8 +61,8 @@ class WithheldFromApiTest {
     @Test
     void theReasonAndCommentSurviveToRuntime() throws Exception {
         WithheldFromApi onField = Sample.class.getField( "qScoreOutliers" ).getAnnotation( WithheldFromApi.class );
-        assertEquals( Reason.PUBLIC_PROJECTION_EXISTS, onField.value() );
-        assertEquals( "use SomePublicProjectionVo", onField.comment() );
+        assertEquals( Reason.INTERNAL_ONLY, onField.value() );
+        assertEquals( "nothing populates it", onField.comment() );
 
         WithheldFromApi onGetter = Sample.class.getMethod( "getFastqHeaders" ).getAnnotation( WithheldFromApi.class );
         assertEquals( Reason.DISCLOSURE, onGetter.value() );

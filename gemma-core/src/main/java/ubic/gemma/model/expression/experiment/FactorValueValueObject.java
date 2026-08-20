@@ -52,40 +52,40 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
     /**
      * It could be the id of the measurement if there is no characteristic.
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private Long charId;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String value;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String valueUri;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String predicate;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String predicateUri;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String object;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String objectUri;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String secondPredicate;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String secondPredicateUri;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String secondObject;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private String secondObjectUri;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "this VO is @Deprecated and off the REST path; FactorValueBasicValueObject serves factor values")
     private Boolean needsAttention;
 

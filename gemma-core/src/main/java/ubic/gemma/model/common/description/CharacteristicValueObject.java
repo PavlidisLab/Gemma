@@ -107,13 +107,13 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     /**
      * id used by url on the client side
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "never populated")
     private String urlId = "";
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "curator editor state; says nothing about the characteristic itself")
     private boolean alreadyPresentInDatabase = false;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "Phenocarta editor state, never populated")
     private boolean alreadyPresentOnGene = false; // phenocarta?
     /**
@@ -135,7 +135,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     /**
      * child term from a root
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated")
     private boolean child = false;
     @WithheldFromApi(value = Reason.UNTRIAGED,
@@ -144,32 +144,32 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     /**
      * what Ontology uses this term
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "never populated")
     private String ontologyUsed = null;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "never populated; a Phenocarta gene tally, not an ACL count")
     private long privateGeneCount = 0L; // phenocarta?
     /**
      * number of occurrences in all genes
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "never populated; a Phenocarta gene tally, not an ACL count")
     private long publicGeneCount = 0L; // phenocarta?
     /**
      * root of a query
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated")
     private boolean root = false;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "flattened common name, never populated outside tests")
     private String taxon = "";
     /**
      * The definition of the value, if it is an ontology term, as supplied by the ontology. If the value is
      * free text, this will be empty
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "never populated")
     private String valueDefinition = "";
 

@@ -42,7 +42,7 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     private String className;
     private String termUri;
     private String termName;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "no constructor or caller ever populates it")
     private String description;
     @Schema(implementation = GOEvidenceCode.class)
@@ -81,22 +81,22 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Nullable
     @Schema(description = "Second object URI for compound Statement annotations.")
     private String secondObjectUri;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentName;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentDescription;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentLink;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentOfParentName;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentOfParentDescription;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentOfParentLink;
     /**

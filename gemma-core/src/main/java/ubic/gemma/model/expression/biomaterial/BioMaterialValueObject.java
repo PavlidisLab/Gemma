@@ -74,7 +74,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     /*
      * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "category-keyed and therefore lossy; characteristics already serializes")
     private Map<String, String> characteristicValues = new HashMap<>();
 
@@ -82,7 +82,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      * Map of categories to original text values (for this biomaterial).
      * This is only used for display and will only be populated if the original value is different from the value.
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "category-keyed and therefore lossy; characteristics carries originalValue")
     private Map<String, String> characteristicOriginalValues = new HashMap<>();
 
@@ -108,7 +108,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     /**
      * Map of factor ids (factor232) to factor value (id or the actual value) for this biomaterial.
      */
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "id cross-reference built for the Web editor")
     private Map<String, String> factorIdToFactorValueId;
 

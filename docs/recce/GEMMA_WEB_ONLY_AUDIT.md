@@ -13,8 +13,20 @@ sites now carry `@WithheldFromApi(Reason)`, enforced by `WithheldFromApiInventor
 > them), while `TaxonValueObject.isSpecies` and most of bucket D were confirmed
 > `REDUNDANT` by checking that nothing writes them at all. Bucket B's `POLICY` framing became
 > `PUBLIC_PROJECTION_EXISTS` and then, once the wire shape was actually probed, `REDUNDANT`
-> (see the correction in bucket B). Bucket C folded into `REDUNDANT` rather than getting a
-> constant of its own — the VO is deprecated, not the suppression.
+> (see the correction in bucket B).
+>
+> **Taxonomy revised 2026-08-19.** `PUBLIC_PROJECTION_EXISTS` no longer exists: its only
+> claimed instance was the false one in bucket B, and what remained of its meaning was
+> indistinguishable from `REDUNDANT`. `REDUNDANT` is now narrowly "the data is already on
+> the wire elsewhere, or trivially derivable from it" — the one reason asserting *no*
+> hazard, and therefore the only one exempt from the suppression enforcement. Everything
+> that is merely unusable moved to a new `INTERNAL_ONLY`: nothing populates it, its shape
+> is lossy, or it sits on a VO nothing serves. That split matters because it decides
+> whether the guard watches a member: all 62 of these previously sat under `REDUNDANT`
+> and none were checked. Current counts — 3 `CALLER_IDENTITY`, 1 `DISCLOSURE`,
+> 29 `REDUNDANT`, 33 `INTERNAL_ONLY`, 13 `UNTRIAGED`, 0 `POLICY`. Bucket C folded into
+> `INTERNAL_ONLY` — the VO is deprecated and unserved, which is a structural fact about
+> the member, not a duplication.
 
 ## Why this exists
 

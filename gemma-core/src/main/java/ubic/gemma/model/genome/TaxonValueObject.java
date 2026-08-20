@@ -32,7 +32,7 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
     private String scientificName;
     private String commonName;
     private Integer ncbiId;
-    @WithheldFromApi(value = Reason.REDUNDANT,
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "no constructor or setter call ever populates it")
     private Boolean isSpecies;
     @WithheldFromApi(value = Reason.UNTRIAGED,
