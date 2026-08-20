@@ -46,8 +46,13 @@ import static org.junit.jupiter.api.Assertions.fail;
  * annotation fails here — which an annotation-driven scan alone could never catch, since a deleted
  * annotation simply vanishes from the scan.</li>
  * <li><b>The suppression.</b> Every listed member is absent from Jackson's serialization view of its
- * class. Checked by comparing {@link java.lang.reflect.Member}s, not property names, so a
- * name-derivation mistake cannot make the assertion vacuously true.</li>
+ * class, checked by comparing {@link java.lang.reflect.Member}s rather than property names.</li>
+ * <li><b>That the suppression is not defeated.</b> Member identity alone is not enough: if a sibling
+ * accessor for the same datum carries an explicit {@code @JsonProperty}, Jackson keeps that one, the
+ * ignore never bites, and no accessor is ever identical to the annotated member — so the identity
+ * check passes while the data is on the wire. That is precisely what all 17 {@code GeeqValueObject}
+ * per-factor score getters were doing, undetected, when this class was first written. See
+ * {@link #aMemberClaimedWithheldIsActuallyWithheld()}.</li>
  * <li><b>The ratchet.</b> {@link Reason#UNTRIAGED} is migration debt, so its population may only
  * shrink. {@link #UNTRIAGED_CEILING} is a separate constant on purpose: regenerating the inventory
  * would hide a new untriaged member, and this would not.</li>
@@ -84,6 +89,41 @@ class WithheldFromApiInventoryTest {
 
         boolean isSameAs( AnnotatedMember m ) {
             return field != null ? field.equals( m.getMember() ) : method.equals( m.getMember() );
+        }
+
+        /**
+         * The property name(s) this member would carry if Jackson bound it. Identity-matching alone
+         * misses the case that motivated {@link #aMemberClaimedWithheldIsActuallyWithheld()}: when a
+         * sibling accessor for the same datum carries an explicit {@code @JsonProperty}, Jackson keeps
+         * that one and the ignore never bites, so no accessor is ever identical to the annotated
+         * member and an identity check finds nothing.
+         */
+        Set<String> impliedPropertyNames() {
+            Set<String> out = new LinkedHashSet<>();
+            if ( field != null ) {
+                out.add( field.getName() );
+                return out;
+            }
+            String n = method.getName();
+            if ( n.startsWith( "get" ) ) {
+                out.add( demangle( n.substring( 3 ) ) );
+            } else if ( n.startsWith( "is" ) ) {
+                out.add( demangle( n.substring( 2 ) ) );
+            }
+            out.add( n );
+            return out;
+        }
+
+        /** Jackson's std mangling: lowercase a leading uppercase run, leave a lowercase lead alone. */
+        private static String demangle( String s ) {
+            if ( s.isEmpty() || Character.isLowerCase( s.charAt( 0 ) ) ) {
+                return s;
+            }
+            StringBuilder sb = new StringBuilder( s );
+            for ( int i = 0; i < sb.length() && Character.isUpperCase( sb.charAt( i ) ); i++ ) {
+                sb.setCharAt( i, Character.toLowerCase( sb.charAt( i ) ) );
+            }
+            return sb.toString();
         }
     }
 
@@ -219,6 +259,58 @@ class WithheldFromApiInventoryTest {
             }
         }
         assertTrue( leaked.isEmpty(), "@WithheldFromApi is not suppressing these: " + leaked );
+    }
+
+    /**
+     * The invariant {@link #nothingInTheInventoryReachesTheWire()} was too weak to catch: a member
+     * whose reason <em>claims</em> the data is withheld must actually be off the wire.
+     * <p>
+     * {@link Reason#REDUNDANT} is exempt by design — it asserts that nothing is being withheld, so a
+     * property of the same name serializing elsewhere confirms the reason instead of contradicting it.
+     * That is the state of the four flattened taxon / factor-value accessors, where a sibling member
+     * legitimately owns the name.
+     */
+    @Test
+    void aMemberClaimedWithheldIsActuallyWithheld() {
+        ObjectMapper mapper = new ObjectMapper();
+        List<String> defeated = new ArrayList<>();
+
+        for ( Site s : scan() ) {
+            if ( s.reason() == Reason.REDUNDANT ) {
+                continue;
+            }
+            BeanDescription desc = mapper.getSerializationConfig()
+                    .introspect( mapper.constructType( s.owner() ) );
+            List<BeanPropertyDefinition> props = desc.findProperties();
+            Set<String> serializedNames = props.stream()
+                    .map( BeanPropertyDefinition::getName )
+                    .collect( Collectors.toCollection( LinkedHashSet::new ) );
+
+            for ( String implied : s.member().impliedPropertyNames() ) {
+                if ( serializedNames.contains( implied ) ) {
+                    defeated.add( s.key() + " claims " + s.reason() + " but \"" + implied + "\" serializes" );
+                }
+                // a suppressed getter whose backing field serializes under ANY name — the exact shape
+                // of the GeeqValueObject case, where @JsonProperty renamed the field just enough that
+                // the name check above would not have noticed
+                if ( s.member().method() == null ) {
+                    continue;
+                }
+                Field backing;
+                try {
+                    backing = s.owner().getDeclaredField( implied );
+                } catch ( NoSuchFieldException e ) {
+                    continue;
+                }
+                for ( BeanPropertyDefinition p : props ) {
+                    if ( p.getField() != null && backing.equals( p.getField().getMember() ) ) {
+                        defeated.add( s.key() + " claims " + s.reason() + " but its backing field "
+                                + implied + " serializes as \"" + p.getName() + "\"" );
+                    }
+                }
+            }
+        }
+        assertTrue( defeated.isEmpty(), "suppression is defeated for:\n  " + String.join( "\n  ", defeated ) );
     }
 
     @Test

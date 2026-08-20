@@ -12,7 +12,8 @@ sites now carry `@WithheldFromApi(Reason)`, enforced by `WithheldFromApiInventor
 > moved to `UNTRIAGED` (both are populated in production code, so "redundant" was not true of
 > them), while `TaxonValueObject.isSpecies` and most of bucket D were confirmed
 > `REDUNDANT` by checking that nothing writes them at all. Bucket B's `POLICY` framing became
-> `PUBLIC_PROJECTION_EXISTS`, and bucket C folded into `REDUNDANT` rather than getting a
+> `PUBLIC_PROJECTION_EXISTS` and then, once the wire shape was actually probed, `REDUNDANT`
+> (see the correction in bucket B). Bucket C folded into `REDUNDANT` rather than getting a
 > constant of its own — the VO is deprecated, not the suppression.
 
 ## Why this exists
@@ -43,7 +44,7 @@ that would be duplicated by a naive removal. The recommended change is to make t
 | bucket | sites | action |
 |---|---:|---|
 | A — caller-identity / disclosure | 4 | keep hidden; re-annotate so it cannot be swept |
-| B — deliberate policy, parallel VO exists | 17 | keep hidden; re-annotate |
+| B — ~~parallel VO exists~~ **premise false, see below** | 17 | already public; suppression is inert |
 | C — dead VO (`@Deprecated`, off the REST path) | 12 | annotation is moot; retire the VO instead |
 | D — display shims redundant with exposed data | 35 | harmless either way; delete the field or leave |
 | E — real data withheld only because Web consumed it | 11 | expose on request, one at a time, after tracing |
@@ -76,7 +77,23 @@ identifiers and submitter-local naming. It is not per-user but it is disclosure.
 **These four are the reason not to bulk-remove.** If nothing else in this document
 is acted on, keep these hidden.
 
-## B — deliberate policy, and the alternative already exists (17 sites) — KEEP HIDDEN
+## B — deliberate policy, and the alternative already exists (17 sites) — ~~KEEP HIDDEN~~ WRONG
+
+> **Corrected 2026-08-18.** Everything in this section rests on the premise that these getters
+> are suppressed. They are not, and never were. Each backing field carries an explicit
+> `@JsonProperty`, which Jackson keeps in preference to the `@JsonIgnore` on the parallel
+> getter, so `GeeqValueObject` publishes all 17 decomposed scores today — inline on
+> `GET /datasets/{dataset}` and through `PipelineStatusValueObject` too. Verified by
+> serializing the VOs, not by reading the annotations. `GeeqValueObject.java:54` is the
+> giveaway: the field is `sScorePlatformsTechMulti` but its `@JsonProperty` says
+> `"sScorePlatformTechMulti"`, so the wire name matches neither field nor getter.
+>
+> The 17 are therefore recorded as `REDUNDANT` ("the suppression is inert"), not
+> `PUBLIC_PROJECTION_EXISTS`. `PublicGeeqValueObject` adds no reach that
+> `GeeqValueObject` does not already give, which makes its existence an open question rather
+> than the justification this section treated it as. `GeeqValueObject`'s own class javadoc says
+> "Represents publicly available geeq information", which points at retiring the duplicate
+> rather than suppressing the originals — but that is a decision, not a finding.
 
 Every per-factor `sScore*` / `qScore*` getter on `GeeqValueObject`.
 

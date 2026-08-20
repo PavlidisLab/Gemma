@@ -152,104 +152,104 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     }
 
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScorePublication() {
         return sScorePublication;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScorePlatformAmount() {
         return sScorePlatformAmount;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScorePlatformsTechMulti() {
         return sScorePlatformsTechMulti;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreAvgPlatformPopularity() {
         return sScoreAvgPlatformPopularity;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreAvgPlatformSize() {
         return sScoreAvgPlatformSize;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreSampleSize() {
         return sScoreSampleSize;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreRawData() {
         return sScoreRawData;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreMissingValues() {
         return sScoreMissingValues;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreOutliers() {
         return qScoreOutliers;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreSampleMeanCorrelation() {
         return qScoreSampleMeanCorrelation;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreSampleMedianCorrelation() {
         return qScoreSampleMedianCorrelation;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreSampleCorrelationVariance() {
         return qScoreSampleCorrelationVariance;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScorePlatformsTech() {
         return qScorePlatformsTech;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreReplicates() {
         return qScoreReplicates;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreBatchInfo() {
         return qScoreBatchInfo;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScorePublicBatchEffect() {
         return qScorePublicBatchEffect;
     }
 
-    @WithheldFromApi(value = Reason.PUBLIC_PROJECTION_EXISTS,
-            comment = "use PublicGeeqValueObject")
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScorePublicBatchConfound() {
         return qScorePublicBatchConfound;
     }
