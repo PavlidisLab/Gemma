@@ -12,6 +12,7 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,6 +23,7 @@ import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PATCH;
@@ -59,6 +61,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig;
+import ubic.gemma.core.ontology.ObsoleteTermUsage;
 import ubic.gemma.core.ontology.providers.OntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceResolver;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
@@ -133,6 +136,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -1226,6 +1230,55 @@ public class AdminWebService {
             vo.error = e.getClass().getSimpleName() + ": " + e.getMessage();
         }
         return vo;
+    }
+
+    /* ===== Obsolete term usage ===== */
+
+    /**
+     * In-application port of {@code FindObsoleteTermsCli}: which obsolete ontology terms do Gemma's annotations
+     * still use, and what does each owning ontology say should replace them.
+     * <p>
+     * The CLI existed because the check needed ontologies in memory and a CLI had to load them itself — which is
+     * why it refuses to run unless {@code load.ontologies=false} and spends its first stretch warming up. A running
+     * application already holds them, so the only work left here is one grouped query over CHARACTERISTIC plus a
+     * lookup per distinct URI.
+     * <p>
+     * Read-only. Correcting the terms is a separate, deliberate action: see {@code autoCorrectable} on each row for
+     * whether a correction could be derived from the ontology at all.
+     */
+    @GET
+    @Path("/ontologies/obsolete-terms")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Report obsolete ontology terms still used by annotations",
+            description = "In-application port of `FindObsoleteTermsCli`. Groups CHARACTERISTIC by term URI across "
+                    + "the subject, predicate and object slots, checks each distinct URI against the loaded "
+                    + "ontologies, and reports those that are obsolete along with the experiment count and the "
+                    + "replacement the ontology asserts via `IAO:0100001`. Gene Ontology annotations are excluded, "
+                    + "matching the CLI. Rows where `autoCorrectable` is true are ones whose replacement is asserted "
+                    + "by the ontology and itself resolves and is current; everything else names why in "
+                    + "`blockedReason` and needs a curator. Requires the ontologies to be loaded — with "
+                    + "`load.ontologies=false` every term reads as unresolvable and the report comes back empty.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = "Resolving terms exceeded the timeout; the ontologies are probably still loading.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<ObsoleteTermUsage>> getObsoleteTerms(
+            @Parameter(description = "Budget in seconds for resolving terms against the loaded ontologies.")
+            @QueryParam("timeoutSeconds") @DefaultValue("120") Integer timeoutSeconds
+    ) {
+        try {
+            return respond( ontologyFacade.findObsoleteTermsInUse( timeoutSeconds, TimeUnit.SECONDS ) );
+        } catch ( TimeoutException e ) {
+            // Almost always "the ontologies have not finished loading", which is a state that passes rather than an
+            // error in the request; 503 says come back, 500 would say something broke.
+            throw new ServiceUnavailableException( "Timed out resolving terms against the loaded ontologies after "
+                    + timeoutSeconds + "s; they may still be loading. Check /admin/ontologies." );
+        }
     }
 
     /* ===== Database connection pool ===== */

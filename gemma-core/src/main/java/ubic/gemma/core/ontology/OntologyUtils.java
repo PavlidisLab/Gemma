@@ -47,6 +47,24 @@ public class OntologyUtils {
     public static final String DEFINITION_URI = BASE_PURL_URI + "IAO_0000115";
 
     /**
+     * {@code IAO:0100001 term replaced by} — the OBO property an ontology uses to name the exact substitute for a
+     * term it has obsoleted. EFO carries it on {@code EFO_0000408} (obsolete_disease) pointing at
+     * {@code MONDO_0000001}.
+     * <p>
+     * This is an assertion of equivalence made by the ontology, so a correction that follows it is derived rather
+     * than decided. Contrast {@link #CONSIDER_URI}.
+     */
+    public static final String TERM_REPLACED_BY_URI = BASE_PURL_URI + "IAO_0100001";
+
+    /**
+     * {@code oboInOwl:consider} — a pointer to terms a CURATOR might consider in place of an obsolete one.
+     * <p>
+     * 🛑 Not a replacement. It carries no claim of equivalence and an obsolete term may offer several. Applying one
+     * automatically would be inventing curation, so it is reported and never acted on.
+     */
+    public static final String CONSIDER_URI = "http://www.geneontology.org/formats/oboInOwl#consider";
+
+    /**
      * Base URI used by EFO.
      */
     public static final String BASE_EFO_URI = "http://www.ebi.ac.uk/efo/";

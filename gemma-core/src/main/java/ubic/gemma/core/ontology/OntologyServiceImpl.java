@@ -819,6 +819,170 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return obsoleteTerms;
     }
 
+    @Override
+    public List<ObsoleteTermUsage> findObsoleteTermsInUse( long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
+        long timeoutMs = timeUnit.toMillis( timeout );
+
+        // One grouped query across the subject, predicate and object slots rather than a walk over every
+        // characteristic: a URI is obsolete or it is not, so checking it once per distinct URI is the same answer
+        // for a fraction of the work.
+        Map<String, String> storedLabelsByUri = characteristicReadService
+                .findValueGroupedByValueUri( null, true, true, true, -1 );
+
+        Map<String, OntologyTerm> obsolete = new LinkedHashMap<>();
+        for ( Map.Entry<String, String> e : storedLabelsByUri.entrySet() ) {
+            String uri = e.getKey();
+            if ( StringUtils.isBlank( uri ) || uri.startsWith( Gene.NCBI_URI_PREFIX ) ) {
+                // gene annotations are not ontology terms; they would all read as "not found"
+                continue;
+            }
+            if ( uri.startsWith( OntologyUtils.BASE_PURL_URI + "GO_" ) ) {
+                continue;
+            }
+            OntologyTerm term = getTerm( uri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+            if ( term != null && term.isObsolete() ) {
+                obsolete.put( uri, term );
+            }
+        }
+
+        log.info( "Checked " + storedLabelsByUri.size() + " distinct term URIs in " + timer.getTime()
+                + " ms, " + obsolete.size() + " are obsolete." );
+
+        if ( obsolete.isEmpty() ) {
+            return Collections.emptyList();
+        }
+
+        Map<String, Long> experimentCounts = characteristicReadService
+                .countExperimentsByUris( obsolete.keySet(), true, true, true, null, Collections.emptyList() );
+
+        List<ObsoleteTermUsage> report = new ArrayList<>( obsolete.size() );
+        for ( Map.Entry<String, OntologyTerm> e : obsolete.entrySet() ) {
+            report.add( describeObsolete( e.getKey(), e.getValue(), storedLabelsByUri.get( e.getKey() ),
+                    experimentCounts.getOrDefault( e.getKey(), 0L ),
+                    Math.max( timeoutMs - timer.getTime(), 0 ) ) );
+        }
+        report.sort( Comparator.comparingLong( ObsoleteTermUsage::getExperimentCount ).reversed() );
+        return report;
+    }
+
+    /**
+     * Resolve what an ontology says should replace one obsolete term.
+     * <p>
+     * A replacement is only usable without a curator when the ontology asserts it via {@code IAO:0100001} AND that
+     * replacement itself resolves and is not obsolete — an obsolete term replaced by another obsolete term is a
+     * chain someone has to look at, not one to follow blindly.
+     */
+    private ObsoleteTermUsage describeObsolete( String uri, OntologyTerm term, @Nullable String storedValue,
+            long experimentCount, long timeoutMs ) throws TimeoutException {
+        ObsoleteTermUsage usage = new ObsoleteTermUsage();
+        usage.setUri( uri );
+        usage.setLabel( term.getLabel() );
+        usage.setStoredValue( storedValue );
+        usage.setExperimentCount( experimentCount );
+
+        for ( AnnotationProperty consider : term.getAnnotations( OntologyUtils.CONSIDER_URI ) ) {
+            // getValue() would hand back the resource's rdfs:label; identity has to come from the URI.
+            String considerUri = consider.getValueUri();
+            if ( StringUtils.isNotBlank( considerUri ) ) {
+                usage.getConsiderUris().add( considerUri );
+            }
+        }
+
+        // Rung 1/2: what the ontology asserts, followed through obsolete intermediates.
+        if ( applyAssertedReplacement( usage, term, timeoutMs ) ) {
+            return usage;
+        }
+        // Rung 3: the merge record. An ontology that merges X into Y often does not write a replaced-by on X; it
+        // writes X into Y's hasAlternativeId instead. Same fact recorded from the other end, so a reverse lookup
+        // finds it, and it is every bit as mechanical.
+        if ( applyMergeRecord( usage, term, timeoutMs ) ) {
+            return usage;
+        }
+        if ( usage.getBlockedReason() == null ) {
+            usage.setBlockedReason( usage.getConsiderUris().isEmpty()
+                    ? "the ontology obsoleted this term without naming a replacement, and no term claims it as an alternative ID"
+                    : "the ontology offers oboInOwl:consider candidates but asserts no replacement; a curator has to choose" );
+        }
+        return usage;
+    }
+
+    /**
+     * Cap on how far {@code IAO:0100001} chains are followed. A term replaced by a term that was itself replaced is
+     * ordinary ontology housekeeping; a chain longer than this is a sign of something odd and is left to a human.
+     */
+    private static final int MAX_REPLACEMENT_HOPS = 5;
+
+    /**
+     * Follow {@code IAO:0100001} to a term that is not itself obsolete.
+     *
+     * @return true if the usage was resolved or definitively blocked by this rule
+     */
+    private boolean applyAssertedReplacement( ObsoleteTermUsage usage, OntologyTerm term, long timeoutMs ) throws TimeoutException {
+        Set<String> visited = new HashSet<>();
+        OntologyTerm current = term;
+        for ( int hop = 1; hop <= MAX_REPLACEMENT_HOPS; hop++ ) {
+            AnnotationProperty replacedBy = current.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI );
+            // getValue() would hand back the resource's rdfs:label; identity has to come from the URI.
+            String replacementUri = replacedBy != null ? replacedBy.getValueUri() : null;
+            if ( StringUtils.isBlank( replacementUri ) ) {
+                if ( hop > 1 ) {
+                    // We did follow an assertion; it just landed on an obsolete term that names no successor. Say
+                    // that, because "obsoleted without naming a replacement" would describe the wrong term. Still
+                    // fall through to the next rung, which may find the successor from the other end.
+                    usage.setBlockedReason( "the asserted replacement " + usage.getReplacedByUri()
+                            + " is itself obsolete and names no further replacement" );
+                }
+                return false; // nothing asserted here; let the next rung try
+            }
+            if ( !visited.add( replacementUri ) ) {
+                usage.setBlockedReason( "the replaced-by chain from this term is cyclic at " + replacementUri );
+                return true;
+            }
+            usage.setReplacedByUri( replacementUri );
+            OntologyTerm replacement = getTerm( replacementUri, timeoutMs, TimeUnit.MILLISECONDS );
+            if ( replacement == null ) {
+                usage.setBlockedReason( "the asserted replacement " + replacementUri + " is not in any ontology Gemma has loaded" );
+                return true;
+            }
+            usage.setReplacedByLabel( replacement.getLabel() );
+            if ( !replacement.isObsolete() ) {
+                usage.setAutoCorrectable( true );
+                usage.setResolvedVia( hop == 1 ? "IAO:0100001" : "IAO:0100001-chain" );
+                usage.setReplacementHops( hop );
+                return true;
+            }
+            current = replacement;
+        }
+        usage.setBlockedReason( "the replaced-by chain from this term is still obsolete after " + MAX_REPLACEMENT_HOPS + " hops" );
+        return true;
+    }
+
+    /**
+     * Look for a current term that claims this obsolete one as an alternative ID, which is how an OBO merge is
+     * recorded on the surviving term.
+     *
+     * @return true if the usage was resolved by this rule
+     */
+    private boolean applyMergeRecord( ObsoleteTermUsage usage, OntologyTerm term, long timeoutMs ) throws TimeoutException {
+        String termId = OntologyUtils.getTermId( term );
+        if ( StringUtils.isBlank( termId ) ) {
+            return false;
+        }
+        OntologyTerm successor = findFirst( ontology -> ontology.findUsingAlternativeId( termId ), termId, timeoutMs );
+        if ( successor == null || successor.isObsolete() || StringUtils.isBlank( successor.getUri() ) ) {
+            return false;
+        }
+        usage.setReplacedByUri( successor.getUri() );
+        usage.setReplacedByLabel( successor.getLabel() );
+        usage.setAutoCorrectable( true );
+        usage.setResolvedVia( "hasAlternativeId" );
+        usage.setReplacementHops( 1 );
+        // A dead-ended replaced-by chain may have left a reason behind; this rung resolved it, so it is not blocked.
+        usage.setBlockedReason( null );
+        return true;
+    }
+
     private void checkForObsolete( Map<OntologyTerm, Long> obsoleteTerms, String uri, String label, long timeoutMs ) throws TimeoutException {
         if ( StringUtils.isNotBlank( uri ) ) {
             OntologyTerm term = this.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );

@@ -20,6 +20,21 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated superseded by {@code GET /admin/ontologies/obsolete-terms}, which answers the same question from a
+ * running application and additionally reports the replacement each ontology asserts.
+ * <p>
+ * This command exists only because a CLI has to load the ontologies itself — hence the {@code load.ontologies=false}
+ * precondition below and the warm-up loop. A running Gemma already holds them.
+ * <p>
+ * Two things the endpoint does not carry over. Its {@code Count} column is always 1: {@code checkForObsolete}
+ * increments the count but is only reached inside the {@code checkedUris} guard, so no term can be counted twice.
+ * And it walks every characteristic in the corpus to answer a question about distinct URIs — the endpoint groups
+ * CHARACTERISTIC by URI instead and asks each one once.
+ * <p>
+ * Scheduled for removal once the correction path lands; see {@code docs/design/OBSOLETE_TERM_CORRECTION.md}.
+ */
+@Deprecated
 public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
     @Autowired
@@ -42,7 +57,7 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
     @Override
     public String getShortDesc() {
-        return "Check for characteristics using obsolete terms as values (excluding GO), prints to sdout";
+        return "DEPRECATED, use GET /admin/ontologies/obsolete-terms instead. Check for characteristics using obsolete terms as values (excluding GO), prints to stdout";
     }
 
     @Override

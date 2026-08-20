@@ -42,7 +42,9 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.concurrent.TimeoutException;
@@ -451,5 +453,244 @@ public class OntologyServiceTest extends BaseTest5 {
         when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
 
         assertNull( ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
+    }
+
+    private static final String OBSOLETE_DISEASE = "http://www.ebi.ac.uk/efo/EFO_0000408";
+    private static final String MONDO_DISEASE = "http://purl.obolibrary.org/obo/MONDO_0000001";
+
+    /**
+     * The real shape of the problem: EFO obsoleted {@code EFO_0000408} and named
+     * {@code MONDO_0000001} as its replacement, so the correction is derivable rather than a curator's guess.
+     */
+    @Test
+    public void testObsoleteTermWithAssertedReplacementIsAutoCorrectable() throws TimeoutException {
+        Map<String, String> inUse = new LinkedHashMap<>();
+        inUse.put( OBSOLETE_DISEASE, "disease" );
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( inUse );
+
+        AnnotationProperty replacedBy = mock();
+        // The annotation names a resource: its identity is the URI, and getValue() would hand back the label.
+        when( replacedBy.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( replacedBy );
+
+        OntologyTerm replacement = mock();
+        when( replacement.getLabel() ).thenReturn( "disease" );
+        when( replacement.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( replacement );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 15000L ) );
+
+        List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        assertEquals( 1, report.size() );
+        ObsoleteTermUsage usage = report.get( 0 );
+        assertEquals( OBSOLETE_DISEASE, usage.getUri() );
+        assertEquals( "obsolete_disease", usage.getLabel() );
+        assertEquals( MONDO_DISEASE, usage.getReplacedByUri() );
+        assertEquals( "disease", usage.getReplacedByLabel() );
+        assertEquals( 15000L, usage.getExperimentCount() );
+        assertTrue( usage.isAutoCorrectable() );
+        assertNull( usage.getBlockedReason() );
+    }
+
+    /**
+     * {@code oboInOwl:consider} is advice to a human, not an assertion of equivalence, so it must never make a term
+     * auto-correctable however many candidates it lists.
+     */
+    @Test
+    public void testConsiderCandidatesDoNotMakeATermAutoCorrectable() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty consider = mock();
+        when( consider.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( null );
+        when( obsolete.getAnnotations( OntologyUtils.CONSIDER_URI ) ).thenReturn( Collections.singletonList( consider ) );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 3L ) );
+
+        List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        assertEquals( 1, report.size() );
+        ObsoleteTermUsage usage = report.get( 0 );
+        assertFalse( usage.isAutoCorrectable() );
+        assertNull( usage.getReplacedByUri() );
+        assertEquals( Collections.singletonList( MONDO_DISEASE ), usage.getConsiderUris() );
+        assertNotNull( usage.getBlockedReason() );
+    }
+
+    /**
+     * A replacement that is itself obsolete is a chain for a curator to walk, not one to follow automatically.
+     */
+    @Test
+    public void testObsoleteReplacementIsNotAutoCorrectable() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty replacedBy = mock();
+        when( replacedBy.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( replacedBy );
+
+        OntologyTerm alsoObsolete = mock();
+        when( alsoObsolete.getLabel() ).thenReturn( "obsolete_something_else" );
+        when( alsoObsolete.isObsolete() ).thenReturn( true );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( alsoObsolete );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        assertEquals( 1, report.size() );
+        assertFalse( report.get( 0 ).isAutoCorrectable() );
+        assertTrue( report.get( 0 ).getBlockedReason().contains( "itself obsolete" ) );
+    }
+
+    /**
+     * A term replaced by a term that was itself replaced is ordinary ontology housekeeping. Following the chain to
+     * a current terminus stays mechanical — every hop is an assertion the ontology made.
+     */
+    @Test
+    public void testReplacedByChainIsFollowedToACurrentTerm() throws TimeoutException {
+        String middle = "http://purl.obolibrary.org/obo/MONDO_1111111";
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty toMiddle = mock();
+        when( toMiddle.getValueUri() ).thenReturn( middle );
+        AnnotationProperty toFinal = mock();
+        when( toFinal.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( toMiddle );
+
+        OntologyTerm middleTerm = mock();
+        when( middleTerm.getLabel() ).thenReturn( "also obsolete" );
+        when( middleTerm.isObsolete() ).thenReturn( true );
+        when( middleTerm.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( toFinal );
+
+        OntologyTerm finalTerm = mock();
+        when( finalTerm.getLabel() ).thenReturn( "disease" );
+        when( finalTerm.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( middle ) ).thenReturn( middleTerm );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( finalTerm );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertTrue( usage.isAutoCorrectable() );
+        assertEquals( MONDO_DISEASE, usage.getReplacedByUri() );
+        assertEquals( "IAO:0100001-chain", usage.getResolvedVia() );
+        assertEquals( 2, usage.getReplacementHops() );
+    }
+
+    /**
+     * A cyclic replaced-by chain must stop rather than spin, and must not be presented as correctable.
+     */
+    @Test
+    public void testCyclicReplacedByChainIsNotAutoCorrectable() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty toOther = mock();
+        when( toOther.getValueUri() ).thenReturn( MONDO_DISEASE );
+        AnnotationProperty back = mock();
+        when( back.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( toOther );
+
+        OntologyTerm other = mock();
+        when( other.getLabel() ).thenReturn( "still obsolete" );
+        when( other.isObsolete() ).thenReturn( true );
+        when( other.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( back );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( other );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertFalse( usage.isAutoCorrectable() );
+        assertTrue( usage.getBlockedReason().contains( "cyclic" ) );
+    }
+
+    /**
+     * An ontology that MERGES X into Y frequently writes nothing on X — it records X in Y's hasAlternativeId. The
+     * successor is then found by reverse lookup, which is the same fact read from the other end.
+     */
+    @Test
+    public void testMergedTermIsResolvedByItsAlternativeIdRecord() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty oboId = mock();
+        when( oboId.getContents() ).thenReturn( "EFO:0000408" );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( null );
+        when( obsolete.getAnnotation( "http://www.geneontology.org/formats/oboInOwl#id" ) ).thenReturn( oboId );
+
+        OntologyTerm successor = mock();
+        when( successor.getLabel() ).thenReturn( "disease" );
+        when( successor.getUri() ).thenReturn( MONDO_DISEASE );
+        when( successor.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.findUsingAlternativeId( "EFO:0000408" ) ).thenReturn( successor );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertTrue( usage.isAutoCorrectable() );
+        assertEquals( MONDO_DISEASE, usage.getReplacedByUri() );
+        assertEquals( "hasAlternativeId", usage.getResolvedVia() );
+    }
+
+    /**
+     * GO annotations are gene annotations; their obsolescence is a separate problem and the CLI skipped them, so
+     * the report must not start reporting them just because it changed how it enumerates URIs.
+     */
+    @Test
+    public void testGeneOntologyTermsAreSkipped() throws TimeoutException {
+        String goUri = "http://purl.obolibrary.org/obo/GO_0005575";
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( goUri, "cellular_component" ) );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+
+        assertTrue( ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).isEmpty() );
+        verify( chebiOntologyService, never() ).getTerm( goUri );
     }
 }
