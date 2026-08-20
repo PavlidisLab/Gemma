@@ -4786,8 +4786,14 @@ public class DatasetsWebService {
     /**
      * Public sibling of {@link #getDatasetGeeq(DatasetArg)}: returns the per-factor GEEQ
      * breakdown without exposing the admin-only detected/manual override scores or the
-     * free-text {@code otherIssues} curator field. Drives the GEEQ-badge popover in the
-     * browser UI for anonymous and non-admin users.
+     * free-text {@code otherIssues} curator field, which live on {@link GeeqAdminValueObject}.
+     * Drives the GEEQ-badge popover in the browser UI for anonymous and non-admin users.
+     * <p>
+     * Served by {@link GeeqValueObject} directly. This used to return a parallel
+     * {@code PublicGeeqValueObject}, written on the belief that the per-factor getters on
+     * {@link GeeqValueObject} were JSON-suppressed; they were not — each backing field carries an
+     * explicit {@code @JsonProperty} that Jackson keeps over the ignore on the parallel getter. The
+     * two VOs serialized identical 25-key payloads, so the duplicate was retired.
      */
     @GET
     @Path("/{dataset}/geeq/public")
@@ -4802,7 +4808,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist or GEEQ has not been computed for it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<PublicGeeqValueObject> getDatasetGeeqPublic(
+    public ResponseDataObject<GeeqValueObject> getDatasetGeeqPublic(
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -4812,7 +4818,7 @@ public class DatasetsWebService {
             throw new NotFoundException( "GEEQ has not been computed for dataset " + ee.getShortName()
                     + "; use PUT /geeq to compute it." );
         }
-        PublicGeeqValueObject vo = new PublicGeeqValueObject( geeq );
+        GeeqValueObject vo = new GeeqValueObject( geeq );
         AuditEvent geeqEvent = auditEventService.getLastEvent( ee, GeeqEvent.class );
         if ( geeqEvent != null ) {
             vo.setLastComputed( geeqEvent.getDate() );

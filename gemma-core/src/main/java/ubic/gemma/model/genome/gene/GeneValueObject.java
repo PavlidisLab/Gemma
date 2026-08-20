@@ -27,7 +27,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaRestOnly;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -257,7 +258,8 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         geneValueObject.setAliases( aliases );
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened; taxon already serializes")
     public Long getTaxonId() {
         return taxon == null ? null : taxon.getId();
     }
@@ -278,12 +280,14 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         return !includeTaxon && taxon != null ? taxon.getId() : null;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened; taxon already serializes")
     public String getTaxonCommonName() {
         return taxon == null ? null : taxon.getCommonName();
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened; taxon already serializes")
     public String getTaxonScientificName() {
         return taxon == null ? null : taxon.getScientificName();
     }

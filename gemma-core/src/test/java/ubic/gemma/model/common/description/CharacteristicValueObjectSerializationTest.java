@@ -14,8 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * and it is the only thing on the row that survives curation replacing {@code value} with an ontology
  * label — so a consumer auditing a grounding has nothing else to compare against.
  * <p>
- * It was carried on the VO but annotated {@code @GemmaWebOnly}, which is {@code @JsonIgnore}
- * underneath, so REST silently dropped it and callers concluded Gemma had never kept the original.
+ * It was carried on the VO but annotated with the old {@code @GemmaWebOnly} marker, which is
+ * {@code @JsonIgnore} underneath, so REST silently dropped it and callers concluded Gemma had never
+ * kept the original.
  */
 class CharacteristicValueObjectSerializationTest {
 
@@ -56,9 +57,9 @@ class CharacteristicValueObjectSerializationTest {
     }
 
     @Test
-    void theOtherGemmaWebOnlyFieldsStayOffTheWire() throws Exception {
-        // Un-hiding originalValue must not un-hide its neighbours: the rest of @GemmaWebOnly on this
-        // VO is Phenocarta / editor-display state that no REST client has ever seen.
+    void theOtherWithheldFieldsStayOffTheWire() throws Exception {
+        // Un-hiding originalValue must not un-hide its neighbours: the rest of @WithheldFromApi on
+        // this VO is Phenocarta / editor-display state that no REST client has ever seen.
         Characteristic c = Characteristic.Factory.newInstance( "cell line", null, "N2a", null );
         c.setOriginalValue( "N2a cells" );
 

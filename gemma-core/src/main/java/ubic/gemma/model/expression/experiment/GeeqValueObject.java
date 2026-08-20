@@ -22,7 +22,8 @@ package ubic.gemma.model.expression.experiment;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Setter;
 import lombok.ToString;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
@@ -50,7 +51,7 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     private double sScorePublication;
     @JsonProperty("sScorePlatformAmount")
     private double sScorePlatformAmount;
-    @JsonProperty("sScorePlatformTechMulti")
+    @JsonProperty("sScorePlatformsTechMulti")
     private double sScorePlatformsTechMulti;
     @JsonProperty("sScoreAvgPlatformPopularity")
     private double sScoreAvgPlatformPopularity;
@@ -151,87 +152,104 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
     }
 
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScorePublication() {
         return sScorePublication;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScorePlatformAmount() {
         return sScorePlatformAmount;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScorePlatformsTechMulti() {
         return sScorePlatformsTechMulti;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreAvgPlatformPopularity() {
         return sScoreAvgPlatformPopularity;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreAvgPlatformSize() {
         return sScoreAvgPlatformSize;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreSampleSize() {
         return sScoreSampleSize;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreRawData() {
         return sScoreRawData;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getsScoreMissingValues() {
         return sScoreMissingValues;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreOutliers() {
         return qScoreOutliers;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreSampleMeanCorrelation() {
         return qScoreSampleMeanCorrelation;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreSampleMedianCorrelation() {
         return qScoreSampleMedianCorrelation;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreSampleCorrelationVariance() {
         return qScoreSampleCorrelationVariance;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScorePlatformsTech() {
         return qScorePlatformsTech;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreReplicates() {
         return qScoreReplicates;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreBatchInfo() {
         return qScoreBatchInfo;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScorePublicBatchEffect() {
         return qScorePublicBatchEffect;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScorePublicBatchConfound() {
         return qScorePublicBatchConfound;
     }

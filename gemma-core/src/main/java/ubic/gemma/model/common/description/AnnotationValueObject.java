@@ -23,7 +23,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.lang.Nullable;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -41,7 +42,8 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     private String className;
     private String termUri;
     private String termName;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "no constructor or caller ever populates it")
     private String description;
     @Schema(implementation = GOEvidenceCode.class)
     private String evidenceCode;
@@ -79,17 +81,23 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Nullable
     @Schema(description = "Second object URI for compound Statement annotations.")
     private String secondObjectUri;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentName;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentDescription;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentLink;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentOfParentName;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentOfParentDescription;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentOfParentLink;
     /**
      * Verbatim provenance backing a curated tag — a JSON array of {@code {quote, source, location, ...}}

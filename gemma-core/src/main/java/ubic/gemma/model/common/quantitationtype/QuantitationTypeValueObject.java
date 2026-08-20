@@ -22,7 +22,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -76,7 +77,8 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
      * This is unnecessary in the context of the RESTful API because vector types are always retrieved when the
      * associated ExpressionExperiment is known.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "Any serialized use of QuantitationTypeValueObjects rely on already having the experiment ID on hand")
     private Long expressionExperimentId = null;
 
     /**

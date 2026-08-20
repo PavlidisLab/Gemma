@@ -6,7 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import ubic.gemma.model.annotations.GemmaRestOnly;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 
@@ -19,8 +20,12 @@ import static ubic.gemma.model.common.description.CharacteristicUtils.compareTer
 /**
  * Represents a VO for a {@link Statement}, typically part of a {@link FactorValueBasicValueObject}.
  * <p>
- * Most of the fields in here are reserved for Gemma Web and we are still discussing the best way to represent these for
- * the REST API in <a href="https://github.com/PavlidisLab/Gemma/issues/814">#814</a>.
+ * The REST representation was settled by <a href="https://github.com/PavlidisLab/Gemma/issues/814">#814</a>,
+ * closed in {@code dff752727c}: the {@code predicate*} / {@code object*} slots are public, and a
+ * compound statement's second clause reaches clients flattened by
+ * {@code AbstractFactorValueValueObjectSerializer} rather than through the {@code second*} fields —
+ * see those fields for why they stay off the wire. This javadoc previously said the question was
+ * still open; it has not been since November 2023.
  * @see Statement
  * @see FactorValueBasicValueObject
  * @author poirigui
@@ -58,16 +63,36 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
     @Nullable
     private String objectUri;
 
-    @GemmaWebOnly
+    /**
+     * The second clause of a compound statement (e.g. the {@code "for 12 weeks"} of
+     * {@code "HFD for 12 weeks"}).
+     * <p>
+     * These four are withheld because {@code AbstractFactorValueValueObjectSerializer} already puts
+     * them on the wire, flattened: a statement with a second object is emitted as <em>two</em>
+     * entries in the {@code statements} array sharing one subject, the second carrying this clause
+     * under the generic {@code predicate} / {@code object} keys. Serializing the raw fields as well
+     * would publish the same clause twice under two names. That flattening arrived with the fields'
+     * exposure in {@code dff752727c} ("Serialize statements", fix #814), which is why the first four
+     * slots are public here and these are not.
+     * <p>
+     * {@link ubic.gemma.model.common.description.AnnotationValueObject} exposes its own
+     * {@code second*} fields directly, and that is not an inconsistency: it is serialized as a plain
+     * bean with no flattener, so direct fields are the only way to carry the compound shape there.
+     */
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "AbstractFactorValueValueObjectSerializer flattens the second clause into an extra statements[] entry under the generic predicate/object keys")
     private String secondPredicate;
     @Nullable
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "AbstractFactorValueValueObjectSerializer flattens the second clause into an extra statements[] entry under the generic predicate/object keys")
     private String secondPredicateUri;
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "AbstractFactorValueValueObjectSerializer flattens the second clause into an extra statements[] entry under the generic predicate/object keys")
     private String secondObject;
     @Nullable
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "AbstractFactorValueValueObjectSerializer flattens the second clause into an extra statements[] entry under the generic predicate/object keys")
     private String secondObjectUri;
 
     /**

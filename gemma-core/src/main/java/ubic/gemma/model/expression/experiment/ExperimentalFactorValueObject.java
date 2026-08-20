@@ -24,7 +24,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
 import org.springframework.lang.Nullable;
@@ -162,7 +163,8 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     /**
      * Number of factor values.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "derivable from values, which already serializes")
     public int getNumValues() {
         return this.values == null ? 0 : this.values.size();
     }

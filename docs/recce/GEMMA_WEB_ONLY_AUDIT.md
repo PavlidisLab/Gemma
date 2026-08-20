@@ -1,8 +1,36 @@
 # `@GemmaWebOnly` — what it is really hiding
 
-**Date:** 2026-08-10 · **Status:** read-only audit; no code changed by this document
+**Date:** 2026-08-10 · **Status:** ACTED ON 2026-08-18 — `@GemmaWebOnly` is deleted; all 79
+sites now carry `@WithheldFromApi(Reason)`, enforced by `WithheldFromApiInventoryTest`
 **Scope:** all 79 annotation sites across 15 files in `gemma-core/src/main` +
 `gemma-rest/src/main` (as of `3646111985`)
+
+> **Read this first.** The buckets below are the reasoning; the applied assignments are in
+> `gemma-core/src/test/resources/withheld-from-api-inventory.txt`, which is the pinned
+> record. Where the two disagree, the inventory is what ships. Three deliberate deviations
+> from bucket D: `TaxonValueObject.isGenesUsable`
+> moved to `UNTRIAGED` (it is populated in production code, so "redundant" was not true of
+> it), while `TaxonValueObject.isSpecies` and most of bucket D were confirmed
+> `REDUNDANT` by checking that nothing writes them at all. Bucket B's `POLICY` framing became
+> `PUBLIC_PROJECTION_EXISTS` and then, once the wire shape was actually probed, `REDUNDANT`
+> (see the correction in bucket B).
+>
+> **Taxonomy revised 2026-08-19.** `PUBLIC_PROJECTION_EXISTS` no longer exists: its only
+> claimed instance was the false one in bucket B, and what remained of its meaning was
+> indistinguishable from `REDUNDANT`. `REDUNDANT` is now narrowly "the data is already on
+> the wire elsewhere, or trivially derivable from it" — the one reason asserting *no*
+> hazard, and therefore the only one exempt from the suppression enforcement. Everything
+> that is merely unusable moved to a new `INTERNAL_ONLY`: nothing populates it, its shape
+> is lossy, or it sits on a VO nothing serves. That split matters because it decides
+> whether the guard watches a member: all 62 of these previously sat under `REDUNDANT`
+> and none were checked. Current counts — 3 `CALLER_IDENTITY`, 1 `DISCLOSURE`,
+> 35 `REDUNDANT`, 37 `INTERNAL_ONLY`, **0** `UNTRIAGED`, 0 `POLICY` (76 sites; four members were
+> deleted rather than re-reasoned — two on `DiffExResultSetSummaryValueObject`, plus
+> `ExpressionExperimentSubsetValueObject.accession` (replaced by an annotated `getAccession()`)
+> and its `getSourceExperiment()`).
+> Bucket C folded into
+> `INTERNAL_ONLY` — the VO is deprecated and unserved, which is a structural fact about
+> the member, not a duplication.
 
 ## Why this exists
 
@@ -32,7 +60,7 @@ that would be duplicated by a naive removal. The recommended change is to make t
 | bucket | sites | action |
 |---|---:|---|
 | A — caller-identity / disclosure | 4 | keep hidden; re-annotate so it cannot be swept |
-| B — deliberate policy, parallel VO exists | 17 | keep hidden; re-annotate |
+| B — ~~parallel VO exists~~ **premise false, see below** | 17 | already public; suppression is inert |
 | C — dead VO (`@Deprecated`, off the REST path) | 12 | annotation is moot; retire the VO instead |
 | D — display shims redundant with exposed data | 35 | harmless either way; delete the field or leave |
 | E — real data withheld only because Web consumed it | 11 | expose on request, one at a time, after tracing |
@@ -65,24 +93,34 @@ identifiers and submitter-local naming. It is not per-user but it is disclosure.
 **These four are the reason not to bulk-remove.** If nothing else in this document
 is acted on, keep these hidden.
 
-## B — deliberate policy, and the alternative already exists (17 sites) — KEEP HIDDEN
+## B — deliberate policy, and the alternative already exists (17 sites) — ~~KEEP HIDDEN~~ WRONG
+
+> **Corrected 2026-08-18.** Everything in this section rests on the premise that these getters
+> are suppressed. They are not, and never were. Each backing field carries an explicit
+> `@JsonProperty`, which Jackson keeps in preference to the `@JsonIgnore` on the parallel
+> getter, so `GeeqValueObject` publishes all 17 decomposed scores today — inline on
+> `GET /datasets/{dataset}` and through `PipelineStatusValueObject` too. Verified by
+> serializing the VOs, not by reading the annotations. `GeeqValueObject.java:54` is the
+> giveaway: the field is `sScorePlatformsTechMulti` but its `@JsonProperty` says
+> `"sScorePlatformTechMulti"`, so the wire name matches neither field nor getter.
+>
+> The 17 are therefore recorded as `REDUNDANT` ("the suppression is inert"), not
+> `PUBLIC_PROJECTION_EXISTS`. `PublicGeeqValueObject` added no reach that
+> `GeeqValueObject` does not already give, so it was retired — see below.
 
 Every per-factor `sScore*` / `qScore*` getter on `GeeqValueObject`.
 
-This is not a Gemma Web artifact. `PublicGeeqValueObject` exists precisely to answer
-the REST need, and says so:
+The section originally argued that `PublicGeeqValueObject` existed precisely to answer
+the REST need, and quoted its javadoc as evidence. That javadoc was itself describing a
+suppression that did not work, so it evidenced nothing.
 
-> Public per-factor GEEQ breakdown. Mirrors `GeeqValueObject` but without the
-> `@GemmaWebOnly` JSON-suppression on the per-factor sScore* / qScore* getters, so
-> the decomposed scores reach REST clients. Admin-only fields exposed by
-> `GeeqAdminValueObject` (detected/manual override scores, free-text `otherIssues`)
-> are deliberately omitted.
-
-So the decomposed scores **are** reachable, through a VO built to expose exactly the
-safe subset. Removing the annotation on `GeeqValueObject` would not add a capability;
-it would duplicate one and bypass the admin-field exclusion that the public VO makes
-explicit. A three-tier design (`Geeq` / `PublicGeeq` / `GeeqAdmin`) is doing real
-work here.
+Probing the two VOs showed they serialized **identical 25-key payloads**, so the
+"public projection" projected nothing. `PublicGeeqValueObject` was retired and
+`GET /datasets/{dataset}/geeq/public` now returns `GeeqValueObject` directly — a
+byte-identical response. The surviving split is two-tier, not three: `Geeq` for everyone
+and `GeeqAdmin` for the detected/manual override scores and `otherIssues`, which are
+genuinely admin-only because they are declared on the subclass rather than hidden on the
+parent.
 
 ## C — dead VO (12 sites) — THE ANNOTATION IS MOOT
 
@@ -106,7 +144,12 @@ anything: the underlying data is already on the wire in a better shape.
 
 * `CharacteristicValueObject` (11) — `urlId`, `alreadyPresentInDatabase`,
   `alreadyPresentOnGene`, `child`, `root`, `numTimesUsed`, `ontologyUsed`,
-  `privateGeneCount`, `publicGeneCount`, `taxon`, `valueDefinition`. Mostly
+  `privateGeneCount`, `publicGeneCount`, `taxon`, `valueDefinition`. `numTimesUsed` was
+  briefly moved to `UNTRIAGED` on the belief that production code populated it; the writer
+  is `OntologyServiceImpl.countOccurrences`, reachable only from `findTermsInexact`, whose
+  last production caller went with gemma-web. It counts characteristic rows (sample-level
+  and factor-value-level occurrences), whereas the endpoint already publishes the
+  more useful per-experiment tally as `usageCount` — so it is back in this bucket. Mostly
   Phenocarta-era, flagged as such in the source. `privateGeneCount` sounds
   disclosure-shaped but is a Phenocarta gene tally, not an ACL count — still, do not
   expose it without checking what it counts today.
@@ -129,26 +172,104 @@ anything: the underlying data is already on the wire in a better shape.
 Deleting these fields outright is cleaner than re-annotating them, but there is no
 urgency and no risk in leaving them.
 
-## E — real data, withheld only because Web was the consumer (11 sites) — CANDIDATES
+## E — real data, withheld only because Web was the consumer (11 sites) — DRAINED
 
-The bucket `originalValue` came from. Each is genuine data that a REST client might
-legitimately want and currently cannot get. **None should be exposed speculatively** —
+The bucket `originalValue` came from. Each was thought to be genuine data a REST client
+might legitimately want and could not get. **None should be exposed speculatively** —
 the `originalValue` precedent is the right process: a consumer names it, trace where
 it is populated and whether null is meaningful, then un-hide with a `NON_NULL` guard
 and a serialization test.
 
-| file | member | note before exposing |
-|---|---|---|
-| `StatementValueObject` | `secondPredicate`, `secondPredicateUri`, `secondObject`, `secondObjectUri` | `AnnotationValueObject` already exposes the same four. The asymmetry looks accidental — most likely a real gap. |
-| `ExpressionExperimentValueObject` | `minPvalue` | check whether it is meaningful without the analysis context |
-| `ExpressionExperimentSubsetValueObject` | `accession`, `minPvalue`, `getSourceExperiment()` | `accession` on a subset is plausibly wanted; `getSourceExperiment()` may be reachable already via another field |
-| `DiffExResultSetSummaryValueObject` | `qValue`, `getResultSetId()` | a result-set id that clients cannot see is suspicious; check whether it duplicates `id` |
-| `QuantitationTypeValueObject` | `expressionExperimentId` | back-pointer; check for a redundant path |
+> **Closed out 2026-08-20.** The bucket is empty and `UNTRIAGED_CEILING` is `0`, so any new
+> `UNTRIAGED` now fails `WithheldFromApiInventoryTest`. Applying that process to all 13 exposed
+> nothing: every entry resolved to a deletion or a re-reason, because in each case the *stated*
+> reason turned out to be wrong about the data rather than the exposure being wrong.
+>
+> Deleted, once tracing showed nothing wrote them or the datum was already public under an
+> accurate name: `DiffExResultSetSummaryValueObject.qValue` and `getResultSetId()`,
+> `ExpressionExperimentSubsetValueObject.accession` (replaced by an annotated `getAccession()`,
+> which the interface requires) and its `getSourceExperiment()`.
+>
+> Re-reasoned: the four `StatementValueObject` `second*` fields → `REDUNDANT` (already published,
+> flattened, by `AbstractFactorValueValueObjectSerializer` — see the correction below);
+> `CharacteristicValueObject.numTimesUsed` → `REDUNDANT` (the endpoint publishes the better
+> per-experiment tally as `usageCount`); `QuantitationTypeValueObject.expressionExperimentId` →
+> `REDUNDANT` (every serving endpoint addresses the experiment in the request path); both
+> `minPvalue` copies → `INTERNAL_ONLY` (nothing originates a value); `TaxonValueObject.isGenesUsable`
+> → `INTERNAL_ONLY`.
+>
+> `isGenesUsable` is the one whose reason rests on data rather than structure, and is worth
+> revisiting on that basis: it *is* populated, and it usefully bounds an untargeted GO search's
+> fan-out internally. It is withheld because production serves only genes-usable taxa, making it a
+> constant `true` on the wire — but `GET /taxa` serves every taxon unfiltered and `GeoConverterImpl`
+> still writes `false` for GEO-imported taxa, so if genes-less taxa start being served the field is
+> informative again.
 
-The `StatementValueObject` four are the strongest lead: the identical fields are
-public on `AnnotationValueObject`, so the data is not considered sensitive, and a
-client reading statements through the factor-value serializer sees a truncated
-statement.
+`ExpressionExperimentSubsetValueObject.getSourceExperiment()` was deleted rather than exposed. It
+returned `sourceExperimentId` verbatim, so the datum was already public under the accurate name;
+its `@deprecated` tag pointed at `getSourceExperimentId()`, which is Lombok-generated and therefore
+had no javadoc of its own to carry the redirect back. It had zero callers at bytecode level, and
+the name collided with the live, non-deprecated `ExpressionExperimentSubSet.getSourceExperiment()`
+on the entity — same name, different return type, only the VO's copy dead. Removing it changed no
+payload, since it was suppressed.
+
+> **Corrected 2026-08-19.** This section previously called the four `StatementValueObject`
+> `second*` fields "the strongest lead", on the argument that `AnnotationValueObject` exposes
+> the same four so the asymmetry must be accidental, and that a client reading statements
+> through the factor-value serializer therefore "sees a truncated statement". That last claim
+> is exactly backwards, and the git history says so.
+>
+> All eight relational slots arrived `@GemmaWebOnly` in `4b21c3a06c` (2023-09-21). The split was
+> made deliberately two months later in `dff752727c` ("Serialize statements", **fix #814**),
+> which un-hid `predicate*` / `object*` **and in the same commit added
+> `AbstractFactorValueValueObjectSerializer`** — a custom serializer that flattens a compound
+> statement into *two* entries in the `statements` array sharing one subject, the second
+> carrying the second clause under the generic `predicate` / `object` keys. So the client does
+> not see a truncated statement; it sees the second clause as its own statement. That
+> flattening is still in place today.
+>
+> The four are therefore `REDUNDANT` — already on the wire under another name — and exposing
+> them would be a duplication bug, not a fix: a client reading both `statements[]` and the raw
+> fields would see a compound statement's second clause twice.
+>
+> `AnnotationValueObject` exposing its own `second*` directly (`91c42152b5`, 2026-06-14, 2.7
+> years later) is consistent rather than contradictory: it is serialized as a plain bean with
+> no flattener, so direct fields are the only way to carry the compound shape there.
+
+Both `minPvalue` copies left this table as `INTERNAL_ONLY`. The note here read "check whether it
+is meaningful without the analysis context", which had the premise backwards: there is no analysis
+context to be meaningful in, because nothing ever writes the field. It is declared twice on sibling
+classes (`ExpressionExperimentValueObject:138`, `ExpressionExperimentSubsetValueObject:59` — not
+inherited; `BioAssaySetValueObject` does not declare it), and across all three modules it appears
+at only three lines. The third, `ExpressionExperimentValueObject:316`, is a copy constructor
+propagating it — so nothing originates a value. Ruled out as sources: every constructor on both
+classes, the single `select new` projection in the repo (which targets
+`AnnotationSetSummaryValueObject`), all four `aliasToBean` call sites (all entities, no VO), the
+EE VO's own result transformer and the base `doLoadValueObject` path, and the schema — there is no
+`MIN_PVALUE` column. Deleting both fields is the follow-up; the EE VO's line 316 goes with it.
+
+`ExpressionExperimentSubsetValueObject.accession` left this table by being deleted. Nothing had
+ever written it — no constructor set it and no call site in the reactor invoked the setter — so it
+could only serialize a permanent `null`, matching `INTERNAL_ONLY`'s first shape rather than
+"real data withheld". The field is gone; `getAccession()` survives as an explicit
+`return null;` because `BioAssaySetValueObject` declares it, and carries the annotation so the
+null stays off the wire. Whether that method belongs on the interface at all — one implementor
+can never answer it — is the open question left behind.
+
+`QuantitationTypeValueObject.expressionExperimentId` left this table as `REDUNDANT`. All
+six endpoints that put the VO on the wire — `GET`/`PATCH` on
+`/datasets/{dataset}/quantitationTypes[/{qtId}[/preferred]]`, plus
+`/datasets/{dataset}/subSetGroups`, `/subSetGroups/{subSetGroup}` and
+`/datasets/{dataset}/heatmap-data` — address the experiment in the request path, so a client
+holding the response already holds the id this field would repeat.
+
+`DiffExResultSetSummaryValueObject` used to hold two entries here; both are now gone
+rather than exposed. `qValue` was never written by any code since its introduction in
+2009, and its only reader was a null-guarded line in the retired gemma-web summary
+tree, so it was deleted. `getResultSetId()` returned `id` verbatim — the datum was
+already public under the right name — so its two internal call sites were pointed at
+`getId()` and the alias deleted. Neither removal changes the JSON: `qValue` only ever
+serialized as null, and `getResultSetId()` was suppressed.
 
 ---
 
