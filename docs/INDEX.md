@@ -70,7 +70,7 @@ Total: 151 docs.
 - [`STATIC_ANALYSIS_AUDIT.md`](audit/STATIC_ANALYSIS_AUDIT.md) — Static Analysis Audit — Phase 3 Spring 6+ Infrastructure
 - [`VALIDATION_AUDIT.md`](audit/VALIDATION_AUDIT.md) — Jakarta Validation Audit (Bean Validation 3.0 / JSR-380)
 
-## Plans & roadmaps — `docs/plans/` (17)
+## Plans & roadmaps — `docs/plans/` (18)
 
 - [`AFTER_INVOCATION_PHASE_C_PLAN.md`](plans/AFTER_INVOCATION_PHASE_C_PLAN.md) — AfterInvocation Phase C: @EnableMethodSecurity migration plan
 - [`BRANCH_MERGE_PLAN.md`](plans/BRANCH_MERGE_PLAN.md) — Phase 3 Branch Merge Plan
@@ -85,6 +85,7 @@ Total: 151 docs.
 - [`JUNIT5_MIGRATION_ROADMAP.md`](plans/JUNIT5_MIGRATION_ROADMAP.md) — JUnit 5 (Jupiter) Migration Roadmap
 - [`PERSISTER_DELETION_PLAN.md`](plans/PERSISTER_DELETION_PLAN.md) — PersisterHelper retirement: deletion + dispatch-facade plan
 - [`PERSISTER_REPLACEMENT_ROADMAP.md`](plans/PERSISTER_REPLACEMENT_ROADMAP.md) — persisterHelper retirement: replacement roadmap
+- [`QUALITY_METRICS_EVALUATION_PROPOSAL.md`](plans/QUALITY_METRICS_EVALUATION_PROPOSAL.md) — candidate data-quality metrics (ribosomal-protein coexpression, sex as a positive control, standardized sample correlation) and the harder question of what to evaluate them against
 - [`SPRING6_DEPRECATION_ROADMAP.md`](plans/SPRING6_DEPRECATION_ROADMAP.md) — Spring 6 / Spring Security 6 / Hibernate 6 deprecation roadmap
 - [`WORKTREE_CLEANUP_PLAN.md`](plans/WORKTREE_CLEANUP_PLAN.md) — Worktree cleanup plan
 - [`WORKTREE_CLEANUP_PLAN_v2.md`](plans/WORKTREE_CLEANUP_PLAN_v2.md) — Worktree cleanup plan — v2
