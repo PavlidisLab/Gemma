@@ -7,6 +7,7 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -145,5 +146,59 @@ public class BaselineSelectionTest {
         s.setSubject( subject );
         s.setSubjectUri( subjectUri );
         return s;
+    }
+
+    /**
+     * More than one explicitly marked baseline on a factor is legitimate — a dataset holding two experiments has a
+     * reference level per experiment. {@code getExplicitBaselines} is what lets the analyzer notice that and demand
+     * a subset instead of silently taking whichever one it reached first.
+     */
+    @Test
+    public void testGetExplicitBaselinesReturnsEveryMarkedValue() {
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setType( FactorType.CATEGORICAL );
+        // Distinct ids matter: two blank transient FactorValues are equal, so a Set would collapse them and the
+        // count would silently read 1. Same hashCode footgun the repo conventions warn about.
+        FactorValue a = new FactorValue();
+        a.setId( 1L );
+        a.setIsBaseline( true );
+        FactorValue b = new FactorValue();
+        b.setId( 2L );
+        b.setIsBaseline( true );
+        FactorValue c = new FactorValue();
+        c.setId( 3L );
+        c.setIsBaseline( false );
+        FactorValue d = new FactorValue(); // never marked either way
+        d.setId( 4L );
+        ef.getFactorValues().add( a );
+        ef.getFactorValues().add( b );
+        ef.getFactorValues().add( c );
+        ef.getFactorValues().add( d );
+
+        assertEquals( 2, BaselineSelection.getExplicitBaselines( ef, null ).size() );
+    }
+
+    /**
+     * 🛑 Only the explicit flag counts. The inference finds two candidates on a great many factors — any design
+     * with both a "control" and an "untreated" level — and treating those as an error would fail analyses that run
+     * correctly today. Two INFERRED baselines is ambiguity to resolve; two MARKED ones is a curator's statement.
+     */
+    @Test
+    public void testGetExplicitBaselinesIgnoresInferredOnes() {
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setType( FactorType.CATEGORICAL );
+        FactorValue inferredA = new FactorValue();
+        inferredA.setId( 1L );
+        inferredA.getCharacteristics().add( createStatement( "control", null ) );
+        FactorValue inferredB = new FactorValue();
+        inferredB.setId( 2L );
+        inferredB.getCharacteristics().add( createStatement( "initial time point", null ) );
+        ef.getFactorValues().add( inferredA );
+        ef.getFactorValues().add( inferredB );
+
+        assertTrue( BaselineSelection.isBaselineCondition( inferredA ) );
+        assertTrue( BaselineSelection.isBaselineCondition( inferredB ) );
+        assertTrue( BaselineSelection.getExplicitBaselines( ef, null ).isEmpty(),
+                "two inferred candidates are ambiguity, not a curator saying the design has two reference levels" );
     }
 }

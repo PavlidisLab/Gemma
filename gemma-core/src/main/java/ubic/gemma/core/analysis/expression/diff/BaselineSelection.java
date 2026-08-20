@@ -368,6 +368,34 @@ public class BaselineSelection {
         return getBaselineLevels( factors, null );
     }
 
+    /**
+     * The factor values a curator has EXPLICITLY marked as baseline on this factor, restricted to those the given
+     * samples actually use.
+     * <p>
+     * More than one is legitimate: a dataset holding two experiments has a reference level per experiment. It does
+     * mean the factor cannot be analyzed as a single contrast, which is why
+     * {@link LinearModelAnalyzer} refuses such a factor unless a subset factor was configured.
+     * <p>
+     * 🛑 Deliberately counts only the explicit flag, NOT {@link #isBaselineCondition(FactorValue)}. The inference
+     * finds two candidates on a great many factors — any design with, say, both "control" and "untreated" levels —
+     * and that is ambiguity to be resolved by picking one, not a curator saying "this design has two reference
+     * levels". Treating inferred pairs as an error would fail analyses that run correctly today.
+     *
+     * @param samplesUsed restrict to values used by these samples, or null to consider every value of the factor
+     */
+    public static List<FactorValue> getExplicitBaselines( ExperimentalFactor factor, @Nullable Collection<BioMaterial> samplesUsed ) {
+        List<FactorValue> marked = new ArrayList<>( 1 );
+        for ( FactorValue fv : factor.getFactorValues() ) {
+            if ( samplesUsed != null && !used( fv, samplesUsed ) ) {
+                continue;
+            }
+            if ( Boolean.TRUE.equals( fv.getIsBaseline() ) ) {
+                marked.add( fv );
+            }
+        }
+        return marked;
+    }
+
     public static Map<ExperimentalFactor, FactorValue> getBaselineConditions( Collection<BioMaterial> samplesUsed,
             Collection<ExperimentalFactor> factors ) {
         Map<ExperimentalFactor, FactorValue> baselineConditions = getBaselineLevels( factors, samplesUsed );

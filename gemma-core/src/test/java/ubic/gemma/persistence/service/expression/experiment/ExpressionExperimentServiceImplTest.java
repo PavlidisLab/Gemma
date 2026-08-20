@@ -727,22 +727,28 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     /**
-     * Designating a baseline clears any stale baseline on a sibling factor value, so at most one baseline survives
-     * per factor even when the client leaves the previous baseline's flag untouched (null = no change).
+     * Designating a baseline leaves its siblings alone. Clearing them used to make a second baseline impossible to
+     * record — marking B silently unmarked A — so a dataset holding two experiments could never carry its two
+     * reference levels. {@code null} still means "no change", so a client that omits the field is unaffected.
+     * <p>
+     * The one-reference-level requirement is real, but it belongs to ANALYSIS: {@code LinearModelAnalyzer} refuses
+     * a multi-baseline factor unless a subset factor is configured.
      */
     @Test
-    public void testApplyDesignatingBaselineClearsSibling() {
+    public void testApplyDesignatingBaselineLeavesSiblingAlone() {
         buildFixture();
         controlFv.setIsBaseline( true ); // pre-existing baseline on FV 100
         ExperimentalDesignValueObject proposal = mirrorProposal();
         proposalFv( proposal, 100L ).setBaseline( null ); // client leaves the old baseline untouched
-        proposalFv( proposal, 101L ).setBaseline( true ); // and designates a new one
+        proposalFv( proposal, 101L ).setBaseline( true ); // and designates a second one
 
         DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
 
         assertThat( outcome.isApplied() ).isTrue();
         assertThat( treatedFv.getIsBaseline() ).isTrue();
-        assertThat( controlFv.getIsBaseline() ).isFalse();
+        assertThat( controlFv.getIsBaseline() )
+                .withFailMessage( "a sibling the payload did not mention must keep its flag" )
+                .isTrue();
     }
 
     /**
@@ -764,9 +770,14 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
                 .anySatisfy( s -> assertThat( s.getSubject() ).isEqualTo( "control-edited" ) );
     }
 
-    /** A factor cannot designate more than one baseline; previewDesignChange flags it and apply rejects it. */
+    /**
+     * A factor MAY designate more than one baseline: a dataset holding two experiments has a reference level per
+     * experiment, and a curator has to be able to record that. Curation does not block it — the constraint lives
+     * where it bites, in {@code LinearModelAnalyzer}, which refuses to run such a factor as a single contrast
+     * unless a subset factor is configured.
+     */
     @Test
-    public void testMultipleBaselinesInFactorIsBlocked() {
+    public void testMultipleBaselinesInFactorIsAllowed() {
         buildFixture();
         ExperimentalDesignValueObject proposal = mirrorProposal();
         proposalFv( proposal, 100L ).setBaseline( true );
@@ -774,10 +785,15 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
         DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
         assertThat( report.getBlockers() )
-                .anySatisfy( b -> assertThat( b.getType() ).isEqualTo( "MULTIPLE_BASELINES" ) );
+                .noneSatisfy( b -> assertThat( b.getType() ).isEqualTo( "MULTIPLE_BASELINES" ) );
 
-        assertThatThrownBy( () -> svc.applyDesignChange( fixture, proposal ) )
-                .isInstanceOf( IllegalArgumentException.class );
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( controlFv.getIsBaseline() ).isTrue();
+        assertThat( treatedFv.getIsBaseline() )
+                .withFailMessage( "marking a second baseline must not silently unmark the first" )
+                .isTrue();
     }
 
     private static FactorValueBasicValueObject proposalFv( ExperimentalDesignValueObject vo, long fvId ) {

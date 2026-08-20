@@ -309,6 +309,24 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
         dropIncompleteFactors( samplesUsed, factors );
 
+        // A factor with two curator-marked baselines has no single reference level, so it cannot be run as one
+        // contrast. That design is legitimate -- a dataset holding two experiments has a baseline per experiment --
+        // and the way to analyze it is to subset. Refuse rather than proceed: getBaselineLevels takes whichever
+        // marked value it reaches first, which would produce an ordinary-looking result answering the wrong
+        // question. Checked after dropIncompleteFactors so a factor that is about to be dropped cannot object.
+        if ( config.getSubsetFactor() == null ) {
+            for ( ExperimentalFactor factor : factors ) {
+                List<FactorValue> marked = BaselineSelection.getExplicitBaselines( factor, samplesUsed );
+                if ( marked.size() > 1 ) {
+                    throw new MultipleBaselinesRequireSubsetException( String.format(
+                            "%s has %d factor values marked as baseline (%s); a factor with more than one baseline has"
+                                    + " no single reference level and must be analyzed with a subset factor.",
+                            factor, marked.size(),
+                            marked.stream().map( String::valueOf ).collect( Collectors.joining( ", " ) ) ), config );
+                }
+            }
+        }
+
         /*
          * Do the analysis, by subsets if requested
          */

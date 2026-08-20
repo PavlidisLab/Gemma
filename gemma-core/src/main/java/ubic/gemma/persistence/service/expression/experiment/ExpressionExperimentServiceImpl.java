@@ -637,18 +637,12 @@ public class ExpressionExperimentServiceImpl
                             summary.setFactorValuesToCreate( summary.getFactorValuesToCreate() + 1 );
                         }
                     }
-                    // At most one baseline per factor: reject a payload that marks more than one FV as baseline.
-                    long baselineCount = pf.getValues().stream()
-                            .filter( bpv -> Boolean.TRUE.equals( bpv.getBaseline() ) )
-                            .count();
-                    if ( baselineCount > 1 ) {
-                        DesignPreflightReport.Blocker bb = new DesignPreflightReport.Blocker(
-                                "MULTIPLE_BASELINES",
-                                "Factor " + ( pf.getId() != null ? pf.getId() : "\"" + pf.getName() + "\"" )
-                                        + " designates " + baselineCount + " factor values as baseline; at most one is allowed." );
-                        bb.setFactorId( pf.getId() );
-                        report.getBlockers().add( bb );
-                    }
+                    // NOTE: more than one baseline per factor is allowed and is NOT blocked here. A dataset that
+                    // holds two experiments legitimately has a reference level per experiment, and a curator has to
+                    // be able to record that. The constraint belongs where it actually bites: LinearModelAnalyzer
+                    // refuses to run such a factor as a single contrast unless a subset factor is configured
+                    // (MultipleBaselinesRequireSubsetException). Blocking it at curation time instead made the
+                    // legitimate design unrecordable while leaving the analysis free to pick one arbitrarily.
                 }
             }
         }
@@ -1365,15 +1359,11 @@ public class ExpressionExperimentServiceImpl
             ExperimentalDesignValueObject.ExperimentalFactorEntry pf,
             Map<Long, FactorValue> currentFvsById ) {
         if ( pf.getValues() == null ) return;
-        FactorValue designatedBaseline = null;
-        boolean baselineDesignated = false;
         for ( FactorValueBasicValueObject pv : pf.getValues() ) {
-            FactorValue target;
             if ( pv.getId() == null ) {
                 FactorValue created = createFactorValue( ef, pv );
                 ef.getFactorValues().add( created );
                 currentFvsById.put( created.getId(), created );
-                target = created;
             } else {
                 FactorValue existing = currentFvsById.get( pv.getId() );
                 if ( existing == null ) continue; // preflight should have caught this
@@ -1392,23 +1382,12 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getMeasurementObject() != null ) {
                     applyMeasurementFields( existing, pv.getMeasurementObject() );
                 }
-                target = existing;
-            }
-            if ( Boolean.TRUE.equals( pv.getBaseline() ) ) {
-                baselineDesignated = true;
-                designatedBaseline = target;
             }
         }
-        // At most one baseline per factor. When the payload designates one, clear the flag on every sibling so a
-        // stale baseline the client left untouched cannot coexist. previewDesignChange blocks a payload that
-        // designates more than one, so designatedBaseline is unambiguous here.
-        if ( baselineDesignated ) {
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                if ( fv != designatedBaseline && Boolean.TRUE.equals( fv.getIsBaseline() ) ) {
-                    fv.setIsBaseline( false );
-                }
-            }
-        }
+        // Siblings are deliberately left alone. Clearing them made a second baseline impossible to record at all:
+        // marking B would silently unmark A, so a two-experiment dataset could never carry its two reference
+        // levels. Each factor value's flag now means exactly what the payload said about that value, and nothing
+        // about its neighbours -- `null` still means "no change", so a client that omits the field is unaffected.
     }
 
     private ExperimentalFactor createFactor( ExperimentalDesign ed, ExpressionExperiment ee,
