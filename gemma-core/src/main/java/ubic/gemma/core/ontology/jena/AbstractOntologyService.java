@@ -592,7 +592,10 @@ public abstract class AbstractOntologyService implements OntologyService {
         }
         if ( state.alternativeIDs == null ) {
             log.info( "init search by alternativeID" );
-            this.state = initSearchByAlternativeId( state );
+            // Re-read into the local: initSearchByAlternativeId returns a NEW State and the old one still has a
+            // null map, so dereferencing the stale local NPEs on the first call for each ontology. The assert
+            // below said so, but assertions are off in a deployed JVM, so it failed as an NPE instead.
+            state = this.state = initSearchByAlternativeId( state );
         }
         assert state.alternativeIDs != null;
         String termUri = state.alternativeIDs.get( alternativeId );
