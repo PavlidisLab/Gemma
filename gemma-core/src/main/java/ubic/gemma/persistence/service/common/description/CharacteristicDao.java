@@ -127,6 +127,15 @@ public interface CharacteristicDao
     Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds );
 
     /**
+     * As {@link #countExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, Collection)}, but able to
+     * count usage in the CATEGORY slot as well.
+     * <p>
+     * Separate overload rather than a changed signature because every existing caller counts term usage, where the
+     * category is a different question; only a sweep looking at every slot a URI can occupy wants both.
+     */
+    Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, boolean includeCategories, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds );
+
+    /**
      * Find characteristics with the given URI.
      *
      * @param category         restrict the category of the characteristic, or null to ignore
@@ -338,6 +347,20 @@ public interface CharacteristicDao
      * @param maxResults        maximum number of results to return, or -1 for no limit
      */
     Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults );
+
+    /**
+     * Find representative {@link Characteristic#getCategory()} labels grouped by
+     * {@link Characteristic#getCategoryUri()}.
+     * <p>
+     * The category slot holds ontology terms just as the value slot does, and it goes stale the same way — the
+     * "disease" category is {@code EFO_0000408}, which EFO obsoleted. A sweep that reads only value/predicate/object
+     * URIs cannot see that, and reports the term as unused rather than as a problem.
+     *
+     * @param parentClasses    restrict the parents to these classes, all parents are returned if null
+     * @param includeNoParents include characteristics that have no parents
+     * @param maxResults       maximum number of results to return, or -1 for no limit
+     */
+    Map<String, String> findCategoryGroupedByCategoryUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
 
     Collection<Characteristic> findByValue( String search );
 

@@ -827,8 +827,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         // One grouped query across the subject, predicate and object slots rather than a walk over every
         // characteristic: a URI is obsolete or it is not, so checking it once per distinct URI is the same answer
         // for a fraction of the work.
-        Map<String, String> storedLabelsByUri = characteristicReadService
+        Map<String, String> termLabelsByUri = characteristicReadService
                 .findValueGroupedByValueUri( null, true, true, true, -1 );
+        // The CATEGORY slot holds ontology terms too and goes stale the same way -- "disease" is EFO_0000408,
+        // which EFO obsoleted. Reading only the term slots reports it as unused rather than as a problem.
+        Map<String, String> categoryLabelsByUri = characteristicReadService
+                .findCategoryGroupedByCategoryUri( null, true, -1 );
+
+        Map<String, String> storedLabelsByUri = new LinkedHashMap<>( categoryLabelsByUri );
+        storedLabelsByUri.putAll( termLabelsByUri );
 
         Map<String, OntologyTerm> obsolete = new LinkedHashMap<>();
         for ( Map.Entry<String, String> e : storedLabelsByUri.entrySet() ) {
@@ -854,13 +861,16 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
 
         Map<String, Long> experimentCounts = characteristicReadService
-                .countExperimentsByUris( obsolete.keySet(), true, true, true, null, Collections.emptyList() );
+                .countExperimentsByUris( obsolete.keySet(), true, true, true, true, null, Collections.emptyList() );
 
         List<ObsoleteTermUsage> report = new ArrayList<>( obsolete.size() );
         for ( Map.Entry<String, OntologyTerm> e : obsolete.entrySet() ) {
-            report.add( describeObsolete( e.getKey(), e.getValue(), storedLabelsByUri.get( e.getKey() ),
+            ObsoleteTermUsage usage = describeObsolete( e.getKey(), e.getValue(), storedLabelsByUri.get( e.getKey() ),
                     experimentCounts.getOrDefault( e.getKey(), 0L ),
-                    Math.max( timeoutMs - timer.getTime(), 0 ) ) );
+                    Math.max( timeoutMs - timer.getTime(), 0 ) );
+            usage.setUsedAsCategory( categoryLabelsByUri.containsKey( e.getKey() ) );
+            usage.setUsedAsTerm( termLabelsByUri.containsKey( e.getKey() ) );
+            report.add( usage );
         }
         report.sort( Comparator.comparingLong( ObsoleteTermUsage::getExperimentCount ).reversed() );
         return report;

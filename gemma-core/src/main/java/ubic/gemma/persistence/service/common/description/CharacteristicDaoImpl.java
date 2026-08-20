@@ -257,6 +257,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
 
     @Override
     public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
+        return countExperimentsByUris( uris, includeSubjects, includePredicates, includeObjects, false, taxon, excludedExperimentIds );
+    }
+
+    @Override
+    public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, boolean includeCategories, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
         }
@@ -266,7 +271,7 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         // resolve by overwriting rather than by adding.
         Set<String> distinctUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
         distinctUris.addAll( uris );
-        String qs = buildCountExperimentsByUrisUnionAll( includeSubjects, includePredicates, includeObjects, taxon, !excludedExperimentIds.isEmpty() );
+        String qs = buildCountExperimentsByUrisUnionAll( includeSubjects, includePredicates, includeObjects, includeCategories, taxon, !excludedExperimentIds.isEmpty() );
 
         Query query = getSessionFactory().getCurrentSession().createNativeQuery( qs )
                 .addScalar( "URI", StandardBasicTypes.STRING )
@@ -310,9 +315,9 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
      * more than one column contributes once, which is what the caller-side {@code Set<Long>} of
      * experiment ids used to guarantee.
      */
-    private String buildCountExperimentsByUrisUnionAll( boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, boolean excludeExperiments ) {
-        Assert.isTrue( includeSubjects || includePredicates || includeObjects, "At least one of the source URIs must be included." );
-        List<String> uriColumns = new ArrayList<>( 5 );
+    private String buildCountExperimentsByUrisUnionAll( boolean includeSubjects, boolean includePredicates, boolean includeObjects, boolean includeCategories, @Nullable Taxon taxon, boolean excludeExperiments ) {
+        Assert.isTrue( includeSubjects || includePredicates || includeObjects || includeCategories, "At least one of the source URIs must be included." );
+        List<String> uriColumns = new ArrayList<>( 6 );
         if ( includeSubjects ) {
             uriColumns.add( "VALUE_URI" );
         }
@@ -323,6 +328,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         if ( includeObjects ) {
             uriColumns.add( "OBJECT_URI" );
             uriColumns.add( "SECOND_OBJECT_URI" );
+        }
+        if ( includeCategories ) {
+            // EE2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE leads with CATEGORY_URI, so this arm gets the same
+            // range scan as the others rather than falling back to a table scan.
+            uriColumns.add( "CATEGORY_URI" );
         }
         String aclWhere = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.EXPRESSION_EXPERIMENT_FK", "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
         String taxonJoin = taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "";
@@ -921,6 +931,25 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                     result.put( ( String ) row[2], ( String ) row[3] );
                 }
             }
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, String> findCategoryGroupedByCategoryUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        Map<String, String> result = new HashMap<>();
+        //noinspection unchecked
+        // MAX(CATEGORY) keeps this ONLY_FULL_GROUP_BY-compliant, same as the VALUE branch of
+        // findValueGroupedByValueUri: one representative label per CATEGORY_URI.
+        List<Object[]> rows = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select CATEGORY_URI, MAX(CATEGORY) from CHARACTERISTIC C "
+                        + "where CATEGORY_URI is not null "
+                        + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
+                        + "group by CATEGORY_URI" )
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
+                .list();
+        for ( Object[] row : rows ) {
+            result.put( ( String ) row[0], ( String ) row[1] );
         }
         return result;
     }

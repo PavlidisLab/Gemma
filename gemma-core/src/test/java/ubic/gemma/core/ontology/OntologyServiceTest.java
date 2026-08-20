@@ -485,7 +485,7 @@ public class OntologyServiceTest extends BaseTest5 {
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
         when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
         when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( replacement );
-        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
                 .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 15000L ) );
 
         List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
@@ -521,7 +521,7 @@ public class OntologyServiceTest extends BaseTest5 {
 
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
         when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
-        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
                 .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 3L ) );
 
         List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
@@ -557,7 +557,7 @@ public class OntologyServiceTest extends BaseTest5 {
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
         when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
         when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( alsoObsolete );
-        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
                 .thenReturn( Collections.emptyMap() );
 
         List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
@@ -565,6 +565,70 @@ public class OntologyServiceTest extends BaseTest5 {
         assertEquals( 1, report.size() );
         assertFalse( report.get( 0 ).isAutoCorrectable() );
         assertTrue( report.get( 0 ).getBlockedReason().contains( "itself obsolete" ) );
+    }
+
+    /**
+     * A term used only as a CATEGORY has to be found too. EFO_0000408 is the "disease" category on a large share of
+     * the corpus and is obsolete; reading only the value/predicate/object slots reported it as unused.
+     */
+    @Test
+    public void testObsoleteTermUsedOnlyAsACategoryIsReported() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyMap() );
+        when( characteristicReadService.findCategoryGroupedByCategoryUri( any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty replacedBy = mock();
+        when( replacedBy.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( replacedBy );
+
+        OntologyTerm replacement = mock();
+        when( replacement.getLabel() ).thenReturn( "disease" );
+        when( replacement.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( replacement );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 15000L ) );
+
+        List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        assertEquals( 1, report.size() );
+        ObsoleteTermUsage usage = report.get( 0 );
+        assertEquals( OBSOLETE_DISEASE, usage.getUri() );
+        assertEquals( 15000L, usage.getExperimentCount() );
+        assertTrue( usage.isUsedAsCategory() );
+        assertFalse( usage.isUsedAsTerm(), "it appears in no value/predicate/object slot" );
+    }
+
+    /**
+     * The count must include the category slot, otherwise a category-only term reports zero experiments and reads
+     * as harmless.
+     */
+    @Test
+    public void testCategoryUsageIsIncludedInTheExperimentCount() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyMap() );
+        when( characteristicReadService.findCategoryGroupedByCategoryUri( any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 42L ) );
+
+        ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        // the category flag must actually be requested, not just the three term slots
+        verify( characteristicReadService ).countExperimentsByUris( any(), eq( true ), eq( true ), eq( true ), eq( true ), any(), any() );
     }
 
     /**
@@ -593,7 +657,7 @@ public class OntologyServiceTest extends BaseTest5 {
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
         when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
         when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( replacement );
-        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
                 .thenReturn( Collections.emptyMap() );
 
         ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
@@ -622,7 +686,7 @@ public class OntologyServiceTest extends BaseTest5 {
 
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
         when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
-        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
                 .thenReturn( Collections.emptyMap() );
 
         ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
@@ -663,7 +727,7 @@ public class OntologyServiceTest extends BaseTest5 {
         when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
         when( chebiOntologyService.getTerm( middle ) ).thenReturn( middleTerm );
         when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( finalTerm );
-        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
                 .thenReturn( Collections.emptyMap() );
 
         ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
@@ -699,7 +763,7 @@ public class OntologyServiceTest extends BaseTest5 {
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
         when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
         when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( other );
-        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
                 .thenReturn( Collections.emptyMap() );
 
         ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
@@ -733,7 +797,7 @@ public class OntologyServiceTest extends BaseTest5 {
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
         when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
         when( chebiOntologyService.findUsingAlternativeId( "EFO:0000408" ) ).thenReturn( successor );
-        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
                 .thenReturn( Collections.emptyMap() );
 
         ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );

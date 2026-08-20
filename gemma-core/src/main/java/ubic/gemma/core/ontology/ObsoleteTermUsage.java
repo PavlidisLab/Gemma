@@ -64,8 +64,19 @@ public class ObsoleteTermUsage implements Serializable {
     @Schema(description = "URIs offered by oboInOwl:consider. These are suggestions for a curator, NOT assertions of equivalence, and are never applied automatically.")
     private List<String> considerUris = new ArrayList<>();
 
-    @Schema(description = "Number of experiments carrying an annotation with this URI, in any of the subject, predicate or object slots.")
+    @Schema(description = "Number of experiments carrying an annotation with this URI, in any of the category, subject, predicate or object slots.")
     private long experimentCount;
+
+    /**
+     * Whether the term is used as a CATEGORY. This is a different repair from a stale value and worth knowing
+     * before acting: {@code EFO_0000408} is the "disease" category on a large share of the corpus, so correcting it
+     * rewrites the shape of the annotation rather than one of its terms.
+     */
+    @Schema(description = "True when the term is used in the CATEGORY slot of at least one characteristic.")
+    private boolean usedAsCategory;
+
+    @Schema(description = "True when the term is used as a value, predicate or object.")
+    private boolean usedAsTerm;
 
     @Schema(description = "True when the ontology asserts a replacement that itself resolves and is not obsolete — i.e. the correction can be derived rather than decided. False means a curator has to choose.")
     private boolean autoCorrectable;

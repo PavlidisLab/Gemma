@@ -85,6 +85,12 @@ public class CharacteristicReadServiceImpl implements CharacteristicReadService 
 
     @Override
     @Transactional(readOnly = true)
+    public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, boolean includeCategories, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
+        return this.characteristicDao.countExperimentsByUris( uris, includeSubjects, includePredicates, includeObjects, includeCategories, taxon, excludedExperimentIds );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults ) {
         return this.characteristicDao.findByParentClasses( parentClasses, includeNoParents, category, maxResults );
     }
@@ -164,6 +170,12 @@ public class CharacteristicReadServiceImpl implements CharacteristicReadService 
     @Transactional(readOnly = true)
     public Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults ) {
         return this.characteristicDao.findValueGroupedByValueUri( parentClasses, includeNoParents, includePredicates, includeObjects, maxResults );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, String> findCategoryGroupedByCategoryUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        return this.characteristicDao.findCategoryGroupedByCategoryUri( parentClasses, includeNoParents, maxResults );
     }
 
     @Override
