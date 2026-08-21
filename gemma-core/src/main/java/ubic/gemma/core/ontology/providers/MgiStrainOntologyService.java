@@ -29,8 +29,22 @@ import java.util.List;
  * {@code MGI_Strain.rpt} directly (columns: {@code MGI:<id>} · strain nomenclature · strain type) into
  * the shared {@link AbstractLexicalOntologyService} Lucene index — the same pattern as Cellosaurus.
  * Emitted URIs use the canonical resolvable form {@code https://www.informatics.jax.org/strain/MGI:<id>}
- * (the OBO PURL form 404s). {@code MGI_Strain.rpt} carries no synonyms, so matching is nomenclature-only
- * for now (a synonym source — a strain-synonym report or MouseMine — is a documented follow-up).
+ * (the OBO PURL form 404s). {@code MGI_Strain.rpt} carries no synonyms, so matching is
+ * <strong>nomenclature-only, by decision</strong> — this is not a follow-up waiting to be picked up.
+ * <p>
+ * The consequence is specific and worth knowing before treating a miss as a bug: MGI renames strains
+ * that are later found to share ancestry ({@code BXD80} became {@code BXD73a/RwwJ}), and the historical
+ * name — the one papers, GEO submissions and curators actually write — survives only in MGI's synonym
+ * field. We hold the record; we index it solely under the name nobody uses, so the query misses. It is
+ * the renamed strains specifically, which biases the gap toward submitted metadata.
+ * <p>
+ * Sourcing the synonyms was investigated on 2026-08-20 and declined by Paul as not worth the cost.
+ * MGI publishes exactly two strain reports and neither carries synonyms: this one, and
+ * {@code MGI_Nonstandard_Strain.rpt}, which is a separate set of records with their own accessions
+ * rather than an alternate-name table. The synonyms are reachable only through MGI's per-query search
+ * API, which is the wrong shape for building a 124k-term index. <strong>Do not re-propose MouseMine or
+ * an API enrichment pass</strong> without new information — free text is the accepted curation outcome
+ * for a renamed strain.
  * <p>
  * Honors {@code url.mgiStrain} and {@code load.mgiStrain} in {@code basecode.properties}. Disabled by
  * default; enabled on the production instance.
