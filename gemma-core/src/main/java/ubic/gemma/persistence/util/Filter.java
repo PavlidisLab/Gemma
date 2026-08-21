@@ -314,11 +314,16 @@ public class Filter implements PropertyMapping {
     private String toString( boolean withOriginalProperties ) {
         String requiredValueString;
         if ( requiredValue instanceof Subquery ) {
-            String s = ( ( Subquery ) requiredValue ).getFilter().toString( withOriginalProperties );
+            java.util.List<Filter> conjuncts = ( ( Subquery ) requiredValue ).getFilters();
+            String s = conjuncts.stream()
+                    .map( c -> c.toString( withOriginalProperties ) )
+                    .collect( java.util.stream.Collectors.joining( " and " ) );
             if ( operator == Operator.inSubquery ) {
                 return "any(" + s + ")";
-            } else if ( operator == Operator.notInSubquery && isNegative( ( ( Subquery ) requiredValue ).getFilter() ) ) {
-                return "all(" + Filter.not( ( ( Subquery ) requiredValue ).getFilter() ).toString( withOriginalProperties ) + ")";
+            } else if ( operator == Operator.notInSubquery && conjuncts.size() == 1 && isNegative( conjuncts.get( 0 ) ) ) {
+                // `all(x)` is sugar for "none match not-x"; it only reads back that way for a single
+                // conjunct, so a conjunction falls through to the explicit none(...) rendering.
+                return "all(" + Filter.not( conjuncts.get( 0 ) ).toString( withOriginalProperties ) + ")";
             } else if ( operator == Operator.notInSubquery ) {
                 return "none(" + s + ")";
             } else {

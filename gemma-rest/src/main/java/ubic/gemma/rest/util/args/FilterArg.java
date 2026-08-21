@@ -20,12 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.service.FilteringDao;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.SubqueryMode;
 import ubic.gemma.rest.util.MalformedArgException;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -104,6 +106,25 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * <dd>True if no element of the collection satisfies the predicate. Note that this is true for an empty collection.</dd>
  * </dl>
  * By default, {@code any(predicate)} is used.
+ * <h3>Quantifying a conjunction</h3>
+ * A quantifier may scope SEVERAL predicates, conjoined with {@code and}. The conjunction then has to
+ * be satisfied by a single element of the collection:
+ * <p>
+ * {@code any(allCharacteristics.valueUri = <uri> and allCharacteristics.categoryUri = <uri>)}
+ * <p>
+ * This is not the same as writing the two predicates at the top level. {@code a = 1 and b = 2}
+ * becomes two independent subqueries — "some element has a=1" AND "some element has b=2" — which is
+ * satisfied when those are two different elements. Only the quantified form can express "one
+ * characteristic that carries this value AND this category", i.e. "this gene URI, as a genotype".
+ * <p>
+ * The top-level form is not merged implicitly, because it has a legitimate meaning of its own:
+ * {@code allCharacteristics.subject = a and allCharacteristics.subject = b} asks for datasets
+ * carrying both annotations, and reading it as one annotation being both would answer empty every
+ * time.
+ * <p>
+ * Every predicate must be filterable via a subquery and belong to the same collection.
+ * {@code all(...)} is rejected over a conjunction: "every element satisfies A and B" negates to a
+ * disjunction, which the underlying subquery cannot represent — use {@code any} or {@code none}.
  * <h2>Logical expressions</h2>
  * Multiple filters can be chained using conjunctions (i.e. {@code AND, and}) or disjunctions (i.e. {@code OR, or, ','}) keywords.
  * Example:<br>
@@ -157,7 +178,9 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
 
         int numClauses = filter.filterContext.clause().stream()
                 .map( FilterArgParser.ClauseContext::subClause )
-                .mapToInt( Collection::size ).sum();
+                .flatMap( Collection::stream )
+                // a quantified sub-clause may carry a conjunction of predicates; count each
+                .mapToInt( sc -> sc.predicate().size() ).sum();
         if ( numClauses > MAX_CLAUSES ) {
             throw new MalformedArgException( String.format( "The number of clauses cannot exceed %d.", MAX_CLAUSES ) );
         }
@@ -180,36 +203,62 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
                 } else {
                     subqueryMode = null;
                 }
-                FilterArgParser.PredicateContext predicate = subClause.predicate();
-                String property = predicate.PROPERTY().getText();
-                ubic.gemma.persistence.util.Filter.Operator operator;
+                // A quantifier may scope several predicates; they are conjoined INSIDE one subquery so
+                // that they bind to the same element of the relation. Without a quantifier there is
+                // exactly one predicate, and it takes the ordinary path.
+                List<FilterArgParser.PredicateContext> predicates = subClause.predicate();
+                String property = predicates.get( 0 ).PROPERTY().getText();
                 try {
-                    if ( !service.getFilterableProperties().contains( property ) ) {
-                        throw new IllegalArgumentException( String.format( "The property of %s is unknown", property ) );
+                    for ( FilterArgParser.PredicateContext p : predicates ) {
+                        if ( !service.getFilterableProperties().contains( p.PROPERTY().getText() ) ) {
+                            throw new IllegalArgumentException( String.format( "The property of %s is unknown", p.PROPERTY().getText() ) );
+                        }
                     }
                     ubic.gemma.persistence.util.Filter f;
-                    if ( predicate.operator() != null ) {
-                        operator = operatorToOperator( predicate.operator() );
-                        String requiredValue = scalarToString( predicate.scalar() );
-                        if ( subqueryMode != null ) {
-                            f = service.getFilter( property, operator, requiredValue, subqueryMode );
-                        } else {
-                            f = service.getFilter( property, operator, requiredValue );
+                    if ( predicates.size() > 1 ) {
+                        // conjoined inside one subquery, so the predicates bind to the same element
+                        List<FilteringDao.ConjunctSpec> specs = new ArrayList<>( predicates.size() );
+                        for ( FilterArgParser.PredicateContext p : predicates ) {
+                            String prop = p.PROPERTY().getText();
+                            if ( p.operator() != null ) {
+                                specs.add( FilteringDao.ConjunctSpec.of( prop, operatorToOperator( p.operator() ),
+                                        scalarToString( p.scalar() ) ) );
+                            } else {
+                                List<String> requiredValue = p.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
+                                if ( requiredValue.isEmpty() ) {
+                                    throw new MalformedArgException( String.format( "The right hand side collection for '%s' must be non-empty.", prop ) );
+                                }
+                                specs.add( FilteringDao.ConjunctSpec.of( prop, collectionOperatorToOperator( p.collectionOperator() ),
+                                        requiredValue ) );
+                            }
                         }
+                        f = service.getFilter( specs, subqueryMode );
                     } else {
-                        operator = collectionOperatorToOperator( predicate.collectionOperator() );
-                        List<String> requiredValue = predicate.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
-                        if ( subqueryMode != null ) {
-                            f = service.getFilter( property, operator, requiredValue, subqueryMode );
+                        FilterArgParser.PredicateContext predicate = predicates.get( 0 );
+                        ubic.gemma.persistence.util.Filter.Operator operator;
+                        if ( predicate.operator() != null ) {
+                            operator = operatorToOperator( predicate.operator() );
+                            String requiredValue = scalarToString( predicate.scalar() );
+                            if ( subqueryMode != null ) {
+                                f = service.getFilter( property, operator, requiredValue, subqueryMode );
+                            } else {
+                                f = service.getFilter( property, operator, requiredValue );
+                            }
                         } else {
-                            f = service.getFilter( property, operator, requiredValue );
-                        }
-                        // the rhs might be a subquery, unnest it
-                        ubic.gemma.persistence.util.Filter filterToValidate = unnestSubquery( f );
-                        if ( filterToValidate.getRequiredValue() == null || ( ( Collection<?> ) filterToValidate.getRequiredValue() ).isEmpty() ) {
-                            // collections must be non-empty
-                            throw new MalformedArgException( String.format( "The right hand side collection in '%s' must be non-empty.",
-                                    filterToValidate ) );
+                            operator = collectionOperatorToOperator( predicate.collectionOperator() );
+                            List<String> requiredValue = predicate.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
+                            if ( subqueryMode != null ) {
+                                f = service.getFilter( property, operator, requiredValue, subqueryMode );
+                            } else {
+                                f = service.getFilter( property, operator, requiredValue );
+                            }
+                            // the rhs might be a subquery, unnest it
+                            ubic.gemma.persistence.util.Filter filterToValidate = unnestSubquery( f );
+                            if ( filterToValidate.getRequiredValue() == null || ( ( Collection<?> ) filterToValidate.getRequiredValue() ).isEmpty() ) {
+                                // collections must be non-empty
+                                throw new MalformedArgException( String.format( "The right hand side collection in '%s' must be non-empty.",
+                                        filterToValidate ) );
+                            }
                         }
                     }
                     disjunction = disjunction.or( f );

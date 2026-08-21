@@ -69,6 +69,11 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
     }
 
     @Override
+    public Filter getFilter( List<ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) {
+        throw new UnsupportedOperationException( "This entity does not support filtering." );
+    }
+
+    @Override
     public final Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
         throw new UnsupportedOperationException( message );
     }

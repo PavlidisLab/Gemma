@@ -190,6 +190,11 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
+    public Filter getFilter( List<FilteringDao.ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) throws IllegalArgumentException {
+        return voDao.getFilter( conjuncts, subqueryMode );
+    }
+
+    @Override
     public Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
         checkIfPropertyIsAccessible( property );
         return voDao.getFilter( property, operator, values );

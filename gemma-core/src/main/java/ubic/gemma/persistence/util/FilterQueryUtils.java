@@ -105,13 +105,17 @@ public class FilterQueryUtils {
     }
 
     static String formSubClause( Filter filter, int i ) {
+        return formSubClause( filter, i, 0 );
+    }
+
+    static String formSubClause( Filter filter, int i, int k ) {
         StringBuilder disjunction = new StringBuilder();
         if ( filter.getPropertyName().endsWith( ".size" ) ) {
             disjunction.append( "size(" ).append( formProperty( filter ).replaceFirst( "\\.size$", "" ) ).append( ')' ).append( ' ' );
         } else {
             disjunction.append( formProperty( filter ) ).append( ' ' );
         }
-        String paramName = formParamName( filter, i );
+        String paramName = formParamName( filter, i, k );
 
         // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
         if ( filter.getOperator().equals( Filter.Operator.eq ) && filter.getRequiredValue() == null ) {
@@ -184,10 +188,21 @@ public class FilterQueryUtils {
                 disjunction.append( a.getPropertyName() ).append( " " ).append( a.getAlias() );
             }
             disjunction.append( " where " );
-            if ( s.getFilter().getObjectAlias() == null ) {
-                disjunction.append( rootAlias ).append( "." );
+            // A subquery may carry several conjoined filters, all binding to the SAME element of the
+            // relation ("this characteristic has value X and category Y"). Conjunct k > 0 takes a
+            // `_k`-suffixed parameter name so k == 0 keeps the exact name it had when a subquery could
+            // only hold one filter — addRestrictionParameters mirrors this, and the two must not drift.
+            List<Filter> conjuncts = s.getFilters();
+            for ( int ck = 0; ck < conjuncts.size(); ck++ ) {
+                Filter conjunct = conjuncts.get( ck );
+                if ( ck > 0 ) {
+                    disjunction.append( " and " );
+                }
+                if ( conjunct.getObjectAlias() == null ) {
+                    disjunction.append( rootAlias ).append( "." );
+                }
+                disjunction.append( formSubClause( conjunct, i, ck ) );
             }
-            disjunction.append( formSubClause( s.getFilter(), i ) );
             disjunction.append( ")" );
         } else if ( filter.getRequiredValue() instanceof Collection ) {
             disjunction
@@ -225,27 +240,57 @@ public class FilterQueryUtils {
             for ( Filter subClause : clause ) {
                 if ( subClause == null )
                     continue;
-                String paramName = formParamName( subClause, ++i );
+                ++i;
                 if ( subClause.getOperator().equals( Filter.Operator.inSubquery ) || subClause.getOperator().equals( Filter.Operator.notInSubquery ) ) {
                     Subquery s = ( Subquery ) requireNonNull( subClause.getRequiredValue() );
-                    addRestrictionParameters( query, Filters.by( s.getFilter() ), i - 1 );
-                } else if ( subClause.getOperator().equals( Filter.Operator.in ) || subClause.getOperator().equals( Filter.Operator.notIn ) ) {
-                    if ( !( subClause.getRequiredValue() instanceof Collection<?> coll ) ) {
-                        throw new IllegalArgumentException( "Required value must be a non-null collection for the 'in' operator." );
+                    // Mirrors the `_k` suffixing in formSubClause above; if these two disagree the
+                    // query builds fine and then fails at bind time with a missing-parameter error.
+                    List<Filter> conjuncts = s.getFilters();
+                    for ( int k = 0; k < conjuncts.size(); k++ ) {
+                        bindParameter( query, conjuncts.get( k ), formParamName( conjuncts.get( k ), i, k ), i );
                     }
-                    // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
-                    //noinspection rawtypes,unchecked
-                    query.setParameterList( paramName, optimizeParameterList( (Collection) coll ) );
-                } else if ( subClause.getOperator().equals( Filter.Operator.like ) || subClause.getOperator().equals( Filter.Operator.notLike ) ) {
-                    query.setParameter( paramName, escapeLike( ( String ) requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
                 } else {
-                    query.setParameter( paramName, subClause.getRequiredValue() );
+                    bindParameter( query, subClause, formParamName( subClause, i, 0 ), i );
                 }
             }
         }
     }
 
+    /**
+     * Bind one filter's right-hand side under an already-resolved parameter name.
+     * <p>
+     * A nested subquery recurses rather than binding: its own conjuncts carry the parameters.
+     */
+    private static void bindParameter( Query query, Filter filter, String paramName, int i ) {
+        if ( filter.getOperator().equals( Filter.Operator.inSubquery ) || filter.getOperator().equals( Filter.Operator.notInSubquery ) ) {
+            Subquery s = ( Subquery ) requireNonNull( filter.getRequiredValue() );
+            List<Filter> conjuncts = s.getFilters();
+            for ( int k = 0; k < conjuncts.size(); k++ ) {
+                bindParameter( query, conjuncts.get( k ), formParamName( conjuncts.get( k ), i, k ), i );
+            }
+        } else if ( filter.getOperator().equals( Filter.Operator.in ) || filter.getOperator().equals( Filter.Operator.notIn ) ) {
+            if ( !( filter.getRequiredValue() instanceof Collection<?> coll ) ) {
+                throw new IllegalArgumentException( "Required value must be a non-null collection for the 'in' operator." );
+            }
+            // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
+            //noinspection rawtypes,unchecked
+            query.setParameterList( paramName, optimizeParameterList( (Collection) coll ) );
+        } else if ( filter.getOperator().equals( Filter.Operator.like ) || filter.getOperator().equals( Filter.Operator.notLike ) ) {
+            query.setParameter( paramName, escapeLike( ( String ) requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
+        } else {
+            query.setParameter( paramName, filter.getRequiredValue() );
+        }
+    }
+
     private static String formParamName( PropertyMapping mapping, int i ) {
-        return formProperty( mapping ).replaceAll( "\\W", "_" ) + i;
+        return formParamName( mapping, i, 0 );
+    }
+
+    /**
+     * @param k position of this filter within its subquery's conjunction; 0 (the only possibility
+     *          before conjunctions existed) yields the historical name unchanged.
+     */
+    private static String formParamName( PropertyMapping mapping, int i, int k ) {
+        return formProperty( mapping ).replaceAll( "\\W", "_" ) + i + ( k == 0 ? "" : "_" + k );
     }
 }

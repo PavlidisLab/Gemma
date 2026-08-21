@@ -195,12 +195,19 @@ public class FilterJpaUtils {
         // inner filter's right-hand side was always a scalar/collection (never another Subquery);
         // we keep that assumption here and use the leaf-predicate helper which resolves paths off
         // the inner From rather than the outer Root.
-        Filter innerFilter = sq.getFilter();
-        From<?, ?> innerFrom = innerFilter.getObjectAlias() != null ? aliasMap.get( innerFilter.getObjectAlias() ) : subRoot;
-        if ( innerFrom == null ) {
-            throw new IllegalStateException( "Unresolvable inner filter alias '" + innerFilter.getObjectAlias() + "'." );
+        // A subquery may carry several conjoined filters, all binding to the same element of the
+        // relation. Conjoining them INSIDE the subquery is the whole point — hoisting them to the
+        // outer query would ask "some element matches X and some element matches Y" instead.
+        java.util.List<Predicate> innerPredicates = new java.util.ArrayList<>();
+        for ( Filter innerFilter : sq.getFilters() ) {
+            From<?, ?> innerFrom = innerFilter.getObjectAlias() != null ? aliasMap.get( innerFilter.getObjectAlias() ) : subRoot;
+            if ( innerFrom == null ) {
+                throw new IllegalStateException( "Unresolvable inner filter alias '" + innerFilter.getObjectAlias() + "'." );
+            }
+            innerPredicates.add( buildLeafPredicate( cb, innerFrom, innerFilter ) );
         }
-        jpaSub.where( buildLeafPredicate( cb, innerFrom, innerFilter ) );
+        jpaSub.where( innerPredicates.size() == 1 ? innerPredicates.get( 0 )
+                : cb.and( innerPredicates.toArray( new Predicate[0] ) ) );
 
         Path<?> outerPath = resolvePath( root, f.getPropertyName() );
         CriteriaBuilder.In<Object> inPred = cb.in( ( Expression<Object> ) outerPath );
