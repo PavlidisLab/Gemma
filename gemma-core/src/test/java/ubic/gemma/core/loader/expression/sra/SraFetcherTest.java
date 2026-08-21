@@ -13,11 +13,29 @@ import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
 public class SraFetcherTest {
+
+    /**
+     * Runs of SRX12015965, keyed by accession and holding {totalSpots, totalBases, size}.
+     */
+    private static final Map<String, long[]> EXPECTED_RUNS = new LinkedHashMap<>();
+
+    static {
+        EXPECTED_RUNS.put( "SRR15720449", new long[] { 57188090L, 1601266520L, 484343211L } );
+        EXPECTED_RUNS.put( "SRR15720450", new long[] { 57188090L, 5204116190L, 1625757823L } );
+        EXPECTED_RUNS.put( "SRR15720451", new long[] { 56623841L, 1585467548L, 476689987L } );
+        EXPECTED_RUNS.put( "SRR15720452", new long[] { 56623841L, 5152769531L, 1601837740L } );
+        EXPECTED_RUNS.put( "SRR15720453", new long[] { 57666129L, 1614651612L, 485060588L } );
+        EXPECTED_RUNS.put( "SRR15720454", new long[] { 57666129L, 5247617739L, 1658807706L } );
+        EXPECTED_RUNS.put( "SRR15720455", new long[] { 64162444L, 1796548432L, 541304976L } );
+        EXPECTED_RUNS.put( "SRR15720456", new long[] { 64162444L, 5838782404L, 1816352222L } );
+    }
 
     @Rule
     public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
@@ -191,53 +209,19 @@ public class SraFetcherTest {
                                                         assertThat( m2.getOrganism() ).isEqualTo( "Mus musculus" );
                                                     } );
                                         } );
+                                // SRA does not guarantee the order of the runs within a run set, so each run is
+                                // pinned by its accession instead of by its position
                                 assertThat( sr.getRuns() )
                                         .extracting( SraRun::getAccession )
-                                        .containsExactly(
-                                                "SRR15720449",
-                                                "SRR15720450",
-                                                "SRR15720451",
-                                                "SRR15720452",
-                                                "SRR15720453",
-                                                "SRR15720454",
-                                                "SRR15720455",
-                                                "SRR15720456" );
-                                assertThat( sr.getRuns() )
-                                        .extracting( SraRun::getTotalBases )
-                                        .containsExactly(
-                                                1601266520L,
-                                                5204116190L,
-                                                1585467548L,
-                                                5152769531L,
-                                                1614651612L,
-                                                5247617739L,
-                                                1796548432L,
-                                                5838782404L );
-                                assertThat( sr.getRuns() )
-                                        .extracting( SraRun::getTotalSpots )
-                                        .containsExactly(
-                                                57188090L,
-                                                57188090L,
-                                                56623841L,
-                                                56623841L,
-                                                57666129L,
-                                                57666129L,
-                                                64162444L,
-                                                64162444L
-                                        );
-                                long[] closeTo = {
-                                        484343211L,
-                                        1625757823L,
-                                        476689987L,
-                                        1601837740L,
-                                        485060588L,
-                                        1658807706L,
-                                        541304976L,
-                                        1816352222L };
-                                for ( int i = 0; i < closeTo.length; i++ ) {
-                                    assertThat( sr.getRuns().get( i ).getSize() )
-                                            .isCloseTo( closeTo[i], Offset.offset( 1024L * 1024L ) );
-                                }
+                                        .containsExactlyInAnyOrderElementsOf( EXPECTED_RUNS.keySet() );
+                                assertThat( sr.getRuns() ).allSatisfy( run -> {
+                                    long[] expected = EXPECTED_RUNS.get( run.getAccession() );
+                                    assertThat( run.getTotalSpots() ).isEqualTo( expected[0] );
+                                    assertThat( run.getTotalBases() ).isEqualTo( expected[1] );
+                                    // runinfo sizes are rounded to the next megabyte
+                                    assertThat( run.getSize() )
+                                            .isCloseTo( expected[2], Offset.offset( 1024L * 1024L ) );
+                                } );
                             } );
                 } );
     }
