@@ -61,8 +61,14 @@ public class MgiRelationProducer {
     /** As {@link AnnotationRelation#getSource()} spells it. */
     public static final String SOURCE = "MGI";
 
+    /**
+     * RO_0003301. The constant name keeps the colloquial "is model of" because that is what
+     * everyone here calls the relation; the VALUE is RO's own {@code rdfs:label}, which is what
+     * {@code Relation.terms.txt} sanctions and therefore what the commit validator compares
+     * against. Do not "fix" the value back to the readable spelling — that is a 400.
+     */
     private static final String IS_MODEL_OF_URI = "http://purl.obolibrary.org/obo/RO_0003301";
-    private static final String IS_MODEL_OF_LABEL = "is model of";
+    private static final String IS_MODEL_OF_LABEL = "has role in modeling";
 
     /** MGI ships mouse genetics; the reports carry no taxon column. */
     private static final int MOUSE_NCBI_TAXON_ID = 10090;

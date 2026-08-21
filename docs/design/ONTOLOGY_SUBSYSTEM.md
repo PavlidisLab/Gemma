@@ -280,7 +280,7 @@ survived a full refresh on prod. Its incremental predicate is the experiment's
 `lastUpdated`, not the characteristic's.
 
 **Controlled vocabularies.** `EFO.factor.categories.txt` (28 active entries) defines
-categories; `Relation.terms.txt` (28) defines predicates. Both are tab-separated
+categories; `Relation.terms.txt` (29) defines predicates. Both are tab-separated
 `URI<TAB>label`. Enforcement differs by path: the design-file importer **rejects** an
 unknown category, while the REST validator treats both files as an authoritative *label
 source* and falls through to loaded ontologies then OLS for anything not listed. Values are

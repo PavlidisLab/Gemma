@@ -8,9 +8,9 @@ http://purl.obolibrary.org/obo/RO_0002200	has phenotype
 http://purl.obolibrary.org/obo/RO_0001025	located in
 http://purl.obolibrary.org/obo/GENO_0000222	has_genotype
 http://purl.obolibrary.org/obo/CLO_0037209	derives from cell
-http://purl.obolibrary.org/obo/CLO_0037210	derived from cell line
+http://purl.obolibrary.org/obo/CLO_0037210	derives from cell line cell
 http://purl.obolibrary.org/obo/RO_0002220	adjacent to
-http://purl.obolibrary.org/obo/RO_0002503	toward
+http://purl.obolibrary.org/obo/RO_0002503	towards
 http://gemma.msl.ubc.ca/ont/TGEMO_00167	delivered for duration
 http://gemma.msl.ubc.ca/ont/TGEMO_00166	delivered at dose
 http://gemma.msl.ubc.ca/ont/TGEMO_00168	has developmental stage
@@ -20,8 +20,9 @@ http://gemma.msl.ubc.ca/ont/TGEMO_00171	induced by
 http://gemma.msl.ubc.ca/ont/TGEMO_00183	delivered to
 http://gemma.msl.ubc.ca/ont/TGEMO_00202	sampled after
 http://gemma.msl.ubc.ca/ont/TGEMO_00201	has child with disease
+http://gemma.msl.ubc.ca/ont/TGEMO_00215	targeted towards
 http://purl.obolibrary.org/obo/CLO_0000015	derives from patient having disease
-http://purl.obolibrary.org/obo/RO_0003301	is model of
+http://purl.obolibrary.org/obo/RO_0003301	has role in modeling
 http://purl.obolibrary.org/obo/CLO_0000179	is disease model for
 http://purl.obolibrary.org/obo/CLO_0037207	derives from organism
 http://purl.obolibrary.org/obo/CLO_0037208	derives from anatomic part

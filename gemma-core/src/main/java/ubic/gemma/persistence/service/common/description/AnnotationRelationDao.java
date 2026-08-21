@@ -152,7 +152,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          *
          * <p>A generic class enumerates its members exactly the way a disease enumerates its models:
          * {@code induced pluripotent stem cell line cell} carries 17 rows of
-         * {@code derived from cell line} naming 201B7, 585A1, Detroit 551, WT33 and the rest. Nothing
+         * {@code derives from cell line cell} naming 201B7, 585A1, Detroit 551, WT33 and the rest. Nothing
          * there is about the term a curator is looking at; the term is a heading for a list.</p>
          *
          * <p>Reported rather than filtered on, for the reason {@link #objectBreadth} is: uib was
@@ -411,10 +411,16 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
 
         /**
          * NCBI taxon id for human, which decides whether an inferred disease claim reads as
-         * {@code has disease} or as {@code is model of}.
+         * {@code has disease} or as {@code has role in modeling}.
          */
         private static final int HUMAN_NCBI_TAXON_ID = 9606;
 
+        /**
+         * RO_0003301. The constant name keeps the colloquial "is model of" because that is what
+         * everyone here calls the relation; the VALUE is RO's own {@code rdfs:label}, which is what
+         * {@code Relation.terms.txt} sanctions and therefore what the commit validator compares
+         * against. Do not "fix" the value back to the readable spelling — that is a 400.
+         */
         private static final String IS_MODEL_OF_URI = "http://purl.obolibrary.org/obo/RO_0003301";
         private static final String HAS_DISEASE_URI = "http://purl.obolibrary.org/obo/RO_0016002";
 
@@ -428,9 +434,9 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          * itself, and three consumers will choose three.</p>
          *
          * <p><b>Taxon picks the verb</b>, which is the rule the design settled on and the reason
-         * {@code RO_0003301 is model of} was added to the vocabulary. A mouse carrying {@code APP/PS1}
+         * {@code RO_0003301 has role in modeling} was added to the vocabulary. A mouse carrying {@code APP/PS1}
          * <i>models</i> Alzheimer disease; a human line carrying {@code LRRK2 G2019S} is not modelling
-         * Parkinson disease, it <i>has</i> it. Unknown taxon falls to {@code is model of}, the weaker
+         * Parkinson disease, it <i>has</i> it. Unknown taxon falls to {@code has role in modeling}, the weaker
          * of the two claims, rather than being guessed at.</p>
          *
          * <p>Null when {@link #getInferenceDirection()} is
@@ -517,7 +523,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
                             .impliesAnInducer( predicateUri )
                             && taxonNcbiId != null && taxonNcbiId == HUMAN_NCBI_TAXON_ID
                             ? "has disease"
-                            : "is model of";
+                            : "has role in modeling";
                 case SUBJECT_IMPLIES_OBJECT:
                     return predicate;
                 default:
@@ -544,7 +550,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          * actually sees, which is the claim.</p>
          *
          * <p>It correctly keeps apart claims whose verb differs: the same genotype relation on a mouse
-         * implies {@code is model of} and on a human line {@code has disease}, and those are two claims
+         * implies {@code has role in modeling} and on a human line {@code has disease}, and those are two claims
          * rather than one rendered twice.</p>
          */
         @Nullable

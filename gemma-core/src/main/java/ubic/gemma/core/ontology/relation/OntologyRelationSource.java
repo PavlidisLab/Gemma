@@ -232,7 +232,7 @@ class OntologyRelationSource {
             new Relation( OBO + "CLO_0037207", "derives from organism", null, false ),
             new Relation( OBO + "CLO_0037229", "cell line cell derived from organism", null, false ),
             new Relation( OBO + "CLO_0037209", "derives from cell", Categories.CELL_TYPE, false ),
-            new Relation( OBO + "CLO_0037210", "derived from cell line", CELL_LINE, false ),
+            new Relation( OBO + "CLO_0037210", "derives from cell line cell", CELL_LINE, false ),
             // 🛑 RO_0001000 derives from -- the FLAT ones only, and they are the bulk of this source.
             // CLO curators mostly wrote the generic property and let the target's vocabulary carry the
             // meaning, so the specific properties above are the rare spelling of the same relation.

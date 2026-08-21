@@ -62,7 +62,7 @@
 -- same split exists on EXPRESSION_EXPERIMENT2CHARACTERISTIC. A census over VALUE_URI alone silently drops most
 -- of the annotation surface: the drug/treatment term is frequently in the object position,
 -- and the CLO predicates in Relation.terms.txt (CLO_0037209 derives from cell, CLO_0037210
--- derived from cell line, CLO_0037227/0037229) put cell lines there too.
+-- derives from cell line cell, CLO_0037227/0037229) put cell lines there too.
 --
 -- Q0 measures how wrong a one-slot census would have been. Run it first, and quote it
 -- alongside any number taken from a query that reads only VALUE_URI.

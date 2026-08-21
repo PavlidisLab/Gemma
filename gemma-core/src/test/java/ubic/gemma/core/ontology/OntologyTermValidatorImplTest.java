@@ -318,7 +318,7 @@ public class OntologyTermValidatorImplTest {
 
     /**
      * A predicate is checked against Gemma's OWN vocabulary, not against whatever ontologies happen to be
-     * loaded. {@code Relation.terms.txt} is the rule for that slot: 22 relations Gemma ships and sanctions.
+     * loaded. {@code Relation.terms.txt} is the rule for that slot: 29 relations Gemma ships and sanctions.
      * <p>
      * This is the case that failed on gemma2. {@code RO_0002573} is in that file, labelled exactly
      * {@code "has modifier"}, and Gemma had stored it on GSE11630 — but RO is not among the loadable

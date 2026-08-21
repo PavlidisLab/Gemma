@@ -83,12 +83,12 @@ public enum RelationTopicality {
             "http://purl.obolibrary.org/obo/CLO_0037207",      // derives from organism
             "http://purl.obolibrary.org/obo/CLO_0037208",      // derives from anatomic part
             "http://purl.obolibrary.org/obo/CLO_0037209",      // derived from cell
-            "http://purl.obolibrary.org/obo/CLO_0037210",      // derived from cell line
+            "http://purl.obolibrary.org/obo/CLO_0037210",      // derives from cell line cell
             "http://purl.obolibrary.org/obo/CLO_0037227",      // cell line cell derived from anatomical part
             "http://purl.obolibrary.org/obo/CLO_0037229",      // cell line cell derived from organism
             "http://purl.obolibrary.org/obo/ENVO_01003004",    // derives from part of -- cell line -> brain
             "http://purl.obolibrary.org/obo/RO_0000087",       // has role -- CHEBI's drug -> role
-            "http://purl.obolibrary.org/obo/RO_0003301",       // is model of
+            "http://purl.obolibrary.org/obo/RO_0003301",       // has role in modeling
             "http://gemma.msl.ubc.ca/ont/TGEMO_00201"          // has child with disease
     );
 

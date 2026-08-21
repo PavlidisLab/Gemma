@@ -41,7 +41,7 @@ sample is a model.
 That policy is only defensible if the model-of relation stays **derivable**. A
 user ticking "autism" in the disease selector must still find an experiment
 annotated only as `Chd8` mutant, even though no disease annotation is present on
-it. Rather than materialize an `is model of` predicate onto every experiment —
+it. Rather than materialize an `has role in modeling` predicate onto every experiment —
 which would duplicate, per experiment, a fact that is a property of the genotype
 — Gemma derives the relation on demand from annotations the corpus already
 carries.
@@ -145,7 +145,7 @@ appropriate for query expansion and for showing a curator, and inappropriate for
 automatic annotation.
 
 Nothing writes annotations. If the relation is ever materialized that is a
-separate decision, and `is model of` would be the predicate to discuss, not
+separate decision, and `has role in modeling` would be the predicate to discuss, not
 `has role disease model`, which says a thing is a model without saying of what.
 
 ## API

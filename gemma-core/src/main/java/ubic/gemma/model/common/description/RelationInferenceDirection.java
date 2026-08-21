@@ -87,13 +87,13 @@ public enum RelationInferenceDirection {
             "http://purl.obolibrary.org/obo/CLO_0037207",      // derives from organism
             "http://purl.obolibrary.org/obo/CLO_0037208",      // derives from anatomic part
             "http://purl.obolibrary.org/obo/CLO_0037209",      // derived from cell
-            "http://purl.obolibrary.org/obo/CLO_0037210",      // derived from cell line
+            "http://purl.obolibrary.org/obo/CLO_0037210",      // derives from cell line cell
             "http://purl.obolibrary.org/obo/CLO_0037227",
             "http://purl.obolibrary.org/obo/CLO_0037229",
             "http://purl.obolibrary.org/obo/ENVO_01003004",    // derives from part of
             "http://purl.obolibrary.org/obo/RO_0001000",       // derives from -- TYPED OBJECT ONLY, see below
             "http://purl.obolibrary.org/obo/RO_0000087",       // has role -- imatinib implies antineoplastic
-            "http://purl.obolibrary.org/obo/RO_0003301",       // is model of
+            "http://purl.obolibrary.org/obo/RO_0003301",       // has role in modeling
             "http://purl.obolibrary.org/obo/RO_0016002",       // has disease -- SNCA implies Parkinson
             "http://gemma.msl.ubc.ca/ont/TGEMO_00201"          // has child with disease
     );
@@ -225,13 +225,13 @@ public enum RelationInferenceDirection {
         RelationInferenceDirection direction = byPredicate( predicateUri );
         if ( direction == OBJECT_IMPLIES_SUBJECT
                 && !RelationTopicality.subjectIsADisease( subjectCategoryUri, subjectValueUri ) ) {
-            // 🛑 Every predicate on this side resolves to `is model of` or `has disease`, so the
+            // 🛑 Every predicate on this side resolves to `has role in modeling` or `has disease`, so the
             // licence only makes sense when the SUBJECT names a disease. Where it does not, the arrow
             // is simply pointing the other way and inverting it asserts something nobody said:
             //   strain: C10 Congenic (A.B6chr10) --has_genotype--> C57BL/6
-            //     => C57BL/6 is model of C10 Congenic          -- backwards; C57BL/6 is its BACKGROUND
+            //     => C57BL/6 has role in modeling C10 Congenic          -- backwards; C57BL/6 is its BACKGROUND
             //   genotype: Myrf [mouse] --has_genotype--> C57BL/6
-            //     => C57BL/6 is model of Myrf                  -- a strain is not a model of a gene
+            //     => C57BL/6 has role in modeling Myrf                  -- a strain is not a model of a gene
             // Both reported by uib 2026-08-18, from a curator's screen on GSE99114. Topicality keeps
             // these rows on the card, which is right -- they are facts about the term -- and this
             // stops them being turned into a claim.
@@ -250,7 +250,7 @@ public enum RelationInferenceDirection {
      * <p>🛑 The taxon rule — organism models the disease, human line has it — is right for a genotype
      * and unsatisfiable for a compound. uib measured it on one subject: {@code MPTP},
      * {@code alpha-synuclein inclusion body} and {@code methamphetamine} were reported
-     * <i>is model of Parkinson disease</i> and {@code oxidopamine} <i>has disease Parkinson
+     * <i>has role in modeling Parkinson disease</i> and {@code oxidopamine} <i>has disease Parkinson
      * disease</i> — same relation, and the only thing that differed was which taxon the attesting
      * experiment happened to carry. A compound is never the thing that has the disease, so for these
      * predicates the verb is settled by the predicate and taxon is not consulted.</p>

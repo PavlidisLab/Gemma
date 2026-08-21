@@ -480,7 +480,7 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
                     // ...and the claim runs the other, with the genotype as its subject
                     assertThat( r.getImpliedSubjectUri() ).isEqualTo( SURF1 );
                     assertThat( r.getImpliedObjectUri() ).isEqualTo( LEIGH );
-                    assertThat( r.getImpliedPredicate() ).isEqualTo( "is model of" );
+                    assertThat( r.getImpliedPredicate() ).isEqualTo( "has role in modeling" );
                 } );
 
         // the human case is not a model of anything -- it has the disease
@@ -782,15 +782,15 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     }
 
     /**
-     * 🛑 An {@code OBJECT_IMPLIES_SUBJECT} licence resolves to {@code is model of} or
+     * 🛑 An {@code OBJECT_IMPLIES_SUBJECT} licence resolves to {@code has role in modeling} or
      * {@code has disease} — a claim ABOUT DISEASE — so it may only run where the subject is one.
      *
      * <p>uib, 2026-08-18, from the {@code C57BL/6} chip on GSE99114:</p>
      * <pre>
      * strain:   C10 Congenic (A.B6chr10) --has_genotype--> C57BL/6
-     *   =&gt; C57BL/6 is model of C10 Congenic     backwards: C57BL/6 is its BACKGROUND
+     *   =&gt; C57BL/6 has role in modeling C10 Congenic     backwards: C57BL/6 is its BACKGROUND
      * genotype: Myrf [mouse]             --has_genotype--> C57BL/6
-     *   =&gt; C57BL/6 is model of Myrf             a strain is not a model of a gene
+     *   =&gt; C57BL/6 has role in modeling Myrf             a strain is not a model of a gene
      * </pre>
      *
      * <p>The licence assumed the pattern {@code disease model: X --has_genotype--> <genotype>}, where
@@ -871,7 +871,7 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
      *
      * <p>uib measured four {@code induced by} rows on one subject: {@code MPTP},
      * {@code alpha-synuclein inclusion body} and {@code methamphetamine} came back
-     * <i>is model of Parkinson disease</i> and {@code oxidopamine} came back <i>has disease Parkinson
+     * <i>has role in modeling Parkinson disease</i> and {@code oxidopamine} came back <i>has disease Parkinson
      * disease</i>. The only thing that differed was which taxon the attesting experiment carried.</p>
      *
      * <p>"A mouse carrying APP/PS1 models the disease; a human line carrying LRRK2 G2019S has it" is
@@ -888,7 +888,7 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
                 .satisfies( r -> {
                     assertThat( r.getTaxonNcbiId() ).as( "the fixture taxon is human" ).isEqualTo( 9606 );
                     assertThat( r.getImpliedSubjectUri() ).isEqualTo( OXIDOPAMINE );
-                    assertThat( r.getImpliedPredicate() ).isEqualTo( "is model of" );
+                    assertThat( r.getImpliedPredicate() ).isEqualTo( "has role in modeling" );
                 } );
     }
 

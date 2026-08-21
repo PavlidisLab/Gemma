@@ -101,7 +101,7 @@ class MgiRelationProducerTest {
         assertThat( r.getSubjectValueUri() )
                 .isEqualTo( "https://www.informatics.jax.org/allele/MGI:1857444" );
         assertThat( r.getSubjectCategory() ).isEqualTo( "genotype" );
-        assertThat( r.getPredicate() ).isEqualTo( "is model of" );
+        assertThat( r.getPredicate() ).isEqualTo( "has role in modeling" );
         assertThat( r.getObjectValueUri() ).isEqualTo( MONDO_RETT );
         assertThat( r.getObjectValue() ).isEqualTo( "Rett syndrome" );
         assertThat( r.getObjectCategory() ).isEqualTo( "disease" );

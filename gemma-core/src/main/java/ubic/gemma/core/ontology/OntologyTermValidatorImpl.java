@@ -201,7 +201,7 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
      * Gemma's own answer for the two slots where Gemma has rules, or {@code null} for the slots where it does not.
      * <p>
      * Predicates and categories are constrained vocabularies Gemma ships and owns — {@code Relation.terms.txt}
-     * (22 relations) and the category terms — so for those slots the local list is the authority and there is
+     * (29 relations) and the category terms — so for those slots the local list is the authority and there is
      * nothing to ask an ontology or OLS about. Subjects, objects and values are deliberately unconstrained:
      * curators legitimately use terms from ontologies Gemma has never loaded, and blocking those would be wrong.
      * <p>

@@ -127,7 +127,7 @@ filtering subjects to CLO's own namespace loses nothing.
 | `CLO:0037209` | derives from cell | 67 | 67 | 0 |
 | `CLO:0037207` | derives from organism | 23 | 23 | 5 |
 | `CLO:0037208` | derives from anatomic part | 18 | 18 | 0 |
-| `CLO:0037210` | derived from cell line | 2 | 2 | 0 |
+| `CLO:0037210` | derives from cell line cell | 2 | 2 | 0 |
 | `CLO:0037227`, `CLO:0037229`, `CLO:0037375`–`CLO:0037378` | — | **0** | **0** | 0 |
 
 Four things in that table change the plan:
@@ -335,7 +335,7 @@ not a curation surface — the vocabulary constrains what a curator may write in
 them would discard 90% of what CLO asserts because a text file was not updated.
 But the file should be extended deliberately, not by a maintenance job, so this
 needs a decision. `CLO:0000179` is the one that matters; note that
-`RO:0003301 is model of` is already in the file and is a *different* URI, so
+`RO:0003301 has role in modeling` is already in the file and is a *different* URI, so
 adopting it instead would mean rewriting CLO's own predicate, which is worse.
 
 ## 6. Not recommended

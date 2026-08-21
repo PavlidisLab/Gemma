@@ -1132,7 +1132,7 @@ public class AnnotationsWebService {
          * for a client to invert. Null when nothing is implied.
          *
          * <p>{@code Alzheimer disease --has_genotype--> APP/PS1} is stored; what follows from it is
-         * {@code APP/PS1 --is model of--> Alzheimer disease}. Taxon picks the verb — a human subject
+         * {@code APP/PS1 --has role in modeling--> Alzheimer disease}. Taxon picks the verb — a human subject
          * gets {@code has disease}, because a human line carrying a variant is not modelling the
          * disease, it has it.</p>
          */
