@@ -190,7 +190,15 @@ public class GeneWebService {
                 .query( query.trim() )
                 .taxonConstraint( taxon )
                 .resultTypes( Collections.singleton( Gene.class ) )
-                .maxResults( limit )
+                // Ask for a wide candidate window, NOT the caller's limit. Both passes below —
+                // the score re-rank and the taxon backstop — only reorder / discard what search
+                // already returned, so cutting to `limit` up here decides the answer before
+                // either runs. ?query=Myc&taxon=mouse&limit=1 returned an EMPTY list that way:
+                // search handed back one arbitrary Myc ortholog (rat), and the mouse backstop
+                // dropped it. It also made ranking depend on limit — limit=1 gave rat, limit=3
+                // put mouse first. Cut to `limit` after filtering instead. Same reasoning as
+                // AnnotationsWebService.UPSTREAM_LIMIT.
+                .maxResults( SEARCH_CANDIDATE_LIMIT )
                 .fillResults( true )
                 .build();
         List<SearchResult<?>> raw;
@@ -238,9 +246,15 @@ public class GeneWebService {
                 vo.setMatchType( sr.getMatchKind().getWireName() );
             }
             vos.add( vo );
+            if ( vos.size() == limit ) {
+                // The caller's cut, applied last — after ranking and the taxon backstop have had
+                // the full candidate window to work with.
+                break;
+            }
         }
         // Search hits are built from un-thawed entities, so the aliases (a LAZY collection) come back
-        // empty on the VO. Batch-load them in one query keyed by gene ID.
+        // empty on the VO. Batch-load them in one query keyed by gene ID. Runs on the truncated list,
+        // so widening the candidate window above doesn't widen this query.
         geneService.populateAliases( vos );
         return respond( vos );
     }
@@ -251,6 +265,15 @@ public class GeneWebService {
     /** Upper bound on {@code limit}; requests above this are 400. */
     static final int SEARCH_MAX_LIMIT = 50;
     private static final String SEARCH_MAX_LIMIT_STR = "50";
+    /**
+     * Candidate window requested from the search service, before local ranking and the taxon
+     * backstop narrow it down to the caller's {@code limit}. Sized so a taxon-scoped query still
+     * has room after the other taxa's orthologs are discarded — a symbol like {@code Myc} matches
+     * across every taxon Gemma carries, and prefix hits ({@code Mycbp}, {@code Mycbpap}, …)
+     * multiply that further. Only ids/scores are materialized at this width; the VO and alias
+     * loads happen after truncation.
+     */
+    private static final int SEARCH_CANDIDATE_LIMIT = 500;
 
     /**
      * Extract a lowercased official symbol from a search result that may hold either a
