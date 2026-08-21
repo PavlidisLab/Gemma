@@ -146,13 +146,24 @@ public class SearchWebService {
             maxResults = limit != null ? limit.getValue( MAX_SEARCH_RESULTS ) : 100;
         }
 
+        ubic.gemma.model.genome.Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
+
+        // The taxon backstop below discards results, so the search has to be asked for more than the
+        // caller wants or the discards come straight off the response. Widen only when the backstop
+        // will actually run — it needs the result objects to read a taxon from.
+        boolean taxonBackstop = taxon != null && fillResults;
+        int searchMaxResults = maxResults;
+        if ( taxonBackstop && maxResults > 0 ) {
+            searchMaxResults = Math.min( maxResults * TAXON_BACKSTOP_OVERFETCH, MAX_SEARCH_RESULTS );
+        }
+
         SearchSettings searchSettings = SearchSettings.builder()
                 .query( query.getValue() )
                 .datasetConstraint( datasetArg != null ? datasetArgService.getEntity( datasetArg ) : null )
-                .taxonConstraint( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
+                .taxonConstraint( taxon )
                 .platformConstraint( platformArg != null ? platformArgService.getEntity( platformArg ) : null )
                 .resultTypes( resultTypesCls )
-                .maxResults( maxResults )
+                .maxResults( searchMaxResults )
                 .fillResults( fillResults )
                 // Gene search hits only the gene services by default; GO→gene expansion is opt-in
                 // (it is a function search, and scanning GO on every gene query was a ~25s hot spot
@@ -188,6 +199,12 @@ public class SearchWebService {
         try {
             return new SearchResultsResponseDataObject( searchResultVos.stream()
                     .sorted() // SearchResults are sorted by descending score order
+                    // Taxon backstop. SearchSettings.taxonConstraint is advisory: it is passed to every
+                    // source but the gene sources (HibernateSearchSource, the GO source) do not apply it,
+                    // so ?query=Myc&taxon=mouse used to answer with the rat and human orthologs at every
+                    // limit — silently, which is worse than an error. Drop what provably does not match,
+                    // AFTER scoring and BEFORE the caller's limit. Mirrors GeneWebService.searchGenes.
+                    .filter( sr -> !taxonBackstop || matchesTaxon( sr.getResultObject(), taxon.getId() ) )
                     .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE ) // results are limited by class, so there might be more results than expected when unraveling everything
                     .map( sr -> {
                         String resultUrl;
@@ -214,6 +231,49 @@ public class SearchWebService {
                 log.warn( "Failed to generate URLs for " + exceptions.size() + " search results.", e );
             }
         }
+    }
+
+    /**
+     * How much wider than the caller's {@code limit} to search when the taxon backstop is active.
+     * A symbol like {@code Myc} matches an ortholog in every taxon Gemma carries, so the wanted one
+     * can sit several rows down; this buys room for those to be discarded without eating into the
+     * response.
+     */
+    private static final int TAXON_BACKSTOP_OVERFETCH = 10;
+
+    /**
+     * Whether a search-result VO is compatible with a requested taxon.
+     * <p>
+     * Only four of the nine supported result types carry a taxon at all. The rest
+     * ({@link BibliographicReferenceValueObject}, {@link BioSequenceValueObject},
+     * {@link CompositeSequenceValueObject}, {@link ExpressionExperimentSetValueObject},
+     * blacklisted entities) have no taxon concept, and a taxon-constrained search must NOT
+     * silently drop them — {@code true} is the right answer there, not "unknown, discard".
+     * <p>
+     * A type that does carry a taxon but has none set is discarded: the caller asked for one
+     * taxon, and a result we cannot show to belong to it does not answer that question. Same
+     * rule as {@code GeneWebService.searchGenes}.
+     * <p>
+     * Reads the taxon OBJECT rather than the flattened id accessors: those are {@code @Deprecated}
+     * on two of the four, and their names disagree ({@code getTaxonID} on platforms,
+     * {@code getTaxonId} elsewhere). Mind that {@code getTaxon()} is not the object on every type —
+     * on experiments and platforms it returns the common NAME as a String.
+     */
+    private static boolean matchesTaxon( @Nullable Object vo, Long wantTaxonId ) {
+        TaxonValueObject voTaxon;
+        if ( vo instanceof GeneValueObject ) {
+            voTaxon = ( ( GeneValueObject ) vo ).getTaxon();
+        } else if ( vo instanceof ExpressionExperimentValueObject ) {
+            voTaxon = ( ( ExpressionExperimentValueObject ) vo ).getTaxonObject();
+        } else if ( vo instanceof ArrayDesignValueObject ) {
+            voTaxon = ( ( ArrayDesignValueObject ) vo ).getTaxonObject();
+        } else if ( vo instanceof GeneSetValueObject ) {
+            voTaxon = ( ( GeneSetValueObject ) vo ).getTaxon();
+        } else {
+            // no taxon concept for this result type — the constraint does not apply to it
+            return true;
+        }
+        return voTaxon != null && wantTaxonId.equals( voTaxon.getId() );
     }
 
     private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "resultObject" );
