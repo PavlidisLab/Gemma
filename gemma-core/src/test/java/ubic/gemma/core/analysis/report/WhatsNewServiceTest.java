@@ -1,43 +1,64 @@
 package ubic.gemma.core.analysis.report;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 
-import java.nio.file.Paths;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * The report used to be asserted through its on-disk cache — generate, then read the
+ * Java-serialized {@code WhatsNew.new} / {@code WhatsNew.updated} files back and compare. That
+ * cache is gone (its only reader went with gemma-web), so what is left to pin is the query
+ * surface itself: the windows agree with each other, and the cheap count agrees with the full
+ * report.
+ */
 public class WhatsNewServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private WhatsNewService whatsNewService;
 
-    @Value("${gemma.appdata.home}")
-    private String appDataHome;
-
+    /**
+     * The daily window is contained in the weekly one. Holds regardless of what the test DB
+     * happens to contain, including when both are empty.
+     */
     @Test
-    @Disabled("Fails randomly on the CI")
-    public void testGeneratePublicWeeklyReport() {
-        // FIXME: generate some test data because we currently rely on other tests left-overs
-        WhatsNew initialReport = whatsNewService.generateWeeklyReport();
-        assertThat( Paths.get( appDataHome, "WhatsNew", "WhatsNew.new" ) ).exists();
-        assertThat( Paths.get( appDataHome, "WhatsNew", "WhatsNew.updated" ) ).exists();
-        WhatsNew report = whatsNewService.getLatestWeeklyReport();
-        assertThat( report ).isNotNull();
-        assertThat( report.getDate() ).isEqualTo( initialReport.getDate() );
-        assertThat( report.getNewArrayDesigns() )
-                .containsExactlyElementsOf( initialReport.getNewArrayDesigns() );
-        assertThat( report.getUpdatedArrayDesigns() )
-                .containsExactlyElementsOf( initialReport.getUpdatedArrayDesigns() );
-        assertThat( report.getNewExpressionExperiments() )
-                .containsExactlyElementsOf( initialReport.getNewExpressionExperiments() );
-        assertThat( report.getUpdatedExpressionExperiments() )
-                .containsExactlyElementsOf( initialReport.getUpdatedExpressionExperiments() );
-        assertThat( report.getNewEEIdsPerTaxon() ).isEqualTo( initialReport.getNewEEIdsPerTaxon() );
-        assertThat( report.getUpdatedEEIdsPerTaxon() ).isEqualTo( initialReport.getUpdatedEEIdsPerTaxon() );
-        assertThat( report.getEeCountPerTaxon() ).isEqualTo( initialReport.getEeCountPerTaxon() );
+    public void testDailyReportIsContainedInTheWeeklyReport() {
+        WhatsNew daily = whatsNewService.getDailyReport();
+        WhatsNew weekly = whatsNewService.getWeeklyReport();
+
+        assertThat( weekly.getNewExpressionExperiments() )
+                .containsAll( daily.getNewExpressionExperiments() );
+        assertThat( weekly.getNewArrayDesigns() )
+                .containsAll( daily.getNewArrayDesigns() );
+    }
+
+    /**
+     * {@code countNewExpressionExperiments} exists so the daily {@link HomeStats} snapshot can
+     * skip {@code getReport}'s platform / taxon / biomaterial passes. It must not skip anything
+     * that changes the number.
+     */
+    @Test
+    public void testCountAgreesWithTheFullReport() {
+        Date since = new Date( System.currentTimeMillis() - TimeUnit.DAYS.toMillis( 7 ) );
+
+        long counted = whatsNewService.countNewExpressionExperiments( since );
+
+        assertThat( counted )
+                .isEqualTo( whatsNewService.getReport( since ).getNewExpressionExperiments().size() );
+    }
+
+    /**
+     * A window that ended before Gemma existed has nothing in it — guards against the count
+     * silently ignoring its date argument and returning the whole corpus.
+     */
+    @Test
+    public void testEmptyWindowCountsZero() {
+        Date tomorrow = new Date( System.currentTimeMillis() + TimeUnit.DAYS.toMillis( 1 ) );
+
+        assertThat( whatsNewService.countNewExpressionExperiments( tomorrow ) ).isZero();
     }
 }

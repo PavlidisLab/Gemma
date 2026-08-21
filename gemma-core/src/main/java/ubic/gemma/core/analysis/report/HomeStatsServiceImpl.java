@@ -121,6 +121,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      *  finish in the typical refresh window. */
     private static final long ANNOTATION_COUNT_TIMEOUT_MS = 60_000L;
 
+    /** Trailing windows reported in {@link HomeStats#getDatasetsAdded()}, shortest first.
+     *  Several are shipped because dataset loading runs in bursts — see the field's javadoc. */
+    private static final int[] DATASETS_ADDED_WINDOW_DAYS = { 7, 30, 90, 365 };
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
@@ -137,6 +141,21 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
     private SessionFactory sessionFactory;
     @Autowired
     private ManualAuthenticationService manualAuthenticationService;
+    @Autowired
+    private WhatsNewService whatsNewService;
+
+    /**
+     * Category URI for {@code genotype} (EFO). Scopes the gene-perturbation stats
+     * ({@link HomeStats#getGeneManipulatedCount()}, {@link HomeStats#getGeneManipulatedExperimentCount()},
+     * {@link HomeStats#getTopPerturbedGenes()}) to genes annotated as perturbation TARGETS.
+     * <p>
+     * Without it those three counted a gene URI in ANY category, so a cytokine administered to
+     * cells under {@code treatment} inflated its "perturbed" count — TNF read 72 where only 39
+     * experiments actually perturbed it, TGFB1 62 where 31 did. The sanctioned vocabulary agrees
+     * this is the right home: {@code GET /annotations/categories} lists {@code ncbi_gene/} among
+     * genotype's {@code preferredPrefixes}.
+     */
+    private static final String GENOTYPE_CATEGORY_URI = "http://www.ebi.ac.uk/efo/EFO_0000513";
 
     /** URI prefix marking CHEBI chemical-entity terms. Used to narrow the top-level
      *  {@code drugCount} field to actual chemicals (vs the broader {@code treatment}
@@ -331,15 +350,16 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
 
         // Drug count — CHEBI-anchored characteristics only. Narrower than the `treatment`
         // category-label count which captures non-drug treatments too.
-        stats.setDrugCount( countDistinctValueUrisByPrefix( CHEBI_URI_PREFIX ) );
+        stats.setDrugCount( countDistinctValueUrisByPrefix( CHEBI_URI_PREFIX, null ) );
 
         // Manipulated-gene count — distinct gene URIs annotating experiments as
         // perturbation targets. Genes carry the NCBI gene-record namespace, see Gene#NCBI_URI_PREFIX.
-        stats.setGeneManipulatedCount( countDistinctValueUrisByPrefix( Gene.NCBI_URI_PREFIX ) );
+        stats.setGeneManipulatedCount( countDistinctValueUrisByPrefix( Gene.NCBI_URI_PREFIX, GENOTYPE_CATEGORY_URI ) );
 
         // Companion: count of experiments touched by any gene-URI annotation (vs the
         // distinct-genes count above, which counts the genes themselves).
-        stats.setGeneManipulatedExperimentCount( countDistinctExperimentsByCharacteristicUriPrefix( Gene.NCBI_URI_PREFIX ) );
+        stats.setGeneManipulatedExperimentCount(
+                countDistinctExperimentsByCharacteristicUriPrefix( Gene.NCBI_URI_PREFIX, GENOTYPE_CATEGORY_URI ) );
 
         // Total cells across single-cell experiments — sum of BioAssay.numberOfCells for
         // assays attached to EEs with a SingleCellDimension. Reported in millions on the
@@ -380,6 +400,12 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
         // bar chart. Companion to geneManipulatedCount (which is just the total).
         stats.setTopPerturbedGenes( computeTopPerturbedGenes( publicEeIds ) );
 
+        // "Added to Gemma" counts over several trailing windows. This is the cached home for
+        // the WhatsNew counts — the numbers are slow enough to need caching, and this snapshot
+        // is already refreshed daily and persisted, so they ride along rather than getting a
+        // second nightly job and a second on-disk format.
+        stats.setDatasetsAdded( computeDatasetsAdded( stats.getGeneratedAt() ) );
+
         long elapsed = System.currentTimeMillis() - t0;
         log.info( "HomeStats: snapshot recomputed in " + elapsed + " ms — "
                 + stats.getDatasetCount() + " datasets ("
@@ -394,7 +420,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 + stats.getDeaResultSetCount() + " DEA result sets, "
                 + stats.getFactorValuesByCategory().size() + " FV-category rows, "
                 + stats.getDatasetsByAccessionSource().size() + " accession sources, "
-                + stats.getRecentExperiments().size() + " recent" );
+                + stats.getRecentExperiments().size() + " recent, added "
+                + stats.getDatasetsAdded().stream()
+                        .map( w -> w.getCount() + "/" + w.getDays() + "d" )
+                        .collect( Collectors.joining( " " ) ) );
         return stats;
     }
 
@@ -434,13 +463,26 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      * EE-lookup; for a stat tile that's not worth the precision (the public/private
      * partition has a tiny effect on a count like "distinct drugs in Gemma").
      */
-    private long countDistinctValueUrisByPrefix( String uriPrefix ) {
-        Long n = ( Long ) sessionFactory.getCurrentSession()
+    /**
+     * Count distinct {@code valueUri}s under a namespace prefix, optionally restricted to
+     * characteristics carrying a given category.
+     *
+     * @param categoryUri when non-null, only characteristics whose OWN {@code categoryUri} matches
+     *                    are counted. This is a same-row predicate, not "the experiment also has
+     *                    such a category somewhere" — the distinction is what separates a gene
+     *                    perturbed in a study from one merely administered in it.
+     */
+    private long countDistinctValueUrisByPrefix( String uriPrefix, @Nullable String categoryUri ) {
+        org.hibernate.query.Query<?> q = sessionFactory.getCurrentSession()
                 .createQuery( "select count(distinct c.valueUri) from Characteristic c "
-                        + "where c.valueUri like :prefix" )
+                        + "where c.valueUri like :prefix"
+                        + ( categoryUri != null ? " and c.categoryUri = :categoryUri" : "" ) )
                 .setParameter( "prefix", uriPrefix + "%" )
-                .setCacheable( true )
-                .uniqueResult();
+                .setCacheable( true );
+        if ( categoryUri != null ) {
+            q.setParameter( "categoryUri", categoryUri );
+        }
+        Long n = ( Long ) q.uniqueResult();
         return n != null ? n : 0L;
     }
 
@@ -451,14 +493,18 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      * so the count includes tags, sample-level annotations, and factor-value characteristics
      * uniformly. Not ACL-filtered — tile semantics are corpus shape, not anonymous visibility.
      */
-    private long countDistinctExperimentsByCharacteristicUriPrefix( String uriPrefix ) {
-        Number n = ( Number ) sessionFactory.getCurrentSession()
+    private long countDistinctExperimentsByCharacteristicUriPrefix( String uriPrefix, @Nullable String categoryUri ) {
+        org.hibernate.query.Query<?> q = sessionFactory.getCurrentSession()
                 .createNativeQuery( "select count(distinct EXPRESSION_EXPERIMENT_FK) "
                         + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC "
-                        + "where VALUE_URI like :prefix" )
+                        + "where VALUE_URI like :prefix"
+                        + ( categoryUri != null ? " and CATEGORY_URI = :categoryUri" : "" ) )
                 .setParameter( "prefix", uriPrefix + "%" )
-                .setCacheable( true )
-                .uniqueResult();
+                .setCacheable( true );
+        if ( categoryUri != null ) {
+            q.setParameter( "categoryUri", categoryUri );
+        }
+        Number n = ( Number ) q.uniqueResult();
         return n != null ? n.longValue() : 0L;
     }
 
@@ -631,10 +677,16 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                             + "  AND ee2c.VALUE_URI = CONCAT(:prefix, g.NCBI_GENE_ID) "
                             + "LEFT JOIN TAXON t ON g.TAXON_FK = t.ID "
                             + "WHERE ee2c.VALUE_URI LIKE :prefixLike "
+                            // Same-row category predicate: the gene URI must itself be annotated as
+                            // a genotype, not merely co-occur with some genotype elsewhere in the
+                            // experiment. Without it a cytokine applied under `treatment` counted as
+                            // perturbed (TNF 72 vs 39 real).
+                            + "  AND ee2c.CATEGORY_URI = :genotypeUri "
                             + "  AND ee2c.EXPRESSION_EXPERIMENT_FK IN (:eeIds) "
                             + "GROUP BY g.ID, g.OFFICIAL_SYMBOL, t.COMMON_NAME" )
                     .setParameter( "prefix", Gene.NCBI_URI_PREFIX )
                     .setParameter( "prefixLike", Gene.NCBI_URI_PREFIX + "%" )
+                    .setParameter( "genotypeUri", GENOTYPE_CATEGORY_URI )
                     .setParameterList( "eeIds", batch )
                     .setCacheable( true )
                     .list();
@@ -1072,6 +1124,30 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                 .setCacheable( true )
                 .uniqueResult();
         return n != null ? n : 0L;
+    }
+
+    /**
+     * Count public experiments created within each trailing window.
+     * <p>
+     * Windows are measured back from {@code generatedAt} rather than "now" so every count in a
+     * given snapshot shares one origin, and {@link HomeStats.AddedInWindow#getSince()} is the
+     * date the caller can quote verbatim.
+     */
+    private List<HomeStats.AddedInWindow> computeDatasetsAdded( Date generatedAt ) {
+        List<HomeStats.AddedInWindow> out = new ArrayList<>();
+        for ( int days : DATASETS_ADDED_WINDOW_DAYS ) {
+            Date since = new Date( generatedAt.getTime() - TimeUnit.DAYS.toMillis( days ) );
+            try {
+                out.add( new HomeStats.AddedInWindow( days, since,
+                        whatsNewService.countNewExpressionExperiments( since ) ) );
+            } catch ( RuntimeException e ) {
+                // One slow / failed window must not cost the whole snapshot: every other field
+                // here is independent, and the panel renders per-tile.
+                log.warn( "HomeStats: could not count datasets added in the last " + days
+                        + " days; omitting that window", e );
+            }
+        }
+        return out;
     }
 
     private Path snapshotFile() {

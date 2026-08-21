@@ -31,7 +31,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.analysis.report.WhatsNewService;
+import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.scheduler.SecureMethodInvokingJobDetailFactoryBean;
 import ubic.gemma.core.scheduler.SecureQuartzJobBean;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
@@ -57,7 +57,7 @@ public class SchedulerSecurityTest extends BaseIntegrationTest5 {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private WhatsNewService whatsNewService;
+    private ArrayDesignReportService arrayDesignReportService;
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
@@ -97,8 +97,8 @@ public class SchedulerSecurityTest extends BaseIntegrationTest5 {
         String jobName = "job_" + RandomStringUtils.insecure().nextAlphabetic( 10 );
 
         SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.securityContext );
-        jobDetail.setTargetMethod( "generateWeeklyReport" );
-        jobDetail.setTargetObject( whatsNewService ); // access should be ok for GROUP_AGENT.
+        jobDetail.setTargetMethod( "generateArrayDesignReport" );
+        jobDetail.setTargetObject( arrayDesignReportService ); // access should be ok for GROUP_AGENT.
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.

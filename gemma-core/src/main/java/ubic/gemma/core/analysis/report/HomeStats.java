@@ -90,15 +90,19 @@ public class HomeStats {
      *  treatments like radiation exposure or behavioural interventions. */
     private long drugCount;
 
-    /** Distinct genes annotated as manipulation targets across the corpus (characteristics
-     *  whose {@code valueUri} starts with {@link ubic.gemma.model.genome.Gene#NCBI_URI_PREFIX},
-     *  typically under a genotype / genetic-perturbation category). Reflects how many distinct
-     *  genes Gemma has perturbation data for (knockouts, knockdowns, overexpression, etc.). */
+    /** Distinct genes annotated as manipulation targets across the corpus — characteristics whose
+     *  {@code valueUri} starts with {@link ubic.gemma.model.genome.Gene#NCBI_URI_PREFIX} AND whose
+     *  own {@code categoryUri} is {@code genotype}. Reflects how many distinct genes Gemma has
+     *  perturbation data for (knockouts, knockdowns, overexpression, etc.).
+     *  <p>
+     *  The category is enforced on the SAME characteristic, not on the experiment. Until
+     *  2026-08-21 it was not enforced at all and the field counted a gene URI in any category,
+     *  which swept in cytokines and growth factors administered under {@code treatment}. */
     private long geneManipulatedCount;
 
-    /** Companion to {@link #geneManipulatedCount}: number of distinct experiments that carry
-     *  at least one gene-URI annotation. {@link #geneManipulatedCount} counts the genes;
-     *  this counts how many experiments have any gene perturbation at all. */
+    /** Companion to {@link #geneManipulatedCount}: number of distinct experiments carrying at
+     *  least one genotype-category gene-URI annotation. {@link #geneManipulatedCount} counts the
+     *  genes; this counts how many experiments perturbed any gene at all. */
     private long geneManipulatedExperimentCount;
 
     /** Total individual cells measured across all single-cell experiments — sum of
@@ -134,8 +138,14 @@ public class HomeStats {
 
     /**
      * Per-gene ranking of how many public EEs carry that gene as a perturbation-target
-     * annotation. Top 25, sorted descending by {@code numberOfExpressionExperiments}.
-     * Drives the home-page middle-column bar chart of most-studied perturbed genes.
+     * annotation — a gene URI whose own category is {@code genotype}. Top 25, sorted descending
+     * by {@code numberOfExpressionExperiments}. Drives the home-page middle-column bar chart of
+     * most-studied perturbed genes.
+     * <p>
+     * Scoped to genotype since 2026-08-21. Before that it counted the gene URI in any category,
+     * so genes that are both perturbation targets and administered agents read high for the wrong
+     * reason — TNF 72 against 39 real perturbations, TGFB1 62 against 31 — and four cytokines held
+     * top-10 places that belong to Sox2, Mecp2, Pten and Apoe.
      */
     private List<PerturbedGeneStat> topPerturbedGenes = new ArrayList<>();
 
@@ -165,6 +175,41 @@ public class HomeStats {
 
     /** Most-recently curated public experiments, for the scrolling-names widget. */
     private List<RecentExperiment> recentExperiments = new ArrayList<>();
+
+    /**
+     * How many public experiments were added to Gemma over each of several trailing windows,
+     * newest window first. "Added" is the {@code action='C'} audit row — when the dataset was
+     * first loaded — NOT when it was made public; see {@link WhatsNewService} for why the
+     * publication date is not reportable.
+     * <p>
+     * Several windows ship together because loading runs in bursts, so the useful window is not
+     * fixed: on 2026-08-21 the trailing 7-, 30- and 90-day counts were all 0 (the most recent
+     * load was 2026-05-12) while the 365-day count was 1,195. A caller that renders a
+     * "recently added" figure should pick the shortest window whose count is non-zero and label
+     * it with that window's {@link AddedInWindow#since}, rather than hard-coding "this week"
+     * and rendering a permanent zero.
+     */
+    private List<AddedInWindow> datasetsAdded = new ArrayList<>();
+
+    /** Count of public experiments created within one trailing window. */
+    @Data
+    @NoArgsConstructor
+    public static class AddedInWindow {
+        /** Width of the window in days (7, 30, 90, 365). */
+        private int days;
+        /** Resolved start of the window — {@code generatedAt - days}. Carried so a caller can
+         *  label the figure ("1,195 added since 2025-08-21") without recomputing the date
+         *  against a snapshot that may be up to a day old. */
+        private Date since;
+        /** Public experiments whose creation event falls on or after {@link #since}. */
+        private long count;
+
+        public AddedInWindow( int days, Date since, long count ) {
+            this.days = days;
+            this.since = since;
+            this.count = count;
+        }
+    }
 
     @Data
     @NoArgsConstructor

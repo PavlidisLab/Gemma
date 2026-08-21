@@ -34,7 +34,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
@@ -84,7 +83,6 @@ public class SchedulerConfig {
     public SchedulerFactoryBean schedulerFactoryBean(
             @Qualifier("arrayDesignReportTrigger") Trigger arrayDesignReportTrigger,
             @Qualifier("expressionExperimentReportTrigger") Trigger expressionExperimentReportTrigger,
-            @Qualifier("whatsNewTrigger") Trigger whatsNewTrigger,
             @Qualifier("gene2CsUpdateTrigger") Trigger gene2CsUpdateTrigger,
             @Qualifier("batchInfoTrigger") Trigger batchInfoTrigger,
             @Qualifier("ee2cExperimentUpdateTrigger") Trigger ee2cExperimentUpdateTrigger,
@@ -96,7 +94,6 @@ public class SchedulerConfig {
         factory.setTriggers(
                 arrayDesignReportTrigger,
                 expressionExperimentReportTrigger,
-                whatsNewTrigger,
                 gene2CsUpdateTrigger,
                 batchInfoTrigger,
                 ee2cExperimentUpdateTrigger,
@@ -153,15 +150,6 @@ public class SchedulerConfig {
             @Qualifier("groupAgentSecurityContext") SecurityContext securityContext ) {
         return secureMethodCronTrigger( arrayDesignReportService, "generateArrayDesignReport",
                 "0 30 1 1 * ?", securityContext );
-    }
-
-    /** Every day at 00:15. */
-    @Bean(name = "whatsNewTrigger")
-    public CronTriggerFactoryBean whatsNewTrigger(
-            WhatsNewService whatsNewService,
-            @Qualifier("groupAgentSecurityContext") SecurityContext securityContext ) {
-        return secureMethodCronTrigger( whatsNewService, "generateWeeklyReport",
-                "0 15 0 * * ?", securityContext );
     }
 
     /** Every day at 00:40. */

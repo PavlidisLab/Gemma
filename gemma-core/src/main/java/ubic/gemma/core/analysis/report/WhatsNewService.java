@@ -18,14 +18,23 @@
  */
 package ubic.gemma.core.analysis.report;
 
-import org.springframework.security.access.annotation.Secured;
-
-import org.springframework.lang.Nullable;
+import java.util.Date;
 
 /**
  * Creates reports that can be shown on the web pages or in social media feeds.
  * <p>
- * Reports are always generated from an anonymous user's perspective.
+ * Reports are always generated from an anonymous user's perspective, so the counts match
+ * what a logged-out visitor can actually see.
+ * <p>
+ * <b>"New" means created in Gemma</b> — the {@code action='C'} row on the entity's audit
+ * trail, i.e. when the dataset was first loaded. It is deliberately not "made public": the
+ * {@code MakePublicEvent} / {@code DatasetPublishedEvent} types exist but have effectively
+ * never fired (0 occurrences across a 200-dataset / ~5,000-event sample of prod on
+ * 2026-08-21), so there is no publication date to report. Callers that surface these counts
+ * to visitors should label them "added to Gemma" rather than "made public".
+ * <p>
+ * These reports are expensive enough that callers should cache them rather than compute per
+ * request; {@link HomeStats} carries the corpus-wide counts in its daily snapshot.
  *
  * @author paul
  */
@@ -44,15 +53,28 @@ public interface WhatsNewService {
     WhatsNew getWeeklyReport();
 
     /**
-     * Generate and save the report from last week. It can later be retrieved with {@link #getLatestWeeklyReport()}.
+     * Generate the report covering everything that changed since a given date.
+     * <p>
+     * This is the full report: it loads the new and updated experiments and platforms, splits
+     * them by taxon, and counts their biomaterials. Cost scales with the size of the window —
+     * a year-wide window touches most of the corpus. When only the headline count is needed,
+     * use {@link #countNewExpressionExperiments(Date)} instead.
+     *
+     * @param since start of the reporting window
+     * @return new and updated objects since {@code since}, from an anonymous user's perspective
      */
-    @Secured({ "GROUP_AGENT" })
-    WhatsNew generateWeeklyReport();
+    WhatsNew getReport( Date since );
 
     /**
-     * Retrieve the latest weekly report if available.
-     * @return the latest weekly report, or null if unavailable
+     * Count the public experiments first created in Gemma since a given date.
+     * <p>
+     * The cheap counterpart to {@link #getReport(Date)}: it resolves ids through the audit
+     * trail's creation events and applies the same anonymous-user ACL filter, without loading
+     * the associated platforms, taxa or biomaterials.
+     *
+     * @param since start of the counting window
+     * @return the number of experiments an anonymous visitor can see that were created on or
+     *         after {@code since}
      */
-    @Nullable
-    WhatsNew getLatestWeeklyReport();
+    long countNewExpressionExperiments( Date since );
 }
