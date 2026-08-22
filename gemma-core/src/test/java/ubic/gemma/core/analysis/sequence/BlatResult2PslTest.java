@@ -78,9 +78,9 @@ public class BlatResult2PslTest {
         assertThat( lines[1] ).isEqualTo( "browser position chr1:99000-101500" );
         assertThat( lines[2] ).isEqualTo(
                 "track name=\"AFFX_a\" description=\"Gemma BLAT alignment\" visibility=2 useScore=1" );
-        // the 21 PSL columns, in UCSC order
-        assertThat( lines[3].split( " " ) ).containsExactly(
-                "470", "2", "0", "0", "0", "0", "1", "10", "+", "\"AFFX_a\"", "500", "0", "480",
+        // the 21 PSL columns, in UCSC order, TAB-delimited
+        assertThat( lines[3].split( "\t" ) ).containsExactly(
+                "470", "2", "0", "0", "0", "0", "1", "10", "+", "AFFX_a", "500", "0", "480",
                 "chr1", "248956422", "100000", "100500", "2", "200,280,", "0,200,", "100000,100210," );
     }
 
@@ -99,8 +99,8 @@ public class BlatResult2PslTest {
         String[] lines = track.split( "\n" );
         assertThat( lines[1] ).isEqualTo( "browser position chr12:799000-801500" );
         assertThat( lines ).hasSize( 5 ); // provenance, position, track, 2 psl lines
-        assertThat( lines[3] ).startsWith( "480 " );
-        assertThat( lines[4] ).startsWith( "300 " );
+        assertThat( lines[3] ).startsWith( "480\t" );
+        assertThat( lines[4] ).startsWith( "300\t" );
     }
 
     /**
@@ -134,7 +134,7 @@ public class BlatResult2PslTest {
 
         String track = BlatResult2Psl.blatResults2PslTrack( Collections.singleton( br ), HOST, "AFFX_a" );
 
-        assertThat( track.split( "\n" )[3].split( " " )[14] ).isEqualTo( "100501" );
+        assertThat( track.split( "\n" )[3].split( "\t" )[14] ).isEqualTo( "100501" );
     }
 
     /**
@@ -158,5 +158,32 @@ public class BlatResult2PslTest {
         assertThatThrownBy( () -> BlatResult2Psl.blatResults2PslTrack(
                 Collections.emptyList(), HOST, "AFFX_a" ) )
                 .isInstanceOf( IllegalArgumentException.class );
+    }
+
+    /**
+     * The query name went out wrapped in literal double quotes from 2007 until 2026-08-22. UIB
+     * measured what that does in UCSC: the item label in the track's left column renders as
+     * {@code "1007_s_at_collapsed"}, quotes included, which is what a visitor reads. PSL has no
+     * quoting convention -- the quotes were simply part of the field.
+     */
+    @Test
+    public void queryNameIsNotQuoted() {
+        String track = BlatResult2Psl.blatResults2PslTrack(
+                Collections.singleton( blatResult( "1", 100000L, 100500L, 470 ) ), HOST, "AFFX_a" );
+
+        assertThat( track.split( "\n" )[3].split( "\t" )[9] ).isEqualTo( "AFFX_a" );
+        assertThat( track ).doesNotContain( "\"AFFX_a\"\t" );
+    }
+
+    /**
+     * The track line keeps its quotes -- {@code track name="..."} is UCSC's own syntax for that
+     * line, unlike the PSL data rows.
+     */
+    @Test
+    public void trackLineKeepsItsQuotes() {
+        String track = BlatResult2Psl.blatResults2PslTrack(
+                Collections.singleton( blatResult( "1", 100000L, 100500L, 470 ) ), HOST, "AFFX_a" );
+
+        assertThat( track.split( "\n" )[2] ).startsWith( "track name=\"AFFX_a\"" );
     }
 }

@@ -43,6 +43,15 @@ public class BlatResult2Psl {
     private static final int EXTRA_WINDOW = 1000;
 
     /**
+     * PSL is a tab-delimited format. This emitted space-delimited from 2007 until 2026-08-22;
+     * hgTracks accepted it (UIB loaded both a human and a rat track in UCSC and each parsed as
+     * {@code psl} with the right item count), because its custom-track reader splits on any
+     * whitespace. Tabs are used anyway so the output stays valid for the tools that do require
+     * them -- {@code pslToBigPsl}, the Table Browser, track hubs -- none of which were exercised.
+     */
+    private static final char SEP = '\t';
+
+    /**
      * Order alignments best-first, by match count. Used to pick which alignment the {@code browser
      * position} line frames when a track carries several.
      */
@@ -57,33 +66,33 @@ public class BlatResult2Psl {
      */
     private static String blatResult2Psl( BlatResult blatResult ) {
         StringBuilder buf = new StringBuilder();
-        buf.append( blatResult.getMatches() ).append( " " );
-        buf.append( blatResult.getMismatches() ).append( " " );
-        buf.append( blatResult.getRepMatches() ).append( " " );
-        buf.append( blatResult.getNs() ).append( " " );
-        buf.append( blatResult.getQueryGapCount() ).append( " " );
-        buf.append( blatResult.getQueryGapBases() ).append( " " );
-        buf.append( blatResult.getTargetGapCount() ).append( " " );
-        buf.append( blatResult.getTargetGapBases() ).append( " " );
-        buf.append( blatResult.getStrand() ).append( " " );
-        buf.append( "\"" ).append( blatResult.getQuerySequence().getName() ).append( "\" " );
-        buf.append( blatResult.getQuerySequence().getLength() ).append( " " );
-        buf.append( blatResult.getQueryStart() ).append( " " );
-        buf.append( blatResult.getQueryEnd() ).append( " " );
-        buf.append( chromosomeName( blatResult ) ).append( " " );
+        buf.append( blatResult.getMatches() ).append( SEP );
+        buf.append( blatResult.getMismatches() ).append( SEP );
+        buf.append( blatResult.getRepMatches() ).append( SEP );
+        buf.append( blatResult.getNs() ).append( SEP );
+        buf.append( blatResult.getQueryGapCount() ).append( SEP );
+        buf.append( blatResult.getQueryGapBases() ).append( SEP );
+        buf.append( blatResult.getTargetGapCount() ).append( SEP );
+        buf.append( blatResult.getTargetGapBases() ).append( SEP );
+        buf.append( blatResult.getStrand() ).append( SEP );
+        buf.append( blatResult.getQuerySequence().getName() ).append( SEP );
+        buf.append( blatResult.getQuerySequence().getLength() ).append( SEP );
+        buf.append( blatResult.getQueryStart() ).append( SEP );
+        buf.append( blatResult.getQueryEnd() ).append( SEP );
+        buf.append( chromosomeName( blatResult ) ).append( SEP );
         if ( blatResult.getTargetChromosome() != null && blatResult.getTargetChromosome().getSequence() != null
                 && blatResult.getTargetChromosome().getSequence().getLength() != null ) {
-            buf.append( blatResult.getTargetChromosome().getSequence().getLength() ).append( " " );
+            buf.append( blatResult.getTargetChromosome().getSequence().getLength() ).append( SEP );
         } else if ( blatResult.getTargetSequence() != null && blatResult.getTargetSequence().getLength() != null ) {
-            buf.append( blatResult.getTargetSequence().getLength() ).append( " " );
+            buf.append( blatResult.getTargetSequence().getLength() ).append( SEP );
         } else {
-            buf.append( blatResult.getTargetEnd() + 1 ).append( " " );// seems okay as long as more than the target end.
+            buf.append( blatResult.getTargetEnd() + 1 ).append( SEP );// seems okay as long as more than the target end.
         }
-        buf.append( blatResult.getTargetStart() ).append( " " );
-        buf.append( blatResult.getTargetEnd() ).append( " " );
-        buf.append( blatResult.getBlockCount() ).append( " " );
-        buf.append( blatResult.getBlockSizes() ).append( " " );
-        buf.append( blatResult.getQueryStarts() ).append( " " );
+        buf.append( blatResult.getTargetStart() ).append( SEP );
+        buf.append( blatResult.getTargetEnd() ).append( SEP );
+        buf.append( blatResult.getBlockCount() ).append( SEP );
+        buf.append( blatResult.getBlockSizes() ).append( SEP );
+        buf.append( blatResult.getQueryStarts() ).append( SEP );
         buf.append( blatResult.getTargetStarts() );
         buf.append( "\n" );
         return buf.toString();
