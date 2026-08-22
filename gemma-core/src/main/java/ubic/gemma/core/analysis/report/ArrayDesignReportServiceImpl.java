@@ -20,6 +20,7 @@
 package ubic.gemma.core.analysis.report;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -60,7 +61,14 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * shared or mounted from less-trusted storage.
      */
     private static final ObjectInputFilter REPORT_DESERIALIZATION_FILTER = ObjectInputFilter.Config.createFilter(
-            "ubic.gemma.**;java.util.**;java.lang.**;java.time.**;java.math.**;java.sql.**;!*" );
+            // java.net.** is required, not optional: ArrayDesignValueObject.releaseUrl is a
+            // java.net.URL and is populated for every platform carrying a GPL accession, i.e.
+            // nearly all of them. Without it the filter rejects the stream, getSummaryObject
+            // swallows the InvalidClassException and returns null, and every consumer sees "no
+            // report" for a report that is present, readable and correctly written. That failed
+            // silently for as long as nothing read these files; exposing the counts over REST is
+            // what surfaced it.
+            "ubic.gemma.**;java.util.**;java.lang.**;java.net.**;java.time.**;java.math.**;java.sql.**;!*" );
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -77,6 +85,11 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     private static final List<Class<? extends AuditEventType>> eventTypes = Arrays.asList(
             ArrayDesignSequenceUpdateEvent.class, ArrayDesignSequenceAnalysisEvent.class,
             ArrayDesignGeneMappingEvent.class, ArrayDesignRepeatAnalysisEvent.class );
+
+    @Override
+    public String getReportDir() {
+        return appdataHome + File.separatorChar + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR;
+    }
 
     @Override
     public void generateAllArrayDesignReport() {
@@ -224,6 +237,11 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
 
             } catch ( Throwable e ) {
+                // Deliberately broad, but no longer silent: a report that exists and cannot be read
+                // is a different problem from one that was never generated, and the caller cannot
+                // tell them apart from a null return.
+                log.warn( String.format( "Failed to read the cached report for platform %d from %s: %s",
+                        id, f, ExceptionUtils.getRootCauseMessage( e ) ) );
                 return null;
             }
         }

@@ -40,7 +40,9 @@ import java.util.Collection;
  * {@code scheduler} profile, and production nodes run {@code production} without it, so on a
  * production deployment the reports are never written at all. This command fills that gap.
  * <p>
- * With no platform arguments it processes every platform, which is the usual way to run it.
+ * Requires an explicit selection: pass {@code --all} for the whole corpus, or name platforms with
+ * the usual {@code -a} / platform-identifier options. With neither, the base class fails with
+ * "No platforms matched the given options" rather than defaulting to everything.
  *
  * @author paul
  */
@@ -61,6 +63,12 @@ public class ArrayDesignReportCli extends ArrayDesignSequenceManipulatingCli {
 
     @Override
     protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
+        // Announced up front, and loudly. Which directory this lands in depends on
+        // gemma.appdata.home, which is NOT the same for the CLI and for gemma-rest — the CLI runs
+        // on the host, gemma-rest reads a mounted volume. A run that writes to the wrong tree looks
+        // completely successful and produces nothing the API can see.
+        String reportDir = arrayDesignReportService.getReportDir();
+        log.info( String.format( "Output will be written to: %s", reportDir ) );
         int done = 0;
         for ( ArrayDesign ad : arrayDesigns ) {
             try {
@@ -73,7 +81,8 @@ public class ArrayDesignReportCli extends ArrayDesignSequenceManipulatingCli {
                 addErrorObject( ad, e );
             }
         }
-        log.info( String.format( "Regenerated %d of %d platform report(s).", done, arrayDesigns.size() ) );
+        log.info( String.format( "%d of %d platform report(s) written to %s",
+                done, arrayDesigns.size(), reportDir ) );
         // The grand-total summary is a separate file and is what the "all platforms" figures read.
         arrayDesignReportService.generateAllArrayDesignReport();
     }

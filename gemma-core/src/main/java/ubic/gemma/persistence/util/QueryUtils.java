@@ -331,7 +331,31 @@ public class QueryUtils {
     }
 
     public static String escapeLike( String s ) {
-        return s.replaceAll( "[%_\\\\]", "\\\\$0" );
+        return escapeLike( s, '\\' );
+    }
+
+    /**
+     * Escape the SQL {@code LIKE} wildcards in {@code s} using an explicit escape character.
+     * <p>
+     * Both wildcards must be escaped, {@code _} as much as {@code %} — {@code _} matches any single
+     * character, so leaving it raw makes a search for {@code 1007_s_at} quietly match neighbours.
+     * The escape character itself is escaped too, so it is safe for it to occur in the data.
+     * <p>
+     * The caller MUST emit a matching {@code escape} clause. Relying on the backslash default is not
+     * enough: under MySQL's {@code NO_BACKSLASH_ESCAPES} mode a backslash is an ordinary character,
+     * and the escaped pattern then matches nothing at all rather than matching too much — which is
+     * exactly how underscore searches came to return empty results everywhere.
+     */
+    public static String escapeLike( String s, char escapeChar ) {
+        StringBuilder out = new StringBuilder( s.length() + 8 );
+        for ( int i = 0; i < s.length(); i++ ) {
+            char c = s.charAt( i );
+            if ( c == '%' || c == '_' || c == escapeChar ) {
+                out.append( escapeChar );
+            }
+            out.append( c );
+        }
+        return out.toString();
     }
 
     private static <T extends Identifiable> Predicate<T> distinctById() {

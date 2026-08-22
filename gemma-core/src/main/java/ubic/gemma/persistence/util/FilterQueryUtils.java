@@ -18,6 +18,14 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 public class FilterQueryUtils {
 
     /**
+     * Escape character used for {@code like} patterns, paired with an explicit {@code escape} clause.
+     * <p>
+     * Deliberately not a backslash: whether a backslash escapes anything depends on the server's
+     * {@code sql_mode}, and getting that wrong fails in the silent direction (matches nothing).
+     */
+    private static final char LIKE_ESCAPE_CHAR = '~';
+
+    /**
      * Forms an order by clause for a Hibernate query based on given arguments.
      *
      * @param sort the property and direction the query should be ordered by.
@@ -210,6 +218,14 @@ public class FilterQueryUtils {
         } else {
             disjunction
                     .append( ":" ).append( paramName );
+            if ( filter.getOperator() == Filter.Operator.like || filter.getOperator() == Filter.Operator.notLike ) {
+                // Explicit escape character, so the pattern does not depend on the backslash default
+                // being honoured. Under MySQL's NO_BACKSLASH_ESCAPES mode it is not, and an escaped
+                // wildcard silently matches nothing — which is what made every filter containing an
+                // underscore (`name like 1007_s_at`, i.e. most Affymetrix probe names) come back
+                // empty. Must stay in step with the escape character used in addRestrictionParameters.
+                disjunction.append( " escape '" ).append( LIKE_ESCAPE_CHAR ).append( "'" );
+            }
         }
         return disjunction.toString();
     }
@@ -276,7 +292,7 @@ public class FilterQueryUtils {
             //noinspection rawtypes,unchecked
             query.setParameterList( paramName, optimizeParameterList( (Collection) coll ) );
         } else if ( filter.getOperator().equals( Filter.Operator.like ) || filter.getOperator().equals( Filter.Operator.notLike ) ) {
-            query.setParameter( paramName, escapeLike( ( String ) requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
+            query.setParameter( paramName, escapeLike( ( String ) requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the 'like' operator." ), LIKE_ESCAPE_CHAR ) + "%" );
         } else {
             query.setParameter( paramName, filter.getRequiredValue() );
         }
