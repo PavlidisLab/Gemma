@@ -95,6 +95,20 @@ class SearchTaxonBackstopTest {
         assertThat( matches( null, MOUSE ) ).isTrue();
     }
 
+    /**
+     * ?exclude=resultObject strips the very objects the backstop reads a taxon from. That path used to
+     * skip filtering entirely, which is the worst place to skip it: the caller receives bare ids and
+     * cannot see that the species is wrong. The objects are now loaded for the check and stripped
+     * afterwards, so `matchesTaxon` must still be the thing deciding — a null result object reaching
+     * it means the strip happened too early.
+     */
+    @Test
+    void nullResultObjectIsNotSomethingTheBackstopCanJudge() {
+        // if stripping ever moves ahead of the filter, every result looks unjudgeable and survives
+        assertThat( matches( null, MOUSE ) ).isTrue();
+        assertThat( matches( gene( RAT ), MOUSE ) ).isFalse();
+    }
+
     private static GeneValueObject gene( Long taxonId ) {
         GeneValueObject g = new GeneValueObject();
         g.setTaxon( taxonId != null ? new TaxonValueObject( taxonId ) : null );

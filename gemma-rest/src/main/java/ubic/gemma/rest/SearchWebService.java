@@ -149,9 +149,14 @@ public class SearchWebService {
         ubic.gemma.model.genome.Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
 
         // The taxon backstop below discards results, so the search has to be asked for more than the
-        // caller wants or the discards come straight off the response. Widen only when the backstop
-        // will actually run — it needs the result objects to read a taxon from.
-        boolean taxonBackstop = taxon != null && fillResults;
+        // caller wants or the discards come straight off the response.
+        boolean taxonBackstop = taxon != null;
+        // The backstop reads each result's taxon off its value object. When the caller excluded
+        // resultObject we load them anyway and strip them before responding: a search that accepts a
+        // ?taxon and then silently ignores it is worse than a slower one, and this is the path where
+        // ignoring it is invisible (the caller gets bare ids and cannot tell the species is wrong).
+        // Only pays the cost when a taxon was actually supplied.
+        boolean loadObjectsForBackstop = taxonBackstop && !fillResults;
         int searchMaxResults = maxResults;
         if ( taxonBackstop && maxResults > 0 ) {
             searchMaxResults = Math.min( maxResults * TAXON_BACKSTOP_OVERFETCH, MAX_SEARCH_RESULTS );
@@ -186,7 +191,7 @@ public class SearchWebService {
         List<SearchResult<? extends IdentifiableValueObject<?>>> searchResultVos;
 
         // Some result VOs are null for unknown reasons, see https://github.com/PavlidisLab/Gemma/issues/417
-        if ( fillResults ) {
+        if ( fillResults || loadObjectsForBackstop ) {
             searchResultVos = searchService.loadValueObjects( searchResults );
         } else {
             searchResultVos = searchResults.stream()
@@ -206,6 +211,8 @@ public class SearchWebService {
                     // AFTER scoring and BEFORE the caller's limit. Mirrors GeneWebService.searchGenes.
                     .filter( sr -> !taxonBackstop || matchesTaxon( sr.getResultObject(), taxon.getId() ) )
                     .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE ) // results are limited by class, so there might be more results than expected when unraveling everything
+                    // honour ?exclude=resultObject now that the backstop has had what it needed
+                    .map( sr -> loadObjectsForBackstop ? sr.withResultObject( ( IdentifiableValueObject<?> ) null ) : sr )
                     .map( sr -> {
                         String resultUrl;
                         boolean resultUrlExternal;
