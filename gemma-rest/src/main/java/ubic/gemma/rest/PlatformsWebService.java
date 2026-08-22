@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.lang.Nullable;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
+import ubic.gemma.core.analysis.sequence.BlatResult2Psl;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -39,6 +41,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
@@ -75,6 +81,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.rest.util.Responders.paginate;
 import static ubic.gemma.rest.util.Responders.paginateByCursor;
@@ -92,9 +99,13 @@ public class PlatformsWebService {
 
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
     private static final String ERROR_ANNOTATION_FILE_CANNOT_BE_GENERATED = "Annotation file for platform %s is not on disk and this instance cannot generate it: %s";
+    private static final String ERROR_NO_ALIGNMENTS = "Platform element %s on %s has no BLAT alignments that can be placed in the genome browser.";
 
     public static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";
     public static final MediaType TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE = new MediaType( "text", "tab-separated-values", "UTF-8" );
+
+    public static final String TEXT_PLAIN_UTF8 = "text/plain; charset=UTF-8";
+    public static final MediaType TEXT_PLAIN_UTF8_TYPE = new MediaType( "text", "plain", "UTF-8" );
 
     @Autowired
     private GeneService geneService;
@@ -116,6 +127,17 @@ public class PlatformsWebService {
     private AccessDecisionManager accessDecisionManager;
     @Autowired
     private TicketsWebService ticketsWebService;
+    @Autowired
+    private BioSequenceService bioSequenceService;
+    @Autowired
+    private BlatResultService blatResultService;
+
+    /**
+     * Written into the PSL track's provenance comment so a track pasted into UCSC says which Gemma
+     * produced it.
+     */
+    @Value("${gemma.hosturl}")
+    private String hostUrl;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -688,6 +710,79 @@ public class PlatformsWebService {
         ubic.gemma.model.expression.designElement.CompositeSequence cs =
                 probeArgService.getEntityWithPlatform( probeArg, platform );
         return respond( compositeSequenceService.loadValueObjectWithGeneMappingSummary( cs ) );
+    }
+
+    /**
+     * Retrieves the BLAT alignments of a single probe as a UCSC Genome Browser custom track, in
+     * PSL format.
+     * <p>
+     * Replaces the legacy gemma-web {@code BlatResultTrackController} ({@code blatTrack.html?id=}),
+     * which served one alignment at a time and was meant to be fetched BY UCSC, via
+     * {@code hgTracks?hgt.customText=<gemma url>}. That round trip is not available to us: the
+     * deployment does not answer bots, so UCSC's fetcher cannot retrieve the URL. The 2.0 browser
+     * therefore reads this text itself and submits the CONTENT to UCSC (POST {@code hgct_customText}
+     * to {@code hgCustom}) rather than handing UCSC a link back to us.
+     * <p>
+     * The track is keyed on the probe rather than on a BLAT result id on purpose. The
+     * {@code mappingSummary} response carries {@code blatResult.id} values that are not all real
+     * {@code BlatResult} rows -- the {@code AnnotationAssociation} branch of
+     * {@code getGeneMappingSummary} synthesizes a value object holding the BIOSEQUENCE id -- so a
+     * client-supplied id cannot be trusted to address an alignment. Deriving the alignments here
+     * from the probe's biological characteristic avoids that ambiguity entirely.
+     *
+     * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
+     *                    is more efficient. Only platforms that user has access to will be available.
+     * @param probeArg    the name or ID of the platform element whose alignments should be rendered.
+     *                    Note that names containing a forward slash are not accepted.
+     * @param download    when true, serve with an attachment disposition so a browser saves it as a
+     *                    {@code .psl} file instead of rendering it inline.
+     */
+    @GET
+    @Path("/{platform}/elements/{probe}/pslTrack")
+    @Produces(TEXT_PLAIN_UTF8)
+    @Operation(summary = "Retrieve the BLAT alignments of a probe as a UCSC custom track",
+            description = "Returns a UCSC Genome Browser custom track in PSL format covering every BLAT alignment of the probe: a `browser position` line framing the best-scoring alignment, a `track` line, and one PSL data line per alignment. Intended to be POSTed to UCSC's `hgCustom` as `hgct_customText` by the client.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(mediaType = TEXT_PLAIN_UTF8, schema = @Schema(type = "string"))),
+                    @ApiResponse(responseCode = "404", description = "Probe not found on the given platform, or it has no BLAT alignments that can be placed in the genome browser",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response getPlatformElementPslTrack( // Params:
+            @PathParam("platform") PlatformArg<?> platformArg, // Required
+            @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
+    ) {
+        ArrayDesign platform = arrayDesignArgService.getEntity( platformArg );
+        CompositeSequence cs = probeArgService.getEntityWithPlatform( probeArg, platform );
+
+        BioSequence bioSequence = bioSequenceService.findByCompositeSequence( cs );
+        if ( bioSequence == null ) {
+            throw new NotFoundException( String.format( ERROR_NO_ALIGNMENTS, cs.getName(), platform.getShortName() ) );
+        }
+
+        Collection<BlatResult> alignments = blatResultService.thaw( blatResultService.findByBioSequence( bioSequence ) );
+        // an alignment with no target chromosome cannot be placed in the browser; dropping those here
+        // keeps one unplaceable alignment from failing the whole track.
+        List<BlatResult> placeable = alignments.stream()
+                .filter( br -> br.getTargetChromosome() != null && br.getTargetChromosome().getName() != null )
+                .collect( Collectors.toList() );
+        if ( placeable.isEmpty() ) {
+            throw new NotFoundException( String.format( ERROR_NO_ALIGNMENTS, cs.getName(), platform.getShortName() ) );
+        }
+        if ( placeable.size() < alignments.size() ) {
+            log.warn( "Dropped " + ( alignments.size() - placeable.size() ) + " of " + alignments.size()
+                    + " BLAT alignments of " + cs.getName() + " from its PSL track: no target chromosome." );
+        }
+
+        String track = BlatResult2Psl.blatResults2PslTrack( placeable, hostUrl, cs.getName() );
+        String fileName = cs.getName().replaceAll( Pattern.quote( "/" ), "_" ) + ".psl";
+        Response.ResponseBuilder builder = Response.ok( track )
+                .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_PLAIN_UTF8_TYPE );
+        if ( download ) {
+            builder = builder.header( "Content-Disposition", "attachment; filename=\"" + fileName + "\"" );
+        }
+        return builder.build();
     }
 
     /**
