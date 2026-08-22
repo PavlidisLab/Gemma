@@ -38,7 +38,7 @@ public abstract class CompositeSequenceArg<T>
             throw new MalformedArgException( "Composite sequence identifier cannot be null or empty.", null );
         }
         try {
-            return new CompositeSequenceIdArg( Long.parseLong( s.trim() ) );
+            return new CompositeSequenceIdArg( Long.parseLong( s.trim() ), s.trim() );
         } catch ( NumberFormatException e ) {
             return new CompositeSequenceNameArg( s );
         }
