@@ -324,7 +324,14 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         if ( !noDB ) cliArrayDesignAuditService.recordAnnotationBasedGeneMapping( platform, auditMessage );
 
         log.info( "Don't forget to update the annotation files, any old ones will be deleted (unless dry run)" );
-        if ( !noDB ) arrayDesignAnnotationService.deleteExistingFiles( platform );
+        if ( !noDB ) {
+            // A DELETE, so naming the directory matters more here than for a write: against the
+            // wrong tree this is a silent no-op that leaves the real, stale annotation files in
+            // place for gemma-rest to keep serving.
+            log.info( String.format( "Deleting existing annotation files for %s from: %s",
+                    platform.getShortName(), arrayDesignAnnotationService.getAnnotDataDir() ) );
+            arrayDesignAnnotationService.deleteExistingFiles( platform );
+        }
 
         /*
         Delete elements for the platform that are not on the input list. This should probably not be kept here; we'll do it offline.

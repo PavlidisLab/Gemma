@@ -87,6 +87,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
         gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxa ) );
 
         HttpFetcher fetcher = new HttpFetcher();
+        log.info( String.format( "Output will be written to: %s", downloadPath ) );
         fetcher.setLocalBasePath( downloadPath );
 
         Collection<File> files;
