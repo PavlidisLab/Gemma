@@ -129,6 +129,10 @@ public class AdminWebServiceTest {
     @Mock
     private ubic.gemma.core.search.indexer.IndexerService indexerService;
     @Mock
+    private ubic.gemma.rest.util.args.PlatformArgService platformArgService;
+    @Mock
+    private ubic.gemma.core.analysis.report.ArrayDesignReportService arrayDesignReportService;
+    @Mock
     private ubic.gemma.core.ontology.OntologyService ontologyFacade;
 
     private AdminWebService webService;
@@ -146,7 +150,7 @@ public class AdminWebServiceTest {
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
                 Collections.emptyList(), ontologyFacade, dataSource, userManager, annotationSetService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
-                indexerService );
+                indexerService, platformArgService, arrayDesignReportService );
     }
 
     /* ===== /admin/caches ===== */

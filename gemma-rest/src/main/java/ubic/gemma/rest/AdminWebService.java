@@ -55,6 +55,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.rest.util.args.PlatformArgService;
+import ubic.gemma.rest.util.args.PlatformArg;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.core.analysis.report.ArrayDesignReportService;
+import ubic.gemma.core.tasks.maintenance.ArrayDesignReportTaskCommand;
 import ubic.gemma.core.search.indexer.IndexerService;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -168,6 +173,8 @@ public class AdminWebService {
     private final CacheManager cacheManager;
     private final SessionFactory sessionFactory;
     private final TaskRunningService taskRunningService;
+    private final PlatformArgService platformArgService;
+    private final ArrayDesignReportService arrayDesignReportService;
     private final SessionRegistry sessionRegistry;
     private final List<OntologyService> ontologies;
     private final DataSource dataSource;
@@ -264,8 +271,12 @@ public class AdminWebService {
             BlacklistedEntityService blacklistedEntityService,
             ExternalDatabaseReadService externalDatabaseReadService,
             GeoScrapeService geoScrapeService,
-            IndexerService indexerService ) {
+            IndexerService indexerService,
+            PlatformArgService platformArgService,
+            ArrayDesignReportService arrayDesignReportService ) {
         this.cacheManager = cacheManager;
+        this.platformArgService = platformArgService;
+        this.arrayDesignReportService = arrayDesignReportService;
         this.sessionFactory = sessionFactory;
         this.taskRunningService = taskRunningService;
         this.sessionRegistry = sessionRegistry;
@@ -658,6 +669,73 @@ public class AdminWebService {
         return Response.status( Response.Status.ACCEPTED )
                 .location( URI.create( "/tasks/" + jobId ) )
                 .entity( respond( body ) )
+                .build();
+    }
+
+    /* ===== Platform reports ===== */
+
+    /**
+     * Regenerate the cached report for ONE platform, synchronously.
+     * <p>
+     * The report holds the per-platform element / sequence / alignment / gene counts that
+     * {@code GET /platforms} serves as {@code numberOfGenes} and {@code numberOfMappedElements}.
+     * They are never computed per request — counting distinct genes for one large platform measures
+     * ~1.7s against production — so they are read from a file that something has to write. On a
+     * production node nothing does: the Quartz trigger that refreshes them monthly
+     * ({@code SchedulerConfig.arrayDesignReportTrigger}) is gated on the {@code scheduler} profile,
+     * which production does not run.
+     * <p>
+     * Synchronous because a single platform is a couple of seconds and the caller wants the new
+     * numbers back. Use {@code POST /admin/tasks/platform-reports} for the whole corpus.
+     */
+    @POST
+    @Path("/platforms/{platform}/report")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Regenerate the cached report for one platform",
+            description = "Recomputes and rewrites the on-disk report backing `numberOfGenes` / `numberOfMappedElements` for a single platform, and returns the refreshed value object. Synchronous; takes a couple of seconds on a large platform.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No platform matches the supplied identifier",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<ArrayDesignValueObject> regeneratePlatformReport(
+            @PathParam("platform") PlatformArg<?> platformArg ) {
+        ArrayDesign platform = platformArgService.getEntity( platformArg );
+        return respond( arrayDesignReportService.generateArrayDesignReport( platform.getId() ) );
+    }
+
+    /**
+     * Submit an async regeneration of the cached reports for EVERY platform.
+     * <p>
+     * The bulk counterpart of {@link #regeneratePlatformReport}; the corpus-wide run is far too long
+     * to hold a request open. Mirrors the other admin task endpoints: returns 202 with the job id,
+     * poll {@code /tasks/{taskId}}.
+     */
+    @POST
+    @Path("/tasks/platform-reports")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Submit an async regeneration of every platform's cached report",
+            description = "Port of the `updatePlatformReports` CLI. Submits a single async task that rewrites the on-disk report for every platform plus the all-platforms summary. Returns 202 with the submitted task ID; poll `/tasks/{taskId}` for progress.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "202",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+            })
+    public Response submitPlatformReportsRegeneration() {
+        String jobId = taskRunningService.submitTaskCommand( new ArrayDesignReportTaskCommand( true ) );
+        return Response.status( Response.Status.ACCEPTED )
+                .location( URI.create( "/tasks/" + jobId ) )
+                .entity( respond( Collections.singletonMap( "submittedJobId", jobId ) ) )
                 .build();
     }
 

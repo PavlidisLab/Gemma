@@ -98,6 +98,7 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
 
+
     /**
      * Obtain all the genes associated to the platform organized by corresponding design elements.
      */

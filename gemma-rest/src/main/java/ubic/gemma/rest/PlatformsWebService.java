@@ -28,10 +28,14 @@ import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.lang.Nullable;
+import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -39,6 +43,15 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.SearchTimeoutException;
+import ubic.gemma.core.search.ParseSearchException;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
@@ -56,7 +69,11 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import static ubic.gemma.rest.util.Responders.paginate;
@@ -82,11 +99,15 @@ public class PlatformsWebService {
     @Autowired
     private GeneService geneService;
     @Autowired
+    private SearchService searchService;
+    @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private ArrayDesignAnnotationService annotationFileService;
+    @Autowired
+    private ArrayDesignReportService arrayDesignReportService;
     @Autowired
     private PlatformArgService arrayDesignArgService;
     @Autowired
@@ -115,7 +136,8 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort, // Optional, default +id
-            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Opt-in: populate `numberOfGenes` (distinct genes the platform's elements map to) and `numberOfMappedElements` (elements with at least one gene mapping). Off by default — the counts aggregate the whole gene-to-element mapping for each platform on the page, which is wasted work for callers that do not render them.") @QueryParam("withGeneCounts") @DefaultValue("false") boolean withGeneCounts
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter );
         if ( cursorArg != null ) {
@@ -125,10 +147,18 @@ public class PlatformsWebService {
             // restricts cursors to single-component id sorts until the index audit lands.
             CursorPage<ArrayDesignValueObject> page = arrayDesignArgService.getPlatformsByCursor(
                     filters, cursorArg.getValue(), limit.getValue() );
+            if ( withGeneCounts ) {
+                hydrateGeneCounts( page );
+            }
             return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" } );
         }
-        return paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
-                arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> response =
+                paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
+                        arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        if ( withGeneCounts ) {
+            hydrateGeneCounts( response.getData() );
+        }
+        return response;
     }
 
     @GET
@@ -175,7 +205,8 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort, // Optional, default +id
-            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "Opt-in: populate `numberOfGenes` (distinct genes the platform's elements map to) and `numberOfMappedElements` (elements with at least one gene mapping).") @QueryParam("withGeneCounts") @DefaultValue("false") boolean withGeneCounts
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter )
                 .and( arrayDesignArgService.getFilters( platformsArg ) );
@@ -189,10 +220,18 @@ public class PlatformsWebService {
             // platform identifiers that the offset-mode result would be.
             CursorPage<ArrayDesignValueObject> page = arrayDesignArgService.getPlatformsByCursor(
                     filters, cursorArg.getValue(), limit.getValue() );
+            if ( withGeneCounts ) {
+                hydrateGeneCounts( page );
+            }
             return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" } );
         }
-        return paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
-                arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        FilteredAndPaginatedResponseDataObject<ArrayDesignValueObject> response =
+                paginate( arrayDesignService::loadValueObjects, filters, new String[] { "id" },
+                        arrayDesignArgService.getSort( sort ), offset.getValue(), limit.getValue() );
+        if ( withGeneCounts ) {
+            hydrateGeneCounts( response.getData() );
+        }
+        return response;
     }
 
     @GET
@@ -308,8 +347,18 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
-            @Parameter(description = "Opt-in: populate `sequence` (raw probe sequence string) and `sequenceLength` on each element. Off by default to keep the listing response small — sequences are 25-300bp per probe and would inflate a 22k-element page by ~1 MB.") @QueryParam("withSequence") @DefaultValue("false") boolean withSequence
+            @Parameter(description = "Opt-in: populate `sequence` (raw probe sequence string) and `sequenceLength` on each element. Off by default to keep the listing response small — sequences are 25-300bp per probe and would inflate a 22k-element page by ~1 MB.") @QueryParam("withSequence") @DefaultValue("false") boolean withSequence,
+            @Parameter(description = "Opt-in: populate `genes` (compact `{id, officialSymbol, ncbiId}` per mapped gene) on each element. Off by default; costs one extra batch query per page. An element that maps to no gene gets `[]`, so an empty list is distinguishable from the field not being requested.") @QueryParam("withGenes") @DefaultValue("false") boolean withGenes,
+            @Parameter(description = "Restrict to the elements mapping to this gene. Free text, resolved through gene search — an official symbol, an alias/synonym (`p53` finds TP53), or an NCBI id all work. Scoped to the platform's own taxon, so no taxon argument is needed. A query matching no gene returns an empty page.") @QueryParam("gene") QueryArg geneQuery,
+            @QueryParam("filter") @DefaultValue("") FilterArg<CompositeSequence> filter // Optional, default no restriction
     ) {
+        // Resolve ?gene= before touching pagination: the resolution is a search, and a query that
+        // matches no gene on this platform's taxon has to yield an empty page rather than silently
+        // degrading to the unfiltered listing.
+        Collection<Long> geneIds = geneQuery != null
+                ? resolveGeneIdsForPlatform( platformArg, geneQuery )
+                : null;
+        Filters userFilters = probeArgService.getFilters( filter );
         if ( cursorArg != null ) {
             // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
             // not considered user-supplied (parallels GET /platforms step 1c). In cursor mode we
@@ -318,11 +367,178 @@ public class PlatformsWebService {
             // The path-derived arrayDesign.id filter is composed into the Filters inside
             // getElementsByCursor so the platform scope is enforced identically in both modes.
             CursorPage<CompositeSequenceValueObject> page = arrayDesignArgService.getElementsByCursor(
-                    platformArg, cursorArg.getValue(), limit.getValue(), withSequence );
-            return paginateByCursor( page, new String[] { "id" } );
+                    platformArg, userFilters, geneIds, cursorArg.getValue(), limit.getValue(), withSequence, withGenes );
+            return new FilteredAndCursorPaginatedResponseDataObject<>( page, userFilters, new String[] { "id" } );
         }
-        return paginate( arrayDesignArgService.getElements( platformArg, limit.getValue(), offset.getValue(), withSequence ), new String[] { "id" } );
+        return paginate( arrayDesignArgService.getElements( platformArg, userFilters, geneIds, limit.getValue(), offset.getValue(), withSequence, withGenes ), userFilters, new String[] { "id" } );
     }
+
+    /**
+     * Populate {@code numberOfGenes} + {@code numberOfMappedElements} on a page of platform VOs.
+     * <p>
+     * These counts are NOT computed live. Measured against production, counting distinct genes and
+     * mapped elements for the single largest platform takes ~1.7&nbsp;s warm (21,288 genes over
+     * 114,159 elements) — past the point where a per-request computation is acceptable, and a page
+     * of twenty platforms multiplies it. The counts also change only when a platform's sequence or
+     * gene mappings are recomputed, which is why {@code ArrayDesignReportService} keeps them in a
+     * disk report: written by the pipeline whenever mappings change, and by a monthly scheduled job
+     * ({@code SchedulerConfig.arrayDesignReportTrigger}).
+     * <p>
+     * Two sources, in order:
+     * <ol>
+     * <li>Gene-list platforms (how RNA-seq data is represented — the "elements" ARE genes) need no
+     * report at all: the element count IS both counts, and that is one indexed count on
+     * {@code COMPOSITE_SEQUENCE}.</li>
+     * <li>Microarray platforms come from the disk report. Absent report means the counts stay null
+     * — deliberately, rather than falling back to the slow query. Null here means "not computed
+     * yet", which the report timestamp lets a client distinguish from a real zero.</li>
+     * </ol>
+     */
+    private void hydrateGeneCounts( Iterable<ArrayDesignValueObject> vos ) {
+        List<ArrayDesignValueObject> pending = new ArrayList<>();
+        for ( ArrayDesignValueObject vo : vos ) {
+            if ( vo.getId() == null ) {
+                continue;
+            }
+            if ( isGeneList( vo ) ) {
+                // Elements are genes one-for-one, so a single indexed count answers both, with no
+                // dependence on a report having been generated.
+                ArrayDesign ad = arrayDesignService.load( vo.getId() );
+                if ( ad != null ) {
+                    long elements = arrayDesignService.countCompositeSequences( ad );
+                    vo.setNumberOfGenes( elements );
+                    vo.setNumberOfMappedElements( elements );
+                    continue;
+                }
+            }
+            pending.add( vo );
+        }
+        if ( pending.isEmpty() ) {
+            return;
+        }
+        // fillInValueObjects reads one serialized report per platform and leaves the VO untouched
+        // when none exists, so platforms without a report keep null counts.
+        arrayDesignReportService.fillInValueObjects( pending );
+        for ( ArrayDesignValueObject vo : pending ) {
+            vo.setNumberOfGenes( parseReportCount( vo.getNumGenes() ) );
+            vo.setNumberOfMappedElements( parseReportCount( vo.getNumProbesToGenes() ) );
+            vo.setGeneCountsLastUpdated( vo.getDateCached() );
+        }
+    }
+
+    /**
+     * True for the platform kinds whose elements are genes rather than probes — {@code GENELIST} is
+     * what processed RNA-seq lands on, and {@code SEQUENCING} is its upstream sibling.
+     */
+    private static boolean isGeneList( ArrayDesignValueObject vo ) {
+        String tt = vo.getTechnologyType();
+        return TechnologyType.GENELIST.name().equals( tt ) || TechnologyType.SEQUENCING.name().equals( tt );
+    }
+
+    /**
+     * The report stores its counts as strings. A malformed or absent entry yields null rather than
+     * a zero, so "no report" never renders as "this platform maps to no genes".
+     */
+    @Nullable
+    private static Long parseReportCount( @Nullable String value ) {
+        if ( value == null ) {
+            return null;
+        }
+        try {
+            return Long.parseLong( value.trim() );
+        } catch ( NumberFormatException e ) {
+            return null;
+        }
+    }
+
+    /**
+     * Resolve a free-text {@code ?gene=} query to the gene ids an element listing should be
+     * restricted to, scoped to the taxon of {@code platformArg}.
+     * <p>
+     * Deliberately goes through {@link SearchService} rather than
+     * {@code GeneService.findByOfficialSymbol}: the visitor typing into the platform page's element
+     * box types what they know a gene as, which is frequently an alias or an older symbol
+     * ({@code p53} for TP53, {@code Cx43} for GJA1) that an exact-symbol lookup misses entirely.
+     * The platform fixes the taxon, so no taxon argument is needed and cross-species orthologs are
+     * excluded up front.
+     * <p>
+     * Returns the top-ranked gene plus any that tie it on both score and match kind — a genuine
+     * ambiguity, e.g. one alias carried by two genes. Deliberately NOT the whole ranked list: the
+     * page is ordered by element id, not by gene relevance, so admitting weaker matches would
+     * scatter their probes through the results with nothing to indicate they ranked lower.
+     * Pair with {@code withGenes=true} to show which gene each returned element matched.
+     */
+    private Collection<Long> resolveGeneIdsForPlatform( PlatformArg<?> platformArg, QueryArg geneQuery ) {
+        ArrayDesign platform = arrayDesignArgService.getEntity( platformArg );
+        String query = geneQuery.getValue().trim();
+        SearchSettings settings = SearchSettings.builder()
+                .query( query )
+                .taxonConstraint( platform.getPrimaryTaxon() )
+                .resultTypes( Collections.singleton( Gene.class ) )
+                // Wide candidate window, then rank, then cut — same reasoning as
+                // GeneWebService.searchGenes: cutting before the taxon filter and the re-rank would
+                // let an arbitrary ortholog decide the answer.
+                .maxResults( GENE_SEARCH_CANDIDATE_LIMIT )
+                .fillResults( true )
+                .build();
+        List<SearchResult<?>> raw;
+        try {
+            raw = new ArrayList<>( searchService.search( settings, new SearchContext( null, null ) ).toList() );
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid gene query: " + e.getQuery(), e );
+        } catch ( SearchTimeoutException e ) {
+            throw new ServiceUnavailableException( e.getMessage(), 30L, e.getCause() );
+        } catch ( SearchException e ) {
+            throw new InternalServerErrorException( e );
+        }
+        raw.sort( GeneWebService.searchRankingComparator( query.toLowerCase( Locale.ROOT ) ) );
+        Long wantTaxonId = platform.getPrimaryTaxon() != null ? platform.getPrimaryTaxon().getId() : null;
+        List<Long> ids = new ArrayList<>();
+        Double topScore = null;
+        Object topMatchKind = null;
+        for ( SearchResult<?> sr : raw ) {
+            Object o = sr.getResultObject();
+            Long geneId;
+            Long taxonId;
+            if ( o instanceof GeneValueObject ) {
+                GeneValueObject vo = ( GeneValueObject ) o;
+                geneId = vo.getId();
+                taxonId = vo.getTaxon() != null ? vo.getTaxon().getId() : null;
+            } else if ( o instanceof Gene ) {
+                Gene g = ( Gene ) o;
+                geneId = g.getId();
+                taxonId = g.getTaxon() != null ? g.getTaxon().getId() : null;
+            } else {
+                // SearchResults with a null resultObject carry no identity to filter or key on.
+                continue;
+            }
+            if ( geneId == null ) {
+                continue;
+            }
+            // Backstop the taxon constraint here too: SearchService aggregates across sources and
+            // not all of them honour SearchSettings.taxonConstraint (see GeneWebService.searchGenes).
+            if ( wantTaxonId != null && !wantTaxonId.equals( taxonId ) ) {
+                continue;
+            }
+            if ( topScore == null ) {
+                topScore = sr.getScore();
+                topMatchKind = sr.getMatchKind();
+            } else if ( sr.getScore() != topScore.doubleValue()
+                    || !java.util.Objects.equals( topMatchKind, sr.getMatchKind() ) ) {
+                break;
+            }
+            ids.add( geneId );
+        }
+        return ids;
+    }
+
+    /**
+     * Candidate window requested from the search service when resolving {@code ?gene=}, before the
+     * rank and the taxon backstop narrow it to the winning gene. Matches
+     * {@code GeneWebService.SEARCH_CANDIDATE_LIMIT} — only ids and scores are materialized at this
+     * width.
+     */
+    private static final int GENE_SEARCH_CANDIDATE_LIMIT = 500;
 
     /**
      * Retrieves composite sequences (elements) of the given platform.
@@ -359,7 +575,8 @@ public class PlatformsWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
-            @Parameter(description = "Opt-in: populate `sequence` and `sequenceLength` on each element. Useful when looking up a small probe set explicitly — for a curator inspecting a single probe row, the sequence is a one-row fetch.") @QueryParam("withSequence") @DefaultValue("false") boolean withSequence
+            @Parameter(description = "Opt-in: populate `sequence` and `sequenceLength` on each element. Useful when looking up a small probe set explicitly — for a curator inspecting a single probe row, the sequence is a one-row fetch.") @QueryParam("withSequence") @DefaultValue("false") boolean withSequence,
+            @Parameter(description = "Opt-in: populate `genes` (compact `{id, officialSymbol, ncbiId}` per mapped gene) on each element. An element that maps to no gene gets `[]`.") @QueryParam("withGenes") @DefaultValue("false") boolean withGenes
     ) {
         if ( cursorArg != null ) {
             // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
@@ -370,18 +587,16 @@ public class PlatformsWebService {
             // composed into the Filters inside getElementsByCursor (via CompositeSequenceArrayArg
             // .getPlatformFilter()) so the scope is enforced identically in both modes.
             CursorPage<CompositeSequenceValueObject> page = arrayDesignArgService.getElementsByCursor(
-                    platformArg, probesArg, cursorArg.getValue(), limit.getValue(), withSequence );
+                    platformArg, probesArg, cursorArg.getValue(), limit.getValue(), withSequence, withGenes );
             // Filters are computed inside getElementsByCursor; re-compute here purely for the
             // echoed `filter` field on the response wrapper (matches the offset variant).
-            probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
-            Filters filters = Filters.by( probesArg.getPlatformFilter() );
+            Filters filters = arrayDesignArgService.getElementFilters( platformArg, probesArg );
             return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" } );
         }
         // Use the Filtered* paginate overload so the response surface keeps the echoed `filter`
         // field (matching the cursor-mode FilteredAndCursorPaginatedResponseDataObject).
-        probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
-        Filters filters = Filters.by( probesArg.getPlatformFilter() );
-        return paginate( arrayDesignArgService.getElements( platformArg, probesArg, limit.getValue(), offset.getValue(), withSequence ), filters, new String[] { "id" } );
+        Filters filters = arrayDesignArgService.getElementFilters( platformArg, probesArg );
+        return paginate( arrayDesignArgService.getElements( platformArg, probesArg, limit.getValue(), offset.getValue(), withSequence, withGenes ), filters, new String[] { "id" } );
     }
 
     /**

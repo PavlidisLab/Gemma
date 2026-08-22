@@ -32,6 +32,7 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
@@ -89,6 +90,17 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
         @Bean
         public PlatformArgService platformArgService() {
             return mockFilteringService( PlatformArgService.class, ArrayDesign.class );
+        }
+
+        /**
+         * Needed since {@code GET /platforms/{platform}/elements} gained a {@code ?filter=}
+         * argument: {@code CustomModelResolver.resolveAvailableProperties} looks up an
+         * {@link EntityArgService} per {@code FilterArg<T>} element type to enumerate the
+         * filterable properties for the spec, and throws when none is registered.
+         */
+        @Bean
+        public CompositeSequenceArgService compositeSequenceArgService() {
+            return mockFilteringService( CompositeSequenceArgService.class, CompositeSequence.class );
         }
 
         @Bean

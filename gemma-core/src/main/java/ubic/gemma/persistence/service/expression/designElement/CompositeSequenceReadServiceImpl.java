@@ -21,6 +21,7 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -29,7 +30,9 @@ import ubic.gemma.persistence.util.Slice;
 import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -196,5 +199,17 @@ public class CompositeSequenceReadServiceImpl implements CompositeSequenceReadSe
     @Transactional(readOnly = true)
     public Map<Long, CompositeSequenceDao.BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds ) {
         return this.compositeSequenceDao.getSequenceData( compositeSequenceIds );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, List<GeneReferenceValueObject>> getGeneData( Collection<Long> compositeSequenceIds ) {
+        return this.compositeSequenceDao.getGeneData( compositeSequenceIds );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<Long> findIdsByGeneIds( Collection<Long> geneIds, Long arrayDesignId ) {
+        return this.compositeSequenceDao.findIdsByGeneIds( geneIds, arrayDesignId );
     }
 }

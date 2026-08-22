@@ -53,6 +53,8 @@ class AdminWebServiceOntologyRefreshTest {
     @Mock private TaxonArgService taxonArgService;
     @Mock private BlacklistedEntityService blacklistedEntityService;
     @Mock private ExternalDatabaseReadService externalDatabaseReadService;
+    @Mock private ubic.gemma.rest.util.args.PlatformArgService platformArgService;
+    @Mock private ubic.gemma.core.analysis.report.ArrayDesignReportService arrayDesignReportService;
     @Mock private GeoScrapeService geoScrapeService;
     @Mock private IndexerService indexerService;
 
@@ -69,7 +71,7 @@ class AdminWebServiceOntologyRefreshTest {
         service = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
                 List.of( chebi, mondo ), ontologyFacade, dataSource, userManager, annotationSetService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
-                indexerService );
+                indexerService, platformArgService, arrayDesignReportService );
     }
 
     @Test
@@ -106,7 +108,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, List.of( clo ), ontologyFacade, dataSource, userManager, annotationSetService,
                 ticketService, taxonArgService, blacklistedEntityService, externalDatabaseReadService,
-                geoScrapeService, indexerService );
+                geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         for ( String alias : new String[]{ "CLO", "clo", "cellLineOntology", "CellLineOntologyService" } ) {
             assertThat( svc.refreshOntology( alias, false ).getStatus() ).isEqualTo( 202 );
@@ -180,7 +182,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
                 annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
-                externalDatabaseReadService, geoScrapeService, indexerService );
+                externalDatabaseReadService, geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
                 .isInstanceOf( ServiceUnavailableException.class );
@@ -195,7 +197,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
                 annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
-                externalDatabaseReadService, geoScrapeService, indexerService );
+                externalDatabaseReadService, geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
                 .isInstanceOf( ClientErrorException.class )
@@ -212,7 +214,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
                 annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
-                externalDatabaseReadService, geoScrapeService, indexerService );
+                externalDatabaseReadService, geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         Response resp = svc.rebuildOntologySlim( "CHEBI" );
 
@@ -229,7 +231,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
                 annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
-                externalDatabaseReadService, geoScrapeService, indexerService );
+                externalDatabaseReadService, geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         for ( String alias : new String[]{ "CHEBI", "chebi", "ChebiOntologyService" } ) {
             assertThat( svc.rebuildOntologySlim( alias ).getStatus() ).isEqualTo( 202 );
@@ -303,7 +305,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService emptyService = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, Collections.emptyList(), ontologyFacade, dataSource, userManager, annotationSetService,
                 ticketService, taxonArgService, blacklistedEntityService, externalDatabaseReadService,
-                geoScrapeService, indexerService );
+                geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         assertThatThrownBy( () -> emptyService.refreshOntology( "CHEBI", false ) )
                 .isInstanceOf( NotFoundException.class );

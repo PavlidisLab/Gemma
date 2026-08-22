@@ -36,6 +36,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
@@ -846,5 +847,61 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
             out.put( id, new CompositeSequenceDao.BioSequenceLite( seq, len ) );
         }
         return out;
+    }
+
+    @Override
+    public Map<Long, List<GeneReferenceValueObject>> getGeneData( Collection<Long> compositeSequenceIds ) {
+        if ( compositeSequenceIds == null || compositeSequenceIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // Column projection off GENE2CS, not an entity query: a 50-row element page renders three
+        // gene fields per row, so hydrating Gene entities (and their LAZY taxon / alias / product
+        // edges) to read three columns would be the expensive way to answer a cheap question.
+        // Batched because the caller's page size is user-controlled and MySQL's IN-list has to
+        // stay bounded; 2048 matches the batch width getGenes(Collection) already uses.
+        //language=MySQL
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select GENE2CS.CS as CS, gene.ID as GENE_ID, "
+                        + "gene.OFFICIAL_SYMBOL as OFFICIAL_SYMBOL, gene.NCBI_GENE_ID as NCBI_GENE_ID "
+                        + "from GENE2CS join CHROMOSOME_FEATURE gene on gene.ID = GENE2CS.GENE "
+                        + "where GENE2CS.CS in (:cs) "
+                        + "group by GENE2CS.CS, gene.ID" );
+        Map<Long, List<GeneReferenceValueObject>> out = new java.util.HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( query, "cs", compositeSequenceIds, 2048 )
+                .forEach( row -> {
+                    Long csId = ( ( Number ) row[0] ).longValue();
+                    Long geneId = row[1] != null ? ( ( Number ) row[1] ).longValue() : null;
+                    String symbol = ( String ) row[2];
+                    Integer ncbiId = row[3] != null ? ( ( Number ) row[3] ).intValue() : null;
+                    out.computeIfAbsent( csId, k -> new ArrayList<>() )
+                            .add( new GeneReferenceValueObject( geneId, symbol, ncbiId ) );
+                } );
+        // Stable order within a probe so a page render doesn't reshuffle between requests; the
+        // native query's group-by gives no ordering guarantee of its own.
+        for ( List<GeneReferenceValueObject> genes : out.values() ) {
+            genes.sort( Comparator.comparing( GeneReferenceValueObject::getOfficialSymbol,
+                            Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                    .thenComparing( GeneReferenceValueObject::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        }
+        return out;
+    }
+
+    @Override
+    public Set<Long> findIdsByGeneIds( Collection<Long> geneIds, Long arrayDesignId ) {
+        if ( geneIds == null || geneIds.isEmpty() || arrayDesignId == null ) {
+            return Collections.emptySet();
+        }
+        // GENE2CS carries (AD, GENE) as a composite index — gene2csgeneadindex — so this is an
+        // index-only seek per gene with no table joins at all. Deliberately NOT expressed through
+        // CS_BY_GENE_GENE2CS_QUERY: that select joins COMPOSITE_SEQUENCE, CHROMOSOME_FEATURE and
+        // ARRAY_DESIGN to project entities, none of which is needed to answer "which probe ids".
+        //language=MySQL
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select distinct GENE2CS.CS from GENE2CS "
+                        + "where GENE2CS.AD = :ad and GENE2CS.GENE in (:genes)" )
+                .setParameter( "ad", arrayDesignId );
+        return QueryUtils.<Long, Object>streamByBatch( query, "genes", geneIds, 2048 )
+                .map( id -> ( ( Number ) id ).longValue() )
+                .collect( Collectors.toCollection( LinkedHashSet::new ) );
     }
 }

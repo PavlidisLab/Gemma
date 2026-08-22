@@ -316,6 +316,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
         return readService.countGenes( arrayDesign, useGene2Cs );
     }
 
+
     @Override
     public ArrayDesign thaw( ArrayDesign arrayDesign ) {
         return readService.thaw( arrayDesign );
