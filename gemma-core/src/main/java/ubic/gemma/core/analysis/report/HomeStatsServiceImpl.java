@@ -671,7 +671,16 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
                     .createNativeQuery( "SELECT g.OFFICIAL_SYMBOL AS sym, "
                             + "       t.COMMON_NAME AS tax, "
                             + "       COUNT(DISTINCT ee2c.EXPRESSION_EXPERIMENT_FK) AS cnt "
-                            + "FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC ee2c "
+                            // FORCE INDEX is not a micro-optimization. The CATEGORY_URI equality below
+                            // hands the optimizer a single-value match on the LEADING column of
+                            // EE2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE, which it prefers over a
+                            // VALUE_URI range scan — but it cannot reach VALUE_URI inside that composite
+                            // without also constraining CATEGORY (column 2), so it degenerates into
+                            // scanning every genotype row, the largest annotation category. That took the
+                            // startup refresh from seconds to >12 minutes without finishing (2026-08-21).
+                            // VALUE_URI is the selective predicate (~13k gene-URI rows corpus-wide): drive
+                            // off it and let CATEGORY_URI filter that small set.
+                            + "FROM EXPRESSION_EXPERIMENT2CHARACTERISTIC ee2c FORCE INDEX (EE2C_VALUE_URI_VALUE) "
                             + "INNER JOIN CHROMOSOME_FEATURE g "
                             + "  ON g.class = 'Gene' "
                             + "  AND ee2c.VALUE_URI = CONCAT(:prefix, g.NCBI_GENE_ID) "
