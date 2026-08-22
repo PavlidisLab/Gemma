@@ -24,6 +24,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
@@ -162,6 +163,10 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      *  category-label, which also captures radiation, behavioural interventions, etc.).
      *  Also drives the {@code other_chemical} catchall in {@code treatmentSubcategories}. */
     private static final String CHEBI_URI_PREFIX = "http://purl.obolibrary.org/obo/CHEBI_";
+
+    /** Bucket whose membership is seeded from {@link BaselineSelection}, the codebase's own
+     *  definition of a control condition, instead of being restated in the JSON spec. */
+    private static final String CONTROL_BUCKET_KEY = "control";
 
     /** Classpath default location for the treatment-buckets spec — see
      *  {@link TreatmentBucketsConfig} and {@code treatment-buckets.json} in the same package. */
@@ -817,6 +822,21 @@ public class HomeStatsServiceImpl implements HomeStatsService, InitializingBean 
      *  and constructing sub-bucket accumulators. */
     private BucketAccum buildAccum( TreatmentBucketsConfig.Bucket spec ) {
         Set<String> subtreeUris = expandSubtreeUris( spec );
+        if ( CONTROL_BUCKET_KEY.equals( spec.getKey() ) ) {
+            // Seed the control bucket from BaselineSelection rather than restating its URIs here.
+            // That class is where Gemma already decides what a control condition is, and its javadoc
+            // is explicit: "Exposed rather than copied so there is one list." Its list is broader than
+            // the two OBI roles the spec carried, so terms like EFO_0001461 `control` and EFO_0005168
+            // `wild type genotype` were falling through to the `other` catchall and rendering on the
+            // home page as though they were treatments of interest.
+            //
+            // These are not dropped, only reclassified: the control bucket is group=control, which the
+            // frontend clusters with vehicles and strips before charting. Anything genuinely
+            // pharmacological still matches an earlier bucket first — the control bucket is last, so
+            // e.g. phosphate-buffered saline stays under `vehicle`.
+            subtreeUris = new HashSet<>( subtreeUris );
+            subtreeUris.addAll( BaselineSelection.getControlGroupUris() );
+        }
         BucketAccum accum = new BucketAccum( spec, subtreeUris );
         if ( spec.getSubBuckets() != null && !spec.getSubBuckets().isEmpty() ) {
             List<BucketAccum> children = new ArrayList<>();
