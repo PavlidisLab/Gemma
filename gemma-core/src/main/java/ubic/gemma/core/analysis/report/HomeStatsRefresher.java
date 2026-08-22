@@ -130,15 +130,15 @@ public class HomeStatsRefresher {
         if ( ontologyServices == null || ontologyServices.isEmpty() ) {
             return;
         }
-        long loading = countLoadingOntologies();
-        if ( loading == 0 ) {
+        long unready = countUnreadyOntologies();
+        if ( unready == 0 ) {
             return; // everything already warm — compute immediately
         }
         log.info( "HomeStats: waiting up to " + ( ontologyWarmupTimeoutMs / 1000 )
-                + "s for " + loading + " ontology service(s) to finish loading before the startup snapshot" );
+                + "s for " + unready + " ontology service(s) to finish loading before the startup snapshot" );
         long t0 = System.currentTimeMillis();
         long deadline = t0 + ontologyWarmupTimeoutMs;
-        while ( System.currentTimeMillis() < deadline && countLoadingOntologies() > 0 ) {
+        while ( System.currentTimeMillis() < deadline && countUnreadyOntologies() > 0 ) {
             try {
                 Thread.sleep( 2000 );
             } catch ( InterruptedException e ) {
@@ -147,26 +147,44 @@ public class HomeStatsRefresher {
             }
         }
         long waited = ( System.currentTimeMillis() - t0 ) / 1000;
-        long stillLoading = countLoadingOntologies();
-        if ( stillLoading > 0 ) {
-            log.warn( "HomeStats: proceeding with startup snapshot after " + waited + "s — " + stillLoading
-                    + " ontology service(s) still loading; ontology-derived buckets may be undercounted "
+        long stillUnready = countUnreadyOntologies();
+        if ( stillUnready > 0 ) {
+            log.warn( "HomeStats: proceeding with startup snapshot after " + waited + "s — " + stillUnready
+                    + " ontology service(s) still not loaded; ontology-derived buckets may be undercounted "
                     + "until the daily refresh" );
         } else {
             log.info( "HomeStats: ontology services warmed in " + waited + "s; computing startup snapshot" );
         }
     }
 
-    /** Count enabled ontology services whose background initialization thread is still running. */
-    private long countLoadingOntologies() {
+    /**
+     * Count enabled ontology services that are not yet usable.
+     * <p>
+     * Readiness is {@link OntologyService#isOntologyLoaded()}, NOT whether the initialization thread is
+     * alive. Those differ in exactly the case this wait exists for: on a cold container the init threads
+     * have not been spawned when this runs, so a liveness check counts zero, concludes "everything is
+     * already warm", and computes immediately against ontologies that are not loaded. That is what
+     * happened on frink on 2026-08-21 — the snapshot logged "parent ... not loaded in OntologyService"
+     * for most CHEBI buckets and no "waiting up to" line at all, leaving treatmentSubcategories
+     * undercounted with terms falling through to the catchalls. Liveness answers "is it working right
+     * now"; this wait needs "can I use it yet".
+     * <p>
+     * A cancelled initialization is treated as ready-as-it-will-ever-be, so an ontology that has given up
+     * cannot hold the snapshot hostage for the whole timeout.
+     * <p>
+     * Waiting costs nothing user-visible: {@code GET /stats/home} serves the previously persisted
+     * snapshot throughout, so the trade is a later-but-correct recompute against an immediate-but-wrong
+     * one.
+     */
+    private long countUnreadyOntologies() {
         long n = 0;
         for ( OntologyService o : ontologyServices ) {
             try {
-                if ( o.isEnabled() && o.isInitializationThreadAlive() ) {
+                if ( o.isEnabled() && !o.isOntologyLoaded() && !o.isInitializationThreadCancelled() ) {
                     n++;
                 }
             } catch ( RuntimeException ignored ) {
-                // a bean that throws from isEnabled()/isInitializationThreadAlive() can't be waited on
+                // a bean that throws from these can't be waited on
             }
         }
         return n;
