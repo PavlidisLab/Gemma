@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.quartz.CronTriggerFactoryBean;
 import org.springframework.scheduling.quartz.JobDetailFactoryBean;
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
@@ -62,16 +61,16 @@ import java.util.Map;
  * to the legacy XML behavior; this migration is intentionally a like-for-like port and does
  * not attempt to repair dead wiring.
  * <p>
- * {@link EnableScheduling} is enabled to preserve {@code <task:annotation-driven/>}
- * semantics, even though the comment in the legacy XML noted Gemma deliberately avoids
- * {@code @Scheduled} / {@code @Async} for security-context reasons. Keeping the annotation
- * on means any future {@code @Scheduled} methods (e.g., in CLI tools) still wire up.
+ * Annotation-driven scheduling ({@code @Scheduled}) is NOT enabled here — it moved to
+ * {@link AnnotationDrivenSchedulingConfig}, which also covers the {@code production} profile.
+ * Gating it on {@code scheduler} meant every {@code @Scheduled} method was dormant on
+ * production nodes, which run {@code production} without {@code scheduler}. This class is now
+ * only about the Quartz triggers.
  *
  * @author keshav (original XML)
  */
 @Configuration
 @Profile(EnvironmentProfiles.SCHEDULER)
-@EnableScheduling
 public class SchedulerConfig {
 
     /**

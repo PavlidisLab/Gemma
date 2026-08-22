@@ -23,6 +23,7 @@ import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.ontology.providers.OntologyService;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -33,9 +34,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * server context — REST, dev, scheduler — regardless of whether
  * {@code @EnableScheduling} is active (it is skipped under the
  * {@link ubic.gemma.core.context.EnvironmentProfiles#CLI} profile, which has no
- * homepage to warm). {@code SchedulerConfig} is profile-gated to
- * {@link ubic.gemma.core.context.EnvironmentProfiles#SCHEDULER}, so a {@code @Scheduled}
- * method would never fire on a local-dev container. The lifecycle event always fires.
+ * homepage to warm). {@code @Scheduled} now fires on production nodes too (see
+ * {@code AnnotationDrivenSchedulingConfig}), but not under {@code dev} or {@code test}, so the
+ * lifecycle event remains the only trigger there.
  * It runs the refresh in a background thread so Spring startup isn't blocked by the
  * minute-or-two cold-cache aggregation pass.
  * <p>
@@ -75,6 +76,14 @@ public class HomeStatsRefresher {
     @Value("${gemma.homeStats.ontologyWarmup.timeout:900000}")
     private long ontologyWarmupTimeoutMs;
 
+    /**
+     * How old the persisted snapshot may be before a restart recomputes it. Restarts within this
+     * window reuse what is on disk and cost nothing; the daily cron does the routine refreshing.
+     * Default 7 days.
+     */
+    @Value("${gemma.homeStats.startupRefresh.maxAgeDays:7}")
+    private int startupRefreshMaxAgeDays;
+
     /** Guard against re-entry — multiple {@code ContextRefreshedEvent}s fire over a
      *  context's lifetime (each child context, refresh-by-actuator, etc.). Only the
      *  first matters for the startup pass. */
@@ -104,6 +113,21 @@ public class HomeStatsRefresher {
         }
         if ( !startupRefreshArmed.compareAndSet( true, false ) ) {
             return;
+        }
+        HomeStats cached = homeStatsService.getCached();
+        if ( cached != null && cached.getGeneratedAt() != null ) {
+            long ageMs = System.currentTimeMillis() - cached.getGeneratedAt().getTime();
+            long maxAgeMs = TimeUnit.DAYS.toMillis( startupRefreshMaxAgeDays );
+            if ( ageMs < maxAgeMs ) {
+                log.info( "HomeStats: snapshot from " + cached.getGeneratedAt() + " is "
+                        + TimeUnit.MILLISECONDS.toHours( ageMs ) + "h old (< " + startupRefreshMaxAgeDays
+                        + "d); skipping startup refresh, the daily cron will update it" );
+                return;
+            }
+            log.info( "HomeStats: snapshot from " + cached.getGeneratedAt() + " is older than "
+                    + startupRefreshMaxAgeDays + "d — recomputing at startup" );
+        } else {
+            log.info( "HomeStats: no usable snapshot on disk — recomputing at startup" );
         }
         log.info( "HomeStats: startup refresh — recomputing in background" );
         Thread t = new Thread( () -> {
