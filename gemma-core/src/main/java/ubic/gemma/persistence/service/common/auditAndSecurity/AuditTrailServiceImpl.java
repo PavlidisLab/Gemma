@@ -127,9 +127,16 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         AuditTrail trail = ensureInSession( auditable.getAuditTrail() );
         auditable.setAuditTrail( trail );
         AuditEvent auditEvent = createAuditEvent( auditEventType, note, detail, payloadJson, performedDate );
-        // If object is curatable, update curation details
-        if ( ( auditable instanceof Curatable ) && updateCurationDetails ) {
-            curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
+        // If object is curatable, update curation details.
+        // Unproxy first: Curatable is introduced at ExpressionExperiment, below Investigation and
+        // BioAssaySet, so a proxy typed to either supertype does NOT satisfy this test even once
+        // initialized -- the proxy class is generated from the DECLARED type and never gains a
+        // subclass's interfaces. @AuditedConditional methods declaring an Investigation parameter
+        // (AnnotationSetServiceImpl.attach, WorkflowServiceImpl.advance) reach here with exactly
+        // that, so the audit row was written while curation details were silently left stale.
+        Auditable target = ( Auditable ) Hibernate.unproxy( auditable );
+        if ( ( target instanceof Curatable ) && updateCurationDetails ) {
+            curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) target, auditEvent );
         }
         // AuditTrail.addEvent appends to the bag AND repoints the denormalised
         // AuditTrail.lastEvent pointer under (date desc, id desc) ordering —
