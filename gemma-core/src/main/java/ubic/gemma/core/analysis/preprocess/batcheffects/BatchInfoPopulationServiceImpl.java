@@ -400,7 +400,12 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * Remove an existing batch factor, if it exists. This is really only relevant in a 'force' situation.
+     * Remove every existing batch factor, if any. This is really only relevant in a 'force' situation.
+     * <p>
+     * All of them are removed, not just the first: a design that already carries more than one batch
+     * factor would otherwise keep the extras and end up with two after the fresh one is created. As of
+     * 2026-08-22 prod holds 24 such designs (18 with two batch factors, 6 with three), so the
+     * more-than-one case is real rather than defensive.
      *
      * @param ee ee
      */
@@ -412,26 +417,29 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             return;
         }
 
-        ExperimentalFactor toRemove = null;
+        // collect first, mutate after: remove() takes the factor out of ed.getExperimentalFactors(),
+        // which is the collection being walked here.
+        List<ExperimentalFactor> toRemove = new ArrayList<>();
 
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
 
             if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
-                toRemove = ef;
-                break;
-                /*
-                 * FIXME handle the case where we somehow have two or more.
-                 */
+                toRemove.add( ef );
             }
         }
 
-        if ( toRemove == null ) {
+        if ( toRemove.isEmpty() ) {
             return;
         }
 
-        BatchInfoPopulationServiceImpl.log.info( "Removing existing batch factor: " + toRemove );
+        if ( toRemove.size() > 1 ) {
+            BatchInfoPopulationServiceImpl.log.warn( ee + " has " + toRemove.size()
+                    + " batch factors; removing all of them." );
+        }
+
+        BatchInfoPopulationServiceImpl.log.info( "Removing existing batch factor(s): " + toRemove );
         experimentalFactorService.remove( toRemove );
-        ee.getExperimentalDesign().getExperimentalFactors().remove( toRemove );
+        ee.getExperimentalDesign().getExperimentalFactors().removeAll( toRemove );
         this.expressionExperimentService.update( ee );
     }
 
