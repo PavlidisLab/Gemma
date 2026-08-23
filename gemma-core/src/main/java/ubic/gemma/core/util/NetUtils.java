@@ -113,6 +113,26 @@ public class NetUtils {
         if ( !success ) {
             throw new IOException( "Failed to complete download of " + seekFile );
         }
+
+        /*
+         * Verify what actually landed on disk. retrieveFile reporting success does not mean the
+         * bytes are right: transfers have delivered both short files and files LONGER than the
+         * remote (a run of already-written bytes replayed mid-stream). Without this check the wrong
+         * file is accepted, cached, and only fails much later in whatever reads it -- a corrupt
+         * GEO _RAW.tar surfaces as "Invalid byte <n> at offset 0 ... len=8" from the tar reader,
+         * which reads like a bad archive rather than a bad transfer. Delete the local copy so the
+         * caller's retry re-fetches instead of reusing it, and so the size check above cannot
+         * later mistake it for a complete download.
+         */
+        long actualSize = outputFile.length();
+        if ( actualSize != expectedSize ) {
+            if ( !outputFile.delete() ) {
+                log.warn( "Could not remove the incomplete download at " + outputFile );
+            }
+            throw new IOException( String.format(
+                    "Download of %s produced %d bytes, expected %d; removed the local copy.",
+                    seekFile, actualSize, expectedSize ) );
+        }
         return success;
     }
 
