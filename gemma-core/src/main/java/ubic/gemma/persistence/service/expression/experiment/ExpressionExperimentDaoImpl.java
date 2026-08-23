@@ -240,17 +240,17 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public void evictBioAssaysCache( ExpressionExperiment ee ) {
-        getSessionFactory().getCache().evictCollectionData( getEntityName() + ".bioAssays", ee.getId() );
+        getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".bioAssays", ee.getId() );
     }
 
     @Override
     public void evictOtherPartsCache( ExpressionExperiment ee ) {
-        getSessionFactory().getCache().evictCollectionData( getEntityName() + ".otherParts", ee.getId() );
+        getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".otherParts", ee.getId() );
     }
 
     @Override
     public void evictQuantitationTypesCache( ExpressionExperiment ee ) {
-        getSessionFactory().getCache().evictCollectionData( getEntityName() + ".quantitationTypes", ee.getId() );
+        getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".quantitationTypes", ee.getId() );
     }
 
     @Override
