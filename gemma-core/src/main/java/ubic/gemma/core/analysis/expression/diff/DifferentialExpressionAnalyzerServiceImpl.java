@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.expression.diff;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -582,7 +583,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
 
-        BioAssaySet experimentAnalyzed = copyMe.getExperimentAnalyzed();
+        // unproxy before the tests below: a subset reached through getExperimentAnalyzed() arrives as a
+        // BioAssaySet proxy, matches neither ee nor `instanceof ExpressionExperimentSubSet`, and lands in
+        // the else -- so redoing a subset analysis reports "Cannot redo an analysis for one experiment
+        // if the analysis is for another" about its own subset.
+        BioAssaySet experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( copyMe.getExperimentAnalyzed() );
         assert experimentAnalyzed != null;
         if ( experimentAnalyzed.equals( ee ) ) {
             results = analysisSelectionAndExecutionService.analyze( ee, config );

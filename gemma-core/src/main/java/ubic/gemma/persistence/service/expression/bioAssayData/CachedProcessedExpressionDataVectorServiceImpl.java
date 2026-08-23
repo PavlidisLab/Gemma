@@ -628,6 +628,10 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
     @Nullable
     private Collection<DoubleVectorValueObject> sliceSubSet( BioAssaySet bas, @Nullable Collection<DoubleVectorValueObject> obs ) {
+        // unproxy before the test: a subset arriving as a BioAssaySet proxy is an instance of neither
+        // subclass, so it would take the else branch and hand back the source experiment's full set of
+        // vectors unsliced -- the wrong data, silently, rather than an exception.
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
         if ( bas instanceof ExpressionExperimentSubSet ) {
             return sliceSubSet( ( ExpressionExperimentSubSet ) bas, obs );
         } else {
@@ -734,15 +738,13 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         return m.getOrDefault( bas, Collections.emptyList() );
     }
 
+    /**
+     * Delegates to {@link CommonQueries#getExperiment(BioAssaySet)}, which was a byte-identical copy of
+     * what used to live here. Keeping one body means the unproxy that copy needed cannot be applied to
+     * only one of them.
+     */
     private ExpressionExperiment getExperiment( BioAssaySet bas ) {
-        ExpressionExperiment e;
-        if ( bas instanceof ExpressionExperiment ) {
-            e = ( ExpressionExperiment ) bas;
-        } else if ( bas instanceof ExpressionExperimentSubSet ) {
-            e = ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
-        } else {
-            throw new UnsupportedOperationException( "Couldn't handle a " + bas.getClass() );
-        }
+        ExpressionExperiment e = CommonQueries.getExperiment( bas );
         assert e != null;
         return e;
     }

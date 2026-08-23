@@ -23,6 +23,7 @@ import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.lang.Nullable;
@@ -607,7 +608,11 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         /*
          * We need to check this just in the subset of samples actually used.
          */
-        BioAssaySet experimentAnalyzed = rs.getAnalysis().getExperimentAnalyzed();
+        // unproxy before the test: getExperimentAnalyzed() is mapped against the abstract BioAssaySet, so
+        // a subset arrives as a proxy that is an instance of neither subclass. It would then take the
+        // else branch and count the factor's levels over the whole experiment instead of over the
+        // samples the subset actually uses -- a meta-analysis admitted or rejected on the wrong count.
+        BioAssaySet experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( rs.getAnalysis().getExperimentAnalyzed() );
         assert experimentAnalyzed != null;
         if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
 

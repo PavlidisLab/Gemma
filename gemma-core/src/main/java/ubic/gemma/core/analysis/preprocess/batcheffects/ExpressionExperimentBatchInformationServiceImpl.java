@@ -2,6 +2,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -158,6 +159,11 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public boolean hasSignificantBatchConfound( BioAssaySet bas ) {
+        // ExpressionDataFileHelperService.getAnalysis passes analysis.getExperimentAnalyzed() straight in
+        // here, and that association is mapped against the abstract BioAssaySet, so it arrives as a proxy
+        // matching neither branch -- "Unsupported BioAssaySet type: ...$HibernateProxy" while writing the
+        // diffex result files.
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
         if ( bas instanceof ExpressionExperiment ) {
             return hasSignificantBatchConfound( ( ExpressionExperiment ) bas );
         }
