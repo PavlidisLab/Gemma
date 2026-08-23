@@ -21,6 +21,7 @@ package ubic.gemma.persistence.util;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.type.StandardBasicTypes;
@@ -103,7 +104,24 @@ public class CommonQueries {
         return bioAssaySets.stream().map( CommonQueries::getExperiment ).collect( IdentifiableUtils.toIdentifiableSet() );
     }
 
-    private static ExpressionExperiment getExperiment( @MayBeUninitialized BioAssaySet bas ) {
+    /**
+     * Resolve a {@link BioAssaySet} to the {@link ExpressionExperiment} that owns its data: itself if
+     * it is one, its source experiment if it is a subset.
+     * <p>
+     * The argument is unproxied first. An association mapped against the abstract {@link BioAssaySet}
+     * -- {@code SingleExperimentAnalysis.experimentAnalyzed} is the common one -- hands back a
+     * {@code BioAssaySet$HibernateProxy}, which is an instance of neither concrete subclass and used to
+     * fall through to the throw below. Same remedy as {@code ExpressionDataFileUtils
+     * .formatExperimentAnalyzedFilename} and {@code DifferentialExpressionAnalysisDaoImpl
+     * .getSourceExperiment}.
+     * <p>
+     * Public because {@code CachedProcessedExpressionDataVectorServiceImpl} carried a byte-identical
+     * copy of this method; it now delegates here so the unproxy cannot be forgotten in one of the two.
+     *
+     * @throws UnsupportedOperationException if {@code bas} is neither an experiment nor a subset
+     */
+    public static ExpressionExperiment getExperiment( @MayBeUninitialized BioAssaySet bas ) {
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
         if ( bas instanceof ExpressionExperiment ) {
             return ( ExpressionExperiment ) bas;
         } else if ( bas instanceof ExpressionExperimentSubSet ) {

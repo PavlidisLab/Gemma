@@ -12,13 +12,21 @@
 package ubic.gemma.persistence.util;
 
 import org.hibernate.Session;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.junit.jupiter.api.Test;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 import java.util.Collections;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * Native-SQL coverage gap from NATIVE_SQL_COVERAGE_AUDIT_2026_05_25.md
@@ -79,5 +87,103 @@ public class CommonQueriesTest {
         assertThat( CommonQueries.filterProbesByPlatform( Collections.singletonList( 42L ),
                 Collections.emptyList(), session ) ).isEmpty();
         verifyNoInteractions( session );
+    }
+
+    /*
+     * getExperiment is the shared BioAssaySet -> ExpressionExperiment resolver; the vector service used
+     * to carry its own copy. Its callers reach it through associations mapped against the abstract
+     * BioAssaySet, so what arrives is a BioAssaySet proxy: an instance of neither concrete subclass,
+     * which fell through to "Couldn't handle a ...$HibernateProxy".
+     */
+
+    private static ExpressionExperiment ee( Long id ) {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( id );
+        ee.setShortName( "GSE" + id );
+        return ee;
+    }
+
+    /**
+     * See {@code ExpressionDataFileUtilsTest.LazyProxy} — a real class rather than a Mockito mock,
+     * because {@code Hibernate.unproxy} goes through {@code asHibernateProxy()} (a default method
+     * returning {@code this}) which a mock stubs to {@code null}, letting an unresolved proxy through
+     * and passing against the unfixed code.
+     */
+    private static class LazyProxy extends BioAssaySet implements HibernateProxy {
+
+        private final LazyInitializer li;
+
+        private LazyProxy( BioAssaySet target ) {
+            this.li = mock( LazyInitializer.class );
+            when( li.getImplementation() ).thenReturn( target );
+        }
+
+        @Override
+        public LazyInitializer getHibernateLazyInitializer() {
+            return li;
+        }
+
+        @Override
+        public Object writeReplace() {
+            return this;
+        }
+
+        @Override
+        public boolean equals( Object obj ) {
+            return this == obj;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode( this );
+        }
+
+        @Override
+        public Set<BioAssay> getBioAssays() {
+            throw new UnsupportedOperationException( "Nothing should reach through this stand-in." );
+        }
+
+        @Override
+        public void setBioAssays( Set<BioAssay> bioAssays ) {
+            throw new UnsupportedOperationException( "Nothing should reach through this stand-in." );
+        }
+    }
+
+    @Test
+    public void testGetExperimentOfInitializedExperiment() {
+        ExpressionExperiment ee = ee( 1L );
+        assertThat( CommonQueries.getExperiment( ee ) ).isSameAs( ee );
+    }
+
+    @Test
+    public void testGetExperimentOfLazyProxiedExperiment() {
+        ExpressionExperiment ee = ee( 1L );
+        BioAssaySet proxy = new LazyProxy( ee );
+        // guard: the proxy really is opaque, otherwise this test proves nothing
+        assertThat( proxy ).isNotInstanceOf( ExpressionExperiment.class );
+
+        assertThat( CommonQueries.getExperiment( proxy ) ).isSameAs( ee );
+    }
+
+    @Test
+    public void testGetExperimentOfInitializedSubsetReturnsItsSource() {
+        ExpressionExperiment source = ee( 1L );
+        ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+        subset.setId( 7L );
+        subset.setSourceExperiment( source );
+
+        assertThat( CommonQueries.getExperiment( subset ) ).isSameAs( source );
+    }
+
+    @Test
+    public void testGetExperimentOfLazyProxiedSubsetReturnsItsSource() {
+        ExpressionExperiment source = ee( 1L );
+        ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+        subset.setId( 7L );
+        subset.setSourceExperiment( source );
+        BioAssaySet proxy = new LazyProxy( subset );
+        assertThat( proxy ).isNotInstanceOf( ExpressionExperimentSubSet.class );
+
+        assertThat( CommonQueries.getExperiment( proxy ) ).isSameAs( source );
     }
 }
