@@ -102,6 +102,7 @@ import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 import static ubic.gemma.persistence.util.Thaws.thawBibliographicReference;
+import static ubic.gemma.persistence.util.Thaws.thawCurationDetails;
 import static ubic.gemma.persistence.util.Thaws.thawDatabaseEntry;
 
 /**
@@ -2820,7 +2821,7 @@ public class ExpressionExperimentDaoImpl
         }
 
         Hibernate.initialize( expressionExperiment.getGeeq() );
-        Hibernate.initialize( expressionExperiment.getCurationDetails() );
+        thawCurationDetails( expressionExperiment );
 
         Hibernate.initialize( expressionExperiment.getOtherParts() );
 
