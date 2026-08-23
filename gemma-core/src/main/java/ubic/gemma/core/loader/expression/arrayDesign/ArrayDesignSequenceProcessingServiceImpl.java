@@ -169,7 +169,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             // these composite sequences are just use
             newCompositeSequence.setArrayDesign( arrayDesign );
             BioSequence collapsed = SequenceManipulation.collapse( apr.get( newCompositeSequence ) );
-            String sequenceName = newCompositeSequence.getName() + "_collapsed";
+            String sequenceName = newCompositeSequence.getName() + SequenceManipulation.COLLAPSED_NAME_SUFFIX;
             collapsed.setName( sequenceName );
             collapsed.setType( SequenceType.AFFY_COLLAPSED );
             collapsed.setPolymerType( PolymerType.DNA );

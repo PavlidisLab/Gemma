@@ -186,4 +186,48 @@ public class BlatResult2PslTest {
 
         assertThat( track.split( "\n" )[2] ).startsWith( "track name=\"AFFX_a\"" );
     }
+
+    /**
+     * Gemma names the collapsed Affymetrix BioSequence {@code <probe>_collapsed} and UCSC renders
+     * the PSL query name as the track's visible item label, so the suffix reached the visitor:
+     * UIB measured the label reading {@code "1007_s_at_collapsed"} in the browser.
+     */
+    @Test
+    public void collapsedSuffixIsStrippedFromTheVisibleQueryName() {
+        BlatResult br = blatResult( "1", 100000L, 100500L, 470 );
+        br.getQuerySequence().setName( "1007_s_at" + SequenceManipulation.COLLAPSED_NAME_SUFFIX );
+
+        String track = BlatResult2Psl.blatResults2PslTrack( Collections.singleton( br ), HOST, null );
+
+        assertThat( track.split( "\n" )[3].split( "\t" )[9] ).isEqualTo( "1007_s_at" );
+        // the track name defaults off the same value, so it must not disagree with the item label
+        assertThat( track.split( "\n" )[2] ).startsWith( "track name=\"1007_s_at\"" );
+    }
+
+    /**
+     * Only one trailing occurrence goes, so a probe genuinely carrying the suffix in its own name
+     * is not truncated past it.
+     */
+    @Test
+    public void onlyOneTrailingCollapsedSuffixIsStripped() {
+        BlatResult br = blatResult( "1", 100000L, 100500L, 470 );
+        br.getQuerySequence().setName( "foo_collapsed_collapsed" );
+
+        String track = BlatResult2Psl.blatResults2PslTrack( Collections.singleton( br ), HOST, "t" );
+
+        assertThat( track.split( "\n" )[3].split( "\t" )[9] ).isEqualTo( "foo_collapsed" );
+    }
+
+    /**
+     * A name that merely contains the suffix mid-string is untouched.
+     */
+    @Test
+    public void suffixIsOnlyStrippedAtTheEnd() {
+        BlatResult br = blatResult( "1", 100000L, 100500L, 470 );
+        br.getQuerySequence().setName( "a_collapsed_probe" );
+
+        String track = BlatResult2Psl.blatResults2PslTrack( Collections.singleton( br ), HOST, "t" );
+
+        assertThat( track.split( "\n" )[3].split( "\t" )[9] ).isEqualTo( "a_collapsed_probe" );
+    }
 }
