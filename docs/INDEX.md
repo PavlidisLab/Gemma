@@ -37,7 +37,7 @@ Total: 151 docs.
 - [`WORKFLOW_GROUPS_RECCE.md`](recce/WORKFLOW_GROUPS_RECCE.md) — Workflow Groups CRUD + `/datasets/{id}/groups` — Reconnaissance
 - [`WORKFLOW_STATE_TRACKS_RECCE.md`](recce/WORKFLOW_STATE_TRACKS_RECCE.md) — Workflow state: the curation/analysis fork — proposal
 
-## Audits — `docs/audit/` (30)
+## Audits — `docs/audit/` (31)
 
 - [`ASPECTJ_DEEPER_AUDIT.md`](audit/ASPECTJ_DEEPER_AUDIT.md) — AspectJ Deeper Audit (Phase 3, post-`ASPECTJ_EHCACHE_AUDIT`)
 - [`ASPECTJ_EHCACHE_AUDIT.md`](audit/ASPECTJ_EHCACHE_AUDIT.md) — AspectJ + ehcache + JCache audit (Phase 3 infra)
@@ -57,6 +57,7 @@ Total: 151 docs.
 - [`HIBERNATE_TYPE_AUDIT.md`](audit/HIBERNATE_TYPE_AUDIT.md) — Hibernate 6 `@Type` / UserType audit
 - [`HIKARICP_AUDIT.md`](audit/HIKARICP_AUDIT.md) — HikariCP audit + modernization
 - [`HQL_SQL_AUDIT.md`](audit/HQL_SQL_AUDIT.md) — HQL / native SQL audit — gemma-core
+- [`LAZY_INITIALIZATION_AUDIT.md`](audit/LAZY_INITIALIZATION_AUDIT.md) — proxy-blind `instanceof`, lazy collections in flush listeners, and VOs built across two transactions: the three shapes behind the 2026-08-23 `makeProcessedData` failures
 - [`LISTENABLEFUTURE_AUDIT.md`](audit/LISTENABLEFUTURE_AUDIT.md) — ListenableFuture Audit (Phase 3 Spring 6+ Modernization)
 - [`LOGGING_AUDIT.md`](audit/LOGGING_AUDIT.md) — Logging stack audit — Phase 3 Spring 6+ infrastructure modernization
 - [`LOMBOK_AUDIT.md`](audit/LOMBOK_AUDIT.md) — Lombok Audit — Phase 3 Spring 6+ Modernization Recce
