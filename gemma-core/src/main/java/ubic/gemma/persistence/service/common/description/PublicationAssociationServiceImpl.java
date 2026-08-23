@@ -13,6 +13,7 @@ package ubic.gemma.persistence.service.common.description;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
@@ -373,13 +374,20 @@ public class PublicationAssociationServiceImpl implements PublicationAssociation
         if ( investigation == null ) {
             return "an unknown experiment";
         }
+        // Investigation is the mapped root of the hierarchy, and both associations that hold one --
+        // PublicationAssociation.investigation and AnnotationSet.investigation -- are
+        // @ManyToOne(LAZY), so a caller that reached the experiment through either hands us an
+        // Investigation$HibernateProxy. That is an instance of no subclass, so the test below would
+        // fall through and every conflict message would say "experiment id=27929" where the reader
+        // expects "GSE227854".
+        Investigation resolved = ( Investigation ) Hibernate.unproxy( investigation );
         // Short name lives on ExpressionExperiment, not on Investigation, and it is the only label a
         // reader of these messages recognises ("GSE227854", not "id=27929").
-        if ( investigation instanceof ExpressionExperiment
-                && ( ( ExpressionExperiment ) investigation ).getShortName() != null ) {
-            return ( ( ExpressionExperiment ) investigation ).getShortName() + " (id=" + investigation.getId() + ")";
+        if ( resolved instanceof ExpressionExperiment
+                && ( ( ExpressionExperiment ) resolved ).getShortName() != null ) {
+            return ( ( ExpressionExperiment ) resolved ).getShortName() + " (id=" + resolved.getId() + ")";
         }
-        return "experiment id=" + investigation.getId();
+        return "experiment id=" + resolved.getId();
     }
 
     private String describe( @Nullable BibliographicReference ref ) {
