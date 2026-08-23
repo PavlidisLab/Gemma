@@ -40,15 +40,15 @@ public class CurationDetailsValueObject extends IdentifiableValueObject<Curation
         super( curationDetails );
         this.lastUpdated = curationDetails.getLastUpdated();
         this.troubled = curationDetails.getTroubled();
-        this.lastTroubledEvent = curationDetails.getLastTroubledEvent() != null
-                ? new AuditEventValueObject( curationDetails.getLastTroubledEvent() ) : null;
+        this.lastTroubledEvent = AbstractCuratableValueObject.lastEventVo(
+                curationDetails::getLastTroubledEvent, curationDetails, "lastTroubledEvent" );
         this.needsAttention = curationDetails.getNeedsAttention();
-        this.lastNeedsAttentionEvent = curationDetails.getLastNeedsAttentionEvent() != null
-                ? new AuditEventValueObject( curationDetails.getLastNeedsAttentionEvent() ) : null;
+        this.lastNeedsAttentionEvent = AbstractCuratableValueObject.lastEventVo(
+                curationDetails::getLastNeedsAttentionEvent, curationDetails, "lastNeedsAttentionEvent" );
         if ( SecurityUtil.isUserAdmin() ) {
             this.curationNote = curationDetails.getCurationNote();
-            this.lastNoteUpdateEvent = curationDetails.getLastNoteUpdateEvent() != null
-                    ? new AuditEventValueObject( curationDetails.getLastNoteUpdateEvent() ) : null;
+            this.lastNoteUpdateEvent = AbstractCuratableValueObject.lastEventVo(
+                    curationDetails::getLastNoteUpdateEvent, curationDetails, "lastNoteUpdateEvent" );
         }
     }
 }
