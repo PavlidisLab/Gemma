@@ -6,7 +6,32 @@ mistake in different clothes: **code assumes it holds a real, session-attached e
 when what it actually holds is a Hibernate proxy, an uninitialized collection, or a
 detached instance.**
 
-Fixed so far: `cb3838c718`, `7342805af5`. Still open: the refresh endpoint (below).
+**Status: closed.** `cb3838c718`, `7342805af5`, `8d268aca17`, then the sweep of
+2026-08-23 (`b3dd99d7ef`, `058971d3bc`, `a9b5c38bb7`, `41d957e701`).
+
+## The governing rule, which makes the rest tractable
+
+A Hibernate proxy takes the type of the **declared** load or association target, and
+never gains a subclass's interfaces — not even after initialization. So an `instanceof`
+chain only misses when the declared type is itself a *proxyable supertype*, meaning an
+`@Entity`. In the experiment lineage that is exactly two types: `Investigation` and
+`BioAssaySet`.
+
+`Auditable`, `Curatable`, `Identifiable` and `Securable` are plain interfaces, and
+`AbstractAuditable` is a `@MappedSuperclass` — none can be a proxy's type. A site
+dispatching on one of those is safe unless the value reaches it declared as
+`Investigation` or `BioAssaySet`.
+
+This is why 10 of the 11 non-`BioAssaySet` candidates needed no change, and why a
+blanket `unproxy` sweep would have been wrong: it would have forced initialization on
+associations deliberately kept lazy, and hidden genuine type errors behind a cast that
+always succeeds.
+
+Corollary worth stating, because it bites where nothing throws: `Curatable` is
+introduced at `ExpressionExperiment`, *below* both proxyable types. Any
+`instanceof Curatable` test on a value declared `Investigation` or `BioAssaySet` fails
+silently — `AuditTrailServiceImpl` wrote the audit row and left curation details stale
+for exactly this reason (`41d957e701`).
 
 ## The three shapes
 
@@ -116,12 +141,38 @@ boundary in between. Candidates worth checking on the same grounds:
 `HeatmapDataService:264`, `DatasetsWebService:4772`, `:4815`, `:5439`,
 `DatasetArgService:274` — each thaws and then builds VOs.
 
-## Suggested order
+## Outcome
 
-1. **A1** — `getSecurityOwner()`, because it fails silently and the failure is an ACL.
-2. **C** — the refresh endpoint, because it fires on every CLI write today.
-3. **A2/A3** — one-line `unproxy` each, on paths that are known to be hot.
-4. **A4** — as touched, not as a sweep.
+Nine sites changed of the 38 assessed. The rest were reasoned safe under the rule above.
+
+Two proposed fixes were rejected on inspection, both because they would have traded a
+loud bug for a quiet one:
+
+- **`Hibernate.isInitialized` as the guard inside the curatable VO builder.** An
+  uninitialized-but-attached proxy is the *normal* in-session case, so that test would
+  have stripped the audit events out of every ordinary response. The VO now catches
+  `LazyInitializationException` and warns instead.
+- **`unproxy` at `DifferentialExpressionAnalysisDaoImpl:548`.** Its parameter is
+  `@MayBeUninitialized` by design; resolving it would issue a select per element for no
+  behavioural gain — a performance regression wearing a correctness fix's clothes.
+
+Three findings surfaced that the initial audit had ranked too low or missed entirely:
+
+- `sliceSubSet` (filed A4) returned the **source experiment's full unsliced vectors** for
+  a proxied subset. Wrong data returned successfully, on the vector-retrieval path.
+- `getSecurityOwner()` returning null does not merely lose a parent: `AclEventListener`
+  gives the analysis a *root* ACL, and `ParentIdentityRetrievalStrategyImpl` then reports
+  that resolving the parent identity is unsupported.
+- `AuditTrailServiceImpl:131` was not in the audit at all. It is upstream of
+  `GenericCuratableDaoImpl`, so fixing the site that *was* listed would have changed
+  nothing.
+
+## Unrelated, noticed in passing
+
+`BatchConfound.toString()`'s two branches read transposed — the subset branch prints the
+source experiment's short name with no subset marker, while the else branch (an actual
+experiment) prints `"Subset <name> of <shortName>"`. Nothing to do with proxies; left
+alone.
 
 A cheaper structural option for A: give `BioAssaySet` an `asExpressionExperiment()` (or
 put the unproxy inside a single shared resolver) and route the 32 sites through it, so
