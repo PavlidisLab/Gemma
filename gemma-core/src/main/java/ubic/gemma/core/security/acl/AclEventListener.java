@@ -385,6 +385,23 @@ public class AclEventListener implements PostInsertEventListener, PostDeleteEven
                 if ( !( value instanceof Collection ) ) {
                     continue;
                 }
+                // An uninitialized lazy collection cannot contain a child of THIS insert: putting a
+                // transient child in it would have initialized it first. Iterating one here throws
+                // LazyInitializationException -- getPropertyValue above hands back the unloaded
+                // PersistentCollection without touching it, so the failure lands on the loop, not in
+                // the guarded call. Forcing a load inside a flush listener is not an option either,
+                // so skip. Seen as FactorValue.oldStyleCharacteristics while persisting a
+                // DifferentialExpressionAnalysis, which killed makeProcessedData for the dataset.
+                // An uninitialized lazy collection cannot contain a child of THIS insert: putting a
+                // transient child in it would have initialized it first. Iterating one here throws
+                // LazyInitializationException -- getPropertyValue above hands back the unloaded
+                // PersistentCollection without touching it, so the failure lands on the loop, not in
+                // the guarded call. Forcing a load inside a flush listener is not an option either,
+                // so skip. Seen as FactorValue.oldStyleCharacteristics while persisting a
+                // DifferentialExpressionAnalysis, which killed makeProcessedData for the dataset.
+                if ( !Hibernate.isInitialized( value ) ) {
+                    continue;
+                }
                 for ( Object child : ( Collection<?> ) value ) {
                     handleChild( child, childParentOid, stash, cascades, visited );
                 }

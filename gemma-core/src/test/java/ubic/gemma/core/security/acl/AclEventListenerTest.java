@@ -13,7 +13,10 @@ package ubic.gemma.core.security.acl;
 import ubic.gemma.core.security.model.Securable;
 import ubic.gemma.core.security.model.SecuredChild;
 import ubic.gemma.core.security.model.SecuredNotChild;
+import org.hibernate.Hibernate;
+import org.hibernate.LazyInitializationException;
 import org.hibernate.SessionFactory;
+import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -192,6 +195,45 @@ public class AclEventListenerTest {
 
         Acl childAcl = aclService.readAclById( oid( ChildNoOwner.class, 2L ) );
         assertThat( childAcl.getParentAcl().getObjectIdentity() )
+                .isEqualTo( oid( Root.class, 1L ) );
+    }
+
+    /**
+     * A lazy collection that was never loaded must be stepped over, not iterated.
+     * <p>
+     * {@code getPropertyValue} hands back the unloaded {@code PersistentCollection} without
+     * touching it, so the guarded call above the loop sees nothing wrong and the
+     * {@link LazyInitializationException} lands on the {@code for}. In production this killed
+     * {@code makeProcessedData}: persisting a {@code DifferentialExpressionAnalysis} walked into
+     * {@code FactorValue.oldStyleCharacteristics} and threw
+     * "could not initialize proxy - no Session".
+     * <p>
+     * Skipping is safe rather than merely convenient: putting a transient child into a collection
+     * initializes it first, so an uninitialized one cannot hold a child of this insert.
+     */
+    @Test
+    public void uninitializedLazyCollection_isSteppedOverAndTheWalkContinues() {
+        Root parent = new Root( 1L );
+        ChildNoOwner reachable = new ChildNoOwner( null );
+        parent.notChildren.add( reachable );
+
+        // No session, never initialized -- exactly what Hibernate hands back for an untouched
+        // lazy association whose session has gone.
+        PersistentBag unloaded = new PersistentBag( null );
+        assertThat( Hibernate.isInitialized( unloaded ) ).isFalse();
+        assertThatThrownBy( unloaded::iterator ).isInstanceOf( LazyInitializationException.class );
+
+        persisters.register( Root.class )
+                .withCollectionProperty( "children", CascadeStyles.PERSIST, p -> unloaded )
+                .withCollectionProperty( "notChildren", CascadeStyles.PERSIST, p -> ( ( Root ) p ).notChildren );
+        persisters.register( ChildNoOwner.class );
+
+        firePostInsert( parent, parent.id );
+
+        // The walk got past the unloaded collection and still stashed the child behind it.
+        reachable.id = 2L;
+        firePostInsert( reachable, reachable.id );
+        assertThat( aclService.readAclById( oid( ChildNoOwner.class, 2L ) ).getParentAcl().getObjectIdentity() )
                 .isEqualTo( oid( Root.class, 1L ) );
     }
 
