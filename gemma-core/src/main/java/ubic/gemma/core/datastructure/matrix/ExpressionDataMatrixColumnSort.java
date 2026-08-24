@@ -23,7 +23,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -31,6 +30,7 @@ import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
 
 import org.springframework.lang.Nullable;
 import java.util.*;
@@ -271,7 +271,7 @@ public class ExpressionDataMatrixColumnSort {
             Collection<FactorValue> factorValues = bm.getAllFactorValues();
             for ( FactorValue fv : factorValues ) {
 
-                if ( fv.getCharacteristics().stream().map( Characteristic::getValue ).anyMatch( "DE_Exclude"::equalsIgnoreCase ) ) {
+                if ( FactorValueUtils.isDeExcluded( fv ) ) {
                     continue;
                 }
 

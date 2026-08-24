@@ -32,7 +32,6 @@ import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -81,7 +80,6 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private static final double N_10 = -GeeqServiceImpl.P_10;
     public static final double BATCH_CONF_HAS = GeeqServiceImpl.N_10;
     public static final double BATCH_EFF_STRONG = GeeqServiceImpl.N_10;
-    private static final String DE_EXCLUDE = "DE_Exclude";
 
     private final ExpressionExperimentService expressionExperimentService;
     private final ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
@@ -378,7 +376,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
                 if ( ExperimentFactorUtils.isBatchFactor( ef )
-                        || fv.getCharacteristics().stream().map( Characteristic::getValue ).anyMatch( DE_EXCLUDE::equalsIgnoreCase )
+                        || FactorValueUtils.isDeExcluded( fv )
                         || ef.getType().equals( FactorType.CONTINUOUS ) ) {
                     removeFvs.add( fv ); // always remove batch factor values and DE_EXCLUDE values
                 } else {

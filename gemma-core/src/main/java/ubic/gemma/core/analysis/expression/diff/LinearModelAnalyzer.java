@@ -43,7 +43,6 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -98,11 +97,6 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * Preset levels for which we will store the HitListSizes.
      */
     private static final double[] qValueThresholdsForHitLists = new double[] { 0.001, 0.005, 0.01, 0.05, 0.1 };
-
-    /**
-     * Factors that are always excluded from analysis
-     */
-    private static final String EXCLUDE_CHARACTERISTICS_VALUES = "DE_Exclude";
 
     private static final String EXCLUDE_WARNING = "Found Factor Value with DE_Exclude characteristic. Skipping current subset.";
 
@@ -375,7 +369,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
              * Checking for DE_Exclude characteristics, which should not be included in the analysis.
              * As requested in issue #4458 (bugzilla)
              */
-            if ( isExcluded( subsetFactorValue ) ) {
+            if ( FactorValueUtils.isDeExcluded( subsetFactorValue ) ) {
                 LinearModelAnalyzer.log.warn( LinearModelAnalyzer.EXCLUDE_WARNING );
                 continue;
             }
@@ -412,7 +406,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         for ( Map.Entry<FactorValue, ExpressionExperimentSubSet> sEntry : subsets.entrySet() ) {
             FactorValue subsetFactorValue = sEntry.getKey();
             ExpressionExperimentSubSet subSet = sEntry.getValue();
-            if ( isExcluded( subsetFactorValue ) ) {
+            if ( FactorValueUtils.isDeExcluded( subsetFactorValue ) ) {
                 LinearModelAnalyzer.log.warn( LinearModelAnalyzer.EXCLUDE_WARNING );
                 continue;
             }
@@ -460,14 +454,6 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     /**
      * Check if a factor value should be excluded from the analysis.
      */
-    private boolean isExcluded( FactorValue subsetFactorValue ) {
-        for ( Characteristic c : subsetFactorValue.getCharacteristics() ) {
-            if ( LinearModelAnalyzer.EXCLUDE_CHARACTERISTICS_VALUES.contains( c.getValue() ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
 
 
     @Override
