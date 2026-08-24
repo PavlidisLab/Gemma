@@ -26,6 +26,10 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
+import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -145,6 +149,12 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
 
     private ExperimentalFactor a, b, c, d, e;
 
+    /**
+     * The DE_Include/DE_Exclude marker factor, as GSE13367 carries it: a "collection of material" factor whose two
+     * values select which samples take part in the analysis.
+     */
+    private ExperimentalFactor deMarker;
+
     @BeforeEach
     public void setUp() throws IOException {
         ee = new ExpressionExperiment();
@@ -159,6 +169,10 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
         d.setId( 4L );
         e = ExperimentalFactor.Factory.newInstance( "age", FactorType.CONTINUOUS );
         e.setId( 5L );
+        deMarker = ExperimentalFactor.Factory.newInstance( "collection of material", FactorType.CATEGORICAL );
+        deMarker.setId( 6L );
+        deMarker.getFactorValues().add( deMarkerValue( deMarker, 61L, "DE_Include", FactorValueUtils.DE_INCLUDE_URI ) );
+        deMarker.getFactorValues().add( deMarkerValue( deMarker, 62L, "DE_Exclude", FactorValueUtils.DE_EXCLUDE_URI ) );
         when( entityLocator.locateExpressionExperiment( eq( "1" ), anyBoolean() ) ).thenReturn( ee );
         when( eeService.thawLite( ee ) ).thenReturn( ee );
         when( gemmaRestApiClient.perform( eq( "/datasets/1/refresh" ), eq( "refreshVectors" ), anyBoolean(),
@@ -203,6 +217,77 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
         verify( gemmaRestApiClient ).perform( "/datasets/1/refresh",
                 "refreshVectors", false,
                 "refreshReports", true );
+    }
+
+    /**
+     * The DE_Include/DE_Exclude marker is not a biological factor. Counting it took a two-factor design over the
+     * automatic selector's limit of two and refused the run outright.
+     */
+    @Test
+    public void testAnalysisWithAutomaticallySelectedFactorsWhenDeExcludeFactorIsPresent() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( deMarker );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    /**
+     * GSE13367's shape: two real factors, the DE_Include/DE_Exclude marker and a batch factor.
+     */
+    @Test
+    public void testAnalysisWithAutomaticallySelectedFactorsWhenDeExcludeAndBatchFactorsArePresent() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ed.getExperimentalFactors().add( deMarker );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    /**
+     * The marker is still selectable by ID, so a curator can inspect that design deliberately.
+     */
+    @Test
+    public void testDeExcludeFactorCanStillBeRequestedExplicitly() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( deMarker );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "6" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactly( deMarker );
+        } ) );
+    }
+
+    private static FactorValue deMarkerValue( ExperimentalFactor ef, long id, String value, String valueUri ) {
+        Characteristic ch = Characteristic.Factory.newInstance();
+        ch.setCategory( "collection of material" );
+        ch.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0005066" );
+        ch.setValue( value );
+        ch.setValueUri( valueUri );
+        FactorValue fv = FactorValue.Factory.newInstance( ef );
+        fv.setId( id );
+        fv.getCharacteristics().add( Statement.Factory.newInstance( ch ) );
+        return fv;
     }
 
     @Test

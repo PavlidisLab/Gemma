@@ -466,6 +466,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 factorsToUse.removeIf( ExperimentFactorUtils::isBatchFactor );
             }
 
+            // the DE_Include/DE_Exclude marker selects which samples take part; it is not a biological factor and
+            // must not be counted as one, or a design with two real factors reads as three and is refused below
+            factorsToUse.removeIf( ExperimentFactorUtils::isDeIncludeExcludeFactor );
+
             if ( factorsToUse.isEmpty() ) {
                 throw new RuntimeException( "No suitable factors to analyze found." );
             } else if ( factorsToUse.size() == 1 ) {
