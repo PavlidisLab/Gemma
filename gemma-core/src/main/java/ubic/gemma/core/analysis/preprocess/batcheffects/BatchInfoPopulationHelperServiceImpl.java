@@ -99,7 +99,11 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
      * migration pending the {@code AuditEventPayload} Phase A landing.
      */
     @Override
-    @Transactional
+    // Both exceptions below are handled by the caller, which treats them as "no batch factor" and carries on.
+    // They descend from PreprocessingException, a RuntimeException, so without noRollbackFor this method -- which
+    // joins the caller's transaction -- marks it rollback-only on the way out. The caller's catch cannot clear that
+    // flag, so its own commit then fails with UnexpectedRollbackException and the graceful path never works.
+    @Transactional(noRollbackFor = { FASTQHeadersPresentButNotUsableException.class, SingletonBatchesException.class })
     @AuditedOnError(value = UninformativeFASTQHeadersForBatchingEvent.class,
             exception = FASTQHeadersPresentButNotUsableException.class,
             message = "Batches unable to be determined")
