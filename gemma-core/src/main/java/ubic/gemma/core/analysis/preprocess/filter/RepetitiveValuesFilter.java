@@ -17,9 +17,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
@@ -231,10 +233,37 @@ public class RepetitiveValuesFilter implements ExpressionDataFilter<ExpressionDa
         return filteredMatrix;
     }
 
+    /**
+     * Remove rows the rank-transformed matrix shows as repetitive, but only when the row's own values repeat too.
+     * <p>
+     * Ranks come from {@link MatrixStats#ranksByColumn}, which ranks WITHIN a column, across design elements. A row's
+     * rank distinctness therefore measures where it sits relative to the other rows, not how much it varies: a probe
+     * that is the highest-expressed in every sample holds one single rank throughout and reads as perfectly repetitive
+     * while having a distinct value in every sample. Such a probe can be differentially expressed, and this filter is
+     * only meant to remove rows that cannot be — the ones whose values repeat. So a row with NO repeated value at all
+     * is kept whatever its ranks say.
+     * <p>
+     * The guard is deliberately narrow. The rows the rank measure legitimately catches are ones whose values repeat but
+     * not exactly: an all-zero count row is distinct-valued once log2cpm divides it by differing library sizes, and a
+     * clipped row keeps a handful of distinct values. Both sit at the distinct-value threshold (3 of 10 against the
+     * 0.3 default), so anything looser than "no repeats at all" lets them back through — {@code RepetitiveValuesFilterTest}
+     * pins both.
+     */
     private ExpressionDataDoubleMatrix filterDistinctValuesByRanks( ExpressionDataDoubleMatrix
             dmatrix, ExpressionDataDoubleMatrix ranks ) throws NoDesignElementsException {
-        List<CompositeSequence> kept = new ArrayList<>( dmatrix.getDesignElements() );
-        kept.retainAll( filterDistinctValues( ranks ).getDesignElements() );
+        TooFewDistinctValuesFilter distinctValuesFilter = new TooFewDistinctValuesFilter( minimumFractionOfUniqueValues );
+        Set<CompositeSequence> distinctByRank = new HashSet<>( distinctValuesFilter.filter( ranks ).getDesignElements() );
+        Set<CompositeSequence> noRepeatedValues = new HashSet<>( new TooFewDistinctValuesFilter( 1.0 ).filter( dmatrix ).getDesignElements() );
+        List<CompositeSequence> kept = dmatrix.getDesignElements().stream()
+                .filter( de -> distinctByRank.contains( de ) || noRepeatedValues.contains( de ) )
+                .collect( Collectors.toList() );
+        if ( kept.isEmpty() ) {
+            throw new NoDesignElementsException( "No rows left after filtering for repetitive values with " + distinctValuesFilter + "." );
+        }
+        int removed = dmatrix.rows() - kept.size();
+        if ( removed > 0 ) {
+            log.info( removed + " rows removed due to too many identical values" );
+        }
         return dmatrix.sliceRows( kept );
     }
 

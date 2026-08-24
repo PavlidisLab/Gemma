@@ -15,6 +15,9 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkDataUtils.randomBulkVectors;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkDataUtils.setSeed;
@@ -165,6 +168,70 @@ public class RepetitiveValuesFilterTest {
                 .doesNotContain( deToDrop );
     }
 
+    /**
+     * A probe that is the highest-expressed in every sample holds one single rank throughout, because
+     * {@link ubic.gemma.core.util.math.MatrixStats#ranksByColumn} ranks within a column across design elements. It has
+     * a distinct value in every sample and can be differentially expressed, so the rank-based mode must keep it; only
+     * rows whose own values repeat are removable.
+     */
+    @Test
+    public void testTopRankedProbeWithDistinctValuesIsKept() throws FilteringException {
+        int numProbes = 9, numSamples = 22;
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        for ( int i = 0; i < numProbes; i++ ) {
+            ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, ad ) );
+        }
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( "test" );
+        for ( int i = 0; i < numSamples; i++ ) {
+            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
+            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, ad, bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
+        }
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+
+        DoubleMatrix<CompositeSequence, BioMaterial> m = new DenseDoubleMatrix<>( numProbes, numSamples );
+        m.setRowNames( new ArrayList<>( ad.getCompositeSequences() ) );
+        m.setColumnNames( ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toList() ) );
+        for ( int i = 0; i < numProbes; i++ ) {
+            for ( int j = 0; j < numSamples; j++ ) {
+                // ordinary probes: values repeat, and the rank order genuinely moves between samples, so the rank
+                // measure keeps them on its own and they do not lean on the all-distinct guard under test
+                m.set( i, j, 10.0 + ( ( i * 3 + j ) % 7 ) );
+            }
+        }
+        // the probe that is top-expressed in EVERY sample, with a distinct value each time
+        int top = 3;
+        CompositeSequence topRanked = m.getRowName( top );
+        for ( int j = 0; j < numSamples; j++ ) {
+            m.set( top, j, 100.0 + j );
+        }
+        // the near-constant probe: one value everywhere but the last sample, as in GSE8441's "constant" row
+        int flat = 6;
+        CompositeSequence nearConstant = m.getRowName( flat );
+        for ( int j = 0; j < numSamples; j++ ) {
+            m.set( flat, j, j == numSamples - 1 ? 2.301 : 2.3 );
+        }
+
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, m, qt );
+
+        RepetitiveValuesFilter filter = new RepetitiveValuesFilter();
+        filter.setMode( RepetitiveValuesFilter.Mode.RANK );
+        filter.setMinimumFractionOfUniqueValues( 0.1 );
+
+        assertThat( filter.filter( matrix ) )
+                .satisfies( fm -> {
+                    assertThat( fm.getDesignElements() ).contains( topRanked );
+                    assertThat( fm.getDesignElements() ).doesNotContain( nearConstant );
+                    assertThat( fm.rows() ).isEqualTo( numProbes - 1 );
+                } );
+    }
+
     @Test
     public void testRepetitiveValuesWithNonZeroVariance() throws FilteringException {
         setSeed( 123 );
@@ -296,4 +363,5 @@ public class RepetitiveValuesFilterTest {
                             .doesNotContain( deToDrop );
                 } );
     }
+
 }
