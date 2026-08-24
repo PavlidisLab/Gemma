@@ -156,15 +156,21 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest5 {
         config.setAnalysisType( aa );
         config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
-        // The GSE8441_expmat_8probes fixture intentionally carries only 8 (+1 constant) probes
+        // The GSE8441_expmat_8probes fixture intentionally carries only 8 (+1 near-constant) probes
         // across 22 samples so the ANOVA assertions on hand-computed p-values remain tractable.
-        // RepetitiveValuesFilter in AUTODETECT mode rank-transforms the matrix (LINEAR-scale
-        // input is not log2 and falls through to filterDistinctValuesByRanks); with at most 9
-        // distinct per-column rank buckets, a row's distinct-rank count rarely clears the
-        // production 30% threshold (7/22 distinct values per row) once column ties bite.
-        // Pin a smaller threshold here so the filter still prunes the zero-variance "constant"
-        // probe (1/22 distinct) without flushing every real probe. The threshold is a property
-        // of the fixture's narrow shape, not of the math under test.
+        //
+        // Filter on the values, not on ranks. AUTODETECT rank-transforms this matrix (LINEAR input
+        // is not log2, so it falls through to filterDistinctValuesByRanks) and ranks are taken
+        // WITHIN each column, across only 9 probes: 217757_at is the highest-expressed probe in all
+        // 22 samples, so it holds one single rank throughout and the filter discards it as
+        // repetitive despite having 22 distinct values. The near-constant probe, 2.3 in 21 samples
+        // and 2.301 in the 22nd, moves around the middle of the rank order and survives. That is
+        // backwards for this fixture, and it is what the ANOVA assertions below trip over.
+        //
+        // NOMINAL compares the actual values: the near-constant probe has 2/22 distinct and goes,
+        // every real probe has at least 16/22 and stays, leaving the 8 the assertions expect. The
+        // rank mode's behaviour on a 9-probe matrix is not what this test is here to pin down.
+        config.setRepetitiveValuesFilterMode( DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode.NOMINAL );
         config.setMinimumFractionOfUniqueValues( 0.1 );
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
