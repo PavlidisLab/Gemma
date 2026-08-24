@@ -199,7 +199,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      * Restore the outliers by basically overwriting the original matrix with the corrected values, leaving outlier samples as they were.
      * This is a lot easier than starting over with a new matrix.
      *
-     * @return the originalDataMatrix with the corrected values now plugged in, or, if no outliers were present, the correctedMatrix because why not.s
+     * @return the originalDataMatrix with the corrected values now plugged in and the batch-corrected quantitation
+     * types applied, or, if no outliers were present, the correctedMatrix because why not.
      */
     private ExpressionDataDoubleMatrix restoreOutliers( ExpressionDataDoubleMatrix originalDataMatrix, ExpressionDataDoubleMatrix correctedMatrix ) {
         if ( originalDataMatrix.getBioAssayDimension().getBioAssays().size() == correctedMatrix.columns() ) {
@@ -234,7 +235,19 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             }
         }
 
-        return originalDataMatrix;
+        // the values are ComBat's now, so the matrix has to carry ComBat's quantitation types. Handing back
+        // originalDataMatrix as-is keeps the original QT, whose isBatchCorrected is false, and the caller rejects it.
+        Map<QuantitationType, QuantitationType> correctedQts = new HashMap<>();
+        for ( CompositeSequence designElement : originalDataMatrix.getDesignElements() ) {
+            QuantitationType originalQt = originalDataMatrix.getQuantitationType( designElement );
+            QuantitationType correctedQt = correctedMatrix.getQuantitationType( designElement );
+            if ( originalQt == null || correctedQt == null ) {
+                throw new IllegalStateException( "Missing a quantitation type for " + designElement + " while restoring outliers." );
+            }
+            correctedQts.put( originalQt, correctedQt );
+        }
+
+        return originalDataMatrix.withMatrix( originalDataMatrix.getMatrix(), correctedQts );
     }
 
     /**
