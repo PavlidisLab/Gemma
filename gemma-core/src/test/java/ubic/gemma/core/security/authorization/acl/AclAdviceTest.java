@@ -35,6 +35,8 @@ import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authentication.UserService;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import org.springframework.security.access.AccessDeniedException;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
@@ -81,6 +83,9 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     @Autowired
     private UserManager userManager;
@@ -328,6 +333,72 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
         aclTestUtils.checkLacksAces( diffExpressionAnalysis );
         aclTestUtils.checkHasAclParent( diffExpressionAnalysis, ee );
 
+    }
+
+    /**
+     * A result set of a private experiment must not be readable anonymously.
+     * <p>
+     * {@code GET /resultSets/{id}} used to serve the whole thing -- design, factor values, per-probe results with
+     * genes -- to anonymous callers for experiments {@code GET /datasets/{id}} correctly hid, because
+     * {@link ExpressionAnalysisResultSetService}'s loaders carried no ACL annotations at all while
+     * {@code DifferentialExpressionAnalysisService}'s always had them.
+     */
+    @Test
+    public void testResultSetOfPrivateExperimentIsNotReadableAnonymously() {
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        DifferentialExpressionAnalysis analysis = persistOneAnalysis( ee );
+        Long resultSetId = analysis.getResultSets().iterator().next().getId();
+        assertNotNull( resultSetId );
+
+        securityService.makePrivate( ee );
+        assertTrue( securityService.isPrivate( ee ) );
+
+        // the owner can still read it
+        assertNotNull( expressionAnalysisResultSetService.loadWithResultsAndContrasts( resultSetId ) );
+
+        super.runAsAnonymous();
+        try {
+            ExpressionAnalysisResultSet leaked = expressionAnalysisResultSetService.loadWithResultsAndContrasts( resultSetId );
+            assertNull( leaked, "An anonymous user must not receive the result set of a private experiment." );
+        } catch ( AccessDeniedException expected ) {
+            // also acceptable: denied outright rather than filtered to null
+        }
+    }
+
+    /**
+     * Re-running an analysis deletes the old one and persists a new one in the same call. Prod lost the ACL for
+     * every analysis created from 2026-08-23 onward -- 376 of them, along with every one of their result sets --
+     * and every affected run was a re-run, so pin the second-analysis path specifically.
+     */
+    @Test
+    public void testAnalysisAclOnReanalysis() {
+        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+
+        DifferentialExpressionAnalysis first = persistOneAnalysis( ee );
+        aclTestUtils.checkHasAcl( first );
+        aclTestUtils.checkHasAclParent( first, ee );
+
+        // second pass: persistAnalysis deletes the old analysis before saving this one
+        DifferentialExpressionAnalysis second = persistOneAnalysis( ee );
+
+        aclTestUtils.checkHasAcl( second );
+        aclTestUtils.checkHasAclParent( second, ee );
+        for ( ExpressionAnalysisResultSet rs : second.getResultSets() ) {
+            aclTestUtils.checkHasAcl( rs );
+        }
+    }
+
+    private DifferentialExpressionAnalysis persistOneAnalysis( ExpressionExperiment ee ) {
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.addFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
+        DifferentialExpressionAnalysis analysis = DifferentialExpressionAnalysis.Factory.newInstance();
+        analysis.setProtocol( DiffExAnalyzerUtils.createProtocolForConfig( config, Collections.emptyMap() ) );
+        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance();
+        resultSet.setAnalysis( analysis );
+        resultSet.getExperimentalFactors().addAll( ee.getExperimentalDesign().getExperimentalFactors() );
+        analysis.getResultSets().add( resultSet );
+        analysis.setExperimentAnalyzed( ee );
+        return differentialExpressionAnalyzerService.persistAnalysis( ee, analysis, config );
     }
 
     /*
