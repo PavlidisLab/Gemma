@@ -29,6 +29,8 @@ import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Date;
 import java.util.Objects;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * An evidenced claim about whether a {@link BibliographicReference} belongs to an
@@ -87,6 +89,8 @@ import java.util.Objects;
 public class PublicationAssociation extends AbstractIdentifiable {
 
     @ManyToOne(fetch = FetchType.LAZY)
+    // V25 declares FK_PUBLICATION_ASSOCIATION_INVESTIGATION ON DELETE CASCADE; keep the mapping in step so a Hibernate-generated schema cascades too
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "INVESTIGATION_FK", nullable = false, columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "FK_PUBLICATION_ASSOCIATION_INVESTIGATION"))
     private Investigation investigation;

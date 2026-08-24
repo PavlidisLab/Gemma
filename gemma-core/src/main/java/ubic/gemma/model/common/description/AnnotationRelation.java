@@ -29,6 +29,8 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.util.Date;
 import java.util.Objects;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * One term stands in some relation to another term: {@code subject — predicate → object}, plus where
@@ -248,6 +250,8 @@ public class AnnotationRelation extends AbstractIdentifiable {
      */
     @Nullable
     @ManyToOne(fetch = FetchType.LAZY)
+    // V26 declares FK_ANNOTATION_RELATION_EE ON DELETE CASCADE; keep the mapping in step so a Hibernate-generated schema cascades too
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "FK_ANNOTATION_RELATION_EE"))
     private ExpressionExperiment expressionExperiment;

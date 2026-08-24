@@ -28,6 +28,8 @@ import java.util.Objects;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * A "curation hypothesis" attached to an {@link Investigation}: a JSON
@@ -92,6 +94,8 @@ import ubic.gemma.model.expression.experiment.AgentCurationKind;
 public class AnnotationSet extends AbstractIdentifiable {
 
     @ManyToOne(fetch = FetchType.LAZY)
+    // V20 declares FK_ANNOTATION_SET_INVESTIGATION ON DELETE CASCADE; keep the mapping in step so a Hibernate-generated schema cascades too
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "INVESTIGATION_FK", nullable = false, columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "FK_ANNOTATION_SET_INVESTIGATION"))
     private Investigation investigation;
