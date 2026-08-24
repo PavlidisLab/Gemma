@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A helper class for the differential expression analyzers. This class contains helper methods commonly needed when
@@ -126,6 +127,16 @@ public class DifferentialExpressionAnalysisUtil {
      * @return true if it's okay, false otherwise.
      */
     public static boolean checkValidForLm( BioAssaySet expressionExperiment, ExperimentalFactor experimentalFactor ) {
+        return checkValidForLm( expressionExperiment.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .collect( Collectors.toList() ), experimentalFactor );
+    }
+
+    /**
+     * A variant that judges from a given set of samples rather than every sample in the experiment. Pass the samples
+     * that will actually be modelled, so that DE_Exclude and outlier samples do not make a factor look analyzable.
+     */
+    public static boolean checkValidForLm( Collection<BioMaterial> samples, ExperimentalFactor experimentalFactor ) {
 
         if ( experimentalFactor.getFactorValues().size() < 2 ) {
             log.warn( "Cannot be analyzed: Only one factor value (level) for " + experimentalFactor );
@@ -141,8 +152,7 @@ public class DifferentialExpressionAnalysisUtil {
          */
         boolean replicatesok = false;
         Map<FactorValue, Integer> counts = new HashMap<>();
-        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
+        for ( BioMaterial bm : samples ) {
             for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
 

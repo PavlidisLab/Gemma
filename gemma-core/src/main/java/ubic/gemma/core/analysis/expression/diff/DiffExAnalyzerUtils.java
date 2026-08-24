@@ -2,6 +2,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.matrix.ObjectMatrix;
@@ -33,6 +34,45 @@ public class DiffExAnalyzerUtils {
      * @param columnsToUse columns to use
      * @return bio assay dimension
      */
+    /**
+     * Check whether a sample takes part in a differential expression analysis.
+     * <p>
+     * Two kinds of sample do not: those a curator has marked {@code DE_Exclude}, and those whose assays are all
+     * flagged as outliers. Both must be removed before anything is decided from the sample set — baselines, whether a
+     * factor is complete, the analysis type and the degrees of freedom are all computed from it.
+     */
+    public static boolean isAnalyzed( BioMaterial sample ) {
+        for ( FactorValue fv : sample.getAllFactorValues() ) {
+            if ( FactorValueUtils.isDeExcluded( fv ) ) {
+                return false;
+            }
+        }
+        Collection<BioAssay> assays = sample.getAllBioAssaysUsedIn();
+        return assays.isEmpty() || !assays.stream().allMatch( BioAssay::getIsOutlier );
+    }
+
+    /**
+     * Remove the samples that are not analyzed (see {@link #isAnalyzed(BioMaterial)}) from a data matrix.
+     * <p>
+     * The matrix is returned unchanged when there is nothing to drop, which is the common case.
+     *
+     * @throws IllegalStateException if every sample would be dropped
+     */
+    public static ExpressionDataDoubleMatrix dropSamplesNotAnalyzed( ExpressionDataDoubleMatrix dmatrix ) {
+        List<BioMaterial> samplesToKeep = dmatrix.getBioMaterials().stream()
+                .filter( DiffExAnalyzerUtils::isAnalyzed )
+                .collect( Collectors.toList() );
+        int dropped = dmatrix.columns() - samplesToKeep.size();
+        if ( dropped == 0 ) {
+            return dmatrix;
+        }
+        if ( samplesToKeep.isEmpty() ) {
+            throw new IllegalStateException( "Every sample is either marked DE_Exclude or an outlier, nothing left to analyze." );
+        }
+        log.info( "Dropping " + dropped + " sample(s) marked DE_Exclude or flagged as outliers before analysis." );
+        return dmatrix.sliceColumns( samplesToKeep, createBADMap( samplesToKeep ) );
+    }
+
     public static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
         /*
          * Indices of the biomaterials in the original matrix.
@@ -82,19 +122,29 @@ public class DiffExAnalyzerUtils {
     }
 
     /**
-     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
-     * EXCLUDE_CHARACTERISTICS_VALUES
-     *
      * @return selected type of analysis such as t-test, two-way ANOVA, etc.
      */
     public static AnalysisType determineAnalysisType( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config ) {
+        return determineAnalysisType( bioAssaySet, config, null );
+    }
+
+    /**
+     * A variant that decides from a given set of samples rather than every sample in the experiment.
+     *
+     * @param samplesToAnalyze the samples that will actually be modelled, or null to use all of them. Pass the
+     *                         samples left after {@link #dropSamplesNotAnalyzed(ExpressionDataDoubleMatrix)}, so that
+     *                         DE_Exclude and outlier samples do not decide the analysis type.
+     * @return selected type of analysis such as t-test, two-way ANOVA, etc.
+     */
+    public static AnalysisType determineAnalysisType( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config,
+            @Nullable Collection<BioMaterial> samplesToAnalyze ) {
 
         if ( config.getFactorsToInclude().isEmpty() ) {
             throw new IllegalArgumentException( "Must provide at least one factor" );
         }
 
         if ( config.getAnalysisType() == null ) {
-            AnalysisType type = determineAnalysisType( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(), true );
+            AnalysisType type = determineAnalysisType( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(), true, samplesToAnalyze );
 
             if ( type == null ) {
                 throw new IllegalArgumentException( "The analysis type could not be determined" );
@@ -173,8 +223,8 @@ public class DiffExAnalyzerUtils {
     /**
      * Determines the analysis to execute based on the experimental factors, factor values, and block design.
      * <p>
-     * FIXME: this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
-     *        EXCLUDE_CHARACTERISTICS_VALUES
+     * This overload judges from every sample in the experiment. Prefer the variant taking {@code samplesToAnalyze}
+     * when DE_Exclude or outlier samples may be present — see {@link #dropSamplesNotAnalyzed(ExpressionDataDoubleMatrix)}.
      *
      * @param bioAssaySet                   experiment or subset to determine the analysis type for
      * @param experimentalFactors           which factors to use, or null if to use all from the experiment
@@ -185,6 +235,17 @@ public class DiffExAnalyzerUtils {
     @Nullable
     public static AnalysisType determineAnalysisType( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
             @Nullable ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible ) {
+        return determineAnalysisType( bioAssaySet, experimentalFactors, subsetFactor, includeInteractionsIfPossible, null );
+    }
+
+    /**
+     * A variant that decides from a given set of samples rather than every sample in the experiment.
+     *
+     * @param samplesToAnalyze the samples that will actually be modelled, or null to use all of them
+     */
+    public static AnalysisType determineAnalysisType( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
+            @Nullable ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible,
+            @Nullable Collection<BioMaterial> samplesToAnalyze ) {
 
         Collection<ExperimentalFactor> efsToUse = getFactorsToUse( bioAssaySet, experimentalFactors );
 
@@ -217,7 +278,9 @@ public class DiffExAnalyzerUtils {
                 /*
                  * Check that there is more than one value in at least one group
                  */
-                boolean ok = DifferentialExpressionAnalysisUtil.checkValidForLm( bioAssaySet, experimentalFactor );
+                boolean ok = samplesToAnalyze != null
+                        ? DifferentialExpressionAnalysisUtil.checkValidForLm( samplesToAnalyze, experimentalFactor )
+                        : DifferentialExpressionAnalysisUtil.checkValidForLm( bioAssaySet, experimentalFactor );
 
                 if ( !ok ) {
                     return null;

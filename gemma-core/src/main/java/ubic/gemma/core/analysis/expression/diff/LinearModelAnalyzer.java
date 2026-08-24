@@ -293,9 +293,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 .sorted( FACTOR_COMPARATOR )
                 .collect( Collectors.toList() );
 
-        /*
-         * FIXME this is the place to strip put the outliers.
-         */
+        // DE_Exclude and outlier samples are dropped from the matrix by
+        // DiffExAnalyzerUtils.dropSamplesNotAnalyzed before it gets here, so samplesUsed is the analyzed set
         List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
 
         dmatrix = dmatrix.sliceColumns( samplesUsed, createBADMap( samplesUsed ) ); // enforce ordering
