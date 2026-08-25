@@ -18,11 +18,13 @@ import ubic.gemma.core.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.ontology.providers.ObiService;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.CellosaurusOntologyService;
+import org.apache.lucene.queryparser.classic.ParseException;
 import ubic.gemma.core.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.ontology.model.AnnotationProperty;
@@ -819,5 +821,46 @@ public class OntologyServiceTest extends BaseTest5 {
 
         assertTrue( ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).isEmpty() );
         verify( chebiOntologyService, never() ).getTerm( goUri );
+    }
+
+    /**
+     * A query Lucene cannot parse is caller input, so it must surface as a {@link ParseSearchException}
+     * — the type every search endpoint already maps to 400. It used to arrive as a plain
+     * {@link SearchException}, which {@code AnnotationsWebService} maps to 500, so `cell OR` answered
+     * 500: character escaping in the retry cannot neutralize a bare AND/OR/NOT keyword, so the
+     * reattempt fails identically. Asserts the exact type, not `instanceof SearchException` — the
+     * supertype passes against the unfixed code.
+     */
+    @Test
+    public void testUnparseableQuerySurfacesAsParseSearchException() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+        when( chebiOntologyService.findTerm( anyString(), anyInt() ) )
+                .thenThrow( new OntologySearchException( "Lucene query failure for ontology index.", "cell OR",
+                        new ParseException( "Encountered \"<EOF>\" at line 1, column 7." ) ) );
+
+        ParseSearchException e = assertThrows( ParseSearchException.class,
+                () -> ontologyService.findExperimentsCharacteristicTags( "cell OR", 100, false, false, 5000, TimeUnit.MILLISECONDS ) );
+        // Echoed back to the caller in the 400 body, so it must be what they sent rather than any
+        // internally rewritten form.
+        assertEquals( "cell OR", e.getQuery() );
+    }
+
+    /**
+     * The converse: a failure with no parse error in the chain is a server fault and must stay a
+     * {@link SearchException}, so a broken index keeps answering 500 rather than blaming the query.
+     */
+    @Test
+    public void testNonParseOntologyFailureStaysAServerError() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+        when( chebiOntologyService.findTerm( anyString(), anyInt() ) )
+                .thenThrow( new OntologySearchException( "index is closed", "cell", new java.io.IOException( "boom" ) ) );
+
+        SearchException e = assertThrows( SearchException.class,
+                () -> ontologyService.findExperimentsCharacteristicTags( "cell", 100, false, false, 5000, TimeUnit.MILLISECONDS ) );
+        assertFalse( e instanceof ParseSearchException );
     }
 }

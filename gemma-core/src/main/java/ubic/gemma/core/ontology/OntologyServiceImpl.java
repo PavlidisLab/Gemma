@@ -24,6 +24,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -51,6 +52,7 @@ import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.search.SearchTimeoutException;
+import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -1258,7 +1260,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 }
             }
             return characteristicsFromOntology;
-        }, ontologyServicesToUse, "terms matching " + searchQuery, timeoutMs );
+        }, ontologyServicesToUse, searchQuery, timeoutMs );
 
         // Best first, across every ontology, before anything downstream cuts. URI breaks ties so
         // the order is total: equal scores are common and must not fall back on arrival order.
@@ -1603,8 +1605,27 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return future.get();
     }
 
+    /**
+     * Convert a basecode ontology search failure into the search-layer exception.
+     * <p>
+     * A Lucene {@link ParseException} anywhere in the cause chain means the query itself could not be
+     * parsed, which is caller input rather than a server fault. Reporting that as a plain
+     * {@link SearchException} is what made {@code /annotations/search} answer 500 for a query carrying a
+     * bare boolean keyword, while the callers' existing {@code catch ( ParseSearchException )} -> 400
+     * sat unused. The retry in {@code LuceneOntologySearchIndex} escapes reserved CHARACTERS, which
+     * cannot neutralize the AND/OR/NOT keywords, so the reattempt re-throws the same ParseException.
+     *
+     * @param query the query as the caller supplied it -- it is echoed back on a 400, so callers must
+     *              pass the original rather than an internally rewritten form
+     */
     private SearchException convertBaseCodeOntologySearchExceptionToSearchException( OntologySearchException e, String query ) {
-        return new SearchException( "Ontology search failed for query: " + query, e );
+        String message = "Ontology search failed for query: " + query;
+        for ( Throwable t : ExceptionUtils.getThrowableList( e ) ) {
+            if ( t instanceof ParseException ) {
+                return new LuceneParseSearchException( query, message, ( ParseException ) t );
+            }
+        }
+        return new SearchException( message, e );
     }
 
     @Nullable
