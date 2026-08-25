@@ -161,13 +161,27 @@ public class GeneOntologyServiceImpl extends AbstractDelegatingOntologyService i
         return overlapTerms;
     }
 
+    /**
+     * Rewrite a free-text query so GO matching requires EVERY token, rather than the parser's
+     * default OR: strip the separators already present, then rejoin on AND.
+     * <p>
+     * The first replacement must yield a SPACE. It yielded the empty string, which welded the
+     * operands together — `cell AND neuron` became the single token `cellneuron`, and the rejoin
+     * pass then had no whitespace left to split on, so GO searched a term that cannot exist. Silent:
+     * no error, no hits. Found 2026-08-24 while tracing the `/annotations/search` 500 on a bare
+     * boolean keyword; only reachable on the GO fallback, which runs when the other ontologies
+     * return nothing.
+     */
+    static String requireAllTerms( String queryString ) {
+        return queryString
+                .trim()
+                .replaceAll( "\\s+AND\\s+", " " )
+                .replaceAll( "\\s+", " AND " );
+    }
+
     @Override
     public Collection<OntologySearchResult<OntologyTerm>> findTerm( String queryString, int maxResults ) throws OntologySearchException {
-        // make sure we are all-inclusive
-        queryString = queryString
-                .trim()
-                .replaceAll( "\\s+AND\\s+", "" )
-                .replaceAll( "\\s+", " AND " );
+        queryString = requireAllTerms( queryString );
         StopWatch timer = StopWatch.createStarted();
         Set<OntologySearchResult<OntologyTerm>> matches = super.findTerm( queryString, maxResults )
                 .stream()
