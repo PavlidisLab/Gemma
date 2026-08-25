@@ -227,6 +227,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.genome.gene.GeneService geneService() {
+            return mock( ubic.gemma.persistence.service.genome.gene.GeneService.class );
+        }
+
+        @Bean
         public AnalyticsProvider analyticsProvider() {
             return mock( AnalyticsProvider.class );
         }
@@ -424,6 +429,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @Autowired
     private GeneArgService geneArgService;
+
+    @Autowired
+    private ubic.gemma.persistence.service.genome.gene.GeneService geneService;
 
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
@@ -3086,11 +3094,29 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         ubic.gemma.model.analysis.expression.pca.ProbeLoading pl1 = ubic.gemma.model.analysis.expression.pca.ProbeLoading.Factory.newInstance( 1, 0.9, 1, p1 );
         ubic.gemma.model.analysis.expression.pca.ProbeLoading pl2 = ubic.gemma.model.analysis.expression.pca.ProbeLoading.Factory.newInstance( 1, -0.7, 2, p2 );
         ubic.gemma.model.analysis.expression.pca.ProbeLoading pl3 = ubic.gemma.model.analysis.expression.pca.ProbeLoading.Factory.newInstance( 1, 0.3, 3, p3 );
+        // Vectors carry the probe's gene IDs (GENE2CS-populated on the way out of the processed
+        // cache); that's what the endpoint resolves gene refs from. probe_a is non-specific (two
+        // genes), probe_b maps to one, probe_c has no vector at all.
+        ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject v1 = mock( ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject.class );
+        when( v1.getGenes() ).thenReturn( Arrays.asList( 300L, 301L ) );
+        ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject v2 = mock( ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject.class );
+        when( v2.getGenes() ).thenReturn( Collections.singletonList( 302L ) );
         Map<ubic.gemma.model.analysis.expression.pca.ProbeLoading, ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject> stored = new LinkedHashMap<>();
-        stored.put( pl1, null );
-        stored.put( pl2, null );
+        stored.put( pl1, v1 );
+        stored.put( pl2, v2 );
         stored.put( pl3, null );
         when( svdService.getTopLoadedVectors( eq( ee ), anyInt(), anyInt() ) ).thenReturn( stored );
+
+        Gene g300 = Gene.Factory.newInstance();
+        g300.setId( 300L );
+        g300.setOfficialSymbol( "ZZZ3" );
+        Gene g301 = Gene.Factory.newInstance();
+        g301.setId( 301L );
+        g301.setOfficialSymbol( "AAA1" );
+        Gene g302 = Gene.Factory.newInstance();
+        g302.setId( 302L );
+        g302.setOfficialSymbol( "BRCA1" );
+        when( geneService.loadThawedLiter( anyCollection() ) ).thenReturn( Arrays.asList( g300, g301, g302 ) );
 
         // SVDResult with a 2×2 vMatrix; column 0 (PC1) gives bioAssay scores.
         BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
@@ -3110,15 +3136,22 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( svd.getBioAssays() ).thenReturn( Arrays.asList( a1, a2 ) );
         when( svdService.getSvd( ee ) ).thenReturn( svd );
 
-        assertThat( target( "/datasets/1/svd/loadings" ).queryParam( "pc", 1 ).queryParam( "top", 2 ).request().get() )
-                .hasStatus( Response.Status.OK )
-                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
-                .entity()
-                .hasFieldOrProperty( "data" )
-                .hasFieldOrPropertyWithValue( "data.pc", 1 )
-                .extracting( "data.rows", list( Map.class ) )
-                .hasSize( 2 );
-        // default direction=both sorts by |loading| desc: pl1 (0.9), pl2 (-0.7), pl3 (0.3) → first two are 0.9, -0.7.
+        try ( Response r = target( "/datasets/1/svd/loadings" ).queryParam( "pc", 1 ).queryParam( "top", 2 ).request().get() ) {
+            assertThat( r )
+                    .hasStatus( Response.Status.OK )
+                    .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+            // default direction=both sorts by |loading| desc: pl1 (0.9), pl2 (-0.7), pl3 (0.3) →
+            // first two are 0.9, -0.7. probe_a is non-specific, so its row carries both genes in
+            // the same `genes` shape heatmap-data rows use; probe_b carries one.
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data.pc", 1 )
+                    .doesNotHavePath( "$.data.rows[2]" )
+                    .hasPathWithValue( "$.data.rows[0].genes[0].officialSymbol", "ZZZ3" )
+                    .hasPathWithValue( "$.data.rows[0].genes[1].officialSymbol", "AAA1" )
+                    .doesNotHavePath( "$.data.rows[0].genes[2]" )
+                    .hasPathWithValue( "$.data.rows[1].genes[0].officialSymbol", "BRCA1" )
+                    .doesNotHavePath( "$.data.rows[1].genes[1]" );
+        }
         verify( svdService ).hasSvd( ee );
         verify( svdService ).getTopLoadedVectors( eq( ee ), eq( 1 ), anyInt() );
         verify( svdService ).getSvd( ee );

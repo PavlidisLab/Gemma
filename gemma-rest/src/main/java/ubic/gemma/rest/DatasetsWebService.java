@@ -166,6 +166,7 @@ import ubic.gemma.model.common.measurement.MeasurementValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.rest.annotations.CacheControl;
@@ -187,6 +188,7 @@ import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
@@ -253,6 +255,8 @@ public class DatasetsWebService {
     private TaxonArgService taxonArgService;
     @Autowired
     private GeneArgService geneArgService;
+    @Autowired
+    private GeneService geneService;
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
     @Autowired
@@ -7737,8 +7741,11 @@ public class DatasetsWebService {
      * <p>
      * Uses {@link SVDService#getTopLoadedVectors(ExpressionExperiment, int, int)} to fetch the
      * stored {@link ProbeLoading} rows for the component (one DB hit; no expression-matrix
-     * recompute). bioAssay scores come from the SVDResult's vMatrix column for the PC. Returns
-     * 404 if the dataset has no SVD analysis, 400 if {@code pc} or {@code top} are out of range.
+     * recompute). bioAssay scores come from the SVDResult's vMatrix column for the PC. Gene refs
+     * are resolved from the gene IDs the fetched vectors already carry, in one batched load, and
+     * ship in the same {@link HeatmapDataValueObject.GeneRef} shape heatmap-data rows use.
+     * Returns 404 if the dataset has no SVD analysis, 400 if {@code pc} or {@code top} are out of
+     * range.
      */
     @GET
     @Path("/{dataset}/svd/loadings")
@@ -7746,7 +7753,8 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve top-loaded probes on a principal component for a dataset",
             description = "Returns the top-N probe loadings on the chosen PC (sorted by |loading| desc for "
                     + "`direction=both`, signed for `positive` / `negative`) plus the bioAssay scores on that PC. "
-                    + "404 if SVD has not been computed.",
+                    + "Each row carries the genes the probe maps to, in the same `genes` shape heatmap-data rows "
+                    + "use. 404 if SVD has not been computed.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Invalid pc, top, or direction.",
@@ -7785,7 +7793,23 @@ public class DatasetsWebService {
             // state next to the working sample-correlation / mean-variance panes.
             throw new NotFoundException( ee.getShortName() + " has SVD loadings but no full SVDResult; rerun the SVD task to populate." );
         }
-        return respond( PcLoadingsValueObject.from( pc, top, direction, loaded, svd ) );
+        return respond( PcLoadingsValueObject.from( pc, top, direction, loaded, svd, this::loadGenesById ) );
+    }
+
+    /**
+     * Batch-load genes by ID into an id-keyed map, mirroring the batching in
+     * {@link HeatmapDataService}'s row-metadata builder: one round-trip for every gene referenced
+     * by the returned rows, rather than a lookup per row.
+     */
+    private Map<Long, Gene> loadGenesById( Collection<Long> geneIds ) {
+        if ( geneIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Map<Long, Gene> byId = new HashMap<>();
+        for ( Gene g : geneService.loadThawedLiter( geneIds ) ) {
+            byId.put( g.getId(), g );
+        }
+        return byId;
     }
 
     /**
@@ -8603,9 +8627,10 @@ public class DatasetsWebService {
         Map<Long, Double> bioAssayScores;
 
         public static PcLoadingsValueObject from( int pc, int top, PcLoadingDirection direction,
-                Map<ProbeLoading, DoubleVectorValueObject> loaded, SVDResult svd ) {
-            // Filter + sort the loadings.
-            List<Row> rows = loaded.keySet().stream()
+                Map<ProbeLoading, DoubleVectorValueObject> loaded, SVDResult svd,
+                Function<Collection<Long>, Map<Long, Gene>> geneResolver ) {
+            // Filter + sort the loadings, then keep the top-N.
+            List<ProbeLoading> ranked = loaded.keySet().stream()
                     .filter( pl -> pl.getLoading() != null )
                     .filter( pl -> {
                         double v = pl.getLoading();
@@ -8633,13 +8658,29 @@ public class DatasetsWebService {
                         }
                     } )
                     .limit( top )
-                    .map( pl -> {
-                        CompositeSequence probe = pl.getProbe();
-                        Long deId = probe != null ? probe.getId() : null;
-                        String deName = probe != null ? probe.getName() : null;
-                        return new Row( deId, deName, null, pl.getLoading() );
-                    } )
                     .collect( Collectors.toList() );
+
+            // Gene refs. getTopLoadedVectors already fetched a vector per returned probe, and
+            // those vectors carry their probe's gene IDs (populated from GENE2CS on the way out of
+            // the processed-vector cache) — so the probe -> gene mapping is already paid for and
+            // only the id -> entity leg is left. Resolve it in one batch across all rows, the way
+            // HeatmapDataService#buildRowMetas does.
+            Set<Long> geneIds = new HashSet<>();
+            for ( ProbeLoading pl : ranked ) {
+                DoubleVectorValueObject v = loaded.get( pl );
+                if ( v != null && v.getGenes() != null ) {
+                    geneIds.addAll( v.getGenes() );
+                }
+            }
+            Map<Long, Gene> geneById = geneResolver.apply( geneIds );
+
+            List<Row> rows = new ArrayList<>( ranked.size() );
+            for ( ProbeLoading pl : ranked ) {
+                CompositeSequence probe = pl.getProbe();
+                Long deId = probe != null ? probe.getId() : null;
+                String deName = probe != null ? probe.getName() : null;
+                rows.add( new Row( deId, deName, geneRefsFor( loaded.get( pl ), geneById ), pl.getLoading() ) );
+            }
 
             // bioAssayScores: pull column `pc-1` of the v-matrix (1-indexed PC).
             Map<Long, Double> scores = new LinkedHashMap<>();
@@ -8658,15 +8699,39 @@ public class DatasetsWebService {
             return new PcLoadingsValueObject( pc, rows, scores );
         }
 
+        /**
+         * Gene references for one row, in the same shape heatmap-data rows use. A probe can map to
+         * several genes (a non-specific probe), so this is a list. Null when the probe has no gene
+         * mapping; a gene that missed the batch load degrades to an id-only ref rather than
+         * dropping out, matching {@link HeatmapDataService}'s row-metadata builder.
+         */
+        @Nullable
+        private static List<HeatmapDataValueObject.GeneRef> geneRefsFor( @Nullable DoubleVectorValueObject vector,
+                Map<Long, Gene> geneById ) {
+            if ( vector == null || vector.getGenes() == null || vector.getGenes().isEmpty() ) {
+                return null;
+            }
+            List<HeatmapDataValueObject.GeneRef> refs = new ArrayList<>( vector.getGenes().size() );
+            for ( Long gid : vector.getGenes() ) {
+                Gene g = geneById.get( gid );
+                if ( g != null ) {
+                    refs.add( new HeatmapDataValueObject.GeneRef( g.getId(), g.getOfficialSymbol(), g.getOfficialName() ) );
+                } else {
+                    refs.add( new HeatmapDataValueObject.GeneRef( gid, null, null ) );
+                }
+            }
+            return refs;
+        }
+
         @Value
         public static class Row {
             @Nullable Long designElementId;
             @Nullable String designElementName;
             /**
-             * Reserved — gene-symbol enrichment via the CompositeSequence → Gene mapping path
-             * is deferred. Currently always null.
+             * Genes the probe maps to, or {@code null} if it maps to none. More than one entry
+             * means a non-specific probe.
              */
-            @Nullable String geneSymbol;
+            @Nullable List<HeatmapDataValueObject.GeneRef> genes;
             double loading;
         }
     }
