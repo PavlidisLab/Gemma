@@ -69,6 +69,7 @@
         <mapping class="ubic.gemma.model.common.auditAndSecurity.JobInfo"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.UserGroup"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetTriage"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.CurationLock"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.Ticket"/>

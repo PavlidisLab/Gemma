@@ -45,11 +45,12 @@ import java.util.Set;
  * is why {@code parkedElements} needs explicit storage and the rest does not.
  * See {@code AnnotationSet#getParkedElements()}.</p>
  *
- * <p>🛑 This is set-level element bookkeeping, not the per-finding audit
- * disposition ({@code pending | accepted | dismissed | needs_more_info}) the
- * curation-agents side stores, nor {@link AnnotationSet#getTriage()}. Three
- * different questions: what did the curator do to this element, what did they
- * rule on that finding, and how much does this whole set matter.</p>
+ * <p>🛑 This is per-element bookkeeping within one draft, not the per-finding
+ * audit disposition ({@code pending | accepted | dismissed |
+ * needs_more_info}) the curation-agents side stores, nor
+ * {@link AnnotationSetTriage}. Three different questions at three scopes:
+ * what did the curator do to this element, what did they rule on that
+ * finding, and how much does this whole set matter.</p>
  *
  * <p>This class is pure — no Spring, no DB, no transactions. It is safe to
  * call from REST handlers or from unit tests. The string overload exists so a
