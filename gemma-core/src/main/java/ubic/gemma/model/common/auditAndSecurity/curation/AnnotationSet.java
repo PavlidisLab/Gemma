@@ -154,6 +154,31 @@ public class AnnotationSet extends AbstractIdentifiable {
     @Column(name = "FINALIZED_BY", columnDefinition = "VARCHAR(255)")
     private String finalizedBy;
 
+    /**
+     * How much this set matters — the triage verdict. Written first by the
+     * producing side as its QC verdict, then overwritten by a curator who
+     * disagrees; {@link #triagedBy} names whoever set the stored value.
+     * <p>
+     * {@code NULL} means {@link AnnotationSetTriage#Pending} (nobody has ruled
+     * yet), which is deliberately distinguishable from
+     * {@link AnnotationSetTriage#Fine} (looked at, nothing to do). Stored
+     * nullable rather than defaulting to {@code 'Pending'} so every row that
+     * predates triage reads as un-triaged instead of as a verdict nobody gave.
+     * <p>
+     * 🛑 Not the per-finding audit disposition, and not
+     * {@link CurationDraftDispositions.Disposition} — see
+     * {@link AnnotationSetTriage}.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TRIAGE", columnDefinition = "VARCHAR(16)")
+    private AnnotationSetTriage triage;
+
+    @Column(name = "TRIAGED_BY", columnDefinition = "VARCHAR(255)")
+    private String triagedBy;
+
+    @Column(name = "TRIAGED_AT", columnDefinition = "DATETIME(3)")
+    private Date triagedAt;
+
     @Column(name = "AGENT_VERSION", columnDefinition = "VARCHAR(255)")
     private String agentVersion;
 
@@ -294,6 +319,40 @@ public class AnnotationSet extends AbstractIdentifiable {
 
     public void setFinalizedBy( String finalizedBy ) {
         this.finalizedBy = finalizedBy;
+    }
+
+    /**
+     * @return the stored verdict, or {@link AnnotationSetTriage#Pending} when
+     *         the column is {@code NULL}. Never returns {@code null}, so no
+     *         caller has to decide what an absent triage means.
+     */
+    public AnnotationSetTriage getTriage() {
+        return triage != null ? triage : AnnotationSetTriage.Pending;
+    }
+
+    /**
+     * {@link AnnotationSetTriage#Pending} is stored as {@code NULL} — the two
+     * spellings of "not triaged" must not both end up in the column, or every
+     * query on it needs an {@code OR}.
+     */
+    public void setTriage( AnnotationSetTriage triage ) {
+        this.triage = triage == AnnotationSetTriage.Pending ? null : triage;
+    }
+
+    public String getTriagedBy() {
+        return triagedBy;
+    }
+
+    public void setTriagedBy( String triagedBy ) {
+        this.triagedBy = triagedBy;
+    }
+
+    public Date getTriagedAt() {
+        return triagedAt;
+    }
+
+    public void setTriagedAt( Date triagedAt ) {
+        this.triagedAt = triagedAt;
     }
 
     public String getAgentVersion() {
