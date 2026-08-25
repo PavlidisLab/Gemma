@@ -1136,8 +1136,23 @@
 					leak worth investigating, not a knob to widen further.
 					-->
 					<forkedProcessExitTimeoutInSeconds>120</forkedProcessExitTimeoutInSeconds>
+					<!--
+					**/*IT.java is here because failsafe's own default
+					includes do NOT apply once <includes> is declared, and
+					this block previously listed only **/*Test.java. Five
+					classes were therefore compiled and never run:
+					AnnotationSetPersistenceIT, TicketPersistenceIT,
+					PublicationAssociationPersistenceIT, HqlSmokeIT and
+					HibernateSqmFragileShapesIT. Measured 2026-08-25: 841
+					surefire reports under gemma-core/target, zero for any
+					of them. Nothing fails when a test class matches no
+					include pattern, which is why it went unnoticed.
+					Prefer the *IT.java suffix for new integration tests;
+					they will now actually run.
+					-->
 					<includes>
 						<include>**/*Test.java</include>
+						<include>**/*IT.java</include>
 					</includes>
 					<!--
 					<groups> is a JUnit Platform tag expression. "integration"
