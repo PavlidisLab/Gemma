@@ -2,6 +2,7 @@ package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.expression.experiment.GeeqValueObject;
@@ -83,16 +84,36 @@ public class PipelineStatusValueObject {
     @Setter
     public static class PipelineStepValueObject {
 
+        /** The step has completed successfully. */
+        public static final String STATUS_OK = "ok";
+        /** The most recent attempt failed. */
+        public static final String STATUS_FAILED = "failed";
+        /** Applicable to this experiment, but never attempted. */
+        public static final String STATUS_NOT_RUN = "notRun";
+        /** Not applicable to this experiment -- so "never run" is not a gap. */
+        public static final String STATUS_NOT_APPLICABLE = "notApplicable";
+
         /**
-         * One of {@code batchInfo}, {@code preprocess}, {@code pca}, {@code dea}, {@code coexpression},
-         * {@code missingValue}.
+         * Which pipeline step. The nine emitted by
+         * {@code DatasetsWebService.PIPELINE_STEPS}.
          */
+        @Schema(allowableValues = { "batchInfo", "preprocess", "batchCorrection", "pca", "sampleCorrelation",
+                "meanVariance", "dea", "coexpression", "missingValue" })
         private String step;
         /**
-         * One of {@code ok}, {@code failed}, {@code notRun}, {@code notApplicable}.
+         * One of {@link #STATUS_OK}, {@link #STATUS_FAILED}, {@link #STATUS_NOT_RUN},
+         * {@link #STATUS_NOT_APPLICABLE}.
+         * <p>
+         * Kept a {@code String} rather than promoted to an enum, so that adding a value later is not a
+         * deserialization break for a consumer holding an older copy of the vocabulary. The
+         * {@code allowableValues} below is what pins it: before this, the deployed OpenAPI spec said only
+         * {@code "type": "string"}, which is how a vocabulary drifts with nobody noticing -- and it had
+         * already drifted, since the curation UI carries a six-value union of which two
+         * ({@code in_progress}, {@code needs_attention}) no producer here emits.
          * <p>
          * Wire key is {@code status} per curation-UI alignment; legacy {@code state} accepted on read.
          */
+        @Schema(allowableValues = { "ok", "failed", "notRun", "notApplicable" })
         @JsonProperty("status")
         @JsonAlias({ "state" })
         private String state;

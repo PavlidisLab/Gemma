@@ -390,7 +390,8 @@ public class AnnotationSetsWebService {
                     + "answers whether a curator agrees with one finding. This answers how much the whole "
                     + "set matters, and a finding can be dismissed inside a set ruled `must_fix`.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The ruling was recorded."),
+                    @ApiResponse(responseCode = "200", description = "The ruling was recorded.",
+                            content = @Content(schema = @Schema(implementation = TriageResponse.class))),
                     @ApiResponse(responseCode = "400", description = "`triage` is missing or names no verdict.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",

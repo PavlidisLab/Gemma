@@ -2171,7 +2171,8 @@ public class DatasetsWebService {
                     + "Emits no audit event: an audit event moves `lastUpdated`, which is the very token the "
                     + "commit checks, so taking a lock would 409 every draft in flight on the dataset.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Granted, refreshed or stolen."),
+                    @ApiResponse(responseCode = "200", description = "Granted, refreshed or stolen.",
+                            content = @Content(schema = @Schema(implementation = CurationLockResponse.class))),
                     @ApiResponse(responseCode = "409", description = "Held by someone else; retry with ?steal=true.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response acquireCurationLock(
@@ -4629,11 +4630,15 @@ public class DatasetsWebService {
         AuditEvent winner = pickLatestEvent( successEvent, failedEvent );
         if ( winner == null ) {
             return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey,
-                    applicable ? "notRun" : "notApplicable", null, null, null );
+                    applicable ? PipelineStatusValueObject.PipelineStepValueObject.STATUS_NOT_RUN
+                            : PipelineStatusValueObject.PipelineStepValueObject.STATUS_NOT_APPLICABLE,
+                    null, null, null );
         }
         String eventTypeName = winner.getEventType() != null
                 ? winner.getEventType().getClass().getSimpleName() : null;
-        String state = eventTypeName != null && eventTypeName.startsWith( "Failed" ) ? "failed" : "ok";
+        String state = eventTypeName != null && eventTypeName.startsWith( "Failed" )
+                ? PipelineStatusValueObject.PipelineStepValueObject.STATUS_FAILED
+                : PipelineStatusValueObject.PipelineStepValueObject.STATUS_OK;
         return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey, state,
                 winner.getDate(), eventTypeName, winner.getNote() );
     }

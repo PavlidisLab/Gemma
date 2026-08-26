@@ -355,6 +355,22 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
             return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService.class );
         }
 
+        /**
+         * Triage and lock are mocked rather than wired: this context builds the web service over mocks, so a
+         * new @Autowired collaborator on AnnotationSetsWebService or DatasetsWebService fails context init for
+         * every test in the class until it is declared here. That is what happened when the triage and lock
+         * REST routes landed -- 190 errors, all one missing bean.
+         */
+        @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService annotationSetTriageService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService.class );
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService curationLockService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService.class );
+        }
+
         @Bean
         public AnnotationSetsWebService annotationSetsWebService() {
             return new AnnotationSetsWebService();
