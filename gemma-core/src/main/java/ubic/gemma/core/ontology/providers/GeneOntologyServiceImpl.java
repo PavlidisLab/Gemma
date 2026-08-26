@@ -171,16 +171,43 @@ public class GeneOntologyServiceImpl extends AbstractDelegatingOntologyService i
      * no error, no hits. Found 2026-08-24 while tracing the `/annotations/search` 500 on a bare
      * boolean keyword; only reachable on the GO fallback, which runs when the other ontologies
      * return nothing.
+     * <p>
+     * 🛑 It stripped only {@code AND}, so an infix {@code OR} survived into the rejoin and came out
+     * as an OPERAND: `tumour OR normal` became `tumour AND OR AND normal`, which does not parse. A
+     * legal query was turned into an invalid one by the rewrite, and the endpoint reported a 400 for
+     * a search that should simply have found nothing — which is why `liver OR brain` answered 200
+     * (hits, so no fallback) while `zqx OR zqy` answered 400. Reported by oganm on gemma-ui PR #11.
+     * <p>
+     * Separators are matched with whitespace on BOTH sides, so a DANGLING operator (`cell OR`,
+     * `OR cell`) is deliberately left alone and still fails to parse: that input is malformed, and
+     * making it search is a separate behaviour change that was declined.
+     *
+     * @see #excludesTerms(String) for why {@code NOT} is not a separator
      */
     static String requireAllTerms( String queryString ) {
         return queryString
                 .trim()
-                .replaceAll( "\\s+AND\\s+", " " )
+                .replaceAll( "\\s+(AND|OR)\\s+", " " )
                 .replaceAll( "\\s+", " AND " );
+    }
+
+    /**
+     * Whether a query carries an infix {@code NOT}, i.e. asks to EXCLUDE something.
+     * <p>
+     * {@code NOT} is not stripped as a separator like {@code AND} / {@code OR}: dropping it would
+     * invert the query — `tumour NOT normal` would become `tumour AND normal`, matching the very
+     * thing the caller asked to exclude. GO cannot honour an exclusion here either, because this
+     * leg requires every token by construction, so the fallback sits the query out instead.
+     */
+    static boolean excludesTerms( String queryString ) {
+        return queryString != null && queryString.trim().matches( "(?s).*\\s+NOT\\s+.*" );
     }
 
     @Override
     public Collection<OntologySearchResult<OntologyTerm>> findTerm( String queryString, int maxResults ) throws OntologySearchException {
+        if ( excludesTerms( queryString ) ) {
+            return Collections.emptySet();
+        }
         queryString = requireAllTerms( queryString );
         StopWatch timer = StopWatch.createStarted();
         Set<OntologySearchResult<OntologyTerm>> matches = super.findTerm( queryString, maxResults )
