@@ -409,15 +409,45 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             if ( origVo == null )
                 continue;
             ArrayDesignValueObject cachedVo = this.getSummaryObject( origVo.getId() );
-            if ( cachedVo != null ) {
-                origVo.setNumProbeSequences( cachedVo.getNumProbeSequences() );
-                origVo.setNumProbeAlignments( cachedVo.getNumProbeAlignments() );
-                origVo.setNumProbesToGenes( cachedVo.getNumProbesToGenes() );
-                origVo.setNumGenes( cachedVo.getNumGenes() );
-                origVo.setDateCached( cachedVo.getDateCached() );
-                origVo.setDesignElementCount( cachedVo.getDesignElementCount() );
+            if ( cachedVo == null ) {
+                continue;
             }
+            if ( isForADifferentPlatform( origVo, cachedVo ) ) {
+                log.warn( String.format(
+                        "The cached report at id %d was written for %s but %s holds that id now; ignoring it.",
+                        origVo.getId(), cachedVo.getShortName(), origVo.getShortName() ) );
+                continue;
+            }
+            origVo.setNumProbeSequences( cachedVo.getNumProbeSequences() );
+            origVo.setNumProbeAlignments( cachedVo.getNumProbeAlignments() );
+            origVo.setNumProbesToGenes( cachedVo.getNumProbesToGenes() );
+            origVo.setNumGenes( cachedVo.getNumGenes() );
+            origVo.setDateCached( cachedVo.getDateCached() );
+            origVo.setDesignElementCount( cachedVo.getDesignElementCount() );
         }
+    }
+
+    /**
+     * Whether a cached report belongs to a platform other than the one it is about to be applied to.
+     * <p>
+     * A report is one file per database id ({@code ArrayDesignReport.<id>}) and carries no back-reference to its
+     * platform beyond that filename. So whenever an id comes to mean a different platform than it did when the
+     * report was written, the report is applied to the wrong platform — and silently, because the counts are
+     * plausible numbers either way. Two ways that happens: an appdata home that outlives the database it was
+     * written against (a recreated {@code gemdtest} restarts the auto-increment sequence), and one appdata home
+     * shared by two deployments, which have independent sequences to begin with.
+     * <p>
+     * Observed 2026-08-26 rather than imagined: {@code PlatformsWebServiceTest} asserted that a freshly seeded
+     * microarray with no report has null gene counts, and read 0 — out of a two-day-old report for a different
+     * test platform that had held the same id in a previous {@code gemdtest}.
+     * <p>
+     * Short name is the check: it is the platform's stable public identifier (GPL96) and every report carries it.
+     * When either side has none the report is accepted, because the point is to catch a mismatch rather than an
+     * unknown, and refusing on absence would drop reports written before the field was captured.
+     */
+    private static boolean isForADifferentPlatform( ArrayDesignValueObject origVo, ArrayDesignValueObject cachedVo ) {
+        return origVo.getShortName() != null && cachedVo.getShortName() != null
+                && !origVo.getShortName().equals( cachedVo.getShortName() );
     }
 
     @Override
