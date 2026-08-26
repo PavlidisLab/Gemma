@@ -12,6 +12,7 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import org.hibernate.annotations.OnDelete;
+import ubic.gemma.model.analysis.Investigation;
 import org.hibernate.annotations.OnDeleteAction;
 
 import jakarta.persistence.Column;
@@ -71,13 +72,18 @@ public class CurationLock implements Serializable {
      * The locked investigation, and the primary key. Shares the row's
      * identity rather than carrying a surrogate id: "which dataset is this a
      * lock on" and "which lock is this" are the same question.
+     * <p>
+     * Typed {@link Investigation}, matching both the FK target
+     * ({@code INVESTIGATION(ID)}) and {@link AnnotationSet#getInvestigation()}
+     * — a preboarded experiment is an Investigation but not an
+     * ExpressionExperiment, and curation starts before promotion.
      */
     @Id
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "INVESTIGATION_FK", nullable = false, columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "FK_CURATION_LOCK_INVESTIGATION"))
-    private ubic.gemma.model.expression.experiment.ExpressionExperiment investigation;
+    private Investigation investigation;
 
     /**
      * Whatever identity the holder authenticated as. {@code VARCHAR(255)}
@@ -109,11 +115,11 @@ public class CurationLock implements Serializable {
     public CurationLock() {
     }
 
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment getInvestigation() {
+    public Investigation getInvestigation() {
         return investigation;
     }
 
-    public void setInvestigation( ubic.gemma.model.expression.experiment.ExpressionExperiment investigation ) {
+    public void setInvestigation( Investigation investigation ) {
         this.investigation = investigation;
     }
 
