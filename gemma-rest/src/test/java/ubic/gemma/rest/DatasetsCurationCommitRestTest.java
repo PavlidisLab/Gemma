@@ -4,6 +4,7 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1275,6 +1276,118 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     /** Embed a JSON document as a JSON string value. */
     private static String quoteJson( String raw ) {
         return "\"" + raw.replace( "\\", "\\\\" ).replace( "\"", "\\\"" ) + "\"";
+    }
+
+
+    /* ============== triage ============== */
+
+    /**
+     * The agent's own verdict and a curator's relayed one coexist on the same set, and the curator's is recorded
+     * as CURATOR rather than as the agent that transmitted it. If the kind followed the transport instead of the
+     * delegation, "has a person looked at this" would answer false for every ruling a curator ever made -- which,
+     * now that curation is relayed, is all of them.
+     */
+    @Test
+    public void testAgentAndCuratorVerdictsCoexistWithTheRightKinds() {
+        Long setId = mintProposal( "triage-run-1" );
+        testAuthenticationUtils.runAsUser( "triagealice", true );
+        testAuthenticationUtils.runAsAgent();
+
+        patchTriage( setId, null, "{\"triage\":\"must_fix\"}" );
+        patchTriage( setId, "triagealice", "{\"triage\":\"wont_fix\",\"note\":\"batch artifact\"}" );
+
+        try ( Response r = target( "/annotation-sets/" + setId + "/triage" ).request().get() ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).contains( "must_fix" ).contains( "wont_fix" )
+                    .contains( "\"judgeKind\":\"agent\"" ).contains( "\"judgeKind\":\"curator\"" )
+                    .contains( "triagealice" ).contains( "batch artifact" );
+        }
+        testAuthenticationUtils.runAsAdmin();
+    }
+
+    /**
+     * A judge has one standing ruling, so changing your mind edits rather than accumulates.
+     */
+    @Test
+    public void testSameJudgeRulingTwiceLeavesOneRow() {
+        Long setId = mintProposal( "triage-run-2" );
+        testAuthenticationUtils.runAsUser( "triagebob", true );
+        testAuthenticationUtils.runAsAgent();
+
+        patchTriage( setId, "triagebob", "{\"triage\":\"might_fix\"}" );
+        patchTriage( setId, "triagebob", "{\"triage\":\"fine\"}" );
+
+        try ( Response r = target( "/annotation-sets/" + setId + "/triage" ).request().get() ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).contains( "fine" ).doesNotContain( "might_fix" );
+        }
+        testAuthenticationUtils.runAsAdmin();
+    }
+
+    /**
+     * There is no `pending` verdict -- an un-ruled set has no row -- so a client sending one is told rather than
+     * silently given a verdict nobody chose.
+     */
+    @Test
+    public void testPendingIsNotAVerdict() {
+        Long setId = mintProposal( "triage-run-3" );
+        try ( Response r = target( "/annotation-sets/" + setId + "/triage" )
+                .request().method( "PATCH", Entity.json( "{\"triage\":\"pending\"}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
+        }
+        try ( Response r = target( "/annotation-sets/" + setId + "/triage" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).as( "still un-triaged" ).isEqualTo( "[]" );
+        }
+    }
+
+    /**
+     * Withdrawing returns the set to un-triaged, and withdrawing again is not an error -- a withdrawal that finds
+     * nothing has still achieved what it asked for.
+     */
+    @Test
+    public void testWithdrawReturnsTheSetToUntriaged() {
+        Long setId = mintProposal( "triage-run-4" );
+        patchTriage( setId, null, "{\"triage\":\"fine\"}" );
+        for ( int i = 0; i < 2; i++ ) {
+            try ( Response r = target( "/annotation-sets/" + setId + "/triage" ).request().delete() ) {
+                assertThat( r.getStatus() ).isEqualTo( Response.Status.NO_CONTENT.getStatusCode() );
+            }
+        }
+        try ( Response r = target( "/annotation-sets/" + setId + "/triage" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).isEqualTo( "[]" );
+        }
+    }
+
+    /**
+     * Create a PROPOSAL on the seeded experiment and return its id, read off the response body the way
+     * testRestoringANonSnapshotIsRejected does -- the entity is consumed once, so the id has to come out of the
+     * same read that checks the status.
+     */
+    private Long mintProposal( String runId ) {
+        String body = "{\"role\":\"proposal\",\"source\":\"agent\",\"runId\":\"" + runId
+                + "\",\"createdBy\":\"agent-1\",\"payloadJson\":\"{}\"}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/annotation-sets" )
+                .request().post( Entity.json( body ) ) ) {
+            String json = r.readEntity( String.class );
+            assertThat( r.getStatus() ).as( "response body: %s", json )
+                    .isIn( Response.Status.OK.getStatusCode(), Response.Status.CREATED.getStatusCode() );
+            return Long.parseLong( json.replaceAll( "(?s).*?\"id\"\\s*:\\s*(\\d+).*", "$1" ) );
+        }
+    }
+
+    private void patchTriage( Long setId, @Nullable String onBehalfOf, String body ) {
+        jakarta.ws.rs.client.WebTarget t = target( "/annotation-sets/" + setId + "/triage" );
+        if ( onBehalfOf != null ) {
+            t = t.queryParam( "onBehalfOf", onBehalfOf );
+        }
+        try ( Response r = t.request().method( "PATCH", Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).as( "response body: %s", r.readEntity( String.class ) )
+                    .isEqualTo( Response.Status.OK.getStatusCode() );
+        }
     }
 
 }

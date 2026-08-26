@@ -23,6 +23,7 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -48,9 +49,13 @@ import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSummaryValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetTriage;
+import ubic.gemma.model.common.auditAndSecurity.curation.TriageJudgeKind;
+import ubic.gemma.model.common.auditAndSecurity.curation.TriageVerdict;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -103,6 +108,9 @@ public class AnnotationSetsWebService {
 
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private AnnotationSetTriageService annotationSetTriageService;
 
     /**
      * Screening queue: redirect to the existing
@@ -355,6 +363,144 @@ public class AnnotationSetsWebService {
             throw new NotFoundException( "No annotation set with id " + id );
         }
         return Response.ok( toResponse( updated ) ).build();
+    }
+
+    /* ============== triage ============== */
+
+    /**
+     * Record or replace the caller's triage ruling on an annotation set.
+     *
+     * <p>Idempotent per judge: a second call from the same judge updates their
+     * standing ruling rather than adding one, so a curator changing their mind
+     * leaves one row and not a history.</p>
+     */
+    @PATCH
+    @Path("/annotation-sets/{id}/triage")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Rule on how much an annotation set matters",
+            description = "`triage` is one of `fine`, `wont_fix`, `might_fix`, `must_fix`. There is no "
+                    + "`pending` -- a set nobody has ruled on simply has no triage row, so absence is the "
+                    + "state.\n\n"
+                    + "One standing ruling per judge; several judges coexist, and the effective verdict is "
+                    + "the most recent. `?onBehalfOf=` records the ruling curator when the call is relayed "
+                    + "by an agent, and is honoured only for `GROUP_AGENT` / `GROUP_ADMIN`.\n\n"
+                    + "🛑 Not the per-finding audit disposition (`accepted` / `dismissed` / ...), which "
+                    + "answers whether a curator agrees with one finding. This answers how much the whole "
+                    + "set matters, and a finding can be dismissed inside a set ruled `must_fix`.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The ruling was recorded."),
+                    @ApiResponse(responseCode = "400", description = "`triage` is missing or names no verdict.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response triageAnnotationSet(
+            @PathParam("id") Long id,
+            @Parameter(description = "Who is ruling. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
+            @Nullable TriageRequest body
+    ) {
+        if ( body == null || body.triage == null || body.triage.isBlank() ) {
+            throw new BadRequestException( "Request body must include `triage`"
+                    + " (fine|wont_fix|might_fix|must_fix)." );
+        }
+        TriageVerdict verdict;
+        try {
+            verdict = TriageVerdict.fromDbValue( body.triage );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( e.getMessage() );
+        }
+        AnnotationSet set = requireLoad( id, "id" );
+        String judgedBy = resolveCurator( onBehalfOf );
+        // The kind follows the delegation, not the transport. A ruling relayed for a named curator is that
+        // curator's; only a caller ruling as itself, and being an agent, produces an AGENT verdict. Backwards,
+        // this would make "has a person looked at this" answer false for every ruling a curator made through
+        // the agent -- which, now that curation is relayed, is all of them.
+        boolean ruledForSomeoneNamed = onBehalfOf != null && !onBehalfOf.isBlank();
+        TriageJudgeKind kind = !ruledForSomeoneNamed && SecurityUtil.isUserAgent()
+                ? TriageJudgeKind.AGENT : TriageJudgeKind.CURATOR;
+        AnnotationSetTriage t = annotationSetTriageService.judge( set, verdict, judgedBy, kind, body.note );
+        return Response.ok( toTriageResponse( t ) ).build();
+    }
+
+    /**
+     * Withdraw the caller's ruling, returning the set to un-triaged if it was
+     * the only one. 204 whether or not a row was there -- a withdrawal that
+     * finds nothing has still achieved what it asked for.
+     */
+    @DELETE
+    @Path("/annotation-sets/{id}/triage")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Withdraw a triage ruling",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Withdrawn, or there was nothing to withdraw."),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response withdrawTriage(
+            @PathParam("id") Long id,
+            @Parameter(description = "Whose ruling to withdraw. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
+    ) {
+        AnnotationSet set = requireLoad( id, "id" );
+        annotationSetTriageService.withdraw( set, resolveCurator( onBehalfOf ) );
+        return Response.noContent().build();
+    }
+
+    /**
+     * Every ruling on an annotation set, most recent first. The head of the
+     * list is the effective verdict.
+     */
+    @GET
+    @Path("/annotation-sets/{id}/triage")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Read the triage rulings on an annotation set",
+            description = "Most recent first, so the head of the list is the effective verdict. An empty "
+                    + "list means nobody has ruled.")
+    public Response getTriage( @PathParam("id") Long id ) {
+        AnnotationSet set = requireLoad( id, "id" );
+        List<TriageResponse> rows = new ArrayList<>();
+        for ( AnnotationSetTriage t : annotationSetTriageService.findBySet( set ) ) {
+            rows.add( toTriageResponse( t ) );
+        }
+        return Response.ok( rows ).build();
+    }
+
+    private static TriageResponse toTriageResponse( AnnotationSetTriage t ) {
+        TriageResponse r = new TriageResponse();
+        r.id = t.getId();
+        r.annotationSetId = t.getAnnotationSet() != null ? t.getAnnotationSet().getId() : null;
+        r.triage = t.getVerdict() != null ? t.getVerdict().getDbValue() : null;
+        r.judgedBy = t.getJudgedBy();
+        r.judgeKind = t.getJudgeKind() != null ? t.getJudgeKind().getDbValue() : null;
+        r.judgedAt = t.getJudgedAt();
+        r.note = t.getNote();
+        return r;
+    }
+
+    /** Body for {@link #triageAnnotationSet}. */
+    public static class TriageRequest {
+        @JsonProperty("triage")
+        public String triage;
+        @JsonProperty("note")
+        public String note;
+    }
+
+    /** Wire shape of one triage ruling. */
+    public static class TriageResponse {
+        public Long id;
+        @JsonProperty("annotationSetId")
+        public Long annotationSetId;
+        public String triage;
+        @JsonProperty("judgedBy")
+        public String judgedBy;
+        @JsonProperty("judgeKind")
+        public String judgeKind;
+        @JsonProperty("judgedAt")
+        public Date judgedAt;
+        public String note;
     }
 
     /**

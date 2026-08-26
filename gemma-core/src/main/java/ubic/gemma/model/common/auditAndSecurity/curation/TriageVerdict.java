@@ -47,11 +47,21 @@ public enum TriageVerdict {
     MustFix;
 
     /**
-     * @return the lowercase external form for JSON / wire surfaces, matching
-     *         the convention {@link AnnotationSetRole#getDbValue()} set.
+     * @return the snake_case external form for JSON / wire surfaces —
+     *         {@code fine}, {@code wont_fix}, {@code might_fix},
+     *         {@code must_fix}.
+     *         <p>
+     *         Not the bare {@code name().toLowerCase()} that
+     *         {@link AnnotationSetRole#getDbValue()} uses: those values are
+     *         single words, and these are not. Lower-casing alone emits
+     *         {@code wontfix} while {@link #fromDbValue} accepts
+     *         {@code wont_fix}, which makes the wire asymmetric — a client
+     *         that echoes back what it was given still works, so the mismatch
+     *         only surfaces where someone compares the emitted value against
+     *         the documented one.
      */
     public String getDbValue() {
-        return name().toLowerCase();
+        return name().replaceAll( "(?<=.)(?=\\p{Upper})", "_" ).toLowerCase();
     }
 
     /**
