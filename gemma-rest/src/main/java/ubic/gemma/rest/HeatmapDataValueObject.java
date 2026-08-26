@@ -196,9 +196,10 @@ public class HeatmapDataValueObject {
     }
 
     /**
-     * Compact gene reference: official symbol + full name + ID. The ID is what the client
-     * uses to build a link to the gene page (e.g. {@code /gene/{geneId}}). Every field is
-     * individually optional — producers ship whatever they have.
+     * Compact gene reference: official symbol + full name + Gemma ID + NCBI gene ID. The Gemma ID
+     * is what the client uses to build a link to the gene page (e.g. {@code /gene/{geneId}}); the
+     * NCBI ID is what it uses to link out (e.g. NCBI Gene, or any external resource keyed by
+     * Entrez ID). Every field is individually optional — producers ship whatever they have.
      */
     @Getter
     @Setter
@@ -215,14 +216,20 @@ public class HeatmapDataValueObject {
         @Nullable
         @JsonInclude(JsonInclude.Include.NON_NULL)
         private String name;
+        /** NCBI (Entrez) gene ID. Null for the genes Gemma tracks without one. */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private Integer ncbiId;
 
         public GeneRef() {
         }
 
-        public GeneRef( @Nullable Long id, @Nullable String officialSymbol, @Nullable String name ) {
+        public GeneRef( @Nullable Long id, @Nullable String officialSymbol, @Nullable String name,
+                @Nullable Integer ncbiId ) {
             this.id = id;
             this.officialSymbol = officialSymbol;
             this.name = name;
+            this.ncbiId = ncbiId;
         }
     }
 

@@ -562,7 +562,7 @@ public class HeatmapDataService {
 
     private List<HeatmapDataValueObject.RowMeta> buildRowMetas( Collection<DoubleVectorValueObject> vectors ) {
         // Batch-load gene entities for all gene IDs across all rows so each GeneRef can carry
-        // officialSymbol + name without a per-row round-trip.
+        // officialSymbol + name + NCBI id without a per-row round-trip.
         Set<Long> allGeneIds = new HashSet<>();
         for ( DoubleVectorValueObject v : vectors ) {
             if ( v.getGenes() != null ) {
@@ -589,10 +589,10 @@ public class HeatmapDataService {
                 for ( Long gid : v.getGenes() ) {
                     Gene g = geneById.get( gid );
                     if ( g != null ) {
-                        refs.add( new HeatmapDataValueObject.GeneRef( g.getId(), g.getOfficialSymbol(), g.getOfficialName() ) );
+                        refs.add( new HeatmapDataValueObject.GeneRef( g.getId(), g.getOfficialSymbol(), g.getOfficialName(), g.getNcbiGeneId() ) );
                     } else {
                         // Fall back to id-only ref when the gene didn't come back from the batch load.
-                        refs.add( new HeatmapDataValueObject.GeneRef( gid, null, null ) );
+                        refs.add( new HeatmapDataValueObject.GeneRef( gid, null, null, null ) );
                     }
                 }
                 row.setGenes( refs );
