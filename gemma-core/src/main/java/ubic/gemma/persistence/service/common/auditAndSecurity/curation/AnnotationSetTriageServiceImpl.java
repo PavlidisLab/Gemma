@@ -121,6 +121,12 @@ public class AnnotationSetTriageServiceImpl implements AnnotationSetTriageServic
 
     @Override
     @Transactional(readOnly = true)
+    public Map<Long, AnnotationSetTriage> effectiveForInvestigationIds( Collection<Long> investigationIds ) {
+        return annotationSetTriageDao.findEffectiveByInvestigationIds( investigationIds );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<AnnotationSetTriage> findByInvestigation( Investigation investigation ) {
         Assert.notNull( investigation, "investigation must not be null." );
         return annotationSetTriageDao.findByInvestigation( investigation );

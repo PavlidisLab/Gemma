@@ -101,6 +101,27 @@ public class AnnotationSetTriageDaoImpl extends AbstractDao<AnnotationSetTriage>
 
     @Override
     @SuppressWarnings("unchecked")
+    public Map<Long, AnnotationSetTriage> findEffectiveByInvestigationIds( Collection<Long> investigationIds ) {
+        if ( investigationIds == null || investigationIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // Same shape as findEffectiveBySetIds: one newest-first query, keep the first row seen
+        // per investigation. A dataset can own several annotation sets, so the winner is the most
+        // recent ruling across all of them — which is the rule effectiveFor already applies to a
+        // single set, not a new one.
+        List<AnnotationSetTriage> all = getSessionFactory().getCurrentSession()
+                .createQuery( "from AnnotationSetTriage t where t.annotationSet.investigation.id in (:ids)" + NEWEST_FIRST )
+                .setParameterList( "ids", investigationIds )
+                .list();
+        Map<Long, AnnotationSetTriage> out = new HashMap<>();
+        for ( AnnotationSetTriage t : all ) {
+            out.putIfAbsent( t.getAnnotationSet().getInvestigation().getId(), t );
+        }
+        return out;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public Map<TriageVerdict, Long> countByVerdict() {
         List<Object[]> rows = getSessionFactory().getCurrentSession()
                 .createQuery( "select t.verdict, count(*) from AnnotationSetTriage t group by t.verdict" )

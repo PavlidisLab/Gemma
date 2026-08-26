@@ -503,6 +503,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private OntologyTermValidator ontologyTermValidator;
 
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService annotationSetTriageService;
+
     private ExpressionExperiment ee;
 
     @BeforeEach
@@ -3981,5 +3984,90 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         public LockedPath stealWithPath( Path path ) {
             return new DummyLockedPath( path, shared );
         }
+    }
+
+    /**
+     * The bulk route lives at the LITERAL `/datasets/pipelineStatus` with ids in a query param.
+     * `/datasets/{datasets}/pipelineStatus` would be the same JAX-RS template as the
+     * single-dataset route — a path parameter's name does not distinguish it — so this test also
+     * pins that the two coexist rather than shadowing one another.
+     */
+    @Test
+    @WithMockUser
+    public void testGetDatasetsPipelineStatusReturnsAnEntryPerDatasetAlongsideTheSingleRoute() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+
+        assertThat( target( "/datasets/pipelineStatus" ).queryParam( "datasets", "1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .satisfies( rows -> org.assertj.core.api.Assertions
+                        .assertThat( rows.get( 0 ).get( "datasetId" ) ).isEqualTo( 1 ) );
+
+        // the single-dataset route still answers on its own template
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    @WithMockUser
+    public void testPipelineStatusCarriesTheEffectiveTriageVerdictAndJudgeKind() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetTriage triage =
+                new ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetTriage();
+        triage.setVerdict( ubic.gemma.model.common.auditAndSecurity.curation.TriageVerdict.MustFix );
+        triage.setJudgeKind( ubic.gemma.model.common.auditAndSecurity.curation.TriageJudgeKind.CURATOR );
+        when( annotationSetTriageService.effectiveForInvestigationIds( any() ) )
+                .thenReturn( Collections.singletonMap( 1L, triage ) );
+
+        assertThat( target( "/datasets/pipelineStatus" ).queryParam( "datasets", "1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .satisfies( rows -> {
+                    org.assertj.core.api.Assertions.assertThat( rows.get( 0 ).get( "triageVerdict" ) ).isEqualTo( "MustFix" );
+                    org.assertj.core.api.Assertions.assertThat( rows.get( 0 ).get( "triageJudgeKind" ) ).isEqualTo( "CURATOR" );
+                } );
+    }
+
+    /**
+     * Nothing triaged leaves both fields null rather than defaulting — that is how a caller tells
+     * "not triaged" from "triaged Fine", which a boolean could not express.
+     */
+    @Test
+    @WithMockUser
+    public void testPipelineStatusTriageIsNullWhenNothingHasBeenTriaged() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        when( annotationSetTriageService.effectiveForInvestigationIds( any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.triageVerdict", null )
+                .hasFieldOrPropertyWithValue( "data.triageJudgeKind", null );
+    }
+
+    /**
+     * needsAttention is the pre-agent curator flag and must NOT move with triage: the two are
+     * separate signals, and collapsing them was the thing this design turned down.
+     */
+    @Test
+    @WithMockUser
+    public void testTriageDoesNotTouchTheCuratorNeedsAttentionFlag() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetTriage triage =
+                new ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetTriage();
+        triage.setVerdict( ubic.gemma.model.common.auditAndSecurity.curation.TriageVerdict.MustFix );
+        triage.setJudgeKind( ubic.gemma.model.common.auditAndSecurity.curation.TriageJudgeKind.AGENT );
+        when( annotationSetTriageService.effectiveForInvestigationIds( any() ) )
+                .thenReturn( Collections.singletonMap( 1L, triage ) );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.triageVerdict", "MustFix" )
+                .hasFieldOrPropertyWithValue( "data.needsAttention", false );
     }
 }

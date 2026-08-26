@@ -21,6 +21,7 @@ import ubic.gemma.core.security.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -150,6 +151,9 @@ import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetTriage;
+import ubic.gemma.rest.util.args.DatasetArrayArg;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
@@ -292,6 +296,8 @@ public class DatasetsWebService {
     /** Used by the snapshot/restore pair to load a stored payload; the delegating routes go through the web service above. */
     @Autowired
     private AnnotationSetService annotationSetService;
+    @Autowired
+    private AnnotationSetTriageService annotationSetTriageService;
     @Autowired
     private SecurityService securityService;
     @Autowired
@@ -4756,6 +4762,8 @@ public class DatasetsWebService {
         // designs.
         result.setTroubleDetails( cd.getTroubled() && cd.getCurationNote() != null ? cd.getCurationNote() : "" );
         result.setNeedsAttention( cd.getNeedsAttention() );
+        applyTriage( result, annotationSetTriageService
+                .effectiveForInvestigationIds( Collections.singleton( ee.getId() ) ).get( ee.getId() ) );
         if ( SecurityUtil.isUserAdmin() ) {
             result.setCurationNote( cd.getCurationNote() );
         }
@@ -4780,6 +4788,128 @@ public class DatasetsWebService {
         result.setGeeq( geeq );
 
         return respond( result );
+    }
+
+    /**
+     * Copy an effective triage ruling onto a status VO. Absent ruling leaves both fields null,
+     * which is how a caller tells "nothing triaged" from "triaged Fine".
+     */
+    private void applyTriage( PipelineStatusValueObject vo, @Nullable AnnotationSetTriage triage ) {
+        if ( triage == null ) {
+            return;
+        }
+        vo.setTriageVerdict( triage.getVerdict() != null ? triage.getVerdict().name() : null );
+        vo.setTriageJudgeKind( triage.getJudgeKind() != null ? triage.getJudgeKind().name() : null );
+    }
+
+    /**
+     * Bulk sibling of {@link #getDatasetPipelineStatus(DatasetArg)}.
+     * <p>
+     * 🛑 The path is the literal {@code /datasets/pipelineStatus} with the ids in a query
+     * parameter, NOT {@code /datasets/{datasets}/pipelineStatus}: the latter is the same JAX-RS
+     * template as the single-dataset route — a path parameter's NAME does not distinguish it —
+     * so declaring it would be an ambiguous mapping rather than a second route.
+     */
+    @GET
+    @Path("/pipelineStatus")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the per-step pipeline status of several datasets",
+            description = "The same payload as `/datasets/{dataset}/pipelineStatus`, one entry per dataset, each "
+                    + "carrying its own `experimentId`, in the order requested. Exists because a list view asking "
+                    + "row by row costs one HTTP round-trip per row. Every batchable lookup — audit events, "
+                    + "has-analysis, triage, GEEQ — is fetched once for the whole page. An id that does not resolve "
+                    + "fails the whole request with a 404 rather than being dropped from the array, so a caller "
+                    + "never has to diff what it asked for against what came back. The `curationNote` field is "
+                    + "admin-only.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "One of the datasets does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<List<PipelineStatusValueObject>> getDatasetsPipelineStatus(
+            @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE)
+            @QueryParam("datasets") DatasetArrayArg datasets
+    ) {
+        if ( datasets == null ) {
+            return respond( Collections.emptyList() );
+        }
+        List<ExpressionExperiment> ees = new ArrayList<>( datasetArgService.getEntities( datasets ) );
+        if ( ees.isEmpty() ) {
+            return respond( Collections.emptyList() );
+        }
+
+        // Everything that batches, batched ONCE for the whole page. These are the three calls that
+        // would otherwise be per-row: the audit-event fan-out (~13 round-trips each on its own),
+        // the has-analysis lookup, and the triage ruling.
+        Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
+        for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
+            auditTypes.add( desc.successType );
+            if ( desc.failedType != null ) {
+                auditTypes.add( desc.failedType );
+            }
+        }
+        auditTypes.add( GeeqEvent.class );
+        Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
+                auditEventService.getLastEvents( ees, auditTypes );
+
+        Set<Long> ids = ees.stream().map( ExpressionExperiment::getId ).collect( Collectors.toSet() );
+        Set<Long> withDea = new HashSet<>( differentialExpressionAnalysisService
+                .getExperimentsWithAnalysis( ids, true ) );
+        Map<Long, AnnotationSetTriage> triageById = annotationSetTriageService.effectiveForInvestigationIds( ids );
+
+        // GEEQ, batched. ee.getGeeq() is lazy and the loading transaction has ended, but a proxy
+        // still yields its id without initialising — which is what the single-dataset handler
+        // relies on too. One loadValueObjectsByIds instead of one query per row.
+        Map<Long, Long> geeqIdByEe = new HashMap<>();
+        for ( ExpressionExperiment ee : ees ) {
+            Geeq proxy = ee.getGeeq();
+            if ( proxy != null && proxy.getId() != null ) {
+                geeqIdByEe.put( ee.getId(), proxy.getId() );
+            }
+        }
+        Map<Long, GeeqValueObject> geeqById = geeqIdByEe.isEmpty() ? Collections.emptyMap()
+                : geeqService.loadValueObjectsByIds( geeqIdByEe.values() ).stream()
+                        .filter( g -> g.getId() != null )
+                        .collect( Collectors.toMap( GeeqValueObject::getId, g -> g, ( a, b ) -> a ) );
+
+        boolean admin = SecurityUtil.isUserAdmin();
+        List<PipelineStatusValueObject> out = new ArrayList<>( ees.size() );
+        for ( ExpressionExperiment ee : ees ) {
+            CurationDetails cd = ee.getCurationDetails();
+            boolean missingValueApplicable = hasTwoColorOrDualModePlatform( ee );
+            List<PipelineStatusValueObject.PipelineStepValueObject> steps = new ArrayList<>( PIPELINE_STEPS.size() );
+            for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
+                boolean applicable = !"missingValue".equals( desc.stepKey ) || missingValueApplicable;
+                steps.add( buildPipelineStep( ee, desc, applicable, auditEventsByType ) );
+            }
+
+            PipelineStatusValueObject vo = new PipelineStatusValueObject();
+            vo.setExperimentId( ee.getId() );
+            vo.setSteps( steps );
+            vo.setHasBatchInformation( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) );
+            vo.setHasDifferentialExpressionAnalysis( withDea.contains( ee.getId() ) );
+            // Coexpression was removed in Phase 1c; the field is kept for API compatibility.
+            vo.setHasCoexpressionAnalysis( false );
+            vo.setTroubled( cd.getTroubled() );
+            vo.setTroubleDetails( cd.getTroubled() && cd.getCurationNote() != null ? cd.getCurationNote() : "" );
+            vo.setNeedsAttention( cd.getNeedsAttention() );
+            applyTriage( vo, triageById.get( ee.getId() ) );
+            if ( admin ) {
+                vo.setCurationNote( cd.getCurationNote() );
+            }
+            vo.setIsPublic( securityService.isPublic( ee ) );
+
+            Long geeqId = geeqIdByEe.get( ee.getId() );
+            GeeqValueObject geeq = geeqId != null ? geeqById.get( geeqId ) : null;
+            if ( geeq != null ) {
+                AuditEvent geeqEvent = lookupAuditEvent( auditEventsByType, GeeqEvent.class, ee );
+                if ( geeqEvent != null ) {
+                    geeq.setLastComputed( geeqEvent.getDate() );
+                }
+            }
+            vo.setGeeq( geeq );
+            out.add( vo );
+        }
+        return respond( out );
     }
 
     private PipelineStatusValueObject.PipelineStepValueObject buildPipelineStep( ExpressionExperiment ee,

@@ -52,9 +52,37 @@ public class PipelineStatusValueObject {
     @JsonAlias({ "troubleDetails" })
     private String troubleDetails;
 
+    /**
+     * The curator flag that predates the agent workflow: a human marked this dataset as wanting
+     * a look. 🛑 NOT the agent workflow's signal — that is {@link #triageVerdict}. The two are
+     * deliberately separate and neither is derived from the other.
+     */
     @JsonProperty("needsAttention")
     @JsonAlias({ "needsAttention" })
     private boolean needsAttention;
+
+    /**
+     * The effective triage ruling across this dataset's annotation sets — {@code Fine},
+     * {@code WontFix}, {@code MightFix} or {@code MustFix} — or {@code null} when nothing has
+     * been triaged. Newest ruling wins, the same rule a single annotation set already uses.
+     * <p>
+     * This is the agent workflow's answer to "does a human need to look at this", and it carries
+     * severity and a judge rather than collapsing to a boolean.
+     */
+    @Nullable
+    @JsonProperty("triageVerdict")
+    @JsonAlias({ "triageVerdict" })
+    private String triageVerdict;
+
+    /**
+     * Whether {@link #triageVerdict} came from an {@code AGENT} or a {@code CURATOR}; {@code null} when
+     * nothing has been triaged. A curator's ruling and an agent's are not worth the same, and a
+     * caller cannot tell them apart from the verdict alone.
+     */
+    @Nullable
+    @JsonProperty("triageJudgeKind")
+    @JsonAlias({ "triageJudgeKind" })
+    private String triageJudgeKind;
 
     /**
      * Admin-only; remains {@code null} for non-administrators.

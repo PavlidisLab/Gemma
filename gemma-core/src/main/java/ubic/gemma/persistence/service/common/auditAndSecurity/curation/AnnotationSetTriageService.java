@@ -84,6 +84,12 @@ public interface AnnotationSetTriageService {
     Map<Long, AnnotationSetTriage> effectiveForIds( Collection<Long> annotationSetIds );
 
     /**
+     * The effective ruling for each of several datasets, keyed by dataset id — newest ruling
+     * across every annotation set the dataset owns. One round-trip for a whole page.
+     */
+    Map<Long, AnnotationSetTriage> effectiveForInvestigationIds( Collection<Long> investigationIds );
+
+    /**
      * Every ruling on any set of one investigation, most recent first.
      */
     List<AnnotationSetTriage> findByInvestigation( Investigation investigation );

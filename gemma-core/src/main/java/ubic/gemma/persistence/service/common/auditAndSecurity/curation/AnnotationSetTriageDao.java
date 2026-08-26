@@ -58,6 +58,17 @@ public interface AnnotationSetTriageDao extends BaseDao<AnnotationSetTriage> {
     Map<Long, AnnotationSetTriage> findEffectiveBySetIds( Collection<Long> annotationSetIds );
 
     /**
+     * The effective ruling for each of several INVESTIGATIONS, keyed by investigation id.
+     * <p>
+     * Same rule as {@link #findEffectiveBySetIds(Collection)} — newest ruling wins — applied
+     * across every annotation set the investigation owns rather than one set. Exists so a list
+     * view can ask about a page of datasets in one round-trip instead of one query per row.
+     *
+     * @return investigation id -> effective ruling; ids with no ruling are absent
+     */
+    Map<Long, AnnotationSetTriage> findEffectiveByInvestigationIds( Collection<Long> investigationIds );
+
+    /**
      * Corpus-wide tally by verdict, for the triage queue's counts.
      */
     Map<TriageVerdict, Long> countByVerdict();
