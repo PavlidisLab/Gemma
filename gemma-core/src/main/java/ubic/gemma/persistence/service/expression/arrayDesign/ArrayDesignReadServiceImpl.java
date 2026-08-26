@@ -336,6 +336,7 @@ public class ArrayDesignReadServiceImpl implements ArrayDesignReadService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( Long eeId ) {
         return arrayDesignDao.loadOriginalPlatformValueObjectsForEE( eeId );
     }
