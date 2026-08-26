@@ -18,10 +18,15 @@ import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.Filter;
+
+import javax.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -95,6 +100,113 @@ public class ArrayDesignDaoTest extends BaseDatabaseTest5 {
 
         sessionFactory.getCurrentSession().update( ad );
         sessionFactory.getCurrentSession().flush();
+    }
+
+    /**
+     * A dataset switched to a generic platform must be able to say what it was submitted on WITHOUT anyone
+     * walking its assays — the field lives on BioAssay, and reading it through the sample list costs the whole
+     * list for one line of header.
+     */
+    @Test
+    @WithMockUser
+    public void testLoadOriginalPlatformValueObjectsForEE() {
+        Taxon taxon = Taxon.Factory.newInstance( "opTaxon" );
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign submitted = platform( taxon, "GPL_SUBMITTED" );
+        ArrayDesign generic = platform( taxon, "GPL_GENERIC" );
+
+        // two assays, both switched from `submitted` onto `generic`
+        ExpressionExperiment ee = experimentWith( taxon, generic, submitted, 2 );
+
+        assertThat( arrayDesignDao.loadOriginalPlatformValueObjectsForEE( ee.getId() ) )
+                .singleElement()
+                .hasFieldOrPropertyWithValue( "shortName", "GPL_SUBMITTED" );
+        // and the used platform is still what the other call answers
+        assertThat( arrayDesignDao.loadValueObjectsForEE( ee.getId() ) )
+                .singleElement()
+                .hasFieldOrPropertyWithValue( "shortName", "GPL_GENERIC" );
+    }
+
+    /**
+     * 🛑 A no-op switch — the original recorded as the platform already in use — must NOT come back. Otherwise
+     * "as originally submitted" renders on every dataset, naming the platform the reader is already looking at.
+     */
+    @Test
+    @WithMockUser
+    public void testANoopSwitchIsNotAnOriginalPlatform() {
+        Taxon taxon = Taxon.Factory.newInstance( "noopTaxon" );
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign same = platform( taxon, "GPL_SAME" );
+
+        ExpressionExperiment ee = experimentWith( taxon, same, same, 2 );
+
+        assertThat( arrayDesignDao.loadOriginalPlatformValueObjectsForEE( ee.getId() ) ).isEmpty();
+    }
+
+    /** A dataset that was never switched has no original at all. */
+    @Test
+    @WithMockUser
+    public void testNeverSwitchedHasNoOriginalPlatform() {
+        Taxon taxon = Taxon.Factory.newInstance( "plainTaxon" );
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign used = platform( taxon, "GPL_ONLY" );
+
+        ExpressionExperiment ee = experimentWith( taxon, used, null, 2 );
+
+        assertThat( arrayDesignDao.loadOriginalPlatformValueObjectsForEE( ee.getId() ) ).isEmpty();
+    }
+
+    /** More than one submitted platform is legitimate — the assays need not have come from a single one. */
+    @Test
+    @WithMockUser
+    public void testADatasetCanHaveMoreThanOneOriginalPlatform() {
+        Taxon taxon = Taxon.Factory.newInstance( "multiTaxon" );
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign generic = platform( taxon, "GPL_GENERIC_M" );
+        ArrayDesign firstSubmitted = platform( taxon, "GPL_SUBMITTED_A" );
+        ArrayDesign secondSubmitted = platform( taxon, "GPL_SUBMITTED_B" );
+
+        ExpressionExperiment ee = experimentWith( taxon, generic, firstSubmitted, 1 );
+        addAssay( ee, taxon, generic, secondSubmitted, "extra" );
+        sessionFactory.getCurrentSession().flush();
+
+        assertThat( arrayDesignDao.loadOriginalPlatformValueObjectsForEE( ee.getId() ) )
+                .extracting( "shortName" )
+                .containsExactlyInAnyOrder( "GPL_SUBMITTED_A", "GPL_SUBMITTED_B" );
+    }
+
+    private ArrayDesign platform( Taxon taxon, String shortName ) {
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        ad.setShortName( shortName );
+        ad.setName( shortName );
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
+        return arrayDesignDao.create( ad );
+    }
+
+    private ExpressionExperiment experimentWith( Taxon taxon, ArrayDesign used, @Nullable ArrayDesign original, int assays ) {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( "EE_" + used.getShortName() + "_" + original );
+        ee.setName( ee.getShortName() );
+        sessionFactory.getCurrentSession().persist( ee );
+        for ( int i = 0; i < assays; i++ ) {
+            addAssay( ee, taxon, used, original, String.valueOf( i ) );
+        }
+        sessionFactory.getCurrentSession().flush();
+        return ee;
+    }
+
+    private void addAssay( ExpressionExperiment ee, Taxon taxon, ArrayDesign used, @Nullable ArrayDesign original, String suffix ) {
+        BioMaterial bm = BioMaterial.Factory.newInstance( "bm_" + ee.getShortName() + "_" + suffix );
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        BioAssay ba = BioAssay.Factory.newInstance();
+        ba.setName( "ba_" + ee.getShortName() + "_" + suffix );
+        ba.setSampleUsed( bm );
+        ba.setArrayDesignUsed( used );
+        ba.setOriginalPlatform( original );
+        sessionFactory.getCurrentSession().persist( ba );
+        ee.getBioAssays().add( ba );
     }
 
     @Test

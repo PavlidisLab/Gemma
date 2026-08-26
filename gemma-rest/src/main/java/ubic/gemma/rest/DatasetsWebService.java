@@ -1137,14 +1137,30 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the platforms of a dataset", responses = {
+    @Operation(summary = "Retrieve the platforms of a dataset",
+            description = "By default, the platforms the dataset's assays are on NOW.\n\n"
+                    + "`?original=true` answers the other question — what it was **originally submitted** on, "
+                    + "before any platform switch. That is a list, not a single value: a dataset's assays need "
+                    + "not have come from one submitted platform.\n\n"
+                    + "A dataset that was never switched returns an **empty list** for `?original=true`, not its "
+                    + "current platform. A platform recorded as an original that is also the one in use is a "
+                    + "no-op switch and is excluded, so a non-empty answer always names something that actually "
+                    + "changed.\n\n"
+                    + "🛑 Do not read the original platform out of `GET /datasets/{id}/samples` instead. It is "
+                    + "per-assay there, so the whole assay list comes with it — megabytes for a line of text on "
+                    + "a large dataset — and that route's `limit` applies only in cursor mode.",
+            responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<ArrayDesignValueObject>> getDatasetPlatforms( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Return the platforms the dataset was originally submitted on, rather than the ones in use. Empty when it was never switched.")
+            @QueryParam("original") @DefaultValue("false") Boolean original
     ) {
-        return respond( datasetArgService.getPlatforms( datasetArg ) );
+        return respond( Boolean.TRUE.equals( original )
+                ? datasetArgService.getOriginalPlatforms( datasetArg )
+                : datasetArgService.getPlatforms( datasetArg ) );
     }
 
     /**

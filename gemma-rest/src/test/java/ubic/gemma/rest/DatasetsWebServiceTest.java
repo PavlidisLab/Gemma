@@ -201,8 +201,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         @Bean
         public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService, SearchService searchService,
-                PublicationAssociationService publicationAssociationService ) {
-            return new DatasetArgService( expressionExperimentService, searchService, mock( ArrayDesignService.class ), mock( BioAssayService.class ), mock( OutlierDetectionService.class ),
+                PublicationAssociationService publicationAssociationService, ArrayDesignService arrayDesignService ) {
+            // 🛑 Take the arrayDesignService BEAN, not a fresh mock. It used to construct its own, so the
+            // instance tests autowire and stub was not the instance this service called — a stub could look
+            // set up and be inert, which is a silent way for a test to assert nothing.
+            return new DatasetArgService( expressionExperimentService, searchService, arrayDesignService, mock( BioAssayService.class ), mock( OutlierDetectionService.class ),
                     publicationAssociationService );
         }
 
@@ -4069,5 +4072,50 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .entity()
                 .hasFieldOrPropertyWithValue( "data.triageVerdict", "must_fix" )
                 .hasFieldOrPropertyWithValue( "data.needsAttention", false );
+    }
+
+    /**
+     * `?original=true` must actually route. A declared parameter that is quietly ignored is the failure mode
+     * uib caught on element search — the caller sees a 200 and a plausible body, and cannot tell that the
+     * question they asked was dropped.
+     */
+    @Test
+    @WithMockUser
+    public void testPlatformsOriginalRoutesToTheOriginalPlatforms() {
+        ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject used =
+                new ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject( 1L );
+        used.setShortName( "GPL_GENERIC" );
+        ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject original =
+                new ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject( 2L );
+        original.setShortName( "GPL_SUBMITTED" );
+        when( arrayDesignService.loadValueObjectsForEE( any() ) ).thenReturn( Collections.singletonList( used ) );
+        when( arrayDesignService.loadOriginalPlatformValueObjectsForEE( any() ) ).thenReturn( Collections.singletonList( original ) );
+
+        try ( Response r = target( "/datasets/1/platforms" ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data[0].shortName", "GPL_GENERIC" );
+        }
+
+        try ( Response r = target( "/datasets/1/platforms" ).queryParam( "original", true ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data[0].shortName", "GPL_SUBMITTED" );
+        }
+    }
+
+    /** An unswitched dataset answers with an empty list, never with its current platform. */
+    @Test
+    @WithMockUser
+    public void testPlatformsOriginalIsEmptyRatherThanEchoingTheCurrentPlatform() {
+        when( arrayDesignService.loadOriginalPlatformValueObjectsForEE( any() ) ).thenReturn( Collections.emptyList() );
+
+        try ( Response r = target( "/datasets/1/platforms" ).queryParam( "original", true ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data", Collections.emptyList() )
+                    // the point of the test: not merely absent, but not the current platform either
+                    .doesNotHavePath( "$.data[0]" );
+        }
     }
 }

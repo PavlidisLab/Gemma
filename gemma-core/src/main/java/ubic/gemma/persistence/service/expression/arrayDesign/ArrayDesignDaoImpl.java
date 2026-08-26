@@ -906,6 +906,29 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( @Nullable Long eeId ) {
+        if ( eeId == null ) {
+            return Collections.emptyList();
+        }
+        // A no-op switch — a platform recorded as the original that is ALSO the one in use — is excluded, so
+        // this answers "what was this submitted on, before it became what it is" rather than "what ids appear
+        // in the originalPlatform column". Same rule the details VO applies (ExpressionExperimentDaoImpl,
+        // "omit noop switches"), kept identical so the two cannot drift into disagreeing.
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select op.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays b join b.originalPlatform op "
+                        + "where ee.id = :eeId and op.id not in ("
+                        + "select ad.id from ExpressionExperiment as ee2 "
+                        + "join ee2.bioAssays b2 join b2.arrayDesignUsed ad where ee2.id = :eeId) "
+                        + "group by op" )
+                .setParameter( "eeId", eeId )
+                .setCacheable( true )
+                .list();
+        return this.loadValueObjectsByIds( ids );
+    }
+
+    @Override
     public long countCompositeSequencesWithBioSequences() {
         return ( Long ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select count(distinct cs) from  CompositeSequence as cs "

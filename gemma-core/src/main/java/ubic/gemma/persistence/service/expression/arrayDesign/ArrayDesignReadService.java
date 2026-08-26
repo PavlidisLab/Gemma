@@ -145,6 +145,18 @@ public interface ArrayDesignReadService {
 
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
+    /**
+     * Load the platforms a dataset was ORIGINALLY submitted on, before any platform switch.
+     * <p>
+     * A dataset can have more than one — its assays need not have come from a single submitted platform. A
+     * platform recorded as an original that is ALSO the one in use is a no-op switch and is left out, so an
+     * unswitched dataset answers with an empty list rather than echoing its current platform. That is the same
+     * rule the details VO applies, kept identical so the two cannot drift into disagreeing.
+     *
+     * @see #loadValueObjectsForEE(Long)
+     */
+    List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( Long eeId );
+
     long countCompositeSequencesWithBioSequences();
 
     long countCompositeSequencesWithBlatResults();

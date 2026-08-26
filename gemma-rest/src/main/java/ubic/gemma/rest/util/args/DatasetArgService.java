@@ -222,6 +222,15 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
+     * The platforms the dataset was originally submitted on, before any switch — empty when it was never
+     * switched. Plural because a dataset's assays need not have come from one submitted platform.
+     */
+    public List<ArrayDesignValueObject> getOriginalPlatforms( DatasetArg<?> arg ) {
+        ExpressionExperiment ee = this.getEntity( arg );
+        return adService.loadOriginalPlatformValueObjectsForEE( ee.getId() );
+    }
+
+    /**
      * @return a collection of BioAssays that represent the experiments samples.
      * <p>
      * Uses the narrow {@link ExpressionExperimentService#thawBioAssays(ExpressionExperiment)}

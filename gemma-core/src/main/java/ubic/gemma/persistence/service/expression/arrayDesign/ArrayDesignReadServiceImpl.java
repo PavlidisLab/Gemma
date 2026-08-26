@@ -336,6 +336,11 @@ public class ArrayDesignReadServiceImpl implements ArrayDesignReadService {
     }
 
     @Override
+    public List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( Long eeId ) {
+        return arrayDesignDao.loadOriginalPlatformValueObjectsForEE( eeId );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public long countCompositeSequencesWithBioSequences() {
         return arrayDesignDao.countCompositeSequencesWithBioSequences();

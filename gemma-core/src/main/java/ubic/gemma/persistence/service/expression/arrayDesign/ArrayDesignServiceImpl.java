@@ -267,6 +267,11 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    public List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( Long eeId ) {
+        return readService.loadOriginalPlatformValueObjectsForEE( eeId );
+    }
+
+    @Override
     public long countCompositeSequencesWithBioSequences() {
         return readService.countCompositeSequencesWithBioSequences();
     }
