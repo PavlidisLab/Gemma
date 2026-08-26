@@ -2278,8 +2278,10 @@ public class DatasetsWebService {
                     + "Everything the ordinary commit does still happens: the pre-commit `SNAPSHOT`, the `COMMIT` "
                     + "annotation set parented to the proposal when `run.proposalSetId` is given, the "
                     + "`baseline.lastModified` 409, and the ontology-term gate.\n\n"
-                    + "The lock is NOT released afterwards. Releasing is its own act (`DELETE .../curation/lock`), "
-                    + "and a sign is not always the last thing a curator does to a dataset.",
+                    + "**A successful sign releases the lock**, because signing off ends the curator's turn — "
+                    + "otherwise every signed dataset stays locked until its lease lapses. A sign that fails does "
+                    + "not: the curator keeps the lock they need in order to re-read and sign again. A dry run "
+                    + "never releases anything.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Signed (or, with ?dryRun=true, predicted)."),
                     @ApiResponse(responseCode = "400", description = "No body and no draft to sign, a draft whose payload is not a CurationDocument, or validation blockers.",
@@ -2302,7 +2304,15 @@ public class DatasetsWebService {
         // An empty body counts as no body. A client that POSTs `{}` means "sign what I have been drafting", and
         // committing nothing while reporting success is the wrong answer to that.
         CurationDocument doc = hasAnySection( body ) ? body : readDraftPayloadForSigning( ee, signer );
-        return respond( doCommitCuration( datasetArg, doc, dryRun, false, true ) );
+        CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true );
+        if ( !dryRun ) {
+            // Signing off ends the curator's turn on this dataset, so the lock goes back with it -- otherwise
+            // every signed dataset stays locked until its lease runs out or somebody steals it. Only on success,
+            // and never on a dry run: a sign that 409'd leaves the curator holding the lock, which is exactly
+            // what they need to re-read and sign again.
+            curationLockService.release( ee, signer );
+        }
+        return respond( report );
     }
 
     /** Whether a document asks for anything at all. {@code run} and {@code baseline} alone do not count -- they

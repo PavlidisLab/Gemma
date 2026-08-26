@@ -1824,6 +1824,8 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         }
         assertThat( allFvIds( reloadDesign() ) ).as( "and past the lock it goes through" )
                 .doesNotContain( anchor.getId() );
+        assertThat( lockState() ).as( "signing off ends the turn, so the lock goes back" )
+                .contains( "\"locked\":false" );
 
         expressionExperimentSubSetService.remove( subset );
     }
@@ -1850,6 +1852,43 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 .post( Entity.json( "{}" ) ) ) {
             assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
             assertThat( r.readEntity( String.class ) ).contains( "no draft" );
+        }
+    }
+
+    /**
+     * A sign that fails keeps the lock. The curator's next move is to re-read and sign again, and taking their
+     * lock away mid-refusal would make them re-acquire it — or find someone else had.
+     */
+    @Test
+    public void testAFailedSignKeepsTheLock() {
+        takeLockFor( null );
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/sign" ).request()
+                .post( Entity.json( "{\"curationDetails\":{\"troubled\":true}}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
+        }
+        assertThat( lockState() ).contains( "\"locked\":true" );
+    }
+
+    /** A dry run predicts; it must not release anything. */
+    @Test
+    public void testADryRunSignDoesNotReleaseTheLock() {
+        putDraftAs( "administrator", "{\"curationDetails\":{\"curationNote\":\"not signed yet\"}}" );
+        takeLockFor( null );
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/sign" ).queryParam( "dryRun", true )
+                .request().post( Entity.json( "{}" ) ) ) {
+            assertOk( r );
+        }
+        assertThat( lockState() ).contains( "\"locked\":true" );
+        assertThat( expressionExperimentService.load( ee.getId() ).getCurationDetails().getCurationNote() )
+                .as( "and it wrote nothing" ).isNotEqualTo( "not signed yet" );
+    }
+
+    /** The lock endpoint's own answer, as a string to assert against. */
+    private String lockState() {
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().get() ) {
+            assertOk( r );
+            return r.readEntity( String.class );
         }
     }
 
