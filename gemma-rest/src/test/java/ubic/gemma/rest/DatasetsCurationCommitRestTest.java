@@ -612,38 +612,12 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     @Test
     public void testCommitStrandingASubsetRequiresForce() {
         ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
-        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = before.getExperimentalFactors().stream()
-                .filter( f -> f.getValues().stream().anyMatch( v -> countAssigned( before, v.getId() ) > 0 ) )
-                .findFirst()
-                .orElseThrow( () -> new AssertionError( "seeded design has no assigned factor value" ) );
-        FactorValueBasicValueObject anchor = factor.getValues().stream()
-                .filter( v -> countAssigned( before, v.getId() ) > 0 )
-                .findFirst()
-                .orElseThrow();
-        Set<Long> anchorBmIds = before.getBioMaterialAssignments().stream()
-                .filter( a -> a.getFactorValueIds().contains( anchor.getId() ) )
-                .map( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment::getBioMaterialId )
-                .collect( Collectors.toSet() );
-
-        // A subset defined by exactly the samples carrying that factor value — deleting it strands the subset.
-        // Built inside a transaction: the create cascades over each BioAssay's sample and its lazy factor-value
-        // collections, which are detached once thawBioAssays' session closes.
-        ExpressionExperimentSubSet subset = new TransactionTemplate( transactionManager ).execute( status -> {
-            ExpressionExperiment attached = expressionExperimentService.thawBioAssays(
-                    expressionExperimentService.load( ee.getId() ) );
-            ExpressionExperimentSubSet ss = ExpressionExperimentSubSet.Factory
-                    .newInstance( "anchored on " + anchor.getId(), attached );
-            for ( BioAssay ba : attached.getBioAssays() ) {
-                if ( ba.getSampleUsed() != null && anchorBmIds.contains( ba.getSampleUsed().getId() ) ) {
-                    ss.getBioAssays().add( ba );
-                }
-            }
-            return expressionExperimentSubSetService.create( ss );
-        } );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = factorWithAnAssignedValue( before );
+        FactorValueBasicValueObject anchor = firstAssignedValue( before, factor );
+        ExpressionExperimentSubSet subset = anchorSubsetOn( before, anchor );
         assertThat( subset ).isNotNull();
 
-        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":" + factor.getId() + ","
-                + "\"factorValues\":{\"items\":[],\"deletedIds\":[" + anchor.getId() + "]}}]}}}";
+        String body = deleteFactorValue( factor.getId(), anchor.getId() );
 
         try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
             assertThat( r.getStatus() ).as( "stranding a subset is a consent question, not a silent success" )
@@ -892,6 +866,51 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
             assertOk( r );
         }
         assertThat( reloadDesign().getExperimentalFactors() ).noneMatch( f -> doomed.getId().equals( f.getId() ) );
+    }
+
+    /** The first factor carrying a value that samples are actually assigned to. */
+    private static ExperimentalDesignValueObject.ExperimentalFactorEntry factorWithAnAssignedValue(
+            ExperimentalDesignValueObject design ) {
+        return design.getExperimentalFactors().stream()
+                .filter( f -> f.getValues().stream().anyMatch( v -> countAssigned( design, v.getId() ) > 0 ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "seeded design has no assigned factor value" ) );
+    }
+
+    private static FactorValueBasicValueObject firstAssignedValue( ExperimentalDesignValueObject design,
+            ExperimentalDesignValueObject.ExperimentalFactorEntry factor ) {
+        return factor.getValues().stream()
+                .filter( v -> countAssigned( design, v.getId() ) > 0 )
+                .findFirst()
+                .orElseThrow();
+    }
+
+    /**
+     * A subset defined by exactly the samples carrying one factor value, so that deleting that value strands it.
+     * This is how these tests make {@code requiresForce()} true: the seeded experiment carries no
+     * differential-expression analyses, and stranding a subset is the other half of the predicate.
+     * <p>
+     * Built inside a transaction because the create cascades over each BioAssay's sample and its lazy
+     * factor-value collections, which are detached once {@code thawBioAssays}' session closes.
+     */
+    private ExpressionExperimentSubSet anchorSubsetOn( ExperimentalDesignValueObject design,
+            FactorValueBasicValueObject anchor ) {
+        Set<Long> anchorBmIds = design.getBioMaterialAssignments().stream()
+                .filter( a -> a.getFactorValueIds().contains( anchor.getId() ) )
+                .map( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment::getBioMaterialId )
+                .collect( Collectors.toSet() );
+        return new TransactionTemplate( transactionManager ).execute( status -> {
+            ExpressionExperiment attached = expressionExperimentService.thawBioAssays(
+                    expressionExperimentService.load( ee.getId() ) );
+            ExpressionExperimentSubSet ss = ExpressionExperimentSubSet.Factory
+                    .newInstance( "anchored on " + anchor.getId(), attached );
+            for ( BioAssay ba : attached.getBioAssays() ) {
+                if ( ba.getSampleUsed() != null && anchorBmIds.contains( ba.getSampleUsed().getId() ) ) {
+                    ss.getBioAssays().add( ba );
+                }
+            }
+            return expressionExperimentSubSetService.create( ss );
+        } );
     }
 
     /**
@@ -1721,4 +1740,133 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         }
     }
 
+    // ============================================================================================
+    // Sign-off — POST /datasets/{id}/curation/sign
+    //
+    // An ordinary commit refuses a change that destroys derived data (409 REQUIRES_FORCE). Sign is
+    // where such a change belongs, and what earns it is the curation lock — the only thing that lock
+    // gates. These tests pin both halves: the gate holds, and past the gate the change applies.
+    //
+    // The seeded experiment carries no differential-expression analyses, so requiresForce() is made
+    // true here by stranding a subset — the other half of the same predicate.
+    // ============================================================================================
+
+    /** The whole gate: no lock, no sign, nothing written. */
+    @Test
+    public void testSignWithoutTheLockIsRefused() {
+        ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = factorWithAnAssignedValue( before );
+        FactorValueBasicValueObject anchor = firstAssignedValue( before, factor );
+        ExpressionExperimentSubSet subset = anchorSubsetOn( before, anchor );
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/sign" ).request()
+                .post( Entity.json( deleteFactorValue( factor.getId(), anchor.getId() ) ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.CONFLICT.getStatusCode() );
+            assertThat( r.readEntity( String.class ) )
+                    .as( "the client is told which 409 this is, not left to read the sentence" )
+                    .contains( "\"reason\":\"LOCK_REQUIRED\"" );
+        }
+        assertThat( allFvIds( reloadDesign() ) ).as( "and nothing was written" ).contains( anchor.getId() );
+
+        expressionExperimentSubSetService.remove( subset );
+    }
+
+    /**
+     * Someone else's lock is not yours. The refusal names the holder, as the lock endpoint's own 409 does:
+     * "you cannot sign" without saying who is in the way leaves the curator with nobody to ask.
+     */
+    @Test
+    public void testSignWhileAnotherCuratorHoldsTheLockIsRefused() {
+        ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = factorWithAnAssignedValue( before );
+        FactorValueBasicValueObject anchor = firstAssignedValue( before, factor );
+        ExpressionExperimentSubSet subset = anchorSubsetOn( before, anchor );
+
+        testAuthenticationUtils.runAsAgent();
+        takeLockFor( "signalice" );
+        testAuthenticationUtils.runAsAdmin();
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/sign" ).request()
+                .post( Entity.json( deleteFactorValue( factor.getId(), anchor.getId() ) ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.CONFLICT.getStatusCode() );
+            String json = r.readEntity( String.class );
+            assertThat( json ).contains( "\"reason\":\"LOCK_REQUIRED\"" );
+            assertThat( json ).as( "and it names who holds it" ).contains( "signalice" );
+        }
+        assertThat( allFvIds( reloadDesign() ) ).contains( anchor.getId() );
+
+        expressionExperimentSubSetService.remove( subset );
+    }
+
+    /**
+     * The point of the endpoint. The same payload that a plain commit refuses goes through sign once the lock
+     * is held — with no {@code ?force=true} anywhere, because the signature is the consent.
+     */
+    @Test
+    public void testSignAppliesWhatAPlainCommitRefuses() {
+        ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = factorWithAnAssignedValue( before );
+        FactorValueBasicValueObject anchor = firstAssignedValue( before, factor );
+        ExpressionExperimentSubSet subset = anchorSubsetOn( before, anchor );
+        String body = deleteFactorValue( factor.getId(), anchor.getId() );
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).as( "the plain commit still refuses it" )
+                    .isEqualTo( Response.Status.CONFLICT.getStatusCode() );
+            assertThat( r.readEntity( String.class ) ).contains( "\"reason\":\"REQUIRES_FORCE\"" );
+        }
+        assertThat( allFvIds( reloadDesign() ) ).contains( anchor.getId() );
+
+        takeLockFor( null );
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/sign" ).request()
+                .post( Entity.json( body ) ) ) {
+            assertOk( r );
+        }
+        assertThat( allFvIds( reloadDesign() ) ).as( "and past the lock it goes through" )
+                .doesNotContain( anchor.getId() );
+
+        expressionExperimentSubSetService.remove( subset );
+    }
+
+    /** With no body, what gets signed is the caller's own draft — the held-back delta. */
+    @Test
+    public void testSignWithNoBodySignsTheDraft() {
+        putDraftAs( "administrator", "{\"curationDetails\":{\"curationNote\":\"signed off from the draft\"}}" );
+        takeLockFor( null );
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/sign" ).request()
+                .post( Entity.json( "{}" ) ) ) {
+            assertOk( r );
+        }
+        assertThat( expressionExperimentService.load( ee.getId() ).getCurationDetails().getCurationNote() )
+                .isEqualTo( "signed off from the draft" );
+    }
+
+    /** ... and with neither a body nor a draft, there is nothing to sign. Say so rather than reporting success. */
+    @Test
+    public void testSignWithNoBodyAndNoDraftIsRejected() {
+        takeLockFor( null );
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/sign" ).request()
+                .post( Entity.json( "{}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
+            assertThat( r.readEntity( String.class ) ).contains( "no draft" );
+        }
+    }
+
+    /** Take the curation lock, for the caller or for a named curator. */
+    private void takeLockFor( @Nullable String onBehalfOf ) {
+        jakarta.ws.rs.client.WebTarget t = target( "/datasets/" + ee.getId() + "/curation/lock" );
+        if ( onBehalfOf != null ) {
+            t = t.queryParam( "onBehalfOf", onBehalfOf );
+        }
+        try ( Response r = t.request().post( Entity.json( "{}" ) ) ) {
+            assertOk( r );
+        }
+    }
+
+    /** A CurationDocument that deletes one factor value from one factor, leaving the factor in place. */
+    private static String deleteFactorValue( Long factorId, Long fvId ) {
+        return "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":" + factorId + ","
+                + "\"factorValues\":{\"items\":[],\"deletedIds\":[" + fvId + "]}}]}}}";
+    }
 }

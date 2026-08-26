@@ -225,8 +225,7 @@ public class AnnotationSetsWebService {
     public Response getDraftForDataset( DatasetArg<?> datasetArg, @Nullable String onBehalfOf ) {
         String curator = resolveCurator( onBehalfOf );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        AnnotationSet draft = annotationSetService.findByInvestigationAndRoleAndRunId(
-                ee, AnnotationSetRole.DRAFT, draftRunId( curator ) );
+        AnnotationSet draft = findDraftFor( ee, curator );
         if ( draft == null ) {
             throw new NotFoundException( "No draft for dataset " + ee.getId()
                     + " belonging to " + curator + "." );
@@ -797,6 +796,18 @@ public class AnnotationSetsWebService {
             throw new BadRequestException( "No authenticated user resolved." );
         }
         return u;
+    }
+
+    /**
+     * The one place a curator's DRAFT is looked up. Package-private because sign-off
+     * ({@code POST /datasets/{id}/curation/sign}) reads the same row, and the key is a convention
+     * ({@code draft-<curator>} inside {@code UNIQUE(investigation, role, runId)}) that must not be
+     * spelled out in a second class.
+     */
+    @Nullable
+    AnnotationSet findDraftFor( ExpressionExperiment ee, String curator ) {
+        return annotationSetService.findByInvestigationAndRoleAndRunId(
+                ee, AnnotationSetRole.DRAFT, draftRunId( curator ) );
     }
 
     private static String draftRunId( String curatorUserName ) {

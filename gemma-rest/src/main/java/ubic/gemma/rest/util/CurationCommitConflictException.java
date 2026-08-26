@@ -46,8 +46,14 @@ public class CurationCommitConflictException extends ClientErrorException {
     public enum Reason {
         /** The dataset moved since the draft's baseline. Re-read it, rebuild the diff, commit again. */
         STALE_BASELINE,
-        /** The change would delete differential-expression analyses or strand a subset. Get consent, then {@code ?force=true} (admin). */
+        /**
+         * The change would delete differential-expression analyses or strand a subset. Route it through
+         * {@code POST /datasets/{id}/curation/sign}, which is where a change with consequences belongs, or —
+         * for a caller that is not signing — consent with {@code ?force=true} (admin).
+         */
         REQUIRES_FORCE,
+        /** Sign-off was attempted without holding the curation lock, or while someone else holds it. */
+        LOCK_REQUIRED,
         /** A paper the commit attaches stands rejected for this dataset by a source the commit does not outrank. */
         PUBLICATION_REJECTED,
         /** The write refused this as a conflict without saying which kind — e.g. a short name already in use. */

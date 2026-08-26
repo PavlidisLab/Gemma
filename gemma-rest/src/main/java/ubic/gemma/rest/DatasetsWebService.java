@@ -2132,7 +2132,7 @@ public class DatasetsWebService {
         // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
         // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
         snapshot.setBaseline( null );
-        return respond( doCommitCuration( datasetArg, snapshot, dryRun, force ) );
+        return respond( doCommitCuration( datasetArg, snapshot, dryRun, force, false ) );
     }
 
     @GET
@@ -2253,6 +2253,105 @@ public class DatasetsWebService {
         public Date expiresAt;
         public String stolenFrom;
         public Date stolenAt;
+    }
+
+    /* ============== sign-off ============== */
+
+    @POST
+    @Path("/{dataset}/curation/sign")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Sign off a dataset's curation, applying what an ordinary commit holds back.",
+            description = "🛑 Not `POST /datasets/{id}/publish`. That one flips the ACL with a named reviewer and "
+                    + "is unrelated; this one applies curation.\n\n"
+                    + "An ordinary `PUT /datasets/{id}/curation` refuses a change that would destroy derived data "
+                    + "(409 `REQUIRES_FORCE`). Sign-off is where such a change belongs: it is the same commit, run "
+                    + "once, with the analysis cascade, and **the signature is the consent** — no `?force=true`, "
+                    + "and no admin requirement.\n\n"
+                    + "**The lock is what gates it** — the only thing the advisory curation lock gates. Take it "
+                    + "with `POST /datasets/{id}/curation/lock` first; signing without it is 409 `LOCK_REQUIRED`, "
+                    + "as is signing while someone else holds it.\n\n"
+                    + "**With no request body — or an empty one** — the caller's `DRAFT` annotation set is what "
+                    + "gets signed: that is the held-back delta, and its payload must be a `CurationDocument`. "
+                    + "Pass a body with at least one section to sign something else; the body wins.\n\n"
+                    + "Everything the ordinary commit does still happens: the pre-commit `SNAPSHOT`, the `COMMIT` "
+                    + "annotation set parented to the proposal when `run.proposalSetId` is given, the "
+                    + "`baseline.lastModified` 409, and the ontology-term gate.\n\n"
+                    + "The lock is NOT released afterwards. Releasing is its own act (`DELETE .../curation/lock`), "
+                    + "and a sign is not always the last thing a curator does to a dataset.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Signed (or, with ?dryRun=true, predicted)."),
+                    @ApiResponse(responseCode = "400", description = "No body and no draft to sign, a draft whose payload is not a CurationDocument, or validation blockers.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "`LOCK_REQUIRED` (no lock, or held by someone else), `STALE_BASELINE`, or `PUBLICATION_REJECTED`.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<CurationCommitReport> signDatasetCuration(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Which curator is signing. Agents and admins only; the lock must be held by that identity.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
+            @Parameter(description = "Predict the sign without writing. Still requires the lock — a dry run of a sign a curator could not perform is a misleading answer.")
+            @QueryParam("dryRun") @DefaultValue("false") Boolean dryRun,
+            @Nullable CurationDocument body
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        String signer = SecurityUtil.resolveActingIdentity( onBehalfOf );
+        requireCurationLockHeldBy( ee, signer );
+        // An empty body counts as no body. A client that POSTs `{}` means "sign what I have been drafting", and
+        // committing nothing while reporting success is the wrong answer to that.
+        CurationDocument doc = hasAnySection( body ) ? body : readDraftPayloadForSigning( ee, signer );
+        return respond( doCommitCuration( datasetArg, doc, dryRun, false, true ) );
+    }
+
+    /** Whether a document asks for anything at all. {@code run} and {@code baseline} alone do not count -- they
+     * describe a commit rather than being one. */
+    private static boolean hasAnySection( @Nullable CurationDocument doc ) {
+        return doc != null && ( doc.getBasics() != null || doc.getPublications() != null || doc.getDesign() != null
+                || doc.getTags() != null || doc.getSampleCharacteristics() != null
+                || doc.getCurationDetails() != null );
+    }
+
+    /**
+     * The lock check, and the only gate on sign-off. Reads through {@link CurationLockService#isHeldBy}, so a
+     * lapsed lease counts as nobody holding it — the same reading `GET .../curation/lock` reports.
+     */
+    private void requireCurationLockHeldBy( ExpressionExperiment ee, String signer ) {
+        if ( curationLockService.isHeldBy( ee, signer ) ) {
+            return;
+        }
+        String holder = curationLockService.current( ee ).map( l -> l.getLockedBy() ).orElse( null );
+        // Naming the holder is the point, as it is on the lock endpoint itself: "you do not hold it" without
+        // saying who does leaves the curator with nobody to ask.
+        throw new CurationCommitConflictException( CurationCommitConflictException.Reason.LOCK_REQUIRED,
+                holder == null
+                        ? "Sign-off requires the curation lock and nobody holds it; take it with POST /datasets/"
+                                + ee.getId() + "/curation/lock first."
+                        : "Sign-off requires the curation lock, which " + holder + " holds. Ask them, or take it "
+                                + "with POST /datasets/" + ee.getId() + "/curation/lock?steal=true." );
+    }
+
+    /**
+     * The held-back delta: the signer's own {@code DRAFT}, parsed as a {@link CurationDocument}. Same contract
+     * as a snapshot restore — the payload is opaque to the draft endpoint, so being the wrong shape is a 400
+     * here rather than earlier.
+     */
+    private CurationDocument readDraftPayloadForSigning( ExpressionExperiment ee, String signer ) {
+        AnnotationSet draft = annotationSetsWebService.findDraftFor( ee, signer );
+        if ( draft == null ) {
+            throw new BadRequestException( "Nothing to sign: " + signer + " has no draft for dataset " + ee.getId()
+                    + ", and no request body was supplied." );
+        }
+        if ( StringUtils.isBlank( draft.getPayloadJson() ) ) {
+            throw new BadRequestException( "Nothing to sign: the draft for dataset " + ee.getId() + " is empty." );
+        }
+        try {
+            return SNAPSHOT_MAPPER.readValue( draft.getPayloadJson(), CurationDocument.class );
+        } catch ( com.fasterxml.jackson.core.JsonProcessingException e ) {
+            throw new BadRequestException( "The draft for dataset " + ee.getId()
+                    + " is not a CurationDocument, so it cannot be signed: " + e.getOriginalMessage() );
+        }
     }
 
     @GET
@@ -2687,7 +2786,7 @@ public class DatasetsWebService {
             @Parameter(description = "Consent (admin only) to deleting differential-expression analyses that a design-section change would invalidate. Ignored unless the design section triggers such a cascade.") @QueryParam("force") @DefaultValue("false") Boolean force,
             @Nullable CurationDocument body
     ) {
-        return respond( doCommitCuration( datasetArg, body, false, force ) );
+        return respond( doCommitCuration( datasetArg, body, false, force, false ) );
     }
 
     @POST
@@ -2715,10 +2814,17 @@ public class DatasetsWebService {
             @Nullable CurationDocument body
     ) {
         // A dry run never writes, so the differential-expression cascade never fires — force is irrelevant here.
-        return respond( doCommitCuration( datasetArg, body, true, false ) );
+        return respond( doCommitCuration( datasetArg, body, true, false, false ) );
     }
 
-    private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body, boolean dryRun, boolean force ) {
+    /**
+     * The one commit path. {@code force} is the admin's consent flag on an ordinary commit; {@code signed} is
+     * sign-off's, and they are separate because they are earned differently — {@code force} by being an admin,
+     * {@code signed} by holding the curation lock and calling {@code POST /datasets/{id}/curation/sign}.
+     * Collapsing them into one boolean would make sign-off admin-only, which is not what gates it.
+     */
+    private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body,
+            boolean dryRun, boolean force, boolean signed ) {
         if ( body == null ) {
             throw new BadRequestException( "A CurationDocument request body is required." );
         }
@@ -2798,9 +2904,10 @@ public class DatasetsWebService {
             if ( !report.getBlockers().isEmpty() ) {
                 throw new BadRequestException( "The proposed design has validation blockers: " + summarizeDesignBlockers( report ) );
             }
-            if ( !dryRun && report.requiresForce() && !( force && SecurityUtil.isUserAdmin() ) ) {
+            if ( !dryRun && report.requiresForce() && !signed && !( force && SecurityUtil.isUserAdmin() ) ) {
                 throw new CurationCommitConflictException( CurationCommitConflictException.Reason.REQUIRES_FORCE,
-                        summarizeDesignConsequences( report ) + "; retry with ?force=true (admin only) to consent." );
+                        summarizeDesignConsequences( report ) + "; sign it off (POST /datasets/{id}/curation/sign, "
+                                + "holding the curation lock), or retry with ?force=true (admin only) to consent here." );
             }
         }
 
