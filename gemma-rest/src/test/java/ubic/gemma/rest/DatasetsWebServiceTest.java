@@ -521,6 +521,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // guard.
         User actor = mock( User.class );
         when( userManager.getCurrentUser() ).thenReturn( actor );
+        // Every curation commit now reads the dataset before it writes, to keep what the commit displaces as a
+        // SNAPSHOT. An unstubbed thaw returns null and the whole commit path 500s on it, which reads as a bug in
+        // whichever section the test was actually exercising. Stubbed here rather than per-test because it is no
+        // longer a per-section concern: the snapshot is taken whatever the commit touches.
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
     }
 
     @AfterEach
@@ -3551,7 +3556,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.commitCuration( eq( ee ), any( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class ), eq( false ) ) )
                 .thenReturn( res );
 
-        String body = "{\"publications\":{\"primary\":{\"pubMedId\":\"111\"},\"otherRelevant\":[]}}";
+        // The basis travels with the identifier: these fields are on PublicationEntry wherever it is accepted,
+        // and this path used to resolve them away, so a paper committed with a stated reason was stored as an
+        // unexplained curator claim.
+        String body = "{\"publications\":{\"primary\":{\"pubMedId\":\"111\","
+                + "\"source\":\"geo_submitter_link\",\"evidence\":\"the series names it\"},"
+                + "\"otherRelevant\":[]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
@@ -3560,7 +3570,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
         verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
         assertThat( cap.getValue().isPublicationsPresent() ).isTrue();
-        assertThat( cap.getValue().getPrimaryPublication() ).isEqualTo( ref );
+        assertThat( cap.getValue().getPrimaryPublication() ).isNotNull();
+        assertThat( cap.getValue().getPrimaryPublication().getPublication() ).isEqualTo( ref );
+        assertThat( cap.getValue().getPrimaryPublication().getSource() )
+                .isEqualTo( ubic.gemma.model.common.description.PublicationAssociationSource.GEO_SUBMITTER_LINK );
+        assertThat( cap.getValue().getPrimaryPublication().getEvidence() ).isEqualTo( "the series names it" );
     }
 
     @Test
