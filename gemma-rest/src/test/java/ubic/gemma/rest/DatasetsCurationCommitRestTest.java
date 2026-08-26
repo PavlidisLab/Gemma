@@ -1390,4 +1390,57 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         }
     }
 
+
+    /* ============== curation lock ============== */
+
+    @Test
+    public void testLockIsFreeThenHeldThenReleased() {
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).contains( "\"locked\":false" );
+        }
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" )
+                .request().post( Entity.json( "" ) ) ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).contains( "\"locked\":true" ).contains( "expiresAt" );
+        }
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().delete() ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.NO_CONTENT.getStatusCode() );
+        }
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).contains( "\"locked\":false" );
+        }
+    }
+
+    /**
+     * A second curator is refused with a 409 that NAMES the holder, then gets it with ?steal=true. "Someone else
+     * has it" without saying who leaves the curator with nobody to ask, which is why the holder is in the message
+     * rather than only in the GET.
+     */
+    @Test
+    public void testSecondCuratorIsRefusedByNameThenMaySteal() {
+        testAuthenticationUtils.runAsAgent();
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" )
+                .queryParam( "onBehalfOf", "lockalice" ).request().post( Entity.json( "" ) ) ) {
+            assertOk( r );
+        }
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" )
+                .queryParam( "onBehalfOf", "lockbob" ).request().post( Entity.json( "" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.CONFLICT.getStatusCode() );
+            assertThat( r.readEntity( String.class ) ).contains( "lockalice" ).contains( "steal" );
+        }
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" )
+                .queryParam( "onBehalfOf", "lockbob" ).queryParam( "steal", true )
+                .request().post( Entity.json( "" ) ) ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).contains( "lockbob" ).contains( "\"stolenFrom\":\"lockalice\"" );
+        }
+        testAuthenticationUtils.runAsAdmin();
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().delete() ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.NO_CONTENT.getStatusCode() );
+        }
+    }
+
 }

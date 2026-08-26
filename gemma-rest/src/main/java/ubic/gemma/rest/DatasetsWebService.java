@@ -140,6 +140,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataDeleterService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.security.authentication.UserManager;
@@ -281,6 +282,9 @@ public class DatasetsWebService {
     private AuditTrailService auditTrailService;
     @Autowired
     private AnnotationSetsWebService annotationSetsWebService;
+
+    @Autowired
+    private CurationLockService curationLockService;
     /** Used by the snapshot/restore pair to load a stored payload; the delegating routes go through the web service above. */
     @Autowired
     private AnnotationSetService annotationSetService;
@@ -2137,6 +2141,102 @@ public class DatasetsWebService {
             @QueryParam("shape") @Nullable String shape
     ) {
         return annotationSetsWebService.listAnnotationSets( datasetArg, role, source, createdBy, shape );
+    }
+
+    /* ============== curation lock ============== */
+
+    @GET
+    @Path("/{dataset}/curation/lock")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Who is curating this dataset right now",
+            description = "`{\"locked\": false}` when free. A lapsed claim reads as free — expiry is never "
+                    + "swept, so an abandoned tab frees itself.")
+    public Response getCurationLock( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        return Response.ok( toLockResponse( curationLockService.current( ee ).orElse( null ) ) ).build();
+    }
+
+    @POST
+    @Path("/{dataset}/curation/lock")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Take, refresh or steal the curation lock",
+            description = "🛑 **Advisory.** The guarantee against concurrent writes is the commit's "
+                    + "`baseline.lastModified` 409, not this. The lock exists so that 409 rarely fires and so a "
+                    + "curator can see who else is working, and it gates exactly one thing: sign-off.\n\n"
+                    + "`?steal=true` takes a lock someone else holds. Always available, by design — there is no "
+                    + "unlock ceremony to forget — and it destroys nothing, because the displaced curator's "
+                    + "draft is a separate row. Their next commit 409s and they re-sync.\n\n"
+                    + "Emits no audit event: an audit event moves `lastUpdated`, which is the very token the "
+                    + "commit checks, so taking a lock would 409 every draft in flight on the dataset.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Granted, refreshed or stolen."),
+                    @ApiResponse(responseCode = "409", description = "Held by someone else; retry with ?steal=true.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response acquireCurationLock(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Take a lock another curator holds.")
+            @QueryParam("steal") @DefaultValue("false") Boolean steal,
+            @Parameter(description = "Lease length in minutes; defaults to 30.")
+            @QueryParam("ttlMinutes") @DefaultValue("30") Integer ttlMinutes,
+            @Parameter(description = "Which curator is taking the lock. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        String holder = SecurityUtil.resolveActingIdentity( onBehalfOf );
+        try {
+            return Response.ok( toLockResponse(
+                    curationLockService.acquire( ee, holder, Boolean.TRUE.equals( steal ), ttlMinutes ) ) ).build();
+        } catch ( CurationLockService.CurationLockedException e ) {
+            // 409 rather than 403: the caller is permitted, the dataset is busy. Naming the holder is the point --
+            // "someone else has it" without saying who leaves the curator with nobody to ask.
+            throw new jakarta.ws.rs.ClientErrorException( e.getMessage()
+                    + " Retry with ?steal=true to take it.", Response.Status.CONFLICT );
+        }
+    }
+
+    @DELETE
+    @Path("/{dataset}/curation/lock")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Release the curation lock",
+            description = "Releases only your own lock, unless you are an admin. 204 either way — a release "
+                    + "that finds nothing has still achieved what it asked for.")
+    public Response releaseCurationLock(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Whose lock to release. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        String holder = SecurityUtil.resolveActingIdentity( onBehalfOf );
+        if ( !curationLockService.release( ee, holder ) && SecurityUtil.isUserAdmin() ) {
+            curationLockService.forceRelease( ee );
+        }
+        return Response.noContent().build();
+    }
+
+    private static CurationLockResponse toLockResponse( @Nullable ubic.gemma.model.common.auditAndSecurity.curation.CurationLock lock ) {
+        CurationLockResponse r = new CurationLockResponse();
+        r.locked = lock != null;
+        if ( lock != null ) {
+            r.lockedBy = lock.getLockedBy();
+            r.lockedAt = lock.getLockedAt();
+            r.expiresAt = lock.getExpiresAt();
+            r.stolenFrom = lock.getStolenFrom();
+            r.stolenAt = lock.getStolenAt();
+        }
+        return r;
+    }
+
+    /** Wire shape of the curation lock. Field names are already the JSON names. */
+    public static class CurationLockResponse {
+        public boolean locked;
+        public String lockedBy;
+        public Date lockedAt;
+        public Date expiresAt;
+        public String stolenFrom;
+        public Date stolenAt;
     }
 
     @GET
