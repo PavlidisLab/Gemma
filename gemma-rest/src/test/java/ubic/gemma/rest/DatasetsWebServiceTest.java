@@ -4026,8 +4026,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .entity()
                 .extracting( "data", list( Map.class ) )
                 .satisfies( rows -> {
-                    org.assertj.core.api.Assertions.assertThat( rows.get( 0 ).get( "triageVerdict" ) ).isEqualTo( "MustFix" );
-                    org.assertj.core.api.Assertions.assertThat( rows.get( 0 ).get( "triageJudgeKind" ) ).isEqualTo( "CURATOR" );
+                    org.assertj.core.api.Assertions.assertThat( rows.get( 0 ).get( "triageVerdict" ) ).isEqualTo( "must_fix" );
+                    org.assertj.core.api.Assertions.assertThat( rows.get( 0 ).get( "triageJudgeKind" ) ).isEqualTo( "curator" );
                 } );
     }
 
@@ -4067,7 +4067,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .entity()
-                .hasFieldOrPropertyWithValue( "data.triageVerdict", "MustFix" )
+                .hasFieldOrPropertyWithValue( "data.triageVerdict", "must_fix" )
                 .hasFieldOrPropertyWithValue( "data.needsAttention", false );
     }
 }

@@ -4798,8 +4798,13 @@ public class DatasetsWebService {
         if ( triage == null ) {
             return;
         }
-        vo.setTriageVerdict( triage.getVerdict() != null ? triage.getVerdict().name() : null );
-        vo.setTriageJudgeKind( triage.getJudgeKind() != null ? triage.getJudgeKind().name() : null );
+        // getDbValue(), not name(). The enum's own javadoc calls this "the snake_case external
+        // form for JSON / wire surfaces", and AnnotationSetsWebService spells triage, role, source
+        // and kind that way on every route. name() here made ONE field carry two spellings across
+        // two read surfaces of the same server — invisible until a client compares two reads of
+        // the same ruling, because fromDbValue() accepts either.
+        vo.setTriageVerdict( triage.getVerdict() != null ? triage.getVerdict().getDbValue() : null );
+        vo.setTriageJudgeKind( triage.getJudgeKind() != null ? triage.getJudgeKind().getDbValue() : null );
     }
 
     /**

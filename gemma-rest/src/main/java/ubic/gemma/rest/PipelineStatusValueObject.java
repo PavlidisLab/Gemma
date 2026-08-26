@@ -62,8 +62,8 @@ public class PipelineStatusValueObject {
     private boolean needsAttention;
 
     /**
-     * The effective triage ruling across this dataset's annotation sets — {@code Fine},
-     * {@code WontFix}, {@code MightFix} or {@code MustFix} — or {@code null} when nothing has
+     * The effective triage ruling across this dataset's annotation sets — {@code fine},
+     * {@code wont_fix}, {@code might_fix} or {@code must_fix} — or {@code null} when nothing has
      * been triaged. Newest ruling wins, the same rule a single annotation set already uses.
      * <p>
      * This is the agent workflow's answer to "does a human need to look at this", and it carries
@@ -75,7 +75,7 @@ public class PipelineStatusValueObject {
     private String triageVerdict;
 
     /**
-     * Whether {@link #triageVerdict} came from an {@code AGENT} or a {@code CURATOR}; {@code null} when
+     * Whether {@link #triageVerdict} came from an {@code agent} or a {@code curator}; {@code null} when
      * nothing has been triaged. A curator's ruling and an agent's are not worth the same, and a
      * caller cannot tell them apart from the verdict alone.
      */
