@@ -56,6 +56,7 @@ import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -111,6 +112,9 @@ public class AnnotationSetsWebService {
 
     @Autowired
     private AnnotationSetTriageService annotationSetTriageService;
+
+    @Autowired
+    private CurationLockService curationLockService;
 
     /**
      * Screening queue: redirect to the existing
@@ -254,6 +258,12 @@ public class AnnotationSetsWebService {
                 ee, AnnotationSetRole.DRAFT, draftRunId( curator ) ) != null;
         AnnotationSet draft = annotationSetService.upsertDraft( ee, curator,
                 body.payloadJson, body.parkedElements, parent );
+        // Editing holds the lease. Without this a curator working steadily for longer than the TTL loses the
+        // lock while still typing, which is the opposite of what the lock is for -- and they would find out
+        // only when someone else took it. Best-effort by construction: refresh() returns empty rather than
+        // acquiring when this curator does not hold the lock, so a save never takes a lock nobody asked for
+        // and never fails because the dataset happens to be unlocked.
+        curationLockService.refresh( ee, curator, CurationLockService.DEFAULT_TTL_MINUTES );
         Response.Status status = preExisted ? Response.Status.OK : Response.Status.CREATED;
         return Response.status( status ).entity( toResponse( draft ) ).build();
     }

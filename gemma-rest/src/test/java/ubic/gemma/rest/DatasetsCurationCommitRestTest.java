@@ -1474,4 +1474,48 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         }
     }
 
+
+    /**
+     * Editing holds the lease. Without the refresh on the draft save, a curator working steadily for longer
+     * than the TTL loses the lock while still typing -- and finds out only when someone else takes it.
+     * Asserted as a moved expiry rather than by waiting out a real TTL.
+     */
+    @Test
+    public void testSavingADraftExtendsTheCuratorsLock() {
+        testAuthenticationUtils.runAsAgent();
+        String expiryAfterAcquire;
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" )
+                .queryParam( "onBehalfOf", "leasealice" ).queryParam( "ttlMinutes", 1 )
+                .request().post( Entity.json( "" ) ) ) {
+            assertOk( r );
+            expiryAfterAcquire = r.readEntity( String.class ).replaceAll( "(?s).*\"expiresAt\":\"([^\"]+)\".*", "$1" );
+        }
+        putDraftAs( "leasealice", "{\"factor:1\":{\"name\":\"still editing\"}}" );
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().get() ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            String now = json.replaceAll( "(?s).*\"expiresAt\":\"([^\"]+)\".*", "$1" );
+            assertThat( json ).contains( "leasealice" );
+            // the save pushed the lease out to the default TTL, well past the 1-minute one it was acquired with
+            assertThat( now ).isGreaterThan( expiryAfterAcquire );
+        }
+        testAuthenticationUtils.runAsAdmin();
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().delete() ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.NO_CONTENT.getStatusCode() );
+        }
+    }
+
+    /** A save by someone who holds no lock takes none -- a refresh must never become an acquire. */
+    @Test
+    public void testSavingADraftDoesNotTakeALockYouDoNotHold() {
+        testAuthenticationUtils.runAsAgent();
+        putDraftAs( "leasebob", "{\"factor:1\":{\"name\":\"no lock held\"}}" );
+        testAuthenticationUtils.runAsAdmin();
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).contains( "\"locked\":false" );
+        }
+    }
+
 }
