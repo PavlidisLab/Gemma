@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 
@@ -37,7 +38,8 @@ import java.util.List;
  * <p>
  * Publication identifiers are resolved to persistent {@link BibliographicReference}s by the web layer
  * <em>before</em> the transaction opens, so the (possibly slow, network-bound) PubMed/CrossRef fetch does
- * not hold the commit transaction open.
+ * not hold the commit transaction open. Each arrives as a {@link PublicationAssertion} — the reference plus
+ * the basis given for attaching it — because the basis is what a restore has to put back along with the link.
  */
 public class CurationCommitRequest {
 
@@ -62,8 +64,8 @@ public class CurationCommitRequest {
     // ── publications (set-replace, identifier-resolved) ──
     private boolean publicationsPresent;
     @Nullable
-    private BibliographicReference primaryPublication;
-    private List<BibliographicReference> otherRelevantPublications = Collections.emptyList();
+    private PublicationAssertion primaryPublication;
+    private List<PublicationAssertion> otherRelevantPublications = Collections.emptyList();
 
     // ── design (factors → factor-values → statements) ──
     // The web layer maps CAB's declared-delete DesignCommit onto a COMPLETE ExperimentalDesignValueObject
@@ -109,6 +111,14 @@ public class CurationCommitRequest {
     /** The PROPOSAL this commit is applying, if any; becomes the COMMIT row's parent. */
     @Nullable
     private AnnotationSet runParentProposal;
+
+    // ── auto-snapshot: the dataset's curation as it stood just before this commit ──
+    // Serialized by the web layer, because the CurationDocument shape lives there; minted here so the row shares
+    // the commit's transaction and cannot outlive a rollback.
+    @Nullable
+    private String snapshotPayloadJson;
+    @Nullable
+    private String snapshotCreatedBy;
 
     /** A tag to create, paired with the document {@code clientRef} so the report can echo its new id. */
     public static class TagAdd {
@@ -214,20 +224,25 @@ public class CurationCommitRequest {
         this.publicationsPresent = publicationsPresent;
     }
 
+    /**
+     * The paper to attach as primary, with the basis for attaching it. The basis rides along rather than being
+     * flattened away here: a commit that names evidence has it recorded, and a snapshot replayed as a restore
+     * puts a re-attached paper back with the reason it was attached rather than as an unexplained claim.
+     */
     @Nullable
-    public BibliographicReference getPrimaryPublication() {
+    public PublicationAssertion getPrimaryPublication() {
         return primaryPublication;
     }
 
-    public void setPrimaryPublication( @Nullable BibliographicReference primaryPublication ) {
+    public void setPrimaryPublication( @Nullable PublicationAssertion primaryPublication ) {
         this.primaryPublication = primaryPublication;
     }
 
-    public List<BibliographicReference> getOtherRelevantPublications() {
+    public List<PublicationAssertion> getOtherRelevantPublications() {
         return otherRelevantPublications;
     }
 
-    public void setOtherRelevantPublications( List<BibliographicReference> otherRelevantPublications ) {
+    public void setOtherRelevantPublications( List<PublicationAssertion> otherRelevantPublications ) {
         this.otherRelevantPublications = otherRelevantPublications;
     }
 
@@ -389,6 +404,32 @@ public class CurationCommitRequest {
 
     public void setRunParentProposal( @Nullable AnnotationSet runParentProposal ) {
         this.runParentProposal = runParentProposal;
+    }
+
+    /**
+     * The dataset's current curation, serialized as the {@code CurationDocument} the commit itself accepts, to be
+     * stored as a {@code SNAPSHOT} AnnotationSet if this commit changes anything.
+     * <p>
+     * Read before the commit applies, so it records what the commit displaced. Null on a dry run, which writes
+     * nothing and therefore displaces nothing.
+     */
+    @Nullable
+    public String getSnapshotPayloadJson() {
+        return snapshotPayloadJson;
+    }
+
+    public void setSnapshotPayloadJson( @Nullable String snapshotPayloadJson ) {
+        this.snapshotPayloadJson = snapshotPayloadJson;
+    }
+
+    /** Who committed, recorded on the snapshot row so the displaced state names the commit that displaced it. */
+    @Nullable
+    public String getSnapshotCreatedBy() {
+        return snapshotCreatedBy;
+    }
+
+    public void setSnapshotCreatedBy( @Nullable String snapshotCreatedBy ) {
+        this.snapshotCreatedBy = snapshotCreatedBy;
     }
 
 }

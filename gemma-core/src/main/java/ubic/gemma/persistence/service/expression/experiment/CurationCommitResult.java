@@ -67,6 +67,13 @@ public class CurationCommitResult {
     @Nullable
     private Long commitAnnotationSetId;
 
+    /**
+     * Id of the {@code SNAPSHOT} AnnotationSet holding the curation this commit displaced, or null when the commit
+     * changed nothing (nothing was displaced) or was a dry run (nothing was written).
+     */
+    @Nullable
+    private Long snapshotAnnotationSetId;
+
     public boolean isBasicsChanged() {
         return basicsChanged;
     }
@@ -233,6 +240,15 @@ public class CurationCommitResult {
 
     public void setCommitAnnotationSetId( @Nullable Long commitAnnotationSetId ) {
         this.commitAnnotationSetId = commitAnnotationSetId;
+    }
+
+    @Nullable
+    public Long getSnapshotAnnotationSetId() {
+        return snapshotAnnotationSetId;
+    }
+
+    public void setSnapshotAnnotationSetId( @Nullable Long snapshotAnnotationSetId ) {
+        this.snapshotAnnotationSetId = snapshotAnnotationSetId;
     }
 
 }

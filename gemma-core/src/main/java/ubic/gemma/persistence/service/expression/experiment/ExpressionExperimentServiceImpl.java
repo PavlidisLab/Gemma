@@ -2442,13 +2442,14 @@ public class ExpressionExperimentServiceImpl
 
         // ── publications (set-replace, diffed by id) ──
         if ( request.isPublicationsPresent() ) {
-            BibliographicReference primary = request.getPrimaryPublication();
-            List<BibliographicReference> desiredOther = new ArrayList<>();
-            for ( BibliographicReference ref : request.getOtherRelevantPublications() ) {
-                if ( primary != null && Objects.equals( ref.getId(), primary.getId() ) ) {
+            PublicationAssertion primary = request.getPrimaryPublication();
+            Long primaryId = primary != null ? primary.getPublication().getId() : null;
+            List<PublicationAssertion> desiredOther = new ArrayList<>();
+            for ( PublicationAssertion a : request.getOtherRelevantPublications() ) {
+                if ( Objects.equals( a.getPublication().getId(), primaryId ) ) {
                     continue;
                 }
-                desiredOther.add( ref );
+                desiredOther.add( a );
             }
             Set<Long> currentIds = new HashSet<>();
             if ( ee.getPrimaryPublication() != null ) {
@@ -2458,11 +2459,11 @@ public class ExpressionExperimentServiceImpl
                 currentIds.add( r.getId() );
             }
             Set<Long> desiredIds = new HashSet<>();
-            if ( primary != null ) {
-                desiredIds.add( primary.getId() );
+            if ( primaryId != null ) {
+                desiredIds.add( primaryId );
             }
-            for ( BibliographicReference r : desiredOther ) {
-                desiredIds.add( r.getId() );
+            for ( PublicationAssertion a : desiredOther ) {
+                desiredIds.add( a.getPublication().getId() );
             }
             int created = 0, deleted = 0, unchanged = 0;
             for ( Long id : desiredIds ) {
@@ -2482,25 +2483,22 @@ public class ExpressionExperimentServiceImpl
             result.setPublicationsUnchanged( unchanged );
             if ( !dryRun && ( created > 0 || deleted > 0 ) ) {
                 // Through the same reconcile the standalone write path uses, so a commit cannot leave
-                // an ACCEPTED assertion pointing at a link it has just removed. The composite request
-                // carries no evidence, so these are bare curator assertions: a publication the commit
-                // keeps holds on to whatever basis was already recorded for it, and one it adds gets
-                // an assertion with no stated reason.
+                // an ACCEPTED assertion pointing at a link it has just removed. The caller's basis rides
+                // with each assertion (defaulting to a bare curator claim when none was given), so a
+                // publication this commit adds records why -- and a snapshot replayed as a restore puts a
+                // paper back with the basis it had, instead of as an unexplained curator claim. A kept
+                // publication is untouched unless the incoming source outranks the recorded one.
                 //
                 // Rejections are passed as null -- untouched, not cleared. CurationPublications has no
                 // rejection field, so this section cannot express one, and a section that cannot say a
                 // thing must not be read as denying it. Committing an unrelated edit to a dataset is
                 // not a curator withdrawing a ruling about which paper is not theirs.
-                List<PublicationAssertion> otherAssertions = new ArrayList<>( desiredOther.size() );
-                for ( BibliographicReference ref : desiredOther ) {
-                    otherAssertions.add( new PublicationAssertion( ref, PublicationAssociationSource.CURATOR ) );
-                }
-                publicationAssociationService.reconcile( ee,
-                        primary != null ? new PublicationAssertion( primary, PublicationAssociationSource.CURATOR ) : null,
-                        otherAssertions, null );
-                ee.setPrimaryPublication( primary );
+                publicationAssociationService.reconcile( ee, primary, desiredOther, null );
+                ee.setPrimaryPublication( primary != null ? primary.getPublication() : null );
                 ee.getOtherRelevantPublications().clear();
-                ee.getOtherRelevantPublications().addAll( desiredOther );
+                for ( PublicationAssertion a : desiredOther ) {
+                    ee.getOtherRelevantPublications().add( a.getPublication() );
+                }
             }
             anyChange = anyChange || ( created > 0 || deleted > 0 );
         }
@@ -2684,6 +2682,25 @@ public class ExpressionExperimentServiceImpl
             }
             log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") applied" );
         }
+        // ── auto-snapshot: keep the curation this commit displaced ──
+        // The payload was read before anything applied, so the row holds the pre-commit state and the ordinary
+        // restore path puts it back. Minted inside the commit's transaction: a rollback must not leave a snapshot
+        // claiming a state that was never displaced. Only when something actually changed — a no-op commit
+        // displaces nothing, and a row per retry buries the restore points that matter. SNAPSHOT emits no audit
+        // event (AnnotationSetServiceImpl#ATTACH_AUDIT_WHEN excludes it), so this does not touch lastUpdated.
+        if ( !dryRun && anyChange && StringUtils.isNotBlank( request.getSnapshotPayloadJson() ) ) {
+            AnnotationSetService.AttachedAnnotationSet snapshot = annotationSetService.attach( ee,
+                    AnnotationSetRole.SNAPSHOT,
+                    // Gemma read this payload out of itself, so source can only say which kind of actor's commit
+                    // displaced it: a named run means an agent applied it, anything else a curator.
+                    StringUtils.isNotBlank( request.getRunId() ) ? AnnotationSetSource.AGENT : AnnotationSetSource.CURATOR,
+                    null, AnnotationSetService.PRE_COMMIT_SNAPSHOT_RUN_ID_PREFIX + UUID.randomUUID(),
+                    request.getSnapshotCreatedBy(), null, request.getSnapshotPayloadJson(), null );
+            result.setSnapshotAnnotationSetId( snapshot.getAnnotationSet().getId() );
+            log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") displaced curation kept as"
+                    + " AnnotationSet#" + snapshot.getAnnotationSet().getId() );
+        }
+
         // ── run provenance: record WHICH agent run applied this, if the caller named one ──
         // Minted here rather than in the web layer so it shares the commit's transaction: if the commit rolls back
         // there must be no row claiming the run applied anything. Sparse by design — a curator commit names no run

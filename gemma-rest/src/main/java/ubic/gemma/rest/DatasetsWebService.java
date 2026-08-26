@@ -120,7 +120,10 @@ import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatasetPublicationValueObject;
+import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.model.common.description.PublicationAssociation;
 import ubic.gemma.model.common.description.PublicationAssociationSource;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -152,6 +155,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketSer
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.common.description.PublicationAssertion;
 import ubic.gemma.persistence.service.common.description.PublicationAssociationConflictException;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -318,6 +322,8 @@ public class DatasetsWebService {
     private ExpressionDataDeleterService expressionDataDeleterService;
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private PublicationAssociationService publicationAssociationService;
     @Autowired
     private OntologyTermValidator ontologyTermValidator;
 
@@ -2054,10 +2060,13 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Capture the dataset's current curation as an immutable SNAPSHOT AnnotationSet.",
-            description = "Takes the backup for you: the server reads the current design, tags, sample "
-                    + "characteristics and curation note and stores them as the AnnotationSet's `payloadJson`. "
-                    + "Deliberate and append-only — nothing snapshots on its own, so this is what you call before "
-                    + "letting an agent apply a batch of changes.\n\n"
+            description = "Takes the backup for you: the server reads the current basics, publications "
+                    + "(with the evidence on record for each), design, tags, sample characteristics and curation note "
+                    + "and stores them as the AnnotationSet's `payloadJson`. "
+                    + "Append-only, and deliberate: this is the backup you take before letting an agent apply a "
+                    + "batch of changes. `PUT /datasets/{id}/curation` also takes one on its own — an automatic "
+                    + "capture of what each commit displaced, marked by a `precommit-` run id — so this endpoint "
+                    + "is for the backup you want at a moment of your choosing.\n\n"
                     + "The payload is a `CurationDocument`, the same shape `PUT /datasets/{id}/curation` accepts. "
                     + "That is what makes the two companion operations free: "
                     + "`POST /datasets/{id}/annotation-sets/{setId}/restore?dryRun=true` compares the snapshot "
@@ -2637,7 +2646,15 @@ public class DatasetsWebService {
                     + "differential-expression analyses requires `?force=true` (admin) or returns 409. "
                     + "Optimistic concurrency: `baseline.lastModified` (the dataset `lastUpdated` the draft was "
                     + "built against) is checked; a stale baseline returns 409. Requires `ACL_SECURABLE_EDIT`; a "
-                    + "shortName change additionally requires admin. Returns a CurationCommitReport.",
+                    + "shortName change additionally requires admin. Returns a CurationCommitReport.\n\n"
+                    + "A commit that changes anything first keeps what it displaced: the dataset's curation as it "
+                    + "stood is stored as a SNAPSHOT AnnotationSet in the same transaction, and its id comes back "
+                    + "as `snapshotAnnotationSetId`. Hand that id to "
+                    + "`POST /datasets/{id}/annotation-sets/{setId}/restore` to undo the commit, or with "
+                    + "`?dryRun=true` to see what the commit changed. The capture covers every section this "
+                    + "endpoint writes — basics, publications (with the evidence on record for each), design, "
+                    + "tags, sample characteristics and the curation note — the same capture "
+                    + "`POST /datasets/{id}/annotation-sets/snapshot` takes.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
@@ -2719,14 +2736,16 @@ public class DatasetsWebService {
             }
             request.setPublicationsPresent( true );
             // Resolve identifiers -> references BEFORE the commit transaction (PubMed/CrossRef fetch is slow).
-            request.setPrimaryPublication( resolvePublication( pubs.getPrimary() ) );
-            List<BibliographicReference> other = new ArrayList<>();
+            // Through resolveAssertion, the same mapper PUT /datasets/{id}/publications uses, so the evidence
+            // fields PublicationEntry advertises mean here what they mean there instead of being dropped.
+            request.setPrimaryPublication( resolveAssertion( pubs.getPrimary(), "publications.primary" ) );
+            List<PublicationAssertion> other = new ArrayList<>();
             for ( PublicationEntry id : pubs.getOtherRelevant() ) {
-                BibliographicReference ref = resolvePublication( id );
-                if ( ref == null ) {
+                PublicationAssertion a = resolveAssertion( id, "publications.otherRelevant" );
+                if ( a == null ) {
                     throw new BadRequestException( "Each publications.otherRelevant entry needs a non-blank 'pubMedId' or 'doi'." );
                 }
-                other.add( ref );
+                other.add( a );
             }
             request.setOtherRelevantPublications( other );
         }
@@ -2855,6 +2874,18 @@ public class DatasetsWebService {
         // (applies equally to preflight, so a client catches these on the dry run).
         if ( !termViolations.isEmpty() ) {
             throw new OntologyTermValidationException( termViolations );
+        }
+
+        // ── the restore point: capture what this commit is about to displace ──
+        // Read here — after every validation above, before anything writes — and handed to the service so the
+        // SNAPSHOT row is minted inside the commit's own transaction and dies with it on a rollback. A dry run
+        // displaces nothing, so it captures nothing.
+        // Covers what a deliberate `POST .../annotation-sets/snapshot` covers, which is every section this
+        // endpoint can write — publications included, each with the claim on record for it.
+        if ( !dryRun ) {
+            request.setSnapshotPayloadJson( writeSnapshotPayload( buildCurationSnapshot( ee ) ) );
+            User committer = userManager.getCurrentUser();
+            request.setSnapshotCreatedBy( committer != null ? committer.getUserName() : null );
         }
 
         CurationCommitResult result;
@@ -3450,6 +3481,43 @@ public class DatasetsWebService {
                     .setSerializationInclusion( com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL )
                     .configure( com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false );
 
+    /**
+     * One captured publication: the identifier the commit can resolve it by, plus the claim on record for it.
+     * <p>
+     * Null when the reference carries no such identifier — see {@link #buildCurationSnapshot} for why that voids
+     * the whole section rather than dropping the one entry.
+     */
+    @Nullable
+    private static PublicationEntry snapshotPublication( BibliographicReference ref, @Nullable PublicationAssociation claim ) {
+        DatabaseEntry accession = ref.getPubAccession();
+        String database = accession != null && accession.getExternalDatabase() != null
+                ? accession.getExternalDatabase().getName() : null;
+        String identifier = accession != null ? StringUtils.stripToNull( accession.getAccession() ) : null;
+        if ( identifier == null || database == null ) {
+            return null;
+        }
+        PublicationEntry entry = new PublicationEntry();
+        // Same discrimination the dataset VO makes: the accession is a PubMed id or a preprint DOI, told apart
+        // only by its external database.
+        if ( ExternalDatabases.PUBMED.equals( database ) ) {
+            entry.setPubMedId( identifier );
+        } else if ( ExternalDatabases.DOI.equals( database ) || ExternalDatabases.BIORXIV.equals( database )
+                || ExternalDatabases.ARXIV.equals( database ) ) {
+            entry.setDoi( identifier );
+        } else {
+            return null;
+        }
+        if ( claim != null ) {
+            entry.setSource( claim.getSource() != null ? claim.getSource().getDbValue() : null );
+            entry.setEvidence( claim.getEvidence() );
+            entry.setSupportingEvidence( claim.getSupportingEvidence() );
+            entry.setEvidenceCode( claim.getEvidenceCode() != null ? claim.getEvidenceCode().name() : null );
+            entry.setConfidence( claim.getConfidence() );
+            entry.setAssertedBy( claim.getAssertedBy() );
+        }
+        return entry;
+    }
+
     private static String writeSnapshotPayload( CurationDocument doc ) {
         try {
             return SNAPSHOT_MAPPER.writeValueAsString( doc );
@@ -3534,8 +3602,11 @@ public class DatasetsWebService {
      * we already have and "compare with the snapshot" is the preflight we already have; neither needs a second
      * diff implementation that could disagree with the first.
      * <p>
-     * Every captured entity carries its {@code gemmaId}, so a snapshot replayed against an unchanged structure
-     * updates in place rather than duplicating. Ids that no longer exist at restore time are reconciled by
+     * Publications are captured by identifier rather than by {@code gemmaId} — that is what the commit resolves
+     * them by — each carrying the claim on record for it, so a restore puts a paper back with its basis.
+     * <p>
+     * Every other captured entity carries its {@code gemmaId}, so a snapshot replayed against an unchanged
+     * structure updates in place rather than duplicating. Ids that no longer exist at restore time are reconciled by
      * {@link #reconcileSnapshotForRestore}, not here — a snapshot records what was true, not what to do about it.
      */
     private CurationDocument buildCurationSnapshot( ExpressionExperiment ee ) {
@@ -3545,6 +3616,55 @@ public class DatasetsWebService {
         basics.setName( ee.getName() );
         basics.setDescription( ee.getDescription() );
         doc.setBasics( basics );
+
+        // Publications, each with the claim that attaches it — the pairing GET /datasets/{id}/publications
+        // returns. A commit that drops a paper needs a restore point for it, and the paper has to come back with
+        // the basis it had rather than as an unexplained curator claim.
+        // 🛑 All or nothing. The section is replace-by-absence on commit, so a publication that cannot be written
+        // as an identifier — no accession, or one in a namespace the commit cannot resolve — would be deleted by
+        // the very restore meant to protect it. When one turns up, no publications section is captured at all: an
+        // absent section is left untouched on restore, which is the safe direction to fail.
+        ExpressionExperiment withPubs = expressionExperimentService.loadWithPrimaryPublicationAndOtherRelevantPublications( ee.getId() );
+        if ( withPubs != null ) {
+            BibliographicReference primaryRef = withPubs.getPrimaryPublication();
+            List<BibliographicReference> linked = new ArrayList<>();
+            if ( primaryRef != null ) {
+                linked.add( primaryRef );
+            }
+            if ( withPubs.getOtherRelevantPublications() != null ) {
+                for ( BibliographicReference r : withPubs.getOtherRelevantPublications() ) {
+                    if ( primaryRef == null || !Objects.equals( r.getId(), primaryRef.getId() ) ) {
+                        linked.add( r );
+                    }
+                }
+            }
+            Map<Long, PublicationAssociation> claims = linked.isEmpty()
+                    ? Collections.emptyMap()
+                    : publicationAssociationService.findByPublications( withPubs, linked );
+            CurationPublications pubs = new CurationPublications();
+            List<PublicationEntry> otherRelevant = new ArrayList<>();
+            boolean everyOneExpressible = true;
+            for ( BibliographicReference r : linked ) {
+                PublicationEntry entry = snapshotPublication( r, claims.get( r.getId() ) );
+                if ( entry == null ) {
+                    log.warn( "Curation snapshot of " + ee.getShortName() + " (ID=" + ee.getId() + ") omits the"
+                            + " publications section: BibliographicReference#" + r.getId() + " carries no"
+                            + " identifier the commit could resolve, and a section missing it would delete it on"
+                            + " restore." );
+                    everyOneExpressible = false;
+                    break;
+                }
+                if ( r == primaryRef ) {
+                    pubs.setPrimary( entry );
+                } else {
+                    otherRelevant.add( entry );
+                }
+            }
+            if ( everyOneExpressible ) {
+                pubs.setOtherRelevant( otherRelevant );
+                doc.setPublications( pubs );
+            }
+        }
 
         ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
         Map<Long, String> gsmByBmId = new HashMap<>();
@@ -4084,17 +4204,25 @@ public class DatasetsWebService {
          */
         @Nullable
         private final Long commitAnnotationSetId;
+        /**
+         * The {@code SNAPSHOT} AnnotationSet holding the curation this commit displaced — the id to hand
+         * {@code POST /datasets/{id}/annotation-sets/{setId}/restore} to undo it. Null when the commit changed
+         * nothing, and on a preflight, because neither displaced anything.
+         */
+        @Nullable
+        private final Long snapshotAnnotationSetId;
         private final String error;
 
         private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
                 Map<String, Long> idMap, List<Long> auditEventIds, List<Canonicalization> canonicalizations,
-                @Nullable Long commitAnnotationSetId ) {
+                @Nullable Long commitAnnotationSetId, @Nullable Long snapshotAnnotationSetId ) {
             this.applied = applied;
             this.idMap = idMap;
             this.changes = changes;
             this.auditEventIds = auditEventIds;
             this.canonicalizations = canonicalizations;
             this.commitAnnotationSetId = commitAnnotationSetId;
+            this.snapshotAnnotationSetId = snapshotAnnotationSetId;
             this.error = "";
         }
 
@@ -4134,12 +4262,14 @@ public class DatasetsWebService {
             if ( r.getSampleCharsIdMap() != null ) idMap.putAll( r.getSampleCharsIdMap() );
             List<Long> auditEventIds = r.getDesignAuditEventIds() != null ? r.getDesignAuditEventIds() : Collections.emptyList();
             return new CurationCommitReport( applied, changes, idMap, auditEventIds, canonicalizations,
-                    r.getCommitAnnotationSetId() );
+                    r.getCommitAnnotationSetId(), r.getSnapshotAnnotationSetId() );
         }
 
         public boolean isApplied() { return applied; }
         @Nullable
         public Long getCommitAnnotationSetId() { return commitAnnotationSetId; }
+        @Nullable
+        public Long getSnapshotAnnotationSetId() { return snapshotAnnotationSetId; }
         public Map<String, Long> getIdMap() { return idMap; }
         public Map<String, CurationSectionChange> getChanges() { return changes; }
         public List<Long> getAuditEventIds() { return auditEventIds; }

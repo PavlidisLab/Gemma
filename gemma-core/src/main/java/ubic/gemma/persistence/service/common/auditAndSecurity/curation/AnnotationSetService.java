@@ -37,6 +37,15 @@ import ubic.gemma.model.expression.experiment.AgentCurationKind;
 public interface AnnotationSetService {
 
     /**
+     * Run-id prefix on a {@code SNAPSHOT} taken by a curation commit to keep the state it displaced, as opposed to
+     * one a caller asked for through {@code POST /datasets/{id}/annotation-sets/snapshot}. Both are ordinary
+     * snapshots and restore the same way; the prefix is what tells them apart in a list.
+     * <p>
+     * The rest of the id is a UUID, as for any snapshot &mdash; a commit-taken backup names no run of its own.
+     */
+    String PRE_COMMIT_SNAPSHOT_RUN_ID_PREFIX = "precommit-";
+
+    /**
      * Attach (or return existing) an annotation set to the given
      * investigation. The {@code runId} semantic depends on role and is
      * the caller's responsibility:

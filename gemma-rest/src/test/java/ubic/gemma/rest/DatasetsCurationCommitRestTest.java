@@ -1189,6 +1189,169 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     }
 
 
+    // ── the commit keeps what it displaced ───────────────────────────────────────────────────────────────
+
+    /**
+     * The restore point nobody had to remember to ask for. A commit that changes anything first stores the
+     * curation it is about to overwrite as a SNAPSHOT, and the id it reports feeds the ordinary restore — so the
+     * undo exists even though the curator took no backup beforehand.
+     */
+    @Test
+    public void testCommitKeepsWhatItDisplacedAndTheReportPointsAtIt() {
+        ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = before.getExperimentalFactors().stream()
+                .filter( f -> !f.getValues().isEmpty() )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "seeded design has no factor with values" ) );
+        FactorValueBasicValueObject target = factor.getValues().get( 0 );
+        String originalSummary = target.getSummary();
+
+        long snapshotId;
+        String edit = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":" + factor.getId() + ","
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":" + target.getId() + ","
+                + "\"freeTextLabel\":\"committed over\"}]}}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( edit ) ) ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).as( "the commit says where the curation it displaced went" )
+                    .containsPattern( "\"snapshotAnnotationSetId\"\\s*:\\s*\\d+" );
+            snapshotId = Long.parseLong( json.replaceAll( "(?s).*\"snapshotAnnotationSetId\"\\s*:\\s*(\\d+).*", "$1" ) );
+        }
+        assertThat( fvById( factorById( reloadDesign(), factor.getId() ), target.getId() ).getValue() )
+                .isEqualTo( "committed over" );
+
+        AnnotationSet kept = annotationSetService.load( snapshotId );
+        assertThat( kept ).as( "the reported row exists" ).isNotNull();
+        assertThat( kept.getRole() ).isEqualTo( AnnotationSetRole.SNAPSHOT );
+        assertThat( kept.getRunId() ).as( "a commit-taken backup is distinguishable from one somebody asked for" )
+                .startsWith( AnnotationSetService.PRE_COMMIT_SNAPSHOT_RUN_ID_PREFIX );
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/annotation-sets/" + snapshotId + "/restore" )
+                .queryParam( "force", true ).request().post( Entity.json( "" ) ) ) {
+            assertOk( r );
+        }
+        assertThat( fvById( factorById( reloadDesign(), factor.getId() ), target.getId() ).getSummary() )
+                .as( "the commit is undone from the backup it took itself" ).isEqualTo( originalSummary );
+    }
+
+    /**
+     * A commit that changes nothing displaced nothing, so it keeps nothing. A row per retry would bury the
+     * restore points that matter under identical copies of a state nobody overwrote.
+     */
+    @Test
+    public void testANoOpCommitKeepsNoSnapshot() {
+        String currentName = expressionExperimentService.load( ee.getId() ).getName();
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request()
+                .put( Entity.json( "{\"basics\":{\"name\":\"" + currentName + "\"}}" ) ) ) {
+            assertOk( r );
+        }
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.SNAPSHOT ) )
+                .as( "nothing was displaced, so there is nothing to keep" ).isZero();
+    }
+
+    /** A preflight writes nothing, so there is nothing to keep and no row left behind to explain. */
+    @Test
+    public void testPreflightKeepsNoSnapshot() {
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/preflight" ).request()
+                .post( Entity.json( "{\"basics\":{\"name\":\"dry run\"},"
+                        + "\"curationDetails\":{\"curationNote\":\"not landing\"}}" ) ) ) {
+            assertOk( r );
+        }
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.SNAPSHOT ) )
+                .as( "a dry run leaves no trace" ).isZero();
+    }
+
+    /**
+     * Keeping the displaced curation has to be free in audit events. Every audit event on a curatable sets
+     * {@code curationDetails.lastUpdated} — the optimistic-concurrency token the next commit checks — so a
+     * backup that audited would 409 in-flight drafts by the act of backing up. A basics-only commit emits no
+     * event of its own, which is what makes the count here a direct reading of the backup's cost.
+     */
+    @Test
+    public void testKeepingTheDisplacedCurationCostsNoAuditEvent() {
+        int before = auditEventService.getEvents( expressionExperimentService.load( ee.getId() ) ).size();
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request()
+                .put( Entity.json( "{\"basics\":{\"name\":\"renamed, and backed up\"}}" ) ) ) {
+            assertOk( r );
+        }
+        int after = auditEventService.getEvents( expressionExperimentService.load( ee.getId() ) ).size();
+
+        assertThat( annotationSetService.countByInvestigation( ee, AnnotationSetRole.SNAPSHOT ) )
+                .as( "the backup really was taken" ).isEqualTo( 1 );
+        assertThat( after ).as( "and it cost no audit event" ).isEqualTo( before );
+    }
+
+    /**
+     * The evidence a commit is given is recorded, not dropped. {@code PublicationEntry} carries the basis for a
+     * link on every endpoint that accepts one, and a commit that quietly kept only the identifier would leave the
+     * caller believing it had recorded a reason it never stored.
+     */
+    @Test
+    public void testCommitRecordsTheBasisGivenForAPublication() {
+        // seeded locally so resolving the id is a database lookup, not a PubMed fetch
+        testHelper.getTestPersistentBibliographicReference( "20051063" );
+
+        String attach = "{\"publications\":{\"primary\":{\"pubMedId\":\"20051063\","
+                + "\"source\":\"geo_submitter_link\",\"evidence\":\"the series links this paper\","
+                + "\"evidenceCode\":\"TAS\"},\"otherRelevant\":[]}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( attach ) ) ) {
+            assertOk( r );
+        }
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/publications" ).request().get() ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).as( "the paper is attached" ).contains( "20051063" );
+            assertThat( json ).as( "with the basis given for it" ).contains( "the series links this paper" );
+            assertThat( json ).as( "and the claimed source, not a curator claim invented for it" )
+                    .contains( "geo_submitter_link" );
+        }
+    }
+
+    /**
+     * A commit that drops a paper is undone from its own backup, and the paper comes back with the basis it had.
+     * The basis is how a later reader judges the link — a restore that returns the fact without it hands back
+     * something weaker than what was taken away.
+     */
+    @Test
+    public void testRestoreBringsBackADroppedPublicationWithItsBasis() {
+        testHelper.getTestPersistentBibliographicReference( "20051063" );
+
+        String attach = "{\"publications\":{\"primary\":{\"pubMedId\":\"20051063\","
+                + "\"source\":\"geo_submitter_link\",\"evidence\":\"the series links this paper\","
+                + "\"evidenceCode\":\"TAS\"},\"otherRelevant\":[]}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( attach ) ) ) {
+            assertOk( r );
+        }
+
+        // the curator drops it — and the commit keeps what it displaced
+        long snapshotId;
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request()
+                .put( Entity.json( "{\"publications\":{\"primary\":null,\"otherRelevant\":[]}}" ) ) ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).containsPattern( "\"snapshotAnnotationSetId\"\\s*:\\s*\\d+" );
+            snapshotId = Long.parseLong( json.replaceAll( "(?s).*\"snapshotAnnotationSetId\"\\s*:\\s*(\\d+).*", "$1" ) );
+        }
+        try ( Response r = target( "/datasets/" + ee.getId() + "/publications" ).request().get() ) {
+            assertThat( r.readEntity( String.class ) ).as( "the paper really is gone" ).doesNotContain( "20051063" );
+        }
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/annotation-sets/" + snapshotId + "/restore" )
+                .queryParam( "force", true ).request().post( Entity.json( "" ) ) ) {
+            assertOk( r );
+        }
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/publications" ).request().get() ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).as( "the paper is back" ).contains( "20051063" );
+            assertThat( json ).as( "with the basis it had" ).contains( "the series links this paper" );
+            assertThat( json ).as( "and its source, not rewritten as a curator claim by the restore" )
+                    .contains( "geo_submitter_link" );
+        }
+    }
+
     /* ============== draft delegation: the agent writes for a curator ============== */
 
     /**
