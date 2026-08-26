@@ -626,10 +626,14 @@ public class PlatformsWebService {
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
-     * @param probeArg    the name or ID of the platform element for which the genes should be retrieved. Note that
-     *                    names containing
-     *                    a forward slash are not accepted. Should you need this restriction temporarily lifted, please
-     *                    contact us.
+     * @param probeArg    the platform element for which the genes should be retrieved, by ID or by name —
+     *                    the ID is the addressing form; a name works when it is well-formed for a path segment.
+     *                    🛑 A name containing a forward slash cannot be addressed this way at all — the reverse
+     *                    proxy 404s the encoded form and Tomcat 400s it, so it never reaches the application, and
+     *                    lifting that is a deployment change nobody wants on a public proxy. Every other character
+     *                    is the client's to percent-encode. Resolve such a name to its ID through the query string,
+     *                    where a slash is legal:
+     *                    {@code GET /platforms/{platform}/elements?filter=name = AFFX-HUMISGF3A/M97935_MA_at}.
      * @param offset      optional parameter (defaults to 0) skips the specified amount of datasets when retrieving them
      *                    from the database.
      * @param limit       optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0
@@ -689,7 +693,13 @@ public class PlatformsWebService {
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
      * @param probeArg    the name or ID of the platform element for which the mapping summary should be retrieved.
-     *                    Note that names containing a forward slash are not accepted.
+     *                    the ID is the addressing form; a name works when it is well-formed for a path segment.
+     *                    🛑 A name containing a forward slash cannot be addressed this way at all — the reverse
+     *                    proxy 404s the encoded form and Tomcat 400s it, so it never reaches the application, and
+     *                    lifting that is a deployment change nobody wants on a public proxy. Every other character
+     *                    is the client's to percent-encode. Resolve such a name to its ID through the query string,
+     *                    where a slash is legal:
+     *                    {@code GET /platforms/{platform}/elements?filter=name = AFFX-HUMISGF3A/M97935_MA_at}.
      */
     @GET
     @Path("/{platform}/elements/{probe}/mappingSummary")
@@ -733,7 +743,13 @@ public class PlatformsWebService {
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
      * @param probeArg    the name or ID of the platform element whose alignments should be rendered.
-     *                    Note that names containing a forward slash are not accepted.
+     *                    the ID is the addressing form; a name works when it is well-formed for a path segment.
+     *                    🛑 A name containing a forward slash cannot be addressed this way at all — the reverse
+     *                    proxy 404s the encoded form and Tomcat 400s it, so it never reaches the application, and
+     *                    lifting that is a deployment change nobody wants on a public proxy. Every other character
+     *                    is the client's to percent-encode. Resolve such a name to its ID through the query string,
+     *                    where a slash is legal:
+     *                    {@code GET /platforms/{platform}/elements?filter=name = AFFX-HUMISGF3A/M97935_MA_at}.
      * @param download    when true, serve with an attachment disposition so a browser saves it as a
      *                    {@code .psl} file instead of rendering it inline.
      */
