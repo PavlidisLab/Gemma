@@ -648,7 +648,10 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
             assertThat( r.getStatus() ).as( "stranding a subset is a consent question, not a silent success" )
                     .isEqualTo( Response.Status.CONFLICT.getStatusCode() );
-            assertThat( r.readEntity( String.class ) ).contains( "subset" );
+            String json = r.readEntity( String.class );
+            assertThat( json ).contains( "subset" );
+            assertThat( json ).as( "and the client is told which 409 this is, not left to read the sentence" )
+                    .contains( "\"reason\":\"REQUIRES_FORCE\"" );
         }
         // nothing was written
         assertThat( allFvIds( reloadDesign() ) ).contains( anchor.getId() );
@@ -1350,6 +1353,43 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
             assertThat( json ).as( "and its source, not rewritten as a curator claim by the restore" )
                     .contains( "geo_submitter_link" );
         }
+    }
+
+    /**
+     * A client that has just committed knows the state — its own write produced it — so it should be able to keep
+     * editing and commit again. The report hands back the token for that. Without it the only way to learn the new
+     * baseline is to re-read the dataset, and a client that skips the re-read 409s on a change it made itself.
+     */
+    @Test
+    public void testTheReportHandsBackTheTokenForTheNextCommit() {
+        String token;
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request()
+                .put( Entity.json( "{\"basics\":{\"name\":\"first\"}}" ) ) ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).as( "the report names the next commit's baseline" )
+                    .containsPattern( "\"newBaseline\"\\s*:\\s*\"[^\"]+\"" );
+            token = json.replaceAll( "(?s).*\"newBaseline\"\\s*:\\s*\"([^\"]+)\".*", "$1" );
+        }
+
+        // second commit carrying that token, with no re-read in between
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request()
+                .put( Entity.json( "{\"baseline\":{\"lastModified\":\"" + token + "\"},"
+                        + "\"basics\":{\"name\":\"second\"}}" ) ) ) {
+            assertOk( r );
+        }
+
+        // the same token a third time is refused — which is what proves it was parsed and compared rather than
+        // quietly ignored, since an unreadable token skips the check and lets the commit through
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request()
+                .put( Entity.json( "{\"baseline\":{\"lastModified\":\"" + token + "\"},"
+                        + "\"basics\":{\"name\":\"third\"}}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.CONFLICT.getStatusCode() );
+            assertThat( r.readEntity( String.class ) ).as( "named as the conflict it is" )
+                    .contains( "\"reason\":\"STALE_BASELINE\"" );
+        }
+        assertThat( expressionExperimentService.load( ee.getId() ).getName() )
+                .as( "the refused commit wrote nothing" ).isEqualTo( "second" );
     }
 
     /* ============== draft delegation: the agent writes for a curator ============== */

@@ -2654,7 +2654,17 @@ public class DatasetsWebService {
                     + "`?dryRun=true` to see what the commit changed. The capture covers every section this "
                     + "endpoint writes — basics, publications (with the evidence on record for each), design, "
                     + "tags, sample characteristics and the curation note — the same capture "
-                    + "`POST /datasets/{id}/annotation-sets/snapshot` takes.",
+                    + "`POST /datasets/{id}/annotation-sets/snapshot` takes.\n\n"
+                    + "The report carries `newBaseline`, the dataset's `lastUpdated` after the commit: send it as "
+                    + "`baseline.lastModified` on the next commit and a client can edit and commit repeatedly "
+                    + "without re-reading the dataset between writes.\n\n"
+                    + "Every 409 names which conflict it was in `errors[0].reason`, because the client's next "
+                    + "move differs per case: `STALE_BASELINE` (re-read, rebuild the diff, commit again — the "
+                    + "response deliberately does not hand back a fresher token, since committing over a change "
+                    + "you have not seen is what the token prevents), `REQUIRES_FORCE` (get the curator's consent, "
+                    + "then retry with `?force=true` as admin), `PUBLICATION_REJECTED` (a paper being attached "
+                    + "stands rejected for this dataset), `UNSPECIFIED` (refused as a conflict without a code — "
+                    + "e.g. a short name already in use).",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
@@ -2681,7 +2691,10 @@ public class DatasetsWebService {
     @Operation(summary = "Preflight (dry-run) a curation draft",
             description = "Same body and validation as the commit, but writes nothing: returns the "
                     + "CurationCommitReport with `applied=false` and the per-section change counts, so the UI "
-                    + "can preview the diff before committing.",
+                    + "can preview the diff before committing. `newBaseline` comes back as the dataset's current "
+                    + "`lastUpdated`, so a preflight is also how a client picks up the token to commit with. "
+                    + "A dry run never 409s on the force gate — it predicts that consequence rather than "
+                    + "hitting it — so check `changes` and the design report, not the status code.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
@@ -2780,9 +2793,8 @@ public class DatasetsWebService {
                 throw new BadRequestException( "The proposed design has validation blockers: " + summarizeDesignBlockers( report ) );
             }
             if ( !dryRun && report.requiresForce() && !( force && SecurityUtil.isUserAdmin() ) ) {
-                throw new jakarta.ws.rs.ClientErrorException( summarizeDesignConsequences( report )
-                        + "; retry with ?force=true (admin only) to consent.",
-                        jakarta.ws.rs.core.Response.Status.CONFLICT );
+                throw new CurationCommitConflictException( CurationCommitConflictException.Reason.REQUIRES_FORCE,
+                        summarizeDesignConsequences( report ) + "; retry with ?force=true (admin only) to consent." );
             }
         }
 
@@ -2892,12 +2904,19 @@ public class DatasetsWebService {
         try {
             result = expressionExperimentService.commitCuration( ee, request, dryRun );
         } catch ( org.springframework.dao.OptimisticLockingFailureException e ) {
-            throw new jakarta.ws.rs.ClientErrorException( e.getMessage(), jakarta.ws.rs.core.Response.Status.CONFLICT );
+            // Deliberately without the current token: the draft was built against a state that no longer holds,
+            // so a retry carrying a fresher one would commit over the change the client has not seen — the very
+            // overwrite the token exists to prevent. Re-read, re-diff, commit again.
+            throw new CurationCommitConflictException( CurationCommitConflictException.Reason.STALE_BASELINE, e.getMessage() );
         } catch ( org.springframework.security.access.AccessDeniedException e ) {
             throw new jakarta.ws.rs.ForbiddenException( e.getMessage() );
+        } catch ( PublicationAssociationConflictException e ) {
+            // A paper this commit attaches stands rejected for the dataset. Its own code, because the client's
+            // move is to drop the paper or overrule the rejection, not to re-read anything.
+            throw new CurationCommitConflictException( CurationCommitConflictException.Reason.PUBLICATION_REJECTED, e.getMessage() );
         } catch ( IllegalArgumentException e ) {
             // e.g. shortName already in use
-            throw new jakarta.ws.rs.ClientErrorException( e.getMessage(), jakarta.ws.rs.core.Response.Status.CONFLICT );
+            throw new CurationCommitConflictException( CurationCommitConflictException.Reason.UNSPECIFIED, e.getMessage() );
         }
         return CurationCommitReport.from( result, request, !dryRun, canonicalizations );
     }
@@ -4211,11 +4230,20 @@ public class DatasetsWebService {
          */
         @Nullable
         private final Long snapshotAnnotationSetId;
+        /**
+         * The dataset's {@code lastUpdated} as of this call — send it back as {@code baseline.lastModified} on
+         * the next commit. Without it a client that commits twice has to re-read the dataset in between purely to
+         * learn the token, and one that doesn't gets a 409 it caused itself. Present on a preflight too, where it
+         * is simply the current token (a dry run moves nothing).
+         */
+        @Nullable
+        private final Date newBaseline;
         private final String error;
 
         private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
                 Map<String, Long> idMap, List<Long> auditEventIds, List<Canonicalization> canonicalizations,
-                @Nullable Long commitAnnotationSetId, @Nullable Long snapshotAnnotationSetId ) {
+                @Nullable Long commitAnnotationSetId, @Nullable Long snapshotAnnotationSetId,
+                @Nullable Date newBaseline ) {
             this.applied = applied;
             this.idMap = idMap;
             this.changes = changes;
@@ -4223,6 +4251,7 @@ public class DatasetsWebService {
             this.canonicalizations = canonicalizations;
             this.commitAnnotationSetId = commitAnnotationSetId;
             this.snapshotAnnotationSetId = snapshotAnnotationSetId;
+            this.newBaseline = newBaseline;
             this.error = "";
         }
 
@@ -4262,7 +4291,7 @@ public class DatasetsWebService {
             if ( r.getSampleCharsIdMap() != null ) idMap.putAll( r.getSampleCharsIdMap() );
             List<Long> auditEventIds = r.getDesignAuditEventIds() != null ? r.getDesignAuditEventIds() : Collections.emptyList();
             return new CurationCommitReport( applied, changes, idMap, auditEventIds, canonicalizations,
-                    r.getCommitAnnotationSetId(), r.getSnapshotAnnotationSetId() );
+                    r.getCommitAnnotationSetId(), r.getSnapshotAnnotationSetId(), r.getNewLastUpdated() );
         }
 
         public boolean isApplied() { return applied; }
@@ -4270,6 +4299,8 @@ public class DatasetsWebService {
         public Long getCommitAnnotationSetId() { return commitAnnotationSetId; }
         @Nullable
         public Long getSnapshotAnnotationSetId() { return snapshotAnnotationSetId; }
+        @Nullable
+        public Date getNewBaseline() { return newBaseline; }
         public Map<String, Long> getIdMap() { return idMap; }
         public Map<String, CurationSectionChange> getChanges() { return changes; }
         public List<Long> getAuditEventIds() { return auditEventIds; }
