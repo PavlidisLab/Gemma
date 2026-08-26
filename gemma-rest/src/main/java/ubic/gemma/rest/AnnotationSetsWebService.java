@@ -414,13 +414,8 @@ public class AnnotationSetsWebService {
         }
         AnnotationSet set = requireLoad( id, "id" );
         String judgedBy = resolveCurator( onBehalfOf );
-        // The kind follows the delegation, not the transport. A ruling relayed for a named curator is that
-        // curator's; only a caller ruling as itself, and being an agent, produces an AGENT verdict. Backwards,
-        // this would make "has a person looked at this" answer false for every ruling a curator made through
-        // the agent -- which, now that curation is relayed, is all of them.
-        boolean ruledForSomeoneNamed = onBehalfOf != null && !onBehalfOf.isBlank();
-        TriageJudgeKind kind = !ruledForSomeoneNamed && SecurityUtil.isUserAgent()
-                ? TriageJudgeKind.AGENT : TriageJudgeKind.CURATOR;
+        // Whether a person or a machine decided this.
+        TriageJudgeKind kind = resolveJudgeKind( body.judgeKind, onBehalfOf );
         AnnotationSetTriage t = annotationSetTriageService.judge( set, verdict, judgedBy, kind, body.note );
         return Response.ok( toTriageResponse( t ) ).build();
     }
@@ -469,6 +464,38 @@ public class AnnotationSetsWebService {
         return Response.ok( rows ).build();
     }
 
+    /**
+     * Who decided: a person, or a machine.
+     *
+     * <p>🛑 <b>Taken from the caller, not inferred from the transport.</b> The
+     * obvious inference — "no {@code onBehalfOf} and the caller holds
+     * {@code GROUP_AGENT}, therefore AGENT" — is wrong in the deployment we
+     * actually have. The agent authenticates as whichever account runs it,
+     * which today is a human administrator, so that test reports
+     * {@code CURATOR} for the agent's own verdicts and
+     * {@link AnnotationSetTriage#reviewedByHuman} then answers true for
+     * rulings no person made. That is the exact failure {@code JUDGE_KIND}
+     * exists to prevent, inverted.</p>
+     *
+     * <p>The caller always knows which it is; the principal never did. So the
+     * body carries it, and the inference survives only as a default for a
+     * client that omits it: naming a curator implies a relayed human decision,
+     * and the agent authority — once the agent has its own account — implies a
+     * machine one.</p>
+     */
+    private static TriageJudgeKind resolveJudgeKind( @Nullable String declared, @Nullable String onBehalfOf ) {
+        if ( declared != null && !declared.isBlank() ) {
+            try {
+                return TriageJudgeKind.fromDbValue( declared );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown judgeKind '" + declared + "'; expected agent or curator." );
+            }
+        }
+        boolean ruledForSomeoneNamed = onBehalfOf != null && !onBehalfOf.isBlank();
+        return !ruledForSomeoneNamed && SecurityUtil.isUserAgent()
+                ? TriageJudgeKind.AGENT : TriageJudgeKind.CURATOR;
+    }
+
     private static TriageResponse toTriageResponse( AnnotationSetTriage t ) {
         TriageResponse r = new TriageResponse();
         r.id = t.getId();
@@ -487,6 +514,13 @@ public class AnnotationSetsWebService {
         public String triage;
         @JsonProperty("note")
         public String note;
+        /**
+         * {@code agent} or {@code curator} — who decided. Send it; the
+         * fallback guesses from the transport and guesses wrong whenever the
+         * agent runs as a human account.
+         */
+        @JsonProperty("judgeKind")
+        public String judgeKind;
     }
 
     /** Wire shape of one triage ruling. */

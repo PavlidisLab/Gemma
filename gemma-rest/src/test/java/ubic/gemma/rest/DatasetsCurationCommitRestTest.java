@@ -1443,4 +1443,35 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         }
     }
 
+
+    /**
+     * The agent authenticates as whichever account runs it, which today is a human administrator. Inferring the
+     * judge kind from the transport therefore reports CURATOR for the agent's own verdicts, and
+     * reviewedByHuman then answers true for rulings no person made -- the exact failure JUDGE_KIND exists to
+     * prevent, inverted. So the caller declares it.
+     */
+    @Test
+    public void testAgentRunningAsAdminStillRecordsItsOwnVerdictAsAgent() {
+        Long setId = mintProposal( "triage-run-kind" );
+        // no onBehalfOf, and the caller is administrator -- not GROUP_AGENT
+        patchTriage( setId, null, "{\"triage\":\"must_fix\",\"judgeKind\":\"agent\"}" );
+
+        try ( Response r = target( "/annotation-sets/" + setId + "/triage" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) )
+                    .as( "a declared agent verdict is not relabelled by the transport identity" )
+                    .contains( "\"judgeKind\":\"agent\"" );
+        }
+    }
+
+    /** An unknown judgeKind is refused rather than silently defaulted to a judge nobody named. */
+    @Test
+    public void testUnknownJudgeKindIsRejected() {
+        Long setId = mintProposal( "triage-run-kind-bad" );
+        try ( Response r = target( "/annotation-sets/" + setId + "/triage" )
+                .request().method( "PATCH", Entity.json( "{\"triage\":\"fine\",\"judgeKind\":\"robot\"}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
+        }
+    }
+
 }
