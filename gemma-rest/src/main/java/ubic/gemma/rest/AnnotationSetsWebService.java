@@ -56,6 +56,7 @@ import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.Responders;
+import ubic.gemma.core.security.util.SecurityUtil;
 import ubic.gemma.rest.util.args.DatasetArg;
 import ubic.gemma.rest.util.args.DatasetArgService;
 import ubic.gemma.rest.util.args.LimitArg;
@@ -200,44 +201,77 @@ public class AnnotationSetsWebService {
     }
 
     /**
-     * Fetch the current curator's {@code DRAFT} for the given dataset.
-     * 404 if no draft exists. Convenience over the role-filtered list
-     * because the curation-UI hits this on every dataset open.
+     * Fetch a curator's {@code DRAFT} for the given dataset. 404 if no draft
+     * exists. Convenience over the role-filtered list because the curation
+     * client hits this on every dataset open.
+     *
+     * @param onBehalfOf whose draft to read; see
+     *                   {@link #resolveCurator(String)}. Reading is delegated
+     *                   for the same reason writing is — an agent fetching
+     *                   "the draft" without saying whose would get its own.
      */
-    public Response getDraftForDataset( DatasetArg<?> datasetArg ) {
-        User curator = requireCurrentUser();
+    public Response getDraftForDataset( DatasetArg<?> datasetArg, @Nullable String onBehalfOf ) {
+        String curator = resolveCurator( onBehalfOf );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         AnnotationSet draft = annotationSetService.findByInvestigationAndRoleAndRunId(
                 ee, AnnotationSetRole.DRAFT, draftRunId( curator ) );
         if ( draft == null ) {
-            throw new NotFoundException( "No draft for dataset " + ee.getId() );
+            throw new NotFoundException( "No draft for dataset " + ee.getId()
+                    + " belonging to " + curator + "." );
         }
         return Response.ok( toResponse( draft ) ).build();
     }
 
     /**
-     * Upsert the current curator's {@code DRAFT} for the given dataset.
+     * Upsert a curator's {@code DRAFT} for the given dataset.
      * One DRAFT per (dataset, curator); body's {@code payloadJson} +
      * optional {@code parkedElements} + optional {@code parentId}
      * (the PROPOSAL the draft was seeded from). Returns 201 on create,
      * 200 on update.
+     *
+     * @param onBehalfOf which curator this draft belongs to; see
+     *                   {@link #resolveCurator(String)}
      */
     public Response upsertDraftForDataset( DatasetArg<?> datasetArg,
-            @Nullable UpsertDraftRequest body ) {
+            @Nullable String onBehalfOf, @Nullable UpsertDraftRequest body ) {
         if ( body == null || body.payloadJson == null ) {
             throw new BadRequestException( "Request body must include `payloadJson`." );
         }
-        User curator = requireCurrentUser();
+        String curator = resolveCurator( onBehalfOf );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         AnnotationSet parent = body.parentId != null
                 ? requireLoad( body.parentId, "parentId" )
                 : null;
         boolean preExisted = annotationSetService.findByInvestigationAndRoleAndRunId(
                 ee, AnnotationSetRole.DRAFT, draftRunId( curator ) ) != null;
-        AnnotationSet draft = annotationSetService.upsertDraft( ee, curator.getUserName(),
+        AnnotationSet draft = annotationSetService.upsertDraft( ee, curator,
                 body.payloadJson, body.parkedElements, parent );
         Response.Status status = preExisted ? Response.Status.OK : Response.Status.CREATED;
         return Response.status( status ).entity( toResponse( draft ) ).build();
+    }
+
+    /**
+     * Whose draft this is.
+     *
+     * <p>🛑 Not the authenticated principal. Curation reaches Gemma through
+     * the curation agent rather than from a curator's browser, so the
+     * principal on these calls is normally the agent acting for someone else.
+     * The curator's own name is part of a {@code DRAFT}'s run id
+     * ({@code "draft-{curator}"}), and that run id is inside
+     * {@code UNIQUE(investigation, ROLE, RUN_ID)} — so attributing a draft to
+     * the caller does not merely mis-label it. Every curator's draft on a
+     * dataset would key to {@code draft-agent}, one row, and the second
+     * autosave would overwrite the first with no error.
+     *
+     * <p>Delegation is refused rather than ignored for a caller who is neither
+     * agent nor admin: silently substituting their own name would store a
+     * different fact from the one they asked for.
+     */
+    private String resolveCurator( @Nullable String onBehalfOf ) {
+        if ( onBehalfOf == null || onBehalfOf.isBlank() ) {
+            return requireCurrentUser().getUserName();
+        }
+        return SecurityUtil.resolveActingIdentity( onBehalfOf );
     }
 
     /* ============== cross-dataset routes ============== */
@@ -305,12 +339,17 @@ public class AnnotationSetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Mark an annotation set finalized (done editing / polished)")
+    @Operation(summary = "Mark an annotation set finalized (done editing / polished)",
+            description = "`?onBehalfOf=` records the finalizing curator when the call is relayed "
+                    + "by an agent, so `finalizedBy` names the person who decided rather than the "
+                    + "software that transmitted it. Honoured only for `GROUP_AGENT` / "
+                    + "`GROUP_ADMIN`.")
     public Response finalizeAnnotationSet(
-            @PathParam("id") Long id
+            @PathParam("id") Long id,
+            @Parameter(description = "Who is finalizing. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
-        User user = userManager.getCurrentUser();
-        String by = user != null ? user.getUserName() : null;
+        String by = resolveCurator( onBehalfOf );
         AnnotationSet updated = annotationSetService.finalizeSet( id, by );
         if ( updated == null ) {
             throw new NotFoundException( "No annotation set with id " + id );
@@ -569,8 +608,8 @@ public class AnnotationSetsWebService {
         return u;
     }
 
-    private static String draftRunId( User curator ) {
-        return "draft-" + curator.getUserName();
+    private static String draftRunId( String curatorUserName ) {
+        return "draft-" + curatorUserName;
     }
 
     private static AnnotationSetSource defaultSourceForRole( AnnotationSetRole role ) {

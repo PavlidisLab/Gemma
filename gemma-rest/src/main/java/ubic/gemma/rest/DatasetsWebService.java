@@ -2143,25 +2143,39 @@ public class DatasetsWebService {
     @Path("/{dataset}/annotation-sets/draft")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Fetch the current curator's DRAFT for a dataset (404 if none).")
+    @Operation(summary = "Fetch a curator's DRAFT for a dataset (404 if none).",
+            description = "Defaults to the caller's own draft. `?onBehalfOf=` reads another "
+                    + "curator's, and is honoured only for a caller holding `GROUP_AGENT` or "
+                    + "`GROUP_ADMIN`. An agent asking for \"the draft\" without naming a curator "
+                    + "would get its own, which is never what it means.")
     public Response getDatasetDraftAnnotationSet(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Whose draft to read. Agents and admins only; anyone else claiming another identity is refused.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
-        return annotationSetsWebService.getDraftForDataset( datasetArg );
+        return annotationSetsWebService.getDraftForDataset( datasetArg, onBehalfOf );
     }
 
     @PUT
     @Path("/{dataset}/annotation-sets/draft")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Upsert the current curator's DRAFT for a dataset.",
-            description = "One DRAFT per (dataset, curator); returns 201 on create, 200 on update.")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Upsert a curator's DRAFT for a dataset.",
+            description = "One DRAFT per (dataset, curator); returns 201 on create, 200 on update.\n\n"
+                    + "🛑 Pass `?onBehalfOf=` when writing for someone else. The curator's name is "
+                    + "part of the draft's run id, and that run id sits inside "
+                    + "`UNIQUE(investigation, role, runId)` — so a client that writes several "
+                    + "curators' drafts without naming them keys them all to its own identity, "
+                    + "one row, and each autosave silently overwrites the last. Honoured only for "
+                    + "`GROUP_AGENT` / `GROUP_ADMIN`; refused, not ignored, for anyone else.")
     public Response upsertDatasetDraftAnnotationSet(
             @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Which curator this draft belongs to. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable AnnotationSetsWebService.UpsertDraftRequest body
     ) {
-        return annotationSetsWebService.upsertDraftForDataset( datasetArg, body );
+        return annotationSetsWebService.upsertDraftForDataset( datasetArg, onBehalfOf, body );
     }
 
     @GET

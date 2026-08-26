@@ -17,6 +17,7 @@ package ubic.gemma.core.security.util;
 import ubic.gemma.core.security.AuthorityConstants;
 import ubic.gemma.core.security.acl.domain.AclGrantedAuthoritySid;
 import ubic.gemma.core.security.acl.domain.AclPrincipalSid;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.AccessControlEntry;
@@ -29,6 +30,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -175,6 +177,63 @@ public class SecurityUtil {
      */
     public static boolean isUserLoggedIn() {
         return !isUserAnonymous();
+    }
+
+    /**
+     * Returns true if the current caller holds the agent authority.
+     */
+    public static boolean isUserAgent() {
+        if ( !isUserLoggedIn() ) {
+            return false;
+        }
+        for ( GrantedAuthority authority : getAuthentication().getAuthorities() ) {
+            if ( authority.getAuthority().equals( AuthorityConstants.AGENT_GROUP_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Resolve the identity an action should be recorded against, given an
+     * optional {@code onBehalfOf} claim from the caller.
+     *
+     * <p>Curation writes reach Gemma through the curation agent rather than
+     * from a curator's browser, so the authenticated principal on those calls
+     * is the agent acting for someone else. Recording the principal would
+     * attribute every curator's work to the agent — and where the identity is
+     * part of a uniqueness key, as it is for a {@code DRAFT}'s
+     * {@code "draft-{curator}"} run id, it does worse than mis-attribute: two
+     * curators collapse onto one row and the second write silently overwrites
+     * the first.</p>
+     *
+     * <p>So the acting identity travels on the wire, and the principal only
+     * decides whether the caller may claim it. Only an agent or an admin may;
+     * for anyone else a claim is refused rather than ignored, because
+     * quietly substituting their own name would record a different fact from
+     * the one they asked for.</p>
+     *
+     * @param onBehalfOf the claimed identity, or {@code null} to act as
+     *                   yourself
+     * @return the identity to record
+     * @throws AccessDeniedException if a caller who is neither agent nor admin
+     *                               claims to be someone else
+     * @throws IllegalStateException if there is no authenticated caller to
+     *                               fall back to
+     */
+    public static String resolveActingIdentity( @Nullable String onBehalfOf ) {
+        String principal = getCurrentUsername();
+        if ( onBehalfOf == null || onBehalfOf.isBlank() || onBehalfOf.equals( principal ) ) {
+            if ( principal == null ) {
+                throw new IllegalStateException( "No authenticated caller to attribute this action to." );
+            }
+            return principal;
+        }
+        if ( !isUserAgent() && !isUserAdmin() ) {
+            throw new AccessDeniedException(
+                    "Only an agent or an administrator may act on behalf of another user." );
+        }
+        return onBehalfOf;
     }
 
     /**

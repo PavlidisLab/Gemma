@@ -1187,4 +1187,94 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 .as( "and mints no annotation set" ).isZero();
     }
 
+
+    /* ============== draft delegation: the agent writes for a curator ============== */
+
+    /**
+     * The bug this gate exists for. A DRAFT's run id is {@code "draft-{curator}"} and that run id sits inside
+     * {@code UNIQUE(investigation, role, runId)} — so when the agent relays two curators' drafts without naming
+     * them, both key to the agent's own identity, become one row, and the second autosave overwrites the first
+     * with no error at any layer. Asserted as two surviving rows with the right owners rather than as a status
+     * code, because the failure mode is a successful-looking 200.
+     */
+    @Test
+    public void testAgentDraftsForTwoCuratorsDoNotCollapseOntoOneRow() {
+        testAuthenticationUtils.runAsUser( "draftalice", true );
+        testAuthenticationUtils.runAsUser( "draftbob", true );
+        testAuthenticationUtils.runAsAgent();
+
+        putDraftAs( "draftalice", "{\"factor:1\":{\"name\":\"alice's edit\"}}" );
+        putDraftAs( "draftbob", "{\"factor:1\":{\"name\":\"bob's edit\"}}" );
+
+        testAuthenticationUtils.runAsAdmin();
+        List<AnnotationSet> drafts = annotationSetService.findByInvestigation( ee, AnnotationSetRole.DRAFT );
+        assertThat( drafts ).as( "one draft per curator, not one shared row" ).hasSize( 2 );
+        assertThat( drafts ).extracting( AnnotationSet::getCreatedBy )
+                .containsExactlyInAnyOrder( "draftalice", "draftbob" );
+        assertThat( drafts ).extracting( AnnotationSet::getPayloadJson )
+                .anyMatch( j -> j.contains( "alice's edit" ) )
+                .anyMatch( j -> j.contains( "bob's edit" ) );
+    }
+
+    /**
+     * Reading is delegated for the same reason writing is: an agent that asks for "the draft" without naming a
+     * curator gets its own, which is never what it means.
+     */
+    @Test
+    public void testAgentReadsTheNamedCuratorsDraft() {
+        testAuthenticationUtils.runAsUser( "draftcarol", true );
+        testAuthenticationUtils.runAsAgent();
+        putDraftAs( "draftcarol", "{\"factor:1\":{\"name\":\"carol's edit\"}}" );
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/annotation-sets/draft" )
+                .queryParam( "onBehalfOf", "draftcarol" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).contains( "carol's edit" ).contains( "draftcarol" );
+        }
+        // and without the parameter there is nothing of the agent's own to find
+        try ( Response r = target( "/datasets/" + ee.getId() + "/annotation-sets/draft" ).request().get() ) {
+            assertThat( r.getStatus() ).as( "the agent has no draft of its own" )
+                    .isEqualTo( Response.Status.NOT_FOUND.getStatusCode() );
+        }
+        testAuthenticationUtils.runAsAdmin();
+    }
+
+    /**
+     * A plain curator claiming another identity is refused rather than silently rewritten to their own — storing
+     * a different fact from the one they asked for is worse than declining.
+     */
+    @Test
+    public void testAPlainCuratorMayNotWriteAsSomeoneElse() {
+        testAuthenticationUtils.runAsUser( "drafteve", true );
+        testAuthenticationUtils.runAsUser( "draftmallory", true );
+        try {
+            testAuthenticationUtils.runAsUser( "draftmallory", false );
+            try ( Response r = target( "/datasets/" + ee.getId() + "/annotation-sets/draft" )
+                    .queryParam( "onBehalfOf", "drafteve" )
+                    .request().put( Entity.json( "{\"payloadJson\":\"{}\"}" ) ) ) {
+                assertThat( r.getStatus() ).as( "delegation is refused, not ignored" )
+                        .isNotEqualTo( Response.Status.OK.getStatusCode() )
+                        .isNotEqualTo( Response.Status.CREATED.getStatusCode() );
+            }
+        } finally {
+            testAuthenticationUtils.runAsAdmin();
+        }
+        assertThat( annotationSetService.findByInvestigation( ee, AnnotationSetRole.DRAFT ) )
+                .as( "and nothing was written under either name" ).isEmpty();
+    }
+
+    private void putDraftAs( String curator, String payloadJson ) {
+        String body = "{\"payloadJson\":" + quoteJson( payloadJson ) + "}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/annotation-sets/draft" )
+                .queryParam( "onBehalfOf", curator ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).as( "response body: %s", r.readEntity( String.class ) )
+                    .isIn( Response.Status.OK.getStatusCode(), Response.Status.CREATED.getStatusCode() );
+        }
+    }
+
+    /** Embed a JSON document as a JSON string value. */
+    private static String quoteJson( String raw ) {
+        return "\"" + raw.replace( "\\", "\\\\" ).replace( "\"", "\\\"" ) + "\"";
+    }
+
 }
