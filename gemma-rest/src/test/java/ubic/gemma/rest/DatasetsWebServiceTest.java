@@ -3126,12 +3126,15 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         Gene g300 = Gene.Factory.newInstance();
         g300.setId( 300L );
         g300.setOfficialSymbol( "ZZZ3" );
+        g300.setNcbiGeneId( 26009 );
         Gene g301 = Gene.Factory.newInstance();
         g301.setId( 301L );
         g301.setOfficialSymbol( "AAA1" );
+        // no NCBI id: the ref must still serialize, just without the field
         Gene g302 = Gene.Factory.newInstance();
         g302.setId( 302L );
         g302.setOfficialSymbol( "BRCA1" );
+        g302.setNcbiGeneId( 672 );
         when( geneService.loadThawedLiter( anyCollection() ) ).thenReturn( Arrays.asList( g300, g301, g302 ) );
 
         // SVDResult with a 2×2 vMatrix; column 0 (PC1) gives bioAssay scores.
@@ -3163,9 +3166,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                     .hasPathWithValue( "$.data.pc", 1 )
                     .doesNotHavePath( "$.data.rows[2]" )
                     .hasPathWithValue( "$.data.rows[0].genes[0].officialSymbol", "ZZZ3" )
+                    .hasPathWithValue( "$.data.rows[0].genes[0].ncbiId", 26009 )
                     .hasPathWithValue( "$.data.rows[0].genes[1].officialSymbol", "AAA1" )
+                    .doesNotHavePath( "$.data.rows[0].genes[1].ncbiId" )
                     .doesNotHavePath( "$.data.rows[0].genes[2]" )
                     .hasPathWithValue( "$.data.rows[1].genes[0].officialSymbol", "BRCA1" )
+                    .hasPathWithValue( "$.data.rows[1].genes[0].ncbiId", 672 )
                     .doesNotHavePath( "$.data.rows[1].genes[1]" );
         }
         verify( svdService ).hasSvd( ee );

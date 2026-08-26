@@ -8834,9 +8834,9 @@ public class DatasetsWebService {
             for ( Long gid : vector.getGenes() ) {
                 Gene g = geneById.get( gid );
                 if ( g != null ) {
-                    refs.add( new HeatmapDataValueObject.GeneRef( g.getId(), g.getOfficialSymbol(), g.getOfficialName() ) );
+                    refs.add( new HeatmapDataValueObject.GeneRef( g.getId(), g.getOfficialSymbol(), g.getOfficialName(), g.getNcbiGeneId() ) );
                 } else {
-                    refs.add( new HeatmapDataValueObject.GeneRef( gid, null, null ) );
+                    refs.add( new HeatmapDataValueObject.GeneRef( gid, null, null, null ) );
                 }
             }
             return refs;

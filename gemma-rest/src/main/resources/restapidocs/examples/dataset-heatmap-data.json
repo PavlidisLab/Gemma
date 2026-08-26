@@ -24,14 +24,14 @@
         "designElementId": 101,
         "designElementName": "ILMN_1",
         "genes": [
-          { "id": 672, "officialSymbol": "BRCA1", "name": "BRCA1 DNA repair associated" }
+          { "id": 672, "officialSymbol": "BRCA1", "name": "BRCA1 DNA repair associated", "ncbiId": 672 }
         ]
       },
       {
         "designElementId": 102,
         "designElementName": "ILMN_2",
         "genes": [
-          { "id": 672, "officialSymbol": "BRCA1", "name": "BRCA1 DNA repair associated" }
+          { "id": 672, "officialSymbol": "BRCA1", "name": "BRCA1 DNA repair associated", "ncbiId": 672 }
         ],
         "annotations": {
           "logFC": 1.42,
