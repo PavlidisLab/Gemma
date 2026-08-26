@@ -131,10 +131,15 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
             this.arrayDesign = new ArrayDesignValueObject( ad );
         }
 
+        // 🛑 Key the cache on `op`, NOT on `ad`. Keying on the USED platform handed every sample the platform it
+        // was switched TO in the field naming what it was switched FROM — and only when a caller supplied the
+        // ad2vo map, which the samples route does and most other callers do not, so it looked route-specific.
+        // The else branch was always right, which is why the DB and the ?filter= path disagreed with the VO.
+        // uib measured it on GSE217927, 2026-08-26.
         ArrayDesign op = bioAssay.getOriginalPlatform();
         if ( op != null ) {
-            if ( ad2vo != null && ad2vo.containsKey( ad ) ) {
-                this.originalPlatform = ad2vo.get( ad );
+            if ( ad2vo != null && ad2vo.containsKey( op ) ) {
+                this.originalPlatform = ad2vo.get( op );
             } else {
                 this.originalPlatform = new ArrayDesignValueObject( op );
             }
