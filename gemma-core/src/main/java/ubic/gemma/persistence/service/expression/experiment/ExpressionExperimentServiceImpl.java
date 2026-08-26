@@ -707,76 +707,46 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        // ---- impact: differential expression analyses ----
-        // A factor is "affected" (and therefore its DE analyses must be deleted) when:
-        //   (a) the factor itself is being deleted;
-        //   (b) any of its FactorValues is being deleted (Gemma's existing cascade rule, see FactorValueDeletionImpl);
-        //   (c) a new FactorValue is being added under it (changes the design space);
-        //   (d) any biomaterial assignment to one of its FactorValues changes (different sample groupings -> different
-        //       analysis result, even if every row still exists).
-        // Statement edits on a kept FV do NOT count: the analysis math is unchanged, only labels would be stale.
-        Set<Long> factorIdsAffected = new HashSet<>();
-        for ( ExperimentalFactor ef : factorsBeingDeleted ) {
-            factorIdsAffected.add( ef.getId() );
-        }
-        for ( FactorValue fv : fvsBeingDeleted ) {
-            ExperimentalFactor parent = currentFvParentByFvId.get( fv.getId() );
-            if ( parent != null ) {
-                factorIdsAffected.add( parent.getId() );
-            }
-        }
-        // (c) new FV being added under an existing factor
-        if ( proposed.getExperimentalFactors() != null ) {
-            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
-                if ( pf.getId() == null || pf.getValues() == null ) continue;
-                for ( FactorValueBasicValueObject pv : pf.getValues() ) {
-                    if ( pv.getId() == null ) {
-                        factorIdsAffected.add( pf.getId() );
-                        break;
-                    }
-                }
-            }
-        }
-        // (d) biomaterial assignment changes — for each FV whose membership set changed, mark its parent factor
+        // Counted once, here, because the invalidation rule below needs it and the summary needs it too.
+        // It used to be recomputed in a second pass over the same two maps further down.
+        int changedBmCount = 0;
         for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
             Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
                     .map( FactorValue::getId ).collect( Collectors.toSet() );
             Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
-            if ( currentFvIds.equals( proposedFvIdsForBm ) ) continue;
-            // factor membership changed for this biomaterial — flag every involved factor
-            Set<Long> changedFvIds = new HashSet<>( currentFvIds );
-            changedFvIds.addAll( proposedFvIdsForBm );
-            Set<Long> commonFvIds = new HashSet<>( currentFvIds );
-            commonFvIds.retainAll( proposedFvIdsForBm );
-            changedFvIds.removeAll( commonFvIds );
-            for ( Long fvId : changedFvIds ) {
-                ExperimentalFactor parent = currentFvParentByFvId.get( fvId );
-                if ( parent != null ) {
-                    factorIdsAffected.add( parent.getId() );
-                }
-                // Proposed-new FVs (id != null but not in currentFvParentByFvId) are unreachable here because
-                // they have id == null in the proposal; their parent factor is already flagged by rule (c).
+            if ( !currentFvIds.equals( proposedFvIdsForBm ) ) {
+                changedBmCount++;
             }
         }
 
-        Set<Long> seenAnalysisIds = new HashSet<>();
-        for ( Long efId : factorIdsAffected ) {
-            ExperimentalFactor ef = currentFactorsById.get( efId );
-            if ( ef == null ) continue;
-            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByFactor( ef ) ) {
-                if ( seenAnalysisIds.add( a.getId() ) ) {
-                    Long subsetFvId = a.getSubsetFactorValue() != null ? a.getSubsetFactorValue().getId() : null;
-                    report.getDifferentialExpressionAnalysesToDelete().add(
-                            new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFvId ) );
-                }
-            }
-        }
-        // Also: subset-level analyses anchored on a deleted FV (subsetFactorValue FK becomes dangling)
-        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
-            FactorValue subsetFv = a.getSubsetFactorValue();
-            if ( subsetFv != null && fvIdsBeingDeleted.contains( subsetFv.getId() ) && seenAnalysisIds.add( a.getId() ) ) {
+        // ---- impact: differential expression analyses ----
+        // ONE EXCLUSION, not a list of inclusions: a design commit invalidates this dataset's analyses
+        // UNLESS the only thing that changed was labels on kept factor values. Paul, 2026-08-26 — the
+        // previous four inclusion rules (factor deleted / FV deleted / FV added / assignment changed)
+        // were four places to be wrong, and they missed two real cases: adding a WHOLE factor marked
+        // nothing, because a new factor has no id and no analyses of its own; and a measurement change on
+        // a continuous factor changes the regression while moving no structural counter.
+        //
+        // The failure mode is inverted on purpose. Before, a case nobody enumerated rode through silently
+        // and falsified a live analysis; now it triggers a re-run, and re-running a DEA is cheap.
+        //
+        // Invalidation is DATASET-WIDE rather than per-factor: adding a factor invalidates the analyses on
+        // the other factors too, because they were fitted without a variable the design now declares.
+        //
+        // What is excluded, and only this: statement / characteristic / free-text-value edits on a kept
+        // factor value. Those relabel; they do not move a sample, a level, or a baseline.
+        boolean structuralChange = summary.getFactorsToCreate() > 0
+                || summary.getFactorsToDelete() > 0
+                || summary.getFactorValuesToCreate() > 0
+                || summary.getFactorValuesToDelete() > 0
+                || changedBmCount > 0;
+        boolean invalidatingEdit = hasKeptFactorValueEditsThatChangeTheMath( ee, proposed );
+
+        if ( structuralChange || invalidatingEdit ) {
+            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+                Long subsetFvId = a.getSubsetFactorValue() != null ? a.getSubsetFactorValue().getId() : null;
                 report.getDifferentialExpressionAnalysesToDelete().add(
-                        new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFv.getId() ) );
+                        new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFvId ) );
             }
         }
         summary.setDifferentialExpressionAnalysesToDelete( report.getDifferentialExpressionAnalysesToDelete().size() );
@@ -807,15 +777,6 @@ public class ExpressionExperimentServiceImpl
         summary.setSubsetsWithStaleAnchor( report.getSubsetsWithStaleAnchor().size() );
 
         // ---- impact: biomaterials with changed assignments ----
-        int changedBmCount = 0;
-        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
-            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
-                    .map( FactorValue::getId ).collect( Collectors.toSet() );
-            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
-            if ( !currentFvIds.equals( proposedFvIdsForBm ) ) {
-                changedBmCount++;
-            }
-        }
         summary.setBiomaterialsWithChangedAssignments( changedBmCount );
 
         return report;
@@ -925,28 +886,22 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        // ---- step 2: remove diff-ex analyses dependent on factors being deleted (or that become invalid) ----
-        // Step 3 (factor removal) will also cascade DE analyses through ExperimentalFactorService#remove, so we
-        // only explicitly remove analyses tied to surviving factors whose membership / structure changed in a way
-        // that the FV/factor cascade won't reach. The preflight already enumerated these (see factorIdsAffected).
-        Set<Long> factorIdsAffected = computeAffectedFactorIds( currentFactorsById, currentFvsById,
-                proposedFactorIds, fvIdsBeingDeleted, proposed, currentBmsById );
-        Set<Long> removedAnalysisIds = new HashSet<>();
-        for ( Long efId : factorIdsAffected ) {
-            ExperimentalFactor ef = currentFactorsById.get( efId );
-            if ( ef == null ) continue;
-            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByFactor( ef ) ) {
-                if ( removedAnalysisIds.add( a.getId() ) ) {
+        // ---- step 2: remove the diff-ex analyses the preflight enumerated ----
+        // The invalidation rule lives in previewDesignChange and nowhere else; this side executes the list the
+        // report already carries instead of deriving it a second time. The two derivations DID drift: when the
+        // report was widened to dataset-wide invalidation (2026-08-26) this side still asked per-factor, so a
+        // baseline flip the curator was warned would delete an analysis left that analysis in place, falsified.
+        // Subset-anchored analyses need no separate pass -- the report is built from findByExperiment(ee, true),
+        // so it already names them. Step 4 (factor removal) cascades through ExperimentalFactorService#remove;
+        // whatever it would have reached is already gone by then.
+        Set<Long> analysisIdsToRemove = report.getDifferentialExpressionAnalysesToDelete().stream()
+                .map( DesignPreflightReport.AnalysisRef::getId )
+                .collect( Collectors.toCollection( HashSet::new ) );
+        if ( !analysisIdsToRemove.isEmpty() ) {
+            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+                if ( analysisIdsToRemove.contains( a.getId() ) ) {
                     differentialExpressionAnalysisService.remove( a );
                 }
-            }
-        }
-        // Subset-anchored analyses pointing at deleted FVs would dangle.
-        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
-            FactorValue subsetFv = a.getSubsetFactorValue();
-            if ( subsetFv != null && fvIdsBeingDeleted.contains( subsetFv.getId() )
-                    && removedAnalysisIds.add( a.getId() ) ) {
-                differentialExpressionAnalysisService.remove( a );
             }
         }
 
@@ -1151,6 +1106,54 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
+     * The subset of {@link #hasKeptFactorValueEdits} that changes the analysis MATH rather than its labels:
+     * a baseline flip, or a measurement change on a continuous factor value.
+     * <p>
+     * A baseline flip reverses the direction of every contrast in an existing DEA —
+     * {@link ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet} records the factor value
+     * that WAS the reference, and each contrast's fold change is relative to it. For a two-level factor that
+     * is a pure negation; for three or more the contrast SET changes (baseline A gives B-vs-A and C-vs-A;
+     * baseline B needs A-vs-B and C-vs-B), so there is no in-place correction and the analysis must be re-run.
+     * A measurement change moves the regression the same way.
+     * <p>
+     * 🛑 Statement, characteristic and free-text {@code value} edits are deliberately NOT here. They relabel a
+     * factor value; they do not move a sample, a level or a reference. That is the ONE exclusion the
+     * invalidation rule in {@link #previewDesignChange} is built around.
+     * <p>
+     * 🛑 Baseline-hood is read from the explicit {@code baseline} flag only. It is deliberately NOT computed
+     * through {@code BaselineSelection}, which falls back to control-group characteristics when the flag is
+     * absent: that would make a statement edit flip a baseline, and statement edits are the exclusion.
+     */
+    private boolean hasKeptFactorValueEditsThatChangeTheMath( ExpressionExperiment ee,
+            ExperimentalDesignValueObject proposed ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null || proposed.getExperimentalFactors() == null ) {
+            return false;
+        }
+        Map<Long, FactorValue> currentFvsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                currentFvsById.put( fv.getId(), fv );
+            }
+        }
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+            if ( pf.getValues() == null ) continue;
+            for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                if ( pv.getId() == null ) continue; // a creation; already structural
+                FactorValue cur = currentFvsById.get( pv.getId() );
+                if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
+                if ( pv.getBaseline() != null && !Objects.equals( pv.getBaseline(), cur.getIsBaseline() ) ) {
+                    return true;
+                }
+                if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Whether {@code proposed} carries an in-place edit to an existing (kept) factor value that the structural
      * preflight summary does not count: a baseline-flag change, a deprecated-{@code value} change, a statement
      * edit, or a measurement edit on a continuous factor value. All honour the {@code null = "no change"}
@@ -1272,61 +1275,6 @@ public class ExpressionExperimentServiceImpl
             proposedKeys.merge( statementContentKey( ps ), 1, Integer::sum );
         }
         return !currentKeys.equals( proposedKeys );
-    }
-
-    private Set<Long> computeAffectedFactorIds( Map<Long, ExperimentalFactor> currentFactorsById,
-            Map<Long, FactorValue> currentFvsById, Set<Long> proposedFactorIds, Set<Long> fvIdsBeingDeleted,
-            ExperimentalDesignValueObject proposed, Map<Long, BioMaterial> currentBmsById ) {
-        Set<Long> affected = new HashSet<>();
-        // factor being deleted -> handled by experimentalFactorService.remove later; not in this set
-        // factor losing a FV but staying -> affected
-        for ( Long fvId : fvIdsBeingDeleted ) {
-            FactorValue fv = currentFvsById.get( fvId );
-            if ( fv != null && fv.getExperimentalFactor() != null
-                    && proposedFactorIds.contains( fv.getExperimentalFactor().getId() ) ) {
-                affected.add( fv.getExperimentalFactor().getId() );
-            }
-        }
-        // new FV under existing factor -> affected
-        if ( proposed.getExperimentalFactors() != null ) {
-            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
-                if ( pf.getId() == null || pf.getValues() == null ) continue;
-                for ( FactorValueBasicValueObject pv : pf.getValues() ) {
-                    if ( pv.getId() == null ) {
-                        affected.add( pf.getId() );
-                        break;
-                    }
-                }
-            }
-        }
-        // biomaterial assignment changes -> affected (only via parent factor of changed FVs)
-        Map<Long, Set<Long>> proposedAssignByBmId = new HashMap<>();
-        if ( proposed.getBioMaterialAssignments() != null ) {
-            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : proposed.getBioMaterialAssignments() ) {
-                if ( a.getBioMaterialId() != null && a.getFactorValueIds() != null ) {
-                    proposedAssignByBmId.put( a.getBioMaterialId(), new HashSet<>( a.getFactorValueIds() ) );
-                }
-            }
-        }
-        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
-            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
-                    .map( FactorValue::getId ).collect( Collectors.toSet() );
-            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
-            if ( currentFvIds.equals( proposedFvIdsForBm ) ) continue;
-            Set<Long> changed = new HashSet<>( currentFvIds );
-            changed.addAll( proposedFvIdsForBm );
-            Set<Long> common = new HashSet<>( currentFvIds );
-            common.retainAll( proposedFvIdsForBm );
-            changed.removeAll( common );
-            for ( Long fvId : changed ) {
-                FactorValue fv = currentFvsById.get( fvId );
-                if ( fv != null && fv.getExperimentalFactor() != null
-                        && proposedFactorIds.contains( fv.getExperimentalFactor().getId() ) ) {
-                    affected.add( fv.getExperimentalFactor().getId() );
-                }
-            }
-        }
-        return affected;
     }
 
     private void updateFactorMetadata( ExperimentalFactor ef, ExperimentalDesignValueObject.ExperimentalFactorEntry pf ) {

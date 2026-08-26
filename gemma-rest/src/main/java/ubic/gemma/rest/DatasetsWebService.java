@@ -7652,7 +7652,7 @@ public class DatasetsWebService {
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response replaceDatasetDesign(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Set to true to consent to the change's consequences: deleting differential-expression analyses that depend on affected factors or factor values, and leaving subsets anchored on factor values that would no longer exist.") @QueryParam("force") @DefaultValue("false") Boolean force,
+            @Parameter(description = "Set to true to consent to the change's consequences: deleting this dataset's differential-expression analyses, and leaving subsets anchored on factor values that would no longer exist. The cascade is dataset-wide, not confined to the factors the payload touches — a design change that adds, removes or re-assigns anything invalidates every analysis fitted against the old design. The one exception is an edit that only relabels kept factor values, which cascades nothing.") @QueryParam("force") @DefaultValue("false") Boolean force,
             @Parameter(description = "Optional id of the PROPOSAL annotation set driving this apply. On success the apply is recorded as a COMMIT annotation set carrying that proposal's run reference and parented to it, so the trail reads proposal -> decision -> effect. The set must belong to this dataset and must be a PROPOSAL.") @QueryParam("agentProposalId") @Nullable Long agentProposalId,
             ExperimentalDesignValueObject proposed
     ) {

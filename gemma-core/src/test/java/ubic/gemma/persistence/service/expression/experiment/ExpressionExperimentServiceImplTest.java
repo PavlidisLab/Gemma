@@ -459,7 +459,6 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
         when( eeDao.reload( fixture ) ).thenReturn( fixture );
         when( eeDao.getSubSets( fixture ) ).thenReturn( Collections.emptyList() );
-        when( deaService.findByFactor( treatmentFactor ) ).thenReturn( Collections.emptyList() );
         when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.emptyList() );
     }
 
@@ -508,11 +507,13 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
         dea.setName( "treatment effect" );
-        when( deaService.findByFactor( treatmentFactor ) ).thenReturn( Collections.singletonList( dea ) );
+        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         // remove controlFv from the proposal, AND remove its id from bm1000's assignment
         ExperimentalDesignValueObject proposal = mirrorProposal();
-        proposal.getExperimentalFactors().get( 0 ).getValues().removeIf( v -> v.getId().equals( 100L ) );
+        proposal.getExperimentalFactors().get( 0 ).getValues()
+                .removeIf( v -> v.getId() != null && v.getId() == 100L );
         proposal.getBioMaterialAssignments().stream()
                 .filter( a -> a.getBioMaterialId().equals( 1000L ) )
                 .forEach( a -> a.setFactorValueIds( new ArrayList<>() ) );
@@ -530,7 +531,8 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         buildFixture();
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
-        when( deaService.findByFactor( treatmentFactor ) ).thenReturn( Collections.singletonList( dea ) );
+        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
         proposal.getExperimentalFactors().clear();
@@ -548,7 +550,8 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         buildFixture();
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
-        when( deaService.findByFactor( treatmentFactor ) ).thenReturn( Collections.singletonList( dea ) );
+        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         // No FVs deleted, no factors changed; only bm1000 switches from controlFv (100) to treatedFv (101)
         ExperimentalDesignValueObject proposal = mirrorProposal();
@@ -568,7 +571,8 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         buildFixture();
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
-        when( deaService.findByFactor( treatmentFactor ) ).thenReturn( Collections.singletonList( dea ) );
+        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
         FactorValueBasicValueObject newFv = new FactorValueBasicValueObject();
@@ -588,7 +592,8 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         buildFixture();
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
-        when( deaService.findByFactor( treatmentFactor ) ).thenReturn( Collections.singletonList( dea ) );
+        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         // rename "control" -> "vehicle" on the kept FV; nothing structural changes
         ExperimentalDesignValueObject proposal = mirrorProposal();
@@ -953,7 +958,6 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         fixture.getExperimentalDesign().getExperimentalFactors().add( sibling );
         FactorValue siblingFv = makeFv( 102L, sibling, 1002L, "treatment", "estradiol" );
         bm1000.getFactorValues().add( siblingFv );
-        when( deaService.findByFactor( sibling ) ).thenReturn( Collections.emptyList() );
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
         // edit the statement on the SIBLING's factor value only
@@ -1140,7 +1144,8 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
         // drop the FV the subset is anchored on
         ExperimentalDesignValueObject proposal = mirrorProposal();
-        proposal.getExperimentalFactors().get( 0 ).getValues().removeIf( v -> v.getId().equals( 100L ) );
+        proposal.getExperimentalFactors().get( 0 ).getValues()
+                .removeIf( v -> v.getId() != null && v.getId() == 100L );
         proposal.getBioMaterialAssignments().stream()
                 .filter( a -> a.getBioMaterialId().equals( 1000L ) )
                 .forEach( a -> a.setFactorValueIds( new ArrayList<>() ) );
@@ -1211,7 +1216,6 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
         when( eeDao.reload( fixture ) ).thenReturn( fixture );
         when( eeDao.getSubSets( fixture ) ).thenReturn( Collections.emptyList() );
-        when( deaService.findByFactor( timepointFactor ) ).thenReturn( Collections.emptyList() );
         when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.emptyList() );
     }
 
@@ -1308,7 +1312,8 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         when( subSetReadService.getSubSetsWithBioAssays( fixture ) ).thenReturn( Collections.singletonList( ss ) );
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
-        proposal.getExperimentalFactors().get( 0 ).getValues().removeIf( v -> v.getId().equals( 100L ) );
+        proposal.getExperimentalFactors().get( 0 ).getValues()
+                .removeIf( v -> v.getId() != null && v.getId() == 100L );
         proposal.getBioMaterialAssignments().stream()
                 .filter( a -> a.getBioMaterialId().equals( 1000L ) )
                 .forEach( a -> a.setFactorValueIds( new ArrayList<>() ) );
@@ -1317,5 +1322,140 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         assertThat( report.getBlockers() ).isEmpty();
         assertThat( report.getSubsetsWithStaleAnchor() ).hasSize( 1 );
         assertThat( report.getSubsetsWithStaleAnchor().get( 0 ).getLostFactorValueIds() ).containsExactly( 100L );
+    }
+
+    /**
+     * The inversion, 2026-08-26: invalidation is ONE exclusion — labels on kept factor values — and
+     * everything else invalidates, dataset-wide. These four pin the cases the four old inclusion rules
+     * got wrong, and the one they got right.
+     */
+    private DifferentialExpressionAnalysis stubDatasetWideAnalysis() {
+        DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
+        dea.setId( 9001L );
+        dea.setName( "treatment effect" );
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
+        return dea;
+    }
+
+    /**
+     * Adding a WHOLE factor used to mark nothing: the old rule (c) only fired for a new value under an
+     * EXISTING factor, and a brand-new factor has no id and no analyses of its own. The analyses on the
+     * other factors were fitted without a variable the design now declares, so they go.
+     */
+    @Test
+    public void testPreviewAddingAWholeFactorInvalidatesTheExistingAnalyses() {
+        buildFixture();
+        stubDatasetWideAnalysis();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        ExperimentalDesignValueObject.ExperimentalFactorEntry added =
+                new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        added.setId( null ); // a creation
+        added.setName( "batch" );
+        proposal.getExperimentalFactors().add( added );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).hasSize( 1 );
+        assertThat( report.requiresForce() ).isTrue();
+    }
+
+    /**
+     * A baseline flip moves no structural counter, so it rode through as "safe" and quietly falsified the
+     * analysis: the stored result set still names the OLD reference, and every contrast is relative to it.
+     */
+    @Test
+    public void testPreviewFlippingABaselineInvalidatesTheAnalyses() {
+        buildFixture();
+        stubDatasetWideAnalysis();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 100L ).setBaseline( true );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).hasSize( 1 );
+        assertThat( report.requiresForce() ).isTrue();
+    }
+
+    /**
+     * The exclusion, and the only one: relabelling a kept factor value does not move a sample, a level or a
+     * reference, so the analysis still describes what it described.
+     */
+    @Test
+    public void testPreviewRelabellingAKeptFactorValueDoesNotInvalidateAnything() {
+        buildFixture();
+        stubDatasetWideAnalysis();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        //noinspection deprecation
+        proposalFv( proposal, 100L ).setValue( "a different label" );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).isEmpty();
+        assertThat( report.requiresForce() ).isFalse();
+    }
+
+    /**
+     * The apply side executes the report's list instead of deriving its own. It used to derive its own, and the
+     * two derivations disagreed: the preflight warned that a baseline flip would delete an analysis, the curator
+     * consented with {@code force=true}, and the apply deleted nothing — leaving an analysis whose every contrast
+     * points at the old reference.
+     */
+    @Test
+    public void testApplyRemovesTheAnalysesThePreflightEnumerated() {
+        buildFixture();
+        DifferentialExpressionAnalysis dea = stubDatasetWideAnalysis();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 100L ).setBaseline( true );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( outcome.getPreflightAtApply().requiresForce() ).isTrue();
+        verify( deaService ).remove( dea );
+    }
+
+    /**
+     * The other half of the same contract: the one excluded edit removes nothing. A relabel that deleted analyses
+     * would make every wording fix cost a re-run.
+     */
+    @Test
+    public void testApplyRemovesNoAnalysisForALabelOnlyEdit() {
+        buildFixture();
+        stubDatasetWideAnalysis();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        designFv( proposal, 100L ).getStatements().get( 0 ).setSubject( "vehicle" );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( outcome.getPreflightAtApply().requiresForce() ).isFalse();
+        verify( deaService, never() ).remove( any( DifferentialExpressionAnalysis.class ) );
+    }
+
+    /**
+     * Invalidation is DATASET-wide, not per-factor: a sibling factor's analyses go too, because the design
+     * they were fitted against changed.
+     */
+    @Test
+    public void testPreviewInvalidationIsDatasetWideNotPerFactor() {
+        buildFixture();
+        DifferentialExpressionAnalysis sibling = new DifferentialExpressionAnalysis();
+        sibling.setId( 9002L );
+        sibling.setName( "unrelated factor effect" );
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( sibling ) );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposal.getExperimentalFactors().get( 0 ).getValues()
+                .removeIf( v -> v.getId() != null && v.getId() == 100L );
+        proposal.getBioMaterialAssignments().stream()
+                .filter( a -> a.getBioMaterialId().equals( 1000L ) )
+                .forEach( a -> a.setFactorValueIds( new ArrayList<>() ) );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() )
+                .extracting( DesignPreflightReport.AnalysisRef::getId )
+                .containsExactly( 9002L );
     }
 }
