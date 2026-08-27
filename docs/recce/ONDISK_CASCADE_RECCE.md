@@ -1,5 +1,12 @@
 # On-disk cascade recce — the diff-ex artifacts a curation commit leaves behind
 
+> **IMPLEMENTED 2026-08-27 (`6f9c113b24`).** Paul ruled for Option E. What landed is smaller than
+> §7 describes: `deleteAnalysis` itself carries the `SUPPORTS` override and the cascade calls it, so no
+> `deleteAnalysisArtifacts` was hoisted and the artifact set stays defined where it already was. Four
+> annotations and one changed call. The rollback trade-off in §7 is accepted, and is recorded in the
+> comment at the call site. §8's second route is still unapplied.
+
+
 A structural curation commit (and therefore a sign, and a snapshot restore) drops the dataset's
 differential expression analyses through `differentialExpressionAnalysisService.remove(...)`, which
 deletes database rows only. `DifferentialExpressionAnalyzerServiceImpl.deleteAnalysis(...)` is the
@@ -242,7 +249,18 @@ analysis that was not removed, and the brief for this work says not to widen wha
 D has no such case and costs the plumbing instead.
 
 **Recommendation: Option E if a regenerable cache file may be dropped on a rolled-back commit; Option D
-if it may not.** Not implemented pending that call.
+if it may not.**
+
+✅ **Paul ruled for E, 2026-08-27.** Built as a narrower variant: rather than hoisting
+`deleteAnalysisArtifacts`, `deleteAnalysis` itself was given
+`@Transactional(propagation = Propagation.SUPPORTS)`, and `ExpressionExperimentServiceImpl` step 2 calls
+it through a `@Lazy` injection. Edits 1 and 3 landed as written; edit 2 was not needed. Both halves were
+proven red first: removing the `SUPPORTS` override makes the new integration test
+(`DifferentialExpressionAnalysisServiceTest#testDeleteAnalysisJoinsACallersTransaction`, `@Tag("integration")`,
+so it runs by default) error with `Existing transaction found for transaction marked with propagation
+'never'`; reverting the call site makes
+`ExpressionExperimentServiceImplTest#testApplyRemovesTheAnalysesThePreflightEnumerated` report
+`Wanted but not invoked`.
 
 ## 8. Other database-only removals found while tracing (same defect, different route)
 
