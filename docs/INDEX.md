@@ -1,7 +1,7 @@
 # docs/ index
 
 Working design docs, recces, audits, plans, and session notes for Gemma, sorted into subfolders (2026-07-05 cleanup). `README.md` and `CLAUDE.md` stay at the repo root.
-Total: 151 docs.
+Total: 152 docs.
 
 
 ## Pipeline / compute / job-management (Nextflow) — `docs/pipeline-compute/` (1)
@@ -12,7 +12,7 @@ Total: 151 docs.
 
   <sub>archived sources (`pipeline-compute/archive/`): EXTERNAL_PIPELINE_HANDOFF_RECCE.md, PIPELINES_AND_SCHEDULER_RECCE.md, PIPELINE_COMPUTE_TEST_AND_CONTROL_RECCE.md, WORKFLOW_AND_COMPUTE_ARCHITECTURE.md</sub>
 
-## Recces — `docs/recce/` (21 live, 16 archived)
+## Recces — `docs/recce/` (22 live, 16 archived)
 
 16 recces whose subject shipped, whose premise is gone, or that a live doc supersedes were moved to [`docs/recce/archive/`](recce/archive/README.md) on 2026-08-11 — that README lists each one with the evidence checked.
 
@@ -25,6 +25,7 @@ Total: 151 docs.
 - [`DEA_FINDBYGENE_COLDCACHE_RECCE.md`](recce/DEA_FINDBYGENE_COLDCACHE_RECCE.md) — DEA findByGene cold-cache — fix recce
 - [`GEMMA_WEB_ONLY_AUDIT.md`](recce/GEMMA_WEB_ONLY_AUDIT.md) — what `@GemmaWebOnly` is really hiding: all 79 sites bucketed, and why a bulk removal is a security question
 - [`HEATMAP_REWRITE_RECCE.md`](recce/HEATMAP_REWRITE_RECCE.md) — Heatmap data generation — client-side rewrite recce
+- [`HOMOLOGENE_MODERNIZATION_RECCE.md`](recce/HOMOLOGENE_MODERNIZATION_RECCE.md) — LOW priority: homology comes from a frozen HomoloGene FTP dump; swap the source for NCBI Datasets orthologs
 - [`LOAD_DETAILS_COLD_PATH_RECCE.md`](recce/LOAD_DETAILS_COLD_PATH_RECCE.md) — `loadDetailsValueObjectsByIds` cold-path anatomy
 - [`LOGGING_MODERNIZATION_RECCE.md`](recce/LOGGING_MODERNIZATION_RECCE.md) — Structured logging + OpenTelemetry — Phase 3 recce
 - [`LUCENE_HS_READINESS_RECCE.md`](recce/LUCENE_HS_READINESS_RECCE.md) — Lucene 10 + Hibernate Search 8 readiness recce
