@@ -1,5 +1,6 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.core.security.util.SecurityUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +15,9 @@ import java.util.Date;
  * <p>
  * The {@code curationNote} and {@code lastNoteUpdateEvent} fields are admin-only and remain {@code null} for
  * non-administrators.
+ * <p>
+ * {@code curationPending} is not read from {@link CurationDetails} at all — it comes from the curation lock and
+ * is supplied by the caller, so it is {@code null} unless the reading path had the lock in hand.
  */
 @Getter
 @Setter
@@ -31,6 +35,20 @@ public class CurationDetailsValueObject extends IdentifiableValueObject<Curation
     private String curationNote;
     @Nullable
     private AuditEventValueObject lastNoteUpdateEvent;
+
+    /**
+     * Whether curation of the dataset is under way right now.
+     * <p>
+     * Derived from the curation lock: true exactly while an unexpired claim exists. It names nobody, and it
+     * lapses with the lease rather than waiting on a sign-off, so a curator who only relabels does not leave it
+     * stuck on.
+     */
+    @Nullable
+    @Schema(description = "True while someone holds an unexpired curation lock on the dataset: curation is under "
+            + "way, so treat what you read as provisional. It says nothing about who is curating — no holder, "
+            + "run or agent name is exposed here at any authorization level — and it clears itself when the "
+            + "lease lapses. Null when the reading path did not consult the lock.")
+    private Boolean curationPending;
 
     public CurationDetailsValueObject() {
         super();
@@ -50,5 +68,17 @@ public class CurationDetailsValueObject extends IdentifiableValueObject<Curation
             this.lastNoteUpdateEvent = AbstractCuratableValueObject.lastEventVo(
                     curationDetails::getLastNoteUpdateEvent, curationDetails, "lastNoteUpdateEvent" );
         }
+    }
+
+    /**
+     * As {@link #CurationDetailsValueObject(CurationDetails)}, plus the curation-lock state the caller already
+     * holds.
+     *
+     * @param curationPending whether an unexpired curation lock exists on the dataset, or {@code null} when the
+     *                        caller did not look
+     */
+    public CurationDetailsValueObject( CurationDetails curationDetails, @Nullable Boolean curationPending ) {
+        this( curationDetails );
+        this.curationPending = curationPending;
     }
 }
