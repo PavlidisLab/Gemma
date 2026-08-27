@@ -2015,9 +2015,10 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         verify( securityService ).makePublic( ee );
         verify( securityService, never() ).makePrivate( ee );
-        // The public transition is recorded so we can date when the dataset became crawlable.
-        verify( auditTrailService ).addUpdateEvent( eq( ee ),
-                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class ), anyString() );
+        // MakePublicEvent is emitted by SecurityServiceImpl.makePublic, which is mocked here, so there is
+        // nothing to assert about it at this layer. That the event is written -- once, on the transition
+        // only -- is covered by SecurityServiceTest.makePublicRecordsTheTransitionOnceAndNotAgain, which
+        // runs against a real context and reads the trail back.
     }
 
     @Test
@@ -2083,7 +2084,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
-    public void testMakeDatasetPublicRecordsMakePublicEvent() {
+    public void testMakeDatasetPublicFlipsTheAcl() {
         // Private before the flip (guard reads false), public after (response VO reads true).
         when( securityService.isPublic( ee ) ).thenReturn( false, true );
         when( securityService.isShared( ee ) ).thenReturn( false );
@@ -2094,8 +2095,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasFieldOrPropertyWithValue( "data.isPublic", true );
 
         verify( securityService ).makePublic( ee );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ),
-                eq( ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class ), anyString() );
+        // See testUpdateDatasetPermissionsMakesPublic: the event comes from the mocked SecurityService.
     }
 
     @Test

@@ -4624,10 +4624,9 @@ public class DatasetsWebService {
         if ( body.getIsPublic() != null ) {
             if ( body.getIsPublic() ) {
                 if ( !securityService.isPublic( ee ) ) {
+                    // MakePublicEvent is recorded by SecurityServiceImpl.makePublic, which is the only place
+                    // the ACL flips; recording it again here would put two events on the trail per publish.
                     securityService.makePublic( ee );
-                    auditTrailService.addUpdateEvent( ee,
-                            ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class,
-                            "Made public via REST (PUT permissions)" );
                 }
             } else {
                 if ( securityService.isPublic( ee ) ) {
@@ -4690,10 +4689,8 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !securityService.isPublic( ee ) ) {
+            // See updateDatasetPermissions: the event comes from SecurityServiceImpl.makePublic.
             securityService.makePublic( ee );
-            auditTrailService.addUpdateEvent( ee,
-                    ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent.class,
-                    "Made public via REST (POST makePublic)" );
         }
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
     }

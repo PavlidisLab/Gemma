@@ -251,11 +251,12 @@ public class DatasetUpdateSummaryValueObject {
                 "Differential expression suitability changed" );
         LABELS.put( AnalysisSuitabilityEvent.class, "Analysis suitability changed" );
 
-        // Visibility. MakePublicEvent and DatasetPublishedEvent have live emitters
-        // (DatasetsWebService.makeDatasetPublic / publishDataset) but had fired zero times across
-        // 200 public datasets and ~5,000 audit events sampled on production in August 2026, so
-        // expect these two to render for nothing. They are here so that the day one does fire it
-        // is not labelled by class name.
+        // Visibility. MakePublicEvent had fired zero times across 200 public datasets and ~5,000
+        // audit events sampled on production in August 2026, because only the two REST endpoints
+        // recorded it and nothing else did. It is now emitted by SecurityServiceImpl.makePublic,
+        // the point where the ACL actually flips, so it fires on every path.
+        // 🛑 Going forward only -- there is no backfill, so a dataset made public before
+        // 2026-08-27 still has no such event and its earliest one does not exist.
         LABELS.put( MakePublicEvent.class, "Made public" );
         LABELS.put( MakePrivateEvent.class, "Made private" );
         LABELS.put( DatasetPublishedEvent.class, "Published" );

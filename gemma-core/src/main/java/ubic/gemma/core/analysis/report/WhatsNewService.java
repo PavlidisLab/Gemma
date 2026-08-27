@@ -27,11 +27,16 @@ import java.util.Date;
  * what a logged-out visitor can actually see.
  * <p>
  * <b>"New" means created in Gemma</b> — the {@code action='C'} row on the entity's audit
- * trail, i.e. when the dataset was first loaded. It is deliberately not "made public": the
- * {@code MakePublicEvent} / {@code DatasetPublishedEvent} types exist but have effectively
- * never fired (0 occurrences across a 200-dataset / ~5,000-event sample of prod on
- * 2026-08-21), so there is no publication date to report. Callers that surface these counts
- * to visitors should label them "added to Gemma" rather than "made public".
+ * trail, i.e. when the dataset was first loaded. It is deliberately not "made public".
+ * <p>
+ * {@code MakePublicEvent} had 0 occurrences across a 200-dataset / ~5,000-event sample of prod
+ * on 2026-08-21, because only two REST endpoints recorded it. It is now emitted by
+ * {@code SecurityServiceImpl.makePublic}, so every path records it and the earliest one on a
+ * trail is the first time that dataset became public.
+ * <p>
+ * 🛑 <b>That is going forward only — nothing was backfilled.</b> A dataset made public before
+ * 2026-08-27 carries no such event, and no query can recover its publication date. These counts
+ * are still "added to Gemma" and not "made public".
  * <p>
  * These reports are expensive enough that callers should cache them rather than compute per
  * request; {@link HomeStats} carries the corpus-wide counts in its daily snapshot.

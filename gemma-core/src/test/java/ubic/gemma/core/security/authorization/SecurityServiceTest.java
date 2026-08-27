@@ -41,6 +41,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.*;
@@ -68,6 +71,9 @@ public class SecurityServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private AclTestUtils aclTestUtils;
+
+    @Autowired
+    private AuditEventService auditEventService;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -397,5 +403,50 @@ public class SecurityServiceTest extends BaseSpringContextTest5 {
             this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
                     RandomStringUtils.insecure().nextAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
+    }
+
+    /**
+     * The date a dataset FIRST became public has to come from somewhere, and until now nothing recorded it:
+     * only two REST endpoints emitted {@link MakePublicEvent}, so anything made public by the CLI or a bulk
+     * job left no trace. Production carried 0 occurrences across a 200-dataset sample.
+     * <p>
+     * Emitting from {@code SecurityServiceImpl.makePublic} covers every path. This pins the two properties
+     * that make "first" answerable: the event is written on the transition, and a repeat call — which
+     * returns early because the object is already public — writes nothing. Without the second property the
+     * earliest event would still be right, but the trail would gain a row per redundant call.
+     */
+    @Test
+    public void makePublicRecordsTheTransitionOnceAndNotAgain() {
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
+        assertFalse( securityService.isPublic( ee ), "fixture should start private" );
+        assertEquals( 0, countMakePublicEvents( ee ), "nothing should be recorded before the flip" );
+
+        securityService.makePublic( ee );
+
+        assertTrue( securityService.isPublic( ee ) );
+        assertEquals( 1, countMakePublicEvents( ee ), "the transition should be recorded exactly once" );
+        AuditEvent first = firstMakePublicEvent( ee );
+        assertNotNull( first );
+        assertNotNull( first.getDate(), "the date is the whole point of the event" );
+
+        // Already public: makePublic returns early, so nothing further is recorded and the earliest event
+        // -- the answer to "when did this first become public" -- does not move.
+        securityService.makePublic( ee );
+
+        assertEquals( 1, countMakePublicEvents( ee ), "a redundant call must not add a row" );
+        assertEquals( first.getDate(), firstMakePublicEvent( ee ).getDate() );
+    }
+
+    private long countMakePublicEvents( ExpressionExperiment ee ) {
+        return auditEventService.getEvents( ee ).stream()
+                .filter( e -> e.getEventType() instanceof MakePublicEvent )
+                .count();
+    }
+
+    private AuditEvent firstMakePublicEvent( ExpressionExperiment ee ) {
+        return auditEventService.getEvents( ee ).stream()
+                .filter( e -> e.getEventType() instanceof MakePublicEvent )
+                .min( Comparator.comparing( AuditEvent::getDate ) )
+                .orElse( null );
     }
 }
