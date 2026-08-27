@@ -402,6 +402,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials ) {
         return expressionExperimentDao.findByBioMaterials( biomaterials );
     }

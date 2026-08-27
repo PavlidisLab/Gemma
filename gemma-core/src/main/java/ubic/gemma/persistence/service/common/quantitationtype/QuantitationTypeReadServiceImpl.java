@@ -15,6 +15,7 @@ import org.hibernate.NonUniqueResultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.architecture.SuppressArchUnit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -54,7 +55,8 @@ public class QuantitationTypeReadServiceImpl implements QuantitationTypeReadServ
     }
 
     @Override
-    // does not need to a transaction
+    // The DAO returns a precomputed field; nothing reaches a session, so there is no transaction to open.
+    @SuppressArchUnit("ReadServiceTransactional")
     public Collection<Class<? extends DataVector>> getVectorTypes() {
         return this.quantitationTypeDao.getVectorTypes();
     }
@@ -118,7 +120,8 @@ public class QuantitationTypeReadServiceImpl implements QuantitationTypeReadServ
     }
 
     @Override
-    // no need for a transaction
+    // The DAO reads the JPA metamodel -- static mapping configuration, not session state.
+    @SuppressArchUnit("ReadServiceTransactional")
     public <T extends DataVector> Collection<Class<? extends T>> getMappedDataVectorType( Class<T> vectorType ) {
         return quantitationTypeDao.getMappedDataVectorTypes( vectorType );
     }
