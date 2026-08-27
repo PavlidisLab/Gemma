@@ -509,6 +509,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService annotationSetTriageService;
 
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService curationLockService;
+
     private ExpressionExperiment ee;
 
     @BeforeEach
@@ -536,7 +539,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService );
     }
 
     private static final String HALLUCINATED_TAG_BODY = "{\"tags\":{\"items\":[{\"clientRef\":\"t7\","
@@ -1786,6 +1789,55 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .hasFieldOrPropertyWithValue( "data.curationNote", "admin only" );
+    }
+
+    /**
+     * {@code curationPending} is the curation lock's unexpired lease and nothing else: it must read true while a
+     * lock is held, and the response must still name nobody. The holder is served by
+     * {@code /datasets/{id}/curation/lock}, which is authenticated; this field is readable by anyone who can read
+     * the dataset.
+     */
+    @Test
+    @WithMockUser
+    public void testGetDatasetCurationDetailsReportsCurationPendingWhileLocked() {
+        ee.setCurationDetails( new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails() );
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationLock lock =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationLock();
+        lock.setLockedBy( "curator-jane" );
+        lock.setExpiresAt( new Date( System.currentTimeMillis() + 600000L ) );
+        when( curationLockService.current( any( ubic.gemma.model.analysis.Investigation.class ) ) )
+                .thenReturn( Optional.of( lock ) );
+
+        try ( Response r = target( "/datasets/1/curationDetails" ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            String body = r.readEntity( String.class );
+            assertThat( body ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data.curationPending", true )
+                    .doesNotHavePath( "$.data.lockedBy" )
+                    .doesNotHavePath( "$.data.runId" )
+                    .doesNotHavePath( "$.data.agentName" )
+                    .doesNotHavePath( "$.data.expiresAt" );
+            // the holder's identity must not reach this response by any spelling
+            assertThat( body ).doesNotContain( "curator-jane" );
+        }
+    }
+
+    /**
+     * A free dataset reads false, not null: the GET always consults the lock, so the reader can tell "nobody is
+     * curating" from "this path did not look".
+     */
+    @Test
+    @WithMockUser
+    public void testGetDatasetCurationDetailsReportsNoCurationPendingWhenUnlocked() {
+        ee.setCurationDetails( new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails() );
+        when( curationLockService.current( any( ubic.gemma.model.analysis.Investigation.class ) ) )
+                .thenReturn( Optional.empty() );
+
+        try ( Response r = target( "/datasets/1/curationDetails" ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data.curationPending", false );
+        }
     }
 
     @Test
