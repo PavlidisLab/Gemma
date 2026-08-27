@@ -415,7 +415,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrix.get( subsetFactorValue ), factors, null );
 
             List<ExperimentalFactor> subsetFactors = this
-                    .fixFactorsForSubset( subSet, dmatrix.get( subsetFactorValue ), factors );
+                    .fixFactorsForSubset( bioMaterials, dmatrix.get( subsetFactorValue ), factors );
 
             DifferentialExpressionAnalysisConfig subsetConfig = this
                     .fixConfigForSubset( factors, subsetFactorValue, config );
@@ -496,7 +496,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
                 .sorted( FACTOR_COMPARATOR )
                 .collect( Collectors.toList() );
-        List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subset, dmatrix, factors );
+        List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( samplesInSubset, subsetMatrix, factors );
 
         // subsetFactors, not factors: fixFactorsForSubset has already dropped the factors this subset cannot
         // model, and getBaselineConditions throws for a factor none of the samples carries. Asking it for a
@@ -976,7 +976,12 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     /**
      * Remove factors which are no longer usable, based on the subset.
      */
-    private List<ExperimentalFactor> fixFactorsForSubset( ExpressionExperimentSubSet eesubSet, ExpressionDataDoubleMatrix dmatrix,
+    /**
+     * @param samples the samples that will be modelled for this subset -- NOT the subset's own bioAssays. A factor
+     *                whose second level is carried only by an excluded or outlier sample counts as variable over the
+     *                raw subset and would survive into the model as a constant column.
+     */
+    private List<ExperimentalFactor> fixFactorsForSubset( List<BioMaterial> samples, ExpressionDataDoubleMatrix dmatrix,
             List<ExperimentalFactor> factors ) {
 
         List<ExperimentalFactor> result = new ArrayList<>();
@@ -996,7 +1001,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             } else {
 
                 Collection<FactorValue> levels = new HashSet<>();
-                DiffExAnalyzerUtils.populateFactorValuesFromBASet( eesubSet, f, levels );
+                DiffExAnalyzerUtils.populateFactorValues( samples, f, levels );
 
                 if ( levels.size() > 1 ) {
                     result.add( f );

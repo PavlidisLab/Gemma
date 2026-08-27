@@ -19,6 +19,9 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -111,6 +114,96 @@ public class DiffExAnalyzerUtilsSampleSelectionTest {
                 .doesNotContain( keptExcluded, keptOutlier )
                 .hasSize( NUM_ASSAYS - 2 );
         assertThat( dropped.rows() ).isEqualTo( matrix.rows() );
+    }
+
+    /**
+     * Level counting must use the samples that will be modelled. A factor whose second level is carried only by an
+     * excluded sample reads as variable over the raw set, survives the subset fix, and becomes a constant column in
+     * the model.
+     */
+    @Test
+    public void testPopulateFactorValuesSeesOnlyTheSamplesGiven() {
+        assays.get( assays.size() - 1 ).setIsOutlier( true );
+        BioMaterial onlyTreatedLeft = null;
+        int treatedKept = 0;
+        for ( BioAssay ba : assays ) {
+            if ( ba.getSampleUsed().getFactorValues().contains( treated ) && !ba.getIsOutlier() ) {
+                treatedKept++;
+                onlyTreatedLeft = ba.getSampleUsed();
+            }
+        }
+        assertThat( treatedKept ).isPositive();
+        assertThat( onlyTreatedLeft ).isNotNull();
+
+        // over every sample, both levels are present
+        Collection<FactorValue> overAll = new HashSet<>();
+        DiffExAnalyzerUtils.populateFactorValuesFromBASet( ee, treatment, overAll );
+        assertThat( overAll ).containsExactlyInAnyOrder( control, treated );
+
+        // over the analyzed samples only, a level carried by nobody analyzed is not counted
+        List<BioMaterial> analyzed = new ArrayList<>();
+        for ( BioAssay ba : assays ) {
+            if ( DiffExAnalyzerUtils.isAnalyzed( ba.getSampleUsed() ) && !ba.getSampleUsed().getFactorValues().contains( treated ) ) {
+                analyzed.add( ba.getSampleUsed() );
+            }
+        }
+        Collection<FactorValue> overAnalyzed = new HashSet<>();
+        DiffExAnalyzerUtils.populateFactorValues( analyzed, treatment, overAnalyzed );
+        assertThat( overAnalyzed ).containsExactly( control );
+    }
+
+    /**
+     * A design that is block-complete over every sample need not be over the modelled ones. The interaction term is
+     * chosen here and fitted later on the smaller set, so this decision has to see the same samples the fit will.
+     */
+    @Test
+    public void testBlockCompleteSeesOnlyTheSamplesGiven() {
+        ExperimentalFactor sex = ExperimentalFactor.Factory.newInstance( "sex", FactorType.CATEGORICAL );
+        sex.setId( 2L );
+        FactorValue male = FactorValue.Factory.newInstance( sex );
+        male.setId( 3L );
+        male.setValue( "male" );
+        FactorValue female = FactorValue.Factory.newInstance( sex );
+        female.setId( 4L );
+        female.setValue( "female" );
+        sex.getFactorValues().add( male );
+        sex.getFactorValues().add( female );
+        // control/control/treated/treated x male/female, twice over: every cell filled, with replicates
+        for ( int i = 0; i < assays.size(); i++ ) {
+            assays.get( i ).getSampleUsed().getFactorValues().add( ( i % 4 ) < 2 ? male : female );
+        }
+        List<ExperimentalFactor> factors = Arrays.asList( treatment, sex );
+
+        // determineAnalysisType reads the factors off the design, so the fixture needs one
+        ubic.gemma.model.expression.experiment.ExperimentalDesign ed =
+                ubic.gemma.model.expression.experiment.ExperimentalDesign.Factory.newInstance();
+        ed.setId( 10L );
+        ed.getExperimentalFactors().add( treatment );
+        ed.getExperimentalFactors().add( sex );
+        treatment.setExperimentalDesign( ed );
+        sex.setExperimentalDesign( ed );
+        ee.setExperimentalDesign( ed );
+
+        assertThat( DifferentialExpressionAnalysisUtil.blockComplete( ee, factors ) ).isTrue();
+
+        // knock out one whole cell: every sample that is both treated and male
+        List<BioMaterial> analyzed = new ArrayList<>();
+        for ( BioAssay ba : assays ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm.getFactorValues().contains( treated ) && bm.getFactorValues().contains( male ) ) {
+                continue;
+            }
+            analyzed.add( bm );
+        }
+        assertThat( analyzed ).hasSizeLessThan( assays.size() );
+        assertThat( DifferentialExpressionAnalysisUtil.blockComplete( analyzed, factors ) ).isFalse();
+
+        // and the decision that consumes it: an interaction picked from the full set would be fitted on the
+        // smaller one, where that cell is empty and the term is unestimable.
+        assertThat( DiffExAnalyzerUtils.determineAnalysisType( ee, factors, null, true, null ) )
+                .isEqualTo( AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION );
+        assertThat( DiffExAnalyzerUtils.determineAnalysisType( ee, factors, null, true, analyzed ) )
+                .isEqualTo( AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION );
     }
 
     /**

@@ -90,8 +90,17 @@ public class DiffExAnalyzerUtils {
 
     public static void populateFactorValuesFromBASet( BioAssaySet ee, ExperimentalFactor f,
             Collection<FactorValue> fvs ) {
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
+        populateFactorValues( ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toList() ), f, fvs );
+    }
+
+    /**
+     * As above, over a given set of samples rather than every sample of the experiment or subset. Counting levels
+     * over the raw set lets a factor whose second level is carried only by an excluded or outlier sample look
+     * variable, so it survives into the model as a constant column.
+     */
+    public static void populateFactorValues( Collection<BioMaterial> samples, ExperimentalFactor f,
+            Collection<FactorValue> fvs ) {
+        for ( BioMaterial bm : samples ) {
             for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( f ) ) {
                     fvs.add( fv );
@@ -343,8 +352,13 @@ public class DiffExAnalyzerUtils {
 
                 }
                 /* Check for block design and execute two way ANOVA (with or without interactions). */
-                if ( !includeInteractionsIfPossible || !DifferentialExpressionAnalysisUtil
-                        .blockComplete( bioAssaySet, experimentalFactors ) || !okForInteraction ) {
+                // samplesToAnalyze when we have it, exactly as checkValidForLm above: the interaction term is
+                // chosen here and fitted later on the analyzed set, so deciding block-completeness from the full
+                // experiment can pick an interaction that is unestimable once DE_Exclude and outlier samples go.
+                boolean blockComplete = samplesToAnalyze != null
+                        ? DifferentialExpressionAnalysisUtil.blockComplete( samplesToAnalyze, experimentalFactors )
+                        : DifferentialExpressionAnalysisUtil.blockComplete( bioAssaySet, experimentalFactors );
+                if ( !includeInteractionsIfPossible || !blockComplete || !okForInteraction ) {
                     return AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION; // NO interactions
                 }
                 return AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION;

@@ -53,21 +53,30 @@ public class DifferentialExpressionAnalysisUtil {
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     public static boolean blockComplete( BioAssaySet expressionExperiment, Collection<ExperimentalFactor> factors ) {
+        return blockComplete( DifferentialExpressionAnalysisUtil.getBioMaterials( expressionExperiment ), factors );
+    }
 
-        Collection<BioMaterial> biomaterials = DifferentialExpressionAnalysisUtil
-                .getBioMaterials( expressionExperiment );
+    /**
+     * A variant that judges from a given set of samples rather than every sample in the experiment. Pass the samples
+     * that will actually be modelled, so that DE_Exclude and outlier samples do not make a design look block-complete
+     * when the fitted set is not: the interaction term chosen from the full set is unestimable on the smaller one.
+     * <p>
+     * The sibling {@link #checkValidForLm(Collection, ExperimentalFactor)} exists for the same reason.
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
+    public static boolean blockComplete( Collection<BioMaterial> samples, Collection<ExperimentalFactor> factors ) {
 
         /*
          * Get biomaterials with only those factor values equal to the factor values in the input factors. Only these
          * factor values in each biomaterial will be used to determine completeness.
          */
         Collection<BioMaterial> biomaterialsWithGivenFactorValues = DifferentialExpressionAnalysisUtil
-                .filterFactorValuesFromBiomaterials( factors, biomaterials );
+                .filterFactorValuesFromBiomaterials( factors, samples );
 
         boolean completeBlock = DifferentialExpressionAnalysisUtil
                 .checkBlockDesign( biomaterialsWithGivenFactorValues, factors );
         boolean hasAllReps = DifferentialExpressionAnalysisUtil
-                .checkBiologicalReplicates( expressionExperiment, factors );
+                .checkBiologicalReplicates( samples, factors );
 
         return completeBlock && hasAllReps;
     }
@@ -81,9 +90,14 @@ public class DifferentialExpressionAnalysisUtil {
      */
     static boolean checkBiologicalReplicates( BioAssaySet expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
+        return checkBiologicalReplicates( DifferentialExpressionAnalysisUtil.getBioMaterials( expressionExperiment ), factors );
+    }
 
-        Collection<BioMaterial> biomaterials = DifferentialExpressionAnalysisUtil
-                .getBioMaterials( expressionExperiment );
+    /**
+     * As above, over a given set of samples -- the ones that will actually be modelled.
+     */
+    static boolean checkBiologicalReplicates( Collection<BioMaterial> biomaterials,
+            Collection<ExperimentalFactor> factors ) {
 
         for ( BioMaterial firstBm : biomaterials ) {
 
