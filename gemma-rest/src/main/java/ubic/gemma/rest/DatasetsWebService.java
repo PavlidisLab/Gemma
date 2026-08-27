@@ -2148,7 +2148,7 @@ public class DatasetsWebService {
         // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
         // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
         snapshot.setBaseline( null );
-        return respond( doCommitCuration( datasetArg, snapshot, dryRun, force, false ) );
+        return respond( doCommitCuration( datasetArg, snapshot, dryRun, force, false, null ) );
     }
 
     @GET
@@ -2320,7 +2320,7 @@ public class DatasetsWebService {
         // An empty body counts as no body. A client that POSTs `{}` means "sign what I have been drafting", and
         // committing nothing while reporting success is the wrong answer to that.
         CurationDocument doc = hasAnySection( body ) ? body : readDraftPayloadForSigning( ee, signer );
-        CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true );
+        CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true, signer );
         if ( !dryRun ) {
             // Signing off ends the curator's turn on this dataset, so the lock goes back with it -- otherwise
             // every signed dataset stays locked until its lease runs out or somebody steals it. Only on success,
@@ -2812,7 +2812,7 @@ public class DatasetsWebService {
             @Parameter(description = "Consent (admin only) to deleting differential-expression analyses that a design-section change would invalidate. Ignored unless the design section triggers such a cascade.") @QueryParam("force") @DefaultValue("false") Boolean force,
             @Nullable CurationDocument body
     ) {
-        return respond( doCommitCuration( datasetArg, body, false, force, false ) );
+        return respond( doCommitCuration( datasetArg, body, false, force, false, null ) );
     }
 
     @POST
@@ -2840,7 +2840,7 @@ public class DatasetsWebService {
             @Nullable CurationDocument body
     ) {
         // A dry run never writes, so the differential-expression cascade never fires — force is irrelevant here.
-        return respond( doCommitCuration( datasetArg, body, true, false, false ) );
+        return respond( doCommitCuration( datasetArg, body, true, false, false, null ) );
     }
 
     /**
@@ -2850,7 +2850,7 @@ public class DatasetsWebService {
      * Collapsing them into one boolean would make sign-off admin-only, which is not what gates it.
      */
     private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body,
-            boolean dryRun, boolean force, boolean signed ) {
+            boolean dryRun, boolean force, boolean signed, @Nullable String actingAs ) {
         if ( body == null ) {
             throw new BadRequestException( "A CurationDocument request body is required." );
         }
@@ -3035,8 +3035,16 @@ public class DatasetsWebService {
         // endpoint can write — publications included, each with the claim on record for it.
         if ( !dryRun ) {
             request.setSnapshotPayloadJson( writeSnapshotPayload( buildCurationSnapshot( ee ) ) );
-            User committer = userManager.getCurrentUser();
-            request.setSnapshotCreatedBy( committer != null ? committer.getUserName() : null );
+            // Attributed to whoever the commit is FOR, not to whoever carried it. On a relayed sign
+            // (`?onBehalfOf=`) the authenticated principal is the agent, and recording that would name the
+            // courier on the curator's restore point. `actingAs` is already the resolved curator on that path
+            // and null everywhere else, where the principal is the actor.
+            if ( actingAs != null ) {
+                request.setSnapshotCreatedBy( actingAs );
+            } else {
+                User committer = userManager.getCurrentUser();
+                request.setSnapshotCreatedBy( committer != null ? committer.getUserName() : null );
+            }
         }
 
         CurationCommitResult result;
