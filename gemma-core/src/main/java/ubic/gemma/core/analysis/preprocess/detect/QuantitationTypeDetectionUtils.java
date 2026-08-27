@@ -213,8 +213,19 @@ public class QuantitationTypeDetectionUtils {
 
         double minimum = getMinimum( matrix );
 
-        // negative values indicate log-transformation
+        // Negative values indicate log-transformation -- unless the record already accounts for them.
+        // Background-subtracted and normalized data cross zero on a linear scale by construction, so this
+        // branch reports them as log-transformed when they are not; GSE9594 and GSE28623 are both normalized
+        // LINEAR records that trip it. detectSuspiciousValues skips those same two flags for the same reason.
+        // Where the record accounts for the negatives it is the better answer than the inference, so report it
+        // rather than guessing a scale. Only the linting path passes a QT -- inferQuantitationType passes null,
+        // so building a quantitation type from scratch is unaffected.
         if ( minimum < 0 ) {
+            if ( qt != null && ( qt.getIsBackgroundSubtracted() || qt.getIsNormalized() ) ) {
+                log.info( String.format( "Data has values below zero and the quantitation type is %s, which accounts for them; will report the recorded %s scale rather than inferring a log transformation.",
+                        qt.getIsBackgroundSubtracted() ? "background-subtracted" : "normalized", qt.getScale() ) );
+                return new InferredQuantitationType( qt.getType(), qt.getScale(), qt.getIsRatio() );
+            }
             return new InferredQuantitationType( StandardQuantitationType.AMOUNT, ScaleType.LOGBASEUNKNOWN, ir );
         }
 
