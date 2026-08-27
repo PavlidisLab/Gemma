@@ -100,6 +100,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DatasetShortNameChangedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
@@ -5157,45 +5158,57 @@ public class DatasetsWebService {
      * Step descriptor backing {@link #getDatasetPipelineStatus}: the JSON {@code step} key plus the success-event
      * and (optional) failed-event classes whose latest occurrences determine the step's state.
      */
+    /**
+     * What makes a completed pipeline step stale: the design changed under it, or the analyzed sample set did.
+     * Flagging an outlier no longer reprocesses the dataset on the spot (see OutlierFlaggingServiceImpl), so
+     * this is what says the result is owed a re-run.
+     */
+    private static final Set<Class<? extends AuditEventType>> INVALIDATING_EVENTS =
+            Collections.unmodifiableSet( new LinkedHashSet<>( Arrays.asList( DesignChangeEvent.class, SampleRemovalEvent.class ) ) );
+
     private static final class PipelineStepDescriptor {
         final String stepKey;
         final Class<? extends AuditEventType> successType;
         @Nullable
         final Class<? extends AuditEventType> failedType;
         /**
-         * Whether a design change invalidates this step's output, making a successful run that predates it
+         * The events that invalidate this step's output, making a successful run that predates one of them
          * {@code stale}.
          * <p>
-         * Only {@code dea} carries it. The other eight derive from the expression data rather than from the
-         * experimental design: renaming a factor value does not invalidate a PCA, and marking one stale would
-         * send a curator to re-run something nothing changed the input of.
+         * Two things invalidate a computed result: the experimental design changing under it
+         * ({@code DesignChangeEvent}, emitted only for a real change -- the no-op branch suppresses it) and the
+         * analyzed sample set changing ({@code SampleRemovalEvent}, from flagging or unflagging an outlier).
+         * Every step but {@code batchInfo} is computed from the samples and the design, so every step but
+         * {@code batchInfo} carries both. {@code batchInfo} comes from scan dates and file headers, which
+         * neither touches.
          */
-        final boolean staleOnDesignChange;
+        final Set<Class<? extends AuditEventType>> invalidatedBy;
 
         PipelineStepDescriptor( String stepKey, Class<? extends AuditEventType> successType,
                 @Nullable Class<? extends AuditEventType> failedType ) {
-            this( stepKey, successType, failedType, false );
+            this( stepKey, successType, failedType, INVALIDATING_EVENTS );
         }
 
         PipelineStepDescriptor( String stepKey, Class<? extends AuditEventType> successType,
-                @Nullable Class<? extends AuditEventType> failedType, boolean staleOnDesignChange ) {
+                @Nullable Class<? extends AuditEventType> failedType,
+                Set<Class<? extends AuditEventType>> invalidatedBy ) {
             this.stepKey = stepKey;
             this.successType = successType;
             this.failedType = failedType;
-            this.staleOnDesignChange = staleOnDesignChange;
+            this.invalidatedBy = invalidatedBy;
         }
     }
 
     // BatchInformationEvent (the abstract parent) covers Fetching/FailedFetching/Missing in one query, so no
     // separate failed class is needed for batchInfo.
     private static final List<PipelineStepDescriptor> PIPELINE_STEPS = Arrays.asList(
-            new PipelineStepDescriptor( "batchInfo", BatchInformationEvent.class, null ),
+            new PipelineStepDescriptor( "batchInfo", BatchInformationEvent.class, null, Collections.emptySet() ),
             new PipelineStepDescriptor( "preprocess", ProcessedVectorComputationEvent.class, FailedProcessedVectorComputationEvent.class ),
             new PipelineStepDescriptor( "batchCorrection", BatchCorrectionEvent.class, null ),
             new PipelineStepDescriptor( "pca", PCAAnalysisEvent.class, FailedPCAAnalysisEvent.class ),
             new PipelineStepDescriptor( "sampleCorrelation", SampleCorrelationAnalysisEvent.class, FailedSampleCorrelationAnalysisEvent.class ),
             new PipelineStepDescriptor( "meanVariance", MeanVarianceUpdateEvent.class, FailedMeanVarianceUpdateEvent.class ),
-            new PipelineStepDescriptor( "dea", DifferentialExpressionAnalysisEvent.class, FailedDifferentialExpressionAnalysisEvent.class, true ),
+            new PipelineStepDescriptor( "dea", DifferentialExpressionAnalysisEvent.class, FailedDifferentialExpressionAnalysisEvent.class ),
             new PipelineStepDescriptor( "coexpression", LinkAnalysisEvent.class, FailedLinkAnalysisEvent.class ),
             new PipelineStepDescriptor( "missingValue", MissingValueAnalysisEvent.class, FailedMissingValueAnalysisEvent.class )
     );
@@ -5207,9 +5220,12 @@ public class DatasetsWebService {
             description = "Returns a snapshot of each preprocessing/analysis step (`batchInfo`, `preprocess`, `pca`, "
                     + "`dea`, `coexpression`, `missingValue`) with its last-run date, audit-event class name, and "
                     + "state (`ok`, `failed`, `notRun`, `notApplicable`, or `stale`). `stale` means the step ran "
-                    + "successfully and the experimental design has changed since, so the result survives but no "
-                    + "longer describes the design it was computed from; only `dea` reports it, and only when the "
-                    + "analysis was not deleted by the change. `lastUpdate` answers \"what changed here "
+                    + "successfully and its input has changed since, so the result survives but no longer describes "
+                    + "what it was computed from. Two things invalidate a step: the experimental design changing, "
+                    + "and the analyzed sample set changing (an outlier flagged or unflagged). Every step except "
+                    + "`batchInfo` can report it — `batchInfo` comes from scan dates and file headers, which neither "
+                    + "touches. 🛑 Flagging an outlier does NOT reprocess the dataset; `stale` is how you find the "
+                    + "work that is owed. `lastUpdate` answers \"what changed here "
                     + "recently\" in one short label (`Updated from GEO`, `Differential expression analysis performed`, "
                     + "…) with the event's date and performer; the label comes from the audit-event type, never from "
                     + "curator notes, and `lastUpdate.eventType` is the stable half to key logic off. The "
@@ -5258,6 +5274,7 @@ public class DatasetsWebService {
         // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
         // predates the last design change no longer describes the design it was computed from.
         auditTypes.add( DesignChangeEvent.class );
+        auditTypes.add( SampleRemovalEvent.class );
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( Collections.singleton( ee ), auditTypes );
 
@@ -5380,6 +5397,7 @@ public class DatasetsWebService {
         // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
         // predates the last design change no longer describes the design it was computed from.
         auditTypes.add( DesignChangeEvent.class );
+        auditTypes.add( SampleRemovalEvent.class );
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( ees, auditTypes );
 
@@ -5474,12 +5492,14 @@ public class DatasetsWebService {
         // 🛑 This is the case where the analysis SURVIVED the change. A design edit that invalidates an
         // analysis deletes it (see the invalidation rule), after which the step reads `notRun` and there is
         // nothing left to call stale.
-        if ( PipelineStatusValueObject.PipelineStepValueObject.STATUS_OK.equals( state )
-                && desc.staleOnDesignChange ) {
-            AuditEvent designChange = lookupAuditEvent( auditEventsByType, DesignChangeEvent.class, ee );
-            if ( designChange != null && designChange.getDate() != null && winner.getDate() != null
-                    && designChange.getDate().after( winner.getDate() ) ) {
-                state = PipelineStatusValueObject.PipelineStepValueObject.STATUS_STALE;
+        if ( PipelineStatusValueObject.PipelineStepValueObject.STATUS_OK.equals( state ) ) {
+            for ( Class<? extends AuditEventType> invalidator : desc.invalidatedBy ) {
+                AuditEvent invalidating = lookupAuditEvent( auditEventsByType, invalidator, ee );
+                if ( invalidating != null && invalidating.getDate() != null && winner.getDate() != null
+                        && invalidating.getDate().after( winner.getDate() ) ) {
+                    state = PipelineStatusValueObject.PipelineStepValueObject.STATUS_STALE;
+                    break;
+                }
             }
         }
         return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey, state,
@@ -5640,6 +5660,7 @@ public class DatasetsWebService {
         // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
         // predates the last design change no longer describes the design it was computed from.
         auditTypes.add( DesignChangeEvent.class );
+        auditTypes.add( SampleRemovalEvent.class );
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( visibleEEs, auditTypes );
 

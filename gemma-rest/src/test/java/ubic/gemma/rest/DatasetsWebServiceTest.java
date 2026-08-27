@@ -2552,13 +2552,15 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     }
 
     /**
-     * The other eight steps derive from the expression data, not from the experimental design. Renaming a
-     * factor value does not invalidate a PCA, and marking it stale would send a curator to re-run something
-     * whose input nothing changed.
+     * Every step but batchInfo is computed from the samples and the design, so a design change makes all of
+     * them stale -- not just the DEA. Paul, 2026-08-27: *"everything you mention needs to be redone if
+     * sample-sets and experimental designs are changed, but we want to do it later"*. This test used to
+     * assert the opposite; DesignChangeEvent is emitted only for a real change (the no-op branch suppresses
+     * it), so a relabel does not reach here.
      */
     @Test
     @WithMockUser(authorities = "GROUP_ADMIN")
-    public void testPipelineStatusOnlyDeaGoesStaleNotTheDataDerivedSteps() {
+    public void testPipelineStatusEveryDataDerivedStepGoesStaleOnADesignChange() {
         mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
         Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
         latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent.class,
@@ -2577,9 +2579,68 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .entity()
                 .extracting( "data.steps", list( Map.class ) )
                 .satisfies( steps -> {
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "status" ) ).isEqualTo( "ok" );
-                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "preprocess" ).get( "status" ) ).isEqualTo( "ok" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "status" ) ).isEqualTo( "stale" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "preprocess" ).get( "status" ) ).isEqualTo( "stale" );
                 } );
+    }
+
+    /**
+     * Flagging an outlier changes the analyzed sample set and no longer reprocesses the dataset inline, so
+     * the SampleRemovalEvent it records is what marks the computed results as owed a re-run.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPipelineStatusGoesStaleWhenAnOutlierWasFlaggedAfterTheRun() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent() ) );
+        stubLastEvents( latest );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "status" ) ).isEqualTo( "stale" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "dea" ).get( "status" ) ).isEqualTo( "stale" );
+                } );
+    }
+
+    /**
+     * batchInfo comes from scan dates and file headers. Neither a design edit nor an outlier flag touches
+     * those, so it must not be swept up when the rule widened to every other step.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPipelineStatusBatchInfoIsNeverStale() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
+        // the descriptor asks for the abstract parent, so the stub has to be keyed by it
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent() ) );
+        stubLastEvents( latest );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> org.assertj.core.api.Assertions
+                        .assertThat( findStep( steps, "batchInfo" ).get( "status" ) ).isEqualTo( "ok" ) );
     }
 
     /**
