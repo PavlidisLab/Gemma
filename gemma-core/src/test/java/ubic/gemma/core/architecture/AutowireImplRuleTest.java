@@ -20,6 +20,7 @@ package ubic.gemma.core.architecture;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaAnnotation;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaField;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
@@ -72,6 +73,26 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 )
 public class AutowireImplRuleTest {
 
+    /**
+     * 🛑 <b>The guard against a guard that checks nothing.</b>
+     * <p>
+     * Both rules below are {@code allowEmptyShould( true )} because a clean codebase legitimately matches no
+     * fields — which means neither can distinguish "clean" from "ArchUnit imported nothing". That distinction
+     * mattered: archunit 1.3.0's bundled ASM could not read Java 25 bytecode (major version 69) and imported
+     * <b>zero classes silently</b>, so this test passed while checking nothing from the day it was written
+     * until 2026-08-26, when the same failure was found in a sibling rule. Fixed by archunit 1.4.1.
+     * <p>
+     * This sentinel states the expectation the other two cannot: an empty import is a broken toolchain.
+     */
+    @ArchTest
+    public static void classes_are_actually_imported( JavaClasses classes ) {
+        if ( classes.isEmpty() ) {
+            throw new AssertionError( "ArchUnit imported no classes at all, so every rule here is vacuous. "
+                    + "Usual cause: the bundled ASM cannot read our class file version — check the archunit "
+                    + "version against the compiler release level." );
+        }
+    }
+
     private static final DescribedPredicate<JavaClass> IMPL_TYPED =
             new DescribedPredicate<JavaClass>( "have a simple name ending with 'Impl'" ) {
                 @Override
@@ -104,7 +125,8 @@ public class AutowireImplRuleTest {
 
     /**
      * Intentionally vacuous when no {@code @Autowired} Impl-typed fields exist
-     * — that is the goal state of the migration. {@code allowEmptyShould(true)}
+     * — that is the goal state of the migration. Vacancy only means that once
+     * {@link #classes_are_actually_imported} has confirmed there were classes to check. {@code allowEmptyShould(true)}
      * suppresses ArchUnit's default "rule matched no classes" failure so the
      * guard keeps locking the codebase down without flagging the clean state.
      */
@@ -123,7 +145,8 @@ public class AutowireImplRuleTest {
 
     /**
      * Intentionally vacuous when no constructor-injected Impl-typed parameters
-     * exist — that is the goal state. {@code allowEmptyShould(true)} suppresses
+     * exist — that is the goal state, subject to the same caveat as above:
+     * see {@link #classes_are_actually_imported}. {@code allowEmptyShould(true)} suppresses
      * ArchUnit's default "rule matched no classes" failure.
      */
     @ArchTest
