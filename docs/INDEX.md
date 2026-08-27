@@ -12,7 +12,7 @@ Total: 151 docs.
 
   <sub>archived sources (`pipeline-compute/archive/`): EXTERNAL_PIPELINE_HANDOFF_RECCE.md, PIPELINES_AND_SCHEDULER_RECCE.md, PIPELINE_COMPUTE_TEST_AND_CONTROL_RECCE.md, WORKFLOW_AND_COMPUTE_ARCHITECTURE.md</sub>
 
-## Recces — `docs/recce/` (20 live, 16 archived)
+## Recces — `docs/recce/` (21 live, 16 archived)
 
 16 recces whose subject shipped, whose premise is gone, or that a live doc supersedes were moved to [`docs/recce/archive/`](recce/archive/README.md) on 2026-08-11 — that README lists each one with the evidence checked.
 
@@ -30,6 +30,7 @@ Total: 151 docs.
 - [`LUCENE_HS_READINESS_RECCE.md`](recce/LUCENE_HS_READINESS_RECCE.md) — Lucene 10 + Hibernate Search 8 readiness recce
 - [`MOCK_FIXTURE_CONVERSION_RECCE.md`](recce/MOCK_FIXTURE_CONVERSION_RECCE.md) — Mock fixture conversion recce — top-N tests to convert
 - [`OBJECT_STORAGE_RECCE.md`](recce/OBJECT_STORAGE_RECCE.md) — Object-Storage Abstraction — Reconnaissance
+- [`ONDISK_CASCADE_RECCE.md`](recce/ONDISK_CASCADE_RECCE.md) — the diff-ex archives and result-set TSV caches a curation commit leaves behind, and why the file-removing method is unreachable from the commit transaction
 - [`OPENTELEMETRY_RECCE.md`](recce/OPENTELEMETRY_RECCE.md) — OpenTelemetry tracing — Phase 3 detailed recce
 - [`PERSISTER_SHRINK_RECCE.md`](recce/PERSISTER_SHRINK_RECCE.md) — PERSISTER_SHRINK_RECCE.md — shortest path to retiring `persisterHelper` post-Caches
 - [`SAMPLES_DESIGN_PERF_RECCE.md`](recce/SAMPLES_DESIGN_PERF_RECCE.md) — `/datasets/{id}/samples` and `/datasets/{id}/design` perf recce
