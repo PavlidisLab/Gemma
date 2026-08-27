@@ -2342,6 +2342,112 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
      * The returned map shape is {@code Class<? extends AuditEventType> -> ee -> AuditEvent}; an empty inner
      * map yields {@code notRun}.
      */
+    /**
+     * A DEA that succeeded and then had the design change under it is still there, and its own event still
+     * says it succeeded — but it no longer describes the design it was computed from. `stale` is that state.
+     * <p>
+     * 🛑 Not `notRun`: the analysis was not deleted. A design change that invalidates an analysis deletes it,
+     * and the step then reads `notRun` with nothing left to describe. This is the surviving case.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPipelineStatusDeaGoesStaleWhenTheDesignChangedAfterIt() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent() ) );
+        stubLastEvents( latest );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> org.assertj.core.api.Assertions
+                        .assertThat( findStep( steps, "dea" ).get( "status" ) ).isEqualTo( "stale" ) );
+    }
+
+    /** A design change BEFORE the analysis is the normal order: the DEA already reflects it. */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPipelineStatusDeaStaysOkWhenTheDesignChangedBeforeIt() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent() ) );
+        stubLastEvents( latest );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> org.assertj.core.api.Assertions
+                        .assertThat( findStep( steps, "dea" ).get( "status" ) ).isEqualTo( "ok" ) );
+    }
+
+    /**
+     * The other eight steps derive from the expression data, not from the experimental design. Renaming a
+     * factor value does not invalidate a PCA, and marking it stale would send a curator to re-run something
+     * whose input nothing changed.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPipelineStatusOnlyDeaGoesStaleNotTheDataDerivedSteps() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent() ) );
+        stubLastEvents( latest );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "pca" ).get( "status" ) ).isEqualTo( "ok" );
+                    org.assertj.core.api.Assertions.assertThat( findStep( steps, "preprocess" ).get( "status" ) ).isEqualTo( "ok" );
+                } );
+    }
+
+    /**
+     * A DEA that FAILED and was then followed by a design change stays `failed`. Re-running is the move
+     * either way, and `stale` would hide that the last attempt did not succeed.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPipelineStatusAFailedDeaStaysFailedAfterADesignChange() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent() ) );
+        stubLastEvents( latest );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> org.assertj.core.api.Assertions
+                        .assertThat( findStep( steps, "dea" ).get( "status" ) ).isEqualTo( "failed" ) );
+    }
+
     private void stubLastEvents( Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> eventsByType ) {
         Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, Map<ExpressionExperiment, AuditEvent>> result = new LinkedHashMap<>();
         for ( Map.Entry<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> e : eventsByType.entrySet() ) {

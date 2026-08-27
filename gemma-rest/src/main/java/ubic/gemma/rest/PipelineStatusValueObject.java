@@ -134,6 +134,20 @@ public class PipelineStatusValueObject {
         public static final String STATUS_NOT_RUN = "notRun";
         /** Not applicable to this experiment -- so "never run" is not a gap. */
         public static final String STATUS_NOT_APPLICABLE = "notApplicable";
+        /**
+         * Ran successfully, and the experimental design has changed since -- so the result is still there but
+         * no longer describes the design it was computed from.
+         * <p>
+         * 🛑 Distinct from the two states that already exist elsewhere and are NOT this. {@code incomplete}
+         * (the curation store's step state) means started and unfinished, a curator owes it something.
+         * {@code needsAttention} is the curator's own flag, mirrored at the top level of this VO. This is
+         * neither: nobody has to do anything for the state to be true, and it is about the derived artifact
+         * rather than about the curation.
+         * <p>
+         * Only {@code dea} can report it. A design change that invalidates an analysis DELETES it, after which
+         * the step reads {@code notRun}; this covers the case where the analysis survived the change.
+         */
+        public static final String STATUS_STALE = "stale";
 
         /**
          * Which pipeline step. The nine emitted by
@@ -144,7 +158,7 @@ public class PipelineStatusValueObject {
         private String step;
         /**
          * One of {@link #STATUS_OK}, {@link #STATUS_FAILED}, {@link #STATUS_NOT_RUN},
-         * {@link #STATUS_NOT_APPLICABLE}.
+         * {@link #STATUS_NOT_APPLICABLE}, {@link #STATUS_STALE}.
          * <p>
          * Kept a {@code String} rather than promoted to an enum, so that adding a value later is not a
          * deserialization break for a consumer holding an older copy of the vocabulary. The
@@ -155,7 +169,7 @@ public class PipelineStatusValueObject {
          * <p>
          * Wire key is {@code status} per curation-UI alignment; legacy {@code state} accepted on read.
          */
-        @Schema(allowableValues = { "ok", "failed", "notRun", "notApplicable" })
+        @Schema(allowableValues = { "ok", "failed", "notRun", "notApplicable", "stale" })
         @JsonProperty("status")
         @JsonAlias({ "state" })
         private String state;

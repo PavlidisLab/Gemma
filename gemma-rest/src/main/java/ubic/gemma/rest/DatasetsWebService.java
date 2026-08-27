@@ -99,6 +99,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationNoteUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DatasetShortNameChangedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
@@ -4806,12 +4807,27 @@ public class DatasetsWebService {
         final Class<? extends AuditEventType> successType;
         @Nullable
         final Class<? extends AuditEventType> failedType;
+        /**
+         * Whether a design change invalidates this step's output, making a successful run that predates it
+         * {@code stale}.
+         * <p>
+         * Only {@code dea} carries it. The other eight derive from the expression data rather than from the
+         * experimental design: renaming a factor value does not invalidate a PCA, and marking one stale would
+         * send a curator to re-run something nothing changed the input of.
+         */
+        final boolean staleOnDesignChange;
 
         PipelineStepDescriptor( String stepKey, Class<? extends AuditEventType> successType,
                 @Nullable Class<? extends AuditEventType> failedType ) {
+            this( stepKey, successType, failedType, false );
+        }
+
+        PipelineStepDescriptor( String stepKey, Class<? extends AuditEventType> successType,
+                @Nullable Class<? extends AuditEventType> failedType, boolean staleOnDesignChange ) {
             this.stepKey = stepKey;
             this.successType = successType;
             this.failedType = failedType;
+            this.staleOnDesignChange = staleOnDesignChange;
         }
     }
 
@@ -4824,7 +4840,7 @@ public class DatasetsWebService {
             new PipelineStepDescriptor( "pca", PCAAnalysisEvent.class, FailedPCAAnalysisEvent.class ),
             new PipelineStepDescriptor( "sampleCorrelation", SampleCorrelationAnalysisEvent.class, FailedSampleCorrelationAnalysisEvent.class ),
             new PipelineStepDescriptor( "meanVariance", MeanVarianceUpdateEvent.class, FailedMeanVarianceUpdateEvent.class ),
-            new PipelineStepDescriptor( "dea", DifferentialExpressionAnalysisEvent.class, FailedDifferentialExpressionAnalysisEvent.class ),
+            new PipelineStepDescriptor( "dea", DifferentialExpressionAnalysisEvent.class, FailedDifferentialExpressionAnalysisEvent.class, true ),
             new PipelineStepDescriptor( "coexpression", LinkAnalysisEvent.class, FailedLinkAnalysisEvent.class ),
             new PipelineStepDescriptor( "missingValue", MissingValueAnalysisEvent.class, FailedMissingValueAnalysisEvent.class )
     );
@@ -4835,7 +4851,10 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the per-step pipeline status of a dataset",
             description = "Returns a snapshot of each preprocessing/analysis step (`batchInfo`, `preprocess`, `pca`, "
                     + "`dea`, `coexpression`, `missingValue`) with its last-run date, audit-event class name, and "
-                    + "state (`ok`, `failed`, `notRun`, or `notApplicable`). `lastUpdate` answers \"what changed here "
+                    + "state (`ok`, `failed`, `notRun`, `notApplicable`, or `stale`). `stale` means the step ran "
+                    + "successfully and the experimental design has changed since, so the result survives but no "
+                    + "longer describes the design it was computed from; only `dea` reports it, and only when the "
+                    + "analysis was not deleted by the change. `lastUpdate` answers \"what changed here "
                     + "recently\" in one short label (`Updated from GEO`, `Differential expression analysis performed`, "
                     + "…) with the event's date and performer; the label comes from the audit-event type, never from "
                     + "curator notes, and `lastUpdate.eventType` is the stable half to key logic off. The "
@@ -4878,6 +4897,9 @@ public class DatasetsWebService {
             }
         }
         auditTypes.add( GeeqEvent.class );
+        // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
+        // predates the last design change no longer describes the design it was computed from.
+        auditTypes.add( DesignChangeEvent.class );
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( Collections.singleton( ee ), auditTypes );
 
@@ -4996,6 +5018,9 @@ public class DatasetsWebService {
             }
         }
         auditTypes.add( GeeqEvent.class );
+        // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
+        // predates the last design change no longer describes the design it was computed from.
+        auditTypes.add( DesignChangeEvent.class );
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( ees, auditTypes );
 
@@ -5081,6 +5106,23 @@ public class DatasetsWebService {
         String state = eventTypeName != null && eventTypeName.startsWith( "Failed" )
                 ? PipelineStatusValueObject.PipelineStepValueObject.STATUS_FAILED
                 : PipelineStatusValueObject.PipelineStepValueObject.STATUS_OK;
+        // A run that succeeded and then had the design change under it is still there, and still `ok` by its
+        // own event -- but it no longer describes the design it was computed from. That is `stale`.
+        //
+        // Only applied to a successful run: a DEA that FAILED before a design change is still best described
+        // as failed, since re-running it is the move either way and "stale" would hide why.
+        //
+        // 🛑 This is the case where the analysis SURVIVED the change. A design edit that invalidates an
+        // analysis deletes it (see the invalidation rule), after which the step reads `notRun` and there is
+        // nothing left to call stale.
+        if ( PipelineStatusValueObject.PipelineStepValueObject.STATUS_OK.equals( state )
+                && desc.staleOnDesignChange ) {
+            AuditEvent designChange = lookupAuditEvent( auditEventsByType, DesignChangeEvent.class, ee );
+            if ( designChange != null && designChange.getDate() != null && winner.getDate() != null
+                    && designChange.getDate().after( winner.getDate() ) ) {
+                state = PipelineStatusValueObject.PipelineStepValueObject.STATUS_STALE;
+            }
+        }
         return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey, state,
                 winner.getDate(), eventTypeName, winner.getNote() );
     }
@@ -5234,6 +5276,9 @@ public class DatasetsWebService {
             }
         }
         auditTypes.add( GeeqEvent.class );
+        // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
+        // predates the last design change no longer describes the design it was computed from.
+        auditTypes.add( DesignChangeEvent.class );
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( visibleEEs, auditTypes );
 
