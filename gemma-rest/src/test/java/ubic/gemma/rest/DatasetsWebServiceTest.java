@@ -2668,6 +2668,118 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                         .assertThat( findStep( steps, "dea" ).get( "status" ) ).isEqualTo( "failed" ) );
     }
 
+    /**
+     * The corpus-wide read of the same {@code stale} rule the per-dataset route applies: which datasets owe
+     * pipeline work, and which steps. A PCA that succeeded and then had the design change under it is the
+     * canonical row.
+     */
+    @Test
+    @WithMockUser
+    public void testStaleStepsListsADatasetWhoseRunPredatesTheDesignChange() {
+        stubStaleScanCandidate();
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent() ) );
+        stubLastEventsForStaleScan( latest );
+
+        assertThat( target( "/datasets/staleSteps" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .satisfies( rows -> {
+                    org.assertj.core.api.Assertions.assertThat( rows ).hasSize( 1 );
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> row = ( Map<String, Object> ) rows.get( 0 );
+                    org.assertj.core.api.Assertions.assertThat( ( ( Number ) row.get( "datasetId" ) ).longValue() ).isEqualTo( 1L );
+                    org.assertj.core.api.Assertions.assertThat( row.get( "shortName" ) ).isEqualTo( "GSE0001" );
+                    org.assertj.core.api.Assertions.assertThat( row.get( "invalidatedBy" ) ).isEqualTo( "DesignChangeEvent" );
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> staleSteps = ( List<Map<String, Object>> ) row.get( "staleSteps" );
+                    org.assertj.core.api.Assertions.assertThat( staleSteps )
+                            .isNotEmpty()
+                            .allSatisfy( step -> org.assertj.core.api.Assertions.assertThat( step.get( "status" ) ).isEqualTo( "stale" ) )
+                            .extracting( step -> step.get( "step" ) )
+                            .contains( "pca" )
+                            .doesNotContain( "batchInfo" );
+                } );
+    }
+
+    /**
+     * The disconfirming half: the same two events in the other order. The design change happened BEFORE the
+     * run, so the run already reflects it and nothing is owed. Without this the route could report every
+     * dataset that has ever had a design change and still look right.
+     */
+    @Test
+    @WithMockUser
+    public void testStaleStepsOmitsADatasetWhoseRunPostdatesTheDesignChange() {
+        stubStaleScanCandidate();
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> latest = new LinkedHashMap<>();
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 1_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.DesignChangeEvent() ) );
+        latest.put( ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent.class,
+                AuditEvent.Factory.newInstance( new Date( 2_000_000_000_000L ), AuditAction.UPDATE, null, null, null,
+                        new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent() ) );
+        stubLastEventsForStaleScan( latest );
+
+        assertThat( target( "/datasets/staleSteps" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .satisfies( rows -> org.assertj.core.api.Assertions.assertThat( rows ).isEmpty() );
+    }
+
+    /**
+     * The candidate ids come from an audit query that has no ACL clause, so what keeps a private dataset out
+     * of the response is the ACL-filtered load it is passed through. Here the load returns nothing for the
+     * candidate: the row must not appear, and the audit fan-out must not even be attempted for it.
+     */
+    @Test
+    @WithMockUser
+    public void testStaleStepsDropsACandidateTheCallerCannotRead() {
+        ee.setId( 1L );
+        when( auditEventService.getIdsHavingEvent( eq( ExpressionExperiment.class ), anyCollection() ) )
+                .thenReturn( new LinkedHashSet<>( Collections.singletonList( 1L ) ) );
+        when( expressionExperimentService.load( any( Filters.class ), any() ) )
+                .thenReturn( Collections.emptyList() );
+
+        assertThat( target( "/datasets/staleSteps" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .satisfies( rows -> org.assertj.core.api.Assertions.assertThat( rows ).isEmpty() );
+        verify( auditEventService, never() ).getLastEvents( anyCollection(), anySet() );
+    }
+
+    /** One candidate dataset the caller can read, ready for {@link #stubLastEventsForStaleScan(Map)}. */
+    private void stubStaleScanCandidate() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE0001" );
+        when( auditEventService.getIdsHavingEvent( eq( ExpressionExperiment.class ), anyCollection() ) )
+                .thenReturn( new LinkedHashSet<>( Collections.singletonList( 1L ) ) );
+        when( expressionExperimentService.load( any( Filters.class ), any() ) )
+                .thenReturn( Collections.singletonList( ee ) );
+    }
+
+    /**
+     * Sibling of {@link #stubLastEvents(Map)} for the corpus scan, which hands the batched call a List of the
+     * datasets its ACL-filtered load returned rather than a singleton Set.
+     */
+    private void stubLastEventsForStaleScan( Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> eventsByType ) {
+        Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, Map<ExpressionExperiment, AuditEvent>> result = new LinkedHashMap<>();
+        for ( Map.Entry<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> e : eventsByType.entrySet() ) {
+            result.put( e.getKey(), Collections.singletonMap( ee, e.getValue() ) );
+        }
+        // eq() on the exact list, not anyCollection(): it pins the generic to ExpressionExperiment for
+        // thenReturn, and it asserts the route hands the batched call the list its ACL-filtered load returned.
+        when( auditEventService.getLastEvents( eq( Collections.singletonList( ee ) ), anySet() ) )
+                .thenReturn( result );
+    }
+
     private void stubLastEvents( Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> eventsByType ) {
         Map<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, Map<ExpressionExperiment, AuditEvent>> result = new LinkedHashMap<>();
         for ( Map.Entry<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>, AuditEvent> e : eventsByType.entrySet() ) {

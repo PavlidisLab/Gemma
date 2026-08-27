@@ -15,6 +15,7 @@
 package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.core.security.SecurityService;
 import ubic.gemma.core.security.util.SecurityUtil;
@@ -5263,18 +5264,7 @@ public class DatasetsWebService {
         // 7 step failure types, GEEQ, DesignChange). It batches over DATASETS, not over types,
         // so on this single-dataset path the query count matches the 18 individual
         // getLastEvent(ee, type) calls it replaced; what it buys here is the nested map.
-        Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
-        for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
-            auditTypes.add( desc.successType );
-            if ( desc.failedType != null ) {
-                auditTypes.add( desc.failedType );
-            }
-        }
-        auditTypes.add( GeeqEvent.class );
-        // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
-        // predates the last design change no longer describes the design it was computed from.
-        auditTypes.add( DesignChangeEvent.class );
-        auditTypes.add( SampleRemovalEvent.class );
+        Set<Class<? extends AuditEventType>> auditTypes = pipelineAuditEventTypes();
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( Collections.singleton( ee ), auditTypes );
 
@@ -5386,18 +5376,7 @@ public class DatasetsWebService {
         // would otherwise be per-row: the audit-event fan-out (18 queries per row on its own),
         // the has-analysis lookup, and the triage ruling. getLastEvents still issues one query per
         // TYPE — 18 total — but that count no longer multiplies by the number of rows on the page.
-        Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
-        for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
-            auditTypes.add( desc.successType );
-            if ( desc.failedType != null ) {
-                auditTypes.add( desc.failedType );
-            }
-        }
-        auditTypes.add( GeeqEvent.class );
-        // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
-        // predates the last design change no longer describes the design it was computed from.
-        auditTypes.add( DesignChangeEvent.class );
-        auditTypes.add( SampleRemovalEvent.class );
+        Set<Class<? extends AuditEventType>> auditTypes = pipelineAuditEventTypes();
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( ees, auditTypes );
 
@@ -5463,6 +5442,206 @@ public class DatasetsWebService {
             out.add( vo );
         }
         return respond( out );
+    }
+
+    /**
+     * Every audit-event type the pipeline-step assembly reads: each step's success type, each step's
+     * failure type where it has one, GEEQ, and the two invalidating types. Eighteen in all.
+     * <p>
+     * {@link AuditEventService#getLastEvents(Collection, Collection)} issues one query PER TYPE and
+     * batches over the auditables, so this set fixes the query count of a page at 18 regardless of
+     * how many datasets are on it.
+     */
+    private static Set<Class<? extends AuditEventType>> pipelineAuditEventTypes() {
+        Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
+        for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
+            auditTypes.add( desc.successType );
+            if ( desc.failedType != null ) {
+                auditTypes.add( desc.failedType );
+            }
+        }
+        auditTypes.add( GeeqEvent.class );
+        // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
+        // predates the last design change no longer describes the design it was computed from.
+        auditTypes.addAll( INVALIDATING_EVENTS );
+        return auditTypes;
+    }
+
+    /**
+     * How many candidate datasets are examined per batch by {@link #getStaleDatasets(OffsetArg, LimitArg)}.
+     * <p>
+     * Bounds the {@code in (...)} list handed to the ACL-filtered load and to the audit fan-out, both of
+     * which take the candidate ids as a parameter list. 2048 matches
+     * {@code ExpressionExperimentDaoImpl.getSubSetsByExpressionExperiments}.
+     */
+    private static final int STALE_SCAN_BATCH = 2048;
+
+    /**
+     * The datasets that owe pipeline work: every dataset with at least one {@code stale} step, and which
+     * steps those are.
+     * <p>
+     * 🛑 A literal path segment sharing a level with {@code /{dataset}}, like {@code /blacklisted} — JAX-RS
+     * prefers the literal, so {@code /datasets/staleSteps} does not resolve as a dataset named
+     * "staleSteps".
+     */
+    @GET
+    @Path("/staleSteps")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the datasets owing pipeline work",
+            description = "One call for the whole corpus: every dataset carrying at least one `stale` pipeline "
+                    + "step, with the stale steps themselves and the event that invalidated them. `stale` has the "
+                    + "same meaning as in `/datasets/{dataset}/pipelineStatus` and is computed by the same code — "
+                    + "the step ran successfully and the design or the analyzed sample set has changed since, so "
+                    + "the result survives but no longer describes what it was computed from. Exists so that a "
+                    + "curator or a batch job can pick the work up later rather than reprocessing on every edit.\n\n"
+                    + "Steps reported here are only the stale ones; a dataset with nothing stale is absent. "
+                    + "`batchInfo` never appears (it comes from scan dates and file headers, which neither a design "
+                    + "change nor a sample removal touches), and a step whose most recent attempt FAILED is "
+                    + "reported by `/pipelineStatus` as `failed`, not here — re-running it is the move either way "
+                    + "and `stale` would hide that the last attempt did not succeed.\n\n"
+                    + "Datasets the caller cannot read are filtered out in-query, the same way "
+                    + "`POST /datasets/pipeline-status` filters them.\n\n"
+                    + "Cost is a narrowing query for the whole corpus plus, per batch of "
+                    + STALE_SCAN_BATCH + " candidate datasets, one ACL-filtered load and the 18 audit-event "
+                    + "queries the per-step assembly needs. Nothing is issued per dataset.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+    public PaginatedResponseDataObject<StaleDatasetValueObject> getStaleDatasets(
+            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit
+    ) {
+        int offsetValue = offset.getValue();
+        int limitValue = limit.getValue();
+
+        // Narrow before scanning. Nothing goes stale on its own: a step can only be stale if one of the
+        // invalidating events landed on the dataset, so the datasets worth examining are exactly those
+        // carrying one. That is a single query for the whole corpus, and on a corpus where design edits
+        // and outlier flags are curation actions it leaves a small fraction of it to look at.
+        //
+        // 🛑 NOT auditEventService.getLastEvents(ExpressionExperiment.class, type), which looks like the
+        // corpus-wide primitive for this and is not: it resolves through the denormalised
+        // AuditTrail.lastEvent pointer, so it answers "whose NEWEST event is of this type". A dataset whose
+        // design changed and which then received any other event would be missed, and its step events would
+        // be missed too, since each dataset can contribute at most one event across all the type queries.
+        Set<Long> candidateIds = auditEventService.getIdsHavingEvent( ExpressionExperiment.class, INVALIDATING_EVENTS );
+
+        Set<Class<? extends AuditEventType>> auditTypes = pipelineAuditEventTypes();
+        List<Long> ordered = new ArrayList<>( candidateIds );
+        Collections.sort( ordered );
+
+        List<StaleDatasetValueObject> rows = new ArrayList<>();
+        for ( int from = 0; from < ordered.size(); from += STALE_SCAN_BATCH ) {
+            List<Long> batch = ordered.subList( from, Math.min( from + STALE_SCAN_BATCH, ordered.size() ) );
+            // ACL, by the mechanism POST /datasets/pipeline-status already uses: load(Filters, Sort) filters
+            // in-query (see SecurableFilteringVoEnabledService), so what comes back is what the caller can
+            // read. This is also where the unfiltered candidate ids stop being a set of bare numbers — none
+            // of them reaches the response except through this load.
+            Filters filters = Filters.by( expressionExperimentService.getFilter( "id", Long.class, Filter.Operator.in, batch ) );
+            List<ExpressionExperiment> visible = expressionExperimentService.load( filters,
+                    expressionExperimentService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ) );
+            if ( visible.isEmpty() ) {
+                continue;
+            }
+            Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
+                    auditEventService.getLastEvents( visible, auditTypes );
+            for ( ExpressionExperiment ee : visible ) {
+                List<PipelineStatusValueObject.PipelineStepValueObject> staleSteps = new ArrayList<>();
+                for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
+                    // applicable=true unconditionally. It only decides between notRun and notApplicable, and
+                    // both of those are reached only when the step has no event at all -- a step with no
+                    // event is never stale. So it cannot change this answer, and the per-dataset platform
+                    // lookup that computing it honestly would need is skipped.
+                    PipelineStatusValueObject.PipelineStepValueObject step =
+                            buildPipelineStep( ee, desc, true, auditEventsByType );
+                    if ( PipelineStatusValueObject.PipelineStepValueObject.STATUS_STALE.equals( step.getState() ) ) {
+                        staleSteps.add( step );
+                    }
+                }
+                if ( staleSteps.isEmpty() ) {
+                    continue;
+                }
+                // Which event did it. buildPipelineStep stops at the first invalidator that postdates the
+                // run and does not say which one that was, so name it here from the same pre-fetched map:
+                // the most recent invalidating event on the dataset.
+                AuditEvent invalidating = null;
+                for ( Class<? extends AuditEventType> type : INVALIDATING_EVENTS ) {
+                    invalidating = pickLatestEvent( invalidating, lookupAuditEvent( auditEventsByType, type, ee ) );
+                }
+                rows.add( new StaleDatasetValueObject( ee.getId(), ee.getShortName(), staleSteps,
+                        invalidating != null ? invalidating.getDate() : null,
+                        invalidating != null && invalidating.getEventType() != null
+                                ? invalidating.getEventType().getClass().getSimpleName() : null ) );
+            }
+        }
+
+        List<StaleDatasetValueObject> page = offsetValue < rows.size()
+                ? rows.subList( offsetValue, Math.min( offsetValue + limitValue, rows.size() ) )
+                : Collections.emptyList();
+        return Responders.paginate(
+                new Slice<>( page, Sort.by( null, "datasetId", Sort.Direction.ASC, Sort.NullMode.LAST, "datasetId" ),
+                        offsetValue, limitValue, ( long ) rows.size() ),
+                new String[] { "datasetId" } );
+    }
+
+    /**
+     * One row of {@link #getStaleDatasets(OffsetArg, LimitArg)}: a dataset owing pipeline work, and what it
+     * owes. Carries enough to act on without a second call per dataset.
+     */
+    public static class StaleDatasetValueObject {
+
+        @JsonProperty("datasetId")
+        private final Long datasetId;
+        @Nullable
+        @JsonProperty("shortName")
+        private final String shortName;
+        /**
+         * Only the stale steps, in {@code PIPELINE_STEPS} order. Same shape as the entries of
+         * {@code PipelineStatusValueObject.steps}, so a client already rendering those needs no new mapping;
+         * every {@code status} here is {@code stale}.
+         */
+        @JsonProperty("staleSteps")
+        private final List<PipelineStatusValueObject.PipelineStepValueObject> staleSteps;
+        /** When the most recent invalidating event landed. */
+        @Nullable
+        @JsonProperty("invalidatedOn")
+        private final Date invalidatedOn;
+        /** Simple class name of that event: {@code DesignChangeEvent} or {@code SampleRemovalEvent}. */
+        @Nullable
+        @JsonProperty("invalidatedBy")
+        private final String invalidatedBy;
+
+        public StaleDatasetValueObject( Long datasetId, @Nullable String shortName,
+                List<PipelineStatusValueObject.PipelineStepValueObject> staleSteps,
+                @Nullable Date invalidatedOn, @Nullable String invalidatedBy ) {
+            this.datasetId = datasetId;
+            this.shortName = shortName;
+            this.staleSteps = staleSteps;
+            this.invalidatedOn = invalidatedOn;
+            this.invalidatedBy = invalidatedBy;
+        }
+
+        public Long getDatasetId() {
+            return datasetId;
+        }
+
+        @Nullable
+        public String getShortName() {
+            return shortName;
+        }
+
+        public List<PipelineStatusValueObject.PipelineStepValueObject> getStaleSteps() {
+            return staleSteps;
+        }
+
+        @Nullable
+        public Date getInvalidatedOn() {
+            return invalidatedOn;
+        }
+
+        @Nullable
+        public String getInvalidatedBy() {
+            return invalidatedBy;
+        }
     }
 
     private PipelineStatusValueObject.PipelineStepValueObject buildPipelineStep( ExpressionExperiment ee,
@@ -5649,18 +5828,7 @@ public class DatasetsWebService {
         // One batched audit-event call covering every step + GEEQ across every visible EE.
         // Replaces O(types × EEs) individual getLastEvent calls with O(types): getLastEvents loops
         // the types and issues one query per type (18 here), batching over the EEs only.
-        Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
-        for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
-            auditTypes.add( desc.successType );
-            if ( desc.failedType != null ) {
-                auditTypes.add( desc.failedType );
-            }
-        }
-        auditTypes.add( GeeqEvent.class );
-        // Fetched with the rest so staleness costs no extra round-trip: a step whose last successful run
-        // predates the last design change no longer describes the design it was computed from.
-        auditTypes.add( DesignChangeEvent.class );
-        auditTypes.add( SampleRemovalEvent.class );
+        Set<Class<? extends AuditEventType>> auditTypes = pipelineAuditEventTypes();
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( visibleEEs, auditTypes );
 

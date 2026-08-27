@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author paul
@@ -76,6 +77,21 @@ public interface AuditEventService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     @PostFilter("hasPermission(filterObject.key, 'READ') or hasPermission(filterObject.key, 'ADMINISTRATION')")
     <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type );
+
+    /**
+     * Obtain the ids of every auditable of a class whose trail carries at least one event of any of
+     * the given types. One query, whatever the number of types.
+     * <p>
+     * 🛑 Bare ids, so there is no securable object to hang an ACL check on and none is applied —
+     * the {@code @PostFilter} the sibling above uses has nothing to filter here. Treat the result
+     * as a narrowing step and intersect it with an ACL-filtered load (e.g.
+     * {@code ExpressionExperimentService.load(Filters, Sort)}, whose ACL clause is in-query) before
+     * any of these ids reaches a caller.
+     *
+     * @see AuditEventDao#getIdsHavingEvent(Class, Collection)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    <T extends Auditable> Set<Long> getIdsHavingEvent( Class<T> auditableClass, Collection<Class<? extends AuditEventType>> types );
 
     /**
      * Obtain the latest typed event for each of the given auditables, whatever its type.
