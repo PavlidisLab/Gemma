@@ -96,6 +96,18 @@ public class PipelineStatusValueObject {
 
     private boolean isPublic;
 
+    /**
+     * What changed here most recently, as a short label plus its date and performer — the thing
+     * {@code curationDetails.lastUpdated} leaves out.
+     * <p>
+     * Derived from the dataset's latest typed audit event; a dataset that has only ever been loaded
+     * falls back to its creation row ("Added to Gemma"). {@code null} only for a dataset with no
+     * usable audit row at all.
+     */
+    @Nullable
+    @JsonProperty("lastUpdate")
+    private DatasetUpdateSummaryValueObject lastUpdate;
+
     @Nullable
     private GeeqValueObject geeq;
 

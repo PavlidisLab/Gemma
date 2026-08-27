@@ -107,6 +107,23 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type, Collection<Class<? extends AuditEventType>> excludedTypes );
 
     /**
+     * Obtain the latest event of any type for all given auditables — the batch counterpart of
+     * {@link #getLastEvent(Auditable)}.
+     * <p>
+     * Same "latest" definition as the typed overloads (max date, max id on tie) and the same
+     * requirement that the event carry an {@link AuditEventType}: untyped rows (generic
+     * {@code action='U'} auto-updates and the {@code action='C'} creation row) are skipped, so an
+     * auditable whose trail holds nothing but those is absent from the result map. Use
+     * {@link #getCreateEvents(Collection)} to cover that case.
+     * <p>
+     * Prefer this over passing {@link AuditEventType} to
+     * {@link #getLastEvents(Collection, Class)}: the typed form expands the requested class into
+     * its subclass closure and emits a {@code type(et) in (...)} predicate three times over, which
+     * for the root type is every mapped event class and filters nothing.
+     */
+    <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables );
+
+    /**
      * Obtain the latest events of a specified type for all given auditables.
      *
      * @see #getLastEvent(Auditable, Class)

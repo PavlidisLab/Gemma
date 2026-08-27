@@ -177,6 +177,11 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     }
 
     @Override
+    public <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables ) {
+        return getLastEvents( auditables, null, null );
+    }
+
+    @Override
     public <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables, Class<? extends AuditEventType> type ) {
         return getLastEvents( auditables, type, null );
     }

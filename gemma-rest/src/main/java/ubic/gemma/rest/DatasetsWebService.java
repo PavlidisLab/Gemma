@@ -4838,7 +4838,11 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the per-step pipeline status of a dataset",
             description = "Returns a snapshot of each preprocessing/analysis step (`batchInfo`, `preprocess`, `pca`, "
                     + "`dea`, `coexpression`, `missingValue`) with its last-run date, audit-event class name, and "
-                    + "state (`ok`, `failed`, `notRun`, or `notApplicable`). The `curationNote` field is admin-only.",
+                    + "state (`ok`, `failed`, `notRun`, or `notApplicable`). `lastUpdate` answers \"what changed here "
+                    + "recently\" in one short label (`Updated from GEO`, `Differential expression analysis performed`, "
+                    + "…) with the event's date and performer; the label comes from the audit-event type, never from "
+                    + "curator notes, and `lastUpdate.eventType` is the stable half to key logic off. The "
+                    + "`curationNote` field is admin-only.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -4909,6 +4913,7 @@ public class DatasetsWebService {
             result.setCurationNote( cd.getCurationNote() );
         }
         result.setIsPublic( securityService.isPublic( ee ) );
+        result.setLastUpdate( resolveUpdateSummaries( Collections.singleton( ee ) ).get( ee.getId() ) );
 
         // Hydrate GEEQ via geeqService rather than touching ee.getGeeq() directly: the
         // GEEQ field on ExpressionExperiment is lazy, and the @Transactional that loaded
@@ -4963,7 +4968,7 @@ public class DatasetsWebService {
             description = "The same payload as `/datasets/{dataset}/pipelineStatus`, one entry per dataset, each "
                     + "carrying its own `experimentId`, in the order requested. Exists because a list view asking "
                     + "row by row costs one HTTP round-trip per row. Every batchable lookup — audit events, "
-                    + "has-analysis, triage, GEEQ — is fetched once for the whole page. An id that does not resolve "
+                    + "has-analysis, triage, GEEQ, `lastUpdate` — is fetched once for the whole page. An id that does not resolve "
                     + "fails the whole request with a 404 rather than being dropped from the array, so a caller "
                     + "never has to diff what it asked for against what came back. The `curationNote` field is "
                     + "admin-only.",
@@ -4996,6 +5001,8 @@ public class DatasetsWebService {
         auditTypes.add( GeeqEvent.class );
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( ees, auditTypes );
+
+        Map<Long, DatasetUpdateSummaryValueObject> updateSummaries = resolveUpdateSummaries( ees );
 
         Set<Long> ids = ees.stream().map( ExpressionExperiment::getId ).collect( Collectors.toSet() );
         Set<Long> withDea = new HashSet<>( differentialExpressionAnalysisService
@@ -5043,6 +5050,7 @@ public class DatasetsWebService {
                 vo.setCurationNote( cd.getCurationNote() );
             }
             vo.setIsPublic( securityService.isPublic( ee ) );
+            vo.setLastUpdate( updateSummaries.get( ee.getId() ) );
 
             Long geeqId = geeqIdByEe.get( ee.getId() );
             GeeqValueObject geeq = geeqId != null ? geeqById.get( geeqId ) : null;
@@ -5078,6 +5086,44 @@ public class DatasetsWebService {
                 : PipelineStatusValueObject.PipelineStepValueObject.STATUS_OK;
         return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey, state,
                 winner.getDate(), eventTypeName, winner.getNote() );
+    }
+
+    /**
+     * Resolve the {@code lastUpdate} summary — what changed here most recently — for a page of
+     * datasets, in at most two queries for the whole page.
+     * <p>
+     * The first is the batched latest-typed-event lookup. It cannot see the {@code action='C'}
+     * creation row, because that row carries no event type, so a dataset that has only ever been
+     * loaded comes back empty; those get a second batched call to
+     * {@link AuditEventService#getCreateEvents(Collection)}. The creation row is universal (every
+     * one of 200 datasets sampled on production had one), so this pair leaves essentially nothing
+     * unlabelled.
+     * <p>
+     * Deliberately NOT folded into the {@code auditEventsByType} fan-out the pipeline steps use:
+     * that map is keyed by requested type and issues one query per entry, whereas this wants the
+     * latest event of ANY type, which is a single query.
+     */
+    private Map<Long, DatasetUpdateSummaryValueObject> resolveUpdateSummaries( Collection<ExpressionExperiment> ees ) {
+        if ( ees.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Map<ExpressionExperiment, AuditEvent> lastTyped = auditEventService.getLastEvents( ees );
+        Map<Long, DatasetUpdateSummaryValueObject> out = new HashMap<>( ees.size() );
+        List<ExpressionExperiment> neverTyped = new ArrayList<>();
+        for ( ExpressionExperiment ee : ees ) {
+            AuditEvent ae = lastTyped.get( ee );
+            if ( ae != null ) {
+                out.put( ee.getId(), DatasetUpdateSummaryValueObject.forEvent( ae ) );
+            } else {
+                neverTyped.add( ee );
+            }
+        }
+        if ( !neverTyped.isEmpty() ) {
+            for ( Map.Entry<ExpressionExperiment, AuditEvent> e : auditEventService.getCreateEvents( neverTyped ).entrySet() ) {
+                out.put( e.getKey().getId(), DatasetUpdateSummaryValueObject.forCreation( e.getValue() ) );
+            }
+        }
+        return out;
     }
 
     @Nullable
@@ -5148,6 +5194,7 @@ public class DatasetsWebService {
             description = "Returns a map of dataset ID → {@link PipelineStatusValueObject}, one entry per requested ID that the caller can read. "
                     + "Mirrors the single-EE `GET /{dataset}/pipelineStatus` handler in response shape, but batches the underlying audit-event lookup and "
                     + "DEA-existence query so that loading a workflow-list page of 20–50 experiments takes one DB round-trip per concern rather than 20–50. "
+                    + "Each entry carries `lastUpdate` — a short label for the most recent recorded change, plus its date and performer — so a list row can read \"Updated from GEO · 3 days ago\" without pulling the audit trail. "
                     + "ACL behaviour: IDs the caller cannot read are silently dropped from the result map (no 403 for the batch). "
                     + "Hard cap: " + MAX_PIPELINE_STATUS_BULK + " IDs per request.",
             responses = {
@@ -5192,6 +5239,10 @@ public class DatasetsWebService {
         auditTypes.add( GeeqEvent.class );
         Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> auditEventsByType =
                 auditEventService.getLastEvents( visibleEEs, auditTypes );
+
+        // ONE batched latest-event call (plus one creation-row call for datasets that have never
+        // received a typed event) covering the whole page's lastUpdate summaries.
+        Map<Long, DatasetUpdateSummaryValueObject> updateSummaries = resolveUpdateSummaries( visibleEEs );
 
         // ONE batched DEA-existence call. Returns the subset of visibleIds that have a DEA.
         Set<Long> hasDeaIds = new HashSet<>( differentialExpressionAnalysisService
@@ -5239,10 +5290,12 @@ public class DatasetsWebService {
             if ( ee == null ) {
                 continue; // ACL-dropped or missing
             }
-            result.put( ee.getId(), buildPipelineStatus( ee, auditEventsByType, hasDeaIds.contains( ee.getId() ),
+            PipelineStatusValueObject vo = buildPipelineStatus( ee, auditEventsByType, hasDeaIds.contains( ee.getId() ),
                     isAdmin, adsByEe.getOrDefault( ee, Collections.emptySet() ),
                     Boolean.TRUE.equals( hasBatchInfoByEe.get( ee ) ),
-                    resolveGeeqVo( ee, geeqIdByEeId, geeqVoById ) ) );
+                    resolveGeeqVo( ee, geeqIdByEeId, geeqVoById ) );
+            vo.setLastUpdate( updateSummaries.get( ee.getId() ) );
+            result.put( ee.getId(), vo );
         }
         return respond( result );
     }

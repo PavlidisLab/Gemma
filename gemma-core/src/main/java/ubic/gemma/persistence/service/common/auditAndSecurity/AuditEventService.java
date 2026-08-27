@@ -78,6 +78,18 @@ public interface AuditEventService {
     <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type );
 
     /**
+     * Obtain the latest typed event for each of the given auditables, whatever its type.
+     * <p>
+     * One query for the whole collection. Auditables whose trail carries no typed event at all are
+     * absent from the map rather than mapped to {@code null}; {@link #getCreateEvents(Collection)}
+     * is the batched fallback for those.
+     *
+     * @see AuditEventDao#getLastEvents(Collection)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables );
+
+    /**
      * Fast method to retrieve auditEventTypes of multiple classes.
      *
      * @param types      types
