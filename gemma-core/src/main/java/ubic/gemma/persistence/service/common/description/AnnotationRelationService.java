@@ -55,6 +55,10 @@ public interface AnnotationRelationService {
      * to, with the experiment itself held out of the evidence — a dataset shown its own annotation as
      * support for itself is showing a tautology.</p>
      *
+     * <p>Only forward walks, and no conclusion the experiment already carries: both follow from
+     * {@link AnnotationRelationDao.RelationQuery#seedFromExperimentId(Long)}, which is what makes this
+     * an inference rather than a symmetric browse.</p>
+     *
      * @param direction which way to read: what the experiment's terms stand for, or what stands for
      *                  them
      */

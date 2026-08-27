@@ -829,7 +829,14 @@ public class AnnotationsWebService {
             @Parameter(description = "Restrict to these bases: CURATED, ONTOLOGY, EXTERNAL, CORPUS.") @QueryParam("basis") @Nullable String basis,
             @Parameter(description = "Seed from every annotation a dataset carries, by dataset id, instead "
                     + "of naming a term. This is the experiment-page question: what do this dataset's own "
-                    + "annotations stand for? The dataset is held out of its own evidence automatically.") @QueryParam("dataset") @Nullable Long datasetId,
+                    + "annotations stand for? The dataset is held out of its own evidence automatically. "
+                    + "Narrower than a 'subject'/'object' lookup in two ways, because it asks what the "
+                    + "dataset's terms IMPLY rather than what relates to them: only relations whose "
+                    + "implying end the dataset supplies are returned -- a cell line implies the organ it "
+                    + "came from and an organ implies no cell line -- and a conclusion the dataset already "
+                    + "carries is dropped, since restating an existing annotation is not an inference. A "
+                    + "relation that implies nothing either way is returned by neither rule, so pairing "
+                    + "this with includeExperimentLevel yields nothing.") @QueryParam("dataset") @Nullable Long datasetId,
             @Parameter(description = "Which side a 'dataset' seed is matched on: SUBJECT_TO_OBJECT reads "
                     + "the dataset's terms as subjects, OBJECT_TO_SUBJECT as objects. A curated statement "
                     + "puts the disease in the subject and the gene in the object, so a dataset carrying a "
