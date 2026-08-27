@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -162,6 +163,13 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     @Lazy
     private ExpressionExperimentService self;
+    /**
+     * Used by {@link #applyDesignChange} step 2 so a cascaded analysis takes its on-disk artifacts with it.
+     * {@code @Lazy} because {@code DifferentialExpressionAnalyzerServiceImpl} autowires this service back.
+     */
+    @Autowired
+    @Lazy
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
     /**
      * Used inside {@link #commitCuration} to flush after tag/sample-characteristic adds (so the cascaded inserts
      * assign their ids in time to echo {@code clientRef → newId}) and to bump the curation {@code lastUpdated}
@@ -897,10 +905,15 @@ public class ExpressionExperimentServiceImpl
         Set<Long> analysisIdsToRemove = report.getDifferentialExpressionAnalysesToDelete().stream()
                 .map( DesignPreflightReport.AnalysisRef::getId )
                 .collect( Collectors.toCollection( HashSet::new ) );
+        // Routed through deleteAnalysis, not differentialExpressionAnalysisService.remove: remove drops the rows
+        // only, leaving each analysis's diffex archive and its per-result-set TSV caches on the deployment
+        // volume. deleteAnalysis does the same removal and then those files. It runs at SUPPORTS so it joins
+        // this transaction -- which means the files go before the commit, and a rollback here leaves a
+        // surviving analysis without its caches; both are rebuilt from the database on next request.
         if ( !analysisIdsToRemove.isEmpty() ) {
             for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
                 if ( analysisIdsToRemove.contains( a.getId() ) ) {
-                    differentialExpressionAnalysisService.remove( a );
+                    differentialExpressionAnalyzerService.deleteAnalysis( ee, a );
                 }
             }
         }

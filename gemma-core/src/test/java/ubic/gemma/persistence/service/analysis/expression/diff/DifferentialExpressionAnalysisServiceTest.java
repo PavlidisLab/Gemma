@@ -27,6 +27,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -53,6 +56,12 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseIntegrationTe
 
     @Autowired
     private AclService aclService;
+
+    @Autowired
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @Autowired
     private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy;
@@ -133,6 +142,23 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseIntegrationTe
         expressionExperimentService.remove( e1 );
         expressionExperimentService.remove( e2 );
         expressionExperimentService.remove( e3 );
+    }
+
+    /**
+     * The curation cascade reaches {@code deleteAnalysis} from inside its own transaction
+     * ({@code ExpressionExperimentServiceImpl} step 2, which routes there so the analysis takes its diffex
+     * archive and result-set TSV caches with it). {@code DifferentialExpressionAnalyzerServiceImpl} carries
+     * {@code Propagation.NEVER} at class level, so without the {@code SUPPORTS} override this call throws
+     * {@code IllegalTransactionStateException}. A mocked test cannot see that: it has no proxy, so no
+     * propagation is enforced.
+     */
+    @Test
+    public void testDeleteAnalysisJoinsACallersTransaction() {
+        Long id = eAnalysis1.getId();
+        assertNotNull( id );
+        new TransactionTemplate( transactionManager )
+                .executeWithoutResult( status -> differentialExpressionAnalyzerService.deleteAnalysis( e1, eAnalysis1 ) );
+        assertNull( analysisService.load( id ) );
     }
 
     @Test

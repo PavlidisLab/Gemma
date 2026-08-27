@@ -120,7 +120,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return deleted;
     }
 
+    /**
+     * {@code SUPPORTS} overrides the class-level {@code NEVER} so a caller that is already in a transaction --
+     * {@link ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#applyDesignChange}
+     * cascading invalidated analyses -- can route through here instead of calling
+     * {@code differentialExpressionAnalysisService.remove}, which is database-only and leaves the archive and
+     * result-set TSV caches on the deployment volume. Callers outside a transaction are unaffected.
+     */
     @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
     public void deleteAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis existingAnalysis ) {
         DifferentialExpressionAnalyzerServiceImpl.log

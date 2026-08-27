@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.security.SecurityService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -159,6 +160,11 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         }
 
         @Bean
+        public DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService() {
+            return mock( DifferentialExpressionAnalyzerService.class );
+        }
+
+        @Bean
         public ExpressionExperimentSetService expressionExperimentSetService() {
             return mock( ExpressionExperimentSetService.class );
         }
@@ -273,6 +279,9 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
     @Autowired
     private DifferentialExpressionAnalysisService deaService;
+
+    @Autowired
+    private DifferentialExpressionAnalyzerService analyzerService;
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
@@ -425,7 +434,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     private void buildFixture() {
         // @After in this class only resets a subset of mocks; reset the ones we touch here to keep
         // stubs from leaking between preflight tests.
-        reset( eeDao, deaService, subSetReadService );
+        reset( eeDao, deaService, analyzerService, subSetReadService );
         when( eeDao.getElementClass() ).thenAnswer( a -> ExpressionExperiment.class );
 
         fixture = new ExpressionExperiment();
@@ -1412,7 +1421,9 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
         assertThat( outcome.isApplied() ).isTrue();
         assertThat( outcome.getPreflightAtApply().requiresForce() ).isTrue();
-        verify( deaService ).remove( dea );
+        verify( analyzerService ).deleteAnalysis( fixture, dea );
+        // and NOT through the database-only removal, which is what left the files behind
+        verify( deaService, never() ).remove( dea );
     }
 
     /**
@@ -1431,7 +1442,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
         assertThat( outcome.isApplied() ).isTrue();
         assertThat( outcome.getPreflightAtApply().requiresForce() ).isFalse();
-        verify( deaService, never() ).remove( any( DifferentialExpressionAnalysis.class ) );
+        verify( analyzerService, never() ).deleteAnalysis( any( ExpressionExperiment.class ), any( DifferentialExpressionAnalysis.class ) );
     }
 
     /**

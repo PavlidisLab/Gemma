@@ -252,12 +252,16 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return deleted;
     }
 
+    // SUPPORTS overrides the class-level NEVER on the next two: both are pure filesystem, and deleteAnalysis
+    // now reaches them from inside a caller's transaction.
     @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
     public boolean deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis ) {
         return deleteAndLog( dataDir.resolve( getDiffExArchiveFileName( analysis ) ) );
     }
 
     @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
     public boolean deleteDifferentialExpressionResultSetTsvFile( Long resultSetId ) {
         // Mirrors the filename produced by writeOrLocateDifferentialExpressionResultSetTsvFile.
         return deleteAndLog( dataDir.resolve( "resultSets/resultSet_" + resultSetId + ".tsv.gz" ) );
