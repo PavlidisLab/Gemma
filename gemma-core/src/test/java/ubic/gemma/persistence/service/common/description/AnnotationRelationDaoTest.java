@@ -20,6 +20,7 @@ import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.description.AnnotationRelation;
 import ubic.gemma.model.common.description.AnnotationRelationBasis;
 import ubic.gemma.model.common.description.AnnotationRelationStatus;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.RelationInferenceDirection;
 import ubic.gemma.model.common.description.RelationTopicality;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -66,6 +67,9 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     private static final String MOTOR_NEURON = "http://purl.obolibrary.org/obo/CL_0011001";
     private static final String IPSC_LINE = "http://purl.obolibrary.org/obo/CLO_0037279";
     private static final String OXIDOPAMINE = "http://purl.obolibrary.org/obo/CHEBI_78741";
+    private static final String DERIVES_FROM_ANATOMIC_PART = "http://purl.obolibrary.org/obo/CLO_0037208";
+    private static final String PROSTATE_GLAND = "http://purl.obolibrary.org/obo/UBERON_0002367";
+    private static final String PROSTATE_LINE = "http://purl.obolibrary.org/obo/CLO_0002181";
 
     @Autowired
     private AnnotationRelationDao annotationRelationDao;
@@ -905,6 +909,141 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
                 .as( "two curated rows use it as a bare label, with no URI to match on" ).isTrue();
         assertThat( RelationTopicality.isQuantityValued( HAS_GENOTYPE, "has_genotype" ) ).isFalse();
         assertThat( RelationTopicality.isQuantityValued( null, null ) ).isFalse();
+    }
+
+    /**
+     * 🛑 An experiment seed may only walk FORWARDS: the dataset has to supply the end that implies.
+     *
+     * <p>Paul on GSE315959, 2026-08-27. Its one grounded annotation is {@code organism part: prostate
+     * gland}, which is the CONCLUSION of {@code CLO_0037208 derives from anatomic part}, not its
+     * premise. Seeded from the object side the card read 169 Cellosaurus prostate lines back out of
+     * that one term and offered them as the dataset's inferred concepts. A cell line implies the organ
+     * it was taken from; an organ implies no cell line.</p>
+     *
+     * <p>The control is the same stored row seeded from the other end, so an empty answer here is the
+     * rule and not a fixture that never matched anything.</p>
+     */
+    @Test
+    public void testAnExperimentSeedMustSupplyTheEndThatImplies() {
+        annotationRelationDao.create( derivesFromAnatomicPart( PROSTATE_LINE, PROSTATE_GLAND ) );
+        Long carriesTheLine = experimentAnnotatedWith( PROSTATE_LINE );
+        Long carriesTheOrgan = experimentAnnotatedWith( PROSTATE_GLAND );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .seedFromExperimentId( carriesTheLine )
+                .seedDirection( AnnotationRelationDao.Direction.SUBJECT_TO_OBJECT ) ) )
+                .as( "the line is the premise, so the organ follows from it" )
+                .singleElement()
+                .satisfies( r -> assertThat( r.getImpliedObjectUri() ).isEqualTo( PROSTATE_GLAND ) );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .seedFromExperimentId( carriesTheOrgan )
+                .seedDirection( AnnotationRelationDao.Direction.OBJECT_TO_SUBJECT ) ) )
+                .as( "and the organ is the conclusion, so nothing follows from it" )
+                .isEmpty();
+    }
+
+    /**
+     * A conclusion the dataset already carries is not an inference, so it is not offered back to it.
+     *
+     * <p>Both legs seed from the SUBJECT side, so both clear the forward-walk rule and only this one
+     * separates them: the experiment that carries the line alone is told what it came from, and the
+     * experiment that already says {@code prostate gland} is told nothing.</p>
+     */
+    @Test
+    public void testAConclusionTheDatasetAlreadyCarriesIsNotOfferedBackToIt() {
+        annotationRelationDao.create( derivesFromAnatomicPart( PROSTATE_LINE, PROSTATE_GLAND ) );
+        Long carriesTheLineOnly = experimentAnnotatedWith( PROSTATE_LINE );
+        Long carriesBoth = experimentAnnotatedWith( PROSTATE_LINE, PROSTATE_GLAND );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .seedFromExperimentId( carriesTheLineOnly )
+                .seedDirection( AnnotationRelationDao.Direction.SUBJECT_TO_OBJECT ) ) )
+                .as( "it has not said where the line came from, so the relation tells it something" )
+                .hasSize( 1 );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .seedFromExperimentId( carriesBoth )
+                .seedDirection( AnnotationRelationDao.Direction.SUBJECT_TO_OBJECT ) ) )
+                .as( "it already says prostate gland; restating it is not an inference" )
+                .isEmpty();
+    }
+
+    /**
+     * The shape the two rules must NOT cost us, measured on GSE28044.
+     *
+     * <p>{@code breast cancer --has_genotype--> BRCA1} is stored with the disease as the subject, so
+     * the gene is the premise and the disease is what follows. A dataset carrying the gene supplies
+     * the implying end and does not carry the disease, which is exactly the case the experiment page
+     * exists to show.</p>
+     */
+    @Test
+    public void testAGenotypeSeedStillReachesTheDiseaseItStandsFor() {
+        annotationRelationDao.create( attested( LEIGH, SURF1, AnnotationRelationBasis.CURATED, readMask() ) );
+        Long carriesTheGene = experimentAnnotatedWith( SURF1 );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .seedFromExperimentId( carriesTheGene )
+                .seedDirection( AnnotationRelationDao.Direction.OBJECT_TO_SUBJECT ) ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getInferenceDirection() )
+                            .isEqualTo( RelationInferenceDirection.OBJECT_IMPLIES_SUBJECT );
+                    assertThat( r.getImpliedSubjectUri() ).isEqualTo( SURF1 );
+                    assertThat( r.getImpliedObjectUri() ).isEqualTo( LEIGH );
+                } );
+    }
+
+    /**
+     * Cellosaurus's provenance row: the cell line is the subject and the organ it was taken from is
+     * the object, which is the orientation that made the reported case read backwards.
+     */
+    private AnnotationRelation derivesFromAnatomicPart( String cellLineUri, String organUri ) {
+        AnnotationRelation r = new AnnotationRelation();
+        r.setSubjectValue( "line " + cellLineUri );
+        r.setSubjectValueUri( cellLineUri );
+        r.setSubjectCategory( "cell line" );
+        r.setSubjectCategoryUri( "http://purl.obolibrary.org/obo/CLO_0000031" );
+        r.setPredicate( "derives from anatomic part" );
+        r.setPredicateUri( DERIVES_FROM_ANATOMIC_PART );
+        r.setObjectValue( "part " + organUri );
+        r.setObjectValueUri( organUri );
+        r.setBasis( AnnotationRelationBasis.EXTERNAL );
+        r.setSource( "Cellosaurus" );
+        r.setGeneratedAt( new Date() );
+        return r;
+    }
+
+    /**
+     * An experiment carrying the given terms, written into EE2C by hand.
+     *
+     * <p>The seed is matched against EE2C inside the query, so a seeded read needs rows there and
+     * running the EE2C rebuild first would put its correctness in the path of every assertion.</p>
+     */
+    private Long experimentAnnotatedWith( String... valueUris ) {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ee );
+        for ( String valueUri : valueUris ) {
+            Characteristic c = new Characteristic();
+            c.setValue( "annotation " + valueUri );
+            c.setValueUri( valueUri );
+            sessionFactory.getCurrentSession().persist( c );
+            sessionFactory.getCurrentSession().flush();
+            sessionFactory.getCurrentSession().createNativeQuery(
+                            "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, `VALUE`, VALUE_URI, "
+                                    + "EXPRESSION_EXPERIMENT_FK, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, `LEVEL`) "
+                                    + "values (:id, :value, :valueUri, :eeId, :mask, :level)" )
+                    .setParameter( "id", c.getId() )
+                    .setParameter( "value", c.getValue() )
+                    .setParameter( "valueUri", c.getValueUri() )
+                    .setParameter( "eeId", ee.getId() )
+                    .setParameter( "mask", readMask() )
+                    .setParameter( "level", ExpressionExperiment.class.getName() )
+                    .executeUpdate();
+        }
+        sessionFactory.getCurrentSession().flush();
+        return ee.getId();
     }
 
     /**

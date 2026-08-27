@@ -722,6 +722,23 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          *
          * <p>Pass the same id to {@link #excludedExperimentIds(Collection)} unless you specifically
          * want the experiment counted as evidence for itself.</p>
+         *
+         * <p>🛑 <b>Setting this narrows the read in two ways nothing else does</b>, because seeding
+         * from an experiment is asking what the experiment's terms IMPLY and the other seeds are not:</p>
+         *
+         * <ul>
+         * <li>Only forward walks come back. The seed must be the end that implies — the subject of a
+         * {@link ubic.gemma.model.common.description.RelationInferenceDirection#SUBJECT_IMPLIES_OBJECT}
+         * row, the object of an {@code OBJECT_IMPLIES_SUBJECT} one — so a row whose implying end is not
+         * the side {@link #seedDirection(Direction)} named is dropped, as is one that implies nothing
+         * either way.</li>
+         * <li>Conclusions the experiment already carries are dropped. Being told what you just said is
+         * not an inference.</li>
+         * </ul>
+         *
+         * <p>Both are confined to this path deliberately. A {@code subject}/{@code object} lookup is a
+         * browse — the row is true read from either end and both ends are worth showing — and the
+         * membership read has its own direction gate at its own callsite.</p>
          */
         public RelationQuery seedFromExperimentId( @Nullable Long v ) {
             this.seedFromExperimentId = v;

@@ -105,6 +105,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         }
         if ( q.getSeedFromExperimentId() != null ) {
             where.append( seedFromExperimentConstraint( q.getSeedDirection() ) );
+            where.append( alreadyCarriedConstraint( q.getSeedDirection() ) );
         }
         if ( q.getTaxonId() != null ) {
             // a relation with no taxon is not taxon-specific, so it answers every taxon's question
@@ -292,6 +293,25 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             }
             if ( q.getMinimumSpecificity() > 0 && !basis.isSelfSufficient()
                     && s.getSpecificity() < q.getMinimumSpecificity() ) {
+                continue;
+            }
+            // 🛑 An experiment-seeded read may only walk FORWARDS. The seed has to be the end that
+            // implies -- the subject of a SUBJECT_IMPLIES_OBJECT row, the object of an
+            // OBJECT_IMPLIES_SUBJECT one -- and the seed side is fixed by the direction the caller
+            // seeded from, so `licenses` is asked exactly the question the store is symmetric about.
+            //
+            // Reported by Paul on GSE315959, 2026-08-27. Its one grounded annotation is `prostate
+            // gland`, which is the CONCLUSION of `CLO_0037208 derives from anatomic part`; seeded from
+            // the object side the query read 169 Cellosaurus lines back out of it. A cell line implies
+            // its organ and an organ implies no cell line, so those rows were never the dataset's to
+            // draw.
+            //
+            // NEITHER is dropped with them, which is the same rule and not a second one: a row that
+            // licenses no inference is not an inferred concept. It costs nothing by default -- an
+            // EXPERIMENT_LEVEL row is already out via `termLevelOnly` -- but a caller that passes
+            // `includeExperimentLevel` alongside `dataset` now gets nothing back for it.
+            if ( q.getSeedFromExperimentId() != null
+                    && !s.getInferenceDirection().licenses( q.getSeedDirection() == Direction.SUBJECT_TO_OBJECT ) ) {
                 continue;
             }
             result.add( s );
@@ -579,6 +599,33 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                 + " where S2.EXPRESSION_EXPERIMENT_FK = :seedEeId"
                 + " and (S2.VALUE_URI = R." + side + "_VALUE_URI"
                 + " or (S2.VALUE_URI is null and R." + side + "_VALUE_URI is null and S2.`VALUE` = R." + side + "_VALUE)))";
+    }
+
+    /**
+     * Drop a relation whose CONCLUSION is a term the seed experiment already carries.
+     *
+     * <p>An experiment learns nothing from being told what it already asserts. Reported by Paul on
+     * GSE315959, 2026-08-27: the dataset is annotated {@code organism part: prostate gland}, and the
+     * card offered it 169 Cellosaurus prostate lines, every one of them concluding {@code prostate
+     * gland} — its own annotation, restated 195 times.</p>
+     *
+     * <p>The conclusion sits on the side the seed did NOT match, always. That is not an assumption
+     * about the data; it is what {@link RelationSummary#getInferenceDirection()} is checked for one
+     * method over — a row whose implying end is not the seed side is dropped there, so among the rows
+     * that survive, the seed is the premise and the other end is the conclusion. Which makes this the
+     * mirror of {@link #seedFromExperimentConstraint}: same experiment, same URI-then-value matching,
+     * other side, negated.</p>
+     *
+     * <p>In SQL rather than in the Java filter loop so it runs before the aggregation and before the
+     * breadth and support subqueries, which on the reported case is 195 rows and 169 distinct subjects
+     * that never need counting.</p>
+     */
+    private String alreadyCarriedConstraint( Direction direction ) {
+        String side = direction == Direction.SUBJECT_TO_OBJECT ? "OBJECT" : "SUBJECT";
+        return " and not exists (select 1 from EXPRESSION_EXPERIMENT2CHARACTERISTIC S3"
+                + " where S3.EXPRESSION_EXPERIMENT_FK = :seedEeId"
+                + " and (S3.VALUE_URI = R." + side + "_VALUE_URI"
+                + " or (S3.VALUE_URI is null and R." + side + "_VALUE_URI is null and S3.`VALUE` = R." + side + "_VALUE)))";
     }
 
     /**
