@@ -15,6 +15,8 @@ import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationLock;
 import ubic.gemma.model.analysis.Investigation;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -56,6 +58,16 @@ public interface CurationLockService {
     CurationLock acquire( Investigation ee, String lockedBy, boolean steal, int ttlMinutes );
 
     /**
+     * As {@link #acquire(Investigation, String, boolean, int)}, recording WHAT is taking the lock as well as
+     * who it is for.
+     * <p>
+     * {@code runId} / {@code agentName} are null for a person, which is how a reader tells a curator from a
+     * job. See {@link CurationLock#getRunId()} for why this is stored rather than derived.
+     */
+    CurationLock acquire( Investigation ee, String lockedBy, boolean steal, int ttlMinutes,
+            @Nullable String runId, @Nullable String agentName );
+
+    /**
      * Extend the caller's existing lease without taking one they do not hold.
      * Called on every draft autosave, so working holds the lock and walking
      * away releases it.
@@ -85,6 +97,18 @@ public interface CurationLockService {
      * expiry, so "is it locked" has to mean "is there an unexpired claim".
      */
     Optional<CurationLock> current( Investigation ee );
+
+    /**
+     * The current holders of many datasets, keyed by dataset id, in ONE query.
+     * <p>
+     * Exists because the question is asked about a LIST: the curation queue pages up to 1000 rows, and
+     * asking per row is 1000 round-trips to paint one screen. A dataset nobody holds is simply absent from
+     * the map rather than mapped to null.
+     * <p>
+     * Same expiry rule as {@link #current(Investigation)} — a lapsed claim is not a holder — so a caller can
+     * treat presence in this map as "held right now" without re-checking dates.
+     */
+    Map<Long, CurationLock> current( Collection<Long> investigationIds );
 
     /**
      * Whether {@code username} holds an unexpired lock. This is what sign-off

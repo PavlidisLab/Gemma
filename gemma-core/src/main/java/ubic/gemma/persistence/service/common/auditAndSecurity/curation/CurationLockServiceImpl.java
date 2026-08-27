@@ -21,6 +21,11 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationLock;
 import ubic.gemma.model.analysis.Investigation;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +48,23 @@ public class CurationLockServiceImpl implements CurationLockService {
     @Override
     @Transactional
     public CurationLock acquire( Investigation ee, String lockedBy, boolean steal, int ttlMinutes ) {
+        return acquire( ee, lockedBy, steal, ttlMinutes, null, null );
+    }
+
+    @Override
+    @Transactional
+    public CurationLock acquire( Investigation ee, String lockedBy, boolean steal, int ttlMinutes,
+            @Nullable String runId, @Nullable String agentName ) {
+        CurationLock lock = doAcquire( ee, lockedBy, steal, ttlMinutes );
+        // Set on every acquire, including a refresh, so the row always describes the CURRENT tenure. Carrying
+        // a previous holder's run id forward would be worse than carrying nothing -- it would name a job that
+        // is no longer here.
+        lock.setRunId( runId );
+        lock.setAgentName( agentName );
+        return lock;
+    }
+
+    private CurationLock doAcquire( Investigation ee, String lockedBy, boolean steal, int ttlMinutes ) {
         Assert.notNull( ee, "dataset must not be null." );
         Assert.hasText( lockedBy, "lockedBy must be non-blank." );
         Date now = new Date();
@@ -141,6 +163,31 @@ public class CurationLockServiceImpl implements CurationLockService {
     }
 
     @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, CurationLock> current( Collection<Long> investigationIds ) {
+        if ( investigationIds == null || investigationIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // One `in` query rather than a get() per id: the caller is painting a queue page, not looking at one
+        // dataset. The id IS the identifier (CurationLock's @Id is the Investigation association), so reading
+        // getInvestigation().getId() off the result never initializes the lazy proxy.
+        List<CurationLock> locks = sessionFactory.getCurrentSession()
+                .createQuery( "select l from CurationLock l where l.investigation.id in :ids", CurationLock.class )
+                .setParameterList( "ids", investigationIds )
+                .list();
+        Date now = new Date();
+        Map<Long, CurationLock> out = new HashMap<>( locks.size() );
+        for ( CurationLock l : locks ) {
+            // Expiry is never swept, so the table still holds lapsed rows. Dropping them here keeps this
+            // method's contract identical to the single-dataset current(): present means held right now.
+            if ( !l.isExpired( now ) ) {
+                out.put( l.getInvestigation().getId(), l );
+            }
+        }
+        return out;
+    }
+
     private CurationLock load( Investigation ee ) {
         return sessionFactory.getCurrentSession().get( CurationLock.class, ee.getId() );
     }

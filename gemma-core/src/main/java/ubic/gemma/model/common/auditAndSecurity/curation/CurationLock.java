@@ -112,7 +112,43 @@ public class CurationLock implements Serializable {
     @Column(name = "STOLEN_AT", columnDefinition = "DATETIME(3)")
     private Date stolenAt;
 
+    /**
+     * What is holding this, when the holder is a job rather than a person.
+     * <p>
+     * A blocked curator has to choose between waiting and stealing, and {@link #lockedBy} alone cannot tell
+     * them: an agent acting via {@code ?onBehalfOf=} records the CURATOR there, which is right, and leaves
+     * nothing naming the run. Written at acquire time because a batch takes its locks BEFORE doing the work,
+     * so joining to the holder's draft would answer only once the answer stopped being needed.
+     * <p>
+     * Null for a person. Matches {@code ANNOTATION_SET.RUN_ID}, so the same run is the same string in both
+     * places -- {@code adhoc-decision-ticket}, {@code category-policy-rebuild-2026-08-09}.
+     */
+    @Column(name = "RUN_ID", columnDefinition = "VARCHAR(255)")
+    private String runId;
+
+    /** Which agent, when the holder is one. Null for a person. Matches {@code ANNOTATION_SET.AGENT_NAME}. */
+    @Column(name = "AGENT_NAME", columnDefinition = "VARCHAR(255)")
+    private String agentName;
+
     public CurationLock() {
+    }
+
+    @Nullable
+    public String getRunId() {
+        return runId;
+    }
+
+    public void setRunId( @Nullable String runId ) {
+        this.runId = runId;
+    }
+
+    @Nullable
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public void setAgentName( @Nullable String agentName ) {
+        this.agentName = agentName;
     }
 
     public Investigation getInvestigation() {

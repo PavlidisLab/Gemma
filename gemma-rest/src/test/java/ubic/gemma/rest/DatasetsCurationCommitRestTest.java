@@ -1986,6 +1986,98 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     // ============================================================================================
 
     /**
+     * The read uib asked for: the curation queue pages up to 1000 rows and needs one request per screen,
+     * not one per row.
+     */
+    @Test
+    public void testBulkLockReadReportsWhoHoldsEachDataset() {
+        testAuthenticationUtils.runAsAgent();
+        takeLockFor( "queuealice" );
+        testAuthenticationUtils.runAsAdmin();
+
+        try ( Response r = target( "/datasets/curation/locks" )
+                .queryParam( "datasets", ee.getId() ).request().get() ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).contains( String.valueOf( ee.getId() ) ).contains( "queuealice" );
+        }
+    }
+
+    /**
+     * uib's ask: a blocked curator gets a name and has to choose wait-or-steal, and a batch mid-run looks
+     * exactly like a person at lunch. `?runId=` names the job, and it comes back on the read.
+     * <p>
+     * 🛑 Recorded on the LOCK rather than joined from the holder's draft, because a batch takes its locks
+     * BEFORE doing the work — at the moment a curator is blocked there may be no draft to join to.
+     */
+    @Test
+    public void testTheLockSaysWhatIsHoldingItNotJustWho() {
+        testAuthenticationUtils.runAsAgent();
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" )
+                .queryParam( "onBehalfOf", "batchalice" )
+                .queryParam( "runId", "category-policy-rebuild-2026-08-09" )
+                .queryParam( "agentName", "proposer" )
+                .request().post( Entity.json( "{}" ) ) ) {
+            assertOk( r );
+        }
+        testAuthenticationUtils.runAsAdmin();
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().get() ) {
+            assertOk( r );
+            String json = r.readEntity( String.class );
+            assertThat( json ).as( "who it is for" ).contains( "batchalice" );
+            assertThat( json ).as( "and WHAT is holding it" )
+                    .contains( "category-policy-rebuild-2026-08-09" ).contains( "proposer" );
+        }
+    }
+
+    /** A person takes a lock without naming a job, and it reads as a person: no run id. */
+    @Test
+    public void testAHumanHeldLockNamesNoJob() {
+        takeLockFor( null );
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) )
+                    .as( "no runId means a person, which is the distinction the field exists to make" )
+                    .doesNotContain( "category-policy-rebuild" );
+        }
+    }
+
+    /**
+     * The same answer with the ids in a body. Exists because a thousand ids is ~7 KB of query string against
+     * an 8 KB container header limit, so the queue's largest page sits on the boundary — and past it the
+     * container refuses the request with a 400 that never mentions datasets.
+     */
+    @Test
+    public void testBulkLockReadAcceptsAlargeListInAbody() {
+        testAuthenticationUtils.runAsAgent();
+        takeLockFor( "queuebob" );
+        testAuthenticationUtils.runAsAdmin();
+
+        String body = "{\"datasetIds\":[" + ee.getId() + "]}";
+        try ( Response r = target( "/datasets/curation/locks/query" ).request().post( Entity.json( body ) ) ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) )
+                    .contains( String.valueOf( ee.getId() ) ).contains( "queuebob" );
+        }
+    }
+
+    /**
+     * 🛑 An unheld dataset is ABSENT from the map rather than present with {@code locked:false}. A queue
+     * painting 1000 rows should not be sent 1000 entries to say nothing is happening.
+     */
+    @Test
+    public void testBulkLockReadOmitsDatasetsNobodyHolds() {
+        try ( Response r = target( "/datasets/curation/locks" )
+                .queryParam( "datasets", ee.getId() ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) )
+                    .as( "nobody holds it, so it is not in the map" )
+                    .doesNotContain( "lockedBy" );
+        }
+    }
+
+    /**
      * The batch never fails as a unit. One dataset held by someone else must not sink the claim over
      * the rest, so each id carries its own outcome and the incumbent is named.
      */

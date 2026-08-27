@@ -2222,13 +2222,19 @@ public class DatasetsWebService {
             @Parameter(description = "Lease length in minutes; defaults to 30.")
             @QueryParam("ttlMinutes") @DefaultValue("30") Integer ttlMinutes,
             @Parameter(description = "Which curator is taking the lock. Agents and admins only.")
-            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
+            @Parameter(description = "What is taking the lock, when that is a job — e.g. "
+                    + "`category-policy-rebuild-2026-08-09`. Shown to a curator this lock blocks, who has to "
+                    + "decide whether to wait or steal. Omit for a person.")
+            @QueryParam("runId") @Nullable String runId,
+            @Parameter(description = "Which agent, when the holder is one. Omit for a person.")
+            @QueryParam("agentName") @Nullable String agentName
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         String holder = SecurityUtil.resolveActingIdentity( onBehalfOf );
         try {
-            return Response.ok( toLockResponse(
-                    curationLockService.acquire( ee, holder, Boolean.TRUE.equals( steal ), ttlMinutes ) ) ).build();
+            return Response.ok( toLockResponse( curationLockService.acquire( ee, holder,
+                    Boolean.TRUE.equals( steal ), ttlMinutes, runId, agentName ) ) ).build();
         } catch ( CurationLockService.CurationLockedException e ) {
             // 409 rather than 403: the caller is permitted, the dataset is busy. Naming the holder is the point --
             // "someone else has it" without saying who leaves the curator with nobody to ask.
@@ -2292,6 +2298,80 @@ public class DatasetsWebService {
         public CurationLockResponse lock;
     }
 
+    @GET
+    @Path("/curation/locks")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Who is curating each of these datasets right now",
+            description = "The bulk read of `GET /datasets/{dataset}/curation/lock`. The lock question is asked "
+                    + "about a LIST — the curation queue pages up to 1000 rows — and asking per row is a "
+                    + "round-trip per row to paint one screen. One `in` query serves the whole page.\n\n"
+                    + "Only datasets that are actually held appear in the map. An id that is absent is not "
+                    + "locked, which is the same thing an unlocked dataset's single-dataset read reports.\n\n"
+                    + "🛑 A lapsed lease is NOT a holder. Nothing sweeps expiry, so the table still contains "
+                    + "rows past their `expiresAt`; those are dropped here exactly as the single-dataset route "
+                    + "drops them, and exactly as the commit gate does. A stale-but-unreaped lock can never "
+                    + "block a write or appear in this map.\n\n"
+                    + "Datasets the caller cannot read are dropped rather than failing the request.",
+            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+    public ResponseDataObject<Map<Long, CurationLockResponse>> getCurationLocks(
+            @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE)
+            @QueryParam("datasets") DatasetArrayArg datasets
+    ) {
+        if ( datasets == null ) {
+            return respond( Collections.emptyMap() );
+        }
+        // Resolved through DatasetArrayArg so the collection convention matches the rest of /datasets:
+        // comma-delimited with explode=false. Repeated params silently yield one result.
+        Collection<ExpressionExperiment> ees = datasetArgService.getEntities( datasets );
+        if ( ees.isEmpty() ) {
+            return respond( Collections.emptyMap() );
+        }
+        Set<Long> ids = ees.stream().map( ExpressionExperiment::getId ).collect( Collectors.toSet() );
+        Map<Long, CurationLockResponse> out = new LinkedHashMap<>();
+        for ( Map.Entry<Long, CurationLock> e : curationLockService.current( ids ).entrySet() ) {
+            out.put( e.getKey(), toLockResponse( e.getValue() ) );
+        }
+        return respond( out );
+    }
+
+    @POST
+    @Path("/curation/locks/query")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Who is curating each of these datasets right now, for a large list",
+            description = "The same answer as `GET /datasets/curation/locks`, with the ids in a body instead of "
+                    + "the query string.\n\n"
+                    + "🛑 It exists for size. A thousand ids is roughly 7 KB of query string, and the whole "
+                    + "request line has to fit the container's header limit — 8 KB by default on Tomcat — so "
+                    + "the queue's largest page sits right on that boundary. Past it the request is refused by "
+                    + "the container with a 400 that says nothing about datasets, which is a bad way to find "
+                    + "out. Use the GET for a handful and this for a page.\n\n"
+                    + "A POST that only reads, for the same reason `POST /datasets/pipeline-status` is one. It "
+                    + "writes nothing and takes no lock.\n\n"
+                    + "Same contract as the GET: only held datasets appear, an absent id is not locked, a "
+                    + "lapsed lease is not a holder, and unreadable ids are dropped. Cap: "
+                    + MAX_CURATION_LOCK_READ_BULK + " ids.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Missing or empty `datasetIds`, or over the cap.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<Map<Long, CurationLockResponse>> getCurationLocksBulk(
+            @Nullable CurationLockBulkRequest body
+    ) {
+        List<Long> ids = requireBulkLockIds( body, MAX_CURATION_LOCK_READ_BULK );
+        // Resolved first so the lock lookup runs over readable ids only: a caller must not be able to learn
+        // that a dataset is locked by asking about one they cannot see.
+        Set<Long> readable = resolveReadableDatasets( ids ).stream()
+                .map( ExpressionExperiment::getId ).collect( Collectors.toSet() );
+        Map<Long, CurationLockResponse> out = new LinkedHashMap<>();
+        for ( Map.Entry<Long, CurationLock> e : curationLockService.current( readable ).entrySet() ) {
+            out.put( e.getKey(), toLockResponse( e.getValue() ) );
+        }
+        return respond( out );
+    }
+
     @POST
     @Path("/curation/locks")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -2325,16 +2405,22 @@ public class DatasetsWebService {
             @QueryParam("ttlMinutes") @DefaultValue("30") Integer ttlMinutes,
             @Parameter(description = "Which curator the batch is acting for. Agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
+            @Parameter(description = "What is taking the lock, when that is a job — e.g. "
+                    + "`category-policy-rebuild-2026-08-09`. Shown to a curator this lock blocks, who has to "
+                    + "decide whether to wait or steal. Omit for a person.")
+            @QueryParam("runId") @Nullable String runId,
+            @Parameter(description = "Which agent, when the holder is one. Omit for a person.")
+            @QueryParam("agentName") @Nullable String agentName,
             @Nullable CurationLockBulkRequest body
     ) {
-        List<Long> ids = requireBulkLockIds( body );
+        List<Long> ids = requireBulkLockIds( body, MAX_CURATION_LOCK_BULK );
         String holder = SecurityUtil.resolveActingIdentity( onBehalfOf );
         Map<Long, CurationLockBulkResult> out = new LinkedHashMap<>( ids.size() );
         for ( ExpressionExperiment ee : resolveReadableDatasets( ids ) ) {
             CurationLockBulkResult r = new CurationLockBulkResult();
             try {
                 r.lock = toLockResponse( curationLockService.acquire( ee, holder,
-                        Boolean.TRUE.equals( steal ), ttlMinutes ) );
+                        Boolean.TRUE.equals( steal ), ttlMinutes, runId, agentName ) );
                 r.granted = true;
             } catch ( CurationLockService.CurationLockedException e ) {
                 // Not an error for a batch: it asked about many and this one is busy. The incumbent is named
@@ -2369,7 +2455,7 @@ public class DatasetsWebService {
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable CurationLockBulkRequest body
     ) {
-        List<Long> ids = requireBulkLockIds( body );
+        List<Long> ids = requireBulkLockIds( body, MAX_CURATION_LOCK_BULK );
         String holder = SecurityUtil.resolveActingIdentity( onBehalfOf );
         Map<Long, Boolean> out = new LinkedHashMap<>( ids.size() );
         for ( ExpressionExperiment ee : resolveReadableDatasets( ids ) ) {
@@ -2378,15 +2464,22 @@ public class DatasetsWebService {
         return respond( out );
     }
 
-    private static List<Long> requireBulkLockIds( @Nullable CurationLockBulkRequest body ) {
+    /**
+     * Maximum datasets per bulk lock READ. Higher than the write cap because a read is one query and holds
+     * nothing: the curation queue's largest page is 1000 rows, and the point of the route is one request per
+     * screen.
+     */
+    private static final int MAX_CURATION_LOCK_READ_BULK = 1000;
+
+    private static List<Long> requireBulkLockIds( @Nullable CurationLockBulkRequest body, int cap ) {
         if ( body == null || body.getDatasetIds() == null || body.getDatasetIds().isEmpty() ) {
             throw new BadRequestException( "A request body with non-empty 'datasetIds' is required." );
         }
         // Deduplicated, caller order preserved: a repeated id would otherwise acquire twice and, on release,
         // report a second false for a lock the first entry already dropped.
         List<Long> ids = new ArrayList<>( new LinkedHashSet<>( body.getDatasetIds() ) );
-        if ( ids.size() > MAX_CURATION_LOCK_BULK ) {
-            throw new BadRequestException( "At most " + MAX_CURATION_LOCK_BULK
+        if ( ids.size() > cap ) {
+            throw new BadRequestException( "At most " + cap
                     + " datasets per request; got " + ids.size() + ". Chunk the run." );
         }
         return ids;
@@ -2417,6 +2510,8 @@ public class DatasetsWebService {
             r.expiresAt = lock.getExpiresAt();
             r.stolenFrom = lock.getStolenFrom();
             r.stolenAt = lock.getStolenAt();
+            r.runId = lock.getRunId();
+            r.agentName = lock.getAgentName();
         }
         return r;
     }
@@ -2429,6 +2524,15 @@ public class DatasetsWebService {
         public Date expiresAt;
         public String stolenFrom;
         public Date stolenAt;
+        /**
+         * What is holding it, when that is a job rather than a person; null for a person.
+         * <p>
+         * `lockedBy` alone cannot answer the question a blocked curator actually has — wait, or steal? An
+         * agent acting for someone records the CURATOR in `lockedBy`, so without these a batch mid-run and
+         * a curator at lunch look identical.
+         */
+        public String runId;
+        public String agentName;
     }
 
     /* ============== sign-off ============== */
