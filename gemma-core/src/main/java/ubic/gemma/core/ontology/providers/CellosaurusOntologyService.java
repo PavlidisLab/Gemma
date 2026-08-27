@@ -64,6 +64,30 @@ public class CellosaurusOntologyService extends AbstractLexicalOntologyService {
 
     private static final Pattern SYNONYM = Pattern.compile( "\"([^\"]*)\"" );
 
+    /**
+     * Cell-line biobank namespaces whose {@code xref:} value is a catalogue number a curator actually writes.
+     * <p>
+     * A submitter naming ATCC's {@code HTB-122} means BT-549, and Cellosaurus records that only as
+     * {@code xref: ATCC:HTB-122} — never as a name or synonym. Without this the catalogue number resolves to
+     * nothing, which is what Paul reported for {@code HTB-122} / {@code HTB-166} on 2026-08-26.
+     * <p>
+     * 🛑 <b>A whitelist, not "index the xrefs".</b> Most of the OBO's cross-references are not catalogue
+     * numbers at all — measured over the whole file: {@code PubMed} 147,401, {@code Wikidata} 153,632,
+     * {@code NCIt} 81,041, plus DOIs, GEO series, BioSamples and ontology terms. Indexing those would put
+     * publication and taxon identifiers into a cell-line search.
+     * <p>
+     * {@code CLO}, {@code EFO} and {@code BTO} are deliberately absent even though they are clean
+     * identifiers: those are the conventional ontologies this catalogue exists to BACK UP, and echoing their
+     * accessions here would return a supplementary hit for a term the real ontology already answers.
+     */
+    private static final java.util.Set<String> CATALOGUE_XREF_NAMESPACES = java.util.Set.of(
+            "ATCC", "Coriell", "ECACC", "DSMZ", "JCRB", "RCB", "KCLB", "CLS", "ICLC", "BCRC",
+            "CCRID", "CLDB", "WiCell", "hPSCreg", "MMRRC", "IZSLER", "TKG", "NCBI_Iran" );
+
+    /** {@code xref: ATCC:HTB-122} — namespace and catalogue value. */
+    private static final Pattern CATALOGUE_XREF =
+            Pattern.compile( "^xref:\\s*([A-Za-z_]+):\\s*([^!]+?)\\s*(?:!.*)?$" );
+
     /** {@code xref: NCBI_TaxID:10090 ! Mus musculus (Mouse)} — the only place the OBO states species. */
     private static final Pattern TAXID_XREF =
             Pattern.compile( "^xref:\\s*NCBI_TaxID:(\\d+)\\s*(?:!\\s*(.*))?$" );
@@ -181,6 +205,11 @@ public class CellosaurusOntologyService extends AbstractLexicalOntologyService {
                         String taxLabel = m.group( 2 ) != null ? m.group( 2 ).trim() : null;
                         species.add( new LexicalTermMetadata.Taxon( Integer.parseInt( m.group( 1 ) ),
                                 taxLabel == null || taxLabel.isEmpty() ? null : taxLabel ) );
+                    } else {
+                        String catalogue = catalogueNumber( line.trim() );
+                        if ( catalogue != null ) {
+                            synonyms.add( catalogue );
+                        }
                     }
                 } else if ( line.startsWith( "subset:" ) ) {
                     String s = line.substring( "subset:".length() ).trim();
@@ -203,6 +232,36 @@ public class CellosaurusOntologyService extends AbstractLexicalOntologyService {
         }
         log.info( "Parsed {} Cellosaurus cell-line terms.", terms.size() );
         return terms;
+    }
+
+    /**
+     * The catalogue number in a biobank {@code xref:} line, or null when the line is not one.
+     * <p>
+     * 🛑 <b>Purely numeric values are dropped.</b> Measured over the whole OBO: the whitelisted namespaces
+     * carry 99,284 values, of which 58,616 are ALREADY a name or synonym (which is why {@code AG25367}
+     * resolves today without any of this) leaving 40,484 new — and 10,057 of those are bare numbers like
+     * {@code 00001} or {@code 60053}. A bare number is not something anyone types meaning a cell line, and
+     * not something a human could resolve either without being told the registry; indexing them would add
+     * ten thousand numeric tokens to an index shared with every other ontology. Dropping them leaves ~30,400
+     * entries, all of the {@code HTB-122} shape that actually appears in submitted metadata.
+     * <p>
+     * Short-code collisions, the risk that sank three earlier analyzer relaxations, are not a factor here:
+     * exactly 3 of the new values are 3 characters or fewer.
+     */
+    @Nullable
+    static String catalogueNumber( String xrefLine ) {
+        Matcher m = CATALOGUE_XREF.matcher( xrefLine );
+        if ( !m.matches() ) {
+            return null;
+        }
+        if ( !CATALOGUE_XREF_NAMESPACES.contains( m.group( 1 ) ) ) {
+            return null;
+        }
+        String value = m.group( 2 ).trim();
+        if ( value.isEmpty() || value.chars().allMatch( Character::isDigit ) ) {
+            return null;
+        }
+        return value;
     }
 
     private static void addTerm( List<LexicalTerm> terms, String id, String label, List<String> synonyms,
