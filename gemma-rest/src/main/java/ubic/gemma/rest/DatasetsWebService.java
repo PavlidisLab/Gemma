@@ -5225,9 +5225,12 @@ public class DatasetsWebService {
         // ExpressionExperimentDaoImpl.populateAnalysisInformation javadoc).
         boolean hasCoex = false;
 
-        // Batch-fetch every audit-event type the pipeline-step loop + GEEQ block need in a
-        // single round-trip. Replaces ~13 individual getLastEvent(ee, type) calls — each of
-        // which is its own DB round-trip — with one getLastEvents call returning a nested map.
+        // Collect every audit-event type the pipeline-step loop + GEEQ block need and ask for
+        // them in one call. That call is NOT one query: AuditEventServiceImpl.getLastEvents
+        // loops the types and issues one query PER TYPE — 18 of them here (9 step success types,
+        // 7 step failure types, GEEQ, DesignChange). It batches over DATASETS, not over types,
+        // so on this single-dataset path the query count matches the 18 individual
+        // getLastEvent(ee, type) calls it replaced; what it buys here is the nested map.
         Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
         for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
             auditTypes.add( desc.successType );
@@ -5347,8 +5350,9 @@ public class DatasetsWebService {
         }
 
         // Everything that batches, batched ONCE for the whole page. These are the three calls that
-        // would otherwise be per-row: the audit-event fan-out (~13 round-trips each on its own),
-        // the has-analysis lookup, and the triage ruling.
+        // would otherwise be per-row: the audit-event fan-out (18 queries per row on its own),
+        // the has-analysis lookup, and the triage ruling. getLastEvents still issues one query per
+        // TYPE — 18 total — but that count no longer multiplies by the number of rows on the page.
         Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
         for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
             auditTypes.add( desc.successType );
@@ -5571,7 +5575,8 @@ public class DatasetsWebService {
     @Operation(summary = "Bulk per-step pipeline status for many datasets in one round-trip",
             description = "Returns a map of dataset ID → {@link PipelineStatusValueObject}, one entry per requested ID that the caller can read. "
                     + "Mirrors the single-EE `GET /{dataset}/pipelineStatus` handler in response shape, but batches the underlying audit-event lookup and "
-                    + "DEA-existence query so that loading a workflow-list page of 20–50 experiments takes one DB round-trip per concern rather than 20–50. "
+                    + "DEA-existence query so that loading a workflow-list page of 20–50 experiments costs a fixed number of queries per concern rather than one set per row "
+                    + "(the audit-event lookup is one query per event type — 18 of them — whatever the page size). "
                     + "Each entry carries `lastUpdate` — a short label for the most recent recorded change, plus its date and performer — so a list row can read \"Updated from GEO · 3 days ago\" without pulling the audit trail. "
                     + "ACL behaviour: IDs the caller cannot read are silently dropped from the result map (no 403 for the batch). "
                     + "Hard cap: " + MAX_PIPELINE_STATUS_BULK + " IDs per request.",
@@ -5605,8 +5610,9 @@ public class DatasetsWebService {
             visibleIds.add( ee.getId() );
         }
 
-        // ONE batched audit-event call covering every step + GEEQ across every visible EE.
-        // Replaces O(steps × EEs) individual getLastEvent calls with one DB round-trip.
+        // One batched audit-event call covering every step + GEEQ across every visible EE.
+        // Replaces O(types × EEs) individual getLastEvent calls with O(types): getLastEvents loops
+        // the types and issues one query per type (18 here), batching over the EEs only.
         Set<Class<? extends AuditEventType>> auditTypes = new LinkedHashSet<>();
         for ( PipelineStepDescriptor desc : PIPELINE_STEPS ) {
             auditTypes.add( desc.successType );
