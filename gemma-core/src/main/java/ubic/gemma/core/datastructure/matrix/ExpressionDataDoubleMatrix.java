@@ -286,18 +286,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         int k = 0;
         int[] originalBioMaterialIndices = new int[columnsToUse.size()];
         for ( BioMaterial bm : columnsToUse ) {
-            int columnIndex = sourceMatrix.getColumnIndex( bm );
-            // getColumnIndex answers -1 for a sample the matrix does not hold, and -1 was being written straight
-            // into this index array: the failure then surfaced further down as "Index -1 out of bounds for length
-            // N" while reading a row, naming neither the sample nor the fact that it was missing.
-            if ( columnIndex < 0 ) {
-                throw new IllegalArgumentException( String.format(
-                        "Cannot slice %s out of this matrix: it is not one of its %d samples. A sample dropped from "
-                                + "the matrix (marked DE_Exclude, or flagged as an outlier) is still listed by the "
-                                + "experiment or subset it came from, so the caller has to drop it too.",
-                        bm, sourceMatrix.columns() ) );
-            }
-            originalBioMaterialIndices[k++] = columnIndex;
+            originalBioMaterialIndices[k++] = columnIndexOrThrow( sourceMatrix, bm );
         }
 
         Map<BioAssayDimension, BioAssayDimension> dimMap = new HashMap<>();
@@ -351,6 +340,26 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * @param sourceMatrix matrix
      * @param reorderedDim the reordered bioAssayDimension.
      */
+    /**
+     * Resolve a sample's column in the source matrix, refusing one the matrix does not hold.
+     * <p>
+     * {@link #getColumnIndex(BioMaterial)} answers -1 for a sample it does not have, and that -1 used to be
+     * written straight into the index array: the failure then surfaced further down as "Index -1 out of bounds
+     * for length N" while reading a row, naming neither the sample nor the fact that it was missing. Both
+     * slicing constructors go through here so the two cannot drift apart.
+     */
+    private static int columnIndexOrThrow( ExpressionDataDoubleMatrix sourceMatrix, BioMaterial bm ) {
+        int columnIndex = sourceMatrix.getColumnIndex( bm );
+        if ( columnIndex < 0 ) {
+            throw new IllegalArgumentException( String.format(
+                    "Cannot slice %s out of this matrix: it is not one of its %d samples. A sample dropped from "
+                            + "the matrix (marked DE_Exclude, or flagged as an outlier) is still listed by the "
+                            + "experiment or subset it came from, so the caller has to drop it too.",
+                    bm, sourceMatrix.columns() ) );
+        }
+        return columnIndex;
+    }
+
     private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<BioMaterial> columnsToUse,
             BioAssayDimension reorderedDim ) {
         super( sourceMatrix.getExpressionExperiment() );
@@ -362,7 +371,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         int k = 0;
         int[] originalBioMaterialIndices = new int[columnsToUse.size()];
         for ( BioMaterial bm : columnsToUse ) {
-            originalBioMaterialIndices[k++] = sourceMatrix.getColumnIndex( bm );
+            originalBioMaterialIndices[k++] = columnIndexOrThrow( sourceMatrix, bm );
         }
 
         int[][] numberOfCells = null;

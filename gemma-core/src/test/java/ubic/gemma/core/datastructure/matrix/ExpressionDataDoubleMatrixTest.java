@@ -82,7 +82,14 @@ public class ExpressionDataDoubleMatrixTest {
         BioMaterial stranger = BioMaterial.Factory.newInstance( "not-in-this-matrix" );
         samples.add( stranger );
 
+        // BOTH overloads: every differential-expression caller uses the two-argument form, so guarding only the
+        // one-argument constructor would leave the path that actually crashed uncovered.
         assertThatThrownBy( () -> matrix.sliceColumns( samples ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "not-in-this-matrix" )
+                .hasMessageContaining( "not one of its 4 samples" );
+
+        assertThatThrownBy( () -> matrix.sliceColumns( samples, matrix.getBioAssayDimension() ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "not-in-this-matrix" )
                 .hasMessageContaining( "not one of its 4 samples" );
