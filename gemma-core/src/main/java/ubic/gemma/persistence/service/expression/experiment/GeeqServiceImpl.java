@@ -203,6 +203,31 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         this.scoreReplicates( ee, gq );
     }
 
+    /**
+     * Blank the rows and columns of samples flagged as outliers.
+     * <p>
+     * The stored matrix keeps their values so a curator can review the call against them, but every GEEQ
+     * score is about the samples that count, so they are masked here instead. Doing it at the point of use
+     * also preserves {@code corrMatIssues == 2}, which is set when the matrix contains NaNs and therefore
+     * already meant "this dataset has flagged outliers".
+     */
+    @Nullable
+    static DoubleMatrix<BioAssay, BioAssay> maskOutliers( @Nullable DoubleMatrix<BioAssay, BioAssay> cormat ) {
+        if ( cormat == null ) {
+            return null;
+        }
+        for ( int i = 0; i < cormat.rows(); i++ ) {
+            if ( !cormat.getRowName( i ).getIsOutlier() ) {
+                continue;
+            }
+            for ( int j = 0; j < cormat.columns(); j++ ) {
+                cormat.set( i, j, Double.NaN );
+                cormat.set( j, i, Double.NaN );
+            }
+        }
+        return cormat;
+    }
+
     /*
      * Quality scoring methods
      */
@@ -417,7 +442,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
     private DoubleMatrix<BioAssay, BioAssay> getCormat( ExpressionExperiment ee, Geeq gq ) {
         DoubleMatrix<BioAssay, BioAssay> cormat = null;
         try {
-            cormat = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
+            cormat = maskOutliers( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) );
         } catch ( IllegalStateException e ) {
             log.warn(
                     GeeqServiceImpl.LOG_PREFIX + GeeqServiceImpl.ERR_MSG_CORMAT_MISSING_VALS + ee.getId() );

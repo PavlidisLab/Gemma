@@ -329,6 +329,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         fConfig.setIgnoreMinimumDesignElementsThreshold( true );
         fConfig.setIgnoreMinimumSamplesThreshold( true );
         fConfig.setRequireSequences( requireSequences );
+        // Keep the outlier samples' values. The stored correlation matrix is what a curator reviews an
+        // outlier call against, and masking here wrote them out of it: every correlation involving a
+        // flagged sample was NaN in the raw matrix as well as the regressed one, so the evidence for the
+        // call could not be recovered afterwards. Consumers that want them excluded mask at the point of
+        // use -- see GeeqServiceImpl.getCormat. Precedent for turning it off: ExpressionDataFileHelperService.
+        fConfig.setMaskOutliers( false );
         // Loads using new array designs will fail. So we allow special case where there are no sequences.
         return expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false );
     }
