@@ -144,8 +144,12 @@ public class PipelineStatusValueObject {
          * neither: nobody has to do anything for the state to be true, and it is about the derived artifact
          * rather than about the curation.
          * <p>
-         * Only {@code dea} can report it. A design change that invalidates an analysis DELETES it, after which
-         * the step reads {@code notRun}; this covers the case where the analysis survived the change.
+         * Every step but {@code batchInfo} can report it. A design change that invalidates an analysis DELETES
+         * it, after which the step reads {@code notRun}; this covers the case where the analysis survived the
+         * change.
+         * <p>
+         * {@code GET /datasets/staleSteps} is the corpus-wide read: which datasets carry one of these, and
+         * which steps.
          */
         public static final String STATUS_STALE = "stale";
 

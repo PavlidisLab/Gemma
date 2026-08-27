@@ -192,6 +192,49 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     }
 
     @Override
+    public <T extends Auditable> Set<Long> getIdsHavingEvent( Class<T> auditableClass, Collection<Class<? extends AuditEventType>> types ) {
+        if ( types.isEmpty() ) {
+            return Collections.emptySet();
+        }
+
+        // Union the subclass closures of every requested type into one IN list, so the number of
+        // requested types does not multiply the query count. Contrast getLastEvents(Collection,
+        // Collection), which loops the types because each one needs its own per-trail max.
+        Set<Class<? extends AuditEventType>> classes = new HashSet<>();
+        for ( Class<? extends AuditEventType> type : types ) {
+            classes.addAll( getClassHierarchy( type, null ) );
+        }
+        if ( classes.isEmpty() ) {
+            throw new IllegalArgumentException( "No classes found" );
+        }
+
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
+
+        // Walks trail.events rather than trail.lastEvent: the question here is whether the event
+        // occurred at all, at any point in the trail's history, so the denormalised latest-event
+        // pointer would answer a different (and much narrower) question.
+        //language=HQL
+        final String query = "select distinct a.id from " + entityName + " a "
+                + "join a.auditTrail trail "
+                + "join trail.events ae "
+                + "join ae.eventType et "
+                + "where type(et) in :classes";
+
+        StopWatch timer = StopWatch.createStarted();
+        //noinspection unchecked
+        List<Long> ids = ( List<Long> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( query )
+                .setParameterList( "classes", classes )
+                .list();
+        timer.stop();
+        if ( timer.getTime() > 500 ) {
+            log.info( String.format( "Found %d %s having an event in %s in %d ms", ids.size(), entityName,
+                    classes.stream().map( Class::getSimpleName ).collect( Collectors.joining( ", " ) ), timer.getTime() ) );
+        }
+        return new LinkedHashSet<>( ids );
+    }
+
+    @Override
     public <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date ) {
         String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
         //noinspection unchecked

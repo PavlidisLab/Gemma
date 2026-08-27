@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @see AuditEvent
@@ -132,10 +133,34 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
 
     /**
      * Obtain the latest events of a specified type for all auditable of a given type.
+     * <p>
+     * 🛑 This resolves through the denormalised {@code AuditTrail.lastEvent} pointer, so it answers
+     * "which auditables have an event of this type as their LATEST event, and what is it" — not
+     * "what is each auditable's latest event of this type". An auditable whose newest event is of
+     * some other type is absent from the map even when it does carry an event of the requested
+     * type. {@link #getLastEvents(Collection, Class)} is the overload with per-type semantics; it
+     * takes the max over the type-filtered events of each trail.
      *
      * @see #getLastEvent(Auditable, Class)
      */
     <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type );
+
+    /**
+     * Obtain the ids of every auditable of a class whose trail carries at least one event of any of
+     * the given types.
+     * <p>
+     * One query for the whole corpus, whatever the number of types: the type closures are unioned
+     * into a single {@code type(et) in (...)} predicate. Unlike
+     * {@link #getLastEvents(Class, Class)} this does not go through {@code AuditTrail.lastEvent},
+     * so an event buried anywhere in the trail counts.
+     * <p>
+     * 🛑 The result is NOT ACL-filtered — it is a set of bare ids, which carries no securable
+     * object for an ACL check to act on. It is a narrowing step: intersect it with an
+     * ACL-filtered load before any of these ids reaches a caller.
+     *
+     * @param types event types; each is expanded to its subclass closure, as elsewhere in this DAO
+     */
+    <T extends Auditable> Set<Long> getIdsHavingEvent( Class<T> auditableClass, Collection<Class<? extends AuditEventType>> types );
 
     /**
      * Get auditables that have been created since the given date.
