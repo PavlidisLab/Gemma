@@ -466,10 +466,20 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
         ExperimentalFactor ef = config.getSubsetFactor();
 
+        // The matrix reaching this method has already had DE_Exclude and outlier samples dropped
+        // (AnalysisSelectionAndExecutionService, via DiffExAnalyzerUtils.dropSamplesNotAnalyzed), but the subset
+        // still lists their assays -- flagging a sample as an outlier does not rewrite the subsets it belongs to.
+        // Without the same predicate here the slice below asks for a column the matrix no longer has. On GSE46209
+        // that was 21 assays against a 19-column matrix, two user-flagged outliers apart.
         List<BioMaterial> samplesInSubset = subset.getBioAssays().stream()
                 .map( BioAssay::getSampleUsed )
+                .filter( DiffExAnalyzerUtils::isAnalyzed )
                 .sorted( SAMPLE_COMPARATOR )
                 .collect( Collectors.toList() );
+        if ( samplesInSubset.isEmpty() ) {
+            throw new IllegalStateException( "Every sample of " + subset
+                    + " is either marked DE_Exclude or an outlier, nothing left to analyze." );
+        }
 
         FactorValue subsetFactorValue = config.getSubsetFactorValue();
         if ( subsetFactorValue == null ) {

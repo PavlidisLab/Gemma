@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.persistence.service.expression.experiment.RandomExpressionExperimentUtils.randomExpressionExperiment;
 
 public class ExpressionDataDoubleMatrixTest {
@@ -57,6 +58,34 @@ public class ExpressionDataDoubleMatrixTest {
                     assertThat( sm.getQuantitationTypes() ).isEmpty();
                     assertThat( sm.rows() ).isZero();
                 } );
+    }
+
+    /**
+     * A sample the matrix does not hold must be refused by name. {@code getColumnIndex} answers -1 for one, and
+     * that -1 used to be written into the index array and only surface further down as
+     * "Index -1 out of bounds for length N" while reading a row -- naming neither the sample nor the fact that it
+     * was missing. GSE46209 hit it with 21 subset assays against a 19-column matrix.
+     */
+    @Test
+    public void testSliceColumnsRefusesASampleTheMatrixDoesNotHold() {
+        Taxon taxon = Taxon.Factory.newInstance( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setPrimaryTaxon( taxon );
+        ad.setShortName( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
+        for ( int i = 0; i < 10; i++ ) {
+            ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + ( i + 1 ), ad ) );
+        }
+        ExpressionExperiment ee = randomExpressionExperiment( taxon, 4, ad );
+        ExpressionDataDoubleMatrix matrix = RandomExpressionDataMatrixUtils.randomCountMatrix( ee );
+
+        List<BioMaterial> samples = new ArrayList<>( matrix.getBioMaterials() );
+        BioMaterial stranger = BioMaterial.Factory.newInstance( "not-in-this-matrix" );
+        samples.add( stranger );
+
+        assertThatThrownBy( () -> matrix.sliceColumns( samples ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "not-in-this-matrix" )
+                .hasMessageContaining( "not one of its 4 samples" );
     }
 
     @Test
