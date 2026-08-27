@@ -498,7 +498,11 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 .collect( Collectors.toList() );
         List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subset, dmatrix, factors );
 
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesInSubset, factors );
+        // subsetFactors, not factors: fixFactorsForSubset has already dropped the factors this subset cannot
+        // model, and getBaselineConditions throws for a factor none of the samples carries. Asking it for a
+        // baseline on a factor that was just excluded from the model killed GSE198008.1, where `treatment`
+        // applies to Experiments 3 and 4 and to neither of the other two subsets.
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesInSubset, subsetFactors );
         dropIncompleteFactors( samplesInSubset, factors );
 
         if ( factors.isEmpty() ) {

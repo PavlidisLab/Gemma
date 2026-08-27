@@ -7,12 +7,52 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+
+import java.util.Collections;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BaselineSelectionTest {
+
+    /**
+     * A factor none of the given samples carries has no baseline to pick, and getBaselineConditions says so by
+     * throwing. The caller therefore has to hand it the factors the samples actually use --
+     * {@code LinearModelAnalyzer}'s subset path computes exactly that list with {@code fixFactorsForSubset} and
+     * used to ask for baselines with the unfiltered one. On GSE198008.1 that killed the run: `treatment` applies
+     * to two of the four `collection of material` subsets (32/24 and 11/11) and to neither of the other two
+     * (15/0 and 15/0).
+     */
+    @Test
+    public void testGetBaselineConditionsRefusesAFactorTheSamplesDoNotCarry() {
+        ExperimentalFactor carried = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL );
+        FactorValue fibroblast = FactorValue.Factory.newInstance( carried );
+        fibroblast.getCharacteristics().add( createStatement( "fibroblast", null ) );
+        carried.getFactorValues().add( fibroblast );
+
+        ExperimentalFactor absent = ExperimentalFactor.Factory.newInstance( "treatment", FactorType.CATEGORICAL );
+        FactorValue treated = FactorValue.Factory.newInstance( absent );
+        treated.getCharacteristics().add( createStatement( "treated", null ) );
+        absent.getFactorValues().add( treated );
+
+        BioMaterial sample = BioMaterial.Factory.newInstance( "sample-1" );
+        sample.getFactorValues().add( fibroblast );
+        List<BioMaterial> samples = Collections.singletonList( sample );
+
+        assertThatThrownBy( () -> BaselineSelection.getBaselineConditions( samples, List.of( carried, absent ) ) )
+                .isInstanceOf( IllegalStateException.class )
+                .hasMessageContaining( "None of the samplesUsed have a value for factor" );
+
+        // the same call with only the factors the samples use is what the subset path must make
+        assertThatCode( () -> BaselineSelection.getBaselineConditions( samples, Collections.singletonList( carried ) ) )
+                .doesNotThrowAnyException();
+    }
 
     @Test
     public void testBaseline() {
