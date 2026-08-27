@@ -519,6 +519,7 @@ public class AnnotationSetsWebService {
 
     /** Body for {@link #triageAnnotationSet}. */
     public static class TriageRequest {
+        @Schema(allowableValues = { "fine", "wont_fix", "might_fix", "must_fix" })
         @JsonProperty("triage")
         public String triage;
         @JsonProperty("note")
@@ -528,6 +529,7 @@ public class AnnotationSetsWebService {
          * fallback guesses from the transport and guesses wrong whenever the
          * agent runs as a human account.
          */
+        @Schema(allowableValues = { "agent", "curator" })
         @JsonProperty("judgeKind")
         public String judgeKind;
     }
@@ -537,9 +539,11 @@ public class AnnotationSetsWebService {
         public Long id;
         @JsonProperty("annotationSetId")
         public Long annotationSetId;
+        @Schema(allowableValues = { "fine", "wont_fix", "might_fix", "must_fix" })
         public String triage;
         @JsonProperty("judgedBy")
         public String judgedBy;
+        @Schema(allowableValues = { "agent", "curator" })
         @JsonProperty("judgeKind")
         public String judgeKind;
         @JsonProperty("judgedAt")

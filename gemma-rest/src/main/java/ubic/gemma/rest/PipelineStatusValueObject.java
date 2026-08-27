@@ -70,6 +70,7 @@ public class PipelineStatusValueObject {
      * severity and a judge rather than collapsing to a boolean.
      */
     @Nullable
+    @Schema(allowableValues = { "fine", "wont_fix", "might_fix", "must_fix" })
     @JsonProperty("triageVerdict")
     @JsonAlias({ "triageVerdict" })
     private String triageVerdict;
@@ -80,6 +81,7 @@ public class PipelineStatusValueObject {
      * caller cannot tell them apart from the verdict alone.
      */
     @Nullable
+    @Schema(allowableValues = { "agent", "curator" })
     @JsonProperty("triageJudgeKind")
     @JsonAlias({ "triageJudgeKind" })
     private String triageJudgeKind;
