@@ -52,7 +52,13 @@ public class CurationCommitConflictException extends ClientErrorException {
          * for a caller that is not signing — consent with {@code ?force=true} (admin).
          */
         REQUIRES_FORCE,
-        /** Sign-off was attempted without holding the curation lock, or while someone else holds it. */
+        /**
+         * A write was attempted while someone else holds the curation lock.
+         * <p>
+         * Two strengths share this code. Sign-off requires the caller to HOLD the lock, so it is refused when
+         * nobody holds it too. Every other write — commit, restore — is refused only when a DIFFERENT identity
+         * holds it; an unheld dataset writes as it always did. The message names the holder either way.
+         */
         LOCK_REQUIRED,
         /** A paper the commit attaches stands rejected for this dataset by a source the commit does not outrank. */
         PUBLICATION_REJECTED,

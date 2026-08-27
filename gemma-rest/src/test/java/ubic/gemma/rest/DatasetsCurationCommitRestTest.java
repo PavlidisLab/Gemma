@@ -1744,8 +1744,11 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     // Sign-off — POST /datasets/{id}/curation/sign
     //
     // An ordinary commit refuses a change that destroys derived data (409 REQUIRES_FORCE). Sign is
-    // where such a change belongs, and what earns it is the curation lock — the only thing that lock
-    // gates. These tests pin both halves: the gate holds, and past the gate the change applies.
+    // where such a change belongs, and what earns it is the curation lock. These tests pin both halves:
+    // the gate holds, and past the gate the change applies.
+    //
+    // 🛑 The lock is no longer sign-only. It now refuses ANY write by a non-holder while someone else
+    // holds it — see the commit-gate tests at the bottom of this class.
     //
     // The seeded experiment carries no differential-expression analyses, so requiresForce() is made
     // true here by stranding a subset — the other half of the same predicate.
@@ -1907,5 +1910,132 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     private static String deleteFactorValue( Long factorId, Long fvId ) {
         return "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":" + factorId + ","
                 + "\"factorValues\":{\"items\":[],\"deletedIds\":[" + fvId + "]}}]}}}";
+    }
+
+    // ============================================================================================
+    // The commit gate — holding the lock refuses other people's writes
+    //
+    // The lock used to be advisory everywhere except sign-off: "nothing downstream may read a held
+    // lock as permission", with baseline.lastModified as the correctness guarantee. It still is the
+    // correctness guarantee. What changed is that a batch run can state its claim BEFORE the work
+    // rather than discovering each collision after doing that dataset's work.
+    //
+    // The non-breaking half matters as much as the gate: an unheld dataset must commit exactly as it
+    // always did, or every existing client starts 409ing the day this ships.
+    // ============================================================================================
+
+    /** The gate: someone else holds it, so the write is refused and names them. */
+    @Test
+    public void testCommitWhileAnotherCuratorHoldsTheLockIsRefused() {
+        testAuthenticationUtils.runAsAgent();
+        takeLockFor( "batchalice" );
+        testAuthenticationUtils.runAsAdmin();
+
+        String body = "{\"curationDetails\":{\"curationNote\":\"side edit\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.CONFLICT.getStatusCode() );
+            String json = r.readEntity( String.class );
+            assertThat( json ).contains( "\"reason\":\"LOCK_REQUIRED\"" );
+            assertThat( json ).as( "and it names who is in the way" ).contains( "batchalice" );
+        }
+    }
+
+    /**
+     * 🛑 The non-breaking guarantee. Nobody holds the lock, so the commit behaves exactly as it did
+     * before the gate existed. If this ever fails, every client that commits without acquiring —
+     * which today is all of them — is broken.
+     */
+    @Test
+    public void testCommitOnAnUnheldDatasetIsNotGated() {
+        String body = "{\"curationDetails\":{\"curationNote\":\"no lock anywhere\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertOk( r );
+        }
+    }
+
+    /** Holding it yourself is not being blocked by it. */
+    @Test
+    public void testCommitByTheLockHolderIsNotGated() {
+        takeLockFor( null );
+        String body = "{\"curationDetails\":{\"curationNote\":\"mine to edit\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertOk( r );
+        }
+    }
+
+    /**
+     * A preflight writes nothing, so it is deliberately exempt. Refusing it would stop a curator
+     * finding out what a commit WOULD do while somebody else holds the lock — which is exactly the
+     * moment they most want to know.
+     */
+    @Test
+    public void testPreflightIsNotGatedByAnotherCuratorsLock() {
+        testAuthenticationUtils.runAsAgent();
+        takeLockFor( "batchalice" );
+        testAuthenticationUtils.runAsAdmin();
+
+        String body = "{\"curationDetails\":{\"curationNote\":\"what would this do\"}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/preflight" ).request()
+                .post( Entity.json( body ) ) ) {
+            assertOk( r );
+        }
+    }
+
+    // ============================================================================================
+    // Bulk locks — POST /datasets/curation/locks
+    // ============================================================================================
+
+    /**
+     * The batch never fails as a unit. One dataset held by someone else must not sink the claim over
+     * the rest, so each id carries its own outcome and the incumbent is named.
+     */
+    @Test
+    public void testBulkLockReportsPerDatasetRatherThanFailingTheBatch() {
+        testAuthenticationUtils.runAsAgent();
+        takeLockFor( "batchalice" );
+        testAuthenticationUtils.runAsAdmin();
+
+        String body = "{\"datasetIds\":[" + ee.getId() + "]}";
+        try ( Response r = target( "/datasets/curation/locks" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).as( "the batch itself succeeds" )
+                    .isEqualTo( Response.Status.OK.getStatusCode() );
+            String json = r.readEntity( String.class );
+            assertThat( json ).contains( "\"granted\":false" ).contains( "heldByAnother" );
+            assertThat( json ).as( "and names the incumbent so the caller can report it" ).contains( "batchalice" );
+        }
+    }
+
+    /** A free dataset is granted, and the claim is then visible to the single-dataset read. */
+    @Test
+    public void testBulkLockGrantsAFreeDatasetAndTheClaimIsVisible() {
+        String body = "{\"datasetIds\":[" + ee.getId() + "]}";
+        try ( Response r = target( "/datasets/curation/locks" ).request().post( Entity.json( body ) ) ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).contains( "\"granted\":true" );
+        }
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).contains( "\"locked\":true" );
+        }
+    }
+
+    /**
+     * The companion a finished run has to call. Without it a completed batch's claims sit until the
+     * lease lapses, gating curators on datasets nothing is working on any more.
+     */
+    @Test
+    public void testBulkReleaseDropsTheCallersOwnClaims() {
+        String body = "{\"datasetIds\":[" + ee.getId() + "]}";
+        try ( Response r = target( "/datasets/curation/locks" ).request().post( Entity.json( body ) ) ) {
+            assertOk( r );
+        }
+        try ( Response r = target( "/datasets/curation/locks/release" ).request().post( Entity.json( body ) ) ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).contains( "true" );
+        }
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/lock" ).request().get() ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) ).contains( "\"locked\":false" );
+        }
     }
 }

@@ -145,6 +145,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.core.analysis.service.ExpressionDataDeleterService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationLock;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -2194,9 +2195,16 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Take, refresh or steal the curation lock",
-            description = "🛑 **Advisory.** The guarantee against concurrent writes is the commit's "
-                    + "`baseline.lastModified` 409, not this. The lock exists so that 409 rarely fires and so a "
-                    + "curator can see who else is working, and it gates exactly one thing: sign-off.\n\n"
+            description = "🛑 **Holding this lock now blocks other people's writes.** A commit, restore or "
+                    + "sign by anyone else on this dataset is refused 409 `LOCK_REQUIRED` while the lease "
+                    + "lasts. It previously gated only sign-off and was advisory everywhere else; that is no "
+                    + "longer true, and any client written against \"a held lock is never permission\" needs "
+                    + "re-reading.\n\n"
+                    + "The correctness guarantee is still the commit's `baseline.lastModified` 409 — the lock "
+                    + "does not replace it. What the lock adds is stating a claim BEFORE the work instead of "
+                    + "discovering the collision after it, which is what a batch run needs.\n\n"
+                    + "A dataset nobody holds commits exactly as before, so acquiring is not a precondition "
+                    + "for writing. A dry-run preflight is never gated.\n\n"
                     + "`?steal=true` takes a lock someone else holds. Always available, by design — there is no "
                     + "unlock ceremony to forget — and it destroys nothing, because the displaced curator's "
                     + "draft is a separate row. Their next commit 409s and they re-sync.\n\n"
@@ -2247,6 +2255,157 @@ public class DatasetsWebService {
             curationLockService.forceRelease( ee );
         }
         return Response.noContent().build();
+    }
+
+    /**
+     * Maximum datasets per bulk lock request. Matches the bulk pipeline-status cap.
+     * <p>
+     * A run larger than this chunks. That is deliberate rather than a limitation to raise later: a claim over
+     * hundreds of datasets is held for a fixed lease, and a caller that has to ask for it in chunks is a caller
+     * that notices how much of the corpus it is holding.
+     */
+    private static final int MAX_CURATION_LOCK_BULK = 500;
+
+    /** Body for the bulk lock routes. */
+    public static class CurationLockBulkRequest {
+        @Nullable
+        private List<Long> datasetIds;
+
+        @Nullable
+        public List<Long> getDatasetIds() {
+            return datasetIds;
+        }
+
+        @com.fasterxml.jackson.annotation.JsonProperty("datasetIds")
+        public void setDatasetIds( @Nullable List<Long> datasetIds ) {
+            this.datasetIds = datasetIds;
+        }
+    }
+
+    /** One dataset's outcome in a bulk lock request. */
+    public static class CurationLockBulkResult {
+        @Schema(description = "Whether this request took or refreshed the lock on this dataset.")
+        public boolean granted;
+        @Schema(description = "Why it was not granted; null when it was. Currently only `heldByAnother`.")
+        public String reason;
+        @Schema(description = "The lock as it now stands — the caller's if granted, the incumbent's if not.")
+        public CurationLockResponse lock;
+    }
+
+    @POST
+    @Path("/curation/locks")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Take or refresh the curation lock on many datasets in one round-trip",
+            description = "For a batch run that wants to state its claim over the datasets it is about to work "
+                    + "on, rather than discovering a collision one dataset at a time after doing each one's "
+                    + "work. Holding these locks refuses everyone else's commits on those datasets — see "
+                    + "`POST /datasets/{dataset}/curation/lock`.\n\n"
+                    + "🛑 **Partial by design: this never fails as a unit.** Each dataset gets its own entry, "
+                    + "`granted` true or false with the incumbent named. An all-or-nothing batch would be the "
+                    + "wrong shape — one dataset held by a curator would sink a 500-dataset claim, and the "
+                    + "caller can simply proceed with what it got and skip the rest.\n\n"
+                    + "`steal=true` applies to every id in the request. Prefer taking what is free and skipping "
+                    + "the rest: a batch that steals is a batch that overrides whatever a curator is in the "
+                    + "middle of, on every dataset at once.\n\n"
+                    + "⚠️ Nothing sweeps expiry, so a run that dies holds its claims until the lease lapses. "
+                    + "Keep `ttlMinutes` near the time you actually need and re-take rather than asking for "
+                    + "hours up front. Releasing when done is `POST /datasets/curation/locks/release`.\n\n"
+                    + "Hard cap: " + MAX_CURATION_LOCK_BULK + " ids per request; a larger run chunks. IDs the "
+                    + "caller cannot read are dropped rather than 404ing the batch.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Missing or empty `datasetIds`, or over the cap.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<Map<Long, CurationLockBulkResult>> acquireCurationLocks(
+            @Parameter(description = "Take locks other curators hold. Applies to every id in the request.")
+            @QueryParam("steal") @DefaultValue("false") Boolean steal,
+            @Parameter(description = "Lease length in minutes; defaults to 30.")
+            @QueryParam("ttlMinutes") @DefaultValue("30") Integer ttlMinutes,
+            @Parameter(description = "Which curator the batch is acting for. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
+            @Nullable CurationLockBulkRequest body
+    ) {
+        List<Long> ids = requireBulkLockIds( body );
+        String holder = SecurityUtil.resolveActingIdentity( onBehalfOf );
+        Map<Long, CurationLockBulkResult> out = new LinkedHashMap<>( ids.size() );
+        for ( ExpressionExperiment ee : resolveReadableDatasets( ids ) ) {
+            CurationLockBulkResult r = new CurationLockBulkResult();
+            try {
+                r.lock = toLockResponse( curationLockService.acquire( ee, holder,
+                        Boolean.TRUE.equals( steal ), ttlMinutes ) );
+                r.granted = true;
+            } catch ( CurationLockService.CurationLockedException e ) {
+                // Not an error for a batch: it asked about many and this one is busy. The incumbent is named
+                // so the caller can report or retry, and the rest of the batch is unaffected.
+                r.granted = false;
+                r.reason = "heldByAnother";
+                r.lock = toLockResponse( curationLockService.current( ee ).orElse( null ) );
+            }
+            out.put( ee.getId(), r );
+        }
+        return respond( out );
+    }
+
+    @POST
+    @Path("/curation/locks/release")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Release the curation lock on many datasets in one round-trip",
+            description = "The companion to `POST /datasets/curation/locks`, and the thing a finished batch run "
+                    + "should call. Without it a completed run's claims sit until their lease lapses, blocking "
+                    + "curators on datasets nothing is working on any more.\n\n"
+                    + "Releases only the locks this caller holds; ids held by someone else are reported "
+                    + "`released: false` rather than refused, so a batch can release its whole set without "
+                    + "first working out which ones it still owns.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Missing or empty `datasetIds`, or over the cap.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<Map<Long, Boolean>> releaseCurationLocks(
+            @Parameter(description = "Which curator the batch is acting for. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
+            @Nullable CurationLockBulkRequest body
+    ) {
+        List<Long> ids = requireBulkLockIds( body );
+        String holder = SecurityUtil.resolveActingIdentity( onBehalfOf );
+        Map<Long, Boolean> out = new LinkedHashMap<>( ids.size() );
+        for ( ExpressionExperiment ee : resolveReadableDatasets( ids ) ) {
+            out.put( ee.getId(), curationLockService.release( ee, holder ) );
+        }
+        return respond( out );
+    }
+
+    private static List<Long> requireBulkLockIds( @Nullable CurationLockBulkRequest body ) {
+        if ( body == null || body.getDatasetIds() == null || body.getDatasetIds().isEmpty() ) {
+            throw new BadRequestException( "A request body with non-empty 'datasetIds' is required." );
+        }
+        // Deduplicated, caller order preserved: a repeated id would otherwise acquire twice and, on release,
+        // report a second false for a lock the first entry already dropped.
+        List<Long> ids = new ArrayList<>( new LinkedHashSet<>( body.getDatasetIds() ) );
+        if ( ids.size() > MAX_CURATION_LOCK_BULK ) {
+            throw new BadRequestException( "At most " + MAX_CURATION_LOCK_BULK
+                    + " datasets per request; got " + ids.size() + ". Chunk the run." );
+        }
+        return ids;
+    }
+
+    /**
+     * Resolve ids to datasets the caller can read, dropping the ones they cannot.
+     * <p>
+     * Same ACL-pre-filtered load the bulk pipeline-status route uses: {@code load(Filters, Sort)} filters in
+     * the query (see {@code SecurableFilteringVoEnabledService}), so this is one round-trip for the whole
+     * batch rather than one per id, and unreadable or absent ids simply do not come back.
+     * <p>
+     * Dropped rather than 404: a batch asking about 500 datasets should not lose the whole request to one id
+     * it cannot see, and the response is keyed by id so the caller can tell what came back.
+     */
+    private List<ExpressionExperiment> resolveReadableDatasets( List<Long> ids ) {
+        Filters filters = Filters.by(
+                expressionExperimentService.getFilter( "id", Long.class, Filter.Operator.in, ids ) );
+        return expressionExperimentService.load( filters, null );
     }
 
     private static CurationLockResponse toLockResponse( @Nullable ubic.gemma.model.common.auditAndSecurity.curation.CurationLock lock ) {
@@ -2313,6 +2472,10 @@ public class DatasetsWebService {
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Parameter(description = "Predict the sign without writing. Still requires the lock — a dry run of a sign a curator could not perform is a misleading answer.")
             @QueryParam("dryRun") @DefaultValue("false") Boolean dryRun,
+            @Parameter(description = "Keep the lock instead of releasing it on success. For a batch run, which "
+                    + "signs many datasets under one claim and would otherwise drop its lock at the first sign "
+                    + "and have every later commit refused by its own gate.")
+            @QueryParam("keepLock") @DefaultValue("false") Boolean keepLock,
             @Nullable CurationDocument body
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -2321,12 +2484,23 @@ public class DatasetsWebService {
         // An empty body counts as no body. A client that POSTs `{}` means "sign what I have been drafting", and
         // committing nothing while reporting success is the wrong answer to that.
         CurationDocument doc = hasAnySection( body ) ? body : readDraftPayloadForSigning( ee, signer );
+        // 🛑 `run` is deliberately not a section, so a body carrying ONLY run provenance counts as "no body"
+        // above and the curator's DRAFT is signed instead. The runId still describes THIS sign and has to
+        // survive that, or a relay that dutifully sends one has it accepted and silently dropped — and the
+        // snapshot records no courier, which is the whole reason to send it.
+        if ( body != null && body.getRun() != null && doc.getRun() == null ) {
+            doc.setRun( body.getRun() );
+        }
         CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true, signer );
-        if ( !dryRun ) {
+        if ( !dryRun && !Boolean.TRUE.equals( keepLock ) ) {
             // Signing off ends the curator's turn on this dataset, so the lock goes back with it -- otherwise
             // every signed dataset stays locked until its lease runs out or somebody steals it. Only on success,
             // and never on a dry run: a sign that 409'd leaves the curator holding the lock, which is exactly
             // what they need to re-read and sign again.
+            //
+            // ?keepLock=true is the batch case: one claim over many datasets, signing several of them. Releasing
+            // per sign would drop that claim at the first one and every later commit in the run would then be
+            // refused by the gate this same lock now applies.
             curationLockService.release( ee, signer );
         }
         return respond( report );
@@ -2344,6 +2518,60 @@ public class DatasetsWebService {
      * The lock check, and the only gate on sign-off. Reads through {@link CurationLockService#isHeldBy}, so a
      * lapsed lease counts as nobody holding it — the same reading `GET .../curation/lock` reports.
      */
+    /**
+     * The commit gate: a write is refused while a DIFFERENT identity holds the curation lock.
+     * <p>
+     * 🛑 <b>This reverses a written invariant.</b> The lock was advisory — "nothing downstream may read a held
+     * lock as permission" — with {@code baseline.lastModified} as the correctness guarantee and the lock there
+     * only to make that 409 rare. It still is the correctness guarantee; what changed is that a claim can now
+     * be stated BEFORE the work rather than discovered after it. That matters for a batch run: a 1000-dataset
+     * job otherwise finds a collision one dataset at a time, after doing each one's work.
+     * <p>
+     * An unheld dataset commits exactly as before, so no existing caller has to acquire anything. Only a
+     * foreign holder refuses. A lapsed lease is not a holder — {@link CurationLockService#current} reads an
+     * expired row as empty — so a batch that dies mid-run frees its claims when the lease runs out rather than
+     * wedging the corpus.
+     * <p>
+     * ⚠️ Deliberately NOT applied to a dry run: a preflight writes nothing, and refusing it would stop a
+     * curator finding out what a commit WOULD do while somebody else holds the lock — which is exactly when
+     * they most want to know.
+     * <p>
+     * {@code steal} remains available to everyone, so this gate never wedges: it makes a side edit deliberate
+     * rather than impossible.
+     */
+    private void requireNoForeignCurationLock( ExpressionExperiment ee, @Nullable String actingAs ) {
+        String holder = curationLockService.current( ee ).map( CurationLock::getLockedBy ).orElse( null );
+        if ( holder == null ) {
+            // Nobody holds it, or the lease lapsed. Commit as before -- the overwhelmingly common case, and
+            // deciding it needs no caller identity at all. Resolving the identity first would make an
+            // unauthenticated request fail HERE, turning what should be a 400 or a 403 into a 500.
+            return;
+        }
+        String actor = actingAs != null ? actingAs : currentUsernameOrNull();
+        if ( holder.equals( actor ) ) {
+            return;
+        }
+        throw new CurationCommitConflictException( CurationCommitConflictException.Reason.LOCK_REQUIRED,
+                "This dataset is held by " + holder + ", so committing would edit underneath them. Wait, ask "
+                        + "them, or take it with POST /datasets/" + ee.getId() + "/curation/lock?steal=true." );
+    }
+
+    /**
+     * The caller's username, or null when there is no recognized principal.
+     * <p>
+     * {@link SecurityUtil#getCurrentUsername()} throws rather than returning null in that case. Whoever cannot
+     * be named cannot be the holder, which is all this gate needs to know -- and a request that would be
+     * refused later for some other reason should reach that reason rather than dying here.
+     */
+    @Nullable
+    private static String currentUsernameOrNull() {
+        try {
+            return SecurityUtil.getCurrentUsername();
+        } catch ( RuntimeException e ) {
+            return null;
+        }
+    }
+
     private void requireCurationLockHeldBy( ExpressionExperiment ee, String signer ) {
         if ( curationLockService.isHeldBy( ee, signer ) ) {
             return;
@@ -2857,6 +3085,13 @@ public class DatasetsWebService {
         }
 
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+
+        // Every write path lands here -- commit, restore and sign -- so the gate goes here rather than on each
+        // route. Sign checks the stronger condition (it must HOLD the lock) a few lines up in its own handler;
+        // this one only refuses a foreign holder, which is a weaker check that sign already satisfies.
+        if ( !dryRun ) {
+            requireNoForeignCurationLock( ee, actingAs );
+        }
 
         CurationCommitRequest request = new CurationCommitRequest();
         request.setExpectedLastUpdated( parseBaselineToken( body.getBaseline() != null ? body.getBaseline().getLastModified() : null ) );
