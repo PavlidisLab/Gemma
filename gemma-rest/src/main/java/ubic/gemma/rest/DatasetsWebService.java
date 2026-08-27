@@ -128,7 +128,10 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.description.PublicationAssociation;
 import ubic.gemma.model.common.description.PublicationAssociationSource;
 import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -7535,14 +7538,46 @@ public class DatasetsWebService {
     }
 
     /**
-     * Request body for {@link #patchDatasetQuantitationType}. Currently understands the
-     * {@code isPreferred} (or {@code isPreferred}) field; future patchable fields can be added here.
+     * Request body for {@link #patchDatasetQuantitationType}. Every field is optional; a field left out (or
+     * null) is unchanged, matching {@link CurationDetailsUpdateRequest}.
+     * <p>
+     * The descriptive fields say how the stored numbers are to be READ. They do not touch the numbers, and
+     * correcting one is how a wrongly-recorded quantitation type gets fixed without replacing data.
+     * <p>
+     * {@code representation} and {@code isRecomputedFromRawData} are accepted by the parser only so they can be
+     * refused with a reason: the first describes the stored values themselves rather than their interpretation,
+     * and the second is provenance about what computed them.
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class QuantitationTypePatchRequest {
         @Nullable
         @com.fasterxml.jackson.annotation.JsonAlias({ "is_preferred", "isPreferred" })
         private Boolean preferred;
+        @Nullable
+        private String name;
+        @Nullable
+        private String description;
+        @Nullable
+        private GeneralType generalType;
+        @Nullable
+        private StandardQuantitationType type;
+        @Nullable
+        private ScaleType scale;
+        @Nullable
+        @com.fasterxml.jackson.annotation.JsonAlias({ "is_ratio", "isRatio" })
+        private Boolean ratio;
+        @Nullable
+        @com.fasterxml.jackson.annotation.JsonAlias({ "is_background_subtracted", "isBackgroundSubtracted" })
+        private Boolean backgroundSubtracted;
+        @Nullable
+        @com.fasterxml.jackson.annotation.JsonAlias({ "is_normalized", "isNormalized" })
+        private Boolean normalized;
+        /* refused, not applied -- see the class javadoc */
+        @Nullable
+        private String representation;
+        @Nullable
+        @com.fasterxml.jackson.annotation.JsonAlias({ "is_recomputed_from_raw_data", "isRecomputedFromRawData" })
+        private Boolean recomputedFromRawData;
 
         @Nullable
         public Boolean getPreferred() {
@@ -7551,6 +7586,96 @@ public class DatasetsWebService {
 
         public void setPreferred( @Nullable Boolean preferred ) {
             this.preferred = preferred;
+        }
+
+        @Nullable
+        public String getName() {
+            return name;
+        }
+
+        public void setName( @Nullable String name ) {
+            this.name = name;
+        }
+
+        @Nullable
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription( @Nullable String description ) {
+            this.description = description;
+        }
+
+        @Nullable
+        public GeneralType getGeneralType() {
+            return generalType;
+        }
+
+        public void setGeneralType( @Nullable GeneralType generalType ) {
+            this.generalType = generalType;
+        }
+
+        @Nullable
+        public StandardQuantitationType getType() {
+            return type;
+        }
+
+        public void setType( @Nullable StandardQuantitationType type ) {
+            this.type = type;
+        }
+
+        @Nullable
+        public ScaleType getScale() {
+            return scale;
+        }
+
+        public void setScale( @Nullable ScaleType scale ) {
+            this.scale = scale;
+        }
+
+        @Nullable
+        public Boolean getRatio() {
+            return ratio;
+        }
+
+        public void setRatio( @Nullable Boolean ratio ) {
+            this.ratio = ratio;
+        }
+
+        @Nullable
+        public Boolean getBackgroundSubtracted() {
+            return backgroundSubtracted;
+        }
+
+        public void setBackgroundSubtracted( @Nullable Boolean backgroundSubtracted ) {
+            this.backgroundSubtracted = backgroundSubtracted;
+        }
+
+        @Nullable
+        public Boolean getNormalized() {
+            return normalized;
+        }
+
+        public void setNormalized( @Nullable Boolean normalized ) {
+            this.normalized = normalized;
+        }
+
+        @Nullable
+        public String getRepresentation() {
+            return representation;
+        }
+
+        public void setRepresentation( @Nullable String representation ) {
+            this.representation = representation;
+        }
+
+        @Nullable
+        public Boolean getRecomputedFromRawData() {
+            return recomputedFromRawData;
+        }
+
+        public void setRecomputedFromRawData( @Nullable Boolean recomputedFromRawData ) {
+            this.recomputedFromRawData = recomputedFromRawData;
         }
     }
 
@@ -7564,9 +7689,21 @@ public class DatasetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Patch a quantitation type (currently dispatches on `isPreferred`)",
-            description = "Curation-UI compatibility shim for body-driven patches. Body: `{\"isPreferred\": true|false}` "
-                    + "delegates to the canonical `/preferred` handler. Other patchable fields can be added later.",
+    @Operation(summary = "Correct a quantitation type's record",
+            description = "Changes what the stored numbers are SAID to be. It does not touch the numbers, so this "
+                    + "is how a wrongly-recorded quantitation type is fixed without replacing data — the case it "
+                    + "was built for is a pre-2018 Affymetrix `rma value` recorded as `LINEAR` when RMA output is "
+                    + "log2.\n\n"
+                    + "Every field is optional and only the ones present are changed: `name`, `description`, "
+                    + "`generalType`, `type`, `scale`, `isRatio`, `isBackgroundSubtracted`, `isNormalized`. "
+                    + "`isPreferred` is also accepted and delegates to the canonical `/preferred` handler, which "
+                    + "does the unmark-the-other-one book-keeping and emits its own event.\n\n"
+                    + "🛑 `representation` and `isRecomputedFromRawData` are refused rather than ignored. The first "
+                    + "describes the stored values themselves — changing it would misdescribe the vectors rather "
+                    + "than reinterpret them — and the second records what computed them.\n\n"
+                    + "⚠️ Scale and type govern how downstream code transforms the data, so a correction here "
+                    + "changes later results. The change is recorded as an update event naming the old and new "
+                    + "values.",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
@@ -7580,12 +7717,81 @@ public class DatasetsWebService {
             @PathParam("qtId") Long qtId,
             @Nullable QuantitationTypePatchRequest body
     ) {
-        if ( body == null || body.getPreferred() == null ) {
-            throw new BadRequestException( "PATCH body must include at least one supported field (currently: `isPreferred`)." );
+        if ( body == null ) {
+            throw new BadRequestException( "PATCH body must include at least one supported field." );
         }
-        QuantitationTypePreferredRequest preferredBody = new QuantitationTypePreferredRequest();
-        preferredBody.setPreferred( body.getPreferred() );
-        return doSetDatasetQuantitationTypePreferred( datasetArg, qtId, preferredBody );
+        if ( body.getRepresentation() != null ) {
+            throw new BadRequestException( "`representation` describes the stored values, not how to read them, "
+                    + "so it cannot be patched: changing it would misdescribe the vectors. Reload or recompute the "
+                    + "data instead." );
+        }
+        if ( body.getRecomputedFromRawData() != null ) {
+            throw new BadRequestException( "`isRecomputedFromRawData` records what computed this quantitation type, "
+                    + "so it is set by the computation rather than by hand." );
+        }
+
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt = quantitationTypeService.loadById( qtId, ee );
+        if ( qt == null ) {
+            throw new NotFoundException( "Quantitation type " + qtId + " does not belong to dataset " + ee.getShortName() + "." );
+        }
+
+        // Only fields that are present are touched, and each one that actually moves is named in the audit note --
+        // scale and type decide how downstream code transforms the data, so "what did it say before" is the
+        // question anyone reading this later will have.
+        List<String> changes = new ArrayList<>();
+        if ( body.getName() != null && !body.getName().equals( qt.getName() ) ) {
+            changes.add( String.format( "name %s -> %s", qt.getName(), body.getName() ) );
+            qt.setName( body.getName() );
+        }
+        if ( body.getDescription() != null && !body.getDescription().equals( qt.getDescription() ) ) {
+            changes.add( "description updated" );
+            qt.setDescription( body.getDescription() );
+        }
+        if ( body.getGeneralType() != null && body.getGeneralType() != qt.getGeneralType() ) {
+            changes.add( String.format( "generalType %s -> %s", qt.getGeneralType(), body.getGeneralType() ) );
+            qt.setGeneralType( body.getGeneralType() );
+        }
+        if ( body.getType() != null && body.getType() != qt.getType() ) {
+            changes.add( String.format( "type %s -> %s", qt.getType(), body.getType() ) );
+            qt.setType( body.getType() );
+        }
+        if ( body.getScale() != null && body.getScale() != qt.getScale() ) {
+            changes.add( String.format( "scale %s -> %s", qt.getScale(), body.getScale() ) );
+            qt.setScale( body.getScale() );
+        }
+        if ( body.getRatio() != null && body.getRatio() != qt.getIsRatio() ) {
+            changes.add( String.format( "isRatio %s -> %s", qt.getIsRatio(), body.getRatio() ) );
+            qt.setIsRatio( body.getRatio() );
+        }
+        if ( body.getBackgroundSubtracted() != null && body.getBackgroundSubtracted() != qt.getIsBackgroundSubtracted() ) {
+            changes.add( String.format( "isBackgroundSubtracted %s -> %s", qt.getIsBackgroundSubtracted(), body.getBackgroundSubtracted() ) );
+            qt.setIsBackgroundSubtracted( body.getBackgroundSubtracted() );
+        }
+        if ( body.getNormalized() != null && body.getNormalized() != qt.getIsNormalized() ) {
+            changes.add( String.format( "isNormalized %s -> %s", qt.getIsNormalized(), body.getNormalized() ) );
+            qt.setIsNormalized( body.getNormalized() );
+        }
+
+        if ( changes.isEmpty() && body.getPreferred() == null ) {
+            throw new BadRequestException( "PATCH body must include at least one supported field, and each field "
+                    + "supplied must differ from what the quantitation type already records." );
+        }
+
+        if ( !changes.isEmpty() ) {
+            // Not through updateQuantitationType: that path reads the preferred flag and would emit a
+            // PreferredDataChangedEvent for a change that left preference alone.
+            quantitationTypeService.update( qt );
+            auditTrailService.addUpdateEvent( ee, String.format( "Quantitation type %d (%s): %s.",
+                    qt.getId(), qt.getName(), String.join( ", ", changes ) ) );
+        }
+
+        if ( body.getPreferred() != null ) {
+            QuantitationTypePreferredRequest preferredBody = new QuantitationTypePreferredRequest();
+            preferredBody.setPreferred( body.getPreferred() );
+            return doSetDatasetQuantitationTypePreferred( datasetArg, qtId, preferredBody );
+        }
+        return respond( new QuantitationTypeValueObject( qt, ee, quantitationTypeService.getDataVectorType( qt ) ) );
     }
 
     private ResponseDataObject<QuantitationTypeValueObject> doSetDatasetQuantitationTypePreferred(

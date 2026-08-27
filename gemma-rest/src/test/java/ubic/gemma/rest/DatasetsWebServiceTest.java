@@ -1822,6 +1822,89 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
     }
 
+    /* ---- PATCH /datasets/{id}/quantitationTypes/{qtId} ---- */
+
+    private QuantitationType linearRmaQt() {
+        QuantitationType qt = new QuantitationType();
+        qt.setId( 77L );
+        qt.setName( "rma value" );
+        qt.setGeneralType( ubic.gemma.model.common.quantitationtype.GeneralType.QUANTITATIVE );
+        qt.setType( ubic.gemma.model.common.quantitationtype.StandardQuantitationType.AMOUNT );
+        qt.setScale( ubic.gemma.model.common.quantitationtype.ScaleType.LINEAR );
+        qt.setRepresentation( ubic.gemma.model.common.quantitationtype.PrimitiveType.DOUBLE );
+        qt.setIsRatio( false );
+        return qt;
+    }
+
+    /**
+     * The case this was expanded for: a pre-2018 Affymetrix `rma value` recorded as LINEAR when RMA output is
+     * log2. The correction changes the record, not the numbers, so it must reach
+     * {@code quantitationTypeService.update} and say what moved.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPatchQuantitationTypeCorrectsTheScale() {
+        QuantitationType qt = linearRmaQt();
+        when( quantitationTypeService.loadById( 77L, ee ) ).thenReturn( qt );
+
+        assertThat( target( "/datasets/1/quantitationTypes/77" ).request()
+                .method( "PATCH", Entity.json( "{\"scale\":\"LOG2\"}" ) ) )
+                .hasStatus( Response.Status.OK );
+
+        assertThat( qt.getScale() ).isEqualTo( ubic.gemma.model.common.quantitationtype.ScaleType.LOG2 );
+        verify( quantitationTypeService ).update( qt );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), contains( "scale LINEAR -> LOG2" ) );
+    }
+
+    /**
+     * Preference did not change, so no preferred-data event may be emitted for it. Routing a descriptive patch
+     * through updateQuantitationType would emit one, because that path reads the preferred flag and cannot tell
+     * "already preferred" from "just became preferred".
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPatchQuantitationTypeDoesNotTouchPreference() {
+        QuantitationType qt = linearRmaQt();
+        when( quantitationTypeService.loadById( 77L, ee ) ).thenReturn( qt );
+
+        assertThat( target( "/datasets/1/quantitationTypes/77" ).request()
+                .method( "PATCH", Entity.json( "{\"scale\":\"LOG2\"}" ) ) )
+                .hasStatus( Response.Status.OK );
+
+        verify( expressionExperimentService, never() ).updateQuantitationType( any(), any(), any() );
+    }
+
+    /**
+     * representation describes the stored values rather than how to read them, so patching it would misdescribe
+     * the vectors. Refused with a reason rather than silently ignored.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPatchQuantitationTypeRefusesRepresentation() {
+        assertThat( target( "/datasets/1/quantitationTypes/77" ).request()
+                .method( "PATCH", Entity.json( "{\"representation\":\"INT\"}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( quantitationTypeService, never() ).update( any( QuantitationType.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent( any(), anyString() );
+    }
+
+    /**
+     * A patch that asks for what the record already says changes nothing, so it is a bad request rather than a
+     * 200 with an audit event nobody can interpret.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPatchQuantitationTypeRejectsANoOp() {
+        QuantitationType qt = linearRmaQt();
+        when( quantitationTypeService.loadById( 77L, ee ) ).thenReturn( qt );
+
+        assertThat( target( "/datasets/1/quantitationTypes/77" ).request()
+                .method( "PATCH", Entity.json( "{\"scale\":\"LINEAR\"}" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( quantitationTypeService, never() ).update( any( QuantitationType.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent( any(), anyString() );
+    }
+
     /**
      * A non-administrator does not learn that curation is under way. The lock is consulted either way -- what
      * changes is whether the answer is kept -- so the field reads null rather than false, which would assert
