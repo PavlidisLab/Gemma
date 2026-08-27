@@ -2757,14 +2757,15 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the curation details of a dataset",
             description = "The `curationNote` and `lastNoteUpdateEvent` fields are only populated for administrators.\n\n"
-                    + "`curationPending` is true while someone holds an unexpired curation lock on the dataset — "
-                    + "curation is under way, so what you read here is provisional. Cheap edits (tags, labels, "
-                    + "publications, basics) land as they are made while a design change waits for sign-off, so a "
-                    + "public dataset can show new labels against the old design; this is the flag that says so.\n\n"
-                    + "It reports only that, to everyone who can read the dataset. It never names the holder, the "
-                    + "run or the agent — `/datasets/{dataset}/curation/lock` serves that identity, to "
-                    + "authenticated callers. And it clears itself when the lease lapses rather than waiting on a "
-                    + "sign-off, so a curator who only relabels does not leave it stuck on.",
+                    + "`curationPending` is **administrators only** and is null for everyone else. It is true while "
+                    + "someone holds an unexpired curation lock on the dataset — curation is under way, so what you "
+                    + "read here is provisional. Cheap edits (tags, labels, publications, basics) land as they are "
+                    + "made while a design change waits for sign-off, so a dataset can show new labels against the "
+                    + "old design; this is the flag that says so.\n\n"
+                    + "It reports only that. It never names the holder, the run or the agent — "
+                    + "`/datasets/{dataset}/curation/lock` serves that identity. And it clears itself when the lease "
+                    + "lapses rather than waiting on a sign-off, so a curator who only relabels does not leave it "
+                    + "stuck on.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",

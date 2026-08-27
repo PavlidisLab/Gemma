@@ -1798,7 +1798,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
      * the dataset.
      */
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetDatasetCurationDetailsReportsCurationPendingWhileLocked() {
         ee.setCurationDetails( new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails() );
         ubic.gemma.model.common.auditAndSecurity.curation.CurationLock lock =
@@ -1823,11 +1823,35 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     }
 
     /**
+     * A non-administrator does not learn that curation is under way. The lock is consulted either way -- what
+     * changes is whether the answer is kept -- so the field reads null rather than false, which would assert
+     * something untrue. Null is how curationNote already behaves for a non-administrator.
+     */
+    @Test
+    @WithMockUser
+    public void testGetDatasetCurationDetailsHidesCurationPendingFromNonAdmins() {
+        ee.setCurationDetails( new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails() );
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationLock lock =
+                new ubic.gemma.model.common.auditAndSecurity.curation.CurationLock();
+        lock.setLockedBy( "curator-jane" );
+        lock.setExpiresAt( new Date( System.currentTimeMillis() + 600000L ) );
+        when( curationLockService.current( any( ubic.gemma.model.analysis.Investigation.class ) ) )
+                .thenReturn( Optional.of( lock ) );
+
+        try ( Response r = target( "/datasets/1/curationDetails" ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            String body = r.readEntity( String.class );
+            assertThat( body ).asInstanceOf( json() ).hasPathWithValue( "$.data.curationPending", null );
+            assertThat( body ).doesNotContain( "curator-jane" );
+        }
+    }
+
+    /**
      * A free dataset reads false, not null: the GET always consults the lock, so the reader can tell "nobody is
      * curating" from "this path did not look".
      */
     @Test
-    @WithMockUser
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetDatasetCurationDetailsReportsNoCurationPendingWhenUnlocked() {
         ee.setCurationDetails( new ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails() );
         when( curationLockService.current( any( ubic.gemma.model.analysis.Investigation.class ) ) )

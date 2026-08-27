@@ -39,15 +39,16 @@ public class CurationDetailsValueObject extends IdentifiableValueObject<Curation
     /**
      * Whether curation of the dataset is under way right now.
      * <p>
-     * Derived from the curation lock: true exactly while an unexpired claim exists. It names nobody, and it
-     * lapses with the lease rather than waiting on a sign-off, so a curator who only relabels does not leave it
-     * stuck on.
+     * Administrators only, like {@code curationNote} beside it. Derived from the curation lock: true exactly
+     * while an unexpired claim exists. It names nobody, and it lapses with the lease rather than waiting on a
+     * sign-off, so a curator who only relabels does not leave it stuck on.
      */
     @Nullable
-    @Schema(description = "True while someone holds an unexpired curation lock on the dataset: curation is under "
-            + "way, so treat what you read as provisional. It says nothing about who is curating — no holder, "
-            + "run or agent name is exposed here at any authorization level — and it clears itself when the "
-            + "lease lapses. Null when the reading path did not consult the lock.")
+    @Schema(description = "Administrators only; null for everyone else. True while someone holds an unexpired "
+            + "curation lock on the dataset: curation is under way, so treat what you read as provisional. It "
+            + "says nothing about who is curating — no holder, run or agent name is exposed here at any "
+            + "authorization level — and it clears itself when the lease lapses. Also null when the reading "
+            + "path did not consult the lock.")
     private Boolean curationPending;
 
     public CurationDetailsValueObject() {
@@ -75,10 +76,12 @@ public class CurationDetailsValueObject extends IdentifiableValueObject<Curation
      * holds.
      *
      * @param curationPending whether an unexpired curation lock exists on the dataset, or {@code null} when the
-     *                        caller did not look
+     *                        caller did not look. Kept only for administrators.
      */
     public CurationDetailsValueObject( CurationDetails curationDetails, @Nullable Boolean curationPending ) {
         this( curationDetails );
-        this.curationPending = curationPending;
+        if ( SecurityUtil.isUserAdmin() ) {
+            this.curationPending = curationPending;
+        }
     }
 }
