@@ -110,8 +110,10 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     private Long numPopulatedFactors;
 
-    // if it was switched
-    private Collection<ArrayDesignValueObject> originalPlatforms;
+    // if it was switched: inherited from ExpressionExperimentValueObject as a list of platform
+    // references. It used to be redeclared here as full ArrayDesignValueObjects, which nothing read
+    // -- the field had no reader anywhere in the codebase -- and which now collides with the base
+    // field every filtered read populates.
 
     // if it was split.
     /**

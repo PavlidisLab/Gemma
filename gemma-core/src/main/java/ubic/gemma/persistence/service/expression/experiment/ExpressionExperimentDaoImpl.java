@@ -61,6 +61,7 @@ import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -132,7 +133,7 @@ public class ExpressionExperimentDaoImpl
      *
      *   FILTERED_VO_CACHE_REGION  - EE details VO filter path (the hot one).
      *                               loadDetailsValueObjects*, loadWithRelationsAndCache,
-     *                               populateAnalysisInformation, populateArrayDesignCount,
+     *                               populateAnalysisInformation, populatePlatforms,
      *                               countBioMaterials.
      *   ANNOTATIONS_CACHE_REGION  - getExperiment/BioMaterial/FactorValue annotations
      *                               and the categories/terms usage-frequency rollups.
@@ -2342,18 +2343,24 @@ public class ExpressionExperimentDaoImpl
                             .map( ArrayDesignValueObject::new )
                             .collect( Collectors.toSet() );
                     vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
+                    // The same platforms in the reference form the base VO carries, so a caller reading
+                    // either shape sees the same answer whichever load path produced the VO.
+                    vo.setPlatforms( arrayDesignsUsedIds.stream()
+                            .map( platformsById::get )
+                            .filter( Objects::nonNull )
+                            .map( ad -> new ArrayDesignReferenceValueObject( ad.getId(), ad.getShortName(), ad.getName() ) )
+                            .collect( Collectors.toList() ) );
 
                     // original platforms
-                    Collection<ArrayDesignValueObject> originalPlatformsVos = details.stream()
+                    vo.setOriginalPlatforms( details.stream()
                             .map( ExpressionExperimentDetail::getOriginalPlatformId )
-                            .filter( Objects::nonNull ) // on original platform for the bioAssay
+                            .filter( Objects::nonNull ) // no original platform for the bioAssay
                             .distinct()
                             .filter( op -> !arrayDesignsUsedIds.contains( op ) ) // omit noop switches
                             .map( platformsById::get )
                             .filter( Objects::nonNull )
-                            .map( ArrayDesignValueObject::new )
-                            .collect( Collectors.toSet() );
-                    vo.setOriginalPlatforms( originalPlatformsVos );
+                            .map( ad -> new ArrayDesignReferenceValueObject( ad.getId(), ad.getShortName(), ad.getName() ) )
+                            .collect( Collectors.toList() ) );
 
                     Integer bioAssayCount = details.stream()
                             .map( ExpressionExperimentDetail::getBioAssaysCount )
@@ -2462,7 +2469,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     protected void postProcessValueObjects( List<ExpressionExperimentValueObject> results ) {
-        populateArrayDesignCount( results );
+        populatePlatforms( results );
     }
 
     @Override
@@ -4576,21 +4583,56 @@ public class ExpressionExperimentDaoImpl
                 .list();
     }
 
-    private void populateArrayDesignCount( Collection<ExpressionExperimentValueObject> eevos ) {
+    /**
+     * Name each VO's platforms, and its original platforms when it was switched, from the join that
+     * was already being made to count them.
+     * <p>
+     * This replaced a {@code count(distinct ba.arrayDesignUsed)} query. The count is now taken from
+     * the distinct platforms the same rows carry, so naming them costs no extra round trip — the
+     * expensive part, the bioAssay-to-platform join, was already in the page's post-processing.
+     * <p>
+     * 🛑 <b>It has to stay a separate, id-keyed query.</b> Reaching the platform from inside the
+     * paged, ACL-restricted dataset query is what is slow: uib measured
+     * {@code filter=bioAssays.arrayDesignUsed.shortName=GPL571} at 505 ms against 245 ms for the
+     * same page unfiltered. Here the ids are already known, so the join is an indexed lookup over
+     * one page.
+     * <p>
+     * A no-op switch — an original platform that is also one of the platforms in use — is left out,
+     * matching {@code loadDetailsValueObjects}. Reporting it would tell a curator a dataset was
+     * moved when it was not.
+     */
+    private void populatePlatforms( Collection<ExpressionExperimentValueObject> eevos ) {
         if ( eevos.isEmpty() ) {
             return;
         }
         Query q = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee.id, count(distinct ba.arrayDesignUsed) from ExpressionExperiment ee "
+                .createQuery( "select distinct ee.id, ad.id, ad.shortName, ad.name, op.id, op.shortName, op.name "
+                        + "from ExpressionExperiment ee "
                         + "join ee.bioAssays as ba "
-                        + "where ee.id in (:ids) "
-                        + "group by ee" )
+                        + "join ba.arrayDesignUsed as ad "
+                        + "left join ba.originalPlatform as op "
+                        + "where ee.id in (:ids)" )
                 .setCacheable( true )
                 .setCacheRegion( FILTERED_VO_CACHE_REGION );
-        Map<Long, Long> adCountById = QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
-                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+        Map<Long, Map<Long, ArrayDesignReferenceValueObject>> usedByEe = new HashMap<>();
+        Map<Long, Map<Long, ArrayDesignReferenceValueObject>> originalByEe = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> {
+                    Long eeId = ( Long ) row[0];
+                    usedByEe.computeIfAbsent( eeId, k -> new LinkedHashMap<>() )
+                            .putIfAbsent( ( Long ) row[1], new ArrayDesignReferenceValueObject( ( Long ) row[1], ( String ) row[2], ( String ) row[3] ) );
+                    if ( row[4] != null ) {
+                        originalByEe.computeIfAbsent( eeId, k -> new LinkedHashMap<>() )
+                                .putIfAbsent( ( Long ) row[4], new ArrayDesignReferenceValueObject( ( Long ) row[4], ( String ) row[5], ( String ) row[6] ) );
+                    }
+                } );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
-            eevo.setArrayDesignCount( adCountById.getOrDefault( eevo.getId(), 0L ) );
+            Map<Long, ArrayDesignReferenceValueObject> used = usedByEe.getOrDefault( eevo.getId(), Collections.emptyMap() );
+            eevo.setPlatforms( new ArrayList<>( used.values() ) );
+            eevo.setArrayDesignCount( ( long ) used.size() );
+            Map<Long, ArrayDesignReferenceValueObject> original = new LinkedHashMap<>( originalByEe.getOrDefault( eevo.getId(), Collections.emptyMap() ) );
+            original.keySet().removeAll( used.keySet() );
+            eevo.setOriginalPlatforms( new ArrayList<>( original.values() ) );
         }
     }
 

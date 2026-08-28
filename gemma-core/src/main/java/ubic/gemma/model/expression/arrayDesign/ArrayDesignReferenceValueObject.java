@@ -57,6 +57,23 @@ public class ArrayDesignReferenceValueObject implements Serializable {
     @Nullable
     private String shortName;
 
+    /**
+     * Full name, e.g. {@code Affymetrix GeneChip Human Genome U133A 2.0 Array}.
+     * <p>
+     * The short name is an accession and the full name is the only part a curator reads as a
+     * description of the hardware, so a reference that carries only the accession cannot in fact
+     * name the platform it points at.
+     */
+    @Nullable
+    private String name;
+
+    /**
+     * The identity-only form, for the callers that select two columns.
+     */
+    public ArrayDesignReferenceValueObject( Long id, @Nullable String shortName ) {
+        this( id, shortName, null );
+    }
+
     @Override
     public String toString() {
         return "ArrayDesignReferenceValueObject [id=" + id

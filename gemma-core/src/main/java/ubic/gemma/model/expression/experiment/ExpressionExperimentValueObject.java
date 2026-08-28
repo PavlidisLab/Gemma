@@ -8,6 +8,7 @@ import ubic.gemma.core.security.acl.domain.AclPrincipalSid;
 import ubic.gemma.core.security.acl.domain.AclSid;
 import ubic.gemma.core.security.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
@@ -29,6 +30,7 @@ import org.springframework.lang.Nullable;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.List;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
 @Getter
@@ -86,6 +88,25 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     @JsonProperty("numberOfArrayDesigns")
     private Long arrayDesignCount;
+
+    /**
+     * The platforms this dataset's assays were run on, as accession + full name.
+     * <p>
+     * A list because a dataset may use more than one; {@link #arrayDesignCount} is the size of this
+     * list and is kept because clients read it. Populated on every filtered read out of the same
+     * query that produces the count — the join to the platform was already being paid for.
+     */
+    @Schema(description = "Platforms the dataset's assays were run on, as id + shortName + name. Empty when the dataset has no assays.")
+    private List<ArrayDesignReferenceValueObject> platforms;
+
+    /**
+     * The platforms this dataset's assays were run on BEFORE a platform switch, when one happened.
+     * <p>
+     * Empty for the great majority of datasets. A no-op switch — an original platform that is also
+     * a platform in use — is left out, so a non-empty list here means the dataset really was moved.
+     */
+    @Schema(description = "Platforms the assays were originally run on, when the dataset was switched to another platform. Empty when there was no switch; a switch to the same platform is not reported.")
+    private List<ArrayDesignReferenceValueObject> originalPlatforms;
     private String batchConfound;
     /**
      * Batch effect type. See {@link BatchEffectType} enum for possible values.
@@ -305,6 +326,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.experimentalDesign = vo.getExperimentalDesign();
         this.processedExpressionVectorCount = vo.getProcessedExpressionVectorCount();
         this.arrayDesignCount = vo.getArrayDesignCount();
+        this.platforms = vo.getPlatforms();
+        this.originalPlatforms = vo.getOriginalPlatforms();
         this.bioMaterialCount = vo.getBioMaterialCount();
         this.userCanWrite = vo.getUserCanWrite();
         this.userOwned = vo.getUserOwned();

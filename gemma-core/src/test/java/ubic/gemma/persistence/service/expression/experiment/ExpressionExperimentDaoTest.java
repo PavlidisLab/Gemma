@@ -646,6 +646,100 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         assertNull( sessionFactory.getCurrentSession().get( BioAssayDimension.class, bad.getId() ) );
     }
 
+    /**
+     * The dataset VO has to name the platform, not merely count it: a curator reading a dataset in
+     * the UI sees a blank platform line otherwise, and {@code originalPlatform} is the field that
+     * says a dataset was switched, which is a thing they check for. Asked for by uib with Paul's
+     * "as long as it is fast to fetch" — it is the same join the array-design COUNT was already
+     * making, so nothing extra is fetched.
+     */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectNamesThePlatformsAndTheSwitch() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+
+        ArrayDesign used = new ArrayDesign();
+        used.setShortName( "GPL571" );
+        used.setName( "Affymetrix GeneChip Human Genome U133A 2.0 Array" );
+        used.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( used );
+
+        ArrayDesign switchedFrom = new ArrayDesign();
+        switchedFrom.setShortName( "GPL96" );
+        switchedFrom.setName( "Affymetrix GeneChip Human Genome U133A Array" );
+        switchedFrom.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( switchedFrom );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        BioMaterial bm1 = new BioMaterial();
+        bm1.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm1 );
+        BioAssay switched = new BioAssay();
+        switched.setArrayDesignUsed( used );
+        switched.setOriginalPlatform( switchedFrom );
+        switched.setSampleUsed( bm1 );
+        ee.getBioAssays().add( switched );
+
+        BioMaterial bm2 = new BioMaterial();
+        bm2.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm2 );
+        BioAssay notSwitched = new BioAssay();
+        notSwitched.setArrayDesignUsed( used );
+        // a no-op switch: the "original" platform is the one in use
+        notSwitched.setOriginalPlatform( used );
+        notSwitched.setSampleUsed( bm2 );
+        ee.getBioAssays().add( notSwitched );
+
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertThat( vo.getPlatforms() )
+                .singleElement()
+                .satisfies( p -> {
+                    assertEquals( "GPL571", p.getShortName() );
+                    assertEquals( "Affymetrix GeneChip Human Genome U133A 2.0 Array", p.getName() );
+                } );
+        // the count keeps meaning what it meant, now derived from the same rows
+        assertEquals( 1L, vo.getArrayDesignCount().longValue() );
+        assertThat( vo.getOriginalPlatforms() )
+                .withFailMessage( "the switched-from platform is reported, and the no-op switch is not" )
+                .singleElement()
+                .satisfies( p -> assertEquals( "GPL96", p.getShortName() ) );
+    }
+
+    /**
+     * The other half: a dataset nobody switched reports no original platform at all. Without this a
+     * report that named every used platform as an original one would pass the test above.
+     */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectReportsNoSwitchWhenThereWasNone() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setShortName( "GPL1261" );
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( ad );
+        ba.setSampleUsed( bm );
+        ee.getBioAssays().add( ba );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertThat( vo.getPlatforms() ).extracting( "shortName" ).containsExactly( "GPL1261" );
+        assertThat( vo.getOriginalPlatforms() ).isEmpty();
+    }
+
     @Test
     @WithMockUser
     public void testLoadValueObjectWithSingleCellData() {
