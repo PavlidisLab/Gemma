@@ -166,8 +166,12 @@ If something is slow, fix it. Re-engineer if necessary — caching to hide bad c
 
 ## Reference docs
 
-Working design docs / recces / audits live under `docs/` (see `docs/INDEX.md`); only `README.md`
-and this file stay at the repo root.
+🛑 **New recces, figures and working design docs go in the EVAL repo**
+(`~/Dev/gemma-curation-agents-eval`), not here (Paul, 2026-08-28). This repo tracks code.
+
+The existing `docs/` tree (152 docs, see `docs/INDEX.md`) stays where it is and remains the
+reference for anything already written; only `README.md` and this file sit at the repo root.
+Correct a doc in place if it is already here — the rule is about what gets ADDED.
 
 - `docs/audit/AUDIT_SYSTEM_AUDIT.md` — full audit-system architecture + migration phases.
 - `docs/recce/AUDIT_PHASE_C_RECCE.md` — bucket-by-bucket migration inventory.
