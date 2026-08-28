@@ -30,6 +30,8 @@ import ubic.gemma.model.annotations.WithheldFromApi;
 import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.StatementValueObject;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -67,6 +69,18 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      */
     private Collection<Long> bioAssayIds = new HashSet<>();
     private Collection<CharacteristicValueObject> characteristics = new HashSet<>();
+
+    /**
+     * The same annotations as {@link #characteristics}, as statements — carrying the predicate and
+     * object when a curator wrote one.
+     * <p>
+     * 🛑 A sample annotation can be predicated: {@code DatasetsWebService.tagToCharacteristic} builds
+     * a {@link Statement} whenever the write carries a statement field, and it is the same method
+     * that writes experiment tags. {@link CharacteristicValueObject} has no predicate or object, so
+     * before this the sample payload flattened such an annotation to its subject on every read — a
+     * curator could write a predicated sample characteristic and never see it again.
+     */
+    private Collection<StatementValueObject> statements = new HashSet<>();
 
     /**
      * The BioMaterial this one was derived from, or {@code null} if this is a sample in its own right.
@@ -218,6 +232,12 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         Set<Characteristic> cs = allFactorValuesAndCharacteristics ? bm.getAllCharacteristics() : bm.getCharacteristics();
         for ( Characteristic c : cs ) {
             this.characteristics.add( new CharacteristicValueObject( c ) );
+            // Every annotation is listed here, predicated or not: one collection, one listing, the
+            // predicate simply absent when nothing was said. A bare Characteristic is promoted for
+            // the listing rather than hidden from it — it is the same annotation with less said.
+            this.statements.add( c instanceof Statement
+                    ? new StatementValueObject( ( Statement ) c )
+                    : new StatementValueObject( Statement.Factory.newInstance( c ) ) );
 
             // used for display of characteristics in the biomaterial experimental design editor view.
             if ( StringUtils.isBlank( c.getCategory() ) ) {

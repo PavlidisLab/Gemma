@@ -6,13 +6,14 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import ubic.gemma.core.ontology.FactorValueOntologyServiceImpl;
 import ubic.gemma.core.ontology.FactorValueOntologyUtils;
 import ubic.gemma.model.expression.experiment.AbstractFactorValueValueObject;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
 
 import java.io.IOException;
 import java.util.Collection;
 
 import static ubic.gemma.core.ontology.FactorValueOntologyUtils.visitCharacteristics;
-import static ubic.gemma.core.ontology.FactorValueOntologyUtils.visitStatements;
+import static ubic.gemma.core.ontology.FactorValueOntologyUtils.visitAllStatements;
 
 /**
  * Base serializer for {@link ubic.gemma.model.expression.experiment.FactorValue} VOs.
@@ -59,14 +60,32 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeEndArray();
     }
 
+    /**
+     * Every statement, including the ones with nothing said about them.
+     * <p>
+     * 🛑 This array used to hold only the statements carrying an OBJECT, which made a plain
+     * {@code organism part: chorionic villus} — the commonest annotation there is — arrive as
+     * {@code statements: []} with the row visible only under {@code characteristics}. Three teams
+     * read that as "this factor value has no statement" in a single day (2026-08-28): a write-back
+     * was diagnosed against the wrong cause, and a grounded UBERON term rendered as free text on
+     * every organism-part value of one dataset.
+     * <p>
+     * A grounded value with no predicate is not a different kind of annotation from one with a
+     * predicate; it is the same annotation with less said about it, so it belongs in the same list
+     * with {@code predicate} and {@code object} simply absent. {@code characteristics} still carries
+     * the same rows for clients that read it.
+     */
     private void writeStatements( Long factorValueId, Collection<StatementValueObject> svos, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeArrayFieldStart( "statements" );
-        visitStatements( factorValueId, svos, ( svo, assignedIds ) -> {
+        visitAllStatements( factorValueId, svos, ( svo, assignedIds ) -> {
             if ( assignedIds.getObjectId() != null ) {
                 writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getPredicate(), svo.getPredicateUri(), assignedIds.getObjectId(), svo.getObject(), svo.getObjectUri(), jsonGenerator );
             }
             if ( assignedIds.getSecondObjectId() != null ) {
                 writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getSecondPredicate(), svo.getSecondPredicateUri(), assignedIds.getSecondObjectId(), svo.getSecondObject(), svo.getSecondObjectUri(), jsonGenerator );
+            }
+            if ( assignedIds.getObjectId() == null && assignedIds.getSecondObjectId() == null ) {
+                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), null, null, null, null, null, jsonGenerator );
             }
         } );
         jsonGenerator.writeEndArray();
@@ -83,7 +102,7 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeEndObject();
     }
 
-    private void writeStatement( Long id, String category, String categoryUri, String subjectId, String subject, String subjectUri, String predicate, String predicateUri, String objectId, String object, String objectUri, JsonGenerator jsonGenerator ) throws IOException {
+    private void writeStatement( Long id, String category, String categoryUri, String subjectId, String subject, String subjectUri, @Nullable String predicate, @Nullable String predicateUri, @Nullable String objectId, @Nullable String object, @Nullable String objectUri, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField( "id", id );
         jsonGenerator.writeStringField( "category", category );
@@ -91,11 +110,18 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeStringField( "subjectId", subjectId );
         jsonGenerator.writeStringField( "subject", subject );
         jsonGenerator.writeStringField( "subjectUri", subjectUri );
-        jsonGenerator.writeStringField( "predicate", predicate );
-        jsonGenerator.writeStringField( "predicateUri", predicateUri );
-        jsonGenerator.writeStringField( "objectId", objectId );
-        jsonGenerator.writeStringField( "object", object );
-        jsonGenerator.writeStringField( "objectUri", objectUri );
+        // Absent rather than null when there is no predicate: null reads as "this was cleared", and a
+        // subject-only statement has nothing to clear. The subject half is always written, including
+        // its nulls, because those describe a term that IS there.
+        if ( predicate != null ) {
+            jsonGenerator.writeStringField( "predicate", predicate );
+            jsonGenerator.writeStringField( "predicateUri", predicateUri );
+        }
+        if ( objectId != null ) {
+            jsonGenerator.writeStringField( "objectId", objectId );
+            jsonGenerator.writeStringField( "object", object );
+            jsonGenerator.writeStringField( "objectUri", objectUri );
+        }
         jsonGenerator.writeEndObject();
     }
 }

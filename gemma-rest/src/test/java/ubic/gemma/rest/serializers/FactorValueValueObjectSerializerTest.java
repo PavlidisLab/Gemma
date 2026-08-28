@@ -57,6 +57,44 @@ public class FactorValueValueObjectSerializerTest extends BaseTest5 {
                 .assertEquals( "$.statements[0].predicate", "has role" )
                 .assertEquals( "$.statements[0].objectId", "http://gemma.msl.ubc.ca/ont/TGFVO/1/2" )
                 .assertEquals( "$.statements[0].object", "control" );
+        // both rows are listed either way: the two arrays are one collection, not two kinds of thing
+        assertEquals( 2, objectMapper.readTree( objectMapper.writeValueAsString( fvvo ) ).get( "statements" ).size() );
+        assertEquals( 2, objectMapper.readTree( objectMapper.writeValueAsString( fvvo ) ).get( "characteristics" ).size() );
+    }
+
+    /**
+     * 🛑 A grounded value with no predicate is still a statement, and it has to appear in
+     * {@code statements}.
+     * <p>
+     * It used to appear only under {@code characteristics}, so the commonest annotation in the
+     * corpus — {@code organism part: chorionic villus} — arrived as {@code statements: []}. Three
+     * teams read that as "this factor value has no statement" on 2026-08-28: a write-back was
+     * diagnosed against the wrong cause, and a grounded UBERON term rendered as free text on every
+     * organism-part value of one dataset.
+     */
+    @Test
+    public void aStatementWithNothingSaidAboutItStillAppearsInStatements() throws JsonProcessingException {
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
+        fv.getCharacteristics().add( createCharacteristic( 7L, "organism part", "http://www.ebi.ac.uk/efo/EFO_0000635",
+                "chorionic villus", "http://purl.obolibrary.org/obo/UBERON_0007106" ) );
+
+        String json = objectMapper.writeValueAsString( new FactorValueValueObject( fv ) );
+
+        assertEquals( 1, objectMapper.readTree( json ).get( "statements" ).size() );
+        JsonAssert.with( json )
+                .assertEquals( "$.statements[0].id", 7 )
+                .assertEquals( "$.statements[0].category", "organism part" )
+                .assertEquals( "$.statements[0].subject", "chorionic villus" )
+                .assertEquals( "$.statements[0].subjectUri", "http://purl.obolibrary.org/obo/UBERON_0007106" )
+                // the subject keeps the same identity it would have had with a predicate attached
+                .assertEquals( "$.statements[0].subjectId", "http://gemma.msl.ubc.ca/ont/TGFVO/1/1" );
+        // absent, not null: there is no predicate to report, and null would read as one that was cleared
+        assertFalse( objectMapper.readTree( json ).get( "statements" ).get( 0 ).has( "predicate" ) );
+        assertFalse( objectMapper.readTree( json ).get( "statements" ).get( 0 ).has( "object" ) );
+        // and it is still listed as a characteristic, for clients reading that array
+        assertEquals( 1, objectMapper.readTree( json ).get( "characteristics" ).size() );
     }
 
     /**
