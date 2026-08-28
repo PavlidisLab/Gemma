@@ -73,6 +73,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.util.UninitializedList;
 import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
@@ -4081,13 +4082,18 @@ public class ExpressionExperimentDaoImpl
             throw new IllegalStateException( qt + " from " + ee + " does not have an associated single-cell dimension." );
         }
         long numVecs = getNumberOfSingleCellDataVectors( ee, qt );
+        // this walks every vector's dataIndices for the experiment and is the pass that runs before
+        // MEX generation streams the vectors themselves, so it opts out of the statement timeout the
+        // same way streamQuery does — it does not go through streamQuery because it is consumed here
+        Runnable restoreStatementTimeout = HibernateUtils.liftStatementTimeout( getSessionFactory().getCurrentSession() );
         try ( Stream<Object[]> stream = QueryUtils.stream( getSessionFactory().getCurrentSession()
                 // FIXME: there's a bug in Hibernate scroll() ScrollableResults implementation that causes the native
                 //        int[] array to be cast to Object[], so we need to add a dummy column to avoid this.
                 .createQuery( "select scedv.dataIndices, 1 from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                 .setParameter( "ee", ee )
-                .setParameter( "qt", qt ), Object[].class, fetchSize, useCursorFetchIfSupported, true ) ) {
+                .setParameter( "qt", qt ), Object[].class, fetchSize, useCursorFetchIfSupported, true )
+                .onClose( restoreStatementTimeout ) ) {
             long[] nnzs = new long[dimension.getBioAssays().size()];
             Iterator<Object[]> it = stream.iterator();
             StopWatch timer = StopWatch.createStarted();

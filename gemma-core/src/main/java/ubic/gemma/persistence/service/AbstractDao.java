@@ -333,6 +333,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     public Stream<T> streamAll( boolean createNewSession ) {
         return QueryUtils.createStream( getSessionFactory(),
                 session -> {
+                    Runnable restoreStatementTimeout = HibernateUtils.liftStatementTimeout( session );
                     CriteriaBuilder cb = session.getCriteriaBuilder();
                     //noinspection unchecked
                     CriteriaQuery<T> cq = ( CriteriaQuery<T> ) cb.createQuery( elementClass );
@@ -340,10 +341,11 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
                     cq.select( ( Root<T> ) cq.from( elementClass ) );
                     //noinspection unchecked
                     return QueryUtils.stream( session.createQuery( cq ),
-                            ( Class<T> ) elementClass,
-                            batchSize,
-                            useCursorFetchIfSupported,
-                            isQueryStateless );
+                                    ( Class<T> ) elementClass,
+                                    batchSize,
+                                    useCursorFetchIfSupported,
+                                    isQueryStateless )
+                            .onClose( restoreStatementTimeout );
                 }, createNewSession );
     }
 
@@ -354,14 +356,19 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         if ( createNewSession ) {
             Session session = openSession();
             try {
+                Runnable restoreStatementTimeout = HibernateUtils.liftStatementTimeout( session );
                 return QueryUtils.stream( queryCreator.apply( session ), resultType, fetchSize, useCursorFetchIfSupported, isStateless )
+                        .onClose( restoreStatementTimeout )
                         .onClose( session::close );
             } catch ( Exception e ) {
                 session.close();
                 throw e;
             }
         } else {
-            return QueryUtils.stream( queryCreator.apply( sessionFactory.getCurrentSession() ), resultType, fetchSize, useCursorFetchIfSupported, isStateless );
+            Session session = sessionFactory.getCurrentSession();
+            Runnable restoreStatementTimeout = HibernateUtils.liftStatementTimeout( session );
+            return QueryUtils.stream( queryCreator.apply( session ), resultType, fetchSize, useCursorFetchIfSupported, isStateless )
+                    .onClose( restoreStatementTimeout );
         }
     }
 

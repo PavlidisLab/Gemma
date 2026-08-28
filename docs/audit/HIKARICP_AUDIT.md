@@ -27,6 +27,7 @@ Three call sites construct or configure a `HikariDataSource`:
 | `rewriteBatchedStatements` | `true` | Merge multiple insert/updates into a single round-trip |
 | `connectionTimeZone` | `America/Vancouver` | Lab-local DATETIME interpretation for `java.util.Date` columns |
 | `sessionVariables` | `sql_mode='STRICT_TRANS_TABLES,...,NO_ENGINE_SUBSTITUTION'` | Drops `ONLY_FULL_GROUP_BY` (Gemma HQL produces aggregates without GROUP-BY-listing every non-aggregate select) |
+| `sessionVariables` (cont.) | `,max_execution_time=<ms>` appended when `gemma.db.hikari.maxExecutionTime` is set | Server-side statement timeout. Unset in `default.properties` (gemma-cli reads it too); set per-deployment for gemma-rest. Composed in `DataSourceConfig#withMaxExecutionTime` rather than left to the deployment, because overriding `sessionVariables` wholesale would drop the sql_mode above and restore `ONLY_FULL_GROUP_BY`. Bounds a statement, not a transaction, and does not reach writes; streamed reads opt out in `HibernateUtils#liftStatementTimeout` |
 
 Metrics binding (`HikariCPMetrics`) wires the pool into Micrometer's `MeterRegistry` via `dataSource.setMetricRegistry(registry)` — modern Micrometer-based metrics; no JMX needed.
 
@@ -36,10 +37,10 @@ Metrics binding (`HikariCPMetrics`) wires the pool into Micrometer's `MeterRegis
 |---|---|---|---|
 | `maximumPoolSize` | 10 (default; configurable per env) | Workload-dependent; ops-tuned | Leave alone — ops territory |
 | `minimumIdle` | = `maximumPoolSize` (via `${gemma.db.minimumIdle}` default) | Equal to `maximumPoolSize` for steady-state workloads (HikariCP author's recommendation) | Already correct |
-| `connectionTimeout` | default 30000ms | 30s default is fine | OK |
+| `connectionTimeout` | **10000ms** (`default.properties`) | 30s default is fine | Lowered so a dead tunnel surfaces fast. It is also the signature of pool exhaustion: when every connection is held, every route fails at exactly this value |
 | `idleTimeout` | default 600000ms (10 min) | < `maxLifetime` | OK (default satisfies the constraint) |
 | `maxLifetime` | default 1800000ms (30 min) | At least 30s less than DB `wait_timeout` (MySQL default `wait_timeout=28800`s = 8h) | OK — 30 min << 8 h, huge safety margin |
-| `keepaliveTime` | default 0 (off) | Optional; only useful if pool sees long idle stretches under a network with aggressive intermediary timeouts | Leave off |
+| `keepaliveTime` | **60000ms** (`default.properties`) | Optional; only useful if pool sees long idle stretches under a network with aggressive intermediary timeouts | On — the prod path is SSH-tunneled, so idle sockets die silently |
 | `leakDetectionThreshold` | default 0 (off) on prod; **now 60000ms (60s) on test/testdb** | Recommended on dev/test (catch un-closed connections early), off or high (e.g. 5 min) in prod | **Applied to test only — see Section 4** |
 | `validationTimeout` | default 5000ms | 5s default sane for a MySQL pool | OK |
 | `registerMbeans` | default false | Not set → JMX not registered. Already using Micrometer (preferred) via `HikariCPMetrics`. | Leave off (Micrometer wins) |

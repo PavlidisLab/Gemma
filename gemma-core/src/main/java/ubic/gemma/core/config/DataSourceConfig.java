@@ -11,6 +11,7 @@
 package ubic.gemma.core.config;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +23,7 @@ import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.security.authentication.ManualAuthenticationServiceBasedSecurityContextFactory;
 import ubic.gemma.core.util.DummyMailSender;
 
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import java.util.Properties;
 
@@ -81,6 +83,21 @@ public class DataSourceConfig {
     private String hikariSessionVariables;
 
     /**
+     * Server-side statement timeout in milliseconds, appended to {@link #hikariSessionVariables}
+     * as MySQL's {@code max_execution_time}. Blank (the shipped default) leaves the session
+     * variables untouched, so gemma-cli — which reads the same {@code default.properties} — keeps
+     * running unbounded statements. It is set per-deployment for gemma-rest, where an abandoned
+     * read holds a pooled connection until the server finishes it: a client timeout is not a
+     * cancellation.
+     * <p>
+     * It is composed here rather than left to the deployment because overriding
+     * {@code gemma.db.hikari.sessionVariables} wholesale replaces the sql_mode above, which would
+     * restore ONLY_FULL_GROUP_BY and break Gemma's aggregate HQL.
+     */
+    @Value("${gemma.db.hikari.maxExecutionTime:}")
+    private String hikariMaxExecutionTime;
+
+    /**
      * Pool-level Hikari knobs (distinct from the {@code dataSourceProperties} driver-level knobs
      * above). All four default to {@code null} so that an unset key falls through to Hikari's own
      * built-in defaults rather than overriding them with zero. See {@code deploy/env.example} for
@@ -108,9 +125,41 @@ public class DataSourceConfig {
         props.setProperty( "rewriteBatchedStatements", hikariRewriteBatchedStatements );
         // Default timezone for storage of DATETIME mapped to java.util.Date.
         props.setProperty( "connectionTimeZone", hikariConnectionTimeZone );
-        // Drop ONLY_FULL_GROUP_BY from sql_mode for the connection's session.
-        props.setProperty( "sessionVariables", hikariSessionVariables );
+        // Drop ONLY_FULL_GROUP_BY from sql_mode for the connection's session, plus the statement
+        // timeout when the deployment sets one.
+        props.setProperty( "sessionVariables", withMaxExecutionTime( hikariSessionVariables, hikariMaxExecutionTime ) );
         return props;
+    }
+
+    /**
+     * Append {@code max_execution_time} to a Connector/J {@code sessionVariables} list.
+     * <p>
+     * Connector/J splits that list on commas <em>outside</em> quotes, so appending to the sql_mode
+     * value — which contains commas inside its quotes — is safe; both variables arrive as one
+     * {@code SET SESSION} on every new connection.
+     *
+     * @param sessionVariables  the configured list, never null
+     * @param maxExecutionTimeMs milliseconds, or blank to leave the list alone
+     * @throws IllegalStateException if the timeout is set to something other than a
+     *                               non-negative whole number of milliseconds — a typo here would
+     *                               otherwise reach MySQL as an unparseable SET and fail every
+     *                               connection attempt with a message about sql_mode.
+     */
+    static String withMaxExecutionTime( String sessionVariables, @Nullable String maxExecutionTimeMs ) {
+        if ( StringUtils.isBlank( maxExecutionTimeMs ) ) {
+            return sessionVariables;
+        }
+        long ms;
+        try {
+            ms = Long.parseLong( maxExecutionTimeMs.trim() );
+        } catch ( NumberFormatException e ) {
+            throw new IllegalStateException( "gemma.db.hikari.maxExecutionTime must be a whole number of milliseconds, got '"
+                    + maxExecutionTimeMs + "'." );
+        }
+        if ( ms < 0 ) {
+            throw new IllegalStateException( "gemma.db.hikari.maxExecutionTime must not be negative, got " + ms + "." );
+        }
+        return sessionVariables + ",max_execution_time=" + ms;
     }
 
     /**
