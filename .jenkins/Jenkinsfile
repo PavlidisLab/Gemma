@@ -23,18 +23,31 @@ pipeline {
         maven 'Maven 3.6.3'
     }
     environment {
-        // The agent (chalmers, the built-in node) defaults to JAVA_HOME=jre-21-openjdk
-        // with an even older java 11 first on PATH, but maven.compiler.release is 25
-        // (pom.xml), so a build on either dies with "invalid source release: 25".
-        // JDK 25 IS installed here — it just has no entry under Manage Jenkins > Tools,
-        // so we point at it directly rather than block on a sysop change.
+        // maven.compiler.release is 25 (pom.xml), but the agent (chalmers, the
+        // built-in node) defaults to JAVA_HOME=jre-21-openjdk with java 11 first on
+        // PATH, so an unpinned build dies with "release version 25 not supported".
         //
-        // Swap this pair for `tools { jdk 'Java 25' }` if a JDK 25 tool installation
-        // is ever added. Note that the tools/environment split matters: a stage-level
-        // `tools { jdk ... }` and a pipeline-level environment JAVA_HOME both write
-        // JAVA_HOME and would fight over it, which is why the SonarQube stage below
-        // no longer pins its own JDK.
-        JAVA_HOME = '/usr/lib/jvm/java-25-openjdk'
+        // Pointing at chalmers' own /usr/lib/jvm/java-25-openjdk does NOT work, and
+        // it fails in a way that reads like a JDK bug rather than a missing package:
+        // the installed RPMs are java-25-openjdk + -headless + -crypto-adapter with
+        // no -devel, so that directory has bin/java but NO bin/javac. Maven starts on
+        // 25 happily; then maven-compiler-plugin finds no in-process compiler, forks
+        // an external javac, PATH resolves that to /usr/bin/javac (11.0.25), and javac
+        // 11 rejects --release 25. Build #3 died exactly there, having reported
+        // "Java version: 25.0.4" moments earlier.
+        //
+        // So use a complete JDK on shared storage: /space/opt is the same NFS
+        // directory the Jenkins Maven tool already resolves to
+        // (/space/opt/apache-maven-3.6.3), so chalmers demonstrably reads from it.
+        // Verified there: javac 25.0.3, compiles at --release 25.
+        //
+        // The durable fix is `dnf install java-25-openjdk-devel` on chalmers, after
+        // which this can point back at /usr/lib/jvm/java-25-openjdk — or become
+        // `tools { jdk 'Java 25' }` if a tool installation is ever added. Note that
+        // the tools/environment split matters: a stage-level `tools { jdk ... }` and
+        // a pipeline-level environment JAVA_HOME both write JAVA_HOME and would fight
+        // over it, which is why the SonarQube stage below no longer pins its own JDK.
+        JAVA_HOME = '/space/opt/temurin-25.0.3'
         PATH = "${JAVA_HOME}/bin:${PATH}"
         GEMMA_CLI_WIKI_DEPLOY_TOKEN = credentials('confluence-wiki-token')
     }
