@@ -171,6 +171,7 @@ public abstract class BaseAclAdvice {
      * <li>If the current user is an adminisrator, and keepPrivateEvenWhenAdmin is false, the object gets READ
      * permissions for ANONYMOUS.
      * <li>If the current user is a "regular user" (non-admin) give them read/write permissions.
+     * </ul>
      */
     protected void setupBaseAces( MutableAcl acl, ObjectIdentity oi, Sid sid, boolean keepPrivateEvenWhenAdmin ) {
 

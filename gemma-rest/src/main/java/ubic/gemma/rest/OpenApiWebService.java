@@ -58,7 +58,7 @@ public class OpenApiWebService {
      * {@code Content-Encoding} here is what triggers Jersey's {@code GZipEncoder}: as a {@code ContentEncoder} it
      * compresses based on that response header rather than on {@code Accept-Encoding}. The previous
      * {@code OpenApiGzipHeaderDecorator} set the same header from a {@code WriterInterceptor} that recognised the
-     * spec by its leading {@code {"openapi"} characters, and did so unconditionally; now that the endpoint is
+     * spec by its leading <code>{"openapi"</code> characters, and did so unconditionally; now that the endpoint is
      * ours, the header is set where the entity is built and only when the client asked for it.
      */
     @GET

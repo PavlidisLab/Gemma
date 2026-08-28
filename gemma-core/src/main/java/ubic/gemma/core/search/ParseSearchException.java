@@ -38,7 +38,7 @@ public class ParseSearchException extends SearchException {
     }
 
     /**
-     * The original {@link ParseException} if this query was reattempted.
+     * The original {@code ParseException} if this query was reattempted.
      */
     @Nullable
     public ParseSearchException getOriginalParseException() {

@@ -33,7 +33,7 @@ import java.util.Set;
  * contributes additional ways to spell one. That is why {@link #getTerm(String)} and
  * {@link #getAllURIs()} deliberately answer as if empty — see below.
  *
- * <h3>The table is precomputed, not derived at runtime</h3>
+ * <h2>The table is precomputed, not derived at runtime</h2>
  * The MeSH-to-MONDO join needs all of MeSH, mondo.obo and mondo.sssom.tsv (roughly 80 MB of
  * source) to produce well under a megabyte of output, and the join rules are where all the risk
  * lives. Both facts argue for doing it once, offline, and reviewing the diff:
@@ -42,7 +42,7 @@ import java.util.Set;
  * carrying source versions and sha256. That script's {@code --check} mode reports when MONDO or
  * MeSH have moved on, which is the hook for a scheduled refresh.
  *
- * <h3>Why the synonyms here are safe to index</h3>
+ * <h2>Why the synonyms here are safe to index</h2>
  * Only MONDO-asserted joins are used (MONDO's own {@code MESH:} xrefs plus its SSSOM
  * {@code skos:exactMatch} rows), restricted to the MeSH disease branch (tree numbers {@code C*}
  * and {@code F03}), and any MeSH descriptor resolving to more than one live MONDO term is dropped
@@ -58,7 +58,7 @@ import java.util.Set;
  * to MONDO:0021071, and indexing it would ground a cancer to its benign-or-malignant parent.
  * Reaching MONDO:0002352 needs a concept-level mapping, which is a separate table.
  *
- * <h3>Ranking</h3>
+ * <h2>Ranking</h2>
  * Inherited {@link #isSupplementary()} keeps these hits below every conventional-ontology hit, and
  * {@code OntologyServiceImpl.findTerms} dedupes them on the term. A URI MONDO itself already
  * returned is therefore never re-added from here: this source can only fill a gap, never displace

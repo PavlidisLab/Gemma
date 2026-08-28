@@ -95,11 +95,11 @@ package ubic.gemma.core.util.math.linalg;
  * <b>IMPORTANT:</b> The "_j" suffixes indicate that these routines use
  * Java style indexing. For example, you will see
  *
- * for (i = 0; i < n; i++)
+ * {@code for (i = 0; i < n; i++)}
  *
  * rather than (FORTRAN style)
  *
- * for (i = 1; i <= n; i++)
+ * {@code for (i = 1; i <= n; i++)}
  *
  * To use the "_j" routines you will have to
  * fill elements 0 through n - 1 of vectors rather than elements 1
@@ -142,7 +142,7 @@ public class Blas extends Object {
      *
      * @param nrow The number of rows involved
      * @param a The constant
-     * @param x[&#32][&#32] The matrix
+     * @param x The matrix
      * @param begin The starting row
      * @param j1 The id of col1
      * @param j2 The id of col2
@@ -191,7 +191,7 @@ public class Blas extends Object {
      * Translated and modified by Steve Verrill, February 27, 1997.
      *
      * @param nrow The number of rows involved
-     * @param x[&#32][&#32] The matrix
+     * @param x The matrix
      * @param begin The starting row
      * @param j1 The id of the first column
      * @param j2 The id of the second column
@@ -243,8 +243,8 @@ public class Blas extends Object {
      * Translated by Steve Verrill, March 10, 1998.
      *
      * @param n The number of elements to be checked
-     * @param x[&#32][&#32] The matrix
-     * @param incx The subscript increment for x[&#32][&#32]
+     * @param x The matrix
+     * @param incx The subscript increment for {@code x[][]}
      * @param begin The starting row
      * @param j The id of the column
      *
@@ -325,7 +325,7 @@ public class Blas extends Object {
      * Translated and modified by Steve Verrill, February 26, 1997.
      *
      * @param nrow The number of rows involved
-     * @param x[&#32][&#32] The matrix
+     * @param x The matrix
      * @param begin The starting row
      * @param j The id of the column
      *
@@ -391,8 +391,8 @@ public class Blas extends Object {
      *
      * Translated and modified by Steve Verrill, March 4, 1997.
      *
-     * @param n The order of x[&#32][&#32]
-     * @param x[&#32][&#32] The matrix
+     * @param n The order of {@code x[][]}
+     * @param x The matrix
      * @param j1 The id of the first column
      * @param j2 The id of the second column
      * @param c "cos"
@@ -433,7 +433,7 @@ public class Blas extends Object {
      *
      * @param nrow The number of rows involved
      * @param a The constant
-     * @param x[&#32][&#32] The matrix
+     * @param x The matrix
      * @param begin The starting row
      * @param j The id of the column
      *
@@ -481,7 +481,7 @@ public class Blas extends Object {
      * Translated and modified by Steve Verrill, February 26, 1997.
      *
      * @param n The number of rows of the matrix
-     * @param x[&#32][&#32] The matrix
+     * @param x The matrix
      * @param j1 The id of the first column
      * @param j2 The id of the second column
      *
@@ -527,9 +527,9 @@ public class Blas extends Object {
      *
      * <p>
      * This method multiplies a constant times a portion of a column
-     * of a matrix x[&#32][&#32] and adds the product to the corresponding portion
-     * of a vector y[&#32] --- a portion of y[&#32] is replaced by the corresponding
-     * portion of ax[&#32][j] + y[&#32].
+     * of a matrix {@code x[][]} and adds the product to the corresponding portion
+     * of a vector {@code y[]} --- a portion of {@code y[]} is replaced by the corresponding
+     * portion of {@code ax[][j]} + {@code y[]}.
      * It uses unrolled loops.
      * It is a modification of the LINPACK subroutine
      * DAXPY. In the LINPACK listing DAXPY is attributed to Jack Dongarra
@@ -539,8 +539,8 @@ public class Blas extends Object {
      *
      * @param nrow The number of rows involved
      * @param a The constant
-     * @param x[&#32][&#32] The matrix
-     * @param y[&#32] The vector
+     * @param x The matrix
+     * @param y The vector
      * @param begin The starting row
      * @param j The id of the column of the x matrix
      *
@@ -590,8 +590,8 @@ public class Blas extends Object {
      * Translated and modified by Steve Verrill, March 1, 1997.
      *
      * @param nrow The number of rows involved
-     * @param x[&#32][&#32] The matrix
-     * @param y[&#32] The vector
+     * @param x The matrix
+     * @param y The vector
      * @param begin The starting row
      * @param j The id of the column of the matrix
      *
@@ -634,11 +634,11 @@ public class Blas extends Object {
     /**
      *
      * <p>
-     * This method multiplies a constant times a portion of a vector y[&#32]
+     * This method multiplies a constant times a portion of a vector {@code y[]}
      * and adds the product to the corresponding portion
-     * of a column of a matrix x[&#32][&#32] --- a portion of column j of x[&#32][&#32]
+     * of a column of a matrix {@code x[][]} --- a portion of column j of {@code x[][]}
      * is replaced by the corresponding
-     * portion of ay[&#32] + x[&#32][j].
+     * portion of {@code ay[]} + {@code x[][j]}.
      * It uses unrolled loops.
      * It is a modification of the LINPACK subroutine
      * DAXPY. In the LINPACK listing DAXPY is attributed to Jack Dongarra
@@ -648,8 +648,8 @@ public class Blas extends Object {
      *
      * @param nrow The number of rows involved
      * @param a The constant
-     * @param y[&#32] The vector
-     * @param x[&#32][&#32] The matrix
+     * @param y The vector
+     * @param x The matrix
      * @param begin The starting row
      * @param j The id of the column of the x matrix
      *
@@ -690,7 +690,7 @@ public class Blas extends Object {
      *
      * <p>
      * This method multiplies a constant times a vector and adds the product
-     * to another vector --- dy[&#32] = da*dx[&#32] + dy[&#32].
+     * to another vector --- {@code dy[]} = da*{@code dx[]} + {@code dy[]}.
      * It uses unrolled loops for increments equal to
      * one. It is a translation from FORTRAN to Java of the LINPACK subroutine
      * DAXPY. In the LINPACK listing DAXPY is attributed to Jack Dongarra
@@ -698,12 +698,12 @@ public class Blas extends Object {
      *
      * Translated by Steve Verrill, June 3, 1997.
      *
-     * @param n The order of the vectors dy[&#32] and dx[&#32]
+     * @param n The order of the vectors {@code dy[]} and {@code dx[]}
      * @param da The constant
-     * @param dx[&#32] This vector will be multiplied by the constant da
-     * @param incx The subscript increment for dx[&#32]
-     * @param dy[&#32] This vector will be added to da*dx[&#32]
-     * @param incy The subscript increment for dy[&#32]
+     * @param dx This vector will be multiplied by the constant da
+     * @param incx The subscript increment for {@code dx[]}
+     * @param dy This vector will be added to da*{@code dx[]}
+     * @param incy The subscript increment for {@code dy[]}
      *
      */
 
@@ -763,7 +763,7 @@ public class Blas extends Object {
     /**
      *
      * <p>
-     * This method copies the vector dx[&#32] to the vector dy[&#32].
+     * This method copies the vector {@code dx[]} to the vector {@code dy[]}.
      * It uses unrolled loops for increments equal to
      * one. It is a translation from FORTRAN to Java of the LINPACK subroutine
      * DCOPY. In the LINPACK listing DCOPY is attributed to Jack Dongarra
@@ -771,11 +771,11 @@ public class Blas extends Object {
      *
      * Translated by Steve Verrill, March 1, 1997.
      *
-     * @param n The order of dx[&#32] and dy[&#32]
-     * @param dx[&#32] vector
-     * @param incx The subscript increment for dx[&#32]
-     * @param dy[&#32] vector
-     * @param incy The subscript increment for dy[&#32]
+     * @param n The order of {@code dx[]} and {@code dy[]}
+     * @param dx vector
+     * @param incx The subscript increment for {@code dx[]}
+     * @param dy vector
+     * @param incy The subscript increment for {@code dy[]}
      *
      */
     public static void dcopy_j( int n, double dx[], int incx, double dy[], int incy ) {
@@ -837,8 +837,8 @@ public class Blas extends Object {
     /**
      *
      * <p>
-     * This method copies a portion of vector x[&#32] to the corresponding
-     * portion of vector y[&#32].
+     * This method copies a portion of vector {@code x[]} to the corresponding
+     * portion of vector {@code y[]}.
      * It uses unrolled loops.
      * It is a modification of the LINPACK subroutine
      * dcopy. In the LINPACK listing dcopy is attributed to Jack Dongarra
@@ -847,8 +847,8 @@ public class Blas extends Object {
      * Translated by Steve Verrill, March 1, 1997.
      *
      * @param nrow The number of rows involved
-     * @param x[&#32] vector
-     * @param y[&#32] vector
+     * @param x vector
+     * @param y vector
      * @param begin The starting row
      *
      */
@@ -895,11 +895,11 @@ public class Blas extends Object {
      *
      * Translated by Steve Verrill, June 3, 1997.
      *
-     * @param n The order of the vectors dx[&#32] and dy[&#32]
-     * @param dx[&#32] vector
-     * @param incx The subscript increment for dx[&#32]
-     * @param dy[&#32] vector
-     * @param incy The subscript increment for dy[&#32]
+     * @param n The order of the vectors {@code dx[]} and {@code dy[]}
+     * @param dx vector
+     * @param incx The subscript increment for {@code dx[]}
+     * @param dy vector
+     * @param incy The subscript increment for {@code dy[]}
      *
      */
     public static double ddot_j( int n, double dx[], int incx, double dy[], int incy ) {
@@ -959,7 +959,7 @@ public class Blas extends Object {
      *
      * <p>
      * This method calculates the Euclidean norm of the vector
-     * stored in dx[&#32] with storage increment incx.
+     * stored in {@code dx[]} with storage increment incx.
      * It is a translation from FORTRAN to Java of the LINPACK function
      * DNRM2.
      * In the LINPACK listing DNRM2 is attributed to C.L. Lawson
@@ -969,9 +969,9 @@ public class Blas extends Object {
      *
      * Translated by Steve Verrill, June 3, 1997.
      *
-     * @param n The order of the vector x[&#32]
-     * @param x[&#32] vector
-     * @param incx The subscript increment for x[&#32]
+     * @param n The order of the vector {@code x[]}
+     * @param x vector
+     * @param incx The subscript increment for {@code x[]}
      *
      */
 
@@ -1030,7 +1030,7 @@ public class Blas extends Object {
      *
      * <p>
      * This method calculates the Euclidean norm of a portion
-     * of a vector x[&#32].
+     * of a vector {@code x[]}.
      * It is a modification of the LINPACK function
      * dnrm2.
      * In the LINPACK listing dnrm2 is attributed to C.L. Lawson
@@ -1041,7 +1041,7 @@ public class Blas extends Object {
      * Translated by Steve Verrill, March 3, 1997.
      *
      * @param nrow The number of rows involved
-     * @param x[&#32] vector
+     * @param x vector
      * @param begin The starting row
      *
      */
@@ -1171,10 +1171,10 @@ public class Blas extends Object {
      *
      * Translated by Steve Verrill, June 3, 1997.
      *
-     * @param n The order of the vector dx[&#32]
+     * @param n The order of the vector {@code dx[]}
      * @param da The constant
-     * @param dx[&#32] This vector will be multiplied by the constant da
-     * @param incx The subscript increment for dx[&#32]
+     * @param dx This vector will be multiplied by the constant da
+     * @param incx The subscript increment for {@code dx[]}
      *
      */
     public static void dscal_j( int n, double da, double dx[], int incx ) {
@@ -1236,7 +1236,7 @@ public class Blas extends Object {
      *
      * @param nrow The number of rows involved
      * @param a The constant
-     * @param x[&#32] The vector
+     * @param x The vector
      * @param begin The starting row
      *
      */
@@ -1282,11 +1282,11 @@ public class Blas extends Object {
      *
      * Translated by Steve Verrill, June 3, 1997.
      *
-     * @param n The order of the vectors dx[&#32] and dy[&#32]
-     * @param dx[&#32] vector
-     * @param incx The subscript increment for dx[&#32]
-     * @param dy[&#32] vector
-     * @param incy The subscript increment for dy[&#32]
+     * @param n The order of the vectors {@code dx[]} and {@code dy[]}
+     * @param dx vector
+     * @param incx The subscript increment for {@code dx[]}
+     * @param dy vector
+     * @param incy The subscript increment for {@code dy[]}
      *
      */
 
@@ -1368,8 +1368,8 @@ public class Blas extends Object {
      * Translated by Steve Verrill, March 10, 1998.
      *
      * @param n The number of elements to be checked
-     * @param x[&#32] vector
-     * @param incx The subscript increment for x[&#32]
+     * @param x vector
+     * @param incx The subscript increment for {@code x[]}
      *
      */
     public static int isamax_j( int n, double x[], int incx ) {
@@ -1437,9 +1437,9 @@ public class Blas extends Object {
      *
      * Created by Steve Verrill, March 1997.
      *
-     * @param a[&#32][&#32] The left matrix
-     * @param b[&#32][&#32] The right matrix
-     * @param c[&#32][&#32] The product
+     * @param a The left matrix
+     * @param b The right matrix
+     * @param c The product
      * @param n n
      * @param p p
      * @param r r
@@ -1489,8 +1489,8 @@ public class Blas extends Object {
      *
      * Created by Steve Verrill, March 1997.
      *
-     * @param a[&#32][&#32] matrix
-     * @param at[&#32][&#32] transpose of the matrix
+     * @param a matrix
+     * @param at transpose of the matrix
      * @param n n
      * @param p p
      *
@@ -1518,9 +1518,9 @@ public class Blas extends Object {
      *
      * Created by Steve Verrill, March 1997.
      *
-     * @param a[&#32][&#32] The matrix
-     * @param b[&#32] The vector
-     * @param c[&#32] The product
+     * @param a The matrix
+     * @param b The vector
+     * @param c The product
      * @param n n
      * @param p p
      *

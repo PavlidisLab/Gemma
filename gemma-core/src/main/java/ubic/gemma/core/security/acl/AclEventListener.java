@@ -68,7 +68,7 @@ import java.util.Set;
  * maintenance methods, which encapsulate the gsec-specific rules (base ACEs, parent inheritance,
  * user/group special cases) and were already package-friendly here.
  *
- * <h3>Parent-ACL discovery and the parent stash</h3>
+ * <h2>Parent-ACL discovery and the parent stash</h2>
  *
  * Many SecuredChildren have no @ManyToOne back to their security owner — e.g. BioAssay declares
  * {@code SecuredChild<ExpressionExperiment>} but the FK lives on the EE side

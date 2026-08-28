@@ -109,7 +109,7 @@ public interface TicketDao extends BaseDao<Ticket> {
      * {@code CURSOR_PAGINATION_STEP1_PLAN.md}).
      * <p>
      * Same scope as {@link #findOpenForTarget}: tickets in a non-terminal state
-     * ({@code OPEN}/{@code IN_PROGRESS}) whose {@link TicketTarget} matches
+     * ({@code OPEN}/{@code IN_PROGRESS}) whose {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget} matches
      * {@code (targetType, targetId)}. Cursor mode forces a single-component
      * ascending {@code t.id} sort; the {@code targetType}/{@code targetId}
      * scope is preserved across pages. Fetches {@code limit+1} rows internally

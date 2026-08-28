@@ -639,7 +639,7 @@ public class TicketsWebService {
      * open ticket, marks each target {@link TicketTargetStatus#UNDERWAY}
      * when it starts work on it, then {@link TicketTargetStatus#DONE} when
      * it finishes. Appends a
-     * {@link TicketEventType#TARGET_STATUS_CHANGED} event and a
+     * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType#TARGET_STATUS_CHANGED} event and a
      * {@code TicketTargetStatusChangedEvent} audit-trail row in lockstep.
      * No-op when the target is already at {@code status}.
      *

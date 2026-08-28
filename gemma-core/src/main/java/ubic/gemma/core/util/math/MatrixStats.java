@@ -166,7 +166,7 @@ public class MatrixStats {
     /**
      * Iteratively standardize the columns and rows of the matrix.
      * 
-     * @param data
+     * @param matrix
      */
     public static <R, C> DoubleMatrix<R, C> doubleStandardize( DoubleMatrix<R, C> matrix ) {
         DoubleMatrix<R, C> newMatrix = matrix.copy();
@@ -227,7 +227,7 @@ public class MatrixStats {
      * Log-transform the values in a matrix (log base 2). Values that are less than or equal to zero are left as
      * Double.NaN.
      * 
-     * @param matrixToNormalize
+     * @param matrix
      */
     public static <R, C> void logTransform( DoubleMatrix<R, C> matrix ) {
         for ( int j = 0; j < matrix.rows(); j++ ) {
@@ -374,7 +374,7 @@ public class MatrixStats {
      * 
      * @param <R>
      * @param <C>
-     * @param data
+     * @param matrix
      * @return
      */
     public static <R, C> DoubleMatrix<R, C> standardize( DoubleMatrix<R, C> matrix ) {

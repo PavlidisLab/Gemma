@@ -1,5 +1,5 @@
 /**
- * This package contains baseCode built-in ontologies and a {@link ubic.basecode.ontology.providers.GenericOntologyService}
+ * This package contains baseCode built-in ontologies and a {@code ubic.basecode.ontology.providers.GenericOntologyService}
  * to implement your own ontologies.
  *
  * @author klc

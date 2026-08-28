@@ -13,7 +13,7 @@ import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
- * Utilities for integrating {@link Filter} into {@link org.hibernate.Query}.
+ * Utilities for integrating {@link Filter} into {@link org.hibernate.query.Query}.
  */
 public class FilterQueryUtils {
 

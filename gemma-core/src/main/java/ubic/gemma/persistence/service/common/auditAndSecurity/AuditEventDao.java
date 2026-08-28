@@ -58,7 +58,7 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
      * {@code CURSOR_PAGINATION_STEP1_PLAN.md}).
      * <p>
      * Same scope as {@link #getEvents(Auditable)}: every {@link AuditEvent} on
-     * the supplied {@link Auditable}'s {@link AuditTrail}. Cursor mode forces a
+     * the supplied {@link Auditable}'s {@link ubic.gemma.model.common.auditAndSecurity.AuditTrail}. Cursor mode forces a
      * single-component ascending {@code id} sort (different from the legacy
      * {@code date, id} ordering &mdash; {@code id} is the unique primary key
      * and the only column safe for keyset pagination under the step 1b
@@ -70,7 +70,7 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
      * {@code null} by default.
      *
      * @param auditable the auditable whose trail is being browsed; must have a
-     *                  persistent {@link AuditTrail}
+     *                  persistent {@link ubic.gemma.model.common.auditAndSecurity.AuditTrail}
      * @param cursor    previous-response cursor token (nullable for the first
      *                  page); must have {@code sortSpec == "+id"} and a
      *                  single-component numeric {@code keyTuple} or the call

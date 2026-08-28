@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Date;
 
 /**
- * Task command for the GEO scrape & preboard pipeline. Submitted by
+ * Task command for the GEO scrape &amp; preboard pipeline. Submitted by
  * {@code POST /admin/tasks/geo-scrape}; runs
  * {@link GeoScrapeService#scrape(GeoScrapeService.ScrapeRequest)} on the
  * task-runner worker.

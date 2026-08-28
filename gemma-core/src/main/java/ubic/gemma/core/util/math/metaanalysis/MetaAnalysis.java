@@ -104,7 +104,6 @@ public abstract class MetaAnalysis {
     /**
      * CH sample variance under random effects model, equation 18-20
      * 
-     * @param
      * @return
      */
     protected double metaRESampleVariance( DoubleArrayList effectSizes ) {
@@ -209,7 +208,7 @@ public abstract class MetaAnalysis {
      *            v_dot = [ sum_i=1&circ;k ( q_i &circ; 2 * w_i) ]/[ sum_i=1&circ;k  q_i * w_i ]&circ;2
      * </pre>
      * 
-     * @param variances
+     * @param weights
      * @return
      */
     protected double metaVariance( DoubleArrayList weights, DoubleArrayList qualityIndices ) {
@@ -262,7 +261,7 @@ public abstract class MetaAnalysis {
      * random effects model, we would use 1/(v + v_bs) where v_bs is the between-studies variance.
      * 
      * @param effectSizes
-     * @param sampleSizes
+     * @param weights
      * @return
      */
     protected double weightedMean( DoubleArrayList effectSizes, DoubleArrayList weights ) {
@@ -285,7 +284,7 @@ public abstract class MetaAnalysis {
      * Hedges 18-1, or HS pg. 100.
      * 
      * @param effectSizes
-     * @param sampleSizes
+     * @param weights
      * @param qualityIndices
      * @return
      */

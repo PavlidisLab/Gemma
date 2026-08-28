@@ -38,7 +38,7 @@ import org.hibernate.annotations.OnDeleteAction;
  *
  * <p><b>Why this exists.</b> Gemma holds this knowledge in four places and can query it from none of
  * them. A curator writes {@code disease model: left ventricular hypertrophy — induced by — aortic
- * banding} and it lands in {@link Characteristic#getPredicate()}/{@link Characteristic#getObject()},
+ * banding} and it lands in {@code getPredicate()}/{@code getObject()},
  * indexed per-experiment only; ask "which manipulations are asserted to induce left ventricular
  * hypertrophy?" and there is nothing to ask it of. CLO states which disease a cell line derives from
  * and {@link ubic.gemma.core.ontology.model.OntologyTerm#getRestrictions()} has always been able to
