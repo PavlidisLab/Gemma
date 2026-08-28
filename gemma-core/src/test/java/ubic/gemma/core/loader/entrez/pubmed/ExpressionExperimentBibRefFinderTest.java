@@ -40,6 +40,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author pavlidis
  */
 @Tag("geo")
+// paired with @Tag("geo") so the class is filtered from the default suite; geo is a
+// descriptive marker and is not excluded on its own (tag taxonomy in pom.xml).
+@Tag("slow")
 @ExtendWith(NetworkAvailableExtension.class)
 public class ExpressionExperimentBibRefFinderTest {
 

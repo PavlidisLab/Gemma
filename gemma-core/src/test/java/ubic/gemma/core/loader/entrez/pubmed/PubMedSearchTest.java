@@ -39,6 +39,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author pavlidis
  */
 @Tag("pubmed")
+// paired with @Tag("pubmed") so the class is filtered from the default suite; pubmed is
+// a descriptive marker and is not excluded on its own (tag taxonomy in pom.xml). Matches
+// what PubMedXMLFetcherTest already does.
+@Tag("slow")
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
 @ExtendWith(NetworkAvailableExtension.class)
 public class PubMedSearchTest {

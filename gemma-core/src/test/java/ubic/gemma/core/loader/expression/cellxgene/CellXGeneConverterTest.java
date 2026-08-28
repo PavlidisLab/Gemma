@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,11 @@ import static org.mockito.Mockito.when;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreaterOrEqualTo;
 
 @ContextConfiguration
+// This class carried no tag at all, so nothing kept it out of the default suite. It
+// reaches the CellxGene API and, through CellXGeneConverter.convertPublications, live
+// Entrez as well. @NetworkAvailable does not hold it back — it skips only when the host
+// is unreachable.
+@Tag("slow")
 @ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
 public class CellXGeneConverterTest extends BaseTest5 {
