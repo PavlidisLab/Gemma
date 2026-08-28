@@ -616,6 +616,89 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         assertThat( report.getDifferentialExpressionAnalysesToDelete() ).isEmpty();
     }
 
+    /**
+     * A re-term of a kept factor value is a change the report has to be able to state. It moves no structural
+     * counter — same factor, same factor value, same samples — and before 2026-08-28 the whole class of edit
+     * preflighted as {@code {created: 0, updated: 0, deleted: 0, unchanged: 1}}, which reads as "nothing to do"
+     * for an edit the commit applies (cab on GSE49354.1 · FV 213751 · 2026-08-27).
+     */
+    @Test
+    public void testPreviewReportsAReTermOfAKeptFactorValue() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 100L ).getStatements().get( 0 ).setSubjectUri( "http://purl.obolibrary.org/obo/UBERON_8600023" );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() ).isEmpty();
+        assertThat( report.getFactorValuesToUpdate() ).extracting( DesignPreflightReport.EntityRef::getId )
+                .containsExactly( 100L );
+        assertThat( report.getSummary().getFactorValuesToUpdate() ).isEqualTo( 1 );
+        assertThat( report.getSummary().getFactorsToUpdate() ).isZero();
+        // The edit relabels; it must not be reported as structural, or it would cascade the analyses.
+        assertThat( report.getSummary().getFactorValuesToCreate() ).isZero();
+        assertThat( report.getSummary().getFactorValuesToDelete() ).isZero();
+        assertThat( report.getSummary().getBiomaterialsWithChangedAssignments() ).isZero();
+    }
+
+    /**
+     * The factor half of the same gap: renaming a kept factor touches no factor value at all.
+     */
+    @Test
+    public void testPreviewReportsARenameOfAKeptFactor() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposal.getExperimentalFactors().get( 0 ).setName( "treatment (renamed)" );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getFactorsToUpdate() ).extracting( DesignPreflightReport.EntityRef::getId )
+                .containsExactly( 10L );
+        assertThat( report.getSummary().getFactorsToUpdate() ).isEqualTo( 1 );
+        assertThat( report.getSummary().getFactorValuesToUpdate() ).isZero();
+    }
+
+    /**
+     * The other half of the rule: a proposal that changes nothing reports nothing. Without this the two counters
+     * above could be satisfied by a report that calls every design edited.
+     */
+    @Test
+    public void testPreviewReportsNoUpdatesWhenNothingIsEdited() {
+        buildFixture();
+        DesignPreflightReport report = svc.previewDesignChange( fixture, mirrorProposal() );
+
+        assertThat( report.getFactorsToUpdate() ).isEmpty();
+        assertThat( report.getFactorValuesToUpdate() ).isEmpty();
+        assertThat( report.getSummary().getFactorsToUpdate() ).isZero();
+        assertThat( report.getSummary().getFactorValuesToUpdate() ).isZero();
+    }
+
+    /**
+     * 🛑 The shape an HTTP client actually round-trips. {@code AbstractFactorValueValueObjectSerializer} writes a
+     * statement into {@code statements} only when it has an object, so a plain {@code treatment: control} comes
+     * back to the client under {@code characteristics} with {@code statements: []}. Echoing that back is not an
+     * edit — the characteristic claims the same row by id and rewrites the same subject — and reading the
+     * statements list alone made it look like a deletion of every such row on every full-design PUT.
+     */
+    @Test
+    public void testPreviewDoesNotReportAnEchoOfTheSerializedProjection() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        FactorValueBasicValueObject pv = proposalFv( proposal, 100L );
+        assertThat( pv.getCharacteristics() ).extracting( CharacteristicValueObject::getId )
+                .withFailMessage( "the fixture must carry the statement's id on the characteristic projection, "
+                        + "or this test cannot tell an echo from a deletion" )
+                .containsExactly( 1000L );
+        pv.setStatements( Collections.emptyList() );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getFactorValuesToUpdate() ).isEmpty();
+        assertThat( svc.applyDesignChange( fixture, proposal ).isApplied() )
+                .withFailMessage( "echoing the serialized design must not emit a design-change event" )
+                .isFalse();
+    }
+
     @Test
     public void testPreviewBlocksUnknownFactorId() {
         buildFixture();

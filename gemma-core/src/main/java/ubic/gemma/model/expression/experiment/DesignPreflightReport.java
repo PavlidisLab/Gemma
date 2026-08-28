@@ -53,6 +53,26 @@ public class DesignPreflightReport implements Serializable {
 
     private List<EntityRef> factorsToDelete = new ArrayList<>();
     private List<EntityRef> factorValuesToDelete = new ArrayList<>();
+
+    /**
+     * Kept factors whose name, description or category the proposal rewrites.
+     * <p>
+     * Nothing is created or deleted by such an edit, so every counter above it stays at zero and the report
+     * used to describe a real change as {@code unchanged}. The apply path has always performed these — see
+     * {@code isNoOpDesignApply}, which consults the same comparison — so the gap was in what the report could
+     * say, not in what a PUT would do.
+     */
+    private List<EntityRef> factorsToUpdate = new ArrayList<>();
+
+    /**
+     * Kept factor values the proposal edits in place: a statement re-termed, evidence attached, the baseline
+     * flag flipped, a measurement retimed, the deprecated free-text value rewritten.
+     * <p>
+     * cab hit the gap on GSE49354.1 (2026-08-27): re-terming one factor value's subject URI preflighted as
+     * {@code {created: 0, updated: 0, deleted: 0, unchanged: 1}}, which reads as "nothing to do" for an edit
+     * that a PUT would in fact apply.
+     */
+    private List<EntityRef> factorValuesToUpdate = new ArrayList<>();
     private List<AnalysisRef> differentialExpressionAnalysesToDelete = new ArrayList<>();
 
     /**
@@ -128,6 +148,10 @@ public class DesignPreflightReport implements Serializable {
         private int factorValuesToDelete;
         private int factorsToCreate;
         private int factorValuesToCreate;
+        /** @see DesignPreflightReport#getFactorsToUpdate() */
+        private int factorsToUpdate;
+        /** @see DesignPreflightReport#getFactorValuesToUpdate() */
+        private int factorValuesToUpdate;
         private int differentialExpressionAnalysesToDelete;
         private int subsetsWithStaleAnchor;
         private int biomaterialsWithChangedAssignments;

@@ -787,6 +787,21 @@ public class ExpressionExperimentServiceImpl
         // ---- impact: biomaterials with changed assignments ----
         summary.setBiomaterialsWithChangedAssignments( changedBmCount );
 
+        // ---- impact: in-place edits on kept factors and factor values ----
+        // Reported, never counted as structural. These are the edits the invalidation rule above deliberately
+        // excludes -- they relabel, they move no sample and no level -- so they must stay out of
+        // `structuralChange`. What they must NOT stay out of is the report: before this, re-terming a factor
+        // value preflighted as all-zero, which the caller reads as "nothing to do" for an edit a PUT applies.
+        for ( ExperimentalFactor ef : keptFactorMetadataEdits( ee, proposed ) ) {
+            report.getFactorsToUpdate().add( new DesignPreflightReport.EntityRef( ef.getId(), ef.getName() ) );
+        }
+        summary.setFactorsToUpdate( report.getFactorsToUpdate().size() );
+        for ( FactorValue fv : keptFactorValueEdits( ee, proposed ) ) {
+            report.getFactorValuesToUpdate().add(
+                    new DesignPreflightReport.EntityRef( fv.getId(), FactorValueUtils.getSummaryString( fv ) ) );
+        }
+        summary.setFactorValuesToUpdate( report.getFactorValuesToUpdate().size() );
+
         return report;
     }
 
@@ -1089,33 +1104,45 @@ public class ExpressionExperimentServiceImpl
      * a category is only applied when the factor already has one.
      */
     private boolean hasKeptFactorMetadataEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        return !keptFactorMetadataEdits( ee, proposed ).isEmpty();
+    }
+
+    /**
+     * The kept factors {@link #hasKeptFactorMetadataEdits} finds an in-place edit on, in proposal order.
+     *
+     * @see #keptFactorValueEdits
+     */
+    private List<ExperimentalFactor> keptFactorMetadataEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();
         if ( ed == null || proposed.getExperimentalFactors() == null ) {
-            return false;
+            return Collections.emptyList();
         }
         Map<Long, ExperimentalFactor> currentFactorsById = new HashMap<>();
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
             currentFactorsById.put( ef.getId(), ef );
         }
+        List<ExperimentalFactor> edited = new ArrayList<>();
         for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
             if ( pf.getId() == null ) continue; // creations are already counted in the summary
             ExperimentalFactor cur = currentFactorsById.get( pf.getId() );
             if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
             if ( pf.getName() != null && !Objects.equals( pf.getName(), cur.getName() ) ) {
-                return true;
+                edited.add( cur );
+                continue;
             }
             if ( pf.getDescription() != null && !Objects.equals( pf.getDescription(), cur.getDescription() ) ) {
-                return true;
+                edited.add( cur );
+                continue;
             }
             if ( pf.getCategory() != null && cur.getCategory() != null
                     && ( !Objects.equals( pf.getCategory().getCategory(), cur.getCategory().getCategory() )
                     || !Objects.equals( pf.getCategory().getCategoryUri(), cur.getCategory().getCategoryUri() )
                     || !Objects.equals( pf.getCategory().getValue(), cur.getCategory().getValue() )
                     || !Objects.equals( pf.getCategory().getValueUri(), cur.getCategory().getValueUri() ) ) ) {
-                return true;
+                edited.add( cur );
             }
         }
-        return false;
+        return edited;
     }
 
     /**
@@ -1174,9 +1201,20 @@ public class ExpressionExperimentServiceImpl
      * not short-circuited away.
      */
     private boolean hasKeptFactorValueEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        return !keptFactorValueEdits( ee, proposed ).isEmpty();
+    }
+
+    /**
+     * The kept factor values {@link #hasKeptFactorValueEdits} finds an in-place edit on, in proposal order.
+     * <p>
+     * Returning them rather than a bare boolean is what lets {@link #previewDesignChange} report the edit
+     * instead of counting it as {@code unchanged}: one comparison, read by the no-op gate and by the report,
+     * so the two cannot disagree about what an edit is.
+     */
+    private List<FactorValue> keptFactorValueEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();
         if ( ed == null || proposed.getExperimentalFactors() == null ) {
-            return false;
+            return Collections.emptyList();
         }
         Map<Long, FactorValue> currentFvsById = new HashMap<>();
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
@@ -1184,6 +1222,7 @@ public class ExpressionExperimentServiceImpl
                 currentFvsById.put( fv.getId(), fv );
             }
         }
+        List<FactorValue> edited = new ArrayList<>();
         for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
             if ( pf.getValues() == null ) continue;
             for ( FactorValueBasicValueObject pv : pf.getValues() ) {
@@ -1191,32 +1230,36 @@ public class ExpressionExperimentServiceImpl
                 FactorValue cur = currentFvsById.get( pv.getId() );
                 if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
                 if ( pv.getBaseline() != null && !Objects.equals( pv.getBaseline(), cur.getIsBaseline() ) ) {
-                    return true;
+                    edited.add( cur );
+                    continue;
                 }
                 //noinspection deprecation
                 if ( pv.getValue() != null && !Objects.equals( pv.getValue(), cur.getValue() ) ) {
-                    return true;
+                    edited.add( cur );
+                    continue;
                 }
                 // Statements are replaced wholesale by updateFactorValueStatements when the payload provides them
                 // (null = "no change"). Compare by content so an add / remove / edit registers, while a pure
                 // round-trip that echoes the same statements stays a no-op.
-                if ( pv.getStatements() != null && statementsChanged( cur, pv.getStatements() ) ) {
-                    return true;
+                if ( pv.getStatements() != null && statementsChanged( cur, pv ) ) {
+                    edited.add( cur );
+                    continue;
                 }
                 // Attaching provenance to an otherwise-unchanged statement leaves the content keys identical, so
                 // statementsChanged cannot see it. Without this an evidence-only write is swallowed exactly the
                 // way a factor description-only write used to be.
                 if ( pv.getStatements() != null && statementEvidenceChanged( cur, pv.getStatements() ) ) {
-                    return true;
+                    edited.add( cur );
+                    continue;
                 }
                 // A continuous factor value's measurement is the field its whole meaning rests on; retiming a
                 // timepoint from 7 to 37 days moves no structural counter.
                 if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
-                    return true;
+                    edited.add( cur );
                 }
             }
         }
-        return false;
+        return edited;
     }
 
     /**
@@ -1278,14 +1321,53 @@ public class ExpressionExperimentServiceImpl
      * add / remove / field edits count. Echoing the current statements verbatim (the common baseline-edit
      * round-trip) yields equal multisets and is therefore not a change.
      */
-    private static boolean statementsChanged( FactorValue cur, List<StatementValueObject> proposed ) {
+    /**
+     * Whether the statements {@code pv} proposes differ in content from the ones the factor value holds.
+     * <p>
+     * Compares the multiset of content keys the apply would end up with against the one it starts from, so an
+     * add, a removal and a re-term all register while a payload that echoes what it read stays a no-op.
+     * <p>
+     * 🛑 <b>The proposed side is BOTH projections, not just {@code statements}.</b> A statement with no object
+     * is rendered under {@code characteristics} and left out of {@code statements} entirely
+     * ({@code AbstractFactorValueValueObjectSerializer} writes a statement only when it has an object), and
+     * that is the commonest shape there is — a plain {@code organism part: chorionic villus}. Reading the
+     * statements list alone, a client PUTting back exactly what {@code GET /design} gave it looks like it is
+     * deleting every such row, which cost a spurious design-change event on every full-design round trip and
+     * would have counted the whole design as edited in the preflight report. {@link #updateFactorValueStatements}
+     * has always resolved the two projections together; this is the same resolution, read-only.
+     */
+    private static boolean statementsChanged( FactorValue cur, FactorValueBasicValueObject pv ) {
+        List<StatementValueObject> proposed = pv.getStatements() != null ? pv.getStatements() : Collections.emptyList();
         Map<String, Integer> currentKeys = new HashMap<>();
+        Map<Long, Statement> existingById = new HashMap<>();
         for ( Statement s : cur.getCharacteristics() ) {
             currentKeys.merge( statementContentKey( s ), 1, Integer::sum );
+            if ( s.getId() != null ) {
+                existingById.put( s.getId(), s );
+            }
         }
         Map<String, Integer> proposedKeys = new HashMap<>();
+        Set<Long> claimedByStatement = new HashSet<>();
         for ( StatementValueObject ps : proposed ) {
             proposedKeys.merge( statementContentKey( ps ), 1, Integer::sum );
+            if ( ps.getId() != null ) {
+                claimedByStatement.add( ps.getId() );
+            }
+        }
+        if ( pv.getCharacteristics() != null ) {
+            for ( CharacteristicValueObject pc : pv.getCharacteristics() ) {
+                if ( pc.getId() == null || claimedByStatement.contains( pc.getId() ) ) continue;
+                Statement target = existingById.get( pc.getId() );
+                if ( target == null ) continue;
+                // Mirrors applyCharacteristicSubjectFields: the characteristic projection rewrites the subject
+                // side and cannot express a predicate or an object, so the ones on the row survive.
+                proposedKeys.merge( statementContentKey( pc.getCategory(), pc.getCategoryUri(),
+                        pc.getValue(), pc.getValueUri(),
+                        target.getPredicate(), target.getPredicateUri(),
+                        target.getObject(), target.getObjectUri(),
+                        target.getSecondPredicate(), target.getSecondPredicateUri(),
+                        target.getSecondObject(), target.getSecondObjectUri() ), 1, Integer::sum );
+            }
         }
         return !currentKeys.equals( proposedKeys );
     }
@@ -2475,7 +2557,13 @@ public class ExpressionExperimentServiceImpl
                 DesignPreflightReport.Summary s = previewDesignChange( ee, edvo1 ).getSummary();
                 result.setDesignCreated( s.getFactorsToCreate() + s.getFactorValuesToCreate() );
                 result.setDesignDeleted( s.getFactorsToDelete() + s.getFactorValuesToDelete() );
-                result.setDesignUpdated( s.getBiomaterialsWithChangedAssignments() );
+                // `updated` is every kind of in-place change: samples moved between factor values, and the
+                // relabels — a statement re-termed, evidence attached, a baseline flipped, a measurement
+                // retimed, a factor renamed or re-categorized. Assignments used to be the only one counted,
+                // so a term-only edit reported `unchanged: 1` and read as "nothing to do" for an edit the
+                // commit would in fact apply (cab, GSE49354.1, 2026-08-27).
+                result.setDesignUpdated( s.getBiomaterialsWithChangedAssignments()
+                        + s.getFactorsToUpdate() + s.getFactorValuesToUpdate() );
                 // Symmetry with basics/publications: a clean no-op keep reports unchanged=1, not all-zero.
                 result.setDesignUnchanged( result.getDesignCreated() + result.getDesignDeleted() + result.getDesignUpdated() == 0 ? 1 : 0 );
                 anyChange = anyChange || result.getDesignCreated() > 0 || result.getDesignDeleted() > 0
@@ -2486,7 +2574,8 @@ public class ExpressionExperimentServiceImpl
                 DesignPreflightReport.Summary s1 = outcome1.getPreflightAtApply().getSummary();
                 int created = s1.getFactorsToCreate() + s1.getFactorValuesToCreate();
                 int deleted = s1.getFactorsToDelete() + s1.getFactorValuesToDelete();
-                int updated = s1.getBiomaterialsWithChangedAssignments();
+                int updated = s1.getBiomaterialsWithChangedAssignments()
+                        + s1.getFactorsToUpdate() + s1.getFactorValuesToUpdate();
 
                 List<Long> auditIds = new ArrayList<>();
                 collectDesignChangeEventId( ee, outcome1, auditIds );
@@ -2499,6 +2588,8 @@ public class ExpressionExperimentServiceImpl
                         ExperimentalDesignValueObject edvo2 = buildAssignmentPass( outcome1.getDesign(), plan, idMap );
                         if ( edvo2 != null ) {
                             DesignApplyOutcome outcome2 = self.applyDesignChange( ee, edvo2 );
+                            // Pass 2 exists only to attach samples to factor values pass 1 created, so only the
+                            // assignment count can move; the in-place counters would restate pass 1's edits.
                             updated += outcome2.getPreflightAtApply().getSummary().getBiomaterialsWithChangedAssignments();
                             collectDesignChangeEventId( ee, outcome2, auditIds );
                         }
