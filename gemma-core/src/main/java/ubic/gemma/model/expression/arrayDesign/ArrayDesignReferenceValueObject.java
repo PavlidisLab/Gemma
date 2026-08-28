@@ -68,10 +68,29 @@ public class ArrayDesignReferenceValueObject implements Serializable {
     private String name;
 
     /**
+     * What kind of platform it is — {@code ONECOLOR}, {@code TWOCOLOR}, {@code SEQUENCING},
+     * {@code GENELIST}, {@code OTHER}. Rendered as the enum's name.
+     * <p>
+     * Here because a client that has to say whether a dataset is a microarray or a sequencing run
+     * was otherwise reduced to matching the platform's NAME against a pattern — which reads
+     * correctly for {@code Affymetrix GeneChip …} by luck and returns nothing for a sequencing
+     * platform that does not say so in its name (uib, 2026-08-28).
+     */
+    @Nullable
+    private String technologyType;
+
+    /**
      * The identity-only form, for the callers that select two columns.
      */
     public ArrayDesignReferenceValueObject( Long id, @Nullable String shortName ) {
-        this( id, shortName, null );
+        this( id, shortName, null, null );
+    }
+
+    /**
+     * Identity plus name, for the callers that have no technology type in hand.
+     */
+    public ArrayDesignReferenceValueObject( Long id, @Nullable String shortName, @Nullable String name ) {
+        this( id, shortName, name, null );
     }
 
     @Override

@@ -23,6 +23,9 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -662,6 +665,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         ArrayDesign used = new ArrayDesign();
         used.setShortName( "GPL571" );
         used.setName( "Affymetrix GeneChip Human Genome U133A 2.0 Array" );
+        used.setTechnologyType( TechnologyType.ONECOLOR );
         used.setPrimaryTaxon( taxon );
         sessionFactory.getCurrentSession().persist( used );
 
@@ -701,7 +705,10 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
                 .satisfies( p -> {
                     assertEquals( "GPL571", p.getShortName() );
                     assertEquals( "Affymetrix GeneChip Human Genome U133A 2.0 Array", p.getName() );
+                    assertEquals( "ONECOLOR", p.getTechnologyType() );
                 } );
+        // the dataset's own technology, since its platforms agree on one
+        assertEquals( "ONECOLOR", vo.getTechnologyType() );
         // the count keeps meaning what it meant, now derived from the same rows
         assertEquals( 1L, vo.getArrayDesignCount().longValue() );
         assertThat( vo.getOriginalPlatforms() )
@@ -738,6 +745,68 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         assertNotNull( vo );
         assertThat( vo.getPlatforms() ).extracting( "shortName" ).containsExactly( "GPL1261" );
         assertThat( vo.getOriginalPlatforms() ).isEmpty();
+    }
+
+    /**
+     * 🛑 A dataset run on two kinds of platform IS both, so it has no single technology and the
+     * field says so by being null. Answering with either platform's type — which is what the
+     * details VO does, taking whichever platform the iterator reaches first — labels half the
+     * dataset wrong, and a client cannot tell that from a confident answer.
+     */
+    @Test
+    @WithMockUser
+    public void testTechnologyTypeIsNullWhenThePlatformsDisagree() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign micro = new ArrayDesign();
+        micro.setShortName( "GPL571" );
+        micro.setTechnologyType( TechnologyType.ONECOLOR );
+        micro.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( micro );
+        ArrayDesign seq = new ArrayDesign();
+        seq.setShortName( "GPL11154" );
+        seq.setTechnologyType( TechnologyType.SEQUENCING );
+        seq.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( seq );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        for ( ArrayDesign ad : Arrays.asList( micro, seq ) ) {
+            BioMaterial bm = new BioMaterial();
+            bm.setSourceTaxon( taxon );
+            sessionFactory.getCurrentSession().persist( bm );
+            BioAssay ba = new BioAssay();
+            ba.setArrayDesignUsed( ad );
+            ba.setSampleUsed( bm );
+            ee.getBioAssays().add( ba );
+        }
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertNull( vo.getTechnologyType() );
+        // and the client can still see what it is made of
+        assertThat( vo.getPlatforms() ).extracting( "technologyType" )
+                .containsExactlyInAnyOrder( "ONECOLOR", "SEQUENCING" );
+    }
+
+    /**
+     * The creation date comes off the {@code C} audit event, which is the only record Gemma keeps
+     * of when a dataset was loaded.
+     */
+    @Test
+    @WithMockUser
+    public void testDateCreatedComesFromTheCreationAuditEvent() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        Date created = new Date( 1181157000000L ); // 2007-06-06
+        ee.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( created, AuditAction.CREATE,
+                "Create ExpressionExperiment", null, null, null ) );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertEquals( created, vo.getDateCreated() );
     }
 
     @Test

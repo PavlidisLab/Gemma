@@ -2348,8 +2348,18 @@ public class ExpressionExperimentDaoImpl
                     vo.setPlatforms( arrayDesignsUsedIds.stream()
                             .map( platformsById::get )
                             .filter( Objects::nonNull )
-                            .map( ad -> new ArrayDesignReferenceValueObject( ad.getId(), ad.getShortName(), ad.getName() ) )
+                            .map( ad -> new ArrayDesignReferenceValueObject( ad.getId(), ad.getShortName(), ad.getName(),
+                                    nameOf( ad.getTechnologyType() ) ) )
                             .collect( Collectors.toList() ) );
+                    // setArrayDesigns above took the technology of whichever platform the iterator
+                    // reached first. One field cannot mean "the technology" on one load path and
+                    // "some platform's technology" on the other, so both now answer only when the
+                    // platforms agree.
+                    Set<String> technologies = adVos.stream()
+                            .map( ArrayDesignValueObject::getTechnologyType )
+                            .filter( Objects::nonNull )
+                            .collect( Collectors.toSet() );
+                    vo.setTechnologyType( technologies.size() == 1 ? technologies.iterator().next() : null );
 
                     // original platforms
                     vo.setOriginalPlatforms( details.stream()
@@ -2470,6 +2480,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected void postProcessValueObjects( List<ExpressionExperimentValueObject> results ) {
         populatePlatforms( results );
+        populateDateCreated( results );
     }
 
     @Override
@@ -4606,7 +4617,8 @@ public class ExpressionExperimentDaoImpl
             return;
         }
         Query q = getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ee.id, ad.id, ad.shortName, ad.name, op.id, op.shortName, op.name "
+                .createQuery( "select distinct ee.id, ad.id, ad.shortName, ad.name, ad.technologyType, "
+                        + "op.id, op.shortName, op.name, op.technologyType "
                         + "from ExpressionExperiment ee "
                         + "join ee.bioAssays as ba "
                         + "join ba.arrayDesignUsed as ad "
@@ -4620,10 +4632,12 @@ public class ExpressionExperimentDaoImpl
                 .forEach( row -> {
                     Long eeId = ( Long ) row[0];
                     usedByEe.computeIfAbsent( eeId, k -> new LinkedHashMap<>() )
-                            .putIfAbsent( ( Long ) row[1], new ArrayDesignReferenceValueObject( ( Long ) row[1], ( String ) row[2], ( String ) row[3] ) );
-                    if ( row[4] != null ) {
+                            .putIfAbsent( ( Long ) row[1], new ArrayDesignReferenceValueObject( ( Long ) row[1],
+                                    ( String ) row[2], ( String ) row[3], nameOf( ( TechnologyType ) row[4] ) ) );
+                    if ( row[5] != null ) {
                         originalByEe.computeIfAbsent( eeId, k -> new LinkedHashMap<>() )
-                                .putIfAbsent( ( Long ) row[4], new ArrayDesignReferenceValueObject( ( Long ) row[4], ( String ) row[5], ( String ) row[6] ) );
+                                .putIfAbsent( ( Long ) row[5], new ArrayDesignReferenceValueObject( ( Long ) row[5],
+                                        ( String ) row[6], ( String ) row[7], nameOf( ( TechnologyType ) row[8] ) ) );
                     }
                 } );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
@@ -4633,6 +4647,50 @@ public class ExpressionExperimentDaoImpl
             Map<Long, ArrayDesignReferenceValueObject> original = new LinkedHashMap<>( originalByEe.getOrDefault( eevo.getId(), Collections.emptyMap() ) );
             original.keySet().removeAll( used.keySet() );
             eevo.setOriginalPlatforms( new ArrayList<>( original.values() ) );
+            // The dataset's technology is its platforms' technology, and only when they agree. A
+            // dataset on a microarray and a sequencing platform IS both, and answering with either
+            // one is how a client ends up labelling half of it wrong. Null there says "ask the
+            // platforms", which the VO now carries.
+            Set<String> technologies = used.values().stream()
+                    .map( ArrayDesignReferenceValueObject::getTechnologyType )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            eevo.setTechnologyType( technologies.size() == 1 ? technologies.iterator().next() : null );
+        }
+    }
+
+    private static String nameOf( @Nullable TechnologyType tt ) {
+        return tt != null ? tt.name() : null;
+    }
+
+    /**
+     * When each dataset was created in Gemma, from its {@code C} audit event.
+     * <p>
+     * A second batched query rather than a join onto the platform one: the two go through different
+     * collections and joining both in one statement multiplies the rows before either can be
+     * grouped. It is one indexed round trip per page, on ids already in hand.
+     * <p>
+     * {@code min} because nothing forbids two creation events; the earliest is the creation. A
+     * dataset with none is left null rather than defaulted — an absent record must not be rendered
+     * as a date.
+     */
+    private void populateDateCreated( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, min(ae.date) from ExpressionExperiment ee "
+                        + "join ee.auditTrail as atr "
+                        + "join atr.events as ae "
+                        + "where ee.id in (:ids) and ae.action = 'C' "
+                        + "group by ee.id" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, Date> createdById = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> createdById.put( ( Long ) row[0], ( Date ) row[1] ) );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setDateCreated( createdById.get( eevo.getId() ) );
         }
     }
 

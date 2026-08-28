@@ -30,6 +30,7 @@ import org.springframework.lang.Nullable;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Date;
 import java.util.List;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
@@ -107,6 +108,21 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      */
     @Schema(description = "Platforms the assays were originally run on, when the dataset was switched to another platform. Empty when there was no switch; a switch to the same platform is not reported.")
     private List<ArrayDesignReferenceValueObject> originalPlatforms;
+
+    /**
+     * When the dataset was created in Gemma — loaded, not published.
+     * <p>
+     * Read from the {@code C} audit event, which is the only record of it: there is no creation
+     * column on the dataset (a {@code CURATION_DETAILS.CREATED} backfill was proposed and deferred,
+     * 2026-08-21). Measured universal — 200 of 200 sampled datasets carry the event — but null is
+     * still possible and means the event is missing, never "created just now".
+     * <p>
+     * 🛑 <b>Not filterable or sortable.</b> {@code AbstractCuratableDao} unregisters
+     * {@code auditTrail.*} from the dataset filter surface, so this is a projection for display.
+     * Filtering on it is what the deferred migration was for.
+     */
+    @Schema(description = "When the dataset was loaded into Gemma, from its creation audit event. Null when that event is missing. Display only — not filterable or sortable.")
+    private Date dateCreated;
     private String batchConfound;
     /**
      * Batch effect type. See {@link BatchEffectType} enum for possible values.
@@ -328,6 +344,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.arrayDesignCount = vo.getArrayDesignCount();
         this.platforms = vo.getPlatforms();
         this.originalPlatforms = vo.getOriginalPlatforms();
+        this.dateCreated = vo.getDateCreated();
         this.bioMaterialCount = vo.getBioMaterialCount();
         this.userCanWrite = vo.getUserCanWrite();
         this.userOwned = vo.getUserOwned();
