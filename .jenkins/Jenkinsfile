@@ -146,7 +146,17 @@ pipeline {
         stage('Run quick unit tests') {
             steps {
                 setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest'
+                // No -DexcludedGroups here on purpose: the pom's own default applies,
+                // which surefire consumes as `integration,${excludedGroups}` =
+                // integration,network,slow (pom.xml ~1113 and ~1737).
+                //
+                // This used to pass -DexcludedGroups=SlowTest, which was worse than a
+                // no-op. @Category(SlowTest) exists in zero test files today, so it
+                // excluded nothing — while REPLACING the network,slow default, which
+                // pulled all 78 @Tag("slow") files and the network-bound ones into the
+                // stage that is supposed to be the fast signal. Build #4 spent 15m20s
+                // here and failed on live NCBI calls.
+                sh 'mvn -B test --fail-at-end'
             }
             post {
                 always {
@@ -204,7 +214,17 @@ pipeline {
                     steps {
                         lock('gemma-slow-tests') {
                             setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                            sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack'
+                            // -Dgroups=slow selects the Jupiter tag that tests actually
+                            // carry; the old -Dgroups=SlowTest named a JUnit 4 category
+                            // that no test uses any more, so this stage selected nothing
+                            // and silently passed.
+                            //
+                            // -DexcludedGroups=network is required alongside it, not
+                            // optional: the default exclusion list contains `slow`, and
+                            // an excluded group beats a selected one, so -Dgroups=slow
+                            // on its own would run zero tests. Overriding to `network`
+                            // drops slow from the exclusions and keeps network out.
+                            sh 'mvn -B test --fail-at-end -Dgroups=slow -DexcludedGroups=network -DskipWebpack'
                         }
                     }
                     post {
