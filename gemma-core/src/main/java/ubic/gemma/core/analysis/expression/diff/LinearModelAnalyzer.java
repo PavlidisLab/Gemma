@@ -299,8 +299,14 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
         dmatrix = dmatrix.sliceColumns( samplesUsed, createBADMap( samplesUsed ) ); // enforce ordering
 
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
+        // Baselines come off the PRUNED list, the way the subset path derives them. dropIncompleteFactors
+        // removes a factor some sample carries no value for, the design matrix is built from what survives, and
+        // makeDesignMatrix calls setBaseline for every entry of this map -- so a baseline for a dropped factor
+        // fails the whole analysis with "No factor known by name fact.2, choices are: fact.1". Deriving it
+        // beforehand made that the normal case rather than an edge one: getBaselineConditions falls back to the
+        // FIRST sample's factor values, so a factor missing on any later sample still gets an entry.
         dropIncompleteFactors( samplesUsed, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
 
         // A factor with two curator-marked baselines has no single reference level, so it cannot be run as one
         // contrast. That design is legitimate -- a dataset holding two experiments has a baseline per experiment --
@@ -344,8 +350,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 .collect( Collectors.toList() );
         List<BioMaterial> samplesUsed = orderByExperimentalDesign( dmatrix, factors, null );
         Map<FactorValue, ExpressionDataDoubleMatrix> dmatrixBySubSet = makeSubSetMatrices( dmatrix, samplesUsed, factors, config.getSubsetFactor() );
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
+        // Same ordering as the entry point above: prune first, then describe what is left.
         dropIncompleteFactors( samplesUsed, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
         return doSubSetAnalysis( subsets, dmatrixBySubSet, factors, baselineConditions, config );
     }
 
