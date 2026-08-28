@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static ubic.gemma.core.config.DataSourceConfig.maxExecutionTimeOf;
 import static ubic.gemma.core.config.DataSourceConfig.withMaxExecutionTime;
 
 /**
@@ -68,5 +69,37 @@ class DataSourceConfigTest {
         assertThatThrownBy( () -> withMaxExecutionTime( SHIPPED_SESSION_VARIABLES, "-1" ) )
                 .isInstanceOf( IllegalStateException.class )
                 .hasMessageContaining( "negative" );
+    }
+
+    /**
+     * The reader is the composer read backwards, and the round trip is the guarantee: a deployment
+     * asks {@code GET /admin/db/pool} whether the cap is on, and an answer derived by a second,
+     * independent parse would eventually disagree with what was actually sent to MySQL.
+     */
+    @Test
+    void whenATimeoutWasComposed_thenItIsReadBack() {
+        assertThat( maxExecutionTimeOf( withMaxExecutionTime( SHIPPED_SESSION_VARIABLES, "300000" ) ) )
+                .isEqualTo( 300000L );
+        assertThat( maxExecutionTimeOf( withMaxExecutionTime( SHIPPED_SESSION_VARIABLES, "0" ) ) )
+                .isEqualTo( 0L );
+    }
+
+    /**
+     * No cap composed means no cap reported — including against the shipped list, whose quoted
+     * sql_mode carries commas and underscored words of its own.
+     */
+    @Test
+    void whenNoTimeoutWasComposed_thenNothingIsReadBackFromTheQuotedSqlMode() {
+        assertThat( maxExecutionTimeOf( SHIPPED_SESSION_VARIABLES ) ).isNull();
+        assertThat( maxExecutionTimeOf( null ) ).isNull();
+        assertThat( maxExecutionTimeOf( "" ) ).isNull();
+    }
+
+    /**
+     * A variable whose name merely ENDS with the one being read is a different setting.
+     */
+    @Test
+    void whenAnotherVariableSharesTheSuffix_thenItIsNotMistakenForTheTimeout() {
+        assertThat( maxExecutionTimeOf( SHIPPED_SESSION_VARIABLES + ",other_max_execution_time=99" ) ).isNull();
     }
 }

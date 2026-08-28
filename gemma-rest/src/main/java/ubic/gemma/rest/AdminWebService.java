@@ -53,6 +53,7 @@ import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.config.DataSourceConfig;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.rest.util.args.PlatformArgService;
@@ -1437,7 +1438,7 @@ public class AdminWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Database connection pool snapshot",
-            description = "Returns HikariCP pool stats: active / idle / total connections, threads currently awaiting a connection, plus the configured maximum pool size and connection-timeout. 503 if the configured DataSource is not a HikariDataSource.",
+            description = "Returns HikariCP pool stats: active / idle / total connections, threads currently awaiting a connection, plus the configured maximum pool size, connection-timeout, and the server-side statement timeout the pool opens its connections with (`maxExecutionTimeMillis`, null when uncapped). 503 if the configured DataSource is not a HikariDataSource.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
@@ -1463,6 +1464,13 @@ public class AdminWebService {
         body.connectionTimeoutMillis = hikari.getConnectionTimeout();
         body.idleTimeoutMillis = hikari.getIdleTimeout();
         body.maxLifetimeMillis = hikari.getMaxLifetime();
+        // What the driver was actually handed, not what an env file says. A deployment sets
+        // GEMMA_DB_HIKARI_MAXEXECUTIONTIME, that becomes a Connector/J session variable, and nothing
+        // between there and MySQL reports whether it arrived -- so "is the statement cap on?" was a
+        // question answered by reading env files and inferring. Now the server answers it.
+        java.util.Properties dsProps = hikari.getDataSourceProperties();
+        body.sessionVariables = dsProps != null ? dsProps.getProperty( "sessionVariables" ) : null;
+        body.maxExecutionTimeMillis = DataSourceConfig.maxExecutionTimeOf( body.sessionVariables );
         if ( mx != null ) {
             body.activeConnections = mx.getActiveConnections();
             body.idleConnections = mx.getIdleConnections();
@@ -2464,6 +2472,12 @@ public class AdminWebService {
         public int idleConnections;
         public int totalConnections;
         public int threadsAwaitingConnection;
+        @Schema(description = "The Connector/J session-variable list this pool opens every connection with, verbatim.")
+        @Nullable
+        public String sessionVariables;
+        @Schema(description = "Server-side statement timeout in milliseconds, read back out of `sessionVariables`. Null means no cap is configured and a single read can run until the client gives up -- which does not cancel it. Set per-deployment with GEMMA_DB_HIKARI_MAXEXECUTIONTIME; MySQL applies it to read-only SELECTs only.")
+        @Nullable
+        public Long maxExecutionTimeMillis;
     }
 
     public static class CurationAgentHealthResponse {

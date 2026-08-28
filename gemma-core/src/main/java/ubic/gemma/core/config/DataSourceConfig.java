@@ -26,6 +26,8 @@ import ubic.gemma.core.util.DummyMailSender;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Renovations Phase 3: Java-config replacement for {@code applicationContext-dataSource.xml}.
@@ -145,6 +147,14 @@ public class DataSourceConfig {
      *                               otherwise reach MySQL as an unparseable SET and fail every
      *                               connection attempt with a message about sql_mode.
      */
+    /**
+     * The variable has to start the list or follow a comma. Matching it anywhere would read
+     * {@code foo_max_execution_time=42} as a 42 ms cap -- a wrong number, which is worse than no
+     * answer, since this is what an operator checks to decide whether the cap is on.
+     */
+    private static final Pattern MAX_EXECUTION_TIME =
+            Pattern.compile( "(?:^|,)\\s*max_execution_time\\s*=\\s*(\\d+)" );
+
     static String withMaxExecutionTime( String sessionVariables, @Nullable String maxExecutionTimeMs ) {
         if ( StringUtils.isBlank( maxExecutionTimeMs ) ) {
             return sessionVariables;
@@ -160,6 +170,28 @@ public class DataSourceConfig {
             throw new IllegalStateException( "gemma.db.hikari.maxExecutionTime must not be negative, got " + ms + "." );
         }
         return sessionVariables + ",max_execution_time=" + ms;
+    }
+
+    /**
+     * Read back the statement timeout {@link #withMaxExecutionTime} composed, in milliseconds, or
+     * {@code null} when the list carries none.
+     * <p>
+     * It lives beside the composer so the two cannot drift, and it exists because the setting is
+     * otherwise invisible from outside the JVM: the deployment sets an environment variable, the
+     * variable becomes a Connector/J property, and nothing between there and MySQL says whether it
+     * arrived. {@code GET /admin/db/pool} reports what this returns, so "is the cap on?" is a
+     * question the running server answers about itself rather than one answered by reading
+     * env files and inferring.
+     *
+     * @param sessionVariables a Connector/J session-variable list, possibly null
+     */
+    @Nullable
+    public static Long maxExecutionTimeOf( @Nullable String sessionVariables ) {
+        if ( sessionVariables == null ) {
+            return null;
+        }
+        Matcher m = MAX_EXECUTION_TIME.matcher( sessionVariables );
+        return m.find() ? Long.valueOf( m.group( 1 ) ) : null;
     }
 
     /**
