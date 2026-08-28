@@ -155,10 +155,16 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          * {@code derives from cell line cell} naming 201B7, 585A1, Detroit 551, WT33 and the rest. Nothing
          * there is about the term a curator is looking at; the term is a heading for a list.</p>
          *
-         * <p>Reported rather than filtered on, for the reason {@link #objectBreadth} is: uib was
-         * inferring it from a page of results — more than three objects under one predicate, drop the
-         * group — which is a guess about a global fact from a local sample, and wrong exactly when the
-         * page happens to be short.</p>
+         * <p>Corpus-wide, from a global count, because uib was inferring it from a page of results —
+         * more than three objects under one predicate, drop the group — which is a guess about a global
+         * fact from a local sample, and wrong exactly when the page happens to be short.</p>
+         *
+         * <p>🛑 <b>Per predicate.</b> The count was unscoped until 2026-08-27, and the unscoped number
+         * does not separate the shape described above: on gemma2 it read {@code dimethyl sulfoxide} 9,
+         * {@code BRCA1} 13, {@code biotin} 15, {@code epithelial cell} 20 — the one row a reader wanted
+         * sitting between two ontology closures nobody wanted. Asking one predicate at a time returned
+         * 8, 1, 15 and 3 objects for those four. Filter on it with
+         * {@link RelationQuery#maximumSubjectBreadth(int)}.</p>
          */
         private final long subjectBreadth;
 
@@ -595,6 +601,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         private Direction seedDirection = Direction.SUBJECT_TO_OBJECT;
         private int minimumSupport = 0;
         private int maximumObjectBreadth = 0;
+        private int maximumSubjectBreadth = 0;
         private boolean termLevelOnly = true;
         private boolean includeRefuted = false;
         private double minimumSpecificity = 0d;
@@ -803,6 +810,37 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
          */
         public RelationQuery maximumObjectBreadth( int v ) {
             this.maximumObjectBreadth = v;
+            return this;
+        }
+
+        public int getMaximumSubjectBreadth() {
+            return maximumSubjectBreadth;
+        }
+
+        /**
+         * Drop relations whose subject relates to more than this many distinct objects under the same
+         * predicate. Zero, the default, does not filter.
+         *
+         * <p>The other end of {@link #maximumObjectBreadth(int)}, and it catches a different shape: a
+         * subject enumerating a list rather than saying something about itself. Measured on gemma2
+         * 2026-08-27 over the forward walk of {@code ?dataset=} for 36 datasets, 214 of the 303 rows
+         * were CHEBI's {@code has role} closure ({@code dimethyl sulfoxide} carries 8 roles,
+         * {@code biotin} 15). Counting each row's siblings within that read, a bar of 3 leaves 9 of the
+         * 214 and every row of every other predicate present: {@code has disease} 31/31, {@code derives
+         * from anatomic part} 12/12, {@code derives from patient having disease} 11/11, {@code derived
+         * from cell} 11/11, {@code derived from cell line} 8/8, {@code derives from part of} 7/7,
+         * {@code is disease model for} 3/3. {@link #maximumObjectBreadth(int)} at 25 over the same rows
+         * keeps 43 of the 214 while taking {@code derives from anatomic part} to 1, {@code derives from
+         * patient having disease} to 1 and {@code is disease model for} to 0 — it separates a topic
+         * from a dose, which is not this.</p>
+         *
+         * <p>No default is imposed here for the reason none is imposed there: a curator browsing a term
+         * may well want all fifteen of biotin's roles, which the ranking already orders specific-first.</p>
+         *
+         * @see RelationSummary#getSubjectBreadth()
+         */
+        public RelationQuery maximumSubjectBreadth( int v ) {
+            this.maximumSubjectBreadth = v;
             return this;
         }
 

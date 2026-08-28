@@ -278,13 +278,19 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                     .exampleExperimentId( ( Long ) r[20] )
                     .numberOfExperimentsWithSubject( total )
                     .objectBreadth( breadth.getOrDefault( breadthKey( ( String ) r[6] ), 0L ) )
-                    .subjectBreadth( subjectBreadth.getOrDefault( breadthKey( ( String ) r[0] ), 0L ) )
+                    // subject breadth is per predicate, so the key carries the row's predicate --
+                    // its URI where it has one, matching the coalesce the count grouped on
+                    .subjectBreadth( subjectBreadth.getOrDefault(
+                            breadthKey( ( String ) r[0], r[5] != null ? ( String ) r[5] : ( String ) r[4] ), 0L ) )
                     .evidence( ( String ) r[22] )
                     .build();
             if ( s.getNumberOfExperiments() < q.getMinimumSupport() && !basis.isSelfSufficient() ) {
                 continue;
             }
             if ( q.getMaximumObjectBreadth() > 0 && s.getObjectBreadth() > q.getMaximumObjectBreadth() ) {
+                continue;
+            }
+            if ( q.getMaximumSubjectBreadth() > 0 && s.getSubjectBreadth() > q.getMaximumSubjectBreadth() ) {
                 continue;
             }
             if ( q.isTermLevelOnly()
@@ -465,37 +471,58 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
      * one caller and generic to another.</p>
      */
     private Map<String, Long> findObjectBreadth( Collection<String> objectValues ) {
-        return findBreadth( objectValues, "OBJECT_VALUE", "SUBJECT_VALUE" );
+        return findBreadth( objectValues, "OBJECT_VALUE", "SUBJECT_VALUE", false );
     }
 
     /**
-     * Distinct objects per subject — {@link #findObjectBreadth} with the ends swapped, which is exactly
-     * what uib asked for and the reason the query below is parameterized on its columns rather than
-     * copied. Two near-identical native queries would be two places for the case-collation trap to be
-     * fixed in, and it would get fixed in one.
+     * Distinct objects per subject <b>under one predicate</b> — {@link #findObjectBreadth} with the
+     * ends swapped, which is exactly what uib asked for and the reason the query below is parameterized
+     * on its columns rather than copied. Two near-identical native queries would be two places for the
+     * case-collation trap to be fixed in, and it would get fixed in one.
+     *
+     * <p>🛑 <b>The predicate is part of the grain here and is not on the object side.</b> Swapping the
+     * ends alone counted every object a subject relates to under any predicate, and that number does
+     * not separate the shape it was added for. Measured on gemma2 2026-08-27, the unscoped count read
+     * {@code dimethyl sulfoxide} 9, {@code BRCA1} 13, {@code biotin} 15 and {@code epithelial cell} 20
+     * — the one row a reader wanted ({@code BRCA1 --has disease--> breast cancer}) sitting between two
+     * ontology closures nobody wanted, with no bar able to separate them. Asking the same endpoint one
+     * predicate at a time returned 8, 1, 15 and 3 objects for those four.</p>
      */
     private Map<String, Long> findSubjectBreadth( Collection<String> subjectValues ) {
-        return findBreadth( subjectValues, "SUBJECT_VALUE", "OBJECT_VALUE" );
+        return findBreadth( subjectValues, "SUBJECT_VALUE", "OBJECT_VALUE", true );
     }
 
     /**
-     * @param keyColumn   the end being asked about; the values passed in are its values
-     * @param countColumn the other end, counted distinctly. Both are literals from this class, never
-     *                    caller input.
+     * @param keyColumn    the end being asked about; the values passed in are its values
+     * @param countColumn  the other end, counted distinctly. Both are literals from this class, never
+     *                     caller input.
+     * @param perPredicate count within each predicate separately, keying the result on
+     *                     {@link #breadthKey(String, String)} rather than on the value alone
      */
-    private Map<String, Long> findBreadth( Collection<String> values, String keyColumn, String countColumn ) {
+    private Map<String, Long> findBreadth( Collection<String> values, String keyColumn, String countColumn,
+            boolean perPredicate ) {
         if ( values.isEmpty() ) {
             return Collections.emptyMap();
         }
+        // the predicate is identified by its URI where it has one and by its label where it does not,
+        // the same rule RelationSummary#getTripleKey uses, and normalized for the same collation reason
+        // as the value column beside it
+        String predicateKey = "lower(trim(coalesce(R.PREDICATE_URI, R.PREDICATE)))";
         NativeQuery<?> query = getSessionFactory().getCurrentSession().createNativeQuery(
-                        "select lower(trim(R." + keyColumn + ")) as V, count(distinct R." + countColumn + ") as N "
+                        "select lower(trim(R." + keyColumn + ")) as V, "
+                                + ( perPredicate ? predicateKey + " as P, " : "" )
+                                + "count(distinct R." + countColumn + ") as N "
                                 + "from ANNOTATION_RELATION R where R." + keyColumn + " in (:values) "
                                 // grouped on the normalized value, not the raw one: MySQL would otherwise
                                 // collapse case variants itself and hand back an arbitrary spelling,
                                 // which the Java-side lookup then misses
-                                + "group by lower(trim(R." + keyColumn + "))" )
-                .addScalar( "V", StandardBasicTypes.STRING )
-                .addScalar( "N", StandardBasicTypes.LONG )
+                                + "group by lower(trim(R." + keyColumn + "))"
+                                + ( perPredicate ? ", " + predicateKey : "" ) )
+                .addScalar( "V", StandardBasicTypes.STRING );
+        if ( perPredicate ) {
+            query.addScalar( "P", StandardBasicTypes.STRING );
+        }
+        query.addScalar( "N", StandardBasicTypes.LONG )
                 .addSynchronizedEntityClass( AnnotationRelation.class );
         query.setParameterList( "values", optimizeParameterList( values ) );
         query.setCacheable( true );
@@ -509,7 +536,8 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         // `familial Alzheimer's disease` and `intermediate`.
         Map<String, Long> out = new LinkedHashMap<>();
         for ( Object[] r : rows ) {
-            out.merge( breadthKey( ( String ) r[0] ), asLong( r[1] ), Long::max );
+            out.merge( breadthKey( ( String ) r[0], perPredicate ? ( String ) r[1] : null ),
+                    asLong( r[perPredicate ? 2 : 1] ), Long::max );
         }
         return out;
     }
@@ -519,7 +547,22 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
      * values in the first place.
      */
     private static String breadthKey( @Nullable String value ) {
-        return value != null ? value.trim().toLowerCase( java.util.Locale.ROOT ) : "";
+        return breadthKey( value, null );
+    }
+
+    /**
+     * @param predicate the predicate URI, or its label where there is no URI; null for a count that
+     *                  was not taken per predicate
+     * @see #findSubjectBreadth(Collection)
+     */
+    private static String breadthKey( @Nullable String value, @Nullable String predicate ) {
+        String v = value != null ? value.trim().toLowerCase( java.util.Locale.ROOT ) : "";
+        if ( predicate == null ) {
+            return v;
+        }
+        // NUL as the separator, so no pair of (value, predicate) can collide with another by running
+        // together across it -- values and predicate labels both contain spaces
+        return v + '\0' + predicate.trim().toLowerCase( java.util.Locale.ROOT );
     }
 
     /**
