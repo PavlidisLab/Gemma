@@ -104,7 +104,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
             where.append( " and R.OBJECT_CATEGORY_URI in (:objectCategoryUris)" );
         }
         if ( q.getSeedFromExperimentId() != null ) {
-            where.append( seedFromExperimentConstraint( q.getSeedDirection() ) );
+            // The seed is applied as the FROM source, not here -- see seedDrivenRelationSource.
             where.append( alreadyCarriedConstraint( q.getSeedDirection() ) );
         }
         if ( q.getTaxonId() != null ) {
@@ -142,7 +142,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
                                 // min() like the other non-grouped text columns: rows sharing a triple,
                                 // basis, source and status are one statement, so any of them will do
                                 + "min(R.EVIDENCE) as EV "
-                                + "from ANNOTATION_RELATION R "
+                                + "from " + relationSource( q ) + " "
                                 + "left join TAXON X on X.ID = R.TAXON_FK"
                                 + where
                                 // ONLY_FULL_GROUP_BY: every projected non-aggregate is grouped. Taxon is part of
@@ -636,24 +636,48 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
      * seed against a grounded relation would be a different claim, so the value leg only fires when
      * the seed itself has no URI.</p>
      */
-    private String seedFromExperimentConstraint( Direction direction ) {
+    /**
+     * The relation table, restricted to the seed experiment's own annotations BEFORE anything else reads it.
+     *
+     * <p>🛑 This is a FROM source and not a WHERE clause, and that is the whole performance story. Written as
+     * a predicate -- either a correlated EXISTS or an OR of two INs -- nothing in the WHERE is selective
+     * enough to pick an index ({@code BASIS} matches every row), so MySQL full-scans all ~322k rows of
+     * {@code ANNOTATION_RELATION}. Measured on prod for ee 1699: 42.7s as a correlated EXISTS, 0.65s as an
+     * OR of two uncorrelated INs, <b>0.09s</b> in this form. Only 94 rows match the seed, so the scan was
+     * doing ~3,400x the necessary work.</p>
+     *
+     * <p>The UNION ALL is what makes each branch index-driven: an OR across two differently-indexed columns
+     * cannot use either, while the branches separately take {@code IDX_ANNOTATION_RELATION_SUBJECT} and
+     * {@code IDX_ANNOTATION_RELATION_SUBJECT_VALUE}. The two branches are the disjuncts of the original
+     * EXISTS exactly -- {@code S.VALUE_URI = R.<side>_VALUE_URI} can only hold when both are non-null, and
+     * the other is the both-null-URI case matched on the label -- so the row set is unchanged. Verified
+     * byte-identical to the previous form on ee 1699, 1035, 3333, 91237 and 1036.</p>
+     *
+     * <p>ALL ALL is deliberate over UNION: the branches are disjoint by construction (one requires a
+     * non-null URI, the other a null one), so deduplicating would only pay for a sort that removes nothing.</p>
+     */
+    private String seedDrivenRelationSource( Direction direction ) {
         String side = direction == Direction.SUBJECT_TO_OBJECT ? "SUBJECT" : "OBJECT";
-        // 🛑 Two uncorrelated IN subqueries, NOT one correlated EXISTS. The EXISTS form reads better and
-        // costs 65x: it correlates on R, so MySQL runs it once per row of ANNOTATION_RELATION, and since
-        // nothing else in the WHERE is selective (BASIS matches every row) the plan is a full scan of all
-        // ~322k rows with a dependent subquery on each -- measured 42.7s on prod for ee 1699 against 0.65s
-        // for this form, which is uniform across datasets where the EXISTS form ranged 4.5s to 47.6s.
-        // Written this way the seed set is materialized once and the scan becomes a lookup against it.
-        //
-        // The two branches are the EXISTS form's two disjuncts exactly: `S2.VALUE_URI = R.<side>_VALUE_URI`
-        // can only hold when both are non-null, and the second disjunct is the both-null-URI case matched
-        // on the label. Verified byte-identical output on ee 1699, 1035 and 3333.
-        return " and (R." + side + "_VALUE_URI in (select distinct S2.VALUE_URI"
+        return "(select R1.* from ANNOTATION_RELATION R1"
+                + " where R1." + side + "_VALUE_URI in (select distinct S2.VALUE_URI"
                 + " from EXPRESSION_EXPERIMENT2CHARACTERISTIC S2"
                 + " where S2.EXPRESSION_EXPERIMENT_FK = :seedEeId and S2.VALUE_URI is not null)"
-                + " or (R." + side + "_VALUE_URI is null and R." + side + "_VALUE in (select distinct S2B.`VALUE`"
+                + " union all"
+                + " select R2.* from ANNOTATION_RELATION R2"
+                + " where R2." + side + "_VALUE_URI is null"
+                + " and R2." + side + "_VALUE in (select distinct S2B.`VALUE`"
                 + " from EXPRESSION_EXPERIMENT2CHARACTERISTIC S2B"
-                + " where S2B.EXPRESSION_EXPERIMENT_FK = :seedEeId and S2B.VALUE_URI is null)))";
+                + " where S2B.EXPRESSION_EXPERIMENT_FK = :seedEeId and S2B.VALUE_URI is null)) R";
+    }
+
+    /**
+     * {@code ANNOTATION_RELATION R} for a term-seeded read, whose own subject/object constraint is already
+     * an indexed lookup; the narrowed source above for an experiment-seeded one.
+     */
+    private String relationSource( RelationQuery q ) {
+        return q.getSeedFromExperimentId() != null
+                ? seedDrivenRelationSource( q.getSeedDirection() )
+                : "ANNOTATION_RELATION R";
     }
 
     /**
