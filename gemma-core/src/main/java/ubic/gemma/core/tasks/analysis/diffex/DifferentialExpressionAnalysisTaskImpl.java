@@ -67,7 +67,11 @@ public class DifferentialExpressionAnalysisTaskImpl
             }
 
             log.info( "Removing analysis ..." );
-            this.differentialExpressionAnalysisService.remove( toRemove );
+            // deleteAnalysis, not differentialExpressionAnalysisService.remove: remove drops the rows and leaves
+            // the diffex archive and the per-result-set TSV caches on the deployment volume. Same reasoning as
+            // applyDesignChange step 2 in ExpressionExperimentServiceImpl.
+            differentialExpressionAnalyzerService
+                    .deleteAnalysis( getTaskCommand().getExpressionExperiment(), toRemove );
 
             return newTaskResult( true );
         }
