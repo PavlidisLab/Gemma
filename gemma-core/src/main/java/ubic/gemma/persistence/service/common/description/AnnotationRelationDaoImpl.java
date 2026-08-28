@@ -638,10 +638,22 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
      */
     private String seedFromExperimentConstraint( Direction direction ) {
         String side = direction == Direction.SUBJECT_TO_OBJECT ? "SUBJECT" : "OBJECT";
-        return " and exists (select 1 from EXPRESSION_EXPERIMENT2CHARACTERISTIC S2"
-                + " where S2.EXPRESSION_EXPERIMENT_FK = :seedEeId"
-                + " and (S2.VALUE_URI = R." + side + "_VALUE_URI"
-                + " or (S2.VALUE_URI is null and R." + side + "_VALUE_URI is null and S2.`VALUE` = R." + side + "_VALUE)))";
+        // 🛑 Two uncorrelated IN subqueries, NOT one correlated EXISTS. The EXISTS form reads better and
+        // costs 65x: it correlates on R, so MySQL runs it once per row of ANNOTATION_RELATION, and since
+        // nothing else in the WHERE is selective (BASIS matches every row) the plan is a full scan of all
+        // ~322k rows with a dependent subquery on each -- measured 42.7s on prod for ee 1699 against 0.65s
+        // for this form, which is uniform across datasets where the EXISTS form ranged 4.5s to 47.6s.
+        // Written this way the seed set is materialized once and the scan becomes a lookup against it.
+        //
+        // The two branches are the EXISTS form's two disjuncts exactly: `S2.VALUE_URI = R.<side>_VALUE_URI`
+        // can only hold when both are non-null, and the second disjunct is the both-null-URI case matched
+        // on the label. Verified byte-identical output on ee 1699, 1035 and 3333.
+        return " and (R." + side + "_VALUE_URI in (select distinct S2.VALUE_URI"
+                + " from EXPRESSION_EXPERIMENT2CHARACTERISTIC S2"
+                + " where S2.EXPRESSION_EXPERIMENT_FK = :seedEeId and S2.VALUE_URI is not null)"
+                + " or (R." + side + "_VALUE_URI is null and R." + side + "_VALUE in (select distinct S2B.`VALUE`"
+                + " from EXPRESSION_EXPERIMENT2CHARACTERISTIC S2B"
+                + " where S2B.EXPRESSION_EXPERIMENT_FK = :seedEeId and S2B.VALUE_URI is null)))";
     }
 
     /**
