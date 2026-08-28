@@ -119,249 +119,61 @@ public class AnnotationRelationHarvestTest extends BaseDatabaseTest5 {
     }
 
     /**
-     * The shape a curator actually wrote, taken verbatim from production:
-     * {@code disease model: left ventricular hypertrophy - induced by -> aortic banding}.
+     * 🛑 The rule, and the reason this class no longer tests a harvest: a curated statement does NOT become
+     * a relation.
      *
-     * <p>Note that the object has no URI. That is ordinary rather than a defect — a manipulation is
-     * frequently free text — and it is why the value legs are indexed separately from the URI legs.</p>
+     * <p>The harvest keyed each statement by the TERM, so what a curator wrote about one experiment's
+     * material came back as a property of that term on every other experiment using it. Experiment 24976 --
+     * mouse EAE astrocytes under fingolimod -- showed three such chips, none true of it, each traceable to a
+     * single unrelated experiment. Filtering did not rescue it: 15,007 of ~18,000 curated triples on prod
+     * were attested by one experiment, and the recurring ones were common curation patterns rather than
+     * truths. Paul ruled the harvest out on 2026-08-28.</p>
+     *
+     * <p>This goes red the moment the insert is restored, which is the point.</p>
      */
     @Test
-    public void testACuratedStatementBecomesAQueryableRelation() {
+    public void testACuratedStatementIsNotHarvestedIntoARelation() {
         givenEe2cStatement( "left ventricular hypertrophy", LVH, "induced by", INDUCED_BY, "aortic banding", null );
 
         int written = tableMaintenanceUtil.updateAnnotationRelationEntries( null );
 
-        assertThat( written ).isEqualTo( 1 );
-        List<AnnotationRelationDao.RelationSummary> found = annotationRelationDao.findRelations(
-                new AnnotationRelationDao.RelationQuery().subjectValueUris( Collections.singleton( LVH ) ) );
-        assertThat( found ).singleElement().satisfies( r -> {
-            assertThat( r.getSubjectValue() ).isEqualTo( "left ventricular hypertrophy" );
-            assertThat( r.getPredicateUri() ).isEqualTo( INDUCED_BY );
-            assertThat( r.getObjectValue() ).isEqualTo( "aortic banding" );
-            assertThat( r.getObjectValueUri() ).isNull();
-            assertThat( r.getBasis() ).isEqualTo( AnnotationRelationBasis.CURATED );
-            assertThat( r.getSubjectCategoryUri() ).isEqualTo( DISEASE_MODEL );
-            assertThat( r.getNumberOfExperiments() ).isEqualTo( 1 );
-        } );
+        assertThat( written ).isZero();
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( LVH ) ) ) ).isEmpty();
     }
 
     /**
-     * The whole point: the relation can now be read from the object end.
-     *
-     * <p>"Which manipulations are asserted to induce left ventricular hypertrophy?" had no query
-     * before this, because the only index on a statement is per-experiment.</p>
+     * A run still REMOVES the curated rows already in the table -- that is how the ones harvested before the
+     * rule changed leave -- and the ONTOLOGY row beside it is the control: the delete is scoped to CURATED
+     * and is not a table wipe. Without that second row a delete of everything would pass just as well.
      */
     @Test
-    public void testTheHarvestedRelationReadsFromTheObjectEnd() {
-        givenEe2cStatement( "left ventricular hypertrophy", LVH, "induced by", INDUCED_BY, "aortic banding", null );
+    public void testARunRemovesCuratedRowsAndLeavesEveryOtherBasis() {
+        givenRelationRow( "astrocyte", "organoid", "CURATED" );
+        givenRelationRow( "22Rv1", "prostate carcinoma", "ONTOLOGY" );
 
         tableMaintenanceUtil.updateAnnotationRelationEntries( null );
 
-        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .objectValues( Collections.singleton( "aortic banding" ) ) ) )
-                .singleElement()
-                .satisfies( r -> assertThat( r.getSubjectValueUri() ).isEqualTo( LVH ) );
+        assertThat( countRelationRows( "CURATED" ) ).isZero();
+        assertThat( countRelationRows( "ONTOLOGY" ) ).isEqualTo( 1 );
     }
 
-    /**
-     * A curated row says who asserted it, like every other row.
-     *
-     * <p>SOURCE was null here on the reasoning that Gemma is obviously the source of its own curation.
-     * It is not obvious from the table: {@code GROUP BY SOURCE} answered with a bare NULL against
-     * 36,073 rows, and explaining what those were was the first question the column produced.</p>
-     */
-    @Test
-    public void testACuratedRowNamesGemmaAsItsSource() {
-        givenEe2cStatement( "left ventricular hypertrophy", LVH, "induced by", INDUCED_BY, "aortic banding", null );
-
-        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 1 );
-        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .subjectValueUris( Collections.singleton( LVH ) ) ) )
-                .singleElement()
-                .satisfies( r -> assertThat( r.getSource() ).isEqualTo( "Gemma" ) );
+    private void givenRelationRow( String subject, String object, String basis ) {
+        sessionFactory.getCurrentSession().createNativeQuery(
+                        "insert into ANNOTATION_RELATION (SUBJECT_VALUE, OBJECT_VALUE, BASIS, STATUS,"
+                                + " ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, GENERATED_AT)"
+                                + " values (:s, :o, :b, 'ASSERTED', 1, now())" )
+                .setParameter( "s", subject )
+                .setParameter( "o", object )
+                .setParameter( "b", basis )
+                .executeUpdate();
     }
 
-    /**
-     * An annotation with no predicate is not a relation and must not become one.
-     */
-    @Test
-    public void testAPlainAnnotationIsNotHarvested() {
-        givenEe2cStatement( "left ventricular hypertrophy", LVH, null, null, null, null );
-
-        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isZero();
-    }
-
-    /**
-     * The second clause of a two-clause statement is as asserted as the first.
-     *
-     * <p>The second half of anything a curator expressed as two clauses rides in the second
-     * predicate/object pair. Harvesting only the first would lose a triple silently.</p>
-     */
-    @Test
-    public void testBothClausesOfATwoClauseStatementAreHarvested() {
-        Statement s = newStatement( "asthma", "http://purl.obolibrary.org/obo/MONDO_0004979",
-                "induced by", INDUCED_BY, "ovalbumin", null );
-        s.setSecondPredicate( "delivered to" );
-        s.setSecondPredicateUri( "http://gemma.msl.ubc.ca/ont/TGEMO_00183" );
-        s.setSecondObject( "lung" );
-        persistEe2cRow( s );
-
-        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 2 );
-        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .subjectValueUris( Collections.singleton( "http://purl.obolibrary.org/obo/MONDO_0004979" ) )
-                // unfiltered: `delivered to` is a per-experiment parameter and is correctly absent from
-                // the default view, but the harvest still has to have stored it
-                .termLevelOnly( false ) ) )
-                .extracting( AnnotationRelationDao.RelationSummary::getObjectValue )
-                .containsExactlyInAnyOrder( "ovalbumin", "lung" );
-    }
-
-    /**
-     * 🛑 A clause whose object is a QUANTITY is not harvested, in either clause position.
-     *
-     * <p>This test used to assert the opposite, and the old contract was the defect. {@code 10 mg/kg}
-     * is not a concept: the row cannot be read from the object end, cannot corroborate anything and
-     * cannot license an inference, so storing it only gave every reader something to filter. Measured
-     * on the corpus 2026-08-18 it was 9,606 of 36,073 curated rows — {@code delivered at dose} 6,039,
-     * {@code delivered for duration} 3,231, {@code sampled after} 334, {@code timepoint} 2.</p>
-     *
-     * <p>The first clause survives, so the statement is not lost — only the measurement half of it.</p>
-     */
-    @Test
-    public void testAQuantityValuedClauseIsNotHarvested() {
-        Statement s = newStatement( "asthma", "http://purl.obolibrary.org/obo/MONDO_0004979",
-                "induced by", INDUCED_BY, "ovalbumin", null );
-        s.setSecondPredicate( "delivered at dose" );
-        s.setSecondPredicateUri( "http://gemma.msl.ubc.ca/ont/TGEMO_00166" );
-        s.setSecondObject( "10 mg/kg" );
-        persistEe2cRow( s );
-
-        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 1 );
-        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .subjectValueUris( Collections.singleton( "http://purl.obolibrary.org/obo/MONDO_0004979" ) )
-                .termLevelOnly( false ) ) )
-                .extracting( AnnotationRelationDao.RelationSummary::getObjectValue )
-                .containsExactly( "ovalbumin" );
-    }
-
-    /**
-     * And caught by LABEL where the curator grounded nothing: {@code timepoint} appears in no
-     * vocabulary file and two curated rows use it as a bare string. A URI-only rule would miss them.
-     */
-    @Test
-    public void testAnUngroundedQuantityPredicateIsCaughtByItsLabel() {
-        givenEe2cStatement( "asthma", "http://purl.obolibrary.org/obo/MONDO_0004979",
-                "timepoint", null, "24 h", null );
-
-        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isZero();
-    }
-
-    /**
-     * A rebuild replaces the basis rather than adding to it.
-     *
-     * <p>Running twice must not double the support, and a relation whose statement a curator has since
-     * deleted must not survive. An upsert can only correct rows the new query still produces, which is
-     * how EE2C ended up with 1,008 rows a full rebuild could not fix; delete-then-insert has no such
-     * failure mode.</p>
-     */
-    @Test
-    public void testRunningTheHarvestTwiceDoesNotDoubleTheEvidence() {
-        givenEe2cStatement( "left ventricular hypertrophy", LVH, "induced by", INDUCED_BY, "aortic banding", null );
-
-        tableMaintenanceUtil.updateAnnotationRelationEntries( null );
-        tableMaintenanceUtil.updateAnnotationRelationEntries( null );
-
-        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .subjectValueUris( Collections.singleton( LVH ) ) ) )
-                .singleElement()
-                .satisfies( r -> assertThat( r.getNumberOfExperiments() ).isEqualTo( 1 ) );
-    }
-
-    /**
-     * The taxon rides across, because it decides what the relation says.
-     */
-    @Test
-    public void testTheTaxonIsCarriedOntoTheRelation() {
-        givenEe2cStatement( "left ventricular hypertrophy", LVH, "induced by", INDUCED_BY, "aortic banding", null );
-
-        tableMaintenanceUtil.updateAnnotationRelationEntries( null );
-
-        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .subjectValueUris( Collections.singleton( LVH ) ) ) )
-                .singleElement()
-                .satisfies( r -> assertThat( r.getTaxonCommonName() ).isEqualTo( "human" ) );
-    }
-
-    /**
-     * 🛑 A statement whose object is a control-arm marker is not a relation between two concepts.
-     *
-     * <p>Found live: {@code OBI_0000220 reference subject role} appeared as the object of 10 curated
-     * statements, and it is grounded, so a gate seeded with an experiment's term URIs would reach it
-     * and conclude that every disease which ever had a control arm was implied by having one. The
-     * recognition is {@code BaselineSelection}'s, the same list that picks a DEA baseline, so there is
-     * one list and not two.</p>
-     */
-    @Test
-    public void testAControlArmMarkerIsNotHarvestedAsARelation() {
-        givenEe2cStatement( "Alzheimer disease", "http://purl.obolibrary.org/obo/MONDO_0004975",
-                "has role", "http://purl.obolibrary.org/obo/RO_0000087",
-                "reference subject role", "http://purl.obolibrary.org/obo/OBI_0000220" );
-
-        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isZero();
-    }
-
-    /**
-     * An empty-string URI is not a URI, and stored as one it is unreachable.
-     *
-     * <p>Found live: rows arrived with {@code PREDICATE_URI = ''} rather than null, which passes an
-     * {@code is not null} test and then matches nothing — a consumer filtering on the URI never finds
-     * it, and a consumer checking for null does not either.</p>
-     */
-    @Test
-    public void testAnEmptyStringUriIsStoredAsNull() {
-        givenEe2cStatement( "asthma", "", "induced by", "", "ovalbumin", "" );
-
-        assertThat( tableMaintenanceUtil.updateAnnotationRelationEntries( null ) ).isEqualTo( 1 );
-        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .subjectValues( Collections.singleton( "asthma" ) )
-                // unfiltered: the point is what was STORED. A row whose predicate has no URI cannot be
-                // classified and so is not term-level, which is right, and not what this test is about.
-                .termLevelOnly( false ) ) )
-                .singleElement()
-                .satisfies( r -> {
-                    assertThat( r.getSubjectValueUri() ).isNull();
-                    assertThat( r.getPredicateUri() ).isNull();
-                    assertThat( r.getObjectValueUri() ).isNull();
-                } );
-    }
-
-    /**
-     * The evidence split has to actually split.
-     *
-     * <p>A statement lives on a factor value, but EE2C files design-level annotations under
-     * {@code ExperimentalDesign} and never writes {@code FactorValue} as a level — so a count keyed on
-     * {@code FactorValue} matched nothing and every row reported zero at every level. That failure is
-     * invisible: it does not throw, it reports "attested nowhere in particular" for a relation with
-     * real support behind it.</p>
-     */
-    @Test
-    public void testTheEvidenceSplitCountsDesignLevelStatements() {
-        Statement s = newStatement( "Alzheimer disease", "http://purl.obolibrary.org/obo/MONDO_0004975",
-                "has_genotype", "http://purl.obolibrary.org/obo/GENO_0000222", "5xFAD", null );
-        persistEe2cRow( s, ExperimentalDesign.class.getName() );
-
-        tableMaintenanceUtil.updateAnnotationRelationEntries( null );
-
-        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
-                .objectValues( Collections.singleton( "5xFAD" ) ) ) )
-                .singleElement()
-                .satisfies( r -> {
-                    assertThat( r.getNumberOfExperiments() ).isEqualTo( 1 );
-                    assertThat( r.getNumberOfExperimentsAtFactorValue() )
-                            .as( "a design-level statement has to land somewhere in the split" )
-                            .isEqualTo( 1 );
-                    assertThat( r.getNumberOfExperimentsAtTag() ).isZero();
-                } );
+    private long countRelationRows( String basis ) {
+        return ( ( Number ) sessionFactory.getCurrentSession()
+                .createNativeQuery( "select count(*) from ANNOTATION_RELATION where BASIS = :b" )
+                .setParameter( "b", basis )
+                .uniqueResult() ).longValue();
     }
 
     private void givenEe2cStatement( String subject, String subjectUri, String predicate, String predicateUri,

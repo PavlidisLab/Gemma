@@ -454,84 +454,32 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     private static final String AR_QUERY_SPACE = "ANNOTATION_RELATION";
 
     /**
-     * The harvest: every EE2C row that carries a predicate and an object is already a triple.
+     * Removes the CURATED rows. 🛑 <b>It no longer writes any.</b>
      *
-     * <p>🛑 One carve-out, and only one: predicates whose object is a QUANTITY rather than a concept
-     * ({@code delivered at dose} 6,039 rows, {@code delivered for duration} 3,231,
-     * {@code sampled after} 334, {@code timepoint} 2 — 9,606 of 36,073, a quarter of the harvest).
-     * Their objects are {@code 10 uM} and {@code 10 mg/kg}: nothing can be read from the object end,
-     * corroborated, or inferred. See
-     * {@link ubic.gemma.model.common.description.RelationTopicality#getQuantityValuedPredicateUris()},
-     * which owns the list so the read side and the harvest cannot disagree about it.</p>
+     * <p>The harvest turned every EE2C row carrying a predicate and an object into a triple keyed by the
+     * TERM. A statement a curator wrote about ONE experiment's material therefore came back as a property
+     * of that term and landed on every other experiment using it. uib found it on experiment 24976 -- mouse
+     * EAE astrocytes under fingolimod -- which rendered three confident chips, none of them true of it:
+     * {@code astrocyte --derives from part of--> organoid} from ee 31771,
+     * {@code astrocyte --has role--> cell co-culturing} from ee 32195, and {@code nuclear RNA extract
+     * --derived from cell--> vasoactive intestinal peptide secreting cell} from ee 32525.</p>
      *
-     * <p>Otherwise predicate-agnostic on purpose. An allow-list would have to be maintained in step with the
-     * curators\' vocabulary and would silently drop whatever was added to it last -
-     * {@code GENO_0000222 has_genotype}, {@code RO_0002573 has modifier} and
-     * {@code TGEMO_00171 induced by} are the three that carry volume today, but the table is general
-     * and there is no reason for the harvest to be narrower than the thing it feeds.</p>
+     * <p>🛑 <b>Filtering does not rescue the harvest, and this was measured rather than assumed.</b> 15,007
+     * of ~18,000 curated triples on prod were attested by a single experiment. The ones that recurred were
+     * the common curation PATTERNS rather than truths -- {@code Trp53 --has_genotype--> Homozygous negative}
+     * across 133 experiments, though Trp53 is also overexpressed and heterozygous elsewhere. Adding both
+     * breadth bars on top left a set that still read mostly experiment-local: {@code diabetes mellitus
+     * --induced by--> streptozocin} holds for STZ models rather than for diabetes, {@code Apoe --has_allele
+     * --> APOE4} is simply wrong because Apoe also carries E2 and E3, and {@code induced by} records how one
+     * model was made. Paul, 2026-08-28, having read them: <i>"most of these are not good … let's just delete
+     * all the curated records. We'll just make sure the ones we add are high quality."</i></p>
      *
-     * <p>{@code OBJECT_CATEGORY} stays null: a statement has one category, which belongs to the
-     * subject. Inventing a category for the object would assert something the curator did not.</p>
+     * <p>The delete is kept, and is what removes the rows already in the table. Curated relations are not
+     * gone as a concept -- what is gone is deriving them wholesale from annotations that were never
+     * assertions about a term. Anything added back has to be curated as a relation in its own right.</p>
      *
-     * <p>{@code EVIDENCE_CODE} defaults to {@code IC} when the statement carries none, for the same
-     * reason {@code SOURCE} is {@code 'Gemma'}. 1,630 of the 26,464 CURATED rows inherited a null,
-     * because several writers — the composite curation commit among them — never set the column on
-     * the characteristic. Every other source in the table answers for every row it has
-     * (CELLOSAURUS {@code IIA}, CHEBI and CLO {@code IEA}, MGI {@code TAS}/{@code IIA}), so a bare
-     * NULL under {@code GROUP BY EVIDENCE_CODE} is a question about the harvest rather than about
-     * the data.</p>
-     *
-     * <p>{@code IC} is the honest value rather than a filler: the row exists because a curator wrote
-     * the statement, which is what "inferred by curator" says, and it is what the 24,833 coded rows
-     * beside it already say. Defaulting here rather than backfilling the characteristics is
-     * deliberate — the table is rebuilt from scratch on every run, so this self-heals and cannot
-     * drift, and it does not put a value on the curator's own annotation that the curator did not
-     * write.</p>
-     *
-     * <p>{@code SOURCE} is {@code 'Gemma'} rather than null. It used to be null on the reasoning that
-     * a curated row's source is Gemma itself and therefore goes without saying — but it does not go
-     * without saying to anyone reading the table. {@code GROUP BY SOURCE} returned a bare NULL for
-     * 36,073 rows and the first question anybody asked of it was what those were. A column that means
-     * "who asserted this" should answer for every row it has.</p>
+     * @return always 0; nothing is written. The count of rows REMOVED goes to the log.
      */
-    private static final String AR_STATEMENT_QUERY =
-            "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
-                    + "C.PREDICATE, nullif(trim(C.PREDICATE_URI), ''), C.OBJECT, nullif(trim(C.OBJECT_URI), ''), "
-                    + "I.TAXON_FK, 'CURATED', 'Gemma', coalesce(C.EVIDENCE_CODE, 'IC'), C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
-                    + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
-                    + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
-                    + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
-                    + "where nullif(trim(C.OBJECT), '') is not null and (nullif(trim(C.PREDICATE), '') is not null or nullif(trim(C.PREDICATE_URI), '') is not null) and C.OBJECT not in (:baselineValues) and (C.OBJECT_URI is null or C.OBJECT_URI not in (:baselineUris)) "
-                    + "and (C.PREDICATE_URI is null or C.PREDICATE_URI not in (:quantityUris)) "
-                    + "and (C.PREDICATE is null or trim(C.PREDICATE) not in (:quantityLabels)) "
-                    + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
-
-    /**
-     * The same harvest for the second leg of a two-clause statement.
-     *
-     * <p>A {@code Statement} can carry two predicate/object pairs, and the second is not decoration:
-     * the second half of anything a curator expressed as two clauses rides there. Dropping it would
-     * lose a triple that is as asserted as the first one. (A dose or a duration often rides there too,
-     * and is excluded by the same quantity filter as the first clause.)</p>
-     */
-    private static final String AR_SECOND_STATEMENT_QUERY =
-            "select C.`VALUE`, nullif(trim(C.VALUE_URI), ''), C.CATEGORY, nullif(trim(C.CATEGORY_URI), ''), "
-                    + "C.SECOND_PREDICATE, nullif(trim(C.SECOND_PREDICATE_URI), ''), C.SECOND_OBJECT, nullif(trim(C.SECOND_OBJECT_URI), ''), "
-                    + "I.TAXON_FK, 'CURATED', 'Gemma', coalesce(C.EVIDENCE_CODE, 'IC'), C.EXPRESSION_EXPERIMENT_FK, C.`LEVEL`, "
-                    + "C.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, :now "
-                    + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC C "
-                    + "join INVESTIGATION I on I.ID = C.EXPRESSION_EXPERIMENT_FK "
-                    + "where nullif(trim(C.SECOND_OBJECT), '') is not null and (nullif(trim(C.SECOND_PREDICATE), '') is not null or nullif(trim(C.SECOND_PREDICATE_URI), '') is not null) and C.SECOND_OBJECT not in (:baselineValues) and (C.SECOND_OBJECT_URI is null or C.SECOND_OBJECT_URI not in (:baselineUris)) "
-                    + "and (C.SECOND_PREDICATE_URI is null or C.SECOND_PREDICATE_URI not in (:quantityUris)) "
-                    + "and (C.SECOND_PREDICATE is null or trim(C.SECOND_PREDICATE) not in (:quantityLabels)) "
-                    + "and (C.EXPRESSION_EXPERIMENT_FK = :eeId or :eeId is null)";
-
-    private static final String AR_INSERT_COLUMNS =
-            "insert into ANNOTATION_RELATION (SUBJECT_VALUE, SUBJECT_VALUE_URI, SUBJECT_CATEGORY, SUBJECT_CATEGORY_URI, "
-                    + "PREDICATE, PREDICATE_URI, OBJECT_VALUE, OBJECT_VALUE_URI, "
-                    + "TAXON_FK, BASIS, SOURCE, EVIDENCE_CODE, EXPRESSION_EXPERIMENT_FK, `LEVEL`, "
-                    + "ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK, GENERATED_AT) ";
-
     @Override
     @Timed
     @Transactional
@@ -539,7 +487,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         StopWatch timer = StopWatch.createStarted();
         String what = ee != null ? " for " + ee : "";
         log.info( String.format( "Updating CURATED ANNOTATION_RELATION entries%s...", what ) );
-        Date now = new Date();
 
         // Delete first, then insert. An upsert can only correct rows the new query still produces, so a
         // row whose statement a curator has since deleted would outlive the annotation it came from --
@@ -553,25 +500,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         }
         int removed = delete.executeUpdate();
 
-        int inserted = 0;
-        for ( String query : new String[] { AR_STATEMENT_QUERY, AR_SECOND_STATEMENT_QUERY } ) {
-            inserted += sessionFactory.getCurrentSession()
-                    .createNativeQuery( AR_INSERT_COLUMNS + query )
-                    .addSynchronizedQuerySpace( AR_QUERY_SPACE )
-                    .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
-                    .setParameter( "eeId", ee != null ? ee.getId() : null )
-                    .setParameter( "now", now )
-                    .setParameterList( "baselineValues", BaselineSelection.getControlGroupTerms() )
-                    .setParameterList( "baselineUris", BaselineSelection.getControlGroupUris() )
-                    .setParameterList( "quantityUris",
-                            ubic.gemma.model.common.description.RelationTopicality.getQuantityValuedPredicateUris() )
-                    .setParameterList( "quantityLabels",
-                            ubic.gemma.model.common.description.RelationTopicality.getQuantityValuedPredicateLabels() )
-                    .executeUpdate();
-        }
-        log.info( String.format( "Done updating CURATED ANNOTATION_RELATION entries%s; %d removed, %d written in %d ms.",
-                what, removed, inserted, timer.getTime() ) );
-        return inserted;
+        log.info( String.format( "Done removing CURATED ANNOTATION_RELATION entries%s; %d removed in %d ms.",
+                what, removed, timer.getTime() ) );
+        return 0;
     }
 
     /**
