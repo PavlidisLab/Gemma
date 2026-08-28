@@ -1,323 +1,324 @@
 //file:noinspection GrUnresolvedAccess
 
-def buildHash
-def gemmaVersion
-def baseCodeVersion
-def dataDir
-def deployRef
-def deployServer
-def cliRef
-def cliWikiPageSuffix
-
-void setBuildStatus(String context, String message, String state) {
-    step([
-        $class            : "GitHubCommitStatusSetter",
-        reposSource       : [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/PavlidisLab/Gemma"],
-        contextSource     : [$class: "ManuallyEnteredCommitContextSource", context: context],
-        errorHandlers     : [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
-        statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]]]
-    ])
-}
+// ============================================================================
+// TEMPORARY DISCOVERY PIPELINE — this is NOT the real Gemma pipeline.
+//
+// The real one is preserved in git at 5e8c36a786 (branch `deployment`).
+// Restore it with:
+//     git checkout 5e8c36a786 -- .jenkins/Jenkinsfile
+//
+// Purpose: find out what a Jenkins agent actually gives a HOST (non-Docker)
+// build, so the 2.0 pipeline can be written against reality instead of guesses.
+// Specifically we want to know:
+//   1. What JDK does a `sh` step see by default? (Gemma 2.0 needs 25; the old
+//      pipeline ran on the agent default, which was fine when Gemma was 17.)
+//   2. Which JDK / Maven tool installations exist in Manage Jenkins, and what
+//      are they actually called?
+//   3. Are the host-build prerequisites present — writable ~/.m2, the vendored
+//      org.hdf5group:hdf5 jar, native libhdf5, a reachable gemdtest MySQL?
+//
+// Deliberately absent, versus the real pipeline:
+//   - No GitHubCommitStatusSetter. A probe must not stamp build statuses on
+//     real commits.
+//   - No slackSend. No notifications for a throwaway job.
+//   - No deploy / publish / site steps of any kind. Nothing here writes
+//     outside the workspace.
+//   - No pipeline-level `tools` block. That is the whole point: every stage
+//     below sees the BARE agent environment. Tool installations are probed
+//     explicitly in 'Jenkins tool installations' via the `tool` step.
+//
+// Every probe is non-fatal (`|| true`, `set +e`, catchError) so one build
+// returns the complete picture rather than stopping at the first gap.
+// ============================================================================
 
 pipeline {
+    // To probe one specific node instead of whichever is free, change this to
+    // `agent { label 'the-node-label' }` and re-run.
     agent any
-    tools {
-        maven 'Maven 3.6.3'
-    }
-    environment {
-        GEMMA_CLI_WIKI_DEPLOY_TOKEN = credentials('confluence-wiki-token')
-    }
+
     parameters {
-        string(name: 'DATA_DIR', defaultValue: '/space/gemmaData', description: 'Directory where production data is stored.')
-        string(name: 'STAGING_DATA_DIR', defaultValue: '/space/staginggemmaData', description: 'Directory where staging data is stored.')
-        string(name: 'DEV_DATA_DIR', defaultValue: '/space/sandboxgemmaData', description: 'Directory where development data is stored.')
-        string(name: 'MAVEN_SITES_DIR', defaultValue: '/space/web/maven-sites', description: 'Directory where Maven sites are deployed.')
-        string(name: 'CLI_DIR_PREFIX', defaultValue: '/space/opt/gemma-cli', description: 'Prefix for Gemma CLI deployment directory.')
-        string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat', description: 'Prefix for Gemma Web deployment directories.')
-        // either hotfix or release, we only have one staging server & CLI symlink
-        choice(name: 'STAGING_BRANCH', choices: ['hotfix', 'release'], description: 'Branch deployed to the staging server and CLI symlink.')
-        // whether or not to force integration tests
-        booleanParam(name: 'FORCE_INTEGRATION_TESTS', defaultValue: false, description: 'Force integration tests to be performed regardless of the branch being built.')
-        booleanParam(name: 'FORCE_SLOW_TESTS', defaultValue: false, description: 'Force slow tests to be performed regardless of the branch being built.')
-        booleanParam(name: 'FORCE_DEPLOY', defaultValue: false, description: 'Force deployment to be performed regardless of the branch being built.')
-        booleanParam(name: 'FORCE_SONARQUBE', defaultValue: false, description: 'Force SonarQube analysis to be performed regardless of the branch being built.')
+        string(name: 'MAVEN_TOOL_NAMES',
+               defaultValue: 'Maven 3.6.3, Maven 3.9.6, Maven 3.9, Maven, maven',
+               description: 'Comma-separated Maven tool names to look for in Manage Jenkins > Tools. Names that do not exist are reported, not fatal.')
+        string(name: 'JDK_TOOL_NAMES',
+               defaultValue: 'Java 17, Java 21, Java 25, JDK 17, JDK 21, JDK 25, jdk-25, temurin-25',
+               description: 'Comma-separated JDK tool names to look for. Same deal — misses are reported.')
+        string(name: 'MYSQL_HOST', defaultValue: 'localhost', description: 'Host to test gemdtest reachability against.')
+        string(name: 'MYSQL_PORT', defaultValue: '3306', description: 'Port to test gemdtest reachability against.')
+        booleanParam(name: 'RUN_MAVEN_VALIDATE', defaultValue: true,
+                     description: 'Run `mvn -N validate` with the first Maven tool found. This resolves the parent pom over the network and fires the enforcer, which is the definitive answer to "is the agent JDK new enough?".')
     }
+
     stages {
-        stage('Checkout scm') {
+        stage('Agent identity') {
             steps {
-                checkout scm
+                sh '''
+                    set +e
+                    echo "=== agent identity ==="
+                    echo "NODE_NAME        = $NODE_NAME"
+                    echo "NODE_LABELS      = $NODE_LABELS"
+                    echo "EXECUTOR_NUMBER  = $EXECUTOR_NUMBER"
+                    echo "WORKSPACE        = $WORKSPACE"
+                    echo "JENKINS_URL      = $JENKINS_URL"
+                    echo "hostname         = $(hostname -f 2>/dev/null || hostname)"
+                    echo "running as       = $(id)"
+                    echo
+                    echo "--- kernel / os ---"
+                    uname -a
+                    head -5 /etc/os-release 2>/dev/null
+                    echo
+                    echo "--- capacity ---"
+                    echo "cpus: $(nproc 2>/dev/null || echo '?')"
+                    free -h 2>/dev/null | head -2
+                    df -h "$WORKSPACE" 2>/dev/null || df -h .
+                '''
+            }
+        }
+
+        stage('Bare toolchain (no tools block)') {
+            steps {
+                sh '''
+                    set +e
+                    echo "=== what a sh step sees with NO Jenkins tools block ==="
+                    echo "JAVA_HOME = ${JAVA_HOME:-<unset>}"
+                    echo "M2_HOME   = ${M2_HOME:-<unset>}"
+                    echo "PATH      = $PATH"
+                    echo
+                    echo "--- binaries on PATH ---"
+                    for b in java javac mvn git docker ssh rsync mysql curl bash nc; do
+                        p=$(command -v "$b" 2>/dev/null)
+                        printf '%-8s -> %s\\n' "$b" "${p:-<NOT FOUND>}"
+                    done
+                    echo
+                    echo "--- java -version (THE ANSWER WE CAME FOR) ---"
+                    java -version 2>&1 || echo "no java on PATH"
+                    echo
+                    echo "--- javac -version ---"
+                    javac -version 2>&1 || echo "no javac on PATH"
+                    echo
+                    echo "--- mvn -version (shows the JDK Maven would compile with) ---"
+                    mvn -version 2>&1 || echo "no mvn on PATH"
+                '''
+            }
+        }
+
+        stage('JDK inventory on the agent') {
+            steps {
+                sh '''
+                    set +e
+                    echo "=== JDKs installed on this agent ==="
+                    for d in /usr/lib/jvm /usr/java /opt/java /opt/jdk "$HOME/.jdks" "$HOME/.sdkman/candidates/java"; do
+                        if [ -d "$d" ]; then
+                            echo "--- $d ---"
+                            ls -1 "$d"
+                        fi
+                    done
+                    echo
+                    echo "--- alternatives ---"
+                    update-alternatives --list java 2>/dev/null \\
+                        || alternatives --display java 2>/dev/null | head -20 \\
+                        || echo "(no alternatives system)"
+                    echo
+                    echo "--- Jenkins-managed tool installs unpacked on this agent ---"
+                    AGENT_ROOT="${WORKSPACE%%/workspace/*}"
+                    echo "agent fs root (guessed): $AGENT_ROOT"
+                    ls -1 "$AGENT_ROOT/tools" 2>/dev/null || echo "(no $AGENT_ROOT/tools directory)"
+                    find "$AGENT_ROOT/tools" -mindepth 1 -maxdepth 2 2>/dev/null | head -40
+                    echo
+                    echo "--- version of every JDK found above ---"
+                    for d in /usr/lib/jvm/* /usr/java/* /opt/java/* "$HOME/.jdks"/* "$AGENT_ROOT/tools/hudson.model.JDK"/*; do
+                        if [ -x "$d/bin/java" ]; then
+                            printf '%s\\n    %s\\n' "$d" "$("$d/bin/java" -version 2>&1 | head -1)"
+                        fi
+                    done
+                '''
+            }
+        }
+
+        stage('Jenkins tool installations') {
+            steps {
                 script {
-                    gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
-                    baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
-                    buildHash = env.GIT_COMMIT
-                    def productionBuild = env.BRANCH_NAME == 'master'
-                    def supportBuild = env.BRANCH_NAME.startsWith('support-')
-                    def stagingBuild = env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*'
-                    if (productionBuild) {
-                        if (gemmaVersion.endsWith('-SNAPSHOT')) {
-                            error("A production build must not have a -SNAPSHOT suffix.")
+                    // The `tool` step resolves a named installation from
+                    // Manage Jenkins > Tools and returns its home directory,
+                    // installing it on the agent if it is set to auto-install.
+                    // An unknown name throws, so each lookup is guarded — this
+                    // turns the stage into a name-discovery sweep that needs no
+                    // admin access and no in-process script approval.
+                    //
+                    // The try/catch is inlined rather than wrapped in a helper
+                    // closure on purpose: Groovy CPS transforms closures oddly
+                    // and exception handling inside one is a known source of
+                    // "not serializable" surprises. Repetition is the cheap fix.
+                    def mavenNames = params.MAVEN_TOOL_NAMES.tokenize(',').collect { it.trim() }.findAll { it }
+                    def jdkNames = params.JDK_TOOL_NAMES.tokenize(',').collect { it.trim() }.findAll { it }
+
+                    echo "=== JDK tool installations ==="
+                    def jdkHomes = []
+                    for (n in jdkNames) {
+                        try {
+                            def home = tool(name: n, type: 'jdk')
+                            echo "FOUND   jdk tool '${n}' -> ${home}"
+                            jdkHomes.add(home)
+                        } catch (ignored) {
+                            echo "absent  jdk tool '${n}'"
                         }
-                        dataDir = params.DATA_DIR
-                        deployServer = 'moe'
-                        deployRef = 'gemma'
-                        cliRef = 'production'
-                        cliWikiPageSuffix = ' (generated)'
-                    } else if (supportBuild) {
-                        if (gemmaVersion.endsWith('-SNAPSHOT')) {
-                            error("A support build must not have a -SNAPSHOT suffix.")
+                    }
+
+                    echo "=== Maven tool installations ==="
+                    def mavenHomes = []
+                    for (n in mavenNames) {
+                        try {
+                            def home = tool(name: n, type: 'maven')
+                            echo "FOUND   maven tool '${n}' -> ${home}"
+                            mavenHomes.add(home)
+                        } catch (ignored) {
+                            echo "absent  maven tool '${n}'"
                         }
-                    } else if (stagingBuild) {
-                        if (!gemmaVersion.endsWith("-SNAPSHOT")) {
-                            error("A staging build must have a -SNAPSHOT suffix.")
+                    }
+
+                    echo "=== versions behind each JDK tool found ==="
+                    for (h in jdkHomes) {
+                        withEnv(["PROBE_JAVA_HOME=${h}"]) {
+                            sh 'echo "--- $PROBE_JAVA_HOME ---"; "$PROBE_JAVA_HOME/bin/java" -version 2>&1 || true'
                         }
-                        dataDir = params.STAGING_DATA_DIR
-                        deployServer = 'chalmers'
-                        deployRef = 'gemma-staging'
-                        cliRef = 'staging'
-                        cliWikiPageSuffix = ' (staging)'
-                    } else {
-                        if (!gemmaVersion.endsWith("-SNAPSHOT")) {
-                            error("A development build must have a -SNAPSHOT suffix.")
+                    }
+
+                    echo "=== versions behind each Maven tool found (on the agent default JDK) ==="
+                    for (h in mavenHomes) {
+                        withEnv(["PROBE_MVN_HOME=${h}", "PATH+PROBE_MVN=${h}/bin"]) {
+                            sh 'echo "--- $PROBE_MVN_HOME ---"; mvn -version 2>&1 || true'
                         }
-                        dataDir = params.DEV_DATA_DIR
-                        deployServer = 'chalmers'
-                        deployRef = 'gemma'
-                        cliRef = gemmaVersion
-                        cliWikiPageSuffix = ' (development)'
+                    }
+
+                    // Stash for the validate stage below.
+                    env.FIRST_MAVEN_HOME = mavenHomes.isEmpty() ? '' : mavenHomes[0]
+                    if (mavenHomes.isEmpty()) {
+                        echo "WARNING: none of the probed Maven tool names exist. Check Manage Jenkins > Tools for the real names and re-run with MAVEN_TOOL_NAMES set."
+                    }
+                    if (jdkHomes.isEmpty()) {
+                        echo "WARNING: none of the probed JDK tool names exist. Any host build will run on the agent default JDK reported above."
                     }
                 }
-                sh 'mvn -B clean'
             }
         }
-        stage('Build') {
+
+        stage('Docker availability (informational)') {
             steps {
-                setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
-                sh 'mvn -B compile'
-            }
-            post {
-                success {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} succeeded.", 'SUCCESS'
-                }
-                unsuccessful {
-                    setBuildStatus "Build", "Build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                }
+                sh '''
+                    set +e
+                    echo "=== docker on the agent ==="
+                    echo "We are NOT planning to use it — this is recorded only so the"
+                    echo "decision to stay host-based is made against known facts."
+                    command -v docker || echo "(docker not on PATH)"
+                    docker version 2>&1 | head -20
+                    echo "--- group membership ---"
+                    id -nG | tr ' ' '\\n' | grep -qx docker \\
+                        && echo "agent user IS in the docker group" \\
+                        || echo "agent user is NOT in the docker group"
+                '''
             }
         }
-        stage('Run quick unit tests') {
+
+        stage('Host build prerequisites') {
             steps {
-                setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest'
-            }
-            post {
-                always {
-                    junit testResults: '**/target/surefire-reports/*.xml'
-                }
-                success {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                }
-                unsuccessful {
-                    setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                }
+                sh '''
+                    set +e
+                    echo "=== Maven local repository & settings ==="
+                    echo "HOME = $HOME"
+                    ls -ld "$HOME/.m2" 2>/dev/null || echo "(no ~/.m2)"
+                    if [ -w "$HOME/.m2" ]; then echo "~/.m2 IS writable"; else echo "~/.m2 is NOT writable (or absent)"; fi
+                    ls -l "$HOME/.m2/settings.xml" 2>/dev/null || echo "(no ~/.m2/settings.xml — pavlab mirror/repo creds may be missing)"
+                    du -sh "$HOME/.m2/repository" 2>/dev/null || true
+                    echo
+                    echo "=== vendored hdf5 (org.hdf5group:hdf5:1.12.3) ==="
+                    echo "Not on Maven Central or the pavlab mirror; it lives in vendor/hdf5"
+                    echo "and must be install-file'd into the local repo before anything resolves it."
+                    ls -l "$HOME/.m2/repository/org/hdf5group/hdf5/1.12.3" 2>/dev/null \\
+                        || echo "NOT PRESENT in the local repo — the pipeline will need an install-file step"
+                    echo
+                    echo "=== native libhdf5 (parent pom default hdf5.libDir=/usr/lib64/hdf5) ==="
+                    ls -l /usr/lib64/hdf5 2>/dev/null || echo "(/usr/lib64/hdf5 absent)"
+                    ls -1 /usr/lib64/libhdf5* /usr/lib/x86_64-linux-gnu/libhdf5* 2>/dev/null | head
+                    echo
+                    echo "=== repo contents in the workspace ==="
+                    ls -1 2>/dev/null | head -30
+                    echo "--- vendor/hdf5 ---"
+                    ls -1 vendor/hdf5 2>/dev/null || echo "(no vendor/hdf5 — is this workspace checked out?)"
+                    echo "--- retired module check (gemma-web should be ABSENT) ---"
+                    ls -d gemma-web 2>/dev/null && echo "gemma-web present?!" || echo "gemma-web absent, as expected (deleted bb154eee88)"
+                    echo "--- HEAD ---"
+                    git log --oneline -1 2>/dev/null || true
+                '''
             }
         }
-        stage('Package') {
+
+        stage('gemdtest reachability') {
             steps {
-                setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B package -DskipTests'
-            }
-            post {
-                success {
-                    archiveArtifacts artifacts: '**/target/*.jar, **/target/*.war', fingerprint: true
-                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                }
-                unsuccessful {
-                    setBuildStatus "Package", "Package for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+                withEnv(["DB_HOST=${params.MYSQL_HOST}", "DB_PORT=${params.MYSQL_PORT}"]) {
+                    sh '''
+                        set +e
+                        echo "=== MySQL for integration tests ==="
+                        echo "target: $DB_HOST:$DB_PORT"
+                        command -v mysql >/dev/null 2>&1 && mysql --version || echo "(no mysql client on PATH)"
+                        if command -v nc >/dev/null 2>&1; then
+                            nc -z -w 3 "$DB_HOST" "$DB_PORT" && echo "port IS reachable" || echo "port NOT reachable"
+                        elif command -v bash >/dev/null 2>&1; then
+                            bash -c "exec 3<>/dev/tcp/$DB_HOST/$DB_PORT" 2>/dev/null \\
+                                && echo "port IS reachable" || echo "port NOT reachable"
+                        else
+                            echo "(neither nc nor bash available to test the port)"
+                        fi
+                    '''
                 }
             }
         }
-        stage('Run integration tests and perform deployment in parallel') {
+
+        stage('Maven validate (enforcer check)') {
             when {
-                anyOf {
-                    branch 'master'
-                    branch 'support-*'
-                    branch 'hotfix-*'
-                    branch 'release-*'
-                    branch 'development'
-                    expression { params.FORCE_INTEGRATION_TESTS }
-                    expression { params.FORCE_SLOW_TESTS }
-                    expression { params.FORCE_SONARQUBE }
-                    expression { params.FORCE_DEPLOY }
+                allOf {
+                    expression { params.RUN_MAVEN_VALIDATE }
+                    expression { env.FIRST_MAVEN_HOME }
                 }
             }
-            parallel {
-                stage('Run slow unit tests') {
-                    when {
-                        anyOf {
-                            // we can safely ignore integration tests on the master branch, those were run in hotfix/release
-                            branch 'support-*'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                            expression { params.FORCE_SLOW_TESTS }
-                        }
-                    }
-                    steps {
-                        lock('gemma-slow-tests') {
-                            setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                            sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack'
-                        }
-                    }
-                    post {
-                        always {
-                            junit testResults: '**/target/surefire-reports/*.xml'
-                        }
-                        success {
-                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                        }
-                        unsuccessful {
-                            setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                        }
+            steps {
+                // Non-recursive validate: resolves the parent pom and runs the
+                // enforcer rules. If the agent's default JDK is older than the
+                // source level, this is where it says so, in plain language,
+                // instead of failing cryptically halfway through a real build.
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+                    withEnv(["PATH+PROBE_MVN=${env.FIRST_MAVEN_HOME}/bin"]) {
+                        sh 'mvn -B -N validate'
                     }
                 }
-                stage('Run integration tests') {
-                    when {
-                        anyOf {
-                            // we can safely ignore integration tests on the master branch, those were run in hotfix/release
-                            branch 'support-*'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                            expression { params.FORCE_INTEGRATION_TESTS }
-                        }
-                    }
-                    steps {
-                        setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        lock('database/gemdtest') {
-                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -DskipJavadoc -DskipWebpack'
-                        }
-                    }
-                    post {
-                        always {
-                            junit testResults: '**/target/failsafe-reports/*.xml'
-                        }
-                        success {
-                            setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                        }
-                        unsuccessful {
-                            setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                        }
-                    }
-                }
-                stage('SonarQube Analysis') {
-                    tools {
-                        jdk 'Java 17'
-                    }
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'support-*'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                            expression { params.FORCE_SONARQUBE }
-                        }
-                    }
-                    steps {
-                        lock('gemma-sonarqube-analysis') {
-                            setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
-                            withSonarQubeEnv('UBC SonarQube') {
-                                sh "mvn package -DskipTests -DskipJavadoc -DskipWebpack dependency-check:check org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
-                            }
-                        }
-                    }
-                    post {
-                        success {
-                            setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
-                        }
-                        failure {
-                            setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} failed.", 'ERROR'
-                        }
-                        unstable {
-                            setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
-                        }
-                    }
-                }
-                stage('Deploy artifacts') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                            expression { params.FORCE_DEPLOY }
-                        }
-                    }
-                    steps {
-                        sh 'mvn -B deploy -DskipTests -DskipJavadoc -DskipWebpack'
-                    }
-                }
-                stage('Deploy Maven website') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
-                            branch 'development'
-                            expression { params.FORCE_DEPLOY }
-                        }
-                    }
-                    steps {
-                        sh 'mvn -B site-deploy -DskipWebpack'
-                        script {
-                            // maven site-deploy changes permission on the parent site directory (pavlab-starter-parent),
-                            // but the Gemma site directory is not a subdirectory of it.
-                            // This is replicating what the plugin is doing https://maven.apache.org/plugins/maven-site-plugin/deploy-mojo.html 
-                            sh "chmod -Rf g+w,a+rX ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} || true"
-                            if (dataDir != null) {
-                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/gemma/gemma-${gemmaVersion} ${dataDir}/gemma-devsite"
-                                sh "ln -Tsf ${params.MAVEN_SITES_DIR}/baseCode/baseCode-${baseCodeVersion} ${dataDir}/baseCode-site"
-                            }
-                        }
-                    }
-                }
-                stage('Deploy Gemma Web') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            // we only support one staging server
-                            branch params.STAGING_BRANCH + '-*'
-                            branch 'development'
-                            expression { params.FORCE_DEPLOY }
-                        }
-                    }
-                    steps {
-                        sh "env GEMMA_WEB_DEPLOY_SERVER=${deployServer} GEMMA_WEB_PREFIX=${params.DEPLOY_DIR_PREFIX} ./gemma-web/deploy.sh ${deployRef}"
-                    }
-                }
-                stage('Deploy Gemma CLI') {
-                    when {
-                        anyOf {
-                            branch 'master'
-                            branch params.STAGING_BRANCH + '-*'
-                            // never deploy the development CLI, it's too risky
-                            // branch 'development'
-                            expression { params.FORCE_DEPLOY }
-                        }
-                    }
-                    steps {
-                        sh "env GEMMA_CLI_PREFIX=${params.CLI_DIR_PREFIX} ./gemma-cli/deploy.sh ${cliRef}"
-                        sh "env GEMMA_CLI_WIKI_PAGE_SUFFIX='${cliWikiPageSuffix}' ./gemma-cli/deploy-wiki.sh 'pavlab-wiki:Global/gemma/Gemma Landing Page/Gemma Curation/List of Gemma CLI Tools${cliWikiPageSuffix}'"
-                    }
-                }
+            }
+        }
+
+        stage('Environment dump') {
+            steps {
+                // Filtered: a node could carry a token in its environment, and
+                // this console log is visible to anyone who can see the job.
+                sh '''
+                    set +e
+                    echo "=== agent environment (secret-ish names filtered out) ==="
+                    env | sort | grep -viE 'token|password|passwd|secret|_key|apikey|credential'
+                '''
             }
         }
     }
+
     post {
-        fixed {
-            slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
-        }
-        unsuccessful {
-            slackSend color: 'danger', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Failure (<${env.BUILD_URL}|Open>)"
+        always {
+            echo '''
+================================================================================
+Discovery run complete. The three things to read out of the log above:
+  1. 'Bare toolchain' > java -version   — the agent default JDK. Gemma 2.0 needs 25.
+  2. 'Jenkins tool installations'       — the real names to put in a tools block.
+  3. 'Host build prerequisites'         — whether ~/.m2 is writable and whether
+                                          the vendored hdf5 jar needs installing.
+Restore the real pipeline with:
+    git checkout 5e8c36a786 -- .jenkins/Jenkinsfile
+================================================================================
+'''
         }
     }
 }
