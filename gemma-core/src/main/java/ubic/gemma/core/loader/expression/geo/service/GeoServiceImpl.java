@@ -440,13 +440,18 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             log.info( "Updating " + ees.size() + " experiments from accession " + geoAccession );
         }
 
-        Collection<ExpressionExperiment> result = fetchFromGEO( geoAccession, geoUpdateConfig );
+        GeoRefetch refetch = fetchFromGEO( geoAccession, geoUpdateConfig );
 
         // multi-species automatically split by Gemma at conversion stage so we may have >1
-        for ( ExpressionExperiment freshFromGEO : result ) {
+        for ( ExpressionExperiment freshFromGEO : refetch.experiments ) {
             // multi-species automatically split by Gemma at conversion stage so we may have >1
             for ( ExpressionExperiment ee : ees ) { // because it could be a split by us.
                 updateFromGEO( ee, geoAccession, freshFromGEO, geoUpdateConfig );
+            }
+        }
+        if ( geoUpdateConfig.sourceMetadata ) {
+            for ( ExpressionExperiment ee : ees ) {
+                refreshSourceMetadata( ee, refetch.series );
             }
         }
     }
@@ -458,14 +463,56 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 "This method is only for GEO experiments" );
 
         String geoAccession = ee.getAccession().getAccession();
-        Collection<ExpressionExperiment> result = fetchFromGEO( geoAccession, geoUpdateConfig );
+        GeoRefetch refetch = fetchFromGEO( geoAccession, geoUpdateConfig );
 
-        for ( ExpressionExperiment freshFromGEO : result ) {
+        for ( ExpressionExperiment freshFromGEO : refetch.experiments ) {
             updateFromGEO( ee, geoAccession, freshFromGEO, geoUpdateConfig );
+        }
+        if ( geoUpdateConfig.sourceMetadata ) {
+            refreshSourceMetadata( ee, refetch.series );
         }
     }
 
-    private Collection<ExpressionExperiment> fetchFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig ) {
+    /**
+     * Store (or replace) the source metadata document for one experiment from a series just parsed.
+     * <p>
+     * Split-ness is DERIVED rather than passed: at import the caller knows whether it is splitting,
+     * but a backfill only has the result, and the result says it — an experiment holding fewer of
+     * the series' samples than the series has IS a split of it. Getting this wrong only mislabels
+     * the {@code isSplitSubseries} flag, but the sample list it travels with would then describe a
+     * whole series while claiming to be one part of it.
+     */
+    private void refreshSourceMetadata( ExpressionExperiment ee, GeoSeries series ) {
+        ExpressionExperiment thawed = expressionExperimentService.thawLite( ee );
+        long ourSamples = thawed.getBioAssays().stream()
+                .map( BioAssay::getAccession )
+                .filter( Objects::nonNull )
+                .map( DatabaseEntry::getAccession )
+                .filter( Objects::nonNull )
+                .distinct()
+                .count();
+        boolean split = ourSamples > 0 && ourSamples < series.getSamples().size();
+        storeSourceMetadata( thawed, series, split, new Date() );
+    }
+
+    /**
+     * What one refetch produced: the parsed series and the experiments converted from it.
+     * <p>
+     * The series used to be dropped on the floor here. It is the only thing that can build a source
+     * metadata document, so a refetch that discards it cannot record what GEO said even though it
+     * just read it.
+     */
+    private static class GeoRefetch {
+        private final GeoSeries series;
+        private final Collection<ExpressionExperiment> experiments;
+
+        private GeoRefetch( GeoSeries series, Collection<ExpressionExperiment> experiments ) {
+            this.series = series;
+            this.experiments = experiments;
+        }
+    }
+
+    private GeoRefetch fetchFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig ) {
         // other complications arise if this is a multiplatform data set that was switched/merged etc, but we will take the data for the corresponding GSMs.
 
         // fetch the experiment from GEO
@@ -489,7 +536,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             this.getPubMedInfo( result );
         }
 
-        return result;
+        return new GeoRefetch( series, result );
     }
 
     /**

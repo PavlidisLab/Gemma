@@ -365,6 +365,15 @@ public interface ExpressionExperimentDao
      */
     boolean hasProcessedExpressionData( ExpressionExperiment ee );
 
+    /**
+     * Whether a source metadata document is stored for this experiment.
+     * <p>
+     * A projection rather than a read of the field: {@code SOURCE_METADATA} is a LONGTEXT holding
+     * the whole GEO record, and the backfill asks this question once per experiment across the
+     * corpus purely to decide whether to skip it.
+     */
+    boolean hasSourceMetadata( ExpressionExperiment ee );
+
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
 

@@ -930,6 +930,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     boolean hasProcessedExpressionData( ExpressionExperiment ee );
 
     /**
+     * @see ExpressionExperimentDao#hasSourceMetadata(ExpressionExperiment)
+     */
+    boolean hasSourceMetadata( ExpressionExperiment ee );
+
+    /**
      * @return counts design element data vectors grouped by quantitation type
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

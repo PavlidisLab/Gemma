@@ -794,6 +794,26 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
      * The creation date comes off the {@code C} audit event, which is the only record Gemma keeps
      * of when a dataset was loaded.
      */
+    /**
+     * The backfill asks this once per experiment across the corpus to decide whether to skip it, so
+     * it must not read the document to answer — {@code SOURCE_METADATA} is a LONGTEXT holding the
+     * whole GEO record.
+     */
+    @Test
+    @WithMockUser
+    public void testHasSourceMetadata() {
+        ExpressionExperiment without = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( without );
+        ExpressionExperiment with = new ExpressionExperiment();
+        with.setSourceMetadata( "{\"source\":\"GEO\"}" );
+        with.setSourceMetadataSchemaVersion( 1 );
+        sessionFactory.getCurrentSession().persist( with );
+        sessionFactory.getCurrentSession().flush();
+
+        assertFalse( expressionExperimentDao.hasSourceMetadata( without ) );
+        assertTrue( expressionExperimentDao.hasSourceMetadata( with ) );
+    }
+
     @Test
     @WithMockUser
     public void testDateCreatedComesFromTheCreationAuditEvent() {

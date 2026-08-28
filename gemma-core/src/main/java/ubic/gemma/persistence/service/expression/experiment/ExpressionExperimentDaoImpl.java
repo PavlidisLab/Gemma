@@ -1942,6 +1942,14 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public boolean hasSourceMetadata( ExpressionExperiment ee ) {
+        return ( Boolean ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.sourceMetadata is not null from ExpressionExperiment ee where ee = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( expressionExperiments.isEmpty() ) {
             return Collections.emptyMap();

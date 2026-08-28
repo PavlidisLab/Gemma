@@ -1973,6 +1973,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public boolean hasSourceMetadata( ExpressionExperiment ee ) {
+        return expressionExperimentDao.hasSourceMetadata( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee ) {
         return this.expressionExperimentDao.getQuantitationTypeCount( ee );
     }
