@@ -1235,6 +1235,23 @@
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
 					</additionalJOptions>
+					<additionalOptions>
+						<additionalOption>-Xmaxerrs 100000</additionalOption>
+						<additionalOption>-Xmaxwarns 100000</additionalOption>
+					</additionalOptions>
+					<!--
+					    @todo is used in the ported baseCode math/ sources and a few
+					    older Gemma classes. It is not a standard javadoc tag, so
+					    doclint rejects it as an unknown tag; registering it here keeps
+					    the notes rendering instead of rewriting them into prose.
+					-->
+					<tags>
+						<tag>
+							<name>todo</name>
+							<placement>a</placement>
+							<head>To Do:</head>
+						</tag>
+					</tags>
 				</configuration>
 			</plugin>
 			<plugin>
