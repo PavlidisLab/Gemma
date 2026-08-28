@@ -8527,20 +8527,19 @@ public class DatasetsWebService {
                             .header( "Content-Disposition", "attachment; filename=\"" + ( download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() ) ) + "\"" )
                             .build();
                 } else {
-                    // generate the file in the background and stream it
-                    // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
-                    log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
-                    // we do not want to use cursor fetch because it requires a lot of memory on the database server
-                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, 30, false, force );
-                    return streamTabularDatasetSingleCellExpression( ee, qt, download );
+                    // One build, two consumers — same tee as the bulk data endpoints: the in-band stream
+                    // and the cache file are fed from a single pass. The single-cell payloads are the
+                    // largest in the system, so the racing fire-and-forget build this replaces was at its
+                    // most expensive here: two concurrent full vector scans per cold request. A concurrent
+                    // builder degrades to a plain stream inside the service; a disconnected caller does
+                    // not abort the cache build.
+                    log.info( "Single-cell data for " + qt + " is not available, will generate and stream it in one pass." );
+                    return streamTabularDatasetSingleCellExpression( ee, qt, download, force );
                 }
             } catch ( TimeoutException e ) {
-                // file is being written, recommend to the user to wait a little bit, stacktrace is superfluous
+                // file is locked by a concurrent writer; the service degrades to a plain stream internally
                 log.warn( "Single-cell data for " + qt + " is still being generated, it will be streamed in the meantime." );
-                return streamTabularDatasetSingleCellExpression( ee, qt, download );
-            } catch ( RejectedExecutionException e ) {
-                log.warn( "Too many file generation tasks are being executed, will stream the single-cell data instead.", e );
-                return streamTabularDatasetSingleCellExpression( ee, qt, download );
+                return streamTabularDatasetSingleCellExpression( ee, qt, download, force );
             } catch ( InterruptedException e ) {
                 Thread.currentThread().interrupt();
                 throw new InternalServerErrorException( e );
@@ -8550,11 +8549,12 @@ public class DatasetsWebService {
         }
     }
 
-    private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
+    private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download, boolean force ) {
         String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
         return Response.ok( ( StreamingOutput ) stream -> {
                     try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
-                        expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, false, false, 30, false, writer, true, null );
+                        // we do not want to use cursor fetch because it requires a lot of memory on the database server
+                        expressionDataFileService.streamAndWriteTabularSingleCellExpressionData( ee, qt, 30, false, force, writer, true );
                     }
                 } )
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )

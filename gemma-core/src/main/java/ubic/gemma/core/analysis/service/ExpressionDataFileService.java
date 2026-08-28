@@ -349,6 +349,15 @@ public interface ExpressionDataFileService {
     void streamAndWriteRawExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
+     * Tabular single-cell sibling of
+     * {@link #streamAndWriteProcessedExpressionData(ExpressionExperiment, boolean, boolean, Writer, boolean)} —
+     * the payloads here are the largest in the system, so the duplicated cold build this replaces was at
+     * its most expensive on this path: two concurrent full scans of the single-cell vectors per cold
+     * request.
+     */
+    void streamAndWriteTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Writer writer, boolean autoFlush ) throws IOException;
+
+    /**
      * Writes out the experimental design for the given experiment.
      * <p>
      * The bioassays (col 0) matches the header row of the data matrix printed out by the {@link MatrixWriter}.

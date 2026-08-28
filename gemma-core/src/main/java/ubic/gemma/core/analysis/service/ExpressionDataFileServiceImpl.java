@@ -927,6 +927,16 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 w -> writeRawExpressionData( ee, qt, null, false, false, false, w, autoFlush ) );
     }
 
+    @Override
+    public void streamAndWriteTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Writer writer, boolean autoFlush ) throws IOException {
+        String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
+        // same staleness rule as writeOrLocateTabularSingleCellExpressionData: a file older than the
+        // dataset's last curation update is rebuilt
+        Date invalidatedBefore = ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null;
+        this.<IOException>streamAndPopulateCache( filename, invalidatedBefore, forceWrite, writer,
+                w -> writeTabularSingleCellExpressionData( ee, qt, null, false, false, fetchSize, useCursorFetchIfSupported, w, autoFlush, null ) );
+    }
+
     /** The expensive single-pass producer a {@link #streamAndPopulateCache} call tees into two consumers. */
     @FunctionalInterface
     private interface DataWriter<E extends Exception> {
