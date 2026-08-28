@@ -124,6 +124,19 @@ public class AnnotationsWebService {
      * Configured in {@code EhcacheConfig#APP_CACHES} so it appears in {@code GET /admin/caches}
      * with hit/miss stats and can be flushed via the unified {@code DELETE /admin/caches/{name}}.
      */
+    /**
+     * Subject-breadth bar applied to {@code ?dataset=} when the caller sets none.
+     *
+     * <p>A subject relating to more than this many objects under one predicate is enumerating a list
+     * rather than saying something about itself. Measured on the forward walk across 36 datasets: 214
+     * of 303 rows were ChEBI's {@code has role} closure, and a bar of 3 leaves 9 of those while keeping
+     * every row of every other predicate. It costs the 4 datasets whose only relations were role rows.</p>
+     *
+     * <p>🛑 Not applied to a {@code ?subject=}/{@code ?object=} read. Those answer "what is known about
+     * this term", where a term's full role list is the answer rather than the noise.</p>
+     */
+    private static final int DATASET_SEEDED_MAX_SUBJECT_BREADTH = 3;
+
     private static final String SEARCH_CACHE_NAME = "AnnotationsSearchResponseCache";
 
     /**
@@ -863,7 +876,8 @@ public class AnnotationsWebService {
                     + "something about itself. Measured on the forward walk of 'dataset' across 36 "
                     + "datasets, 214 of 303 rows were ChEBI's 'has role' closure -- dimethyl sulfoxide "
                     + "carries 8 roles, biotin 15 -- and a bar of 3 leaves 9 of those 214 while keeping "
-                    + "every row of every other predicate present. 0 (the default) does not filter.") @QueryParam("maxSubjectBreadth") @DefaultValue("0") int maxSubjectBreadth,
+                    + "every row of every other predicate present. Defaults to 3 for a 'dataset' read and to off "
+                    + "for a 'subject'/'object' read; pass 0 to turn it off explicitly.") @QueryParam("maxSubjectBreadth") @DefaultValue("-1") int maxSubjectBreadth,
             @Parameter(description = "Also return relations a source states do NOT hold, alongside the "
                     + "asserted ones. Off by default, and deliberately absent from /relations/implies: a "
                     + "refuted row must never reach a caller asking what a term entails. Distinguish them "
@@ -875,13 +889,17 @@ public class AnnotationsWebService {
         if ( StringUtils.isBlank( subject ) && StringUtils.isBlank( object ) && datasetId == null ) {
             throw new BadRequestException( "One of 'subject', 'object' or 'dataset' must be supplied; the whole relation table is not a question." );
         }
+        // -1 is "the caller said nothing", which is why the bar can default differently by seed without
+        // taking away the ability to turn it off: an explicit 0 still means unfiltered.
+        int effectiveMaxSubjectBreadth = maxSubjectBreadth >= 0 ? maxSubjectBreadth
+                : ( datasetId != null ? DATASET_SEEDED_MAX_SUBJECT_BREADTH : 0 );
         ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery q = new ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery()
                 .taxonId( taxonId )
                 .minimumSupport( minSupport )
                 .includeRefuted( includeRefuted )
                 .minimumSpecificity( minSpecificity )
                 .maximumObjectBreadth( maxObjectBreadth )
-                .maximumSubjectBreadth( maxSubjectBreadth )
+                .maximumSubjectBreadth( effectiveMaxSubjectBreadth )
                 .termLevelOnly( !includeExperimentLevel )
                 .maxResults( limit );
         // A term is addressed by URI when it has one and by its value when it does not; rather than

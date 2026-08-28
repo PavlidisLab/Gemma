@@ -2685,6 +2685,65 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         assertThat( captor.getAllValues() ).anySatisfy( q -> assertThat( q.getMaximumSubjectBreadth() ).isEqualTo( 3 ) );
     }
 
+    /**
+     * The bar defaults ON for a dataset-seeded read, where the fan-out was measured.
+     */
+    @Test
+    @WithMockUser
+    public void testRelationsAppliesTheSubjectBreadthBarByDefaultForADataset() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+        when( expressionExperimentService.load( 91237L ) ).thenReturn( new ExpressionExperiment() );
+
+        target( "/annotations/relations" )
+                .queryParam( "dataset", "91237" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() ).anySatisfy( q -> assertThat( q.getMaximumSubjectBreadth() ).isEqualTo( 3 ) );
+    }
+
+    /**
+     * ...and a caller who asks for 0 gets 0. Without this the default could not be turned off, which is
+     * the difference between a default and a policy.
+     */
+    @Test
+    @WithMockUser
+    public void testAnExplicitZeroTurnsTheSubjectBreadthBarOff() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+        when( expressionExperimentService.load( 91237L ) ).thenReturn( new ExpressionExperiment() );
+
+        target( "/annotations/relations" )
+                .queryParam( "dataset", "91237" )
+                .queryParam( "maxSubjectBreadth", "0" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() ).allSatisfy( q -> assertThat( q.getMaximumSubjectBreadth() ).isZero() );
+    }
+
+    /**
+     * Positive control for the two above: a term-seeded read is NOT barred. A term card asking what is
+     * known about DMSO wants its role list; that is the answer there, not the noise.
+     */
+    @Test
+    @WithMockUser
+    public void testATermSeededReadIsNotBarredByDefault() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+
+        target( "/annotations/relations" )
+                .queryParam( "subject", "http://purl.obolibrary.org/obo/CHEBI_28262" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() ).allSatisfy( q -> assertThat( q.getMaximumSubjectBreadth() ).isZero() );
+    }
+
     /** And it stays off unless asked, so exposing it changed no existing caller's results. */
     @Test
     @WithMockUser
