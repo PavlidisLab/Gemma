@@ -4,6 +4,8 @@ def buildHash
 def gemmaVersion
 def baseCodeVersion
 def dataDir
+def deployRef
+def deployServer
 def cliRef
 def cliWikiPageSuffix
 
@@ -57,6 +59,7 @@ pipeline {
         string(name: 'DEV_DATA_DIR', defaultValue: '/space/sandboxgemmaData', description: 'Directory where development data is stored.')
         string(name: 'MAVEN_SITES_DIR', defaultValue: '/space/web/maven-sites', description: 'Directory where Maven sites are deployed.')
         string(name: 'CLI_DIR_PREFIX', defaultValue: '/space/opt/gemma-cli', description: 'Prefix for Gemma CLI deployment directory.')
+        string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat', description: 'Prefix for Gemma REST deployment directories. These are the same Tomcat instance directories gemma-web used.')
         // either hotfix or release, we only have one staging server & CLI symlink
         choice(name: 'STAGING_BRANCH', choices: ['hotfix', 'release'], description: 'Branch deployed to the staging server and CLI symlink.')
         // whether or not to force integration tests
@@ -81,6 +84,8 @@ pipeline {
                             error("A production build must not have a -SNAPSHOT suffix.")
                         }
                         dataDir = params.DATA_DIR
+                        deployServer = 'moe'
+                        deployRef = 'gemma'
                         cliRef = 'production'
                         cliWikiPageSuffix = ' (generated)'
                     } else if (supportBuild) {
@@ -92,6 +97,8 @@ pipeline {
                             error("A staging build must have a -SNAPSHOT suffix.")
                         }
                         dataDir = params.STAGING_DATA_DIR
+                        deployServer = 'chalmers'
+                        deployRef = 'gemma-staging'
                         cliRef = 'staging'
                         cliWikiPageSuffix = ' (staging)'
                     } else {
@@ -99,6 +106,8 @@ pipeline {
                             error("A development build must have a -SNAPSHOT suffix.")
                         }
                         dataDir = params.DEV_DATA_DIR
+                        deployServer = 'chalmers'
+                        deployRef = 'gemma'
                         cliRef = gemmaVersion
                         cliWikiPageSuffix = ' (development)'
                     }
@@ -315,10 +324,35 @@ pipeline {
                         }
                     }
                 }
-                // 'Deploy Gemma Web' used to sit here. Removed: the gemma-web module
-                // was deleted in bb154eee88 (2026-05-27) and ./gemma-web/deploy.sh
-                // along with it, so the stage could only ever fail. Nothing replaces
-                // it yet — gemma-rest is not deployed from Jenkins for now.
+                // Replaces 'Deploy Gemma Web', which died with the gemma-web module in
+                // bb154eee88. That WAR carried gemma-rest as a compile-scope jar, so
+                // one deploy shipped the browser UI and /rest/v2/* together; this ships
+                // the REST API alone, into the same Tomcat instance directories, on the
+                // same branch-to-server map gemma-web used.
+                stage('Deploy Gemma REST') {
+                    when {
+                        anyOf {
+                            branch 'master'
+                            // we only support one staging server
+                            branch params.STAGING_BRANCH + '-*'
+                            branch 'development'
+                            expression { params.FORCE_DEPLOY }
+                        }
+                    }
+                    steps {
+                        // The WAR exists only under the gemma-rest-war profile — the
+                        // Package stage above builds gemma-rest as a JAR, which is what
+                        // 'Deploy artifacts' publishes to the pavlab repo, and flipping
+                        // that default would change what consumers of the artifact get
+                        // (see the rationale in gemma-rest/pom.xml).
+                        //
+                        // -am is needed because `package` does not install gemma-core
+                        // into the local repository, so gemma-rest cannot resolve it
+                        // from a previous stage's output.
+                        sh 'mvn -B -P gemma-rest-war package -pl gemma-rest -am -DskipTests -DskipJavadoc -DskipWebpack'
+                        sh "env GEMMA_REST_DEPLOY_SERVER=${deployServer} GEMMA_REST_PREFIX=${params.DEPLOY_DIR_PREFIX} ./gemma-rest/deploy.sh ${deployRef}"
+                    }
+                }
                 stage('Deploy Gemma CLI') {
                     when {
                         anyOf {
