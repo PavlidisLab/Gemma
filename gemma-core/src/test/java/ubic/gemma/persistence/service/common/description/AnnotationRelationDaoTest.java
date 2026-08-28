@@ -67,6 +67,8 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     private static final String MOTOR_NEURON = "http://purl.obolibrary.org/obo/CL_0011001";
     private static final String IPSC_LINE = "http://purl.obolibrary.org/obo/CLO_0037279";
     private static final String OXIDOPAMINE = "http://purl.obolibrary.org/obo/CHEBI_78741";
+    private static final String HAS_ROLE = "http://purl.obolibrary.org/obo/RO_0000087";
+    private static final String HAS_DISEASE = "http://purl.obolibrary.org/obo/RO_0016002";
     private static final String DERIVES_FROM_ANATOMIC_PART = "http://purl.obolibrary.org/obo/CLO_0037208";
     private static final String PROSTATE_GLAND = "http://purl.obolibrary.org/obo/UBERON_0002367";
     private static final String PROSTATE_LINE = "http://purl.obolibrary.org/obo/CLO_0002181";
@@ -995,6 +997,62 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     }
 
     /**
+     * 🛑 Subject breadth counts objects under ONE predicate, and the unscoped number it used to report
+     * cannot do the job the field was added for.
+     *
+     * <p>Measured on gemma2 2026-08-27, unscoped: {@code dimethyl sulfoxide} 9, {@code BRCA1} 13,
+     * {@code biotin} 15, {@code epithelial cell} 20. The one row a reader wanted
+     * ({@code BRCA1 --has disease--> breast cancer}) sits between two ontology closures nobody wanted,
+     * so no bar on that number separates them. Asking the endpoint one predicate at a time returned
+     * 8, 1, 15 and 3 objects for those four.</p>
+     *
+     * <p>The fixture is that shape at small scale: one subject bearing three roles and one disease.
+     * Unscoped every row of it reads 4 and the disease row is indistinguishable from a role.</p>
+     */
+    @Test
+    public void testSubjectBreadthCountsObjectsUnderOnePredicateOnly() {
+        String compound = threeRolesAndOneDisease();
+
+        List<AnnotationRelationDao.RelationSummary> found = annotationRelationDao.findRelations(
+                new AnnotationRelationDao.RelationQuery()
+                        .subjectValueUris( Collections.singleton( compound ) ) );
+
+        assertThat( found ).hasSize( 4 );
+        assertThat( found ).filteredOn( r -> "has role".equals( r.getPredicate() ) )
+                .as( "the roles enumerate a list, and the count sees all three of them" )
+                .hasSize( 3 )
+                .allSatisfy( r -> assertThat( r.getSubjectBreadth() ).isEqualTo( 3 ) );
+        assertThat( found ).filteredOn( r -> "has disease".equals( r.getPredicate() ) )
+                .as( "the roles are not counted against the disease -- a different predicate is a "
+                        + "different question" )
+                .singleElement()
+                .satisfies( r -> assertThat( r.getSubjectBreadth() ).isEqualTo( 1 ) );
+    }
+
+    /**
+     * The bar, on the same fixture. A subject enumerating a list under one predicate goes; the row it
+     * makes one statement with stays.
+     */
+    @Test
+    public void testAListEnumeratingSubjectIsDroppedWhenACallerSetsASubjectBreadthBar() {
+        String compound = threeRolesAndOneDisease();
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( compound ) ) ) )
+                .as( "with no bar the whole closure comes back, as it always has" )
+                .hasSize( 4 );
+
+        assertThat( annotationRelationDao.findRelations( new AnnotationRelationDao.RelationQuery()
+                .subjectValueUris( Collections.singleton( compound ) )
+                .maximumSubjectBreadth( 1 ) ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getPredicate() ).isEqualTo( "has disease" );
+                    assertThat( r.getSubjectBreadth() ).isEqualTo( 1 );
+                } );
+    }
+
+    /**
      * Cellosaurus's provenance row: the cell line is the subject and the organ it was taken from is
      * the object, which is the orientation that made the reported case read backwards.
      */
@@ -1065,19 +1123,44 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
      */
     private AnnotationRelation ontologyRow( String subjectUri, String subjectValue, String objectUri,
             String objectValue ) {
+        return ontologyRow( subjectUri, subjectValue, objectUri, objectValue, "has role", HAS_ROLE );
+    }
+
+    /**
+     * @see #ontologyRow(String, String, String, String)
+     */
+    private AnnotationRelation ontologyRow( String subjectUri, String subjectValue, String objectUri,
+            String objectValue, String predicate, String predicateUri ) {
         AnnotationRelation r = new AnnotationRelation();
         r.setSubjectValue( subjectValue );
         r.setSubjectValueUri( subjectUri );
         r.setSubjectCategory( "cell line" );
         r.setSubjectCategoryUri( "http://purl.obolibrary.org/obo/CLO_0000031" );
-        r.setPredicate( "has role" );
-        r.setPredicateUri( "http://purl.obolibrary.org/obo/RO_0000087" );
+        r.setPredicate( predicate );
+        r.setPredicateUri( predicateUri );
         r.setObjectValue( objectValue );
         r.setObjectValueUri( objectUri );
         r.setBasis( AnnotationRelationBasis.ONTOLOGY );
         r.setSource( "CHEBI" );
         r.setGeneratedAt( new Date() );
         return r;
+    }
+
+    /**
+     * One subject bearing three roles and one disease — the shape gemma2 serves for a compound.
+     *
+     * @return the subject's URI
+     */
+    private String threeRolesAndOneDisease() {
+        String compound = "http://purl.obolibrary.org/obo/CHEBI_9300001";
+        for ( int i = 0; i < 3; i++ ) {
+            annotationRelationDao.create( ontologyRow( compound, "the compound",
+                    "http://purl.obolibrary.org/obo/CHEBI_930001" + i, "role " + i ) );
+        }
+        annotationRelationDao.create( ontologyRow( compound, "the compound",
+                "http://purl.obolibrary.org/obo/MONDO_9300020", "the one disease",
+                "has disease", HAS_DISEASE ) );
+        return compound;
     }
 
     private AnnotationRelation attested( String subjectUri, String objectUri, AnnotationRelationBasis basis, int mask ) {

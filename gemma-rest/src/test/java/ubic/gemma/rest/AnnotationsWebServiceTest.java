@@ -2665,6 +2665,26 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         assertThat( captor.getAllValues() ).anySatisfy( q -> assertThat( q.isIncludeRefuted() ).isTrue() );
     }
 
+    /**
+     * A query parameter that never reaches the query is decorative and nothing fails — the same shape
+     * the two tests above pin for {@code includeRefuted}.
+     */
+    @Test
+    @WithMockUser
+    public void testRelationsPassesTheSubjectBreadthBarToTheQuery() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+
+        target( "/annotations/relations" )
+                .queryParam( "subject", "http://purl.obolibrary.org/obo/CHEBI_28262" )
+                .queryParam( "maxSubjectBreadth", "3" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() ).anySatisfy( q -> assertThat( q.getMaximumSubjectBreadth() ).isEqualTo( 3 ) );
+    }
+
     /** And it stays off unless asked, so exposing it changed no existing caller's results. */
     @Test
     @WithMockUser

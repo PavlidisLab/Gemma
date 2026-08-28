@@ -857,6 +857,13 @@ public class AnnotationsWebService {
                     + "'24 h' to 448 and 'induced pluripotent stem cell line cell' to 81, while MPTP and "
                     + "5xFAD sit in the low single digits. Not a quality judgement -- a dose is a good "
                     + "statement and a very broad object. 0 (the default) does not filter.") @QueryParam("maxObjectBreadth") @DefaultValue("0") int maxObjectBreadth,
+            @Parameter(description = "Drop relations whose subject relates to more than this many "
+                    + "distinct objects UNDER THE SAME PREDICATE. The other end of maxObjectBreadth, and "
+                    + "it catches a different shape: a subject enumerating a list rather than saying "
+                    + "something about itself. Measured on the forward walk of 'dataset' across 36 "
+                    + "datasets, 214 of 303 rows were ChEBI's 'has role' closure -- dimethyl sulfoxide "
+                    + "carries 8 roles, biotin 15 -- and a bar of 3 leaves 9 of those 214 while keeping "
+                    + "every row of every other predicate present. 0 (the default) does not filter.") @QueryParam("maxSubjectBreadth") @DefaultValue("0") int maxSubjectBreadth,
             @Parameter(description = "Also return relations a source states do NOT hold, alongside the "
                     + "asserted ones. Off by default, and deliberately absent from /relations/implies: a "
                     + "refuted row must never reach a caller asking what a term entails. Distinguish them "
@@ -874,6 +881,7 @@ public class AnnotationsWebService {
                 .includeRefuted( includeRefuted )
                 .minimumSpecificity( minSpecificity )
                 .maximumObjectBreadth( maxObjectBreadth )
+                .maximumSubjectBreadth( maxSubjectBreadth )
                 .termLevelOnly( !includeExperimentLevel )
                 .maxResults( limit );
         // A term is addressed by URI when it has one and by its value when it does not; rather than
@@ -1106,10 +1114,13 @@ public class AnnotationsWebService {
          */
         long objectBreadth;
         /**
-         * How many distinct objects this SUBJECT relates to -- the mirror of {@link #objectBreadth}.
-         * High means the term is enumerating a list rather than saying something about itself: an
-         * {@code induced pluripotent stem cell line cell} naming seventeen cell lines it was derived
-         * into is a heading, not a fact about the term on the card.
+         * How many distinct objects this SUBJECT relates to UNDER THE SAME PREDICATE -- the mirror of
+         * {@link #objectBreadth}. High means the term is enumerating a list rather than saying
+         * something about itself: an {@code induced pluripotent stem cell line cell} naming seventeen
+         * cell lines it was derived into is a heading, not a fact about the term on the card.
+         *
+         * <p>🛑 The count was unscoped until 2026-08-27 and read a different number then; filter on it
+         * with {@code maxSubjectBreadth}.</p>
          */
         long subjectBreadth;
         double specificity;
