@@ -417,21 +417,33 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             List<ExperimentalFactor> subsetFactors = this
                     .fixFactorsForSubset( bioMaterials, dmatrix.get( subsetFactorValue ), factors );
 
-            DifferentialExpressionAnalysisConfig subsetConfig = this
-                    .fixConfigForSubset( factors, subsetFactorValue, config );
-
             if ( subsetFactors.isEmpty() ) {
                 LinearModelAnalyzer.log
                         .warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
                 continue;
             }
 
+            // subsetFactors, not factors: fixConfigForSubset narrows the config to the list it is handed, so
+            // handing it the full list narrows nothing and leaves factorsToInclude and interactionsToInclude
+            // naming factors fixFactorsForSubset just dropped -- a config that disagrees with the model built
+            // beside it from subsetFactors.
+            DifferentialExpressionAnalysisConfig subsetConfig = this
+                    .fixConfigForSubset( subsetFactors, subsetFactorValue, config );
+
+            // The baseline map is built once over the whole experiment, so it still carries entries for factors
+            // this subset cannot model. makeDesignMatrix calls setBaseline for every entry it holds, and the
+            // design matrix beside it was built from subsetFactors -- which is DesignMatrix reporting "No factor
+            // known by name fact.2, choices are: fact.1" and failing the subset. Restricting the keys leaves the
+            // chosen baseline of every surviving factor untouched.
+            Map<ExperimentalFactor, FactorValue> subsetBaselines = new HashMap<>( baselineConditions );
+            subsetBaselines.keySet().retainAll( subsetFactors );
+
             /*
              * Run analysis on the subset.
              */
             try {
                 results.add( doAnalysis( subSet, dmatrix.get( subsetFactorValue ), bioMaterials,
-                        subsetFactors, baselineConditions, subsetFactorValue, subsetConfig ) );
+                        subsetFactors, subsetBaselines, subsetFactorValue, subsetConfig ) );
             } catch ( AnalysisException e ) {
                 if ( config.isIgnoreFailingSubsets() ) {
                     log.warn( "Failed to analyze subset " + subsetFactorValue + ".", e );
@@ -493,27 +505,34 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         // slice.
         ExpressionDataDoubleMatrix subsetMatrix = dmatrix.sliceColumns( samplesInSubset, createBADMap( samplesInSubset ) );
 
-        List<ExperimentalFactor> factors = config.getFactorsToInclude().stream()
-                .sorted( FACTOR_COMPARATOR )
-                .collect( Collectors.toList() );
-        List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( samplesInSubset, subsetMatrix, factors );
-
-        // subsetFactors, not factors: fixFactorsForSubset has already dropped the factors this subset cannot
-        // model, and getBaselineConditions throws for a factor none of the samples carries. Asking it for a
-        // baseline on a factor that was just excluded from the model killed GSE198008.1, where `treatment`
-        // applies to Experiments 3 and 4 and to neither of the other two subsets.
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesInSubset, subsetFactors );
-        dropIncompleteFactors( samplesInSubset, factors );
-
-        if ( factors.isEmpty() ) {
-            throw new NoFactorLeftForAnalysisException( "All factors were removed due to incomplete values", config );
-        }
+        // The sorted full-experiment list is consumed here instead of being held in a variable: every check
+        // below has to be made against the factors this subset can model, and keeping a named copy of the
+        // unfiltered list is what let dropIncompleteFactors prune a list the model never read.
+        List<ExperimentalFactor> subsetFactors = fixFactorsForSubset( samplesInSubset, subsetMatrix,
+                config.getFactorsToInclude().stream()
+                        .sorted( FACTOR_COMPARATOR )
+                        .collect( Collectors.toList() ) );
 
         if ( subsetFactors.isEmpty() ) {
             LinearModelAnalyzer.log
                     .warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
             return null;
         }
+
+        dropIncompleteFactors( samplesInSubset, subsetFactors );
+
+        if ( subsetFactors.isEmpty() ) {
+            throw new NoFactorLeftForAnalysisException( "All factors were removed due to incomplete values", config );
+        }
+
+        // Baselines come last, off the pruned list. subsetFactors is what the design matrix is built from, and
+        // makeDesignMatrix calls setBaseline for every entry of this map -- so a map holding a factor the model
+        // dropped fails the subset with "No factor known by name fact.2, choices are: fact.1". Deriving it after
+        // both drops is what makes that impossible rather than merely unlikely. getBaselineConditions also throws
+        // for a factor none of the samples carries: asking it for a baseline on a factor that was just excluded
+        // from the model killed GSE198008.1, where `treatment` applies to Experiments 3 and 4 and to neither of
+        // the other two subsets.
+        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesInSubset, subsetFactors );
 
         return doAnalysis( subset, subsetMatrix, samplesInSubset, subsetFactors,
                 baselineConditions, subsetFactorValue, fixConfigForSubset( subsetFactors, subsetFactorValue, config ) );
