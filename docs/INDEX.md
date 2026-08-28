@@ -1,7 +1,7 @@
 # docs/ index
 
 Working design docs, recces, audits, plans, and session notes for Gemma, sorted into subfolders (2026-07-05 cleanup). `README.md` and `CLAUDE.md` stay at the repo root.
-Total: 152 docs.
+Total: 153 docs.
 
 
 ## Pipeline / compute / job-management (Nextflow) — `docs/pipeline-compute/` (1)
@@ -73,7 +73,7 @@ Total: 152 docs.
 - [`STATIC_ANALYSIS_AUDIT.md`](audit/STATIC_ANALYSIS_AUDIT.md) — Static Analysis Audit — Phase 3 Spring 6+ Infrastructure
 - [`VALIDATION_AUDIT.md`](audit/VALIDATION_AUDIT.md) — Jakarta Validation Audit (Bean Validation 3.0 / JSR-380)
 
-## Plans & roadmaps — `docs/plans/` (18)
+## Plans & roadmaps — `docs/plans/` (19)
 
 - [`AFTER_INVOCATION_PHASE_C_PLAN.md`](plans/AFTER_INVOCATION_PHASE_C_PLAN.md) — AfterInvocation Phase C: @EnableMethodSecurity migration plan
 - [`BRANCH_MERGE_PLAN.md`](plans/BRANCH_MERGE_PLAN.md) — Phase 3 Branch Merge Plan
@@ -90,6 +90,7 @@ Total: 152 docs.
 - [`PERSISTER_REPLACEMENT_ROADMAP.md`](plans/PERSISTER_REPLACEMENT_ROADMAP.md) — persisterHelper retirement: replacement roadmap
 - [`QUALITY_METRICS_EVALUATION_PROPOSAL.md`](plans/QUALITY_METRICS_EVALUATION_PROPOSAL.md) — candidate data-quality metrics (ribosomal-protein coexpression, sex as a positive control, standardized sample correlation) and the harder question of what to evaluate them against
 - [`SPRING6_DEPRECATION_ROADMAP.md`](plans/SPRING6_DEPRECATION_ROADMAP.md) — Spring 6 / Spring Security 6 / Hibernate 6 deprecation roadmap
+- [`TOMCAT10_STAGING_MIGRATION_PLAN.md`](plans/TOMCAT10_STAGING_MIGRATION_PLAN.md) — Tomcat 10.1 migration for the staging instance (`gemma-staging` on chalmers)
 - [`WORKTREE_CLEANUP_PLAN.md`](plans/WORKTREE_CLEANUP_PLAN.md) — Worktree cleanup plan
 - [`WORKTREE_CLEANUP_PLAN_v2.md`](plans/WORKTREE_CLEANUP_PLAN_v2.md) — Worktree cleanup plan — v2
 - [`WORKTREE_CLEANUP_PLAN_v3.md`](plans/WORKTREE_CLEANUP_PLAN_v3.md) — Worktree cleanup plan v3
