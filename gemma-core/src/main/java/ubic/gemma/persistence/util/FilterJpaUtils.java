@@ -285,8 +285,8 @@ public class FilterJpaUtils {
      * <p>
      * Pre-Phase-2 the legacy Hibernate Criteria implementation tracked aliases natively through
      * {@code Subcriteria}; the JPA Criteria port doesn't have a built-in alias-to-join mechanism,
-     * so {@link AbstractCriteriaFilteringVoEnabledDao} threads the {@code alias → prefix} map
-     * (sourced from {@link AbstractFilteringVoEnabledDao#getFilterablePropertyObjectAliases()})
+     * so {@link ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao} threads the {@code alias → prefix} map
+     * (sourced from {@link ubic.gemma.persistence.service.AbstractFilteringVoEnabledDao#getFilterablePropertyObjectAliases()})
      * through to this helper. When the alias is recognised, the registered prefix is walked first
      * (creating implicit joins via {@code Path.get}), then the leaf property name is walked on top.
      */

@@ -22,7 +22,7 @@ import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.model.expression.experiment.GeoScrapeWatermark;
 
 /**
- * Async runner for the GEO scrape & preboard pipeline. Submitted by
+ * Async runner for the GEO scrape &amp; preboard pipeline. Submitted by
  * {@code POST /admin/tasks/geo-scrape}.
  *
  * @author phase 3 geo-scrape pipeline

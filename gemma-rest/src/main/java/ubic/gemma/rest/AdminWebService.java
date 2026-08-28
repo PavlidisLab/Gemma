@@ -1635,7 +1635,7 @@ public class AdminWebService {
     /* ===== GEO scrape & preboard pipeline ===== */
 
     /**
-     * Submit a GEO scrape & preboard run. Iterates recent GEO records via
+     * Submit a GEO scrape &amp; preboard run. Iterates recent GEO records via
      * {@link GeoScrapeService}, filters by taxon + matcher criteria, and
      * creates {@code PreboardedExperiment} rows for matches.
      *

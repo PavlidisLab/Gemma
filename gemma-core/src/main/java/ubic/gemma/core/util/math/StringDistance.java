@@ -45,10 +45,12 @@ public class StringDistance {
      * ..., m. For other pairs i, j use (1) d(i, j) = min(d(i-1, j)+1, d(i, j-1)+1, d(i-1, j-1) + r(s(i), t(j)))
      * <p>
      * That last step is also described as:
+     * <ul>
      * <li>Set cell d[i,j] of the matrix equal to the minimum of:<br>
      * a. The cell immediately above plus 1: d[i-1,j] + 1.<br>
      * b. The cell immediately to the left plus 1: d[i,j-1] + 1.<br>
      * c. The cell diagonally above and to the left plus the cost: d[i-1,j-1] + cost.<br>
+     * </ul>
      * <p>
      * (Description partly cribbed from http://www.cut-the-knot.org/do_you_know/Strings.shtml and
      * http://www.merriampark.com/ld.htm)

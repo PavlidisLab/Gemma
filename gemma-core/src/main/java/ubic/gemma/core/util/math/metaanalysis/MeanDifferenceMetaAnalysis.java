@@ -51,7 +51,7 @@ public class MeanDifferenceMetaAnalysis extends MetaAnalysis {
     private double z; // z score
 
     /**
-     * @param b
+     * @param fixed
      */
     public MeanDifferenceMetaAnalysis( boolean fixed ) {
         this.fixed = fixed;

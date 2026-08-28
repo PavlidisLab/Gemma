@@ -61,7 +61,7 @@ import java.util.Set;
  * GEO's {@code !Series_pubmed_id}. That is why those 23,066 rows carry {@code IIA} — inferred from
  * imported annotation — and not {@code TAS}. This command is what turns the inference into a check.</p>
  *
- * <h3>Why acc.cgi and not a batched esummary</h3>
+ * <h2>Why acc.cgi and not a batched esummary</h2>
  *
  * <p>🛑 <b>An agreement with {@code esummary db=gds} would not be evidence of anything, and it is the
  * disagreements it hides that matter.</b> The gds index lags the live GEO record
@@ -80,7 +80,7 @@ import java.util.Set;
  * false MATCHES, which are not. So every series is read from {@code acc.cgi} — one request each,
  * paced, and the run is resumable because at that rate it is measured in hours.</p>
  *
- * <h3>What it will and will not write</h3>
+ * <h2>What it will and will not write</h2>
  *
  * <ul>
  * <li><b>Agreement</b> — the assertion is re-stated with {@code TAS} and evidence saying it was

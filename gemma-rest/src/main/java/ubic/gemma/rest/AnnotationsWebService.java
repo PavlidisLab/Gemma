@@ -1730,7 +1730,7 @@ public class AnnotationsWebService {
     // for everything) — same admin endpoint that lists hit/miss stats.
 
     /**
-     * @see #searchAnnotations(StringArrayArg)
+     * @see #searchAnnotations
      */
     @GET
     @Path("/search/{query}")

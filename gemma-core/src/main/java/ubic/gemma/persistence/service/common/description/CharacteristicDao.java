@@ -174,7 +174,7 @@ public interface CharacteristicDao
     /**
      * One representative, ACL-visible usage of a term (keyed by its value URI), for showing a search hit in
      * the context it has actually been applied (e.g. a curator picking a rare term sees "wild type" under
-     * the "genotype" factor of some accessible dataset). Unlike {@link #countByCategory}, this exposes a
+     * the "genotype" factor of some accessible dataset). Unlike {@code countByCategory}, this exposes a
      * specific dataset + statement, so it MUST be ACL-restricted — sourced from the denormalised {@code EE2C}
      * view with the same ACL clause the usage-frequency queries use, so a private dataset never leaks.
      */

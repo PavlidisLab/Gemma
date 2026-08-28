@@ -39,7 +39,7 @@ import ubic.gemma.core.security.authentication.UserManager;
  * machinery — the AuditTrail has to be non-null on the parent before cascade
  * walks into it.
  *
- * <h3>Audit Phase C-2: PostInsert / PreDelete wired</h3>
+ * <h2>Audit Phase C-2: PostInsert / PreDelete wired</h2>
  * The listener implements {@code PostInsertEventListener} +
  * {@code PreDeleteEventListener} to drive auto-CREATE / auto-DELETE emission
  * (see {@code AUDIT_MIGRATION_PHASE_C_RECCE.md} §2.1). Phase C-2 cuts those
@@ -49,7 +49,7 @@ import ubic.gemma.core.security.authentication.UserManager;
  * {@code doDeleteAdvice} @Before advices are deleted in the same commit so
  * the two emitters never both fire on the same lifecycle event.
  *
- * <h3>Why {@code @Lazy(false)}</h3>
+ * <h2>Why {@code @Lazy(false)}</h2>
  * This configuration exists purely for the side effect in {@link #afterPropertiesSet()}; nothing
  * injects it. In CLI contexts {@link ubic.gemma.core.context.LazyInitByDefaultPostProcessor} marks
  * every non-infrastructure bean definition lazy-init, so without this annotation the bean is

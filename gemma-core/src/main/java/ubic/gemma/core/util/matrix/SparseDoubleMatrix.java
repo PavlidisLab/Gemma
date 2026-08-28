@@ -58,7 +58,7 @@ public class SparseDoubleMatrix<R, C> extends DoubleMatrix<R, C> {
     /**
      * @param rows int
      * @param cols int
-     * @param initlalCapacity int
+     * @param initialCapacity int
      * @param minLoadFactor double
      * @param maxLoadFactor double
      */

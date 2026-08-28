@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Service surface for the GEO scrape & preboard pipeline.
+ * Service surface for the GEO scrape &amp; preboard pipeline.
  *
  * <p>The pipeline pulls recent GEO records via {@code GeoBrowser}, filters by
  * taxon + matcher criteria, and creates {@code PreboardedExperiment} rows for

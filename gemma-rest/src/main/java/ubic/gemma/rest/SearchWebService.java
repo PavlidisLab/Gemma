@@ -59,7 +59,7 @@ import static java.util.function.Function.identity;
 public class SearchWebService {
 
     /**
-     * Name used in the OpenAPI schema to identify result types as per {@link #search(QueryArg, DatasetArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
+     * Name used in the OpenAPI schema to identify result types as per {@link #search}'s
      * fourth argument.
      */
     public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";

@@ -94,7 +94,7 @@ public interface PreboardedExperimentService {
             throws PreboardedAlreadyPromotedException;
 
     /**
-     * Return value of {@link #promote(PreboardedExperiment, ExpressionExperiment)}.
+     * Return value of {@link #promote(ExpressionExperiment, PreboardedExperiment)}.
      */
     class PromotionResult {
         private final Long preboardedId;
@@ -146,7 +146,7 @@ public interface PreboardedExperimentService {
     }
 
     /**
-     * Thrown by {@link #promote(PreboardedExperiment, ExpressionExperiment)}
+     * Thrown by {@link #promote(ExpressionExperiment, PreboardedExperiment)}
      * when the preboarded has already been promoted.
      */
     class PreboardedAlreadyPromotedException extends Exception {

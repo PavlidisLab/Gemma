@@ -104,7 +104,7 @@ public class DenseDoubleMatrix<R, C> extends DoubleMatrix<R, C> {
     /**
      * Return a copy of a given column.
      * 
-     * @param col int
+     * @param s int
      * @return double[]
      */
     public double[] getColByName( C s ) {

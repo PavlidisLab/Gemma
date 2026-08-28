@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * two filters asks "some characteristic has X AND Y". Only the latter can express "this gene URI, as a
  * genotype".
  * <p>
- * The root alias is used whenever {@code null} is used as object alias in the {@link #aliases} or {@link #filter}. It
+ * The root alias is used whenever {@code null} is used as object alias in the {@code aliases} or {@code filter}. It
  * can be declared by passing an {@link Alias} with a {@code null} object alias and an empty property name.
  * @author poirgui
  * @see Filter#by(String, String, Class, Filter.Operator, Subquery)
@@ -52,13 +52,13 @@ public class Subquery {
      */
     String propertyName;
     /**
-     * List of aliases for resolving the object alias defined in {@link #filter}.
+     * List of aliases for resolving the object alias defined in {@code filter}.
      */
     List<Alias> aliases;
     /**
      * Root alias of this subquery.
      * <p>
-     * If none are defined in {@link #aliases}, the default {@code e} is used.
+     * If none are defined in {@code aliases}, the default {@code e} is used.
      */
     String rootAlias;
     /**

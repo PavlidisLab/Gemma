@@ -39,7 +39,7 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
 
     /**
      * Variant that carries per-gene differential-expression statistics for the contrast represented by the
-     * result-set used to build the response. See {@link #geneOfficialName} accessors on
+     * result-set used to build the response. See {@code geneOfficialName} accessors on
      * {@link GeneElementExpressionsValueObject} for the exposed fields.
      */
     public ExperimentExpressionLevelsValueObject( long datasetId,

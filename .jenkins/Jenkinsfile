@@ -25,6 +25,32 @@ pipeline {
         maven 'Maven 3.6.3'
     }
     environment {
+        // maven.compiler.release is 25 (pom.xml), but the agent (chalmers, the
+        // built-in node) defaults to JAVA_HOME=jre-21-openjdk with java 11 first on
+        // PATH, so an unpinned build dies with "release version 25 not supported".
+        //
+        // Pointing at chalmers' own /usr/lib/jvm/java-25-openjdk does NOT work, and
+        // it fails in a way that reads like a JDK bug rather than a missing package:
+        // the installed RPMs are java-25-openjdk + -headless + -crypto-adapter with
+        // no -devel, so that directory has bin/java but NO bin/javac. Maven starts on
+        // 25 happily; then maven-compiler-plugin finds no in-process compiler, forks
+        // an external javac, PATH resolves that to /usr/bin/javac (11.0.25), and javac
+        // 11 rejects --release 25. Build #3 died exactly there, having reported
+        // "Java version: 25.0.4" moments earlier.
+        //
+        // So use a complete JDK on shared storage: /space/opt is the same NFS
+        // directory the Jenkins Maven tool already resolves to
+        // (/space/opt/apache-maven-3.6.3), so chalmers demonstrably reads from it.
+        // Verified there: javac 25.0.3, compiles at --release 25.
+        //
+        // The durable fix is `dnf install java-25-openjdk-devel` on chalmers, after
+        // which this can point back at /usr/lib/jvm/java-25-openjdk — or become
+        // `tools { jdk 'Java 25' }` if a tool installation is ever added. Note that
+        // the tools/environment split matters: a stage-level `tools { jdk ... }` and
+        // a pipeline-level environment JAVA_HOME both write JAVA_HOME and would fight
+        // over it, which is why the SonarQube stage below no longer pins its own JDK.
+        JAVA_HOME = '/space/opt/temurin-25.0.3'
+        PATH = "${JAVA_HOME}/bin:${PATH}"
         GEMMA_CLI_WIKI_DEPLOY_TOKEN = credentials('confluence-wiki-token')
     }
     parameters {
@@ -33,7 +59,7 @@ pipeline {
         string(name: 'DEV_DATA_DIR', defaultValue: '/space/sandboxgemmaData', description: 'Directory where development data is stored.')
         string(name: 'MAVEN_SITES_DIR', defaultValue: '/space/web/maven-sites', description: 'Directory where Maven sites are deployed.')
         string(name: 'CLI_DIR_PREFIX', defaultValue: '/space/opt/gemma-cli', description: 'Prefix for Gemma CLI deployment directory.')
-        string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat', description: 'Prefix for Gemma Web deployment directories.')
+        string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat', description: 'Prefix for Gemma REST deployment directories. These are the same Tomcat instance directories gemma-web used.')
         // either hotfix or release, we only have one staging server & CLI symlink
         choice(name: 'STAGING_BRANCH', choices: ['hotfix', 'release'], description: 'Branch deployed to the staging server and CLI symlink.')
         // whether or not to force integration tests
@@ -92,6 +118,20 @@ pipeline {
         stage('Build') {
             steps {
                 setBuildStatus "Build", "Build #${env.BUILD_NUMBER} has started...", 'PENDING'
+                // A receipt in the log of which JDK and Maven this build actually got.
+                // The 'Maven 3.6.3' tool is vanilla Apache, released six years before
+                // JDK 25; if it ever chokes on a newer JDK, drop the `tools` block and
+                // use /usr/bin/mvn, which is Red Hat's patched 3.6.3-15 — the same
+                // build the dev boxes compile Gemma with on JDK 25.
+                sh 'mvn -version'
+                // org.hdf5group:hdf5 is on neither Maven Central nor the pavlab mirror;
+                // it is vendored in-repo. Install it into the local repository before
+                // anything tries to resolve it. Without this the failed lookup writes
+                // *.lastUpdated markers into ~/.m2, and Maven then refuses to retry the
+                // remote until its update interval elapses — so the build keeps failing
+                // for the rest of the day without so much as another attempt.
+                // install-file is idempotent, so this is safe to re-run every build.
+                sh 'mvn -B org.apache.maven.plugins:maven-install-plugin:3.1.4:install-file -Dfile=vendor/hdf5/hdf5-1.12.3.jar -DpomFile=vendor/hdf5/hdf5-1.12.3.pom'
                 sh 'mvn -B compile'
             }
             post {
@@ -106,7 +146,17 @@ pipeline {
         stage('Run quick unit tests') {
             steps {
                 setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest'
+                // No -DexcludedGroups here on purpose: the pom's own default applies,
+                // which surefire consumes as `integration,${excludedGroups}` =
+                // integration,network,slow (pom.xml ~1113 and ~1737).
+                //
+                // This used to pass -DexcludedGroups=SlowTest, which was worse than a
+                // no-op. @Category(SlowTest) exists in zero test files today, so it
+                // excluded nothing — while REPLACING the network,slow default, which
+                // pulled all 78 @Tag("slow") files and the network-bound ones into the
+                // stage that is supposed to be the fast signal. Build #4 spent 15m20s
+                // here and failed on live NCBI calls.
+                sh 'mvn -B test --fail-at-end'
             }
             post {
                 always {
@@ -164,7 +214,17 @@ pipeline {
                     steps {
                         lock('gemma-slow-tests') {
                             setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                            sh 'mvn -B test --fail-at-end -Dgroups=SlowTest -DskipWebpack'
+                            // -Dgroups=slow selects the Jupiter tag that tests actually
+                            // carry; the old -Dgroups=SlowTest named a JUnit 4 category
+                            // that no test uses any more, so this stage selected nothing
+                            // and silently passed.
+                            //
+                            // -DexcludedGroups=network is required alongside it, not
+                            // optional: the default exclusion list contains `slow`, and
+                            // an excluded group beats a selected one, so -Dgroups=slow
+                            // on its own would run zero tests. Overriding to `network`
+                            // drops slow from the exclusions and keeps network out.
+                            sh 'mvn -B test --fail-at-end -Dgroups=slow -DexcludedGroups=network -DskipWebpack'
                         }
                     }
                     post {
@@ -209,9 +269,13 @@ pipeline {
                     }
                 }
                 stage('SonarQube Analysis') {
-                    tools {
-                        jdk 'Java 17'
-                    }
+                    // Was pinned to `tools { jdk 'Java 17' }`. It can't be any more:
+                    // this stage runs `mvn package` first, and maven.compiler.release
+                    // is 25, which javac 17 cannot emit. So it inherits the pipeline's
+                    // JDK 25 like every other stage. If the SonarQube server's scanner
+                    // turns out to reject 25, the fix is to run the scanner alone
+                    // against pre-built classes on a JDK it accepts — not to move the
+                    // compile back to 17.
                     when {
                         anyOf {
                             branch 'master'
@@ -280,7 +344,12 @@ pipeline {
                         }
                     }
                 }
-                stage('Deploy Gemma Web') {
+                // Replaces 'Deploy Gemma Web', which died with the gemma-web module in
+                // bb154eee88. That WAR carried gemma-rest as a compile-scope jar, so
+                // one deploy shipped the browser UI and /rest/v2/* together; this ships
+                // the REST API alone, into the same Tomcat instance directories, on the
+                // same branch-to-server map gemma-web used.
+                stage('Deploy Gemma REST') {
                     when {
                         anyOf {
                             branch 'master'
@@ -291,7 +360,17 @@ pipeline {
                         }
                     }
                     steps {
-                        sh "env GEMMA_WEB_DEPLOY_SERVER=${deployServer} GEMMA_WEB_PREFIX=${params.DEPLOY_DIR_PREFIX} ./gemma-web/deploy.sh ${deployRef}"
+                        // The WAR exists only under the gemma-rest-war profile — the
+                        // Package stage above builds gemma-rest as a JAR, which is what
+                        // 'Deploy artifacts' publishes to the pavlab repo, and flipping
+                        // that default would change what consumers of the artifact get
+                        // (see the rationale in gemma-rest/pom.xml).
+                        //
+                        // -am is needed because `package` does not install gemma-core
+                        // into the local repository, so gemma-rest cannot resolve it
+                        // from a previous stage's output.
+                        sh 'mvn -B -P gemma-rest-war package -pl gemma-rest -am -DskipTests -DskipJavadoc -DskipWebpack'
+                        sh "env GEMMA_REST_DEPLOY_SERVER=${deployServer} GEMMA_REST_PREFIX=${params.DEPLOY_DIR_PREFIX} ./gemma-rest/deploy.sh ${deployRef}"
                     }
                 }
                 stage('Deploy Gemma CLI') {

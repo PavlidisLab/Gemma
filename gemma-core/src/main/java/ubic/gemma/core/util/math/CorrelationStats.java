@@ -154,7 +154,7 @@ public class CorrelationStats {
     }
 
     /**
-     * Find the approximate Pearson correlation required to meet a particular pvalue. If the pvalue is <=0 or >= 1,
+     * Find the approximate Pearson correlation required to meet a particular pvalue. If the pvalue is &lt;=0 or >= 1,
      * returns 1 and 0 respectively.
      * 
      * @param pval double
@@ -404,7 +404,7 @@ public class CorrelationStats {
 
     /**
      * Ported from R prho.c and cor.test.R which is in turn a port of a Fortran method (AS 89, Best and Roberts, Applied
-     * Statistics 1975 p 377-379). We compute exact probabilities for very small values (< 9) and use a special
+     * Statistics 1975 p 377-379). We compute exact probabilities for very small values (&lt; 9) and use a special
      * algorithm for larger values. At very large values the t-distribution can be used, this method will be slow.
      * <p>
      * The pvalues returned are based on the assumption of no tied ranks.
@@ -413,7 +413,7 @@ public class CorrelationStats {
      * @param n number of samples -- NOT degrees of freedom. If there were missing values, you should compute n as the
      *        number of complete cases.
      * @return one-sided pvalue. This is the upper tail if rho is positive, lower tail if rho is negative (this is
-     *         potentially confusing, basically we always return a value <=0.5)
+     *         potentially confusing, basically we always return a value &lt;=0.5)
      */
     private static double spearmanPvalueSmallSample( double rho, int n ) {
 

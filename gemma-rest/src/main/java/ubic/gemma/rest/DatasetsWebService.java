@@ -6948,7 +6948,7 @@ public class DatasetsWebService {
      * This is actually performing a 302 Found redirection to point the HTTP client to the corresponding result sets
      * endpoint.
      *
-     * @see AnalysisResultSetsWebService#getResultSets(DatasetArrayArg, DatabaseEntryArrayArg, FilterArg, OffsetArg, LimitArg, SortArg)
+     * @see AnalysisResultSetsWebService#getResultSets
      */
     @GET
     @Path("/{dataset}/analyses/differential/resultSets")

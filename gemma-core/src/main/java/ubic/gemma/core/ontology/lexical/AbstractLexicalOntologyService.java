@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * synonyms)} terms — not a hierarchy the vocabulary lacks.
  * <p>
  * Subclasses supply the parsed term stream via {@link #parse(InputStream)} and (usually) a source to
- * {@link #openSource() open}. Hierarchy operations return empty; there is nothing to walk.
+ * {@link #openSource(boolean) open}. Hierarchy operations return empty; there is nothing to walk.
  */
 public abstract class AbstractLexicalOntologyService implements OntologyService {
 

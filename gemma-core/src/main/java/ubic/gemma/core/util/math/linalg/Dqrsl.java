@@ -62,11 +62,11 @@ Date        Translator        Changes
  * IMPORTANT: The "_j" suffixes indicate that these routines use
  * Java/C style indexing. For example, you will see
  *
- * for (i = 0; i < n; i++)
+ * {@code for (i = 0; i &lt; n; i++)}
  *
  * rather than
  *
- * for (i = 1; i <= n; i++)
+ * {@code for (i = 1; i &lt;= n; i++)}
  *
  * To use the "_j" routines you will have
  * to fill elements 0 through n - 1 rather than elements 1 through n.
@@ -106,13 +106,12 @@ public class Dqrsl extends Object {
      *
      * Translated by Steve Verrill, February 25, 1997.
      *
-     * @param X The matrix to be decomposed
+     * @param x The matrix to be decomposed
      * @param n The number of rows of the matrix X
      * @param p The number of columns of the matrix X
      * @param qraux This vector "contains further information required to
      *        recover the orthogonal part of the decomposition."
      * @param jpvt This output vector contains pivoting information.
-     * @param work This vector is used as temporary space
      * @param job This value indicates whether column pivoting should be performed
      *
      */
@@ -401,9 +400,9 @@ public class Dqrsl extends Object {
      *
      * Translated by Steve Verrill, February 27, 1997.
      *
-     * @param X This n by p matrix contains most of the output from DQRDC
+     * @param x This n by p matrix contains most of the output from DQRDC
      * @param n The number of rows of X
-     * @param k k <= min(n,p) where p is the number of columns of X
+     * @param k k &lt;= min(n,p) where p is the number of columns of X
      * @param qraux This vector "contains further information required to
      *        recover the orthogonal part of the decomposition"
      * @param y This n by 1 vector will be manipulated by DQRSL

@@ -22,7 +22,7 @@ import java.util.Set;
 
 /**
  * Thrown when
- * {@link WorkflowService#advance(Long, WorkflowState, String, Long)} is
+ * {@link WorkflowService#advance} is
  * asked for a transition the state machine forbids (e.g. {@code Discovery
  * -> Public}). The REST layer maps this to a 409 Conflict with a body
  * listing {@link #getAllowedNextStates()}.
