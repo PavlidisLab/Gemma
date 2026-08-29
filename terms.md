@@ -36,3 +36,6 @@ The Gemma Website may contain links to other websites. Those websites are not un
 
 ## 7. All Disputes To Be Resolved in Vancouver, B.C.
 The Gemma Website is a British Columbia website, and these UBC Terms of Use, (and all disputes arising out of or relating to these UBC Terms of Use) will be governed and interpreted according to the laws of British Columbia, Canada without regard to its conflicts of laws rules. You agree that by using the Gemma Website and the UBC Services and accepting these UBC Terms of Use you submit to the exclusive jurisdiction of the Courts of competent authority in the City of Vancouver, Province of British Columbia, Canada. Any acceptance of your application for UBC Services takes place in Vancouver, British Columbia, Canada.
+
+## 8. Cookies. {#cookies}
+The Gemma Website uses cookies and browser local storage. Some hold what you have chosen while browsing — the genes selected for a visualization, which sections you have expanded — and stay on your device. Others come from Google Analytics, which we use to count visits and see which pages are used; you can opt out with [Google's browser add-on](https://tools.google.com/dlpage/gaoptout). We do not track you across other websites, and we do not sell or share your information with anyone.
