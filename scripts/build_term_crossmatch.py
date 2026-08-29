@@ -375,6 +375,49 @@ def parse_efo_clo_xrefs(path: pathlib.Path) -> frozenset[str]:
     return frozenset(hits)
 
 
+def parse_cellosaurus_names(path: pathlib.Path) -> dict[str, frozenset[str]]:
+    """name (verbatim, as written) -> the Cellosaurus accessions carrying it.
+
+    Read from cellosaurus.obo: each [Term] has an `id: CVCL_xxxx`, a `name:` and any number of
+    `synonym:` lines. Nothing here is normalized -- the whole point of asking Cellosaurus is that
+    it, not us, decides that `SW 620` and `SW620` are one line, and it says so by listing both on
+    one accession. Normalizing the keys would restore exactly the assumption this replaces.
+    """
+    names: dict[str, set[str]] = collections.defaultdict(set)
+    acc: str | None = None
+    with path.open(encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            line = line.rstrip("\n")
+            if line == "[Term]":
+                acc = None
+            elif line.startswith("id: CVCL_"):
+                acc = line[4:].strip()
+            elif acc and line.startswith("name: "):
+                names[line[6:].strip()].add(acc)
+            elif acc and line.startswith("synonym: "):
+                m = re.match(r'synonym: "((?:[^"\\]|\\.)*)"', line)
+                if m:
+                    names[m.group(1).replace('\\"', '"').strip()].add(acc)
+    return {k: frozenset(v) for k, v in names.items()}
+
+
+def cellosaurus_accession(label: str, names: dict[str, frozenset[str]]) -> str | None:
+    """The single Cellosaurus accession a CLO label names, or None when it is not exactly one.
+
+    A label matching nothing, or matching several lines, is not evidence. `H9` names the WA09
+    embryonic stem line as well as the HuT 78 clone; `U-373 MG` names both the ATCC line and the
+    Uppsala one. Those pairs get no row.
+    """
+    bare = re.sub(r"\s+cell$", "", label.strip())
+    hits = names.get(bare) or names.get(bare.lower()) or frozenset()
+    if len(hits) != 1:
+        # case-insensitive fallback, still exact on the string itself
+        folded = {k.lower() for k in names}
+        if bare.lower() in folded:
+            hits = frozenset().union(*(v for k, v in names.items() if k.lower() == bare.lower()))
+    return next(iter(hits)) if len(hits) == 1 else None
+
+
 def strict_label_key(label: str) -> str:
     """Normalize for case and punctuation ONLY -- deliberately NOT stripping a trailing ' cell'.
 
@@ -409,8 +452,17 @@ EXCLUDED_TWIN_URIS = frozenset({
 
 def build_twin_rows(classes: dict[str, dict], efo_xref: frozenset[str],
                     usage: dict[str, int], prefs: dict[tuple[str, str], int],
-                    min_winner: int, min_margin: int) -> tuple[list[list], dict[str, int]]:
-    """Ontology-anchored twin groups -> TermUriMigration.tsv rows, one per losing member."""
+                    min_winner: int, min_margin: int,
+                    cellosaurus: dict[str, frozenset[str]]) -> tuple[list[list], dict[str, int]]:
+    """Ontology-anchored twin groups -> TermUriMigration.tsv rows, one per losing member.
+
+    🛑 A row is emitted ONLY where Cellosaurus lists both CLO labels on one accession. The ladder
+    below picks which of two classes wins; it has never had anything to say about whether they are
+    the same cell line, and for years the answer was assumed from the labels matching once case and
+    punctuation were stripped. That produced CLO_0037155 'KMH-2 cell' -> CLO_0007112 'KM-H2 cell',
+    two different lines, served for every read of GSE10831 until 2026-08-29. Of the 67 rows the old
+    rule produced, Cellosaurus confirms 61 and cannot decide 6.
+    """
     for c in classes.values():
         c["usage"] = usage.get(c["uri"], 0)
         c["categories"] = ()
@@ -432,6 +484,12 @@ def build_twin_rows(classes: dict[str, dict], efo_xref: frozenset[str],
         if any(m["uri"] in EXCLUDED_TWIN_URIS for m in members):
             tally["dropped_known_distinct"] += 1
             continue
+        accessions = {cellosaurus_accession(m["label"], cellosaurus) for m in members}
+        if len(accessions) != 1 or None in accessions:
+            # not one line, or Cellosaurus cannot say: no row, whatever the ladder would decide
+            tally["dropped_no_cellosaurus_evidence"] += 1
+            continue
+        accession = accessions.pop()
         favoured, why = choose(members, prefs, efo_xref, min_winner, min_margin)
         if favoured is None:
             tally["undecided"] += 1
@@ -441,7 +499,8 @@ def build_twin_rows(classes: dict[str, dict], efo_xref: frozenset[str],
             if m["uri"] == favoured["uri"]:
                 continue
             rows.append(["clo_twin", m["uri"], m["label"], favoured["uri"], favoured["label"],
-                         m["usage"], why])
+                         m["usage"],
+                         f"Cellosaurus: both spellings are synonyms of {accession}; {why}"])
             tally["rows"] += 1
             tally["rows_zero_usage" if m["usage"] == 0 else "rows_with_usage"] += 1
     rows.sort(key=lambda r: (-r[5], r[1]))
@@ -462,6 +521,10 @@ def main() -> int:
                     help="CLO in RDF/XML. Switches to ONTOLOGY-ANCHORED twin mode: groups come "
                          "from CLO's own label collisions rather than from the corpus, so a twin "
                          "with zero annotations is visible. Writes TermUriMigration.tsv rows.")
+    ap.add_argument("--cellosaurus-obo", type=pathlib.Path,
+                    help="cellosaurus.obo (ftp.expasy.org/databases/cellosaurus/). REQUIRED for the "
+                         "twin lane: it is the only source that says whether two CLO classes are one "
+                         "cell line. Without it no twin row is emitted.")
     ap.add_argument("--efo-obo", type=pathlib.Path,
                     help="EFO in OBO format, for the R3 inbound-xref rule. Required with --clo-owl.")
     ap.add_argument("--min-usage-winner", type=int, default=2,
@@ -480,6 +543,11 @@ def main() -> int:
             print("ERROR: --clo-owl needs --efo-obo (the R3 inbound-xref rule reads it).",
                   file=sys.stderr)
             return 2
+        if not args.cellosaurus_obo:
+            print("ERROR: --clo-owl needs --cellosaurus-obo. Label resemblance is not evidence that "
+                  "two CLO classes are one cell line; Cellosaurus is what decides it.",
+                  file=sys.stderr)
+            return 2
         census = read_census(args.census)
         usage = {u: r["usage"] for u, r in census.items()}
         print(f"census: {len(census)} distinct URIs", file=sys.stderr)
@@ -488,8 +556,11 @@ def main() -> int:
         efo_xref = parse_efo_clo_xrefs(args.efo_obo)
         print(f"EFO: points at {len(efo_xref)} CLO classes", file=sys.stderr)
         prefs = load_preferences(pathlib.Path(__file__).with_name("term_crossmatch_preferences.tsv"))
+        cellosaurus = parse_cellosaurus_names(args.cellosaurus_obo)
+        print(f"Cellosaurus: {len(cellosaurus)} distinct names from {args.cellosaurus_obo}",
+              file=sys.stderr)
         rows, tally = build_twin_rows(classes, efo_xref, usage, prefs,
-                                      args.min_usage_winner, args.min_usage_margin)
+                                      args.min_usage_winner, args.min_usage_margin, cellosaurus)
         # lineterminator="\n": csv.writer defaults to CRLF, and the output of this script is
         # meant to be diffed against -- and pasted into -- a LF file. A CRLF copy compares as
         # 100% changed against an identical LF one, which reads as "nothing reproduces".

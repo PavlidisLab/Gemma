@@ -1,3 +1,9 @@
+# The clo_twin rows were arbitrated against Cellosaurus (cellosaurus.obo release 56.0,
+# 25-June-2026) on 2026-08-29: a row survives only where both CLO labels are verbatim
+# synonyms of ONE Cellosaurus accession. Six pairs whose spellings name more than one
+# line were dropped -- 'H9' is also the WA09 stem line, 'U-373 MG' is both the ATCC and
+# the Uppsala line. Label resemblance alone is not evidence and no longer produces a row;
+# see scripts/build_term_crossmatch.py.
 # Terms Gemma resolves to a different URI on read, until the database migration runs.
 #
 # 🛑 THIS FILE IS THE SINGLE SOURCE. scripts/sql/term_uri_migration.sql is GENERATED from it by
@@ -38,11 +44,11 @@
 #                       measurement. See docs/design/TERM_URI_CANONICALIZATION.md.
 lane	from_uri	from_label	to_uri	to_label	n_annotations	rule
 malformed	http://purl.obolibrary.org/obo/CL:0000115	endothelial cell	http://purl.obolibrary.org/obo/CL_0000115	endothelial cell	39	repaired IRI resolves
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007365	LNCAP cell	http://purl.obolibrary.org/obo/CLO_0037116	LNCaP cell	38	R5 usage, among members equal on every stronger rule
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007365	LNCAP cell	http://purl.obolibrary.org/obo/CLO_0037116	LNCaP cell	38	Cellosaurus 56.0: both spellings are synonyms of CVCL_0395 (LNCaP)
 malformed	http://purl.obolibrary.org/obo/CL:0000128	oligodendrocyte	http://purl.obolibrary.org/obo/CL_0000128	oligodendrocyte	19	repaired IRI resolves
-clo_twin	http://purl.obolibrary.org/obo/CLO_0037291	MDAMB231 cell	http://purl.obolibrary.org/obo/CLO_0007634	MDA-MB-231 cell	16	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0037291	MDAMB231 cell	http://purl.obolibrary.org/obo/CLO_0007634	MDA-MB-231 cell	16	Cellosaurus 56.0: both spellings are synonyms of CVCL_0062 (MDA-MB-231)
 malformed	http://purl.obolibrary.org/obo/CL_0000669000669	pericyte	http://purl.obolibrary.org/obo/CL_0000669	pericyte	11	label of the repaired id matches
-clo_twin	http://purl.obolibrary.org/obo/CLO_0003702	Hep 3B cell	http://purl.obolibrary.org/obo/CLO_0003710	HEP-3B cell	10	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0003702	Hep 3B cell	http://purl.obolibrary.org/obo/CLO_0003710	HEP-3B cell	10	Cellosaurus 56.0: both spellings are synonyms of CVCL_0326 (Hep 3B2.1-7)
 malformed	CL:0000115	endothelial cell	http://purl.obolibrary.org/obo/CL_0000115	endothelial cell	9	expanded IRI resolves
 malformed	CL:0000129	microglial cell	http://purl.obolibrary.org/obo/CL_0000129	microglial cell	9	expanded IRI resolves
 malformed	CL:0000236	B cell	http://purl.obolibrary.org/obo/CL_0000236	B cell	9	expanded IRI resolves
@@ -67,69 +73,63 @@ malformed	CL:4023051	vascular leptomeningeal cell	http://purl.obolibrary.org/obo
 malformed	CL:4030059	L2/3 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030059	L2/3 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
 malformed	CL:4030065	L6 intratelencephalic projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030065	L6 intratelencephalic projecting glutamatergic neuron	8	expanded IRI resolves
 malformed	CL:4030067	L5/6 near-projecting glutamatergic neuron	http://purl.obolibrary.org/obo/CL_4030067	L5/6 near-projecting glutamatergic neuron	8	expanded IRI resolves
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007059	K-562 cell	http://purl.obolibrary.org/obo/CLO_0007050	K 562 cell	8	R4 carries a definition; its twin does not
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007529	MALME-3M cell	http://purl.obolibrary.org/obo/CLO_0007530	Malme-3M cell	5	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009034	SK-BR-3 cell	http://purl.obolibrary.org/obo/CLO_0037295	SKBR3 cell	3	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001777	b.End3 cell	http://purl.obolibrary.org/obo/CLO_0001928	bEnd.3 cell	2	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009195	SW 480 cell	http://purl.obolibrary.org/obo/CLO_0009218	SW480 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009325	TF1 cell	http://purl.obolibrary.org/obo/CLO_0009326	TF-1 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0037015	HCC-827 cell	http://purl.obolibrary.org/obo/CLO_0003659	HCC827 cell	2	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007059	K-562 cell	http://purl.obolibrary.org/obo/CLO_0007050	K 562 cell	8	Cellosaurus 56.0: both spellings are synonyms of CVCL_0004 (K-562)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007529	MALME-3M cell	http://purl.obolibrary.org/obo/CLO_0007530	Malme-3M cell	5	Cellosaurus 56.0: both spellings are synonyms of CVCL_1438 (Malme-3M)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009034	SK-BR-3 cell	http://purl.obolibrary.org/obo/CLO_0037295	SKBR3 cell	3	Cellosaurus 56.0: both spellings are synonyms of CVCL_0033 (SK-BR-3)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001777	b.End3 cell	http://purl.obolibrary.org/obo/CLO_0001928	bEnd.3 cell	2	Cellosaurus 56.0: both spellings are synonyms of CVCL_0170 (bEnd.3)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009195	SW 480 cell	http://purl.obolibrary.org/obo/CLO_0009218	SW480 cell	2	Cellosaurus 56.0: both spellings are synonyms of CVCL_0546 (SW480)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009325	TF1 cell	http://purl.obolibrary.org/obo/CLO_0009326	TF-1 cell	2	Cellosaurus 56.0: both spellings are synonyms of CVCL_0559 (TF-1)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0037015	HCC-827 cell	http://purl.obolibrary.org/obo/CLO_0003659	HCC827 cell	2	Cellosaurus 56.0: both spellings are synonyms of CVCL_2063 (HCC827)
 malformed	http://purl.obolibrary.org/obo/CL:0000127	astrocyte	http://purl.obolibrary.org/obo/CL_0000127	astrocyte	1	repaired IRI resolves
 malformed	http://purl.obolibrary.org/obo/CL:4023017	sst GABAergic cortical interneuron	http://purl.obolibrary.org/obo/CL_4023017	sst GABAergic interneuron	1	repaired IRI resolves
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001084	143 B cell	http://purl.obolibrary.org/obo/CLO_0001088	143B cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001606	A-673 cell	http://purl.obolibrary.org/obo/CLO_0001605	A673 cell	1	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001890	BC3 cell	http://purl.obolibrary.org/obo/CLO_0001891	BC-3 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0002165	Ca Ski cell	http://purl.obolibrary.org/obo/CLO_0002201	CaSki cell	1	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0004266	HT 1080 cell	http://purl.obolibrary.org/obo/CLO_0004276	HT-1080 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0008782	Reh cell	http://purl.obolibrary.org/obo/CLO_0008781	REH cell	1	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009196	SW 620 cell	http://purl.obolibrary.org/obo/CLO_0009221	SW620 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009450	U 937 cell	http://purl.obolibrary.org/obo/CLO_0009465	U-937 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001199	22RV1 cell	http://purl.obolibrary.org/obo/CLO_0001200	22Rv1 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001543	A 172 cell	http://purl.obolibrary.org/obo/CLO_0001560	A172 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001544	A 375 cell	http://purl.obolibrary.org/obo/CLO_0001582	A-375 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001559	A-172 cell	http://purl.obolibrary.org/obo/CLO_0001560	A172 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001592	A-431 cell	http://purl.obolibrary.org/obo/CLO_0001591	A431 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001596	A-498 cell	http://purl.obolibrary.org/obo/CLO_0009974	A498 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0001766	AtT-20 cell	http://purl.obolibrary.org/obo/CLO_0001765	AtT20 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0002031	BRL-3A cell	http://purl.obolibrary.org/obo/CLO_0002029	BRL 3A cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0002129	C-4I cell	http://purl.obolibrary.org/obo/CLO_0002125	C-4 I cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0002176	Caki-1 cell	http://purl.obolibrary.org/obo/CLO_0002175	CAKI-1 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0002467	CHP 212 cell	http://purl.obolibrary.org/obo/CLO_0002473	CHP-212 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0002722	DBTRG.05MG cell	http://purl.obolibrary.org/obo/CLO_0002723	DBTRG-05MG cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0002802	DMS-79 cell	http://purl.obolibrary.org/obo/CLO_0002800	DMS 79 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0002882	ECV-304 cell	http://purl.obolibrary.org/obo/CLO_0002881	ECV304 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0003581	H 9 cell	http://purl.obolibrary.org/obo/CLO_0003612	H9 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0003696	HeLa S3 cell	http://purl.obolibrary.org/obo/CLO_0003695	HeLa S 3 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0003699	HELA-S3 cell	http://purl.obolibrary.org/obo/CLO_0003695	HeLa S 3 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0004268	HT 1376 cell	http://purl.obolibrary.org/obo/CLO_0004279	HT-1376 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0006705	IM-9 cell	http://purl.obolibrary.org/obo/CLO_0006703	IM 9 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0006985	J.?1 cell	http://purl.obolibrary.org/obo/CLO_0006987	J1 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007068	KASUMI-1 cell	http://purl.obolibrary.org/obo/CLO_0007069	Kasumi-1 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007144	L 929 cell	http://purl.obolibrary.org/obo/CLO_0007219	L929 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007220	L-929 cell	http://purl.obolibrary.org/obo/CLO_0007219	L929 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007393	LS 174T cell	http://purl.obolibrary.org/obo/CLO_0007403	LS174T cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007394	LS 180 cell	http://purl.obolibrary.org/obo/CLO_0007404	LS180 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007687	MEWO cell	http://purl.obolibrary.org/obo/CLO_0007688	MeWo cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0007920	N-18 cell	http://purl.obolibrary.org/obo/CLO_0007919	N18 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0008282	P 3 HR 1 cell	http://purl.obolibrary.org/obo/CLO_0008331	P3HR-1 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0008301	P-19 cell	http://purl.obolibrary.org/obo/CLO_0008302	P19 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0008340	P-815 cell	http://purl.obolibrary.org/obo/CLO_0008341	P815 cell	0	R4 carries a definition; its twin does not
-clo_twin	http://purl.obolibrary.org/obo/CLO_0008693	R D cell	http://purl.obolibrary.org/obo/CLO_0008770	RD cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0008869	RPMI 2650 cell	http://purl.obolibrary.org/obo/CLO_0008876	RPMI-2650 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0008874	RPMI 8402 cell	http://purl.obolibrary.org/obo/CLO_0009857	RPMI-8402 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009032	SK LU 1 cell	http://purl.obolibrary.org/obo/CLO_0009039	SK-LU-1 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009186	SW 1353 cell	http://purl.obolibrary.org/obo/CLO_0009210	SW1353 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009193	SW 403 cell	http://purl.obolibrary.org/obo/CLO_0009215	SW403 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009194	SW 48 cell	http://purl.obolibrary.org/obo/CLO_0009216	SW48 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009200	SW 837 cell	http://purl.obolibrary.org/obo/CLO_0009224	SW837 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009209	SW-13 cell	http://purl.obolibrary.org/obo/CLO_0009185	SW 13 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009214	SW-403 cell	http://purl.obolibrary.org/obo/CLO_0009215	SW403 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009217	SW-480 cell	http://purl.obolibrary.org/obo/CLO_0009218	SW480 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009235	T 24 cell	http://purl.obolibrary.org/obo/CLO_0009245	T24 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009236	T 98 G cell	http://purl.obolibrary.org/obo/CLO_0009258	T98G cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009461	U-373 MG cell	http://purl.obolibrary.org/obo/CLO_0009460	U373 MG cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009594	WI-38 cell	http://purl.obolibrary.org/obo/CLO_0009591	WI 38 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009615	WM-266-4 cell	http://purl.obolibrary.org/obo/CLO_0009612	WM 266-4 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009968	LS-411N cell	http://purl.obolibrary.org/obo/CLO_0007406	LS411N cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0009969	LS-513 cell	http://purl.obolibrary.org/obo/CLO_0007407	LS513 cell	0	R5 usage, among members equal on every stronger rule
-clo_twin	http://purl.obolibrary.org/obo/CLO_0037050	DOHH-2 cell	http://purl.obolibrary.org/obo/CLO_0002805	DOHH2 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001084	143 B cell	http://purl.obolibrary.org/obo/CLO_0001088	143B cell	1	Cellosaurus 56.0: both spellings are synonyms of CVCL_2270 (143B)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001606	A-673 cell	http://purl.obolibrary.org/obo/CLO_0001605	A673 cell	1	Cellosaurus 56.0: both spellings are synonyms of CVCL_0080 (A-673)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002165	Ca Ski cell	http://purl.obolibrary.org/obo/CLO_0002201	CaSki cell	1	Cellosaurus 56.0: both spellings are synonyms of CVCL_1100 (Ca Ski)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0004266	HT 1080 cell	http://purl.obolibrary.org/obo/CLO_0004276	HT-1080 cell	1	Cellosaurus 56.0: both spellings are synonyms of CVCL_0317 (HT-1080)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008782	Reh cell	http://purl.obolibrary.org/obo/CLO_0008781	REH cell	1	Cellosaurus 56.0: both spellings are synonyms of CVCL_1650 (Reh)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009196	SW 620 cell	http://purl.obolibrary.org/obo/CLO_0009221	SW620 cell	1	Cellosaurus 56.0: both spellings are synonyms of CVCL_0547 (SW620)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009450	U 937 cell	http://purl.obolibrary.org/obo/CLO_0009465	U-937 cell	1	Cellosaurus 56.0: both spellings are synonyms of CVCL_0007 (U-937)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001199	22RV1 cell	http://purl.obolibrary.org/obo/CLO_0001200	22Rv1 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1045 (22Rv1)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001543	A 172 cell	http://purl.obolibrary.org/obo/CLO_0001560	A172 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0131 (A-172)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001544	A 375 cell	http://purl.obolibrary.org/obo/CLO_0001582	A-375 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0132 (A-375)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001559	A-172 cell	http://purl.obolibrary.org/obo/CLO_0001560	A172 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0131 (A-172)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001592	A-431 cell	http://purl.obolibrary.org/obo/CLO_0001591	A431 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0037 (A-431)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001596	A-498 cell	http://purl.obolibrary.org/obo/CLO_0009974	A498 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1056 (A-498)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0001766	AtT-20 cell	http://purl.obolibrary.org/obo/CLO_0001765	AtT20 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_2300 (AtT-20)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002031	BRL-3A cell	http://purl.obolibrary.org/obo/CLO_0002029	BRL 3A cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0606 (BRL-3A)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002129	C-4I cell	http://purl.obolibrary.org/obo/CLO_0002125	C-4 I cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_2253 (C-4-I)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002176	Caki-1 cell	http://purl.obolibrary.org/obo/CLO_0002175	CAKI-1 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0234 (Caki-1)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002467	CHP 212 cell	http://purl.obolibrary.org/obo/CLO_0002473	CHP-212 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1125 (CHP-212)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002722	DBTRG.05MG cell	http://purl.obolibrary.org/obo/CLO_0002723	DBTRG-05MG cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1169 (DBTRG-05MG)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002802	DMS-79 cell	http://purl.obolibrary.org/obo/CLO_0002800	DMS 79 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1178 (DMS 79)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0002882	ECV-304 cell	http://purl.obolibrary.org/obo/CLO_0002881	ECV304 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_2029 (ECV-304)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0003696	HeLa S3 cell	http://purl.obolibrary.org/obo/CLO_0003695	HeLa S 3 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0058 (HeLa S3)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0003699	HELA-S3 cell	http://purl.obolibrary.org/obo/CLO_0003695	HeLa S 3 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0058 (HeLa S3)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0004268	HT 1376 cell	http://purl.obolibrary.org/obo/CLO_0004279	HT-1376 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1292 (HT-1376)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0006705	IM-9 cell	http://purl.obolibrary.org/obo/CLO_0006703	IM 9 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1305 (IM-9)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007068	KASUMI-1 cell	http://purl.obolibrary.org/obo/CLO_0007069	Kasumi-1 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0589 (Kasumi-1)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007144	L 929 cell	http://purl.obolibrary.org/obo/CLO_0007219	L929 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0462 (NCTC clone 929)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007220	L-929 cell	http://purl.obolibrary.org/obo/CLO_0007219	L929 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0462 (NCTC clone 929)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007393	LS 174T cell	http://purl.obolibrary.org/obo/CLO_0007403	LS174T cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1384 (LS174T)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007394	LS 180 cell	http://purl.obolibrary.org/obo/CLO_0007404	LS180 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0397 (LS180)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0007687	MEWO cell	http://purl.obolibrary.org/obo/CLO_0007688	MeWo cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0445 (MeWo)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008282	P 3 HR 1 cell	http://purl.obolibrary.org/obo/CLO_0008331	P3HR-1 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_2676 (P3HR-1)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008340	P-815 cell	http://purl.obolibrary.org/obo/CLO_0008341	P815 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_2154 (P815)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008693	R D cell	http://purl.obolibrary.org/obo/CLO_0008770	RD cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1649 (RD)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008869	RPMI 2650 cell	http://purl.obolibrary.org/obo/CLO_0008876	RPMI-2650 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1664 (RPMI-2650)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0008874	RPMI 8402 cell	http://purl.obolibrary.org/obo/CLO_0009857	RPMI-8402 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1667 (RPMI-8402)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009032	SK LU 1 cell	http://purl.obolibrary.org/obo/CLO_0009039	SK-LU-1 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0629 (SK-LU-1)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009186	SW 1353 cell	http://purl.obolibrary.org/obo/CLO_0009210	SW1353 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0543 (SW1353)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009193	SW 403 cell	http://purl.obolibrary.org/obo/CLO_0009215	SW403 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0545 (SW403)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009194	SW 48 cell	http://purl.obolibrary.org/obo/CLO_0009216	SW48 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1724 (SW48)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009200	SW 837 cell	http://purl.obolibrary.org/obo/CLO_0009224	SW837 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1729 (SW837)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009209	SW-13 cell	http://purl.obolibrary.org/obo/CLO_0009185	SW 13 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0542 (SW13)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009214	SW-403 cell	http://purl.obolibrary.org/obo/CLO_0009215	SW403 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0545 (SW403)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009217	SW-480 cell	http://purl.obolibrary.org/obo/CLO_0009218	SW480 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0546 (SW480)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009235	T 24 cell	http://purl.obolibrary.org/obo/CLO_0009245	T24 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0554 (T24)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009236	T 98 G cell	http://purl.obolibrary.org/obo/CLO_0009258	T98G cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0556 (T98G)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009594	WI-38 cell	http://purl.obolibrary.org/obo/CLO_0009591	WI 38 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_0579 (WI-38)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009615	WM-266-4 cell	http://purl.obolibrary.org/obo/CLO_0009612	WM 266-4 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_2765 (WM266-4)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009968	LS-411N cell	http://purl.obolibrary.org/obo/CLO_0007406	LS411N cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1385 (LS411N)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0009969	LS-513 cell	http://purl.obolibrary.org/obo/CLO_0007407	LS513 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1386 (LS513)
+clo_twin	http://purl.obolibrary.org/obo/CLO_0037050	DOHH-2 cell	http://purl.obolibrary.org/obo/CLO_0002805	DOHH2 cell	0	Cellosaurus 56.0: both spellings are synonyms of CVCL_1179 (DoHH2)

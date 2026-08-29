@@ -2,6 +2,13 @@ package ubic.gemma.model.common.description;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -107,5 +114,52 @@ public class CharacteristicUtilsUriMigrationTest {
                 .as( "KMH-2 is its own cell line; rewriting it to KM-H2 changes what the annotation says" )
                 .isEqualTo( kmh2 );
         assertThat( CharacteristicUtils.canonicalLabel( kmh2, "KMH-2 cell" ) ).isEqualTo( "KMH-2 cell" );
+    }
+
+    /**
+     * 🛑 Every cell-line merge in the shipped table names the Cellosaurus accession that decided it.
+     * <p>
+     * The twin lane used to be built on label resemblance alone — two CLO classes whose labels match
+     * once case and punctuation are stripped — which merged KMH-2 into KM-H2, two different lines,
+     * on every read. Cellosaurus arbitrated all 67 rows on 2026-08-29: 61 are one accession carrying
+     * both spellings as synonyms, 6 could not be decided by name and are gone. A row without that
+     * evidence is a row built the old way, so this reads the resource rather than the parsed map.
+     */
+    @Test
+    public void testEveryCellLineMergeCitesItsCellosaurusAccession() throws Exception {
+        List<String[]> twins = new ArrayList<>();
+        try ( BufferedReader r = new BufferedReader( new InputStreamReader(
+                Objects.requireNonNull( CharacteristicUtils.class.getResourceAsStream(
+                        "/ubic/gemma/core/ontology/TermUriMigration.tsv" ) ), StandardCharsets.UTF_8 ) ) ) {
+            String line;
+            while ( ( line = r.readLine() ) != null ) {
+                if ( line.isEmpty() || line.charAt( 0 ) == '#' ) continue;
+                String[] f = line.split( "\t" );
+                if ( f.length >= 7 && "clo_twin".equals( f[0] ) ) {
+                    twins.add( f );
+                }
+            }
+        }
+
+        assertThat( twins ).isNotEmpty();
+        assertThat( twins ).allSatisfy( f -> assertThat( f[6] )
+                .as( "%s -> %s must say which Cellosaurus accession made them one line", f[1], f[3] )
+                .contains( "Cellosaurus" )
+                .containsPattern( "CVCL_[0-9A-Za-z]+" ) );
+    }
+
+    /**
+     * The six pairs Cellosaurus could not decide by name are not in the table. Each spelling names
+     * more than one line — {@code H9} is also the WA09 embryonic stem line, {@code U-373 MG} is both
+     * the ATCC line and the Uppsala one — so the spelling cannot be what makes them the same.
+     */
+    @Test
+    public void testTheUndecidablePairsAreNotMerged() {
+        for ( String uri : new String[] { "CLO_0001890", "CLO_0003581", "CLO_0006985",
+                "CLO_0007920", "CLO_0008301", "CLO_0009461" } ) {
+            assertThat( CharacteristicUtils.canonicalUri( OBO + uri ) )
+                    .as( "%s names more than one cell line; it must be served as stored", uri )
+                    .isEqualTo( OBO + uri );
+        }
     }
 }

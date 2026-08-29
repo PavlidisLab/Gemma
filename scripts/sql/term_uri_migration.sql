@@ -83,7 +83,6 @@ INSERT INTO TERM_URI_MIGRATION (FROM_URI, TO_URI, TO_LABEL, LANE) VALUES
   ('http://purl.obolibrary.org/obo/CL:4023017', 'http://purl.obolibrary.org/obo/CL_4023017', 'sst GABAergic interneuron', 'malformed'),
   ('http://purl.obolibrary.org/obo/CLO_0001084', 'http://purl.obolibrary.org/obo/CLO_0001088', '143B cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0001606', 'http://purl.obolibrary.org/obo/CLO_0001605', 'A673 cell', 'clo_twin'),
-  ('http://purl.obolibrary.org/obo/CLO_0001890', 'http://purl.obolibrary.org/obo/CLO_0001891', 'BC-3 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0002165', 'http://purl.obolibrary.org/obo/CLO_0002201', 'CaSki cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0004266', 'http://purl.obolibrary.org/obo/CLO_0004276', 'HT-1080 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0008782', 'http://purl.obolibrary.org/obo/CLO_0008781', 'REH cell', 'clo_twin'),
