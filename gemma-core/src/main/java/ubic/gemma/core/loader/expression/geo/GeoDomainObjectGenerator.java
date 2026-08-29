@@ -51,6 +51,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -77,6 +78,12 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     @Nullable
     private File metadataCacheDir;
+
+    /**
+     * So a corpus sweep does not print the same permissions problem thousands of times; see
+     * {@link #writeMetadataCacheFile(File, byte[])}.
+     */
+    private final AtomicBoolean cacheWriteFailureReported = new AtomicBoolean( false );
 
     private final Fetcher datasetFetcher;
     private final Fetcher seriesFetcher;
@@ -441,8 +448,16 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.setMetadataOnly( true );
         // series first: the sample records that follow attach to what it declared
-        this.parseRecord( seriesAccession, GeoScope.SELF, parser );
-        this.parseRecord( seriesAccession, GeoScope.SAMPLES, parser );
+        byte[] self = this.parseRecord( seriesAccession, GeoScope.SELF, parser, true );
+        // A series GEO has retired lists no samples, and its sample records are then legitimately
+        // empty -- GSE1829, titled "RETIRED", zero !Series_sample_id lines, and targ=gsm answers
+        // with nothing at all. That is GEO having no samples to give, not a failed fetch, so the
+        // series record is what says whether an empty answer is expected.
+        boolean declaresSamples = countLines( self, "!Series_sample_id" ) > 0;
+        this.parseRecord( seriesAccession, GeoScope.SAMPLES, parser, declaresSamples );
+        if ( !declaresSamples ) {
+            log.info( seriesAccession + " lists no samples at GEO; storing the series record alone." );
+        }
         GeoSeries series = parser.getResults().iterator().next().getSeriesMap().get( seriesAccession );
         if ( series == null ) {
             throw new RuntimeException( "No series was parsed for " + seriesAccession );
@@ -457,7 +472,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * rejects a stream whose {@code available()} is zero, which is what a freshly opened URL stream
      * reports. These records are tens of kilobytes.
      */
-    private void parseRecord( String seriesAccession, GeoScope scope, GeoFamilyParser parser ) {
+    private byte[] parseRecord( String seriesAccession, GeoScope scope, GeoFamilyParser parser,
+            boolean requireContent ) {
         URL url = GeoUtils.getUrl( seriesAccession, GeoSource.DIRECT, GeoFormat.SOFT, scope, GeoAmount.BRIEF );
         File cached = this.metadataCacheFile( seriesAccession, scope );
         try {
@@ -471,7 +487,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                         return IOUtils.toByteArray( is );
                     }
                 }, ncbiApiKey ), "fetch " + url );
-                    if ( body.length == 0 ) {
+                    if ( body.length == 0 && requireContent ) {
                     throw new RuntimeException( "GEO returned an empty document for " + url );
                 }
                 this.writeMetadataCacheFile( cached, body );
@@ -485,10 +501,26 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                 throw new RuntimeException( "GEO served an HTML page rather than a SOFT record for "
                         + url + "; the accession is withdrawn, private or unknown to GEO." );
             }
-            parser.parse( new ByteArrayInputStream( body ) );
+            if ( body.length > 0 ) {
+                parser.parse( new ByteArrayInputStream( body ) );
+            }
+            return body;
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to read " + url, e );
         }
+    }
+
+    /**
+     * How many lines of a SOFT record start with the given tag.
+     */
+    private static int countLines( byte[] body, String tag ) {
+        int n = 0;
+        for ( String line : new String( body, StandardCharsets.UTF_8 ).split( "\n" ) ) {
+            if ( line.startsWith( tag ) ) {
+                n++;
+            }
+        }
+        return n;
     }
 
     /**
@@ -551,7 +583,21 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             }
             Files.write( cached.toPath(), body );
         } catch ( IOException e ) {
-            log.warn( "Could not cache the GEO metadata record at " + cached + ": " + e.getMessage() );
+            // An IOException's message here is usually just the path again, so name the class: an
+            // AccessDeniedException on /cosmos means the accession's directory predates the
+            // group-writable convention -- GSE28548's is drwxr-xr-x tomcat:pavlab from 2018, and the
+            // CLI container runs as uid 999 in the caller's group, so it cannot create a file there.
+            // Nothing is lost when this happens: the record was fetched and is in hand, it simply
+            // will not be there for the next run.
+            String why = e.getClass().getSimpleName() + ": " + e.getMessage();
+            if ( cacheWriteFailureReported.compareAndSet( false, true ) ) {
+                log.warn( "Could not cache the GEO metadata record at " + cached + " (" + why
+                        + "). The record was still fetched and used. If this is a permissions error, the"
+                        + " directory is not writable by the user this process runs as; further"
+                        + " occurrences are logged at DEBUG." );
+            } else {
+                log.debug( "Could not cache the GEO metadata record at " + cached + " (" + why + ")." );
+            }
         }
     }
 

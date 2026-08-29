@@ -129,4 +129,20 @@ class GeoMetadataOnlyFetchTest {
                 new GeoSourceMetadataBuilder.ExperimentIdentity( "GSE102415", 1L, false, null ),
                 new Date( 1_770_000_000_000L ) );
     }
+
+    /**
+     * 🛑 A series GEO has retired lists no samples, and `targ=gsm` then answers with nothing at all.
+     * GSE1829 is titled "RETIRED", declares zero `!Series_sample_id`, and returns 0 bytes —
+     * reproducibly, twice, not as a hiccup. Failing the experiment over that reports GEO's own state
+     * as our error and throws away the series record we did get. It cost eid 861 its document in the
+     * corpus sweep on 2026-08-29.
+     */
+    @Test
+    void testARetiredSeriesWithNoSamplesStillYieldsItsSeriesRecord( @TempDir Path cacheDir ) {
+        GeoSeries series = generator( cacheDir ).generateSeriesMetadataOnly( "GSE1829" );
+
+        assertThat( series.getGeoAccession() ).isEqualTo( "GSE1829" );
+        assertThat( series.getTitle() ).isEqualTo( "RETIRED" );
+        assertThat( series.getSamples() ).isEmpty();
+    }
 }
