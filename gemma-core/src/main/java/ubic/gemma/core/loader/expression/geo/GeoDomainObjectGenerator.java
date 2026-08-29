@@ -32,6 +32,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
 import ubic.gemma.core.loader.expression.geo.service.GeoScope;
 import ubic.gemma.core.loader.expression.geo.service.GeoSource;
 import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import org.apache.commons.io.IOUtils;
@@ -47,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -67,6 +69,12 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     private static final SimpleRetry<IOException> metadataRetry = new SimpleRetry<>(
             new SimpleRetryPolicy( 3, 1001, 1.5 ), IOException.class,
             GeoDomainObjectGenerator.class.getName() );
+
+    /**
+     * Where metadata-only records are cached; null means take it from the configuration.
+     */
+    @Nullable
+    private File metadataCacheDir;
 
     private final Fetcher datasetFetcher;
     private final Fetcher seriesFetcher;
@@ -241,6 +249,14 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         }
         Collection<File> fullSeries = seriesFetcher.fetch( seriesAccession );
         return fullSeries != null ? fullSeries.iterator().next() : null;
+    }
+
+    /**
+     * Override where metadata-only records are cached; defaults to {@code geo.local.datafile.basepath},
+     * the directory the family SOFT files already live in.
+     */
+    public void setMetadataCacheDir( @Nullable File metadataCacheDir ) {
+        this.metadataCacheDir = metadataCacheDir;
     }
 
     public void setDoSampleMatching( boolean doSampleMatching ) {
@@ -433,7 +449,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     }
 
     /**
-     * Read one acc.cgi record into the parser.
+     * Read one acc.cgi record into the parser, from the local cache when it is there.
      * <p>
      * The body is buffered before parsing rather than streamed: {@link GeoFamilyParser#parse(InputStream)}
      * rejects a stream whose {@code available()} is zero, which is what a freshly opened URL stream
@@ -441,18 +457,78 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     private void parseRecord( String seriesAccession, GeoScope scope, GeoFamilyParser parser ) {
         URL url = GeoUtils.getUrl( seriesAccession, GeoSource.DIRECT, GeoFormat.SOFT, scope, GeoAmount.BRIEF );
+        File cached = this.metadataCacheFile( seriesAccession, scope );
         try {
-            byte[] body = metadataRetry.execute( EntrezUtils.retryNicely( ctx -> {
-                try ( InputStream is = url.openStream() ) {
-                    return IOUtils.toByteArray( is );
+            byte[] body;
+            if ( cached != null && cached.canRead() && cached.length() > 0 ) {
+                log.debug( "Reading " + cached + " instead of " + url );
+                body = Files.readAllBytes( cached.toPath() );
+            } else {
+                body = metadataRetry.execute( EntrezUtils.retryNicely( ctx -> {
+                    try ( InputStream is = url.openStream() ) {
+                        return IOUtils.toByteArray( is );
+                    }
+                }, ncbiApiKey ), "fetch " + url );
+                if ( body.length == 0 ) {
+                    throw new RuntimeException( "GEO returned an empty document for " + url );
                 }
-            }, ncbiApiKey ), "fetch " + url );
-            if ( body.length == 0 ) {
-                throw new RuntimeException( "GEO returned an empty document for " + url );
+                this.writeMetadataCacheFile( cached, body );
             }
             parser.parse( new ByteArrayInputStream( body ) );
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to read " + url, e );
+        }
+    }
+
+    /**
+     * Where a metadata-only record is cached: beside the family SOFT file for the same accession,
+     * under a name that cannot collide with it.
+     * <p>
+     * 🛑 These records are NOT the family file and must never be mistaken for it. The full download
+     * is {@code <ACC>/<ACC>.soft.gz} (and {@code <ACC>_family.soft.gz} is what
+     * {@code LocalSeriesFetcher} seeks); a metadata-only record holds no platform table and no
+     * sample data, so anything reading one as the family file would see an experiment with no data
+     * and no probes. Hence {@code <ACC>.<targ>.brief.soft}: a different extension, an uncompressed
+     * file, and the GEO target it came from in the name. The directory is shared on purpose — it is
+     * where everything fetched for an accession already lives, and 57,212 accessions' worth of full
+     * files sit there that this must not touch.
+     *
+     * @return the cache file, or {@code null} when no cache directory is configured, in which case
+     *         the record is fetched and used without being stored
+     */
+    @Nullable
+    private File metadataCacheFile( String seriesAccession, GeoScope scope ) {
+        String basePath = metadataCacheDir != null ? metadataCacheDir.getPath()
+                : Settings.getString( "geo.local.datafile.basepath" );
+        if ( StringUtils.isBlank( basePath ) ) {
+            return null;
+        }
+        String targ = scope == GeoScope.SELF ? "self" : "gsm";
+        return new File( new File( basePath, seriesAccession ), seriesAccession + "." + targ + ".brief.soft" );
+    }
+
+    /**
+     * Store a fetched record. A cache that cannot be written is not a failure: the record is already
+     * in hand, and the run continues without it.
+     */
+    private void writeMetadataCacheFile( @Nullable File cached, byte[] body ) {
+        if ( cached == null ) {
+            return;
+        }
+        if ( !cached.getName().endsWith( ".brief.soft" ) ) {
+            // belt and braces: this method only ever writes metadata-only records, and writing one
+            // over a family file would replace real data with a metadata stub
+            throw new IllegalStateException( "Refusing to write a metadata record to " + cached );
+        }
+        try {
+            File dir = cached.getParentFile();
+            if ( dir != null && !dir.isDirectory() && !dir.mkdirs() && !dir.isDirectory() ) {
+                log.warn( "Could not create " + dir + "; the record was fetched but not cached." );
+                return;
+            }
+            Files.write( cached.toPath(), body );
+        } catch ( IOException e ) {
+            log.warn( "Could not cache the GEO metadata record at " + cached + ": " + e.getMessage() );
         }
     }
 

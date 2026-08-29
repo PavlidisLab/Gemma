@@ -15,8 +15,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 
+import java.nio.file.Path;
 import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,8 +44,8 @@ class GeoMetadataOnlyFetchTest {
      * the sample records that {@code targ=gsm} returns.
      */
     @Test
-    void testTheSampleRecordsCarryWhatTheDocumentNeeds() throws Exception {
-        GeoSeries series = new GeoDomainObjectGenerator().generateSeriesMetadataOnly( "GSE102415" );
+    void testTheSampleRecordsCarryWhatTheDocumentNeeds( @TempDir Path cacheDir ) throws Exception {
+        GeoSeries series = generator( cacheDir ).generateSeriesMetadataOnly( "GSE102415" );
 
         assertThat( series.getGeoAccession() ).isEqualTo( "GSE102415" );
         assertThat( series.getTitle() ).isNotBlank();
@@ -69,12 +71,22 @@ class GeoMetadataOnlyFetchTest {
      * "no characteristics" must parse rather than fail.
      */
     @Test
-    void testATwoChannelSeriesWithoutCharacteristicsStillParses() {
-        GeoSeries series = new GeoDomainObjectGenerator().generateSeriesMetadataOnly( "GSE1024" );
+    void testATwoChannelSeriesWithoutCharacteristicsStillParses( @TempDir Path cacheDir ) {
+        GeoSeries series = generator( cacheDir ).generateSeriesMetadataOnly( "GSE1024" );
 
         assertThat( series.getGeoAccession() ).isEqualTo( "GSE1024" );
         assertThat( series.getSamples() ).hasSize( 36 );
         assertThat( series.getSamples() )
                 .allSatisfy( s -> assertThat( s.getTitle() ).isNotBlank() );
+    }
+
+    /**
+     * Cached into a temporary directory rather than the configured one: this test must not deposit
+     * records into the shared GEO download tree, which holds the real family files.
+     */
+    private GeoDomainObjectGenerator generator( Path cacheDir ) {
+        GeoDomainObjectGenerator generator = new GeoDomainObjectGenerator();
+        generator.setMetadataCacheDir( cacheDir.toFile() );
+        return generator;
     }
 }
