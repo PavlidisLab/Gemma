@@ -81,7 +81,7 @@ public interface BioMaterialService extends SecurableBaseService<BioMaterial>, S
     Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm );
 
     @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     BioMaterial thaw( BioMaterial bioMaterial );
 
     @CheckReturnValue
