@@ -133,6 +133,7 @@ public class UpdateGeoSourceMetadataCliTest extends BaseCliTest5 {
         acc.setExternalDatabase( geo );
         ee.setAccession( acc );
         when( entityLocator.locateExpressionExperiment( eq( "GSE1234" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
         return ee;
     }
 
@@ -192,10 +193,51 @@ public class UpdateGeoSourceMetadataCliTest extends BaseCliTest5 {
         ee.setId( 2L );
         ee.setShortName( "GPL_only" );
         when( entityLocator.locateExpressionExperiment( eq( "GPL_only" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
 
         assertThat( cli ).withArguments( "-e", "GPL_only" ).succeeds();
 
         verify( geoService, never() ).updateFromGEO( any( ExpressionExperiment.class ), any() );
         verify( eeService, never() ).hasSourceMetadata( any() );
+    }
+
+    /**
+     * 🛑 The accession must be read from a THAWED experiment. The batch task runs off the main
+     * thread with no session, so the instance it is handed is detached and
+     * {@code ee.getAccession()} is an uninitialized proxy —
+     * {@code LazyInitializationException: Could not initialize proxy [DatabaseEntry#…]}, on every
+     * experiment in the run, measured on production 2026-08-29.
+     * <p>
+     * The other tests here cannot catch it: they build an experiment in memory, where the
+     * accession is a real object and reading it works whether or not anything was thawed. This one
+     * gives the un-thawed instance NO accession, so a CLI that reads it sees "not from GEO", skips,
+     * and never calls the fetch.
+     */
+    @Test
+    @WithMockUser
+    public void testItReadsTheAccessionFromTheThawedExperiment() {
+        ExpressionExperiment detached = new ExpressionExperiment();
+        detached.setId( 3L );
+        detached.setShortName( "GSE9999" );
+        // no accession: standing in for the proxy that cannot be initialized off-session
+
+        ExpressionExperiment thawed = new ExpressionExperiment();
+        thawed.setId( 3L );
+        thawed.setShortName( "GSE9999" );
+        ExternalDatabase geo = new ExternalDatabase();
+        geo.setName( ExternalDatabases.GEO );
+        DatabaseEntry acc = new DatabaseEntry();
+        acc.setAccession( "GSE9999" );
+        acc.setExternalDatabase( geo );
+        thawed.setAccession( acc );
+
+        when( entityLocator.locateExpressionExperiment( eq( "GSE9999" ), anyBoolean() ) ).thenReturn( detached );
+        when( eeService.thawLite( detached ) ).thenReturn( thawed );
+        when( eeService.hasSourceMetadata( thawed ) ).thenReturn( false );
+
+        assertThat( cli ).withArguments( "-e", "GSE9999" ).succeeds();
+
+        verify( eeService ).thawLite( detached );
+        verify( geoService ).updateFromGEO( eq( thawed ), any() );
     }
 }

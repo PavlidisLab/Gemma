@@ -72,21 +72,27 @@ public class UpdateGeoSourceMetadataCli extends ExpressionExperimentManipulating
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         getBatchTaskExecutor().execute( () -> {
             try {
-                if ( ee.getAccession() == null
-                        || !ExternalDatabases.GEO.equals( ee.getAccession().getExternalDatabase().getName() ) ) {
+                // The batch task runs off the main thread, where there is no session and the
+                // experiment is detached: reading ee.getAccession() directly threw
+                // LazyInitializationException on the DatabaseEntry proxy for every experiment in
+                // the run. Thawing first is the same opening move as
+                // ExpressionExperimentDataUpdaterCli, and everything below reads the thawed one.
+                ExpressionExperiment thawed = expressionExperimentService.thawLite( ee );
+                if ( thawed.getAccession() == null
+                        || !ExternalDatabases.GEO.equals( thawed.getAccession().getExternalDatabase().getName() ) ) {
                     // Not an error: plenty of experiments did not come from GEO, and there is no
                     // record for them to store. Counting them as failures would bury the real ones.
-                    addSuccessObject( ee, "Not a GEO experiment, nothing to store." );
+                    addSuccessObject( thawed, "Not a GEO experiment, nothing to store." );
                     return;
                 }
-                if ( !force && expressionExperimentService.hasSourceMetadata( ee ) ) {
-                    addSuccessObject( ee, "Already has a source metadata document, skipped." );
+                if ( !force && expressionExperimentService.hasSourceMetadata( thawed ) ) {
+                    addSuccessObject( thawed, "Already has a source metadata document, skipped." );
                     return;
                 }
-                geoService.updateFromGEO( ee, GeoService.GeoUpdateConfig.builder()
+                geoService.updateFromGEO( thawed, GeoService.GeoUpdateConfig.builder()
                         .sourceMetadata( true )
                         .build() );
-                addSuccessObject( ee, "Stored the GEO source metadata document." );
+                addSuccessObject( thawed, "Stored the GEO source metadata document." );
             } catch ( Exception e ) {
                 // One experiment failing to fetch must not end a corpus sweep: GEO withdraws series,
                 // renames them, and rate-limits, and the next 20,000 are unaffected by any of that.
