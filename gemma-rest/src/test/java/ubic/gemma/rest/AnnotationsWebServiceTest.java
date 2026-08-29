@@ -2815,8 +2815,14 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             assertThat( v.getLane() ).isIn( "malformed", "clo_twin" );
         } );
         assertThat( all ).as( "the twin lane is decided by rules, and the rules have to be visible" )
-                .anySatisfy( v -> assertThat( v.getBasis() ).startsWith( "R3" ) )
-                .anySatisfy( v -> assertThat( v.getBasis() ).startsWith( "R5" ) );
+                .anySatisfy( v -> assertThat( v.getBasis() ).contains( "R3" ) )
+                .anySatisfy( v -> assertThat( v.getBasis() ).contains( "R5" ) );
+        // The ladder says which of the two spellings wins. What says they are ONE cell line is
+        // Cellosaurus, and a merge that cannot name its accession is a merge made on label
+        // resemblance -- which is how KMH-2 came to be served as KM-H2.
+        assertThat( all ).filteredOn( v -> "clo_twin".equals( v.getLane() ) )
+                .isNotEmpty()
+                .allSatisfy( v -> assertThat( v.getBasis() ).containsPattern( "CVCL_[0-9A-Za-z]+" ) );
     }
 
     /** Filtering by URI returns that one row, and an unmapped URI returns none rather than a guess. */
