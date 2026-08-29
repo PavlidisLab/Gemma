@@ -2858,6 +2858,11 @@ public class ExpressionExperimentDaoImpl
         }
 
         Hibernate.initialize( expressionExperiment.getGeeq() );
+        // owner is a lazy @ManyToOne. Left as an uninitialized proxy it is dead once the thawing
+        // session closes, and SplitExperimentServiceImpl copies it onto each new experiment, where
+        // EeWriteServiceImpl.persistExpressionExperiment reads getName() off it to look the contact
+        // up — inside its own session, but the proxy belongs to the closed one, so it throws there.
+        Hibernate.initialize( expressionExperiment.getOwner() );
         thawCurationDetails( expressionExperiment );
 
         Hibernate.initialize( expressionExperiment.getOtherParts() );
@@ -2866,6 +2871,15 @@ public class ExpressionExperimentDaoImpl
             for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
                 Hibernate.initialize( ef );
                 ef.getFactorValues().forEach( Hibernate::initialize );
+                // Hibernate.initialize( ef ) loads the entity, not its lazy collections, so without
+                // this the deprecated annotations collection stays a proxy and any read of it on the
+                // detached experiment throws. SplitExperimentServiceImpl.cloneExperimentalFactors
+                // reads it with no session (split is Propagation.NEVER), which broke splitExperiment
+                // outright. Per-factor this is an "EXPERIMENTAL_FACTOR_FK = ?" lookup that the index
+                // answers with zero rows; the eager mapping the field comment warns about is the
+                // IN-subquery form, which is not what this is.
+                //noinspection deprecation
+                Hibernate.initialize( ef.getAnnotations() );
             }
             Hibernate.initialize( expressionExperiment.getExperimentalDesign().getTypes() );
         }

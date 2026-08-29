@@ -46,6 +46,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
@@ -85,6 +86,9 @@ public class SplitExperimentTest extends BaseSpringContextTest5 {
 
     @Autowired
     private AclService aclService;
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
 
     /* fixtures */
     private Collection<ExpressionExperiment> ees;
@@ -238,10 +242,11 @@ public class SplitExperimentTest extends BaseSpringContextTest5 {
         ExpressionExperiment ee = getTestPersistentBasicExpressionExperiment( ad );
         ees = Collections.singleton( ee );
 
-        // Deliberately NOT thawed: split() is Propagation.NEVER and reads the deprecated lazy
-        // ExperimentalFactor.annotations while cloning, which no thaw initializes. Use the graph
-        // the helper built in memory.
-        ExperimentalFactor splitOn = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
+        // Thaw the way SplitExperimentCli does, so the detached graph split() clones is the one
+        // the CLI actually hands it.
+        ee = eeService.thawLite( ee );
+        ExperimentalFactor splitOn = experimentalFactorService.thaw(
+                ee.getExperimentalDesign().getExperimentalFactors().iterator().next() );
         assertFalse( splitOn.getFactorValues().isEmpty() );
 
         results = splitService.split( ee, splitOn, false );
