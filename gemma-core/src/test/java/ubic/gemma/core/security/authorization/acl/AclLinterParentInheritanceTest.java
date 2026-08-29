@@ -96,6 +96,11 @@ public class AclLinterParentInheritanceTest extends BaseDatabaseTest5 {
         }
 
         @Bean
+        public AclLinterHelperService aclLinterHelperService() {
+            return new AclLinterHelperServiceImpl();
+        }
+
+        @Bean
         public ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy() {
             return new ObjectIdentityRetrievalStrategyImpl();
         }

@@ -48,6 +48,15 @@ public class AclLinterServiceImpl implements AclLinterService {
     private AclClassMetadata aclClassMetadata;
     @Autowired
     private ubic.gemma.core.security.acl.BaseAclAdvice aclAdvice;
+    @Autowired
+    private AclLinterHelperService aclLinterHelperService;
+
+    /**
+     * Identifiers per parent-linking transaction. A bulk repair of BioAssay on production is
+     * 631,709 rows; at this size a failure costs one batch instead of the whole run, and the
+     * re-run picks up what is left because a linked identity no longer matches the query.
+     */
+    private static final int PARENT_LINK_BATCH_SIZE = 500;
 
     /**
      * Renovations Phase 3: gsec HQL deprecation. Direct JdbcTemplate access to the canonical
@@ -295,27 +304,12 @@ public class AclLinterServiceImpl implements AclLinterService {
     /**
      * Attach the ACL identity of {@code identifier} to {@code parentAoi}.
      * <p>
-     * This MUST go through {@link AclService#updateAcl(MutableAcl)} rather than
-     * {@link AclObjectIdentity#setParentObject(AclObjectIdentity)}. {@code AclObjectIdentity} is
-     * annotated {@code @Immutable}, so Hibernate silently discards the dirty state and the fix never
-     * reaches the database — no exception, no UPDATE. The same trap is documented on
-     * {@link #lintSecuredNotChildWithParent}, which was converted earlier; the child-parent linters
-     * were missed, and on 2026-08-06 a production repair run reported 548 successful parent
-     * assignments while writing none of them. Routing through {@code JdbcMutableAclService} makes the
-     * write land and evicts the ACL cache.
+     * The write itself lives on {@link AclLinterHelperService} so the bulk repair can drive it in
+     * batches; see {@link AclLinterHelperServiceImpl#setParentAcl} for why it must go through
+     * {@code updateAcl} and why it also turns on {@code entries_inheriting}.
      */
     private void setParentAcl( Class<? extends Securable> clazz, Long identifier, AclObjectIdentity parentAoi ) {
-        MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( clazz, identifier ) );
-        acl.setParent( aclService.readAclById( parentAoi ) );
-        // entries_inheriting has to be turned on with the parent, not just the parent set. Spring
-        // only walks to the parent when it is on, so a link written without it grants nothing and
-        // the run still reports a fix. It is off on exactly the rows this repairs:
-        // BaseAclAdvice sets it from inheritFromParent, which is false when no parent was
-        // discoverable at insert time — the same branch that gives the child its own ACEs. Those
-        // ACEs stay, and correctly so: Spring checks an ACL's own entries before the parent's.
-        // AclEventListener.handleChild sets both for the same reason.
-        acl.setEntriesInheriting( true );
-        aclService.updateAcl( acl );
+        aclLinterHelperService.setParentAcl( clazz, identifier, parentAoi );
     }
 
     /**
@@ -323,41 +317,31 @@ public class AclLinterServiceImpl implements AclLinterService {
      */
     private void lintSecuredChildWithoutParent( Class<? extends SecuredChild<?>> clazz, AclLinterConfig config, Collection<LintResult> results ) {
         log.info( "Linting " + clazz.getSimpleName() + " lacking parent ACL identities..." );
-        //noinspection unchecked
-        List<AclObjectIdentity> list = sessionFactory.getCurrentSession()
-                .createQuery( "select aoi from AclObjectIdentity aoi "
-                        + "where aoi.type = :type "
-                        + "and aoi.parentObject is null" )
-                .setParameter( "type", clazz.getName() )
-                .setReadOnly( !config.isApplyFixes() )
-                .list();
-        if ( list.isEmpty() ) {
+        // Identifiers only, by raw SQL. The previous form loaded every matching AclObjectIdentity
+        // entity into a single list, which for BioAssay on production is 631,709 of them before any
+        // work starts.
+        List<Long> identifiers = jdbcTemplate.queryForList(
+                "select aoi.object_id_identity "
+                        + "from acl_object_identity aoi "
+                        + "join acl_class cls on aoi.object_id_class = cls.id "
+                        + "where cls.class = ? and aoi.parent_object is null",
+                Long.class, clazz.getName() );
+        if ( identifiers.isEmpty() ) {
             log.info( "All " + clazz.getSimpleName() + " have parent ACL identities." );
-        } else {
-            log.warn( "There are " + list.size() + " " + clazz.getSimpleName() + " lacking parent ACL identities." );
+            return;
         }
-        for ( AclObjectIdentity aoi : list ) {
-            if ( config.isApplyFixes() ) {
-                SecuredChild<?> sc = getSecuredChild( clazz, aoi.getIdentifier() );
-                if ( sc == null ) {
-                    log.warn( "Could not find " + formatEntity( clazz, aoi ) + "." );
-                    results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity. The fix could not be applied because the entity could not be found.", false ) );
-                    continue;
-                }
-                AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc );
-                if ( parentAoi != null ) {
-                    setParentAcl( clazz, aoi.getIdentifier(), parentAoi );
-                    String fixMessage = "Parent ACL identity was set to " + parentAoi + ".";
-                    log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
-                    results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
-                } else {
-                    results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity. The fix could not be applied because the parent ACL identity could not be found.", false ) );
-                }
-                // remove to prevent SecuredChild to pile up in memory
-                sessionFactory.getCurrentSession().evict( sc );
-            } else {
-                results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity.", false ) );
+        log.warn( "There are " + identifiers.size() + " " + clazz.getSimpleName() + " lacking parent ACL identities." );
+        if ( !config.isApplyFixes() ) {
+            for ( Long identifier : identifiers ) {
+                results.add( new LintResult( clazz, identifier, "Entity is a SecuredChild with no parent ACL identity.", false ) );
             }
+            return;
+        }
+        for ( int from = 0; from < identifiers.size(); from += PARENT_LINK_BATCH_SIZE ) {
+            List<Long> batch = identifiers.subList( from, Math.min( from + PARENT_LINK_BATCH_SIZE, identifiers.size() ) );
+            results.addAll( aclLinterHelperService.linkParentsInNewTransaction( clazz, batch ) );
+            log.info( String.format( "%s: linked %d/%d.", clazz.getSimpleName(),
+                    Math.min( from + PARENT_LINK_BATCH_SIZE, identifiers.size() ), identifiers.size() ) );
         }
     }
 
