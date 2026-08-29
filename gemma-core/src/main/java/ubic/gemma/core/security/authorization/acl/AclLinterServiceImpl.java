@@ -307,6 +307,14 @@ public class AclLinterServiceImpl implements AclLinterService {
     private void setParentAcl( Class<? extends Securable> clazz, Long identifier, AclObjectIdentity parentAoi ) {
         MutableAcl acl = ( MutableAcl ) aclService.readAclById( new AclObjectIdentity( clazz, identifier ) );
         acl.setParent( aclService.readAclById( parentAoi ) );
+        // entries_inheriting has to be turned on with the parent, not just the parent set. Spring
+        // only walks to the parent when it is on, so a link written without it grants nothing and
+        // the run still reports a fix. It is off on exactly the rows this repairs:
+        // BaseAclAdvice sets it from inheritFromParent, which is false when no parent was
+        // discoverable at insert time — the same branch that gives the child its own ACEs. Those
+        // ACEs stay, and correctly so: Spring checks an ACL's own entries before the parent's.
+        // AclEventListener.handleChild sets both for the same reason.
+        acl.setEntriesInheriting( true );
         aclService.updateAcl( acl );
     }
 
