@@ -28,7 +28,9 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.gene.GeneSet;
 
 import org.springframework.lang.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static ubic.gemma.cli.util.OptionsUtils.*;
 
@@ -68,7 +70,7 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
 
     private Class<? extends Securable> clazz;
 
-    private Long identifier;
+    private List<Long> identifiers = new ArrayList<>();
 
     private boolean lintPermissions;
 
@@ -80,8 +82,8 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
     @Override
     protected void buildOptions( Options options ) {
         OptionsUtils.addEnumOption( options, "type", "type", "Type of securable entities to lint.", SecurableType.class );
-        options.addOption( Option.builder( "identifier" ).longOpt( "identifier" ).hasArg().type( Long.class )
-                .desc( "Identifier of the securable entity to lint. Requires the -type,--type option to be set." ).get() );
+        options.addOption( Option.builder( "identifier" ).longOpt( "identifier" ).hasArgs().valueSeparator( ',' ).type( Long.class )
+                .desc( "One or more identifiers (comma-separated) of securable entities to lint. Requires the -type,--type option to be set." ).get() );
         options.addOption( "lintPermissions", "lint-permissions", false, "Lint permissions." );
         options.addOption( "applyFixes", "apply-fixes", false, "Apply fixes to ACLs" );
     }
@@ -90,8 +92,16 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         SecurableType st = OptionsUtils.getEnumOptionValue( commandLine, "type" );
         this.clazz = st != null ? st.getClazz() : null;
-        this.identifier = getParsedOptionValue( commandLine, "identifier",
-                requires( toBeSet( "type" ) ) );
+        this.identifiers = new ArrayList<>();
+        String[] rawIds = commandLine.getOptionValues( "identifier" );
+        if ( rawIds != null && rawIds.length > 0 ) {
+            if ( clazz == null ) {
+                throw new ParseException( "The -type,--type option is required when -identifier,--identifier is set." );
+            }
+            for ( String raw : rawIds ) {
+                this.identifiers.add( Long.parseLong( raw.trim() ) );
+            }
+        }
         this.lintPermissions = commandLine.hasOption( "lintPermissions" );
         this.applyFixes = commandLine.hasOption( "applyFixes" );
     }
@@ -108,8 +118,12 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
                 .applyFixes( applyFixes )
                 .build();
         Collection<AclLinterService.LintResult> results;
-        if ( identifier != null ) {
-            results = aclLinterService.lintAcls( clazz, identifier, config );
+        if ( !identifiers.isEmpty() ) {
+            List<AclLinterService.LintResult> acc = new ArrayList<>();
+            for ( Long id : identifiers ) {
+                acc.addAll( aclLinterService.lintAcls( clazz, id, config ) );
+            }
+            results = acc;
         } else if ( clazz != null ) {
             results = aclLinterService.lintAcls( clazz, config );
         } else {
