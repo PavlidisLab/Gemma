@@ -300,6 +300,15 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         assertEquals( TicketType.SCREENING, ticketDao.load( id ).getType() );
         assertEquals( "SCREENING", new JdbcTemplate( dataSource )
                 .queryForObject( "SELECT TYPE FROM TICKET WHERE ID = ?", String.class, id ) );
+
+        // AUDIT is the other value added with no migration; same pin.
+        TicketTarget at = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 12L );
+        Long aid = ticketService.openTicket( reporter, TicketType.AUDIT, "audit-roundtrip",
+                Collections.singleton( at ) ).getId();
+        flushAndClear();
+        assertEquals( TicketType.AUDIT, ticketDao.load( aid ).getType() );
+        assertEquals( "AUDIT", new JdbcTemplate( dataSource )
+                .queryForObject( "SELECT TYPE FROM TICKET WHERE ID = ?", String.class, aid ) );
     }
 
     @Test

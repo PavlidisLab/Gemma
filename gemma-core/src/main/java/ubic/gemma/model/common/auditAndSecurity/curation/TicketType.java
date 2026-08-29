@@ -69,6 +69,13 @@ public enum TicketType {
      * opens, comments with what it found, and transitions to RESOLVED.
      */
     LITERATURE_SEARCH,
+    /**
+     * An agent audit run — a batch check of existing curation (dispositions, groundings,
+     * publication links, …) that opens a ticket to carry its findings. The curation store
+     * files these; Gemma carries the value so an audit ticket can be raised against a
+     * dataset here rather than only in the store (Paul, 2026-08-29).
+     */
+    AUDIT,
     /** Catch-all for tickets that don't fit a more specific category. */
     GENERIC
 }
