@@ -44,6 +44,22 @@ import java.util.List;
 public class CurationCommitRequest {
 
     /**
+     * When true and this is not a dry run, committing advances the open CURATION / SCREENING ticket
+     * targets for this dataset to DONE and resolves a ticket whose last open target this closes. Set by
+     * the commit and sign routes, left false by restore and preflight — a restore reverts curation and
+     * must not close the ticket that asked for it.
+     */
+    private boolean advanceLinkedTickets = false;
+
+    public boolean isAdvanceLinkedTickets() {
+        return advanceLinkedTickets;
+    }
+
+    public void setAdvanceLinkedTickets( boolean advanceLinkedTickets ) {
+        this.advanceLinkedTickets = advanceLinkedTickets;
+    }
+
+    /**
      * The dataset {@code lastUpdated} the draft was built against (optimistic-concurrency token), or
      * {@code null} to skip the check. Commit is rejected when the dataset moved since.
      */

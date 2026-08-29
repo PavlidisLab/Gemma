@@ -2205,7 +2205,7 @@ public class DatasetsWebService {
         // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
         // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
         snapshot.setBaseline( null );
-        return respond( doCommitCuration( datasetArg, snapshot, dryRun, force, false, null ) );
+        return respond( doCommitCuration( datasetArg, snapshot, dryRun, force, false, null, false ) );
     }
 
     @GET
@@ -2650,7 +2650,7 @@ public class DatasetsWebService {
         if ( body != null && body.getRun() != null && doc.getRun() == null ) {
             doc.setRun( body.getRun() );
         }
-        CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true, signer );
+        CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true, signer, true );
         if ( !dryRun && !Boolean.TRUE.equals( keepLock ) ) {
             // Signing off ends the curator's turn on this dataset, so the lock goes back with it -- otherwise
             // every signed dataset stays locked until its lease runs out or somebody steals it. Only on success,
@@ -3213,7 +3213,7 @@ public class DatasetsWebService {
             @Parameter(description = "Consent (admin only) to deleting differential-expression analyses that a design-section change would invalidate. Ignored unless the design section triggers such a cascade.") @QueryParam("force") @DefaultValue("false") Boolean force,
             @Nullable CurationDocument body
     ) {
-        return respond( doCommitCuration( datasetArg, body, false, force, false, null ) );
+        return respond( doCommitCuration( datasetArg, body, false, force, false, null, true ) );
     }
 
     @POST
@@ -3241,7 +3241,7 @@ public class DatasetsWebService {
             @Nullable CurationDocument body
     ) {
         // A dry run never writes, so the differential-expression cascade never fires — force is irrelevant here.
-        return respond( doCommitCuration( datasetArg, body, true, false, false, null ) );
+        return respond( doCommitCuration( datasetArg, body, true, false, false, null, false ) );
     }
 
     /**
@@ -3251,7 +3251,7 @@ public class DatasetsWebService {
      * Collapsing them into one boolean would make sign-off admin-only, which is not what gates it.
      */
     private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body,
-            boolean dryRun, boolean force, boolean signed, @Nullable String actingAs ) {
+            boolean dryRun, boolean force, boolean signed, @Nullable String actingAs, boolean advanceTickets ) {
         if ( body == null ) {
             throw new BadRequestException( "A CurationDocument request body is required." );
         }
@@ -3266,6 +3266,9 @@ public class DatasetsWebService {
         }
 
         CurationCommitRequest request = new CurationCommitRequest();
+        // Commit + sign close the curation ticket that asked for the work; restore + preflight do not
+        // (the commitCuration transaction still gates on !dryRun).
+        request.setAdvanceLinkedTickets( advanceTickets );
         request.setExpectedLastUpdated( parseBaselineToken( body.getBaseline() != null ? body.getBaseline().getLastModified() : null ) );
 
         // Accumulate ontology-term grounding failures across every new/changed annotation in the document and

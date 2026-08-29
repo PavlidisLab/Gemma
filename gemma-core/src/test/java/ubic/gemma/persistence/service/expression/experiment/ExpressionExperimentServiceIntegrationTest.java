@@ -87,6 +87,8 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     @Autowired
     private SecurityService securityService;
     @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService ticketService;
+    @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
 
     /**
@@ -697,6 +699,63 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .as( "curation read-back must show what was actually written" )
                 .extracting( AnnotationValueObject::getTermName )
                 .contains( "dimethyl sulfoxide", "HDP-101" );
+    }
+
+    @Test
+    public void commitCuration_advancesAndResolvesTheLinkedCurationTicket() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget target =
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget.Factory.newInstance(
+                        ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() );
+        ubic.gemma.model.common.auditAndSecurity.curation.Ticket ticket = ticketService.openTicket(
+                getTestPersistentContact(),
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketType.CURATION,
+                "curate me", java.util.Collections.singleton( target ) );
+        Long ticketId = ticket.getId();
+
+        CurationCommitRequest req = new CurationCommitRequest();
+        req.setAdvanceLinkedTickets( true );
+        req.setCurationDetailsPresent( true );
+        req.setCurationDetailsNote( "reviewed and annotated" );
+        expressionExperimentService.commitCuration( ee, req, false );
+
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject reloaded =
+                ticketService.loadValueObject( ticketId, false );
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.DONE,
+                reloaded.getTargets().get( 0 ).getStatus(),
+                "the dataset's target should be DONE after the commit" );
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.RESOLVED,
+                reloaded.getState(),
+                "the ticket should resolve once its last open target is done" );
+    }
+
+    @Test
+    public void commitCuration_withoutAdvanceFlag_leavesTheTicketOpen() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget target =
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget.Factory.newInstance(
+                        ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() );
+        ubic.gemma.model.common.auditAndSecurity.curation.Ticket ticket = ticketService.openTicket(
+                getTestPersistentContact(),
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketType.CURATION,
+                "curate me", java.util.Collections.singleton( target ) );
+        Long ticketId = ticket.getId();
+
+        // restore / preflight leave the flag false: a revert must not close the ticket
+        CurationCommitRequest req = new CurationCommitRequest();
+        req.setAdvanceLinkedTickets( false );
+        req.setCurationDetailsPresent( true );
+        req.setCurationDetailsNote( "reverted" );
+        expressionExperimentService.commitCuration( ee, req, false );
+
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject reloaded =
+                ticketService.loadValueObject( ticketId, false );
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.NOT_DONE,
+                reloaded.getTargets().get( 0 ).getStatus() );
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.OPEN, reloaded.getState() );
     }
 
     private ExpressionExperiment createExpressionExperiment() {

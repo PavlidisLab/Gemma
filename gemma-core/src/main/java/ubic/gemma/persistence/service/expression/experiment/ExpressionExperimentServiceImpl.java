@@ -25,6 +25,13 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
@@ -101,6 +108,10 @@ public class ExpressionExperimentServiceImpl
 
     @Autowired
     private AnnotationSetService annotationSetService;
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService ticketService;
+    @Autowired
+    private ubic.gemma.core.security.authentication.UserManager userManager;
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
@@ -2819,8 +2830,52 @@ public class ExpressionExperimentServiceImpl
                     + ( attached.isCreated() ? "" : " (already recorded — this run has committed here before)" ) );
         }
 
+        // ── close the curation ticket this commit fulfilled ──
+        // In the commit's own transaction (Paul, 2026-08-29): if the commit rolls back, the ticket does
+        // not advance. Restore and preflight leave the flag false, so a revert never closes the ticket.
+        if ( !dryRun && request.isAdvanceLinkedTickets() ) {
+            advanceLinkedCurationTickets( ee );
+        }
+
         result.setNewLastUpdated( ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null );
         return result;
+    }
+
+    /**
+     * After a successful curation commit, walk the open CURATION / SCREENING tickets that target this
+     * dataset: mark each not-yet-DONE target for this EE as DONE, and RESOLVE a ticket whose last open
+     * target this closes. A multi-dataset ticket keeps its other datasets' targets. Called inside
+     * {@link #commitCuration}'s transaction so the advance shares the commit's fate.
+     */
+    private void advanceLinkedCurationTickets( ExpressionExperiment ee ) {
+        User actor = userManager.getCurrentUser();
+        if ( actor == null ) {
+            // No principal to attribute the advance to; leave the ticket for a manual touch rather than
+            // writing an unattributed event.
+            return;
+        }
+        for ( Ticket ticket : ticketService.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() ) ) {
+            if ( ticket.getType() != TicketType.CURATION && ticket.getType() != TicketType.SCREENING ) {
+                continue;
+            }
+            Ticket current = ticket;
+            List<Long> toAdvance = new ArrayList<>();
+            for ( TicketTarget t : current.getTargets() ) {
+                if ( t.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT
+                        && ee.getId().equals( t.getTargetId() )
+                        && t.getStatus() != TicketTargetStatus.DONE ) {
+                    toAdvance.add( t.getId() );
+                }
+            }
+            for ( Long rowId : toAdvance ) {
+                current = ticketService.updateTargetStatus( current, rowId, TicketTargetStatus.DONE, actor );
+            }
+            boolean allDone = current.getTargets().stream()
+                    .allMatch( t -> t.getStatus() == TicketTargetStatus.DONE );
+            if ( allDone && current.getState() != TicketState.RESOLVED ) {
+                ticketService.transition( current, TicketState.RESOLVED, actor, "curation committed" );
+            }
+        }
     }
 
     /**

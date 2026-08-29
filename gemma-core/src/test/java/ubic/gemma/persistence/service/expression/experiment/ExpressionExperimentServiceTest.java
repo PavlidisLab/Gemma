@@ -60,6 +60,16 @@ public class ExpressionExperimentServiceTest extends BaseTest5 {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService ticketService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService.class );
+        }
+
+        @Bean
+        public ubic.gemma.core.security.authentication.UserManager userManager() {
+            return mock( ubic.gemma.core.security.authentication.UserManager.class );
+        }
+
+        @Bean
         public org.hibernate.SessionFactory sessionFactory() {
             return mock( org.hibernate.SessionFactory.class );
         }
