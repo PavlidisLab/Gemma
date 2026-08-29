@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Metadata-only records are cached in the same directory as the full family SOFT files — on
@@ -85,5 +86,28 @@ class GeoMetadataCacheTest {
         assertThat( localFamily ).as( "the name LocalSeriesFetcher seeks" ).doesNotExist();
         assertThat( dir.toFile().listFiles() )
                 .allSatisfy( f -> assertThat( f.getName() ).endsWith( ".brief.soft" ) );
+    }
+
+    /**
+     * 🛑 GEO answers a withdrawn, private or unknown accession with an HTML page and a 200, not an
+     * error. The SOFT parser reads it happily, finds no series, and the run reports "No series was
+     * parsed for GSE6959" — which reads as a parser bug rather than as GEO declining to serve the
+     * record. Two of the first 2,160 experiments in the corpus sweep failed this way.
+     */
+    @Test
+    void testAnHtmlErrorPageIsNotParsedAsSoft( @TempDir Path cacheDir ) throws Exception {
+        String acc = "GSE9999999";
+        Path dir = Files.createDirectories( cacheDir.resolve( acc ) );
+        String page = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n<HTML>\n"
+                + "<HEAD><title>GEO Accession Display</title></HEAD>\n<BODY>not a record</BODY></HTML>\n";
+        Files.write( dir.resolve( acc + ".self.brief.soft" ), page.getBytes( StandardCharsets.UTF_8 ) );
+        Files.write( dir.resolve( acc + ".gsm.brief.soft" ), page.getBytes( StandardCharsets.UTF_8 ) );
+
+        GeoDomainObjectGenerator generator = new GeoDomainObjectGenerator();
+        generator.setMetadataCacheDir( cacheDir.toFile() );
+
+        assertThatThrownBy( () -> generator.generateSeriesMetadataOnly( acc ) )
+                .hasMessageContaining( "HTML page" )
+                .hasMessageContaining( "withdrawn, private or unknown" );
     }
 }

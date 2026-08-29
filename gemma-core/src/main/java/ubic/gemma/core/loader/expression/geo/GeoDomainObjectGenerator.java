@@ -48,7 +48,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Locale;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -469,15 +471,36 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                         return IOUtils.toByteArray( is );
                     }
                 }, ncbiApiKey ), "fetch " + url );
-                if ( body.length == 0 ) {
+                    if ( body.length == 0 ) {
                     throw new RuntimeException( "GEO returned an empty document for " + url );
                 }
                 this.writeMetadataCacheFile( cached, body );
+            }
+            // acc.cgi answers a withdrawn, private or unknown accession with an HTML page and a 200,
+            // not an error. Without this the SOFT parser reads the page, finds no series, and the run
+            // reports "No series was parsed" -- which reads as a parser bug rather than as GEO
+            // declining to serve the record. Measured on GSE6959, 2026-08-29. Checked after the cache
+            // read as well as the fetch, because a page stored once would otherwise be parsed forever.
+            if ( looksLikeHtml( body ) ) {
+                throw new RuntimeException( "GEO served an HTML page rather than a SOFT record for "
+                        + url + "; the accession is withdrawn, private or unknown to GEO." );
             }
             parser.parse( new ByteArrayInputStream( body ) );
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to read " + url, e );
         }
+    }
+
+    /**
+     * Whether a response body is an HTML document rather than SOFT.
+     * <p>
+     * Checked on the first bytes only, and tolerant of a leading byte-order mark or blank line: the
+     * point is to tell a served record from a served error page, not to parse HTML.
+     */
+    private static boolean looksLikeHtml( byte[] body ) {
+        String head = new String( body, 0, Math.min( body.length, 64 ), StandardCharsets.UTF_8 )
+                .replace( "\uFEFF", "" ).trim().toLowerCase( Locale.ROOT );
+        return head.startsWith( "<!doctype html" ) || head.startsWith( "<html" );
     }
 
     /**
