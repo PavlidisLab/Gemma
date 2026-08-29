@@ -15,6 +15,7 @@ import ubic.gemma.persistence.util.*;
 
 import org.springframework.lang.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
+import java.util.Objects;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -87,13 +88,46 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     /**
-     * Restrict results to non-troubled curatable entities for non-administrators
+     * Restrict results to non-troubled curatable entities for non-administrators.
+     * <p>
+     * 🛑 Unless the caller asked about trouble themselves. This filter is editorial, not access
+     * control — a troubled dataset is not secret, it is one we are telling ordinary users not to
+     * rely on — and ANDing it onto a query that already says {@code troubled = true} produces a
+     * contradiction that returns an empty list rather than an error. A curator asking Gemma which
+     * of their datasets are troubled was being told "none", which is the one answer that is never
+     * useful and never obviously wrong.
+     * <p>
+     * So: the default still hides them, and a caller who names {@code curationDetails.troubled} in
+     * their own filter gets what they asked for.
      */
     protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
-        if ( !SecurityUtil.isUserAdmin() ) {
+        if ( shouldHideTroubled( filters, objectAlias ) ) {
             filters.and( objectAlias, "curationDetails.troubled", Boolean.class, Filter.Operator.eq, false );
         }
+    }
 
+    /**
+     * The decision itself, separated so it can be tested without a session factory: a filtered query
+     * for a non-administrator also carries the ACL EXISTS clause, and test-created entities have no
+     * ACL rows, so a DAO-level test of this rule would pass on an empty result either way.
+     */
+    static boolean shouldHideTroubled( Filters filters, String objectAlias ) {
+        return !SecurityUtil.isUserAdmin() && !mentionsTroubled( filters, objectAlias );
+    }
+
+    /**
+     * Whether the caller's own filters already say something about the troubled flag on this alias.
+     */
+    private static boolean mentionsTroubled( Filters filters, String objectAlias ) {
+        for ( List<Filter> clause : filters ) {
+            for ( Filter f : clause ) {
+                if ( f != null && "curationDetails.troubled".equals( f.getPropertyName() )
+                        && Objects.equals( objectAlias, f.getObjectAlias() ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
