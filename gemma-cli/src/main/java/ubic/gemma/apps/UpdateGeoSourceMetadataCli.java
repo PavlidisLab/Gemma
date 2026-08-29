@@ -41,7 +41,13 @@ public class UpdateGeoSourceMetadataCli extends ExpressionExperimentManipulating
 
     public UpdateGeoSourceMetadataCli() {
         setDefaultToAll();
-        setAllIsLazy();
+        // NOT setAllIsLazy(): that hands the whole corpus to processAllExpressionExperiments(),
+        // whose default body is empty, so `-all` -- which is also the default when no options are
+        // given -- reported success in 0 seconds having done nothing. Lazy-all is for the CLIs that
+        // replace a per-experiment sweep with one set-based statement (UpdateEE2CCli, UpdateEe2AdCli);
+        // this one has to visit every experiment because each needs its own GEO fetch.
+        // References are enough to visit them: the task thaws before it reads anything.
+        setUseReferencesIfPossible();
     }
 
     @Nullable
@@ -96,7 +102,10 @@ public class UpdateGeoSourceMetadataCli extends ExpressionExperimentManipulating
             } catch ( Exception e ) {
                 // One experiment failing to fetch must not end a corpus sweep: GEO withdraws series,
                 // renames them, and rate-limits, and the next 20,000 are unaffected by any of that.
-                addErrorObject( ee, "Failed to store GEO source metadata", e );
+                // formatExperiment(): ee may still be an uninitialized reference here -- if the
+                // thaw is what failed, printing it directly would raise a second exception on the
+                // way to reporting the first.
+                addErrorObject( formatExperiment( ee ), "Failed to store GEO source metadata", e );
             }
         } );
     }

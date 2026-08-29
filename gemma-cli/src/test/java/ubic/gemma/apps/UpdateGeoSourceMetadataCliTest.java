@@ -7,9 +7,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.cli.util.EntityLocator;
+import ubic.gemma.cli.util.TestCLIContext;
 import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -27,6 +29,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import org.mockito.ArgumentCaptor;
+
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -239,5 +243,52 @@ public class UpdateGeoSourceMetadataCliTest extends BaseCliTest5 {
 
         verify( eeService ).thawLite( detached );
         verify( geoService ).updateFromGEO( eq( thawed ), any() );
+    }
+
+    /**
+     * 🛑 The corpus sweep is the point of this command, and it is what you get by default.
+     * <p>
+     * With {@code setAllIsLazy()} the base class handed {@code -all} to
+     * {@code processAllExpressionExperiments()}, whose default body is empty. Nothing was
+     * processed, nothing was logged beyond "Loading all expression experiments as a stub...", and
+     * the run reported success in 0 seconds — on production, with no output to suggest anything was
+     * wrong. Lazy-all belongs to the commands that replace a per-experiment sweep with one
+     * statement; this one has a GEO fetch per experiment.
+     */
+    @Test
+    @WithMockUser
+    // A fresh CLI bean: ExpressionExperimentManipulatingCLI keeps the -e values and the
+    // single-experiment options it has seen in fields that nothing clears, so a bean that already
+    // ran with -e refuses this one with "single-experiment options used ... but more than one
+    // experiments was found".
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    public void testTheDefaultRunVisitsEveryExperiment() {
+        ExpressionExperiment first = geoExperimentReference( 11L, "GSE1111" );
+        when( eeService.loadAllReferences() ).thenReturn( Arrays.asList( first ) );
+
+        TestCLIContext ctx = new TestCLIContext( "updateGeoSourceMetadata", new String[0] );
+        cli.executeCommand( ctx );
+        assertThat( ctx.getExitStatus() ).withFailMessage( "%s", ctx.getExitCause() ).isZero();
+
+        // Loading the corpus by reference IS the fix: setAllIsLazy() sent -all to
+        // processAllExpressionExperiments() instead, and that hook is empty here.
+        verify( eeService ).loadAllReferences();
+        verify( eeService ).thawLite( first );
+        verify( geoService ).updateFromGEO( eq( first ), any() );
+    }
+
+    private ExpressionExperiment geoExperimentReference( long id, String accession ) {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( id );
+        ee.setShortName( accession );
+        ExternalDatabase geo = new ExternalDatabase();
+        geo.setName( ExternalDatabases.GEO );
+        DatabaseEntry acc = new DatabaseEntry();
+        acc.setAccession( accession );
+        acc.setExternalDatabase( geo );
+        ee.setAccession( acc );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
+        when( eeService.hasSourceMetadata( ee ) ).thenReturn( false );
+        return ee;
     }
 }
