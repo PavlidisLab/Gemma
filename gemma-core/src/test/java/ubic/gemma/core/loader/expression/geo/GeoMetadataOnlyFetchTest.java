@@ -18,8 +18,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Date;
+import java.util.Objects;
+import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -88,5 +91,42 @@ class GeoMetadataOnlyFetchTest {
         GeoDomainObjectGenerator generator = new GeoDomainObjectGenerator();
         generator.setMetadataCacheDir( cacheDir.toFile() );
         return generator;
+    }
+
+    /**
+     * 🛑 The lean fetch must produce the SAME document as the family file it replaces.
+     * <p>
+     * That is the whole risk of the change: the family SOFT carries the platform table and every
+     * sample's data table, and the two records read instead carry neither. If some field the
+     * document needs only appears in what was dropped, the backfill still succeeds — on 23,000
+     * experiments — and stores a document quietly missing it.
+     * <p>
+     * The fixture is GSE102415's real family file, 4.6 KB because it is RNA-seq on a generic
+     * platform, so the whole comparison fits in a classpath resource. That is also its limit: a
+     * two-colour array's family file is tens of megabytes and cannot be a fixture, so equality is
+     * proven here for a series whose family file carries no data tables. The channel fields such a
+     * series does not exercise are read from the sample records either way, and
+     * {@link #testATwoChannelSeriesWithoutCharacteristicsStillParses()} covers those.
+     */
+    @Test
+    void testTheLeanFetchBuildsTheSameDocumentAsTheFamilyFile( @TempDir Path cacheDir ) throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+        try ( InputStream is = new GZIPInputStream( Objects.requireNonNull( getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE102415_family.soft.gz" ) ) ) ) {
+            parser.parse( is );
+        }
+        GeoSeries fromFamily = parser.getResults().iterator().next().getSeriesMap().get( "GSE102415" );
+        GeoSeries fromRecords = generator( cacheDir ).generateSeriesMetadataOnly( "GSE102415" );
+
+        assertThat( document( fromRecords ) )
+                .as( "reading the series and sample records must lose nothing the document carries" )
+                .isEqualTo( document( fromFamily ) );
+    }
+
+    /** Serialized with a fixed harvest date, since that is the one field that must differ. */
+    private String document( GeoSeries series ) {
+        return new GeoSourceMetadataBuilder( new ObjectMapper() ).build( series,
+                new GeoSourceMetadataBuilder.ExperimentIdentity( "GSE102415", 1L, false, null ),
+                new Date( 1_770_000_000_000L ) );
     }
 }
