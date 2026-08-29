@@ -2602,6 +2602,11 @@ public class AnnotationsWebService {
         }
 
         LinkedHashSet<AnnotationSearchResultValueObject> vos = new LinkedHashSet<>();
+        // What a curator picks here is written verbatim, so a suggestion carrying a retired URI
+        // makes a row the read path will rewrite on the way back out — the corpus never converges.
+        // The search VOs are built from projections, which do not canonicalize; only the entity
+        // constructor does. Ranking, counting and enrichment stay keyed on the stored URI.
+        Set<String> emittedUris = new HashSet<>();
         for ( CharacteristicValueObject vo : ranked ) {
             Integer count = vo.getValueUri() != null ? countsByUri.getOrDefault( vo.getValueUri(), 0 ) : null;
             String uri = vo.getValueUri();
@@ -2633,7 +2638,13 @@ public class AnnotationsWebService {
             String matchedVia = match != null ? match.via.token : null;
             String matchedText = match != null ? match.text : null;
             Map<String, Integer> priorCategories = uri != null ? priorCategoriesByUri.get( uri ) : null;
-            vos.add( new AnnotationSearchResultValueObject( vo.getValue(), vo.getValueUri(), vo.getCategory(),
+            String canonicalUri = CharacteristicUtils.canonicalUri( vo.getValueUri() );
+            if ( canonicalUri != null && !emittedUris.add( canonicalUri ) ) {
+                // both spellings ranked; the better-ranked one is already out
+                continue;
+            }
+            vos.add( new AnnotationSearchResultValueObject(
+                    CharacteristicUtils.canonicalLabel( vo.getValueUri(), vo.getValue() ), canonicalUri, vo.getCategory(),
                     vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories,
                     null, null, null, null, priorCountFor( vo.getValueUri(), stringPriorByUri ),
                     sourceMetadataByUri.get( vo.getValueUri() ),
