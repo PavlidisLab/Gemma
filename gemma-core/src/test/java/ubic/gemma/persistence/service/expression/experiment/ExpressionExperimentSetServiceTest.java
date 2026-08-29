@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -126,6 +127,39 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest5 {
         assertEquals( 1, eesInSet.size() );
         assertTrue( eesInSet.contains( ee1 ) );
 
+    }
+
+    /**
+     * A set that declares a taxon keeps the constraint: no mice in a rat set. The two tests below
+     * pin that and must keep passing.
+     * <p>
+     * A set that declares NO taxon may span them. The constraint is a scope a set opts into, not a
+     * property every set must have — a curation cohort is the counter-example that forced it: the
+     * gold reference set is 179 human, 254 mouse and 16 rat, and there is nothing wrong with it.
+     * Before this, creating one was impossible and the failure was an UnsupportedOperationException
+     * reading "EESets with mixed taxa are not supported".
+     */
+    @Test
+    public void testASetWithNoTaxonMaySpanThem() {
+        ExpressionExperimentSet mixed = ExpressionExperimentSet.Factory.newInstance();
+        mixed.setName( "Reference cohort, mixed taxa" );
+        mixed.setDescription( "human and mouse together" );
+        mixed.getExperiments().add( ee1 );
+        mixed.getExperiments().add( eeMouse );
+        mixed.setTaxon( null );
+
+        ExpressionExperimentSet created = expressionExperimentSetService.create( mixed );
+        assertNotNull( created.getId() );
+
+        created.setDescription( "still mixed after an update" );
+        expressionExperimentSetService.update( created );
+
+        assertThat( expressionExperimentSetService.getExperimentsInSet( created.getId() ) )
+                .as( "both taxa are in the set" )
+                .hasSize( 2 );
+        assertThat( created.getTaxon() ).isNull();
+
+        expressionExperimentSetService.remove( created );
     }
 
     @Test
