@@ -123,7 +123,17 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
 
         this.baseline = fv.getIsBaseline();
 
-        this.summary = FactorValueUtils.getSummaryString( fv );
+        // Summarize the STATEMENTS this object is about to serialize, not the entity they came
+        // from. The statement VOs above canonicalize their term URIs and labels; the entity does
+        // not, so one factor value was serializing summary "KMH-2 cell" beside subject
+        // "KM-H2 cell" -- the same object disagreeing with itself about what it says.
+        //
+        // With no statements and no measurement there is nothing for that to matter to, and only
+        // the entity can reach the denormalized FACTOR_VALUE.VALUE column: the subclass field
+        // holding it is not assigned until after this constructor returns.
+        this.summary = ( this.statements.isEmpty() && this.measurementObject == null )
+                ? FactorValueUtils.getSummaryString( fv )
+                : FactorValueUtils.getSummaryString( this );
     }
 
     /**

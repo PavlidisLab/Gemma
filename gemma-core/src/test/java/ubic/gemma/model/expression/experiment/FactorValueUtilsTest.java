@@ -96,4 +96,31 @@ public class FactorValueUtilsTest {
         m.setValue( value );
         return m;
     }
+
+    /**
+     * 🛑 The summary must say what the statements beside it say.
+     * <p>
+     * A statement VO canonicalizes its subject URI and label through the read-time term-URI shim;
+     * the entity does not. The summary was built from the entity, so one factor value serialized
+     * {@code summary: "KMH-2 cell"} next to {@code subject: "KM-H2 cell"} — the same object
+     * disagreeing with itself, which is what uib reported on 2026-08-28. Any row of the shim
+     * reproduces it; this uses a pair the shim is known to carry.
+     */
+    @Test
+    public void testTheSummaryAgreesWithTheStatementsItSummarizes() {
+        Statement s = createStatement( "LNCAP cell", null, null );
+        s.setSubjectUri( "http://purl.obolibrary.org/obo/CLO_0007365" );
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setId( 1L );
+        FactorValue fv = new FactorValue();
+        fv.setId( 2L );
+        fv.setExperimentalFactor( ef );
+        fv.getCharacteristics().add( s );
+
+        FactorValueBasicValueObject vo = new FactorValueBasicValueObject( fv );
+
+        String subject = vo.getStatements().iterator().next().getSubject();
+        assertEquals( "LNCaP cell", subject, "the statement VO canonicalizes, which is the premise of this test" );
+        assertEquals( subject, vo.getSummary(), "the summary and the statement must name the same term" );
+    }
 }
