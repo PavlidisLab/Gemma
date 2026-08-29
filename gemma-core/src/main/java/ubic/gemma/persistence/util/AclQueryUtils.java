@@ -377,19 +377,25 @@ public class AclQueryUtils {
         if ( SecuredChild.class.isAssignableFrom( aoiType ) ) {
             throw new IllegalArgumentException( "ACL filtering cannot be done on a SecuredChild; instead identify the owner and apply ACLs on it." );
         }
-        if ( SecurityUtil.isUserAdmin() ) {
-            // For administrators, no filtering is needed, so the ACE is completely skipped from
-            // the where clause and no parameters are bound.
-            return;
-        }
         // HQL formAclRestrictionClause uses :aoiClassId (the resolved acl_class.id);
         // native formNativeAclRestrictionClause + loadAclInfoFor use :aoiType (the string).
         // Each call site exposes exactly one of the two parameter names, so bind both
         // conditionally rather than requiring the caller to know which form it built.
+        //
+        // These run BEFORE the admin bypass because the restriction clause is not the only
+        // thing that declares them: formIsPubliclyReadableExpression backs the `isPublic`
+        // filter and emits :aoiClassId for every caller, admin included. Binding is guarded
+        // on the query actually declaring the parameter, so an admin whose query carries only
+        // the ` where (1=1)` placeholder still binds nothing.
         String className = aoiType.getCanonicalName();
         setParameterIfPresent( query, AOI_TYPE_PARAM, className );
         if ( hasNamedParameter( query, AOI_CLASS_ID_PARAM ) ) {
             query.setParameter( AOI_CLASS_ID_PARAM, resolveAclClassId( className ) );
+        }
+        if ( SecurityUtil.isUserAdmin() ) {
+            // For administrators, no ACL restriction clause is emitted, so there is no
+            // user-name parameter to bind.
+            return;
         }
         if ( SecurityUtil.isUserAnonymous() ) {
             // a constant is used directly in ANONYMOUS_SID_HQL/ANONYMOUS_SID_SQL, so no binding is necessary

@@ -140,6 +140,39 @@ public class AclQueryUtilsTest extends BaseSpringContextTest5 {
         q.list();
     }
 
+    /**
+     * The {@code isPublic} filter emits {@link AclQueryUtils#formIsPubliclyReadableExpression(String)},
+     * which declares :aclQueryUtils_aoiClassId for every caller — including an administrator, whose
+     * restriction clause is only the {@code (1=1)} placeholder. The binding therefore cannot sit
+     * behind the admin bypass in {@link AclQueryUtils#addAclParameters(Query, Class)}.
+     * <p>
+     * Before the fix this threw {@code No argument for named parameter ':aclQueryUtils_aoiClassId'},
+     * which is what /datasets?filter=isPublic returned to every authenticated curator.
+     */
+    @Test
+    public void testIsPubliclyReadableExpressionIsBoundForAdmin() {
+        super.runAsAdmin();
+        Query q = session.createQuery(
+                "select ee from ExpressionExperiment ee"
+                        + formAclRestrictionClause( "ee.id" )
+                        + " and " + formIsPubliclyReadableExpression( "ee.id" ) + " = false" );
+        addAclParameters( q, ExpressionExperiment.class );
+        q.setMaxResults( 1 );
+        q.list();
+    }
+
+    @Test
+    public void testIsPubliclyReadableExpressionIsBoundForAnonymous() {
+        runAsAnonymous();
+        Query q = session.createQuery(
+                "select ee from ExpressionExperiment ee"
+                        + formAclRestrictionClause( "ee.id" )
+                        + " and " + formIsPubliclyReadableExpression( "ee.id" ) + " = true" );
+        addAclParameters( q, ExpressionExperiment.class );
+        q.setMaxResults( 1 );
+        q.list();
+    }
+
     @Test
     public void testNative() {
         Query q = session.createNativeQuery(
