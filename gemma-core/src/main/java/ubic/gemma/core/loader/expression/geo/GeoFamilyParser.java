@@ -1641,6 +1641,14 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             // no-op for now
         } else if ( this.startsWithIgnoreCase( line, "!Series_sample_taxid" ) ) {
             // no-op for now.
+        } else if ( this.startsWithIgnoreCase( line, "!Series_platform_organism" )
+                || this.startsWithIgnoreCase( line, "!Series_sample_organism" ) ) {
+            // The species named by the platforms and the samples. acc.cgi emits these summary
+            // lines and the family SOFT file does not, so they were unknown until the
+            // metadata-only fetch started reading acc.cgi -- one ERROR per series, and with the
+            // Slack appender bound to ERROR, a failed Slack post behind each one. The species the
+            // document reports comes from the samples' own channels, so there is nothing to take
+            // from here; they are the organism siblings of the taxid lines above.
         } else {
             GeoFamilyParser.log.error( "Unknown flag in series: " + line );
         }
