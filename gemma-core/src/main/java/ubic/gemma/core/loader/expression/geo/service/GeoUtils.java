@@ -40,19 +40,23 @@ public class GeoUtils {
                 throw new UnsupportedOperationException( "Unsupported GEO source: " + source + " for the direct GEO source." );
             }
             String targ;
+            // acc.cgi names its targets self / gsm / gpl / gse / all. A target it does not know is
+            // not an error: it silently answers with the accession's own record, so "samples",
+            // "platform" and "series" all returned the 2 KB series record instead of the thing
+            // asked for (measured on GSE1024, 2026-08-29).
             switch ( scope ) {
                 case SELF:
                     // in the HTML view, the default is self
                     targ = format == GeoFormat.HTML ? null : "self";
                     break;
                 case SAMPLES:
-                    targ = "samples";
+                    targ = "gsm";
                     break;
                 case PLATFORM:
-                    targ = "platform";
+                    targ = "gpl";
                     break;
                 case SERIES:
-                    targ = "series";
+                    targ = "gse";
                     break;
                 case FAMILY:
                     targ = "all";
