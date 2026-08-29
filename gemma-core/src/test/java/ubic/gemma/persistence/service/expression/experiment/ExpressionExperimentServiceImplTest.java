@@ -659,6 +659,45 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     /**
+     * 🛑 A design round-trip must not perform the parked term-URI migration.
+     * <p>
+     * The API serves canonical URIs, so a client that edits nothing still proposes the canonical form
+     * of every retired URI it was shown. Two things went wrong with that: the diff compared the
+     * canonical proposal against the raw entity and called it an edit — cab saw a constant surplus of
+     * +1 or +2 `updated` on 8 datasets, none of it theirs — and committing wrote the canonical value
+     * onto the row, performing {@code scripts/sql/term_uri_migration.sql} one statement at a time on
+     * whatever rode along with an unrelated edit.
+     * <p>
+     * The fixture uses a pair the shim carries: stored {@code CLO_0007365} "LNCAP cell" is served as
+     * {@code CLO_0037116} "LNCaP cell".
+     */
+    @Test
+    public void testARoundTripDoesNotMigrateARetiredTermUri() {
+        buildFixture();
+        Statement stored = controlFv.getCharacteristics().iterator().next();
+        stored.setSubject( "LNCAP cell" );
+        stored.setSubjectUri( "http://purl.obolibrary.org/obo/CLO_0007365" );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        assertThat( proposalFv( proposal, 100L ).getStatements() )
+                .withFailMessage( "the proposal must carry the canonical URI, or this test proves nothing" )
+                .anySatisfy( sv -> assertThat( sv.getSubjectUri() )
+                        .isEqualTo( "http://purl.obolibrary.org/obo/CLO_0037116" ) );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getFactorValuesToUpdate() ).isEmpty();
+        assertThat( report.getSummary().getFactorValuesToUpdate() ).isZero();
+
+        assertThat( svc.applyDesignChange( fixture, mirrorProposal() ).isApplied() )
+                .withFailMessage( "echoing the served design must not emit a design-change event" )
+                .isFalse();
+        assertThat( stored.getSubjectUri() )
+                .withFailMessage( "the migration is parked; a design commit must not run it row by row" )
+                .isEqualTo( "http://purl.obolibrary.org/obo/CLO_0007365" );
+        assertThat( stored.getSubject() ).isEqualTo( "LNCAP cell" );
+    }
+
+    /**
      * The other half of the rule: a proposal that changes nothing reports nothing. Without this the two counters
      * above could be satisfied by a report that calls every design edited.
      */

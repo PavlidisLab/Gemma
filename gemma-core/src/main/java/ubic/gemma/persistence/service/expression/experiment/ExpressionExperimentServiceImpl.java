@@ -1629,17 +1629,48 @@ public class ExpressionExperimentServiceImpl
                 s.getSecondObject(), s.getSecondObjectUri() );
     }
 
+    /**
+     * The entity half of the comparison, canonicalized to match the VO half.
+     * <p>
+     * {@link StatementValueObject} canonicalizes its term URIs and labels on construction and this
+     * side did not, so every stored statement holding a retired URI compared unequal to the very
+     * document that was rendered from it: a preflight that asserted nothing reported updates, on 9
+     * of 9 datasets probed on 2026-08-29. Category and predicate are raw on both sides — the shim
+     * deliberately leaves them alone — so they stay raw here.
+     */
     private static String statementContentKey( Statement s ) {
         return statementContentKey( s.getCategory(), s.getCategoryUri(),
-                s.getSubject(), s.getSubjectUri(),
+                CharacteristicUtils.canonicalLabel( s.getSubjectUri(), s.getSubject() ),
+                CharacteristicUtils.canonicalUri( s.getSubjectUri() ),
                 s.getPredicate(), s.getPredicateUri(),
-                s.getObject(), s.getObjectUri(),
+                CharacteristicUtils.canonicalLabel( s.getObjectUri(), s.getObject() ),
+                CharacteristicUtils.canonicalUri( s.getObjectUri() ),
                 s.getSecondPredicate(), s.getSecondPredicateUri(),
-                s.getSecondObject(), s.getSecondObjectUri() );
+                CharacteristicUtils.canonicalLabel( s.getSecondObjectUri(), s.getSecondObject() ),
+                CharacteristicUtils.canonicalUri( s.getSecondObjectUri() ) );
     }
 
     private static String statementContentKey( String... fields ) {
         return Stream.of( fields ).map( f -> f == null ? " " : f ).collect( Collectors.joining( "" ) );
+    }
+
+    /**
+     * Whether a proposed term differs from the stored one ONLY by the read-time canonicalisation.
+     * <p>
+     * A client edits what the API served it, and the API serves canonical URIs, so a document that
+     * changes nothing still proposes the canonical form of every retired URI it was shown. Writing
+     * that back performs the parked database migration
+     * ({@code scripts/sql/term_uri_migration.sql}) on whichever rows happen to ride along with an
+     * unrelated edit — a migration nobody ran, one row at a time, and no way to tell afterwards
+     * which rows moved. The stored value stays until someone runs the migration deliberately.
+     */
+    private static boolean isOnlyCanonicalization( @Nullable String storedLabel, @Nullable String storedUri,
+            @Nullable String proposedLabel, @Nullable String proposedUri ) {
+        if ( storedUri == null || proposedUri == null || storedUri.equals( proposedUri ) ) {
+            return false;
+        }
+        return proposedUri.equals( CharacteristicUtils.canonicalUri( storedUri ) )
+                && Objects.equals( proposedLabel, CharacteristicUtils.canonicalLabel( storedUri, storedLabel ) );
     }
 
     private Statement buildStatement( StatementValueObject ps ) {
@@ -1651,16 +1682,22 @@ public class ExpressionExperimentServiceImpl
     private void applyStatementFields( Statement s, StatementValueObject ps ) {
         s.setCategory( ps.getCategory() );
         s.setCategoryUri( ps.getCategoryUri() );
-        s.setSubject( ps.getSubject() );
-        s.setSubjectUri( ps.getSubjectUri() );
+        if ( !isOnlyCanonicalization( s.getSubject(), s.getSubjectUri(), ps.getSubject(), ps.getSubjectUri() ) ) {
+            s.setSubject( ps.getSubject() );
+            s.setSubjectUri( ps.getSubjectUri() );
+        }
         s.setPredicate( ps.getPredicate() );
         s.setPredicateUri( ps.getPredicateUri() );
-        s.setObject( ps.getObject() );
-        s.setObjectUri( ps.getObjectUri() );
+        if ( !isOnlyCanonicalization( s.getObject(), s.getObjectUri(), ps.getObject(), ps.getObjectUri() ) ) {
+            s.setObject( ps.getObject() );
+            s.setObjectUri( ps.getObjectUri() );
+        }
         s.setSecondPredicate( ps.getSecondPredicate() );
         s.setSecondPredicateUri( ps.getSecondPredicateUri() );
-        s.setSecondObject( ps.getSecondObject() );
-        s.setSecondObjectUri( ps.getSecondObjectUri() );
+        if ( !isOnlyCanonicalization( s.getSecondObject(), s.getSecondObjectUri(), ps.getSecondObject(), ps.getSecondObjectUri() ) ) {
+            s.setSecondObject( ps.getSecondObject() );
+            s.setSecondObjectUri( ps.getSecondObjectUri() );
+        }
         // Supporting evidence follows the same null = "no change" convention as the rest of the payload, so a
         // client that doesn't carry provenance cannot wipe provenance somebody else recorded.
         if ( ps.getSupportingEvidence() != null ) {
