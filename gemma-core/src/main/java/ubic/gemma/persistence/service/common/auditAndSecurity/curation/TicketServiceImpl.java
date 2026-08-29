@@ -23,6 +23,7 @@ import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
@@ -234,6 +235,45 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         // companion AuditTrail row inline rather than via @AuditedConditional.
         auditTrailService.addUpdateEvent( saved, TicketTargetStatusChangedEvent.class, summary );
         return saved;
+    }
+
+    @Override
+    @Transactional
+    public Ticket updateTargetScreeningResult( Ticket ticket, Long targetId,
+            @Nullable ScreeningResult newResult, @Nullable String newReason, Contact actor ) {
+        Assert.notNull( ticket, "Ticket cannot be null." );
+        Assert.notNull( targetId, "targetId cannot be null." );
+        Assert.notNull( actor, "Actor cannot be null." );
+        Ticket attached = reattach( ticket );
+        TicketTarget tgt = null;
+        for ( TicketTarget t : attached.getTargets() ) {
+            if ( targetId.equals( t.getId() ) ) {
+                tgt = t;
+                break;
+            }
+        }
+        if ( tgt == null ) {
+            throw new IllegalArgumentException( "Ticket " + attached.getId()
+                    + " has no target with id " + targetId );
+        }
+        ScreeningResult old = tgt.getScreeningResult();
+        String oldReason = tgt.getScreeningResultReason();
+        if ( old == newResult && java.util.Objects.equals( oldReason, newReason ) ) {
+            // no-op; don't pollute the log stream.
+            return attached;
+        }
+        tgt.setScreeningResult( newResult );
+        tgt.setScreeningResultReason( newReason );
+        bumpUpdated( attached );
+
+        String summary = "target " + tgt.getTargetId()
+                + " (" + tgt.getTargetType() + "): screeningResult "
+                + old + " -> " + newResult;
+        appendEvent( attached, TicketEventType.SCREENING_RESULT_CHANGED, actor, summary );
+        // No AuditTrail companion: the screening result is uncoupled working state and its
+        // record is the ticket event log. Adding a bespoke AuditEvent subclass here would also
+        // trip the Gemma 1.0 audit-type-compatibility surface for no benefit.
+        return ticketDao.save( attached );
     }
 
     @Override

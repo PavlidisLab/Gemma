@@ -660,8 +660,8 @@ public class TicketsWebService {
             @PathParam("targetRowId") Long targetRowId,
             UpdateTargetStatusRequest req
     ) {
-        if ( req == null || req.getStatus() == null ) {
-            throw new BadRequestException( "Request body with `status` is required." );
+        if ( req == null || ( req.getStatus() == null && !req.hasScreeningResult() ) ) {
+            throw new BadRequestException( "Request body with `status` and/or `screeningResult` is required." );
         }
         Ticket ticket = ticketService.load( id );
         if ( ticket == null ) {
@@ -672,9 +672,14 @@ public class TicketsWebService {
             throw new BadRequestException( "No authenticated user resolved." );
         }
         try {
-            ticketService.updateTargetStatus( ticket, targetRowId, req.getStatus(), actor );
+            if ( req.getStatus() != null ) {
+                ticketService.updateTargetStatus( ticket, targetRowId, req.getStatus(), actor );
+            }
+            if ( req.hasScreeningResult() ) {
+                ticketService.updateTargetScreeningResult( ticket, targetRowId, req.getScreeningResult(), req.getScreeningResultReason(), actor );
+            }
         } catch ( IllegalArgumentException e ) {
-            // updateTargetStatus throws IAE when the targetRowId isn't on this ticket.
+            // the update methods throw IAE when the targetRowId isn't on this ticket.
             throw new NotFoundException( e.getMessage() );
         }
         TicketValueObject vo = ticketService.loadValueObject( id, true );
@@ -929,10 +934,32 @@ public class TicketsWebService {
      * (e.g. a per-target note) without a v2 endpoint.
      */
     public static class UpdateTargetStatusRequest {
-        @Schema(description = "Desired status for this target.", example = "DONE")
+        @Schema(description = "Desired status for this target. Omit to leave unchanged.", example = "DONE")
         private TicketTargetStatus status;
+
+        @Schema(description = "Screening decision for this target (INCLUDE / REJECT / UNDECIDED). "
+                + "Omit to leave unchanged; send null to clear.", example = "INCLUDE")
+        private ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult screeningResult;
+        private boolean screeningResultSet = false;
 
         public TicketTargetStatus getStatus() { return status; }
         public void setStatus( TicketTargetStatus status ) { this.status = status; }
+
+        public ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult getScreeningResult() { return screeningResult; }
+
+        public void setScreeningResult( ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult screeningResult ) {
+            this.screeningResult = screeningResult;
+            this.screeningResultSet = true;
+        }
+
+        /** True once the JSON carried a {@code screeningResult} key, even if its value was null. */
+        public boolean hasScreeningResult() { return screeningResultSet; }
+
+        @Schema(description = "Free-text reason for the screening decision; rides with `screeningResult`. "
+                + "Omit or null to clear.", example = "Superseded by GSE99999")
+        private String screeningResultReason;
+
+        public String getScreeningResultReason() { return screeningResultReason; }
+        public void setScreeningResultReason( String screeningResultReason ) { this.screeningResultReason = screeningResultReason; }
     }
 }

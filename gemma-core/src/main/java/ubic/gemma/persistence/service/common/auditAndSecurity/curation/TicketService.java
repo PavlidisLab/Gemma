@@ -118,6 +118,15 @@ public interface TicketService extends BaseService<Ticket> {
             ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus newStatus, Contact actor );
 
     /**
+     * Record a {@link ScreeningResult} on one target (by its row id). Uncoupled from
+     * {@link #updateTargetStatus}: the two are set independently. No-op when unchanged;
+     * writes a SCREENING_RESULT_CHANGED ticket event when it changes.
+     */
+    Ticket updateTargetScreeningResult( Ticket ticket, Long targetId,
+            @Nullable ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult screeningResult,
+            @Nullable String reason, Contact actor );
+
+    /**
      * Load a ticket and project it to a {@link TicketValueObject} inside the same
      * transaction, force-initializing the {@code reporter} + {@code assignee} +
      * {@code targets} (and {@code events} + each event's {@code actor} when

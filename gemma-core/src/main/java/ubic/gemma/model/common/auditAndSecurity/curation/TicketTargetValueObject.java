@@ -39,6 +39,8 @@ public class TicketTargetValueObject implements Serializable {
     private TicketTargetType targetType;
     private Long targetId;
     private TicketTargetStatus status = TicketTargetStatus.NOT_DONE;
+    private ScreeningResult screeningResult;
+    private String screeningResultReason;
 
     /**
      * Short display label for the target (e.g. an EE's {@code shortName} like
@@ -63,6 +65,24 @@ public class TicketTargetValueObject implements Serializable {
         vo.targetType = t.getTargetType();
         vo.targetId = t.getTargetId();
         vo.status = t.getStatus() != null ? t.getStatus() : TicketTargetStatus.NOT_DONE;
+        vo.screeningResult = t.getScreeningResult();
+        vo.screeningResultReason = t.getScreeningResultReason();
         return vo;
+    }
+
+    public ScreeningResult getScreeningResult() {
+        return screeningResult;
+    }
+
+    public void setScreeningResult( ScreeningResult screeningResult ) {
+        this.screeningResult = screeningResult;
+    }
+
+    public String getScreeningResultReason() {
+        return screeningResultReason;
+    }
+
+    public void setScreeningResultReason( String screeningResultReason ) {
+        this.screeningResultReason = screeningResultReason;
     }
 }

@@ -26,6 +26,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
@@ -309,6 +310,46 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         assertEquals( TicketType.AUDIT, ticketDao.load( aid ).getType() );
         assertEquals( "AUDIT", new JdbcTemplate( dataSource )
                 .queryForObject( "SELECT TYPE FROM TICKET WHERE ID = ?", String.class, aid ) );
+    }
+
+    @Test
+    @DisplayName("screeningResult round-trips, is uncoupled from status, and logs its own event")
+    public void screeningResult_roundTripsUncoupledAndLogged() {
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 21L );
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.SCREENING, "screening-result", Collections.singleton( target ) );
+        Long id = created.getId();
+        Long targetRowId = created.getTargets().iterator().next().getId();
+        flushAndClear();
+
+        // fresh target: no decision recorded
+        Ticket loaded = ticketDao.load( id );
+        assertNull( loaded.getTargets().iterator().next().getScreeningResult() );
+        assertEquals( TicketTargetStatus.NOT_DONE, loaded.getTargets().iterator().next().getStatus() );
+
+        ticketService.updateTargetScreeningResult( loaded, targetRowId, ScreeningResult.REJECT, "superseded by GSE99999", reporter );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        TicketTarget rt = reloaded.getTargets().iterator().next();
+        // decision + reason stored...
+        assertEquals( ScreeningResult.REJECT, rt.getScreeningResult() );
+        assertEquals( "superseded by GSE99999", rt.getScreeningResultReason() );
+        // ...as its enum-name string in the column...
+        assertEquals( "REJECT", new JdbcTemplate( dataSource )
+                .queryForObject( "SELECT SCREENING_RESULT FROM TICKET_TARGET WHERE ID = ?", String.class, targetRowId ) );
+        // ...and status is untouched (uncoupled): a REJECT did not force DONE.
+        assertEquals( TicketTargetStatus.NOT_DONE, rt.getStatus() );
+        // the change is in the ticket event log
+        assertTrue( reloaded.getEvents().stream()
+                .anyMatch( e -> e.getType() == TicketEventType.SCREENING_RESULT_CHANGED ),
+                "expected a SCREENING_RESULT_CHANGED event" );
+
+        // no-op re-set does not append a second event
+        int before = reloaded.getEvents().size();
+        ticketService.updateTargetScreeningResult( reloaded, targetRowId, ScreeningResult.REJECT, "superseded by GSE99999", reporter );
+        flushAndClear();
+        assertEquals( before, ticketDao.load( id ).getEvents().size(), "no-op re-set should log nothing" );
     }
 
     @Test

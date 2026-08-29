@@ -20,6 +20,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import ubic.gemma.model.common.AbstractIdentifiable;
+import org.springframework.lang.Nullable;
 
 import java.util.Objects;
 
@@ -53,6 +54,21 @@ public class TicketTarget extends AbstractIdentifiable {
     @Column(name = "STATUS", nullable = false, columnDefinition = "VARCHAR(16)")
     private TicketTargetStatus status = TicketTargetStatus.NOT_DONE;
 
+    /**
+     * The screening decision recorded for this target, or {@code null} when none has been.
+     * Set independently of {@link #status} — see {@link ScreeningResult}.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "SCREENING_RESULT", columnDefinition = "VARCHAR(16)")
+    private ScreeningResult screeningResult;
+
+    /**
+     * Free-text explanation of {@link #screeningResult}, or {@code null}. The thing that makes
+     * an {@link ScreeningResult#UNDECIDED} actionable to the next reader.
+     */
+    @Column(name = "SCREENING_RESULT_REASON", columnDefinition = "TEXT")
+    private String screeningResultReason;
+
     public Ticket getTicket() {
         return ticket;
     }
@@ -83,6 +99,24 @@ public class TicketTarget extends AbstractIdentifiable {
 
     public void setStatus( TicketTargetStatus status ) {
         this.status = status;
+    }
+
+    @Nullable
+    public ScreeningResult getScreeningResult() {
+        return screeningResult;
+    }
+
+    public void setScreeningResult( @Nullable ScreeningResult screeningResult ) {
+        this.screeningResult = screeningResult;
+    }
+
+    @Nullable
+    public String getScreeningResultReason() {
+        return screeningResultReason;
+    }
+
+    public void setScreeningResultReason( @Nullable String screeningResultReason ) {
+        this.screeningResultReason = screeningResultReason;
     }
 
     @Override

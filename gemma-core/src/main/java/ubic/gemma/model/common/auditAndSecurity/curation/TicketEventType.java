@@ -33,6 +33,9 @@ public enum TicketEventType {
      * {@code TicketTargetStatusChangedEvent} on the governance audit trail.
      */
     TARGET_STATUS_CHANGED,
+
+    /** One per screening decision recorded on a target (see {@code ScreeningResult}). */
+    SCREENING_RESULT_CHANGED,
     /** Deferred — see Decision 4 in the recce doc. Provisioned in the enum so the column never has to grow. */
     COMMENT_EDITED
 }
