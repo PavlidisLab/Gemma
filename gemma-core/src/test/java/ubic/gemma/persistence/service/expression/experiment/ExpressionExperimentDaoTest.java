@@ -196,6 +196,34 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         assertThat( expressionExperimentDao.load( Filters.by( f ), null ) ).isEmpty();
     }
 
+    /**
+     * 🛑 `isPublic` is not a mapped attribute — it is read off the ACL entries when the value object
+     * is built — so the metamodel walk that enumerates filterable properties could not see it and
+     * `filter=isPublic = false` answered 400 "the property of isPublic is unknown". It is now
+     * registered by hand and resolved to the ACL predicate.
+     * <p>
+     * This asserts the query RUNS: the expression is a case-over-exists carrying the ACL class-id
+     * parameter, and the ways it can be wrong are all failures of the HQL rather than wrong answers
+     * — an unbound parameter, or a property Hibernate cannot resolve. A filter that never executed
+     * would be no better than no filter at all.
+     */
+    @Test
+    @WithMockUser
+    public void testDatasetsCanBeFilteredByVisibility() {
+        Filter isPrivate = expressionExperimentDao.getFilter( "isPublic", Filter.Operator.eq, "false" );
+        assertThat( isPrivate.getPropertyName() )
+                .as( "resolved to the ACL predicate rather than a column" )
+                .contains( "AclObjectIdentity" )
+                .contains( "IS_AUTHENTICATED_ANONYMOUSLY" );
+
+        // both directions execute; the fixture is empty of ACL rows, so what matters here is that
+        // Hibernate accepts the expression and the parameter binds
+        assertThat( expressionExperimentDao.load( Filters.by( isPrivate ), null ) ).isNotNull();
+        assertThat( expressionExperimentDao.load(
+                Filters.by( expressionExperimentDao.getFilter( "isPublic", Filter.Operator.eq, "true" ) ), null ) )
+                .isNotNull();
+    }
+
     @Test
     public void testThawTransientEntity() {
         ExpressionExperiment ee = new ExpressionExperiment();

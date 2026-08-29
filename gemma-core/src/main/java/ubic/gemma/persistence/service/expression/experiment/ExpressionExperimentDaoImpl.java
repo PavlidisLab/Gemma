@@ -43,6 +43,7 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -79,6 +80,7 @@ import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
+import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
 
@@ -4482,6 +4484,13 @@ public class ExpressionExperimentDaoImpl
         configurer.unregisterEntity( "geeq.", Geeq.class );
         configurer.registerProperty( "geeq.publicQualityScore" );
 
+        // Visibility. isPublic is on the value object but is not a mapped attribute -- it is read
+        // off the ACL entries when the VO is built -- so the metamodel walk that enumerates
+        // filterable properties cannot find it, and `filter=isPublic = false` was a 400 saying the
+        // property is unknown. It is registered by hand, like geeq.publicQualityScore, and resolved
+        // to the ACL predicate in resolveFilterablePropertyMeta.
+        configurer.registerProperty( "isPublic" );
+
         // the primary publication is not very useful, but its attached database entry is
         configurer.unregisterEntity( "primaryPublication.", BibliographicReference.class );
         configurer.registerEntity( "primaryPublication.pubAccession.", DatabaseEntry.class, 2 );
@@ -4575,6 +4584,17 @@ public class ExpressionExperimentDaoImpl
                 return FilterablePropertyMeta.builder()
                         .propertyName( "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)" )
                         .propertyType( Double.class );
+            case "isPublic":
+                // "Public" means exactly what the anonymous branch of formAclRestrictionClause
+                // means: an ACE granting READ to the anonymous SID. Written as a case-expression so
+                // the filter framework can compare it like any other boolean property.
+                //
+                // The expression lives in AclQueryUtils beside the clause it mirrors, so the one
+                // definition of "public" does not drift into this file.
+                return FilterablePropertyMeta.builder()
+                        .propertyName( AclQueryUtils.formIsPubliclyReadableExpression( OBJECT_ALIAS + ".id" ) )
+                        .propertyType( Boolean.class )
+                        .description( "whether an anonymous caller can read this dataset; derived from the ACL entries, not stored" );
             default:
                 return super.resolveFilterablePropertyMeta( propertyName );
         }

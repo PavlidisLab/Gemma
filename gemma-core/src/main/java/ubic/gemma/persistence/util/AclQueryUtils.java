@@ -123,6 +123,38 @@ public class AclQueryUtils {
     static final String ANONYMOUS_SID_SQL = "select sid.id from acl_sid sid where sid.principal = 0 and sid.sid = 'IS_AUTHENTICATED_ANONYMOUSLY'";
 
     /**
+     * An HQL boolean expression that is true when the object is readable by an anonymous caller —
+     * that is, when it is PUBLIC.
+     * <p>
+     * Public is not a stored flag anywhere: it is an ACE granting READ to the anonymous SID, which
+     * is exactly what the anonymous branch of {@link #formAclRestrictionClause(String, Permission)}
+     * tests. This is that same test, shaped as an expression so a filter can compare it like an
+     * ordinary boolean property.
+     * <p>
+     * 🛑 It matches on {@code aoi.objectIdClass}, the mapped BIGINT, and never on {@code aoi.type},
+     * which is a formula resolving to a correlated subquery on {@code acl_class}. With the formula
+     * the planner re-ran that lookup per outer row and {@code /datasets/count} never finished
+     * against production cardinalities.
+     * <p>
+     * The parameter it declares is this class's own, so a caller that already runs
+     * {@link #addAclParameters(Query, Class)} binds it for free; that method binds only parameters
+     * the query actually declares.
+     *
+     * @param idColumn the outer query's id column, e.g. {@code ee.id}
+     */
+    public static String formIsPubliclyReadableExpression( String idColumn ) {
+        Assert.isTrue( StringUtils.isNotBlank( idColumn ), "The id column cannot be empty." );
+        //language=HQL
+        return "(case when exists ("
+                + "select 1 from AclObjectIdentity paoi join paoi.entries pace "
+                + "where paoi.identifier = " + idColumn + " "
+                + "and paoi.objectIdClass = :" + AOI_CLASS_ID_PARAM + " "
+                + "and bitand(pace.mask, " + BasePermission.READ.getMask() + ") <> 0 "
+                + "and pace.sid in (" + ANONYMOUS_SID_HQL + ")"
+                + ") then true else false end)";
+    }
+
+    /**
      * Create an HQL restriction clause with the {@link BasePermission#READ} permission.
      * @see #formAclRestrictionClause(String, Permission)
      */
