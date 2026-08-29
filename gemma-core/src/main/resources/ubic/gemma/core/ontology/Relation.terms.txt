@@ -21,6 +21,7 @@ http://gemma.msl.ubc.ca/ont/TGEMO_00183	delivered to
 http://gemma.msl.ubc.ca/ont/TGEMO_00202	sampled after
 http://gemma.msl.ubc.ca/ont/TGEMO_00201	has child with disease
 http://gemma.msl.ubc.ca/ont/TGEMO_00215	targeted to
+http://gemma.msl.ubc.ca/ont/TGEMO_00216	has background
 http://purl.obolibrary.org/obo/CLO_0000015	derives from patient having disease
 http://purl.obolibrary.org/obo/RO_0003301	has role in modeling
 http://purl.obolibrary.org/obo/CLO_0000179	is disease model for

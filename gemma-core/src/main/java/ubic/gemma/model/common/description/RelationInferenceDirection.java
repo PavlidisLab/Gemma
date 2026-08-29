@@ -95,7 +95,8 @@ public enum RelationInferenceDirection {
             "http://purl.obolibrary.org/obo/RO_0000087",       // has role -- imatinib implies antineoplastic
             "http://purl.obolibrary.org/obo/RO_0003301",       // has role in modeling
             "http://purl.obolibrary.org/obo/RO_0016002",       // has disease -- SNCA implies Parkinson
-            "http://gemma.msl.ubc.ca/ont/TGEMO_00201"          // has child with disease
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00201",         // has child with disease
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00216"          // has background -- a line implies C57BL/6; B6 implies no line
     );
 
     /**

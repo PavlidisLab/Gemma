@@ -368,6 +368,31 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
      * specific end on the same side each time: a cell line's {@code derives from patient having
      * disease} runs subject-to-object, while {@code has_genotype} runs object-to-subject.</p>
      */
+    /**
+     * A cell line or strain's genetic background is a fact about that line, not about the experiment
+     * that used it, and the implication runs one way: a knockout line implies C57BL/6, while C57BL/6
+     * implies nothing about which of the thousands of lines on it is in hand.
+     * <p>
+     * Minted as TGEMO_00216 on 2026-08-29 so that a background the submitter reported as a constant
+     * characteristic stops being recorded as the experimental strain itself.
+     */
+    @Test
+    public void testABackgroundIsAFactAboutTheLineAndImpliesOnlyDownwards() {
+        String hasBackground = "http://gemma.msl.ubc.ca/ont/TGEMO_00216";
+        String cellLine = "http://purl.obolibrary.org/obo/CLO_0000031";
+
+        assertThat( RelationTopicality.of( hasBackground, cellLine ) )
+                .as( "the background belongs to the line, whatever the experiment did with it" )
+                .isEqualTo( RelationTopicality.TERM_LEVEL );
+
+        assertThat( RelationInferenceDirection.of( hasBackground, cellLine ) )
+                .isEqualTo( RelationInferenceDirection.SUBJECT_IMPLIES_OBJECT );
+        assertThat( RelationInferenceDirection.of( hasBackground, cellLine ).licenses( true ) )
+                .as( "the line implies its background" ).isTrue();
+        assertThat( RelationInferenceDirection.of( hasBackground, cellLine ).licenses( false ) )
+                .as( "C57BL/6 must NOT imply any particular line" ).isFalse();
+    }
+
     @Test
     public void testTheImplicationRunsOnlyOneWayAndTheWayDependsOnThePredicate() {
         String diseaseModel = "http://gemma.msl.ubc.ca/ont/TGEMO_00101";

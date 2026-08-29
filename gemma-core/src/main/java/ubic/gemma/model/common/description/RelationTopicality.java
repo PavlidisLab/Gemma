@@ -89,7 +89,8 @@ public enum RelationTopicality {
             "http://purl.obolibrary.org/obo/ENVO_01003004",    // derives from part of -- cell line -> brain
             "http://purl.obolibrary.org/obo/RO_0000087",       // has role -- CHEBI's drug -> role
             "http://purl.obolibrary.org/obo/RO_0003301",       // has role in modeling
-            "http://gemma.msl.ubc.ca/ont/TGEMO_00201"          // has child with disease
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00201",         // has child with disease
+            "http://gemma.msl.ubc.ca/ont/TGEMO_00216"          // has background -- the line's, not the experiment's
     );
 
     /**
