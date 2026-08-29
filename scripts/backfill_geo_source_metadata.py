@@ -219,16 +219,34 @@ def write_list_file(dest: Path, names: list[str], header: list[str]) -> None:
 # Run & summarize
 # ---------------------------------------------------------------------------
 
-def build_command(cli: str, list_file: Path, batch_tsv: Path,
+def build_command(cli: str, list_file: Path | None, batch_tsv: Path,
                   threads: int, force: bool) -> list[str]:
-    cmd = [cli, "updateGeoSourceMetadata",
-           "-f", str(list_file),
-           "-threads", str(threads),
-           "-batchFormat", "TSV",
-           "-batchOutputFile", str(batch_tsv)]
+    cmd = [cli, "updateGeoSourceMetadata"]
+    if list_file is not None:
+        cmd += ["-f", str(list_file)]
+    cmd += ["-threads", str(threads),
+            "-batchFormat", "TSV",
+            "-batchOutputFile", str(batch_tsv)]
     if force:
         cmd.append("-force")
     return cmd
+
+
+def run_and_log(cmd: list[str], log_file: Path) -> int:
+    """Run the CLI, copying its output to both the terminal and a log beside the batch TSV.
+
+    The corpus run takes hours, so it is started detached and nobody is watching the terminal; a
+    run whose only record was the scrollback would leave nothing to read afterwards.
+    """
+    with log_file.open("w") as log:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+            log.write(line)
+            log.flush()
+        return proc.wait()
 
 
 def summarize(batch_tsv: Path) -> int:
@@ -277,6 +295,10 @@ def main() -> int:
                     help="where the resolved list, preflight report and batch TSV go "
                          "(default: ~/Gemma2.0/handoffs/geo_source_metadata_<date> "
                          "where that directory exists, else ./)")
+    ap.add_argument("--all", action="store_true",
+                    help="every GEO experiment in the corpus instead of a list. The CLI streams the "
+                         "corpus lazily and skips what already has a document, so this is the form "
+                         "for the full backfill and it can be re-issued after an interruption.")
     ap.add_argument("--offset", type=int, default=0, help="skip the first N names")
     ap.add_argument("--limit", type=int, default=None,
                     help="process at most N names (start small: the fetch is rate-limited)")
@@ -302,11 +324,39 @@ def main() -> int:
     if args.summarize:
         return summarize(args.summarize)
 
-    if not args.list.exists():
+    if args.all and (args.limit is not None or args.offset):
+        raise SystemExit("--all takes the whole corpus; --limit and --offset are for a list")
+    if not args.all and not args.list.exists():
         raise SystemExit(f"list file not found: {args.list}")
 
     base = (args.base or resolve_secret("GEMMA_BASE_URL", "GEMMA_BASE_URL", "gemma-base-url")
             or DEFAULT_BASE).rstrip("/")
+
+    if args.all:
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        job = f"geo_source_metadata_all_{datetime.now(timezone.utc).strftime('%Y_%m_%d')}"
+        handoffs = _GEMMA_ROOT / "handoffs"
+        out_dir = args.out_dir or (handoffs / job if handoffs.is_dir() else Path(job))
+        out_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            out_dir.chmod(0o2775)
+        except OSError:
+            pass
+        batch_tsv = out_dir / "batch.tsv"
+        # No preflight: there is no list to resolve, and the CLI streams the corpus rather than
+        # loading 23,000 entities to filter them.
+        cmd = build_command(args.gemma_cli, None, batch_tsv, args.threads, args.force)
+        print(f"every GEO experiment in the corpus, batch TSV -> {batch_tsv}")
+        print("\ncommand:\n  " + " ".join(cmd))
+        if not args.run:
+            print("\n(dry run — pass --run to execute; gemma-cli writes to PRODUCTION)")
+            return 0
+        print("\n🛑 running against PRODUCTION — two GEO fetches per experiment not already done\n")
+        t0 = time.time()
+        code = run_and_log(cmd, out_dir / "run.log")
+        print(f"\ngemma-cli exited {code} after {(time.time() - t0) / 60:.1f} min")
+        summarize(batch_tsv)
+        return code
 
     names = read_list(args.list)
     sliced = names[args.offset:]
