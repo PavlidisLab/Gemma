@@ -239,9 +239,16 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             if ( e instanceof InterruptedException ) {
                 Thread.currentThread().interrupt();
             }
-            List<Runnable> stillRunning = executorService.shutdownNow();
-            if ( !stillRunning.isEmpty() ) {
-                log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
+            // createBatchTaskExecutor() itself can throw -- it opens -batchOutputFile, which
+            // fails on an unwritable directory -- and that lands here before the field is
+            // assigned. Calling shutdownNow() on it then raised an NPE that REPLACED the real
+            // cause, so the run reported "executorService is null" and never named the file it
+            // could not open.
+            if ( executorService != null ) {
+                List<Runnable> stillRunning = executorService.shutdownNow();
+                if ( !stillRunning.isEmpty() ) {
+                    log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
+                }
             }
             if ( e instanceof WorkAbortedException ) {
                 log.warn( "Operation was aborted by the current user." );
