@@ -84,7 +84,6 @@ clo_twin	http://purl.obolibrary.org/obo/CLO_0004266	HT 1080 cell	http://purl.obo
 clo_twin	http://purl.obolibrary.org/obo/CLO_0008782	Reh cell	http://purl.obolibrary.org/obo/CLO_0008781	REH cell	1	R5 usage, among members equal on every stronger rule
 clo_twin	http://purl.obolibrary.org/obo/CLO_0009196	SW 620 cell	http://purl.obolibrary.org/obo/CLO_0009221	SW620 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0009450	U 937 cell	http://purl.obolibrary.org/obo/CLO_0009465	U-937 cell	1	R3 EFO xrefs it (an external ontology's editorial pick)
-clo_twin	http://purl.obolibrary.org/obo/CLO_0037155	KMH-2 cell	http://purl.obolibrary.org/obo/CLO_0007112	KM-H2 cell	1	R5 usage, among members equal on every stronger rule
 clo_twin	http://purl.obolibrary.org/obo/CLO_0001199	22RV1 cell	http://purl.obolibrary.org/obo/CLO_0001200	22Rv1 cell	0	R5 usage, among members equal on every stronger rule
 clo_twin	http://purl.obolibrary.org/obo/CLO_0001543	A 172 cell	http://purl.obolibrary.org/obo/CLO_0001560	A172 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)
 clo_twin	http://purl.obolibrary.org/obo/CLO_0001544	A 375 cell	http://purl.obolibrary.org/obo/CLO_0001582	A-375 cell	0	R3 EFO xrefs it (an external ontology's editorial pick)

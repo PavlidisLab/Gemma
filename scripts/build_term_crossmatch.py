@@ -393,6 +393,20 @@ def strict_label_key(label: str) -> str:
     return re.sub(r"[^a-z0-9]", "", label.strip().lower())
 
 
+# Twin members that label-matching groups together and that are NOT the same thing. Each was
+# found by comparing a stored annotation with the one the API served for it, and each is here
+# because no rule available to this script separates it from a real twin: the labels differ only
+# in punctuation, and the ladder below then picks a winner between two distinct cell lines.
+#
+#   CLO_0037155 'KMH-2 cell' / CLO_0007112 'KM-H2 cell' -- both live, neither obsoleted, different
+#   asserted parents (thyroid-gland-derived vs not). Surfaced on GSE10831 statement 30031645,
+#   2026-08-29. Guarded in CharacteristicUtilsUriMigrationTest.
+EXCLUDED_TWIN_URIS = frozenset({
+    "http://purl.obolibrary.org/obo/CLO_0037155",
+    "http://purl.obolibrary.org/obo/CLO_0007112",
+})
+
+
 def build_twin_rows(classes: dict[str, dict], efo_xref: frozenset[str],
                     usage: dict[str, int], prefs: dict[tuple[str, str], int],
                     min_winner: int, min_margin: int) -> tuple[list[list], dict[str, int]]:
@@ -414,6 +428,9 @@ def build_twin_rows(classes: dict[str, dict], efo_xref: frozenset[str],
         tally["groups"] += 1
         if len({strict_label_key(m["label"]) for m in members}) > 1:
             tally["dropped_suffix_artifact"] += 1
+            continue
+        if any(m["uri"] in EXCLUDED_TWIN_URIS for m in members):
+            tally["dropped_known_distinct"] += 1
             continue
         favoured, why = choose(members, prefs, efo_xref, min_winner, min_margin)
         if favoured is None:

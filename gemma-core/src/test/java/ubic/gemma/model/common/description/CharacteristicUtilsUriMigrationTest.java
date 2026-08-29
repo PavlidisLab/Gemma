@@ -85,4 +85,27 @@ public class CharacteristicUtilsUriMigrationTest {
                     .as( "resolving twice must equal resolving once" ).isEqualTo( once );
         }
     }
+
+    /**
+     * 🛑 KMH-2 and KM-H2 are not the same cell line, and the shim used to say they were.
+     * <p>
+     * {@code CLO_0037155} "KMH-2 cell" was mapped onto {@code CLO_0007112} "KM-H2 cell" on the basis
+     * of "R5 usage" — a tie-break applied AFTER the twin grouping had already decided the two
+     * classes were one, which it does by comparing labels with punctuation and case removed. Both
+     * classes are live in CLO, neither carries {@code termReplacedBy}, and their asserted parents
+     * differ (thyroid-gland-derived versus not). GSE10831's statement 30031645 stored the first and
+     * the design endpoint served the second, which is how it surfaced.
+     * <p>
+     * The row is gone from {@code TermUriMigration.tsv} and from the parked migration. This test
+     * exists because regenerating the table is a script run away, and a re-added row would be
+     * invisible until someone compared a stored value with a served one again.
+     */
+    @Test
+    public void testTwoCellLinesThatMerelyPunctuateAlikeAreNotMerged() {
+        String kmh2 = OBO + "CLO_0037155";
+        assertThat( CharacteristicUtils.canonicalUri( kmh2 ) )
+                .as( "KMH-2 is its own cell line; rewriting it to KM-H2 changes what the annotation says" )
+                .isEqualTo( kmh2 );
+        assertThat( CharacteristicUtils.canonicalLabel( kmh2, "KMH-2 cell" ) ).isEqualTo( "KMH-2 cell" );
+    }
 }

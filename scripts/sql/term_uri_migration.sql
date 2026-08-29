@@ -88,8 +88,7 @@ INSERT INTO TERM_URI_MIGRATION (FROM_URI, TO_URI, TO_LABEL, LANE) VALUES
   ('http://purl.obolibrary.org/obo/CLO_0004266', 'http://purl.obolibrary.org/obo/CLO_0004276', 'HT-1080 cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0008782', 'http://purl.obolibrary.org/obo/CLO_0008781', 'REH cell', 'clo_twin'),
   ('http://purl.obolibrary.org/obo/CLO_0009196', 'http://purl.obolibrary.org/obo/CLO_0009221', 'SW620 cell', 'clo_twin'),
-  ('http://purl.obolibrary.org/obo/CLO_0009450', 'http://purl.obolibrary.org/obo/CLO_0009465', 'U-937 cell', 'clo_twin'),
-  ('http://purl.obolibrary.org/obo/CLO_0037155', 'http://purl.obolibrary.org/obo/CLO_0007112', 'KM-H2 cell', 'clo_twin');
+  ('http://purl.obolibrary.org/obo/CLO_0009450', 'http://purl.obolibrary.org/obo/CLO_0009465', 'U-937 cell', 'clo_twin');
 
 -- Step 1 -- PREFLIGHT. Record these counts before applying; they are what step 3 must match.
 SELECT m.LANE, COUNT(*) AS n_rows, 'subject' AS slot
