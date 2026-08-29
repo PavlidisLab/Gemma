@@ -129,14 +129,59 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
         } else {
             results = aclLinterService.lintAcls( config );
         }
+        // Per-type tally of what happened, so a long run ends with a legible summary instead of only
+        // the scrolled-past per-row lines. Bucketed by an action derived from the message
+        // (created / deleted / missing / dangling / other) and by whether a fix was applied.
+        java.util.Map<String, java.util.Map<String, Integer>> tally = new java.util.TreeMap<>();
+        int fixes = 0, findings = 0;
         for ( AclLinterService.LintResult result : results ) {
             String o = result.getType().getSimpleName() + " Id=" + result.getIdentifier();
             if ( result.isFixed() ) {
                 addSuccessObject( o, result.getMessage() );
+                fixes++;
             } else {
                 addWarningObject( o, result.getMessage() );
+                findings++;
+            }
+            String action = classifyLintAction( result.getMessage() );
+            tally.computeIfAbsent( result.getType().getSimpleName(), k -> new java.util.TreeMap<>() )
+                    .merge( action, 1, Integer::sum );
+        }
+
+        log.info( "===== lintAcls summary =====" );
+        if ( tally.isEmpty() ) {
+            log.info( "Nothing to report: every linted type was clean." );
+        } else {
+            for ( java.util.Map.Entry<String, java.util.Map<String, Integer>> e : tally.entrySet() ) {
+                StringBuilder line = new StringBuilder( e.getKey() ).append( ": " );
+                boolean first = true;
+                for ( java.util.Map.Entry<String, Integer> a : e.getValue().entrySet() ) {
+                    if ( !first ) line.append( ", " );
+                    line.append( a.getValue() ).append( ' ' ).append( a.getKey() );
+                    first = false;
+                }
+                log.info( line.toString() );
             }
         }
+        log.info( applyFixes
+                ? ( fixes + " fix(es) applied, " + findings + " left unfixed" )
+                : ( findings + " finding(s); re-run with --apply-fixes to act on them" ) );
+    }
+
+    /**
+     * Coarse action bucket for the summary, read from the {@link AclLinterService.LintResult} message
+     * (which may carry a row id, so a substring match rather than equality). Keeps the tally readable
+     * without the service having to expose an enum.
+     */
+    private static String classifyLintAction( String message ) {
+        if ( message == null ) return "other";
+        String m = message.toLowerCase();
+        if ( m.contains( "created" ) ) return "created";
+        if ( m.contains( "deleted" ) ) return "deleted";
+        if ( m.contains( "lacks an acl identity" ) || m.contains( "lacking" ) ) return "missing";
+        if ( m.contains( "no corresponding entity" ) || m.contains( "dangling" ) ) return "dangling";
+        if ( m.contains( "parent" ) ) return "parent";
+        return "other";
     }
 
     @Nullable
