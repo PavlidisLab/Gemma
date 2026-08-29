@@ -676,7 +676,7 @@ public class TicketsWebService {
                 ticketService.updateTargetStatus( ticket, targetRowId, req.getStatus(), actor );
             }
             if ( req.hasScreeningResult() ) {
-                ticketService.updateTargetScreeningResult( ticket, targetRowId, req.getScreeningResult(), req.getScreeningResultReason(), actor );
+                ticketService.updateTargetScreeningResult( ticket, targetRowId, req.getScreeningResult(), req.getScreeningResultReason(), req.hasScreeningResultReason(), actor );
             }
         } catch ( IllegalArgumentException e ) {
             // the update methods throw IAE when the targetRowId isn't on this ticket.
@@ -955,11 +955,21 @@ public class TicketsWebService {
         /** True once the JSON carried a {@code screeningResult} key, even if its value was null. */
         public boolean hasScreeningResult() { return screeningResultSet; }
 
-        @Schema(description = "Free-text reason for the screening decision; rides with `screeningResult`. "
-                + "Omit or null to clear.", example = "Superseded by GSE99999")
+        @Schema(description = "Free-text reason for the screening decision. Omit the key to leave the "
+                + "existing reason unchanged (including when re-sending the same screeningResult); send "
+                + "an explicit null to clear it. Only applied on a patch that also carries screeningResult.",
+                example = "Superseded by GSE99999")
         private String screeningResultReason;
+        private boolean screeningResultReasonSet = false;
 
         public String getScreeningResultReason() { return screeningResultReason; }
-        public void setScreeningResultReason( String screeningResultReason ) { this.screeningResultReason = screeningResultReason; }
+
+        public void setScreeningResultReason( String screeningResultReason ) {
+            this.screeningResultReason = screeningResultReason;
+            this.screeningResultReasonSet = true;
+        }
+
+        /** True once the JSON carried a {@code screeningResultReason} key, even if its value was null. */
+        public boolean hasScreeningResultReason() { return screeningResultReasonSet; }
     }
 }

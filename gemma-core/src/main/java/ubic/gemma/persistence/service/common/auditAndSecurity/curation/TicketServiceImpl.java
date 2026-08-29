@@ -240,7 +240,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     @Override
     @Transactional
     public Ticket updateTargetScreeningResult( Ticket ticket, Long targetId,
-            @Nullable ScreeningResult newResult, @Nullable String newReason, Contact actor ) {
+            @Nullable ScreeningResult newResult, @Nullable String newReason, boolean reasonProvided, Contact actor ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( targetId, "targetId cannot be null." );
         Assert.notNull( actor, "Actor cannot be null." );
@@ -258,17 +258,25 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         }
         ScreeningResult old = tgt.getScreeningResult();
         String oldReason = tgt.getScreeningResultReason();
-        if ( old == newResult && java.util.Objects.equals( oldReason, newReason ) ) {
+        // The reason is independent of the decision: an absent reason key leaves it as-is, so
+        // re-sending the same decision without a reason does NOT wipe the note (that silent loss
+        // was the pre-fix behaviour). Only an explicit reason changes or clears it. Clearing the
+        // reason when the DECISION changes is the client's call — send reason=null then.
+        String effectiveReason = reasonProvided ? newReason : oldReason;
+        boolean resultChanged = old != newResult;
+        boolean reasonChanged = reasonProvided && !java.util.Objects.equals( oldReason, newReason );
+        if ( !resultChanged && !reasonChanged ) {
             // no-op; don't pollute the log stream.
             return attached;
         }
         tgt.setScreeningResult( newResult );
-        tgt.setScreeningResultReason( newReason );
+        tgt.setScreeningResultReason( effectiveReason );
         bumpUpdated( attached );
 
         String summary = "target " + tgt.getTargetId()
                 + " (" + tgt.getTargetType() + "): screeningResult "
-                + old + " -> " + newResult;
+                + old + " -> " + newResult
+                + ( reasonChanged ? " (reason updated)" : "" );
         appendEvent( attached, TicketEventType.SCREENING_RESULT_CHANGED, actor, summary );
         // No AuditTrail companion: the screening result is uncoupled working state and its
         // record is the ticket event log. Adding a bespoke AuditEvent subclass here would also

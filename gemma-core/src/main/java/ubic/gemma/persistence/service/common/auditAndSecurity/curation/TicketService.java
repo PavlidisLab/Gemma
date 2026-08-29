@@ -124,7 +124,7 @@ public interface TicketService extends BaseService<Ticket> {
      */
     Ticket updateTargetScreeningResult( Ticket ticket, Long targetId,
             @Nullable ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult screeningResult,
-            @Nullable String reason, Contact actor );
+            @Nullable String reason, boolean reasonProvided, Contact actor );
 
     /**
      * Load a ticket and project it to a {@link TicketValueObject} inside the same

@@ -327,7 +327,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         assertNull( loaded.getTargets().iterator().next().getScreeningResult() );
         assertEquals( TicketTargetStatus.NOT_DONE, loaded.getTargets().iterator().next().getStatus() );
 
-        ticketService.updateTargetScreeningResult( loaded, targetRowId, ScreeningResult.REJECT, "superseded by GSE99999", reporter );
+        ticketService.updateTargetScreeningResult( loaded, targetRowId, ScreeningResult.REJECT, "superseded by GSE99999", true, reporter );
         flushAndClear();
 
         Ticket reloaded = ticketDao.load( id );
@@ -347,9 +347,49 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
 
         // no-op re-set does not append a second event
         int before = reloaded.getEvents().size();
-        ticketService.updateTargetScreeningResult( reloaded, targetRowId, ScreeningResult.REJECT, "superseded by GSE99999", reporter );
+        ticketService.updateTargetScreeningResult( reloaded, targetRowId, ScreeningResult.REJECT, "superseded by GSE99999", true, reporter );
         flushAndClear();
         assertEquals( before, ticketDao.load( id ).getEvents().size(), "no-op re-set should log nothing" );
+    }
+
+    @Test
+    @DisplayName("screeningResult reason is independent: an absent reason key never wipes the note")
+    public void screeningResultReason_absentKeyLeavesReasonUntouched() {
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 22L );
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.SCREENING, "reason-independence", Collections.singleton( target ) );
+        Long id = created.getId();
+        Long rid = created.getTargets().iterator().next().getId();
+
+        // seed a decision + reason
+        ticketService.updateTargetScreeningResult( ticketDao.load( id ), rid,
+                ScreeningResult.UNDECIDED, "needs the paper", true, reporter );
+        flushAndClear();
+        int eventsAfterSeed = ticketDao.load( id ).getEvents().size();
+
+        // re-send the SAME decision with NO reason key (reasonProvided=false) -> true no-op:
+        // reason preserved, no event appended (the pre-fix bug cleared it and logged a change)
+        ticketService.updateTargetScreeningResult( ticketDao.load( id ), rid,
+                ScreeningResult.UNDECIDED, null, false, reporter );
+        flushAndClear();
+        TicketTarget t = ticketDao.load( id ).getTargets().iterator().next();
+        assertEquals( ScreeningResult.UNDECIDED, t.getScreeningResult() );
+        assertEquals( "needs the paper", t.getScreeningResultReason() );
+        assertEquals( eventsAfterSeed, ticketDao.load( id ).getEvents().size(), "no-op must log nothing" );
+
+        // change the decision with NO reason key -> reason survives (client clears it explicitly if wanted)
+        ticketService.updateTargetScreeningResult( ticketDao.load( id ), rid,
+                ScreeningResult.REJECT, null, false, reporter );
+        flushAndClear();
+        t = ticketDao.load( id ).getTargets().iterator().next();
+        assertEquals( ScreeningResult.REJECT, t.getScreeningResult() );
+        assertEquals( "needs the paper", t.getScreeningResultReason() );
+
+        // explicit null reason clears it
+        ticketService.updateTargetScreeningResult( ticketDao.load( id ), rid,
+                ScreeningResult.REJECT, null, true, reporter );
+        flushAndClear();
+        assertNull( ticketDao.load( id ).getTargets().iterator().next().getScreeningResultReason() );
     }
 
     @Test
