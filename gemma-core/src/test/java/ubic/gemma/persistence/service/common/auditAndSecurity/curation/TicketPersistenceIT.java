@@ -284,6 +284,25 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
     }
 
     @Test
+    @DisplayName("SCREENING round-trips and lands in TYPE as its own name, not truncated")
+    public void screeningType_roundTripsAsName() {
+        // The TicketType docblock claims new values need no migration because TYPE is
+        // VARCHAR(64). SCREENING is the first value added since that claim was written;
+        // this pins both halves of it — the value survives the round trip, and the column
+        // holds the constant name rather than an ordinal or a truncated string.
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 11L );
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.SCREENING, "screening-roundtrip",
+                Collections.singleton( target ) );
+        Long id = created.getId();
+        flushAndClear();
+
+        assertEquals( TicketType.SCREENING, ticketDao.load( id ).getType() );
+        assertEquals( "SCREENING", new JdbcTemplate( dataSource )
+                .queryForObject( "SELECT TYPE FROM TICKET WHERE ID = ?", String.class, id ) );
+    }
+
+    @Test
     @DisplayName("OPEN → IN_PROGRESS → RESOLVED lifecycle: state, updatedAt, and event log all advance")
     public void lifecycle_open_inProgress_resolved() {
         TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 99L );
