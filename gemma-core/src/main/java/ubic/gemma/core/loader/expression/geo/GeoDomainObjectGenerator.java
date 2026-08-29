@@ -24,8 +24,17 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.expression.geo.fetcher.DatasetFetcher;
 import ubic.gemma.core.loader.expression.geo.fetcher.PlatformFetcher;
 import ubic.gemma.core.loader.expression.geo.fetcher.SeriesFetcher;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.*;
+import ubic.gemma.core.loader.expression.geo.service.GeoAmount;
+import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
+import ubic.gemma.core.loader.expression.geo.service.GeoScope;
+import ubic.gemma.core.loader.expression.geo.service.GeoSource;
+import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
+import ubic.gemma.core.util.SimpleRetry;
+import ubic.gemma.core.util.SimpleRetryPolicy;
+import org.apache.commons.io.IOUtils;
 import ubic.gemma.core.loader.util.fetcher.Fetcher;
 import ubic.gemma.core.loader.util.sdo.SourceDomainObjectGenerator;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -33,8 +42,11 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 
 import org.springframework.lang.Nullable;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,6 +60,13 @@ import java.util.Map;
 public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     protected static final Log log = LogFactory.getLog( GeoDomainObjectGenerator.class.getName() );
+
+    /**
+     * Same policy the MINiML reads use: three attempts, backing off from ~1 s.
+     */
+    private static final SimpleRetry<IOException> metadataRetry = new SimpleRetry<>(
+            new SimpleRetryPolicy( 3, 1001, 1.5 ), IOException.class,
+            GeoDomainObjectGenerator.class.getName() );
 
     private final Fetcher datasetFetcher;
     private final Fetcher seriesFetcher;
@@ -379,6 +398,62 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         series.setSampleCorrespondence( correspondence );
 
         return series;
+    }
+
+    /**
+     * Fetch and parse only the METADATA of a series: its own record plus its sample records, with no
+     * data tables and no platform record.
+     * <p>
+     * The family SOFT file that {@link #processSeries} downloads embeds the platform table and every
+     * sample's data table, which is the whole of its size: GSE1024's is 36 MB on disk, against 60 KB
+     * for the two records read here (measured 2026-08-29). Nothing that reads a
+     * {@code sourceMetadata} document needs either table, so the backfill pays 36 MB per experiment
+     * for two fields it uses.
+     * <p>
+     * It is still SOFT, so {@link GeoFamilyParser} reads it unchanged; the two responses are parsed
+     * into one parser, series first, because the sample records attach to the series the
+     * {@code !Series_sample_id} lines named. What is NOT done here is everything conversion needs —
+     * no GDS lookup, no sample correspondence — because no {@code ExpressionExperiment} is built.
+     *
+     * @throws RuntimeException if GEO answers with no series, which includes the case of an
+     *                          accession that does not exist
+     */
+    public GeoSeries generateSeriesMetadataOnly( String seriesAccession ) {
+        log.info( "Fetching metadata-only records for " + seriesAccession + " (no data tables)." );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.setMetadataOnly( true );
+        // series first: the sample records that follow attach to what it declared
+        this.parseRecord( seriesAccession, GeoScope.SELF, parser );
+        this.parseRecord( seriesAccession, GeoScope.SAMPLES, parser );
+        GeoSeries series = parser.getResults().iterator().next().getSeriesMap().get( seriesAccession );
+        if ( series == null ) {
+            throw new RuntimeException( "No series was parsed for " + seriesAccession );
+        }
+        return series;
+    }
+
+    /**
+     * Read one acc.cgi record into the parser.
+     * <p>
+     * The body is buffered before parsing rather than streamed: {@link GeoFamilyParser#parse(InputStream)}
+     * rejects a stream whose {@code available()} is zero, which is what a freshly opened URL stream
+     * reports. These records are tens of kilobytes.
+     */
+    private void parseRecord( String seriesAccession, GeoScope scope, GeoFamilyParser parser ) {
+        URL url = GeoUtils.getUrl( seriesAccession, GeoSource.DIRECT, GeoFormat.SOFT, scope, GeoAmount.BRIEF );
+        try {
+            byte[] body = metadataRetry.execute( EntrezUtils.retryNicely( ctx -> {
+                try ( InputStream is = url.openStream() ) {
+                    return IOUtils.toByteArray( is );
+                }
+            }, ncbiApiKey ), "fetch " + url );
+            if ( body.length == 0 ) {
+                throw new RuntimeException( "GEO returned an empty document for " + url );
+            }
+            parser.parse( new ByteArrayInputStream( body ) );
+        } catch ( IOException e ) {
+            throw new RuntimeException( "Failed to read " + url, e );
+        }
     }
 
     /**

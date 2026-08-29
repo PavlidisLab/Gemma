@@ -496,6 +496,21 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     }
 
     /**
+     * Whether this refetch is only being asked for the source metadata document.
+     * <p>
+     * The other three flags all write GEO's opinion into Gemma's own fields, and each of them needs
+     * the converted experiment; {@code sourceMetadata} needs only the parsed series. Adding a flag
+     * to {@link GeoUpdateConfig} without adding it here would quietly take the metadata-only path
+     * for a caller that asked for more, so this reads every field rather than a stored count.
+     */
+    private boolean isSourceMetadataOnly( GeoUpdateConfig geoUpdateConfig ) {
+        return geoUpdateConfig.sourceMetadata
+                && !geoUpdateConfig.experimentTags
+                && !geoUpdateConfig.sampleCharacteristics
+                && !geoUpdateConfig.publications;
+    }
+
+    /**
      * What one refetch produced: the parsed series and the experiments converted from it.
      * <p>
      * The series used to be dropped on the floor here. It is the only thing that can build a source
@@ -514,6 +529,16 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
     private GeoRefetch fetchFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig ) {
         // other complications arise if this is a multiplatform data set that was switched/merged etc, but we will take the data for the corresponding GSMs.
+
+        if ( isSourceMetadataOnly( geoUpdateConfig ) ) {
+            // Nothing downstream reads an ExpressionExperiment on this path: the document is built
+            // from the parsed series alone. Converting anyway meant downloading the family SOFT file
+            // -- platform table and every sample's data table, 36 MB for GSE1024 -- and then building
+            // an experiment to discard it. The metadata-only records are two orders of magnitude
+            // smaller and the conversion is the only thing that needed the platform.
+            return new GeoRefetch( geoDomainObjectGenerator.generateSeriesMetadataOnly( geoAccession ),
+                    Collections.emptyList() );
+        }
 
         // fetch the experiment from GEO
         GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );

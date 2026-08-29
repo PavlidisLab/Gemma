@@ -89,6 +89,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
     private int platformLines = 0;
     private int sampleDataLines = 0;
     private boolean processPlatformsOnly;
+    private boolean metadataOnly;
     private int numWarnings = 0;
 
     @Override
@@ -175,6 +176,19 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
 
     public void setProcessPlatformsOnly( boolean b ) {
         this.processPlatformsOnly = b;
+    }
+
+    /**
+     * Parse records that carry no data and no platform, as GEO's {@code view=brief} series and
+     * sample records do.
+     * <p>
+     * Only the data-table bookkeeping is skipped, because there is nothing for it to describe: a
+     * sample's quantitation types are keyed by its platform, and a platform is only attached to a
+     * sample when a {@code ^PLATFORM} record was parsed. Without one, initializing them walks off
+     * the end of an empty collection.
+     */
+    public void setMetadataOnly( boolean b ) {
+        this.metadataOnly = b;
     }
 
     /**
@@ -1364,9 +1378,14 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         } else if ( this.startsWithIgnoreCase( line, "!Sample_last_update_date" ) ) {
             this.sampleSet( currentSampleAccession, GeoSample::setLastUpdateDate, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
-            if ( value.equals( "0" ) ) {
+            if ( value.equals( "0" ) && !metadataOnly ) {
                 /*
                  * Empty sample, we won't get any data and this messes things up later.
+                 *
+                 * Not in metadataOnly mode: there we deliberately fetched no platform, so the sample
+                 * has none to key quantitation types by, and this line is where a series of RNA-seq
+                 * samples -- which GEO reports with a row count of 0 -- would otherwise fail the
+                 * whole parse.
                  */
                 GeoFamilyParser.log.debug( "No data for sample " + currentSampleAccession );
                 this.initializeQuantitationTypes();
