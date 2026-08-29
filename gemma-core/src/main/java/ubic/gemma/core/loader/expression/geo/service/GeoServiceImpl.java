@@ -484,15 +484,26 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
      */
     private void refreshSourceMetadata( ExpressionExperiment ee, GeoSeries series ) {
         ExpressionExperiment thawed = expressionExperimentService.thawLite( ee );
-        long ourSamples = thawed.getBioAssays().stream()
-                .map( BioAssay::getAccession )
-                .filter( Objects::nonNull )
-                .map( DatabaseEntry::getAccession )
-                .filter( Objects::nonNull )
-                .distinct()
-                .count();
-        boolean split = ourSamples > 0 && ourSamples < series.getSamples().size();
-        storeSourceMetadata( thawed, series, split, new Date() );
+        storeSourceMetadata( thawed, series, isSplitOfItsSeries( thawed ), new Date() );
+    }
+
+    /**
+     * Whether this experiment is one of several Gemma made from one GEO series.
+     * <p>
+     * 🛑 NOT "does it hold fewer samples than the series". That was the first version and it is a
+     * different question: GSE8919 is one experiment holding 193 of its series' 200 samples, was
+     * never split, and was flagged as a sub-series on production because of it. Samples get dropped
+     * for reasons that have nothing to do with splitting.
+     * <p>
+     * The import path asks the real question — the conversion produced more than one experiment
+     * from the series — and a refresh has to ask the same one of the database, or the same
+     * experiment carries a different flag depending on which path last wrote its document.
+     */
+    private boolean isSplitOfItsSeries( ExpressionExperiment ee ) {
+        if ( ee.getAccession() == null || ee.getAccession().getAccession() == null ) {
+            return false;
+        }
+        return expressionExperimentService.findByAccession( ee.getAccession().getAccession() ).size() > 1;
     }
 
     /**
