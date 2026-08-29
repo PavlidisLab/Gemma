@@ -58,6 +58,11 @@ import java.util.Set;
  * {@code pub_med_ids}, which nothing on the consuming side reads, so the field would silently arrive
  * empty.</li>
  * <li>{@code samples} is a list with {@code accession} on each element, not a GSM-keyed map.</li>
+ * <li><b>v1 is not one shape.</b> {@code sampleType} was added on 2026-08-29 without bumping the
+ * version (Paul's call), so a document stamped {@code schemaVersion: 1} may or may not carry it and
+ * a consumer cannot tell which by the version. Every field is optional by the absent-means-absent
+ * rule above, so this changes nothing for a reader that honours it; it does mean the version is not
+ * a way to detect the field.</li>
  * </ul>
  *
  * @author Gemma
