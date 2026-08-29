@@ -2016,6 +2016,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public String getSourceMetadata( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getSourceMetadata( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee ) {
         return this.expressionExperimentDao.getQuantitationTypeCount( ee );
     }

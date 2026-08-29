@@ -15,6 +15,10 @@
 package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.core.security.SecurityService;
@@ -247,6 +251,12 @@ public class DatasetsWebService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    /**
+     * Only used to hand the stored GEO document to the serializer as an object rather than a
+     * string; it parses what we wrote ourselves, so it needs no configuration.
+     */
+    private final ObjectMapper sourceMetadataMapper = new ObjectMapper();
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
     @Autowired
@@ -1537,6 +1547,46 @@ public class DatasetsWebService {
                 Boolean.TRUE.equals( includeRejected ) );
         return respond( out );
 
+    }
+
+    @GET
+    @Path("/{dataset}/sourceMetadata")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the GEO record a dataset was built from",
+            description = "A verbatim cache of what GEO said when the dataset was imported or last "
+                    + "harvested: the per-sample view as the submitter wrote it — characteristic "
+                    + "columns, titles, source names, protocols — plus the series-level text. It is "
+                    + "not curation and carries no judgement of ours; Gemma's own annotations are on "
+                    + "the design and the samples.\n\n"
+                    + "`data` is null when nothing has been harvested for this dataset, which is the "
+                    + "normal state for most of the corpus. That is deliberately not a 404: a 404 "
+                    + "here would be indistinguishable from a dataset that does not exist.\n\n"
+                    + "Not a field on the dataset value object because of its size — p95 142 KB, "
+                    + "largest on production 1.09 MB — which would bloat every list response.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<JsonNode> getDatasetSourceMetadata(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        String document = expressionExperimentService.getSourceMetadata( ee );
+        if ( document == null ) {
+            // NullNode, not null: respond() turns a null payload into a 404 by design, and 404 is
+            // the answer for a dataset that does not exist. Nothing harvested is a different fact.
+            return respond( NullNode.getInstance() );
+        }
+        try {
+            // Served as an object, not as the string it is stored as: a string would make every
+            // consumer parse it themselves, and the envelope around it already is JSON.
+            return respond( sourceMetadataMapper.readTree( document ) );
+        } catch ( JsonProcessingException e ) {
+            // Stored by us, so this is a corrupt row rather than bad input; say so plainly instead
+            // of serving something that parses as an empty document.
+            throw new InternalServerErrorException( "The stored GEO source metadata for "
+                    + ee.getShortName() + " is not valid JSON.", e );
+        }
     }
 
     @PUT

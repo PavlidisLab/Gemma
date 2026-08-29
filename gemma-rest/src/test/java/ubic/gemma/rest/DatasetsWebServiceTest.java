@@ -88,6 +88,7 @@ import ubic.gemma.rest.util.args.*;
 
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.Writer;
@@ -4590,5 +4591,55 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                     // the point of the test: not merely absent, but not the current platform either
                     .doesNotHavePath( "$.data[0]" );
         }
+    }
+
+    /**
+     * The document is served as an object, not as the string it is stored as. A string would make
+     * every consumer parse it themselves, and the envelope around it is already JSON.
+     */
+    @Test
+    public void testGetDatasetSourceMetadata() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE0001" );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getSourceMetadata( ee ) ).thenReturn(
+                "{\"schemaVersion\":1,\"source\":\"GEO\",\"sampleCount\":2,"
+                        + "\"samples\":[{\"accession\":\"GSM1\",\"characteristics\":{\"tissue\":\"Hypothalamus\"}}]}" );
+
+        try ( Response r = target( "/datasets/1/sourceMetadata" ).request().get() ) {
+            assertThat( r ).hasStatus( Response.Status.OK );
+            JsonNode data = r.readEntity( JsonNode.class ).get( "data" );
+            assertThat( data.isObject() )
+                    .withFailMessage( "the document must arrive as an object, not a quoted string" )
+                    .isTrue();
+            assertThat( data.get( "sampleCount" ).asInt() ).isEqualTo( 2 );
+            assertThat( data.get( "samples" ).get( 0 ).get( "characteristics" ).get( "tissue" ).asText() )
+                    .isEqualTo( "Hypothalamus" );
+        }
+    }
+
+    /**
+     * 🛑 Nothing harvested is the normal state for most of the corpus, not an error. A 404 here
+     * would be indistinguishable from a dataset that does not exist, and would make an ordinary
+     * experiment look broken in the curation UI.
+     */
+    @Test
+    public void testGetDatasetSourceMetadataWhenNoneHasBeenHarvested() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getSourceMetadata( ee ) ).thenReturn( null );
+
+        try ( Response r = target( "/datasets/1/sourceMetadata" ).request().get() ) {
+            assertThat( r ).hasStatus( Response.Status.OK );
+            assertThat( r.readEntity( JsonNode.class ).get( "data" ).isNull() ).isTrue();
+        }
+    }
+
+    /** A dataset that does not exist is still a 404, which is what the null case must not look like. */
+    @Test
+    public void testGetDatasetSourceMetadataForAnUnknownDataset() {
+        when( expressionExperimentService.load( 404L ) ).thenReturn( null );
+        assertThat( target( "/datasets/404/sourceMetadata" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
     }
 }

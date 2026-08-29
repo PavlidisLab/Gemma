@@ -223,6 +223,12 @@ public class GeoSourceMetadataBuilder {
         if ( s.getLibSource() != null ) {
             m.put( "librarySource", s.getLibSource().toString() );
         }
+        if ( s.getType() != null ) {
+            // GEO's !Sample_type. The curation UI shows it, and the store it is replacing carried
+            // it on 281 designs. The parser keeps the parsed enum rather than the string GEO wrote,
+            // so this is GEO's value normalized (SRA, RNA, GENOMIC), not verbatim like the rest.
+            m.put( "sampleType", s.getType().toString() );
+        }
         putIfPresent( m, "submissionDate", s.getSubmissionDate() );
         putIfPresent( m, "lastUpdateDate", s.getLastUpdateDate() );
         putIfNotEmpty( m, "supplementaryFiles", trimmed( s.getSupplementaryFiles() ) );

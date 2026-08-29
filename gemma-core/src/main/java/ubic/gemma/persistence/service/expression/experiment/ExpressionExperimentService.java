@@ -935,6 +935,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     boolean hasSourceMetadata( ExpressionExperiment ee );
 
     /**
+     * @see ExpressionExperimentDao#getSourceMetadata(ExpressionExperiment)
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    String getSourceMetadata( ExpressionExperiment ee );
+
+    /**
      * @return counts design element data vectors grouped by quantitation type
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

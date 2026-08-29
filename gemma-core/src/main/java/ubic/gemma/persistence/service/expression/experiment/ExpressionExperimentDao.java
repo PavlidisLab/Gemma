@@ -374,6 +374,16 @@ public interface ExpressionExperimentDao
      */
     boolean hasSourceMetadata( ExpressionExperiment ee );
 
+    /**
+     * The stored GEO source metadata document, or null when none has been harvested.
+     * <p>
+     * Separate from {@link #hasSourceMetadata(ExpressionExperiment)} because this one reads the
+     * LONGTEXT: p95 is 142 KB and the largest on production is 1.09 MB, which is why the document
+     * is not a field on the experiment value object.
+     */
+    @Nullable
+    String getSourceMetadata( ExpressionExperiment ee );
+
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
 

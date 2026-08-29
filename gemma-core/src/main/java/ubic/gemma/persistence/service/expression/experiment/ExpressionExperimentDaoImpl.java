@@ -1950,6 +1950,14 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public String getSourceMetadata( ExpressionExperiment ee ) {
+        return ( String ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.sourceMetadata from ExpressionExperiment ee where ee = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( expressionExperiments.isEmpty() ) {
             return Collections.emptyMap();
