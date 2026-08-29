@@ -251,8 +251,14 @@ public abstract class BaseAclAdvice {
      * Renovations Phase 3: visibility relaxed so {@link AclEventListener} (in the same package)
      * can drive ACL maintenance directly off Hibernate insert events without going through the
      * AOP advice's entity-graph walk.
+     * <p>
+     * Public since 2026-08-29 so the ACL linter (a different package) can repair a Securable that
+     * lost its object identity. {@code aclService.createAcl(oi)} alone yields {@code parent=NULL,
+     * entries_inheriting=1} with no ACEs — "inherit from a parent that does not exist" — so
+     * nothing grants edit and the entity stays un-writable even for an administrator. Going
+     * through here runs {@link #setupBaseAces}, which is what makes the repaired row usable.
      */
-    void addOrUpdateAcl( @Nullable MutableAcl acl, Securable object, @Nullable Acl parentAcl ) {
+    public void addOrUpdateAcl( @Nullable MutableAcl acl, Securable object, @Nullable Acl parentAcl ) {
 
         if ( object.getId() == null ) {
             // Renovations Phase 2: defensive safety net. doAclAdvice now swaps the input arg for

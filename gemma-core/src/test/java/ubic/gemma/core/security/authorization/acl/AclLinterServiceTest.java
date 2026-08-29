@@ -1,12 +1,18 @@
 package ubic.gemma.core.security.authorization.acl;
 
+import ubic.gemma.core.security.acl.BaseAclAdvice;
 import ubic.gemma.core.security.acl.ObjectIdentityRetrievalStrategyImpl;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
@@ -28,6 +34,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -64,6 +72,12 @@ public class AclLinterServiceTest extends BaseDatabaseTest5 {
         public AclClassMetadata aclClassMetadata( SessionFactory sessionFactory ) {
             return new AclClassMetadata( sessionFactory );
         }
+
+        @Bean
+        public BaseAclAdvice aclAdvice( AclService aclService, SessionFactory sessionFactory,
+                ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy ) {
+            return new AclAdvice( aclService, sessionFactory, objectIdentityRetrievalStrategy );
+        }
     }
 
     @Autowired
@@ -71,6 +85,9 @@ public class AclLinterServiceTest extends BaseDatabaseTest5 {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private AclService aclService;
 
     @Test
     @WithMockUser(authorities = { "GROUP_ADMIN" })
@@ -374,5 +391,56 @@ public class AclLinterServiceTest extends BaseDatabaseTest5 {
                             && Long.valueOf( 33333L ).equals( r.getIdentifier() ),
                     "Id with no AOI should not be reported by SecuredNotChild lint, got: " + r );
         }
+    }
+
+    /**
+     * Repairing a top-level Securable must leave it editable.
+     * <p>
+     * The fix used to be a bare {@code aclService.createAcl(oi)}, which writes an identity with no
+     * parent, no access control entries and {@code entries_inheriting} set — "inherit from a parent
+     * that does not exist". Nothing then grants ADMINISTRATION or WRITE, so the
+     * {@code ACL_SECURABLE_EDIT} voter denies every caller including an administrator, and the
+     * linter reports a successful fix on an entity that is still un-writable. That is how
+     * ExpressionExperiments 93287, 93288, 93289, 93433 and 93434 came out of a repair run still
+     * answering 403.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testFixingATopLevelSecurableGrantsAdministration() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        assertNotNull( ee.getId() );
+
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintSecurablesLackingIdentities( true )
+                .applyFixes( true )
+                .build();
+        aclLinterService.lintAcls( ExpressionExperiment.class, ee.getId(), config );
+
+        Acl acl = aclService.readAclById( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        assertNull( acl.getParentAcl(), "A top-level Securable inherits from nothing." );
+        assertFalse( acl.getEntries().isEmpty(),
+                "The repaired ACL carries no access control entries, so nothing grants edit." );
+
+        boolean adminMayAdminister = false;
+        boolean anonymousMayRead = false;
+        for ( AccessControlEntry ace : acl.getEntries() ) {
+            String sid = ace.getSid().toString();
+            if ( sid.contains( "GROUP_ADMIN" ) && ace.getPermission().getMask() == BasePermission.ADMINISTRATION.getMask()
+                    && ace.isGranting() ) {
+                adminMayAdminister = true;
+            }
+            if ( sid.contains( "IS_AUTHENTICATED_ANONYMOUSLY" ) ) {
+                anonymousMayRead = true;
+            }
+        }
+        assertTrue( adminMayAdminister,
+                "GROUP_ADMIN has no ADMINISTRATION entry, so ACL_SECURABLE_EDIT denies an administrator: "
+                        + acl.getEntries() );
+        // ExpressionExperiment is an Investigation, which AclAdvice keeps private on creation. A
+        // repair must not hand anonymous read to a dataset that never had it.
+        assertFalse( anonymousMayRead,
+                "Repairing an Investigation made it publicly readable: " + acl.getEntries() );
     }
 }

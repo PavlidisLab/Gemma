@@ -46,6 +46,8 @@ public class AclLinterServiceImpl implements AclLinterService {
     private ParentIdentityRetrievalStrategy parentIdentityRetrievalStrategy;
     @Autowired
     private AclClassMetadata aclClassMetadata;
+    @Autowired
+    private ubic.gemma.core.security.acl.BaseAclAdvice aclAdvice;
 
     /**
      * Renovations Phase 3: gsec HQL deprecation. Direct JdbcTemplate access to the canonical
@@ -218,9 +220,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         }
         for ( Long identifier : list ) {
             if ( config.isApplyFixes() ) {
-                aclService.createAcl( new AclObjectIdentity( clazz, identifier ) );
-                log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier ) + "." );
-                results.add( new LintResult( clazz, identifier, "ACL identity was created.", true ) );
+                createMissingAcl( clazz, identifier, results );
             } else {
                 results.add( new LintResult( clazz, identifier, "Entity lacks an ACL identity.", false ) );
             }
@@ -248,12 +248,48 @@ public class AclLinterServiceImpl implements AclLinterService {
             return;
         }
         if ( config.isApplyFixes() ) {
-            aclService.createAcl( new AclObjectIdentity( clazz, identifier ) );
-            log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier ) + "." );
-            results.add( new LintResult( clazz, identifier, "ACL identity was created.", true ) );
+            createMissingAcl( clazz, identifier, results );
         } else {
             results.add( new LintResult( clazz, identifier, "Entity lacks an ACL identity.", false ) );
         }
+    }
+
+    /**
+     * Create the ACL a Securable is missing.
+     * <p>
+     * A {@link SecuredChild} gets a bare identity: it holds no ACEs of its own, and
+     * {@link #lintSecuredChildWithoutParent} links it to the parent it inherits from on the same
+     * run.
+     * <p>
+     * A top-level Securable cannot be repaired that way. {@code aclService.createAcl(oi)} writes
+     * {@code parent=NULL, entries_inheriting=1} and no ACEs, which reads as "inherit from a parent
+     * that does not exist": nothing grants ADMINISTRATION or WRITE, so {@code ACL_SECURABLE_EDIT}
+     * denies every caller including an administrator, and the repair leaves the entity exactly as
+     * un-editable as it found it. Observed on ExpressionExperiments 93287, 93288, 93289, 93433 and
+     * 93434, whose factors then inherited from those empty identities and were broken in turn.
+     * Routing through {@link ubic.gemma.core.security.acl.BaseAclAdvice#addOrUpdateAcl} — the same
+     * call {@code AclEventListener.onPostInsert} makes for a newly inserted entity — runs
+     * {@code setupBaseAces} and produces a usable root ACL. It also honours
+     * {@code specialCaseToKeepPrivateOnCreation}, so repairing an Investigation does not hand
+     * anonymous read to a dataset that never had it.
+     */
+    private void createMissingAcl( Class<? extends Securable> clazz, Long identifier, Collection<LintResult> results ) {
+        if ( SecuredChild.class.isAssignableFrom( clazz ) ) {
+            aclService.createAcl( new AclObjectIdentity( clazz, identifier ) );
+            log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier ) + "." );
+            results.add( new LintResult( clazz, identifier, "ACL identity was created.", true ) );
+            return;
+        }
+        Securable s = getSecurable( clazz, identifier );
+        if ( s == null ) {
+            log.warn( "Could not find " + formatEntity( clazz, identifier ) + "." );
+            results.add( new LintResult( clazz, identifier, "Entity lacks an ACL identity. The fix could not be applied because the entity could not be found.", false ) );
+            return;
+        }
+        aclAdvice.addOrUpdateAcl( null, s, null );
+        String fixMessage = "ACL identity was created with base access control entries.";
+        log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier ) + "." );
+        results.add( new LintResult( clazz, identifier, fixMessage, true ) );
     }
 
     /**
@@ -602,6 +638,11 @@ public class AclLinterServiceImpl implements AclLinterService {
     @Nullable
     private SecuredChild<?> getSecuredChild( Class<? extends SecuredChild<?>> clazz, Long identifier ) {
         return ( SecuredChild<?> ) sessionFactory.getCurrentSession().get( clazz, identifier );
+    }
+
+    @Nullable
+    private Securable getSecurable( Class<? extends Securable> clazz, Long identifier ) {
+        return ( Securable ) sessionFactory.getCurrentSession().get( clazz, identifier );
     }
 
     private String formatEntity( Class<?> clazz, AclObjectIdentity aoi ) {
