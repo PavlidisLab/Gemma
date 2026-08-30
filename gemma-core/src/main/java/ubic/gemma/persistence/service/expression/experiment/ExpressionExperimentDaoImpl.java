@@ -449,7 +449,9 @@ public class ExpressionExperimentDaoImpl
                         + "group by ee" )
                 .setParameter( "bm", bm )
                 .list();
-        if ( results == null && includeSubSets ) {
+        // See findIdsByBioMaterial below: Query.list() never returns null, so the null check this
+        // replaces made the subset fallback dead code.
+        if ( results.isEmpty() && includeSubSets ) {
             //noinspection unchecked
             results = this.getSessionFactory().getCurrentSession()
                     .createQuery( "select eess.sourceExperiment from ExpressionExperimentSubSet as eess "
@@ -471,7 +473,15 @@ public class ExpressionExperimentDaoImpl
                         + "group by ee" )
                 .setParameter( "bm", bm )
                 .list();
-        if ( results == null && includeSubSets ) {
+        // Query.list() returns an empty list, never null, so the null check this replaces meant the
+        // subset fallback never ran once. Every BioMaterial whose only route to an experiment is
+        // subset -> sourceExperiment — which is every aggregated single-cell sample — resolved to
+        // nothing: 665,120 of the 669,233 samples an ACL repair had to parent on 2026-08-30, each
+        // logging "Could not find an ExpressionExperiment associated to BioMaterial".
+        // findIdByBioAssay above tests null correctly because uniqueResult() really can return it;
+        // the same shape copied onto a list-returning query is what broke here and in
+        // findByBioMaterial.
+        if ( results.isEmpty() && includeSubSets ) {
             //noinspection unchecked
             results = this.getSessionFactory().getCurrentSession()
                     .createQuery( "select eess.sourceExperiment.id from ExpressionExperimentSubSet as eess "

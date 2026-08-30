@@ -1497,4 +1497,54 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         assertNotNull( platform.getId() );
         return platform;
     }
+    /**
+     * A sample whose only route to an experiment is subset -> sourceExperiment must still resolve.
+     * <p>
+     * The subset fallback in {@code findIdsByBioMaterial} was guarded on {@code results == null},
+     * and {@code Query.list()} returns an empty list rather than null, so it never ran once. Every
+     * aggregated single-cell sample resolved to nothing: 665,120 of the 669,233 samples an ACL
+     * repair had to parent on 2026-08-30, each one logging "Could not find an ExpressionExperiment
+     * associated to BioMaterial".
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testFindIdsByBioMaterial_resolvesThroughASubset() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+
+        // The assay hangs off the subset only — no ee.bioAssays membership, which is the shape
+        // single-cell aggregation produces.
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( ad );
+        ba.setSampleUsed( bm );
+        bm.getBioAssaysUsedIn().add( ba );
+        sessionFactory.getCurrentSession().persist( ba );
+
+        ExpressionExperiment source = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( source );
+        ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+        subset.setSourceExperiment( source );
+        subset.getBioAssays().add( ba );
+        sessionFactory.getCurrentSession().persist( subset );
+        sessionFactory.getCurrentSession().flush();
+
+        assertThat( expressionExperimentDao.findIdsByBioMaterial( bm, true ) )
+                .as( "a subset-only sample resolves to the subset's source experiment" )
+                .containsExactly( source.getId() );
+        assertThat( expressionExperimentDao.findIdsByBioMaterial( bm, false ) )
+                .as( "and not when the caller opts out of subsets" )
+                .isEmpty();
+        // findByBioMaterial carried an identical dead null check.
+        assertThat( expressionExperimentDao.findByBioMaterial( bm, true ) )
+                .as( "the entity-returning sibling resolves it too" )
+                .extracting( ExpressionExperiment::getId )
+                .containsExactly( source.getId() );
+    }
 }
