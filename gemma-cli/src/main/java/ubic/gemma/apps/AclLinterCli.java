@@ -74,6 +74,12 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
 
     private boolean lintPermissions;
 
+    private boolean lintDanglingIdentities;
+    private boolean lintMissingIdentities;
+    private boolean lintChildWithoutParent;
+    private boolean lintChildWithIncorrectParent;
+    private boolean lintNotChildWithParent;
+
     /**
      * Indicate if fixes should be applied.
      */
@@ -85,6 +91,19 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
         options.addOption( Option.builder( "identifier" ).longOpt( "identifier" ).hasArgs().valueSeparator( ',' ).type( Long.class )
                 .desc( "One or more identifiers (comma-separated) of securable entities to lint. Requires the -type,--type option to be set." ).get() );
         options.addOption( "lintPermissions", "lint-permissions", false, "Lint permissions." );
+        // Selecting a single check is not just convenience. lintAcls is @Transactional, so every
+        // check named here runs in ONE transaction, and the parent-linking repair commits its
+        // batches in nested REQUIRES_NEW transactions. Run it alongside the checks that create or
+        // delete ACL identities and the outer transaction holds row locks on identities the
+        // batches then try to update — the inner transaction waits for a lock the outer cannot
+        // release until the inner returns, and MySQL ends it with "Lock wait timeout exceeded".
+        // Naming only --lint-child-without-parent leaves the outer transaction read-only, which is
+        // what makes a large repair possible.
+        options.addOption( "lintDanglingIdentities", "lint-dangling-identities", false, "Lint ACL identities with no entity." );
+        options.addOption( "lintMissingIdentities", "lint-missing-identities", false, "Lint entities with no ACL identity." );
+        options.addOption( "lintChildWithoutParent", "lint-child-without-parent", false, "Lint secured children with no parent ACL identity." );
+        options.addOption( "lintChildWithIncorrectParent", "lint-child-with-incorrect-parent", false, "Lint secured children whose parent ACL identity is wrong." );
+        options.addOption( "lintNotChildWithParent", "lint-not-child-with-parent", false, "Lint top-level securables that have a parent ACL identity." );
         options.addOption( "applyFixes", "apply-fixes", false, "Apply fixes to ACLs" );
     }
 
@@ -104,16 +123,31 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
         }
         this.lintPermissions = commandLine.hasOption( "lintPermissions" );
         this.applyFixes = commandLine.hasOption( "applyFixes" );
+        this.lintDanglingIdentities = commandLine.hasOption( "lintDanglingIdentities" );
+        this.lintMissingIdentities = commandLine.hasOption( "lintMissingIdentities" );
+        this.lintChildWithoutParent = commandLine.hasOption( "lintChildWithoutParent" );
+        this.lintChildWithIncorrectParent = commandLine.hasOption( "lintChildWithIncorrectParent" );
+        this.lintNotChildWithParent = commandLine.hasOption( "lintNotChildWithParent" );
+        // Naming none of them keeps the previous behaviour: run all five. lint-permissions stays
+        // an independent opt-in, as it always was, and does not count as a selection.
+        if ( !( lintDanglingIdentities || lintMissingIdentities || lintChildWithoutParent
+                || lintChildWithIncorrectParent || lintNotChildWithParent ) ) {
+            this.lintDanglingIdentities = true;
+            this.lintMissingIdentities = true;
+            this.lintChildWithoutParent = true;
+            this.lintChildWithIncorrectParent = true;
+            this.lintNotChildWithParent = true;
+        }
     }
 
     @Override
     protected void doAuthenticatedWork() throws Exception {
         AclLinterConfig config = AclLinterConfig.builder()
-                .lintDanglingIdentities( true )
-                .lintSecurablesLackingIdentities( true )
-                .lintChildWithoutParent( true )
-                .lintChildWithIncorrectParent( true )
-                .lintNotChildWithParent( true )
+                .lintDanglingIdentities( lintDanglingIdentities )
+                .lintSecurablesLackingIdentities( lintMissingIdentities )
+                .lintChildWithoutParent( lintChildWithoutParent )
+                .lintChildWithIncorrectParent( lintChildWithIncorrectParent )
+                .lintNotChildWithParent( lintNotChildWithParent )
                 .lintPermissions( lintPermissions )
                 .applyFixes( applyFixes )
                 .build();

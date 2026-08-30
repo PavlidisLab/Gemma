@@ -11,6 +11,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
+import org.mockito.ArgumentCaptor;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import ubic.gemma.core.security.authorization.acl.AclLinterConfig;
 import ubic.gemma.core.security.authorization.acl.AclLinterService;
 import ubic.gemma.core.util.GemmaRestApiClient;
@@ -88,6 +92,53 @@ public class AclLinterCliTest extends BaseCliTest5 {
         // never the whole-class or whole-DB sweeps when specific ids are named
         verify( aclLinterService, never() ).lintAcls( any( Class.class ), any( AclLinterConfig.class ) );
         verify( aclLinterService, never() ).lintAcls( any( AclLinterConfig.class ) );
+    }
+
+    /**
+     * Naming one check must run only that one. The parent-link repair has to be able to run with a
+     * read-only outer transaction: lintAcls is @Transactional, and running the identity-creating
+     * checks in the same call leaves the outer transaction holding row locks that the repair's
+     * nested REQUIRES_NEW batches then wait on forever — "Lock wait timeout exceeded" on a
+     * production run of 631,709 BioAssay identities, 2026-08-30.
+     */
+    @Test
+    @WithMockUser
+    public void namingOneCheck_runsOnlyThatCheck() {
+        when( aclLinterService.lintAcls( any( Class.class ), any( AclLinterConfig.class ) ) )
+                .thenReturn( Collections.emptyList() );
+        assertThat( aclLinterCli )
+                .withArguments( "--type", "ASSAY", "--lint-child-without-parent", "--apply-fixes" )
+                .succeeds();
+        ArgumentCaptor<AclLinterConfig> captor = ArgumentCaptor.forClass( AclLinterConfig.class );
+        verify( aclLinterService ).lintAcls( any( Class.class ), captor.capture() );
+        AclLinterConfig config = captor.getValue();
+        assertTrue( config.isLintChildWithoutParent() );
+        assertTrue( config.isApplyFixes() );
+        assertFalse( config.isLintDanglingIdentities(), "A dangling-identity sweep deletes ACL identities in the outer transaction." );
+        assertFalse( config.isLintSecurablesLackingIdentities(), "A missing-identity sweep creates ACL identities in the outer transaction." );
+        assertFalse( config.isLintChildWithIncorrectParent() );
+        assertFalse( config.isLintNotChildWithParent() );
+    }
+
+    /**
+     * Naming no check keeps the previous behaviour: all five run.
+     */
+    @Test
+    @WithMockUser
+    public void namingNoCheck_runsThemAll() {
+        when( aclLinterService.lintAcls( any( Class.class ), any( AclLinterConfig.class ) ) )
+                .thenReturn( Collections.emptyList() );
+        assertThat( aclLinterCli )
+                .withArguments( "--type", "ASSAY" )
+                .succeeds();
+        ArgumentCaptor<AclLinterConfig> captor = ArgumentCaptor.forClass( AclLinterConfig.class );
+        verify( aclLinterService ).lintAcls( any( Class.class ), captor.capture() );
+        AclLinterConfig config = captor.getValue();
+        assertTrue( config.isLintDanglingIdentities() );
+        assertTrue( config.isLintSecurablesLackingIdentities() );
+        assertTrue( config.isLintChildWithoutParent() );
+        assertTrue( config.isLintChildWithIncorrectParent() );
+        assertTrue( config.isLintNotChildWithParent() );
     }
 
     @Test

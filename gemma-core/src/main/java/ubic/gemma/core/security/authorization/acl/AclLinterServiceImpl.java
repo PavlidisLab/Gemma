@@ -337,6 +337,15 @@ public class AclLinterServiceImpl implements AclLinterService {
             }
             return;
         }
+        // The batches commit in nested REQUIRES_NEW transactions, so this call must not already
+        // hold write locks on the identities they update. It does whenever lintDanglingIdentities
+        // or lintSecurablesLackingIdentities ran for the same type in this call: lintAcls is
+        // @Transactional, those checks delete and create acl_object_identity rows, and the newly
+        // created ones are exactly the parentless identities this repair then targets. The inner
+        // transaction waits on a lock the outer cannot release until the inner returns, so MySQL
+        // ends it with "Lock wait timeout exceeded" — seen on production 2026-08-30. Select the
+        // check on its own (lintAcls --lint-child-without-parent) to keep this transaction
+        // read-only.
         for ( int from = 0; from < identifiers.size(); from += PARENT_LINK_BATCH_SIZE ) {
             List<Long> batch = identifiers.subList( from, Math.min( from + PARENT_LINK_BATCH_SIZE, identifiers.size() ) );
             results.addAll( aclLinterHelperService.linkParentsInNewTransaction( clazz, batch ) );
