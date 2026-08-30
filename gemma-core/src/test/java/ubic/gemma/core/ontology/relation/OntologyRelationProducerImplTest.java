@@ -636,4 +636,27 @@ class OntologyRelationProducerImplTest {
 
         assertThat( producer().produce( Arrays.asList( "TGEMO" ) ) ).isZero();
     }
+
+    /**
+     * 🛑 The whole TGEMO source turns on this. TGEMO writes MONDO URIs straight into its axioms and is
+     * loaded with {@code processImports} off, so its targets have no label in its own model —
+     * {@code OBJECT_VALUE} is NOT NULL, so without a fallback every row is dropped as an unlabelled
+     * target and the source writes nothing while reporting a clean run. Same failure the translated
+     * branch already had, arrived at from the other side.
+     */
+    @Test
+    void aTargetTheSourcesOwnModelCannotNameIsNamedByTheVocabularyThatOwnsIt() {
+        // the term as TGEMO sees it: a URI and nothing else
+        OntologyTerm anonymousToTgemo = mock( OntologyTerm.class );
+        when( anonymousToTgemo.getUri() ).thenReturn( MONDO_ALZHEIMER );
+        when( anonymousToTgemo.getLabel() ).thenReturn( null );
+        tgemoTerms.put( APP_PS1, term( APP_PS1, "APP/PS1",
+                restriction( HAS_ROLE_IN_MODELLING, "has role in modeling", anonymousToTgemo ) ) );
+
+        List<AnnotationRelation> rows = produce( "TGEMO" );
+
+        assertThat( rows ).hasSize( 1 );
+        assertThat( rows.get( 0 ).getObjectValue() ).isEqualTo( "Alzheimer disease" );
+        assertThat( rows.get( 0 ).getObjectValueUri() ).isEqualTo( MONDO_ALZHEIMER );
+    }
 }

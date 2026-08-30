@@ -412,12 +412,28 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
             return rows;
         }
 
-        if ( target.getLabel() == null ) {
+        String nativeLabel = target.getLabel();
+        if ( nativeLabel == null ) {
+            // 🛑 Same trap as the translated branch above, reached a different way. A source that does
+            // not merge in the vocabulary it points at cannot name the target: TGEMO writes MONDO URIs
+            // straight into its axioms and is loaded with processImports off, so every one of its
+            // targets is anonymous in its own model. Ask the vocabulary that owns the term, then the
+            // cross-reference source, before giving up -- otherwise the whole source reads as
+            // unlabelled targets and writes nothing.
+            nativeLabel = labelOf( objectUri, xrefOntology );
+            if ( nativeLabel == null ) {
+                nativeLabel = xrefs.labelOf( objectUri );
+            }
+            if ( nativeLabel != null ) {
+                reading.labelledFromSource++;
+            }
+        }
+        if ( nativeLabel == null ) {
             // no label means no OBJECT_VALUE, which is NOT NULL, and a URI's local name is not a label
             reading.unlabelledTargets++;
             return Collections.emptyList();
         }
-        AnnotationRelation row = build( source, spec, subject, property, objectUri, target.getLabel(), taxon,
+        AnnotationRelation row = build( source, spec, subject, property, objectUri, nativeLabel, taxon,
                 reading.sourceVersion, generatedAt );
         return row != null ? Collections.singletonList( row ) : Collections.<AnnotationRelation>emptyList();
     }
