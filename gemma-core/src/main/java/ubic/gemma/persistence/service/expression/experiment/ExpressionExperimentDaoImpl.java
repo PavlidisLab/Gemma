@@ -1332,6 +1332,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
+        MeanVarianceRelation previous = ee.getMeanVarianceRelation();
         if ( mvr.getId() == null ) {
             Assert.isTrue( mvr.getMeans().length == mvr.getVariances().length,
                     "The number of means and variances must correspond." );
@@ -1339,6 +1340,18 @@ public class ExpressionExperimentDaoImpl
         }
         ee.setMeanVarianceRelation( mvr );
         update( ee );
+        // Delete the relation being replaced. ExpressionExperiment.meanVarianceRelation is a
+        // @ManyToOne, which has no orphanRemoval in JPA, so moving the reference leaves the old row
+        // behind with nothing pointing at it and nothing sweeping it. On production 2026-08-30 that
+        // was 33,535 of 57,311 rows -- roughly 15 GB of the table's 25.4 GB, since each row carries
+        // four mediumblobs.
+        // The flush moves MEAN_VARIANCE_RELATION_FK before the delete; without it the FK still
+        // points at the row being removed. The delete also fires PostDelete, so AclEventListener
+        // takes the ACL identity with it.
+        if ( previous != null && !previous.equals( mvr ) ) {
+            getSessionFactory().getCurrentSession().flush();
+            getSessionFactory().getCurrentSession().remove( previous );
+        }
         return mvr;
     }
 

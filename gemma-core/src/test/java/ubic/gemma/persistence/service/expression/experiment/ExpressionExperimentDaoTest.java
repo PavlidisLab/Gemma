@@ -28,6 +28,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -1546,5 +1547,41 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
                 .as( "the entity-returning sibling resolves it too" )
                 .extracting( ExpressionExperiment::getId )
                 .containsExactly( source.getId() );
+    }
+    /**
+     * Replacing an experiment's mean-variance relation must delete the one it replaces.
+     * <p>
+     * ExpressionExperiment.meanVarianceRelation is a @ManyToOne, and JPA has no orphanRemoval for
+     * one, so moving the reference used to leave the previous row behind with nothing pointing at
+     * it. Nothing sweeps those: on production 2026-08-30, 33,535 of 57,311 rows were unreferenced,
+     * roughly 15 GB of the table's 25.4 GB, since each row carries four mediumblobs. Abandoned ids
+     * ran right up to the maximum, so it was still accumulating.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testUpdateMeanVarianceRelation_deletesTheOneItReplaces() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+
+        MeanVarianceRelation first = new MeanVarianceRelation();
+        first.setMeans( new double[] { 1.0, 2.0 } );
+        first.setVariances( new double[] { 0.1, 0.2 } );
+        expressionExperimentDao.updateMeanVarianceRelation( ee, first );
+        sessionFactory.getCurrentSession().flush();
+        Long firstId = first.getId();
+        assertNotNull( firstId );
+
+        MeanVarianceRelation second = new MeanVarianceRelation();
+        second.setMeans( new double[] { 3.0, 4.0 } );
+        second.setVariances( new double[] { 0.3, 0.4 } );
+        expressionExperimentDao.updateMeanVarianceRelation( ee, second );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        assertThat( sessionFactory.getCurrentSession().get( MeanVarianceRelation.class, firstId ) )
+                .as( "the replaced relation is still there, abandoned" )
+                .isNull();
+        ExpressionExperiment reloaded = sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        assertThat( reloaded.getMeanVarianceRelation().getId() ).isEqualTo( second.getId() );
     }
 }
