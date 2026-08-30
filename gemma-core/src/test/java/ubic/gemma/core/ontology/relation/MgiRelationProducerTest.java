@@ -46,6 +46,8 @@ class MgiRelationProducerTest {
     private TransactionTemplate transactionTemplate;
     private TaxonService taxonService;
     private final List<OntologyXref> xrefs = new ArrayList<>();
+    /** empty unless a test is about the bridge, so every other test sees the allele-only behaviour */
+    private final List<OntologyXref> tgemoXrefs = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
@@ -78,7 +80,12 @@ class MgiRelationProducerTest {
         when( mondo.getIdentifier() ).thenReturn( "mondoOntology" );
         when( mondo.isOntologyLoaded() ).thenReturn( true );
         when( mondo.getCrossReferencesFromSource() ).thenReturn( xrefs );
-        return new MgiRelationProducer( Collections.singletonList( mondo ), dao, transactionTemplate,
+        ubic.gemma.core.ontology.providers.OntologyService tgemo =
+                mock( ubic.gemma.core.ontology.providers.OntologyService.class );
+        when( tgemo.getIdentifier() ).thenReturn( "gemmaOntology" );
+        when( tgemo.isOntologyLoaded() ).thenReturn( true );
+        when( tgemo.getCrossReferencesFromSource() ).thenReturn( tgemoXrefs );
+        return new MgiRelationProducer( Arrays.asList( mondo, tgemo ), dao, transactionTemplate,
                 taxonService );
     }
 
@@ -186,5 +193,46 @@ class MgiRelationProducerTest {
         produce( report( row( "Mecp2<tm1.1Bird>", "MGI:1857444", "1", "DOID:1206" ) ), null );
 
         verify( dao ).removeByBasis( AnnotationRelationBasis.EXTERNAL, null, "MGI" );
+    }
+
+    /**
+     * 🛑 What makes any of this reachable. Every MGI relation is keyed on an allele URI, and measured on
+     * production 2026-08-30 the corpus uses that namespace ZERO times — as it does the MGI strain
+     * namespace. The fact is stored a second time under the TGEMO class that cross-references the
+     * allele, which is what datasets are actually annotated with. Drop the second subject and the row
+     * is still perfectly correct and still matches nothing.
+     */
+    @Test
+    void aFactIsAlsoStoredUnderTheBridgingTermThatCrossReferencesTheAllele() throws Exception {
+        tgemoXrefs.add( new OntologyXref( "http://gemma.msl.ubc.ca/ont/TGEMO_00174", "MGI:3524957",
+                OntologyXref.Strength.EXACT, "APP/PS1" ) );
+
+        List<AnnotationRelation> rows = produce(
+                report( row( "Tg(APPswe,PSEN1dE9)85Dbo", "MGI:3524957", "1", "DOID:1206" ) ), null );
+
+        assertThat( rows ).extracting( AnnotationRelation::getSubjectValueUri )
+                .containsExactly( "https://www.informatics.jax.org/allele/MGI:3524957",
+                        "http://gemma.msl.ubc.ca/ont/TGEMO_00174" );
+        AnnotationRelation bridged = rows.get( 1 );
+        assertThat( bridged.getSubjectValue() ).isEqualTo( "APP/PS1" );
+        assertThat( bridged.getSubjectCategory() ).isEqualTo( "strain" );
+        // everything else is the same claim, including the object and the evidence
+        assertThat( bridged.getObjectValueUri() ).isEqualTo( MONDO_RETT );
+        assertThat( bridged.getPredicateUri() ).isEqualTo( rows.get( 0 ).getPredicateUri() );
+        assertThat( bridged.getEvidence() ).isEqualTo( rows.get( 0 ).getEvidence() );
+    }
+
+    /** An allele nothing cross-references is stored once, exactly as before. */
+    @Test
+    void anAlleleNoBridgingTermNamesIsStillStoredOnce() throws Exception {
+        tgemoXrefs.add( new OntologyXref( "http://gemma.msl.ubc.ca/ont/TGEMO_00174", "MGI:9999999",
+                OntologyXref.Strength.EXACT, "APP/PS1" ) );
+
+        List<AnnotationRelation> rows = produce(
+                report( row( "Mecp2<tm1.1Bird>", "MGI:1857444", "1", "DOID:1206" ) ), null );
+
+        assertThat( rows ).hasSize( 1 );
+        assertThat( rows.get( 0 ).getSubjectValueUri() )
+                .isEqualTo( "https://www.informatics.jax.org/allele/MGI:1857444" );
     }
 }

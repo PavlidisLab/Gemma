@@ -82,6 +82,12 @@ public class MgiRelationProducer {
     /** The ontology whose cross-references translate {@code DOID:} into something Gemma annotates in. */
     private static final String XREF_SOURCE_TOKEN = "MONDO";
 
+    /**
+     * The ontology whose classes cross-reference these alleles, so a fact MGI states about an allele is
+     * also stored against the term the corpus actually annotates.
+     */
+    private static final String BRIDGE_SOURCE_TOKEN = "TGEMO";
+
     private static final int VALUE_MAX = 255;
 
     private final List<ubic.gemma.core.ontology.providers.OntologyService> ontologies;
@@ -157,14 +163,30 @@ public class MgiRelationProducer {
                     XREF_SOURCE_TOKEN );
             return 0;
         }
+        // 🛑 The second subject key, and the reason these rows are reachable at all. Every relation
+        // here is keyed on an MGI allele URI, and NO corpus annotation uses one -- measured on prod
+        // 2026-08-30, both the allele and strain MGI namespaces appear zero times in EE2C. TGEMO's
+        // classes are what datasets are annotated with (6,490 of them), and TGEMO cross-references the
+        // alleles, so the same fact is stored a second time under the TGEMO term. Same shape as
+        // CellosaurusRelationProducer's two subjects per fact. An absent or unloaded TGEMO costs the
+        // bridge, not the run.
+        OntologyXrefIndex bridge = OntologyXrefIndex.fromSource(
+                OntologyServiceResolver.resolve( ontologies, BRIDGE_SOURCE_TOKEN )
+                        .filter( ubic.gemma.core.ontology.providers.OntologyService::isOntologyLoaded )
+                        .orElse( null ) );
+        if ( bridge.isEmpty() ) {
+            log.warn( "{} is not loaded, so MGI relations are stored only under their allele URIs,"
+                    + " which no corpus annotation uses.", BRIDGE_SOURCE_TOKEN );
+        }
+
         Date generatedAt = new Date();
         Taxon mouse = resolveMouse();
 
         Reading reading = new Reading();
         List<AnnotationRelation> rows = new ArrayList<>();
-        rows.addAll( read( asserted, AnnotationRelationStatus.ASSERTED, xrefs, mouse, generatedAt, reading ) );
+        rows.addAll( read( asserted, AnnotationRelationStatus.ASSERTED, xrefs, bridge, mouse, generatedAt, reading ) );
         if ( refuted != null ) {
-            rows.addAll( read( refuted, AnnotationRelationStatus.REFUTED, xrefs, mouse, generatedAt, reading ) );
+            rows.addAll( read( refuted, AnnotationRelationStatus.REFUTED, xrefs, bridge, mouse, generatedAt, reading ) );
         }
 
         log.info( "Read {} MGI relations ({} asserted, {} refuted) from {} statements in {} ms.{}",
@@ -183,7 +205,8 @@ public class MgiRelationProducer {
     }
 
     private List<AnnotationRelation> read( InputStream is, AnnotationRelationStatus status,
-            OntologyXrefIndex xrefs, @Nullable Taxon mouse, Date generatedAt, Reading reading )
+            OntologyXrefIndex xrefs, OntologyXrefIndex bridge, @Nullable Taxon mouse, Date generatedAt,
+            Reading reading )
             throws IOException {
         List<AnnotationRelation> out = new ArrayList<>();
         Set<String> seen = new LinkedHashSet<>();
@@ -211,6 +234,25 @@ public class MgiRelationProducer {
                     reading.refuted++;
                 } else {
                     reading.asserted++;
+                }
+                // the same fact again, under whichever bridging terms cross-reference this allele
+                for ( String bridgedUri : bridge.resolve( e.getAlleleId() ) ) {
+                    String bridgedLabel = bridge.labelOf( bridgedUri );
+                    if ( bridgedLabel == null || !seen.add( bridgedUri + '\t' + mondoUri ) ) {
+                        continue;
+                    }
+                    AnnotationRelation b = build( e, mondoUri, label, status, mouse, generatedAt );
+                    b.setSubjectValue( truncate( bridgedLabel ) );
+                    b.setSubjectValueUri( bridgedUri );
+                    b.setSubjectCategory( OntologyRelationSource.STRAIN.getCategory() );
+                    b.setSubjectCategoryUri( OntologyRelationSource.STRAIN.getCategoryUri() );
+                    out.add( b );
+                    reading.bridged++;
+                    if ( status == AnnotationRelationStatus.REFUTED ) {
+                        reading.refuted++;
+                    } else {
+                        reading.asserted++;
+                    }
                 }
             }
         }
@@ -274,6 +316,7 @@ public class MgiRelationProducer {
         private int asserted = 0;
         private int refuted = 0;
         private int untranslatable = 0;
+        private int bridged = 0;
         private int unlabelled = 0;
         private final Set<String> unresolved = new LinkedHashSet<>();
 
@@ -281,7 +324,8 @@ public class MgiRelationProducer {
             StringBuilder sb = new StringBuilder();
             sb.append( "\nstatements read\t" ).append( statements )
                     .append( "\tuntranslatable DOID\t" ).append( untranslatable )
-                    .append( "\ttranslated but unnamed\t" ).append( unlabelled );
+                    .append( "\ttranslated but unnamed\t" ).append( unlabelled )
+                    .append( "\talso keyed under a bridging term\t" ).append( bridged );
             if ( !unresolved.isEmpty() ) {
                 sb.append( "\nDOIDs MONDO does not cross-reference (" ).append( unresolved.size() )
                         .append( "): " );

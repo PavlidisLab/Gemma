@@ -94,6 +94,15 @@ public class OntologyXref {
             int slash = s.lastIndexOf( '/' );
             int hash = s.lastIndexOf( '#' );
             String localName = s.substring( Math.max( slash, hash ) + 1 );
+            // Some sources publish the CURIE itself as the last path segment rather than the OBO
+            // underscore form -- MGI's are `.../allele/MGI:3524957`, and TGEMO cross-references them
+            // in exactly that shape. Those returned null here, so every such xref was dropped without
+            // trace: the term simply had no cross-references.
+            int colonInLocal = localName.indexOf( ':' );
+            if ( colonInLocal > 0 && colonInLocal < localName.length() - 1 ) {
+                return localName.substring( 0, colonInLocal ).toUpperCase()
+                        + ":" + localName.substring( colonInLocal + 1 );
+            }
             int underscore = localName.indexOf( '_' );
             if ( underscore <= 0 || underscore == localName.length() - 1 ) {
                 return null;
