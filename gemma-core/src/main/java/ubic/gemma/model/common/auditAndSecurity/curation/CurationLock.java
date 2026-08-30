@@ -21,6 +21,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import javax.annotation.Nullable;
@@ -78,7 +79,26 @@ public class CurationLock implements Serializable {
      * — a preboarded experiment is an Investigation but not an
      * ExpressionExperiment, and curation starts before promotion.
      */
+    /**
+     * The primary key, derived from {@link #investigation} by {@code @MapsId} rather than declared
+     * on the association itself.
+     * <p>
+     * With {@code @Id} on the {@code @OneToOne}, Hibernate treats the identifier type as the entity
+     * and warns HHH000038/HHH000039 that the composite-id class overrides neither equals() nor
+     * hashCode() — on every startup. Supplying those on the entity is the wrong answer here: an id
+     * that flips from null to a value on persist is the hashCode footgun this codebase has been bitten
+     * by. A derived Long identifier removes the composite id altogether, and makes
+     * {@code session.get( CurationLock.class, ee.getId() )} correct by construction rather than by
+     * coincidence — that call already passed a Long against an identifier declared as an
+     * Investigation.
+     * <p>
+     * The table is unchanged: INVESTIGATION_FK remains the single primary-key column, so no
+     * migration goes with this.
+     */
     @Id
+    private Long investigationId;
+
+    @MapsId
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "INVESTIGATION_FK", nullable = false, columnDefinition = "BIGINT",
@@ -149,6 +169,12 @@ public class CurationLock implements Serializable {
 
     public void setAgentName( @Nullable String agentName ) {
         this.agentName = agentName;
+    }
+
+    /** @return the primary key, which is the locked investigation's id. */
+    @Nullable
+    public Long getInvestigationId() {
+        return investigationId;
     }
 
     public Investigation getInvestigation() {
