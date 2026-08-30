@@ -161,20 +161,33 @@ class MgiDiseaseModelReport {
                 }
                 String allele = StringUtils.trimToNull( f[1] );
                 String alleleId = StringUtils.trimToNull( f[2] );
-                String doid = StringUtils.trimToNull( f[7] );
-                if ( allele == null || doid == null || !doid.startsWith( "DOID:" ) ) {
+                String doCell = StringUtils.trimToNull( f[7] );
+                if ( allele == null || doCell == null ) {
                     continue;
                 }
-                Entry e = byKey.computeIfAbsent( allele + '\t' + doid,
-                        k -> new Entry( allele, alleleId, doid, StringUtils.trimToNull( f[6] ) ) );
-                e.rows++;
-                // one cell can hold several, pipe-separated -- MGI really does emit `7600971|8631247`
-                String cited = StringUtils.trimToNull( f[5] );
-                if ( cited != null ) {
-                    for ( String id : cited.split( "\\|" ) ) {
-                        String t = StringUtils.trimToNull( id );
-                        if ( t != null ) {
-                            e.citations.add( t );
+                // 🛑 The DO cell is pipe-separated too, exactly like the citation cell below: MGI emits
+                // `DOID:0110042|DOID:10652` for a genotype that models two diseases. Taking the cell
+                // whole leaves a DOID nothing can translate -- `startsWith("DOID:")` is true of the
+                // joined string, so it passed this guard, failed to resolve against MONDO, and was
+                // tallied as untranslatable. Measured on the 2026-08-30 file: 5,723 of 53,950 rows have
+                // a piped cell, and splitting recovers 734 (allele, disease) pairs, 282 of which are
+                // alleles that had NO statement stored at all.
+                for ( String part : doCell.split( "\\|" ) ) {
+                    String doid = StringUtils.trimToNull( part );
+                    if ( doid == null || !doid.startsWith( "DOID:" ) ) {
+                        continue;
+                    }
+                    Entry e = byKey.computeIfAbsent( allele + '\t' + doid,
+                            k -> new Entry( allele, alleleId, doid, StringUtils.trimToNull( f[6] ) ) );
+                    e.rows++;
+                    // one cell can hold several, pipe-separated -- MGI really does emit `7600971|8631247`
+                    String cited = StringUtils.trimToNull( f[5] );
+                    if ( cited != null ) {
+                        for ( String id : cited.split( "\\|" ) ) {
+                            String t = StringUtils.trimToNull( id );
+                            if ( t != null ) {
+                                e.citations.add( t );
+                            }
                         }
                     }
                 }

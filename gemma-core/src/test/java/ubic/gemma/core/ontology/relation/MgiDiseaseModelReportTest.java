@@ -110,4 +110,38 @@ class MgiDiseaseModelReportTest {
     void unusableLinesAreSkippedRatherThanFatal() throws Exception {
         assertThat( parse() ).hasSize( 3 );
     }
+
+    /**
+     * 🛑 The regression: MGI puts SEVERAL DO ids in one cell, pipe-separated, for a genotype that
+     * models more than one disease — {@code DOID:0110042|DOID:10652} on 5,723 of the real file's
+     * 53,950 rows. The joined string starts with {@code DOID:} so it passed the guard, then resolved
+     * against nothing and was tallied as untranslatable. 282 alleles had every one of their cells
+     * piped and so were stored with no statement at all; 280 of those have zero rows on production.
+     */
+    @Test
+    void aPipedDiseaseCellIsOneStatementPerDisease() throws Exception {
+        String report = row( "Tg(APPSwFlLon,PSEN1*M146L*L286V)6799Vas", "Tg(APPSwFlLon)6799Vas",
+                "MGI:3693208", "MP:0002064", "18160570", "MGI:88059", "DOID:0110042|DOID:10652" ) + "\n";
+
+        List<MgiDiseaseModelReport.Entry> entries = new ArrayList<>( MgiDiseaseModelReport.parse(
+                new ByteArrayInputStream( report.getBytes( StandardCharsets.UTF_8 ) ) ) );
+
+        assertThat( entries ).hasSize( 2 );
+        assertThat( entries ).extracting( MgiDiseaseModelReport.Entry::getDoid )
+                .containsExactly( "DOID:0110042", "DOID:10652" );
+        // both halves keep the allele and its citation; neither is a partial record
+        assertThat( entries ).allSatisfy( e -> {
+            assertThat( e.getAlleleId() ).isEqualTo( "MGI:3693208" );
+            assertThat( e.getCitations() ).containsExactly( "18160570" );
+        } );
+    }
+
+    /** A cell that is only separators, or holds something that is not a DOID, still yields nothing. */
+    @Test
+    void aPipedCellWithNoUsableIdIsStillSkipped() throws Exception {
+        String report = row( "x/x", "x<1>", "MGI:1", "MP:1", "1", "MGI:2", "|OMIM:192430|" ) + "\n";
+
+        assertThat( MgiDiseaseModelReport.parse(
+                new ByteArrayInputStream( report.getBytes( StandardCharsets.UTF_8 ) ) ) ).isEmpty();
+    }
 }
