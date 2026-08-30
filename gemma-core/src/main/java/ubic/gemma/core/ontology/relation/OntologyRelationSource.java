@@ -50,6 +50,20 @@ class OntologyRelationSource {
     static final Category ROLE = new Category( "role", "http://purl.obolibrary.org/obo/CHEBI_50906" );
 
     /**
+     * EFO's strain term, which is what the corpus already annotates these under.
+     *
+     * <p>🛑 One category per source is a poorer fit for TGEMO than for CLO or CHEBI, whose classes are
+     * all one thing. Measured on prod 2026-08-30, the thirteen TGEMO classes carrying an MGI xref are
+     * annotated under {@code strain} 279 times, {@code genotype} 48 and {@code disease model} 11 --
+     * strain is the majority, not the whole of it. It is recorded as metadata on the row and does NOT
+     * gate the search widening, which matches on subject/object value URIs alone
+     * ({@code OntologySearchSource.expandByInferredRelations}), so a dataset that annotated APP/PS1 as a
+     * genotype is still reached. A caller that filters {@code subjectCategoryUris} would see only the
+     * strain spelling.</p>
+     */
+    static final Category STRAIN = new Category( "strain", "http://www.ebi.ac.uk/efo/EFO_0005135" );
+
+    /**
      * One readable property.
      */
     static class Relation {
@@ -60,6 +74,8 @@ class OntologyRelationSource {
         private final Category objectCategory;
         private final boolean foreignTargets;
         private final boolean categoryFromTargetVocabulary;
+        @Nullable
+        private final Category subjectCategory;
 
         Relation( String propertyUri, String fallbackLabel, @Nullable Category objectCategory,
                 boolean foreignTargets ) {
@@ -68,11 +84,32 @@ class OntologyRelationSource {
 
         Relation( String propertyUri, String fallbackLabel, @Nullable Category objectCategory,
                 boolean foreignTargets, boolean categoryFromTargetVocabulary ) {
+            this( propertyUri, fallbackLabel, objectCategory, foreignTargets, categoryFromTargetVocabulary, null );
+        }
+
+        Relation( String propertyUri, String fallbackLabel, @Nullable Category objectCategory,
+                boolean foreignTargets, boolean categoryFromTargetVocabulary,
+                @Nullable Category subjectCategory ) {
             this.propertyUri = propertyUri;
             this.fallbackLabel = fallbackLabel;
             this.objectCategory = objectCategory;
             this.foreignTargets = foreignTargets;
             this.categoryFromTargetVocabulary = categoryFromTargetVocabulary;
+            this.subjectCategory = subjectCategory;
+        }
+
+        /**
+         * What the SUBJECT is, when this one property says something different from the rest of its
+         * source.
+         *
+         * <p>Null means the source's own answer, which is right wherever an ontology's classes are all
+         * one thing. TGEMO's are not: {@code RO_0003301}'s subjects there are mouse strains and
+         * {@code RO_0016002}'s are fusion genes, and filing either under the other's category would be
+         * a claim nobody made.</p>
+         */
+        @Nullable
+        Category getSubjectCategory() {
+            return subjectCategory;
         }
 
         String getPropertyUri() {
@@ -126,13 +163,15 @@ class OntologyRelationSource {
 
     private final String name;
     private final String resolverToken;
+    private final String namespace;
     private final Category subjectCategory;
     private final Map<String, Relation> relations;
 
-    private OntologyRelationSource( String name, String resolverToken, Category subjectCategory,
-            List<Relation> relations ) {
+    private OntologyRelationSource( String name, String resolverToken, String namespace,
+            Category subjectCategory, List<Relation> relations ) {
         this.name = name;
         this.resolverToken = resolverToken;
+        this.namespace = namespace;
         this.subjectCategory = subjectCategory;
         Map<String, Relation> byUri = new LinkedHashMap<>();
         for ( Relation r : relations ) {
@@ -154,6 +193,19 @@ class OntologyRelationSource {
      */
     String getResolverToken() {
         return resolverToken;
+    }
+
+    /**
+     * The URI prefix a class of this ontology's own has, used to tell those apart from the classes it
+     * merges in.
+     *
+     * <p>🛑 Carried per source rather than built from {@link #getName()} and the OBO PURL. CLO and CHEBI
+     * are both under {@code purl.obolibrary.org/obo/}; TGEMO is under {@code gemma.msl.ubc.ca/ont/}, so
+     * deriving the prefix from the name matches nothing for it -- the read visits zero classes and
+     * reports success.</p>
+     */
+    String getNamespace() {
+        return namespace;
     }
 
     /**
@@ -222,7 +274,7 @@ class OntologyRelationSource {
      * axiom that {@code getRestrictions()} surfaces only the outermost layer of. Measured against
      * CLO 2026-06-19: 340 flat and 7,776 nested. Unwinding it is its own piece of work.</p>
      */
-    static final OntologyRelationSource CLO = new OntologyRelationSource( "CLO", "CLO", CELL_LINE, Arrays.asList(
+    static final OntologyRelationSource CLO = new OntologyRelationSource( "CLO", "CLO", OBO + "CLO_", CELL_LINE, Arrays.asList(
             new Relation( OBO + "CLO_0000015", "derives from patient having disease", Categories.DISEASE, true ),
             new Relation( OBO + "CLO_0000179", "is disease model for", Categories.DISEASE, true ),
             new Relation( OBO + "CLO_0037208", "derives from anatomic part", Categories.ORGANISM_PART, false ),
@@ -259,11 +311,39 @@ class OntologyRelationSource {
      * cannot say which of a chemical's ancestors is a role and which is chemistry, and the flattening is
      * not something to extend.</p>
      */
-    static final OntologyRelationSource CHEBI = new OntologyRelationSource( "CHEBI", "CHEBI",
+    static final OntologyRelationSource CHEBI = new OntologyRelationSource( "CHEBI", "CHEBI", OBO + "CHEBI_",
             // the Gemma category these values are annotated under, not a claim by CHEBI about what a
             // molecular entity is
             Categories.TREATMENT, Collections.singletonList(
             new Relation( OBO + "RO_0000087", "has role", ROLE, false ) ) );
 
-    static final List<OntologyRelationSource> ALL = Collections.unmodifiableList( Arrays.asList( CLO, CHEBI ) );
+    /**
+     * TGEMO -- {@code RO_0003301 has role in modeling}, which is what makes an experiment annotated
+     * {@code APP/PS1} findable as an Alzheimer disease model.
+     *
+     * <p>TGEMO is Gemma's own ontology and holds the strains and engineered genotypes that no external
+     * vocabulary has a term for. Until these axioms were added the disease each one models was stated
+     * only in the class's {@code IAO_0000115} definition text -- prose, reachable by nothing.</p>
+     *
+     * <p>🛑 Its classes are NOT under the OBO PURL, which is why {@link #getNamespace()} exists. A
+     * source whose prefix was derived from its name would visit zero TGEMO classes and report
+     * success.</p>
+     *
+     * <p>{@code RO_0003301} and not {@code RO_0002200 has phenotype}: the latter is sanctioned by
+     * {@code Relation.terms.txt} but is classified into neither direction set, and
+     * {@code RelationInferenceDirection.byPredicate} fails closed, so those rows would store, read back
+     * and license no inference at all.</p>
+     */
+    static final OntologyRelationSource TGEMO = new OntologyRelationSource( "TGEMO", "TGEMO",
+            "http://gemma.msl.ubc.ca/ont/TGEMO_", STRAIN, Arrays.asList(
+            // targets are MONDO URIs written directly into the axiom, so nothing needs translating
+            new Relation( OBO + "RO_0003301", "has role in modeling", Categories.DISEASE, false ),
+            // 🛑 A fusion gene is NOT a model of the disease it is found in, so this is a different
+            // property and not a second spelling of the one above. RO_0016002 is what Gemma already
+            // uses for gene-to-disease (see RelationInferenceDirection's SUBJECT_SIDE, "SNCA implies
+            // Parkinson"), and its subjects here are genotypes rather than strains.
+            new Relation( OBO + "RO_0016002", "has disease", Categories.DISEASE, false, false,
+                    Categories.GENOTYPE ) ) );
+
+    static final List<OntologyRelationSource> ALL = Collections.unmodifiableList( Arrays.asList( CLO, CHEBI, TGEMO ) );
 }

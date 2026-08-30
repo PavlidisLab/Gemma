@@ -68,6 +68,14 @@ class OntologyRelationProducerImplTest {
     private static final String HUMAN = OBO + "NCBITaxon_9606";
     private static final String BREAST = OBO + "UBERON_0000310";
 
+    private static final String TGEMO = "http://gemma.msl.ubc.ca/ont/TGEMO_";
+    private static final String APP_PS1 = TGEMO + "00174";
+    private static final String HAS_ROLE_IN_MODELLING = OBO + "RO_0003301";
+    private static final String MONDO_ALZHEIMER = OBO + "MONDO_0004975";
+    private static final String BCR_ABL = TGEMO + "00151";
+    private static final String HAS_DISEASE = OBO + "RO_0016002";
+    private static final String MONDO_AML = OBO + "MONDO_0018874";
+
     private static final String IMATINIB = OBO + "CHEBI_45783";
     private static final String HAS_ROLE = OBO + "RO_0000087";
     private static final String ANTINEOPLASTIC_AGENT = OBO + "CHEBI_35610";
@@ -78,6 +86,7 @@ class OntologyRelationProducerImplTest {
 
     private final Map<String, OntologyTerm> cloTerms = new LinkedHashMap<>();
     private final Map<String, OntologyTerm> chebiTerms = new LinkedHashMap<>();
+    private final Map<String, OntologyTerm> tgemoTerms = new LinkedHashMap<>();
     private final Map<String, OntologyTerm> mondoTerms = new LinkedHashMap<>();
     private final List<OntologyXref> xrefs = new ArrayList<>();
 
@@ -89,6 +98,8 @@ class OntologyRelationProducerImplTest {
         when( transactionTemplate.execute( any() ) ).thenAnswer( inv ->
                 ( ( TransactionCallback<?> ) inv.getArgument( 0 ) ).doInTransaction( null ) );
 
+        mondoTerms.put( MONDO_ALZHEIMER, term( MONDO_ALZHEIMER, "Alzheimer disease" ) );
+        mondoTerms.put( MONDO_AML, term( MONDO_AML, "acute myeloid leukemia" ) );
         mondoTerms.put( MONDO_BREAST_ADENOCARCINOMA, term( MONDO_BREAST_ADENOCARCINOMA, "breast adenocarcinoma" ) );
         mondoTerms.put( MONDO_ADENOCARCINOMA, term( MONDO_ADENOCARCINOMA, "adenocarcinoma" ) );
         xrefs.add( new OntologyXref( MONDO_BREAST_ADENOCARCINOMA, "DOID:3458", OntologyXref.Strength.EXACT ) );
@@ -152,6 +163,7 @@ class OntologyRelationProducerImplTest {
         List<ubic.gemma.core.ontology.providers.OntologyService> ontologies = Arrays.asList(
                 ontology( "cellLineOntology", "2026-06-19", cloTerms, Collections.emptyList() ),
                 ontology( "chebiOntology", "254", chebiTerms, Collections.emptyList() ),
+                ontology( "gemmaOntology", "2026-08-30", tgemoTerms, Collections.emptyList() ),
                 ontology( "mondoOntology", "2026-08-04", mondoTerms, xrefs ) );
         return new OntologyRelationProducerImpl( ontologies, dao, transactionTemplate, taxonService, null );
     }
@@ -538,6 +550,90 @@ class OntologyRelationProducerImplTest {
 
     @Test
     void theSupportedSourcesAreTheOnesTheAllowListNames() {
-        assertThat( producer().getSupportedSources() ).containsExactly( "CLO", "CHEBI" );
+        assertThat( producer().getSupportedSources() ).containsExactly( "CLO", "CHEBI", "TGEMO" );
+    }
+
+    /**
+     * 🛑 The regression this exists for: TGEMO publishes under {@code gemma.msl.ubc.ca/ont/}, not the
+     * OBO PURL. While {@code isOwnTerm} built its prefix out of the source's NAME, a TGEMO source
+     * matched none of its own classes -- the read visited every one, kept nothing, and reported
+     * success with an empty coverage block. Point the namespace back at the OBO PURL and this test
+     * goes to zero rows rather than to a wrong row, which is what made the bug invisible.
+     */
+    @Test
+    void aTgemoStrainModelsADiseaseAndTheGemmaNamespaceIsRecognized() {
+        tgemoTerms.put( APP_PS1, term( APP_PS1, "APP/PS1",
+                restriction( HAS_ROLE_IN_MODELLING, "has role in modeling",
+                        term( MONDO_ALZHEIMER, "Alzheimer disease" ) ) ) );
+
+        List<AnnotationRelation> rows = produce( "TGEMO" );
+
+        assertThat( rows ).hasSize( 1 );
+        AnnotationRelation r = rows.get( 0 );
+        assertThat( r.getSubjectValue() ).isEqualTo( "APP/PS1" );
+        assertThat( r.getSubjectValueUri() ).isEqualTo( APP_PS1 );
+        assertThat( r.getSubjectCategory() ).isEqualTo( "strain" );
+        assertThat( r.getSubjectCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0005135" );
+        assertThat( r.getPredicateUri() ).isEqualTo( HAS_ROLE_IN_MODELLING );
+        assertThat( r.getObjectValue() ).isEqualTo( "Alzheimer disease" );
+        assertThat( r.getObjectValueUri() ).isEqualTo( MONDO_ALZHEIMER );
+        assertThat( r.getBasis() ).isEqualTo( AnnotationRelationBasis.ONTOLOGY );
+        assertThat( r.getSource() ).isEqualTo( "TGEMO" );
+    }
+
+    /**
+     * A source still reads only its own classes. TGEMO subclasses NCBITaxon and references MONDO; those
+     * are other ontologies' terms and must not arrive as TGEMO subjects.
+     */
+    @Test
+    void aTgemoReadStillSkipsTermsBelongingToOtherOntologies() {
+        tgemoTerms.put( MONDO_ALZHEIMER, term( MONDO_ALZHEIMER, "Alzheimer disease",
+                restriction( HAS_ROLE_IN_MODELLING, "has role in modeling",
+                        term( MONDO_BREAST_ADENOCARCINOMA, "breast adenocarcinoma" ) ) ) );
+        tgemoTerms.put( APP_PS1, term( APP_PS1, "APP/PS1",
+                restriction( HAS_ROLE_IN_MODELLING, "has role in modeling",
+                        term( MONDO_ALZHEIMER, "Alzheimer disease" ) ) ) );
+
+        List<AnnotationRelation> rows = produce( "TGEMO" );
+
+        assertThat( rows ).hasSize( 1 );
+        assertThat( rows.get( 0 ).getSubjectValueUri() ).isEqualTo( APP_PS1 );
+    }
+
+    /**
+     * 🛑 One category per source is wrong for TGEMO, and this is where it would show. A fusion gene is
+     * a genotype and a mouse line is a strain; the source-wide answer would file one of them under the
+     * other's category — a claim nobody made — so the property carries its own.
+     */
+    @Test
+    void eachTgemoPropertyCarriesItsOwnSubjectCategory() {
+        tgemoTerms.put( APP_PS1, term( APP_PS1, "APP/PS1",
+                restriction( HAS_ROLE_IN_MODELLING, "has role in modeling",
+                        term( MONDO_ALZHEIMER, "Alzheimer disease" ) ) ) );
+        tgemoTerms.put( BCR_ABL, term( BCR_ABL, "MLL-AF9",
+                restriction( HAS_DISEASE, "has disease", term( MONDO_AML, "acute myeloid leukemia" ) ) ) );
+
+        List<AnnotationRelation> rows = produce( "TGEMO" );
+
+        assertThat( rows ).hasSize( 2 );
+        assertThat( rows ).extracting( AnnotationRelation::getSubjectValueUri,
+                        AnnotationRelation::getSubjectCategory, AnnotationRelation::getPredicateUri )
+                .containsExactly(
+                        tuple( APP_PS1, "strain", HAS_ROLE_IN_MODELLING ),
+                        tuple( BCR_ABL, "genotype", HAS_DISEASE ) );
+    }
+
+    /**
+     * A fusion gene models nothing, so its relation must not arrive under the modelling property.
+     * Both are sanctioned and both are SUBJECT_SIDE, which is exactly why a mix-up here would read as
+     * correct.
+     */
+    @Test
+    void anUnlistedPropertyOnATgemoClassIsStillNotRead() {
+        tgemoTerms.put( BCR_ABL, term( BCR_ABL, "MLL-AF9",
+                restriction( OBO + "RO_0002200", "has phenotype",
+                        term( MONDO_AML, "acute myeloid leukemia" ) ) ) );
+
+        assertThat( producer().produce( Arrays.asList( "TGEMO" ) ) ).isZero();
     }
 }

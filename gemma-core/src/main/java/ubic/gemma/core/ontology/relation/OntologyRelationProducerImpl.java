@@ -441,7 +441,8 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
         AnnotationRelation relation = new AnnotationRelation();
         relation.setSubjectValue( truncate( subjectLabel, VALUE_MAX ) );
         relation.setSubjectValueUri( subject.getUri() );
-        Category subjectCategory = source.getSubjectCategory();
+        Category subjectCategory = spec.getSubjectCategory() != null
+                ? spec.getSubjectCategory() : source.getSubjectCategory();
         relation.setSubjectCategory( subjectCategory.getCategory() );
         relation.setSubjectCategoryUri( subjectCategory.getCategoryUri() );
         relation.setPredicate( truncate(
@@ -471,9 +472,12 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
     /**
      * Whether a URI belongs to the ontology being read rather than to something it merges in. CLO ships
      * the DOID, CL, UBERON and NCBITaxon classes it references; only its own classes are cell lines.
+     *
+     * <p>The prefix comes off the source rather than being built from its name and the OBO PURL: TGEMO
+     * publishes under {@code gemma.msl.ubc.ca/ont/}, and the derived form silently matched none of it.</p>
      */
     private static boolean isOwnTerm( OntologyRelationSource source, String uri ) {
-        return uri.startsWith( "http://purl.obolibrary.org/obo/" + source.getName() + "_" );
+        return uri.startsWith( source.getNamespace() );
     }
 
     private static boolean isForeign( @Nullable String uri ) {
