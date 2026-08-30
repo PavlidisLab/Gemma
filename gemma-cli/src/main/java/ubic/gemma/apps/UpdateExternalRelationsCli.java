@@ -48,9 +48,17 @@ public class UpdateExternalRelationsCli extends AbstractAuthenticatedCLI {
      */
     private static final String SITE_ONTOLOGY = "UBERON";
 
-    /** Both are read by identifier and never by text, which is why search indexing stays off. */
-    private static final List<String> REQUIRED_ONTOLOGIES =
-            Collections.unmodifiableList( Arrays.asList( XREF_ONTOLOGY, SITE_ONTOLOGY ) );
+    /**
+     * Also not a source of relations: it is what makes MGI's reachable. Every MGI relation is keyed on
+     * an allele URI and no corpus annotation uses one, so each fact is stored a second time under the
+     * TGEMO class that cross-references the allele. Cold, that second subject is simply absent — the
+     * run reports success and writes rows that match nothing, which is the state this was added to fix.
+     */
+    private static final String BRIDGE_ONTOLOGY = "TGEMO";
+
+    /** All read by identifier and never by text, which is why search indexing stays off. */
+    private static final List<String> REQUIRED_ONTOLOGIES = Collections.unmodifiableList(
+            Arrays.asList( XREF_ONTOLOGY, SITE_ONTOLOGY, BRIDGE_ONTOLOGY ) );
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
