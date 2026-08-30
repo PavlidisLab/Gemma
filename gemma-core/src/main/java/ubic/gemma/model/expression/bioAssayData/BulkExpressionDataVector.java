@@ -31,8 +31,13 @@ public abstract class BulkExpressionDataVector extends DesignElementDataVector {
     private BioAssayDimension bioAssayDimension;
 
     // Bulk hbm flipped QT to LAZY ("lazy=proxy") to dodge the same N+1 — hot DAOs JOIN FETCH it.
+    // nullable = false since 2026-08-30: production has zero raw, processed or single-cell vectors
+    // with a null quantitation type, and SingleCellExpressionDataVector already declared it. The
+    // mapping permitting null is what let ProcessedExpressionDataVectorDaoTest persist 100 vectors
+    // without one, which an inner join fetch on the type then silently filtered out -- fixed at the
+    // time with a left join fetch, reverted now that the schema agrees.
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "QUANTITATION_TYPE_FK", columnDefinition = "BIGINT")
+    @JoinColumn(name = "QUANTITATION_TYPE_FK", nullable = false, columnDefinition = "BIGINT")
     private QuantitationType quantitationType;
 
     /**

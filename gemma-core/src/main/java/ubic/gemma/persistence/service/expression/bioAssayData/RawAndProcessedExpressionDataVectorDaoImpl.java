@@ -60,14 +60,14 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
         result.addAll( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select v from RawExpressionDataVector v "
                         + "left join fetch v.bioAssayDimension "
-                        + "left join fetch v.quantitationType "
+                        + "join fetch v.quantitationType "
                         + "where v.quantitationType = :qt", RawExpressionDataVector.class )
                 .setParameter( "qt", quantitationType )
                 .list() );
         result.addAll( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select v from ProcessedExpressionDataVector v "
                         + "left join fetch v.bioAssayDimension "
-                        + "left join fetch v.quantitationType "
+                        + "join fetch v.quantitationType "
                         + "where v.quantitationType = :qt", ProcessedExpressionDataVector.class )
                 .setParameter( "qt", quantitationType )
                 .list() );
@@ -86,14 +86,14 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
         result.addAll( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select v from RawExpressionDataVector v "
                         + "left join fetch v.bioAssayDimension "
-                        + "left join fetch v.quantitationType "
+                        + "join fetch v.quantitationType "
                         + "where v.quantitationType in :qts", RawExpressionDataVector.class )
                 .setParameter( "qts", quantitationTypes )
                 .list() );
         result.addAll( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select v from ProcessedExpressionDataVector v "
                         + "left join fetch v.bioAssayDimension "
-                        + "left join fetch v.quantitationType "
+                        + "join fetch v.quantitationType "
                         + "where v.quantitationType in :qts", ProcessedExpressionDataVector.class )
                 .setParameter( "qts", quantitationTypes )
                 .list() );
@@ -111,14 +111,14 @@ public class RawAndProcessedExpressionDataVectorDaoImpl extends AbstractDesignEl
         result.addAll( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select v from RawExpressionDataVector v "
                         + "left join fetch v.bioAssayDimension "
-                        + "left join fetch v.quantitationType "
+                        + "join fetch v.quantitationType "
                         + "where v.expressionExperiment = :ee", RawExpressionDataVector.class )
                 .setParameter( "ee", ee )
                 .list() );
         result.addAll( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select v from ProcessedExpressionDataVector v "
                         + "left join fetch v.bioAssayDimension "
-                        + "left join fetch v.quantitationType "
+                        + "join fetch v.quantitationType "
                         + "where v.expressionExperiment = :ee", ProcessedExpressionDataVector.class )
                 .setParameter( "ee", ee )
                 .list() );

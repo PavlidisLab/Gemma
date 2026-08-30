@@ -1,0 +1,24 @@
+-- RAW_ and PROCESSED_EXPRESSION_DATA_VECTOR.QUANTITATION_TYPE_FK become NOT NULL, matching the
+-- mapping and matching SINGLE_CELL_EXPRESSION_DATA_VECTOR, which already declared it.
+--
+-- Audited on production 2026-08-30: zero rows with a null quantitation type in any of the three
+-- vector tables. The question had been open since 2026-05-23, when a unit test was found persisting
+-- 100 vectors with no quantitation type and an inner join fetch silently filtered all of them out.
+-- That was patched with a left join fetch; with the column enforced, the queries revert to an inner
+-- join fetch, which is the tighter form and cannot silently drop a row.
+--
+-- 🛑 DELIBERATELY NOT APPLIED TO PRODUCTION (Paul, 2026-08-30). MODIFY COLUMN ... NOT NULL rebuilds
+-- the table, and on prod these are 781 GB and 550 GB -- roughly 1.3 TB of I/O, needing comparable
+-- free space, to enforce something the data already satisfies. Production is not Flyway-managed
+-- (there is no flyway_schema_history there; V36 and V37 were applied by hand), so this runs only
+-- against gemdtest and H2, where the tables are trivial and the constraint still catches any code
+-- that would write a null.
+-- The enforcement that matters is in the mapping: BulkExpressionDataVector.quantitationType is
+-- nullable = false, so Hibernate rejects a null at flush and the application cannot create one.
+-- Only a raw SQL write could, which is what this constraint would have guarded on prod.
+--
+-- Fails if any row has a null. That is intended: fix the row, not the constraint.
+--   SELECT COUNT(*) FROM RAW_EXPRESSION_DATA_VECTOR WHERE QUANTITATION_TYPE_FK IS NULL;
+--   SELECT COUNT(*) FROM PROCESSED_EXPRESSION_DATA_VECTOR WHERE QUANTITATION_TYPE_FK IS NULL;
+ALTER TABLE RAW_EXPRESSION_DATA_VECTOR MODIFY COLUMN QUANTITATION_TYPE_FK BIGINT NOT NULL;
+ALTER TABLE PROCESSED_EXPRESSION_DATA_VECTOR MODIFY COLUMN QUANTITATION_TYPE_FK BIGINT NOT NULL;

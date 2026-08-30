@@ -11,6 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -81,13 +82,24 @@ public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest
         session.persist( cs );
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
         session.persist( bad );
+        // A quantitation type is required on both vector types; see the note in
+        // BulkExpressionDataVector.quantitationType.
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "test" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LINEAR );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        session.persist( qt );
         RawExpressionDataVector ev = new RawExpressionDataVector();
         ev.setDesignElement( cs );
         ev.setBioAssayDimension( bad );
+        ev.setQuantitationType( qt );
         ev.setData( new byte[0] );
         ProcessedExpressionDataVector pv = new ProcessedExpressionDataVector();
         pv.setDesignElement( cs );
         pv.setBioAssayDimension( bad );
+        pv.setQuantitationType( qt );
         pv.setData( new byte[0] );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ev.setExpressionExperiment( ee );
