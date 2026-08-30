@@ -1,0 +1,20 @@
+-- ARRAY_DESIGN.CURATION_DETAILS_FK becomes NOT NULL, matching the mapping.
+--
+-- ArrayDesign.curationDetails is @ManyToOne(fetch = EAGER) with @Fetch(FetchMode.JOIN) and
+-- @JoinColumn(nullable = false), while the MySQL column allows NULL. The H2 schema, generated from
+-- the mapping, has it NOT NULL, so the divergence exists only on production.
+--
+-- This is the same shape that hid GSE4728's assays (see V36): a non-optional eager association
+-- makes Hibernate's entity loader inner-join the target, so a row with a NULL FK is returned by
+-- session.get() as null -- no exception, no log line, the row simply is not there. On a platform
+-- that would be worse than on an assay, since every BioAssay references one.
+--
+-- A survey on 2026-08-30 compared every column the mappings require against production: 44 differed,
+-- none held a NULL, and only two had this eager non-optional shape -- BIO_ASSAY.SAMPLE_USED_FK
+-- (V36) and this one. The remaining 42 are either scalars, which fail loudly at flush instead of
+-- disappearing, or GEEQ columns that are deliberately nullable because the scoring was removed with
+-- the columns kept.
+--
+-- Fails if any row has a NULL CURATION_DETAILS_FK; deal with the row rather than the constraint.
+--   SELECT ID, SHORT_NAME FROM ARRAY_DESIGN WHERE CURATION_DETAILS_FK IS NULL;
+ALTER TABLE ARRAY_DESIGN MODIFY COLUMN CURATION_DETAILS_FK BIGINT NOT NULL;
