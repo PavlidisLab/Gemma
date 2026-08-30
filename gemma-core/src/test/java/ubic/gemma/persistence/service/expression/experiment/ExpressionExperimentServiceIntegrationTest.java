@@ -125,7 +125,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testFindByFactor() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         ExperimentalDesign design = ee.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
@@ -137,7 +137,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testFindByFactorValue() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         ExperimentalDesign design = ee.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
@@ -150,7 +150,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testFindByFactorValueId() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         ExperimentalDesign design = ee.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
@@ -164,7 +164,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testLoadAllValueObjects() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadAllValueObjects();
         assertThat( vos )
                 .extracting( ExpressionExperimentValueObject::getId )
@@ -173,7 +173,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testGetByTaxon() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Taxon taxon = taxonService.findByCommonName( "mouse" );
         Collection<ExpressionExperiment> list = expressionExperimentService.findByTaxon( taxon );
         assertNotNull( list );
@@ -184,7 +184,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public final void testGetDesignElementDataVectorsByQt() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         QuantitationType quantitationType = ee.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<QuantitationType> quantitationTypes = new HashSet<>();
         quantitationTypes.add( quantitationType );
@@ -206,14 +206,14 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public final void testGetQuantitationTypes() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee );
         assertEquals( 2, types.size() );
     }
 
     @Test
     public void testGetPreferredQuantitationType() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee ).orElse( null );
         assertNotNull( qt );
         assertTrue( qt.getIsPreferred() );
@@ -221,27 +221,26 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testGetBioMaterialCount() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         assertEquals( 8, expressionExperimentService.getBioMaterialCount( ee ) );
     }
 
     @Test
     public void testGetQuantitationTypeCount() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Map<QuantitationType, Long> qts = expressionExperimentService.getQuantitationTypeCount( ee );
         assertEquals( 2, qts.size() );
     }
 
     @Test
     public void testGetRawDataVectorCount() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         assertEquals( 24, expressionExperimentService.getRawDataVectorCount( ee ) );
     }
 
     @Test
     public final void testGetRawExpressionDataVectors() {
-        ExpressionExperiment eel = this.getTestPersistentCompleteExpressionExperiment( false );
-        ees.add( eel );
+        ExpressionExperiment eel = readOnlyExpressionExperiment();
         Collection<CompositeSequence> designElements = new HashSet<>();
         QuantitationType quantitationType = eel.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<RawExpressionDataVector> allv = eel.getRawExpressionDataVectors();
@@ -329,7 +328,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public final void testLoadValueObjectsByIds() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Collection<Long> ids = new HashSet<>();
         Long id = ee.getId();
         ids.add( id );
@@ -390,7 +389,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testLoadValueObjectsByCharacteristic() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Characteristic c = ee.getCharacteristics().stream().findFirst().orElse( null );
         assertThat( c ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "characteristics.id", Filter.Operator.eq, c.getId().toString() );
@@ -463,7 +462,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testLoadValueObjectsByBioAssay() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         BioAssay ba = ee.getBioAssays().stream().findFirst().orElse( null );
         assertThat( ba ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "bioAssays.id", Filter.Operator.eq, ba.getId().toString() );
@@ -758,9 +757,41 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.OPEN, reloaded.getState() );
     }
 
+    /**
+     * A complete experiment — two platforms, 8 samples, 16 assays, 2 quantitation types, 24 raw
+     * vectors — but with no probe sequences. Nothing in this class reads a probe's biological
+     * characteristic, and filling the sequences in built a BioSequence + Gene + GeneProduct + BLAT
+     * result graph per probe.
+     */
+    private ExpressionExperiment newCompleteExperiment() {
+        return testHelper.getTestExpressionExperimentWithAllDependencies( false );
+    }
+
+    /**
+     * The one experiment shared by every test here that only reads it.
+     * <p>
+     * Building one costs ~2.4 s — 1.65 s inside the persister, 0.78 s to delete it again — which
+     * every one of this class's 36 methods used to pay. It is deliberately not added to
+     * {@link #ees}, so it outlives the class rather than being deleted between methods.
+     * <strong>Do not modify it</strong>: a test that changes the experiment, its design, its
+     * samples or its ACLs must build its own with {@link #createExpressionExperiment()}.
+     */
+    private static ExpressionExperiment readOnlyEe;
+
+    private ExpressionExperiment readOnlyExpressionExperiment() {
+        if ( readOnlyEe == null ) {
+            readOnlyEe = prepareExpressionExperiment( newCompleteExperiment() );
+        }
+        return readOnlyEe;
+    }
+
     private ExpressionExperiment createExpressionExperiment() {
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
         ees.add( ee );
+        return prepareExpressionExperiment( ee );
+    }
+
+    private ExpressionExperiment prepareExpressionExperiment( ExpressionExperiment ee ) {
         ee.setName( ExpressionExperimentServiceIntegrationTest.EE_NAME );
 
         Contact c = this.getTestPersistentContact();

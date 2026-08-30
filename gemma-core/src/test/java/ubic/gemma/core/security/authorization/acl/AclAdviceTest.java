@@ -169,7 +169,8 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
     public void testNumExperiments() {
 
         this.runAsAdmin();
-        ArrayDesign ad = super.getTestPersistentArrayDesign( 10, true );
+        // no probe sequences: the test counts experiments per platform and never reads a probe
+        ArrayDesign ad = super.getTestPersistentArrayDesign( 10, true, false, false );
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment( ad );
 
         securityService.makePrivate( ee );
@@ -243,7 +244,7 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
     @Test
     public void testExpressionExperimentAcls() {
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
 
         aclTestUtils.checkEEAcls( ee );
 
@@ -309,7 +310,7 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
          * Create an analysis, add a result set, persist. Problem is: what if we do things in a funny order. Must call
          * update on the Analysis.
          */
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis diffExpressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
@@ -345,7 +346,7 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
      */
     @Test
     public void testResultSetOfPrivateExperimentIsNotReadableAnonymously() {
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
         DifferentialExpressionAnalysis analysis = persistOneAnalysis( ee );
         Long resultSetId = analysis.getResultSets().iterator().next().getId();
         assertNotNull( resultSetId );
@@ -372,7 +373,7 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
      */
     @Test
     public void testAnalysisAclOnReanalysis() {
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
 
         DifferentialExpressionAnalysis first = persistOneAnalysis( ee );
         aclTestUtils.checkHasAcl( first );
@@ -408,7 +409,7 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
     @Test
     public void testUpdateAcl() {
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
 
         aclTestUtils.checkEEAcls( ee );
 
@@ -447,6 +448,17 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
         expressionExperimentService.remove( ee );
 
         aclTestUtils.checkDeleteEEAcls( ee );
+    }
+
+    /**
+     * A complete experiment with no probe sequences. Every ACL walk here
+     * ({@link AclTestUtils#checkEEAcls}, {@link AclTestUtils#checkDeleteEEAcls}) covers the
+     * experiment, its design, factors, factor values, assays, samples and platforms — never a
+     * probe's biological characteristic — so the per-probe BioSequence + Gene + GeneProduct +
+     * BLAT result graph was paid for nothing.
+     */
+    private ExpressionExperiment newCompleteExperiment() {
+        return testHelper.getTestExpressionExperimentWithAllDependencies( false );
     }
 
     private void makeUser( String username ) {

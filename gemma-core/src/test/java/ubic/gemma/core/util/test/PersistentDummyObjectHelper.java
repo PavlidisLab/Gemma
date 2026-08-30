@@ -94,6 +94,8 @@ public class PersistentDummyObjectHelper {
     private ExternalDatabase geo;
     private ExternalDatabase pubmed;
     private Taxon testTaxon;
+    /** Cached "XXX" chromosome per taxon id; see {@link #getTestPersistentChromosome(Taxon)}. */
+    private final Map<Long, Chromosome> testChromosomes = new HashMap<>();
     private int testElementCollectionSize = PersistentDummyObjectHelper.DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
 
     @Autowired
@@ -709,13 +711,7 @@ public class PersistentDummyObjectHelper {
         if ( taxon == null ) {
             taxon = this.getTestPersistentTaxon();
         }
-        Chromosome chromosome = Chromosome.Factory.newInstance( "XXX", null, this.getTestPersistentBioSequence( taxon ), taxon );
-        assert chromosome.getSequence() != null;
-        chromosome = genomePersister.persistChromosome( chromosome );
-        assert chromosome != null;
-        assert chromosome.getSequence() != null;
-        br.setTargetChromosome( chromosome );
-        assert br.getTargetChromosome().getSequence() != null;
+        br.setTargetChromosome( this.getTestPersistentChromosome( taxon ) );
         br.setQuerySequence( querySequence );
         br.setTargetStart( 1L );
         br.setTargetEnd( 1000L );
@@ -725,6 +721,31 @@ public class PersistentDummyObjectHelper {
         targetAlignedRegion.setNucleotideLength( 1001 );
         targetAlignedRegion.setStrand( "-" );
         return genomePersister.persistBlatResults( Collections.singleton( br ) ).iterator().next();
+    }
+
+    /**
+     * Resolve the single "XXX" chromosome used by every test BLAT result for a taxon, caching it.
+     * <p>
+     * {@link GenomePersister#persistChromosome(Chromosome)} de-duplicates on (name, taxon) and only
+     * persists the chromosome's sequence on a miss, so building a fresh {@link BioSequence} for the
+     * chromosome on every call left one orphaned sequence + GenBank {@link DatabaseEntry} row behind
+     * per composite sequence — 12 of them for every experiment from
+     * {@link #getTestExpressionExperimentWithAllDependencies(boolean)}.
+     */
+    private Chromosome getTestPersistentChromosome( Taxon taxon ) {
+        Long taxonId = taxon.getId();
+        if ( taxonId != null && testChromosomes.containsKey( taxonId ) ) {
+            return testChromosomes.get( taxonId );
+        }
+        Chromosome chromosome = Chromosome.Factory.newInstance( "XXX", null,
+                this.getTestPersistentBioSequence( taxon ), taxon );
+        assert chromosome.getSequence() != null;
+        chromosome = genomePersister.persistChromosome( chromosome );
+        assert chromosome != null;
+        if ( taxonId != null ) {
+            testChromosomes.put( taxonId, chromosome );
+        }
+        return chromosome;
     }
 
     /**
@@ -865,7 +886,10 @@ public class PersistentDummyObjectHelper {
         ArrayDesign ad;
 
         bm = this.getTestPersistentBioMaterial( taxon );
-        ad = this.getTestPersistentArrayDesign( 4, true, true );
+        // no sequences: neither caller (ExpressionExperimentSetServiceTest,
+        // ExpressionExperimentSetValueObjectHelperTest) reads the platform's probes, and filling them
+        // in cost a BioSequence + Gene + GeneProduct + BLAT result graph per probe.
+        ad = this.getTestPersistentArrayDesign( 4, true, false );
         ba = this.getTestPersistentBioAssay( ad, bm );
         Set<BioAssay> bas1 = new HashSet<>();
         bas1.add( ba );
