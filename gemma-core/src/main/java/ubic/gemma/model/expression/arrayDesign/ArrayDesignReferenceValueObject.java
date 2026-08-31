@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import com.fasterxml.jackson.databind.util.StdConverter;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -97,5 +98,28 @@ public class ArrayDesignReferenceValueObject implements Serializable {
     public String toString() {
         return "ArrayDesignReferenceValueObject [id=" + id
                 + ( shortName != null ? ", shortName=" + shortName : "" ) + "]";
+    }
+
+    /**
+     * Project a full {@link ArrayDesignValueObject} down to this shape at serialization time.
+     * <p>
+     * For a field that holds a full platform VO but only ever needs to name it. Applied with
+     * {@code @JsonSerialize(converter = …)} plus a matching
+     * {@code @Schema(implementation = ArrayDesignReferenceValueObject.class)}, it changes the wire
+     * shape without changing the Java type, which is what lets a payload shrink while in-JVM readers
+     * of the same field keep the fields they consume.
+     *
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayValueObject#getArrayDesign()
+     */
+    public static class FromArrayDesignValueObject extends StdConverter<ArrayDesignValueObject, ArrayDesignReferenceValueObject> {
+
+        @Override
+        public ArrayDesignReferenceValueObject convert( @Nullable ArrayDesignValueObject value ) {
+            if ( value == null ) {
+                return null;
+            }
+            return new ArrayDesignReferenceValueObject( value.getId(), value.getShortName(), value.getName(),
+                    value.getTechnologyType() );
+        }
     }
 }

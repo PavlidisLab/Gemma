@@ -122,6 +122,7 @@ public class AnalysisResultSetsWebService {
      * @param datasets        filter result sets that belong to any of the provided dataset identifiers, or null to ignore
      * @param databaseEntries filter by associated datasets with given external identifiers, or null to ignore
      */
+    @GZIP
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all result sets matching the provided criteria",
