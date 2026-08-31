@@ -1987,8 +1987,13 @@ public class DatasetsWebService {
     @Path("/{dataset}/auditEvents")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the audit events of a dataset",
-            description = "Legacy mode (no `cursor` parameter): returns the full unpaginated audit-event "
-                    + "list in the existing shape (no count query, full result set, sorted by `date, id`). "
+            description = "Legacy mode (no `cursor` parameter): returns the audit-event list in the existing "
+                    + "shape (no count query, sorted by `date, id` — OLDEST FIRST, so the newest events are at "
+                    + "the END of `data`). With no `limit` the whole trail is returned; with a `limit` the MOST "
+                    + "RECENT `limit` entries are returned, still oldest-first within that window. That is the "
+                    + "window a history view wants: the head of an oldest-first trail is the wrong end. `limit` "
+                    + "is applied last, after `excludeEmpty` and `compact`, so the response carries at most "
+                    + "`limit` entries whatever the other options do. "
                     + "Cursor mode (recommended for datasets accumulating long curation/processing histories): "
                     + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` "
                     + "field along with a `limit`. In cursor mode the result is always sorted by ascending `id` "
@@ -2018,8 +2023,11 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
-            @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Maximum number of entries to return. In cursor mode this is the page size (default "
+                    + DEFAULT_AUDIT_EVENT_PAGE_SIZE + "). Without a `cursor`, omitting it returns the whole trail; supplying it "
+                    + "returns the MOST RECENT `limit` entries, still oldest-first within that window. Applied last, "
+                    + "after `excludeEmpty` and `compact`.")
+            @QueryParam("limit") @Nullable LimitArg limitArg,
             @Parameter(description = "Collapse runs of consecutive same-(eventType, performer) events into one entry with `collapsedCount` + `lastOccurrence`. Default `false`.")
             @QueryParam("compact") @DefaultValue("false") boolean compact,
             @Parameter(description = "Drop entries with no eventType AND blank note/detail (boring update ticks). Default `false`. Combine with `compact=true` for a tight curator-story view.")
@@ -2027,8 +2035,9 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( cursorArg != null ) {
+            int pageSize = limitArg != null ? limitArg.getValue() : DEFAULT_AUDIT_EVENT_PAGE_SIZE;
             CursorPage<AuditEventValueObject> page = auditEventService
-                    .getEventsByCursor( ee, cursorArg.getValue(), limitArg.getValue() )
+                    .getEventsByCursor( ee, cursorArg.getValue(), pageSize )
                     .map( AuditEventValueObject::new );
             if ( excludeEmpty ) {
                 // CursorPage extends AbstractList<O>, so stream directly off it
@@ -2058,9 +2067,33 @@ public class DatasetsWebService {
             out = out.stream().filter( e -> !isEmptyUpdate( e ) ).collect( Collectors.toList() );
         }
         if ( compact ) {
-            return respond( collapseAuditEvents( out ) );
+            return respond( mostRecent( collapseAuditEvents( out ), limitArg ) );
         }
-        return respond( out );
+        return respond( mostRecent( out, limitArg ) );
+    }
+
+    /**
+     * Page size used by {@link #getDatasetAuditEvents} in cursor mode when the caller supplies no {@code limit}.
+     */
+    private static final int DEFAULT_AUDIT_EVENT_PAGE_SIZE = 20;
+
+    /**
+     * Trim an audit-event list to its last {@code limit} entries, preserving their order.
+     * <p>
+     * The trail is served oldest-first, so the interesting end for a caller asking for N entries is the
+     * tail: taking the head would hand a history view the oldest events and never reach the recent ones.
+     * A null {@code limitArg} means the caller sent no {@code limit} and the list is returned untouched,
+     * so an unparameterized request still gets the whole trail.
+     */
+    private static <T> List<T> mostRecent( List<T> events, @Nullable LimitArg limitArg ) {
+        if ( limitArg == null ) {
+            return events;
+        }
+        int limit = limitArg.getValue();
+        if ( events.size() <= limit ) {
+            return events;
+        }
+        return new ArrayList<>( events.subList( events.size() - limit, events.size() ) );
     }
 
     /**

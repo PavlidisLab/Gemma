@@ -136,6 +136,20 @@ public class DatasetsWebServiceAuditEventsCursorTest {
         return LimitArg.valueOf( s );
     }
 
+    /**
+     * Build an audit event with its own performer, so {@code compact=true} sees it as its own
+     * (eventType, performer) run rather than folding it into the previous entry.
+     */
+    private static AuditEvent event( long id, String performerName, String note ) throws Exception {
+        User p = new User();
+        p.setId( id );
+        p.setName( performerName );
+        p.setUserName( performerName );
+        AuditEvent ae = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, p, null );
+        setId( ae, id );
+        return ae;
+    }
+
     @Test
     public void legacyModeWithoutCursorReturnsUnpaginatedResponseDataObject() {
         // Legacy path: AuditEventService.getEvents -> List<AuditEvent>, mapped to VOs and
@@ -258,5 +272,93 @@ public class DatasetsWebServiceAuditEventsCursorTest {
         List<AuditEventValueObject> data = page.getData();
         assertThat( data.get( 0 ).getId() ).isEqualTo( 10L );
         assertThat( data.get( 1 ).getId() ).isEqualTo( 20L );
+    }
+
+    // ---------------------------------------------------------------------
+    // `limit` on the legacy (no-cursor) path.
+    // The trail is served oldest-first, so a bounded request takes the tail.
+    // ---------------------------------------------------------------------
+
+    @Test
+    public void legacyModeWithoutLimitReturnsTheWholeTrail() throws Exception {
+        when( auditEventService.getEvents( ee ) )
+                .thenReturn( Arrays.asList( event( 10L, "alice", "a" ), event( 20L, "bob", "b" ),
+                        event( 30L, "carol", "c" ) ) );
+
+        Object response = webService.getDatasetAuditEvents( datasetArg, null, null, false, false );
+
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<AuditEventValueObject>> r =
+                ( ResponseDataObject<List<AuditEventValueObject>> ) response;
+        assertThat( r.getData() ).extracting( AuditEventValueObject::getId )
+                .containsExactly( 10L, 20L, 30L );
+    }
+
+    @Test
+    public void legacyModeLimitReturnsTheMostRecentEntries() throws Exception {
+        // getEvents is ordered `date, id` ascending, so the newest events are last.
+        when( auditEventService.getEvents( ee ) )
+                .thenReturn( Arrays.asList( event( 10L, "alice", "a" ), event( 20L, "bob", "b" ),
+                        event( 30L, "carol", "c" ) ) );
+
+        Object response = webService.getDatasetAuditEvents( datasetArg, null, limit( "2" ), false, false );
+
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<AuditEventValueObject>> r =
+                ( ResponseDataObject<List<AuditEventValueObject>> ) response;
+        // the tail, still oldest-first within the window
+        assertThat( r.getData() ).extracting( AuditEventValueObject::getId )
+                .containsExactly( 20L, 30L );
+    }
+
+    @Test
+    public void legacyModeLimitAppliesAfterExcludeEmpty() throws Exception {
+        // An entry with no eventType and blank note/detail is dropped by excludeEmpty; the limit
+        // must bound what survives that filter, not the pre-filter list.
+        AuditEvent blank = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, null, null, null, null );
+        setId( blank, 5L );
+        when( auditEventService.getEvents( ee ) )
+                .thenReturn( Arrays.asList( blank, event( 10L, "alice", "a" ), event( 20L, "bob", "b" ),
+                        event( 30L, "carol", "c" ) ) );
+
+        Object response = webService.getDatasetAuditEvents( datasetArg, null, limit( "2" ), false, true );
+
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<AuditEventValueObject>> r =
+                ( ResponseDataObject<List<AuditEventValueObject>> ) response;
+        assertThat( r.getData() ).extracting( AuditEventValueObject::getId )
+                .containsExactly( 20L, 30L );
+    }
+
+    @Test
+    public void legacyModeLimitAppliesAfterCompact() throws Exception {
+        // Three distinct performers collapse to three entries; the limit bounds the collapsed
+        // list so the response never carries more entries than asked for.
+        when( auditEventService.getEvents( ee ) )
+                .thenReturn( Arrays.asList( event( 10L, "alice", "a" ), event( 20L, "bob", "b" ),
+                        event( 30L, "carol", "c" ) ) );
+
+        Object response = webService.getDatasetAuditEvents( datasetArg, null, limit( "2" ), true, false );
+
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<CompactAuditEventValueObject>> r =
+                ( ResponseDataObject<List<CompactAuditEventValueObject>> ) response;
+        assertThat( r.getData() ).hasSize( 2 );
+        assertThat( r.getData() ).extracting( c -> c.getEvent().getId() )
+                .containsExactly( 20L, 30L );
+    }
+
+    @Test
+    public void cursorModeWithoutLimitUsesTheDefaultPageSize() {
+        // `limit` no longer carries a JAX-RS @DefaultValue (the legacy path has to tell "absent"
+        // from "20"), so cursor mode has to supply the default itself.
+        Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
+        CursorPage<AuditEvent> cp = new CursorPage<>(
+                Collections.singletonList( event1 ), null, 20, null, null, null );
+        when( auditEventService.getEventsByCursor( eq( ee ), eq( c ), eq( 20 ) ) ).thenReturn( cp );
+
+        webService.getDatasetAuditEvents( datasetArg, CursorArg.valueOf( c.encode() ), null, false, false );
+
+        verify( auditEventService ).getEventsByCursor( ee, c, 20 );
     }
 }
