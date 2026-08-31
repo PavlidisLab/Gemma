@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 public class ExpressionExperimentReadServiceAnnotationsTest {
 
     private static final String CELL_TYPE_URI = "http://www.ebi.ac.uk/efo/EFO_0000324";
+    private static final String STRAIN_URI = "http://www.ebi.ac.uk/efo/EFO_0005135";
     private static final String ORGANISM_PART_URI = "http://www.ebi.ac.uk/efo/EFO_0000635";
     private static final String GENOTYPE_URI = "http://www.ebi.ac.uk/efo/EFO_0000513";
     private static final String CL_1001610 = "http://purl.obolibrary.org/obo/CL_1001610";
@@ -228,4 +229,25 @@ public class ExpressionExperimentReadServiceAnnotationsTest {
         return new Object[] { s, fv, ef };
     }
 
+
+    /**
+     * 🛑 Paul, 2026-08-31: "annotations should ALWAYS show ALL the annotations, including ungrounded
+     * EEtags." The old default hid tags with no ontology mapping, and a caller cannot tell an
+     * incomplete list from a complete one by inspecting it — it cost a curator an hour hunting a
+     * strain tag that was there all along, and silently truncated a corpus snapshot taken through
+     * this route.
+     */
+    @Test
+    public void getAnnotations_defaultsToIncludingUngroundedTags() {
+        when( expressionExperimentDao.getExperimentAnnotations( ee, false ) ).thenReturn( Arrays.asList(
+                tag( "strain", STRAIN_URI, "Ascl1CreERT2/Ai14", null ),
+                tag( "organism part", ORGANISM_PART_URI, "bone marrow", "http://purl.obolibrary.org/obo/UBERON_0002371" ) ) );
+
+        Set<AnnotationValueObject> annotations = service.getAnnotations( ee );
+
+        assertThat( annotations )
+                .as( "an ungrounded tag is a real tag and must not be filtered out by default" )
+                .extracting( AnnotationValueObject::getValue )
+                .containsExactlyInAnyOrder( "Ascl1CreERT2/Ai14", "bone marrow" );
+    }
 }

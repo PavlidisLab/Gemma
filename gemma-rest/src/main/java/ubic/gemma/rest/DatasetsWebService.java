@@ -7536,12 +7536,14 @@ public class DatasetsWebService {
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> getDatasetAnnotations( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @Parameter(description = "Also return tags that carry no ontology mapping. Off by "
-                    + "default, which suits display: an unmapped string cannot be searched or "
-                    + "reasoned over. Turn it on for curation read-back — a free-text tag is "
-                    + "persisted like any other, so a caller that has just written one otherwise "
-                    + "reads back nothing and cannot tell a rejected write from a filtered read.")
-            @QueryParam("includeFreeText") @DefaultValue("false") Boolean includeFreeText
+            @Parameter(description = "Return tags that carry no ontology mapping. ON BY DEFAULT: "
+                    + "the complete list is the safe one, because a caller cannot tell an incomplete "
+                    + "list from a complete one by inspecting it. Set false only for a grounded-only "
+                    + "view, and only where an unmapped string genuinely cannot be used — it cannot "
+                    + "be searched or reasoned over, which is the whole argument for the old default. "
+                    + "That default hid a real strain tag from a curator for an hour and silently "
+                    + "truncated a corpus snapshot taken through this route.")
+            @QueryParam("includeFreeText") @DefaultValue("true") Boolean includeFreeText
     ) {
         return respond( datasetArgService.getAnnotations( datasetArg, Boolean.TRUE.equals( includeFreeText ) ) );
     }

@@ -714,7 +714,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Override
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment ) {
-        return getAnnotations( expressionExperiment, false );
+        return getAnnotations( expressionExperiment, true );
     }
 
     @Override
@@ -752,7 +752,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Override
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee ) {
-        return getAnnotations( ee, false );
+        return getAnnotations( ee, true );
     }
 
     @Override
