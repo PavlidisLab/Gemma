@@ -26,7 +26,9 @@ import java.util.Map;
  * Reads MGI's genotype-to-disease reports: which mutant genotypes MGI's curators say model which
  * diseases, and which they say do <b>not</b>.
  *
- * <p>Two files of one shape. {@code MGI_Geno_DiseaseDO.rpt} is the positive set and
+ * <p>Two files of one shape, and not the only reports MGI publishes this in — the disease-first
+ * {@code MGI_DiseaseMouseModel.rpt} carries half again as many statements and is read by
+ * {@link MgiDiseaseMouseModelReport}. {@code MGI_Geno_DiseaseDO.rpt} is the positive set and
  * {@code MGI_Geno_NotDiseaseDO.rpt} the negative one, and the negative file is the reason
  * {@link ubic.gemma.model.common.description.AnnotationRelationStatus} exists — a curated,
  * cited statement that a genotype does not model a disease is rare and cannot be recovered from
@@ -138,6 +140,11 @@ class MgiDiseaseModelReport {
         int getRows() {
             return rows;
         }
+
+        /** Count one more report row against this statement. */
+        void addRow() {
+            rows++;
+        }
     }
 
     /**
@@ -179,7 +186,7 @@ class MgiDiseaseModelReport {
                     }
                     Entry e = byKey.computeIfAbsent( allele + '\t' + doid,
                             k -> new Entry( allele, alleleId, doid, StringUtils.trimToNull( f[6] ) ) );
-                    e.rows++;
+                    e.addRow();
                     // one cell can hold several, pipe-separated -- MGI really does emit `7600971|8631247`
                     String cited = StringUtils.trimToNull( f[5] );
                     if ( cited != null ) {

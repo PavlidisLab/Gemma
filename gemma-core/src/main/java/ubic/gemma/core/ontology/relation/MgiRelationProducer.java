@@ -52,7 +52,36 @@ import java.util.Set;
  * {@link AnnotationRelationStatus#REFUTED}, which keeps them out of every read that asks what is
  * supported and out of every inference.</p>
  *
- * @see MgiDiseaseModelReport for the file shape and why rows are not relations
+ * <h3>Three reports, one precedence order</h3>
+ *
+ * <p>{@code MGI_DiseaseMouseModel.rpt} is the disease-first view of the same curation and is the
+ * larger of the two sources: 6,299 asserted (allele, DOID) pairs against the genotype report's 4,516,
+ * 3,331 of them in neither genotype report, over 2,770 alleles the genotype reports never name
+ * (measured 2026-08-30). It carries its refutations in a {@code NOT} column rather than a separate
+ * file, and it has no PubMed column at all, so every statement it contributes is
+ * {@link GOEvidenceCode#IIA}.</p>
+ *
+ * <p>The three reports overlap and contradict each other, so a pair is written once under one rule,
+ * applied by reading in this order into a shared first-wins set:</p>
+ *
+ * <ol>
+ * <li>{@code MGI_Geno_NotDiseaseDO.rpt} — refuted, cited</li>
+ * <li>{@code MGI_DiseaseMouseModel.rpt} {@code NOT} rows — refuted, uncited</li>
+ * <li>{@code MGI_Geno_DiseaseDO.rpt} — asserted, cited</li>
+ * <li>{@code MGI_DiseaseMouseModel.rpt} model rows — asserted, uncited</li>
+ * </ol>
+ *
+ * <p><b>Refutation outranks assertion; within one status the cited report outranks the uncited one.</b>
+ * Both halves earn their place. A refutation is a curator saying no in as many words and is the one
+ * thing this store cannot reconstruct from anything else, so it is not overwritten by an assertion
+ * MGI also publishes — 15 pairs are {@code NOT} here and asserted in the genotype report, 20 the other
+ * way round, and 60 are stated both ways inside the disease report alone, at different allele pairs or
+ * strain backgrounds. Within a status the tie-break keeps the row that names its papers: the disease
+ * report cannot cite, so reading it last is what stops 2,950 already-cited {@code TAS} statements
+ * being replaced by an {@code IIA} copy of themselves.</p>
+ *
+ * @see MgiDiseaseModelReport for the genotype reports' shape and why rows are not relations
+ * @see MgiDiseaseMouseModelReport for the disease report's shape and its missing citation column
  */
 public class MgiRelationProducer {
 
@@ -106,31 +135,40 @@ public class MgiRelationProducer {
         this.taxonService = taxonService;
     }
 
-    /** Config keys and disk-cache names for the two reports. */
+    /** Config keys and disk-cache names for the three reports. */
     private static final String ASSERTED_CACHE = "mgiGenoDisease";
     private static final String REFUTED_CACHE = "mgiGenoNotDisease";
+    private static final String MOUSE_MODEL_CACHE = "mgiDiseaseMouseModel";
+
+    /** What each report is called where a tally or a log line has to name it. */
+    private static final String ASSERTED_REPORT = "MGI_Geno_DiseaseDO.rpt";
+    private static final String REFUTED_REPORT = "MGI_Geno_NotDiseaseDO.rpt";
+    private static final String MOUSE_MODEL_REPORT = "MGI_DiseaseMouseModel.rpt";
 
     /**
      * Rebuild from the reports as configured, fetching and caching them the way the lexical ontology
      * services do.
      *
-     * <p>The negative report is optional in the weakest sense: if it cannot be fetched the positives
-     * still load, because losing 161 refutations is worse than losing 4,124 assertions but not worse
-     * than losing both. It is logged rather than swallowed.</p>
+     * <p>Only the genotype positives are required. The other two are logged and skipped if they cannot
+     * be fetched, because losing one report's contribution is worse than losing all three — and the
+     * log line is the only place their absence is visible, since a missing statement and a statement
+     * MGI never made look identical at the table.</p>
      *
      * @return how many relation rows were written
      */
     public int produce() throws IOException {
         try ( InputStream asserted = CachedSource.open( ASSERTED_CACHE ) ) {
-            InputStream refuted = null;
+            InputStream refuted = open( REFUTED_CACHE, REFUTED_REPORT, "~174 refutations" );
             try {
-                refuted = CachedSource.open( REFUTED_CACHE );
-            } catch ( IOException e ) {
-                log.warn( "Could not read the MGI negative report; the {} refutations it carries will be"
-                        + " absent and nothing will mark their absence.", "~161", e );
-            }
-            try {
-                return produce( asserted, refuted );
+                InputStream mouseModel = open( MOUSE_MODEL_CACHE, MOUSE_MODEL_REPORT,
+                        "~6,300 statements over ~5,500 alleles, most of them named nowhere else" );
+                try {
+                    return produce( asserted, refuted, mouseModel );
+                } finally {
+                    if ( mouseModel != null ) {
+                        mouseModel.close();
+                    }
+                }
             } finally {
                 if ( refuted != null ) {
                     refuted.close();
@@ -139,18 +177,40 @@ public class MgiRelationProducer {
         }
     }
 
+    @Nullable
+    private InputStream open( String cacheName, String report, String whatIsLost ) {
+        try {
+            return CachedSource.open( cacheName );
+        } catch ( IOException e ) {
+            log.warn( "Could not read {}; the {} it carries will be absent and nothing at the table will"
+                    + " mark their absence.", report, whatIsLost, e );
+            return null;
+        }
+    }
+
     /**
-     * Rebuild every MGI relation from the two reports.
+     * Rebuild every MGI relation from the two genotype reports, without the disease report.
+     *
+     * @see #produce(InputStream, InputStream, InputStream)
+     */
+    public int produce( InputStream asserted, @Nullable InputStream refuted ) throws IOException {
+        return produce( asserted, refuted, null );
+    }
+
+    /**
+     * Rebuild every MGI relation from the three reports.
      *
      * <p>Rebuild rather than upsert, and scoped to this source: an upsert can only correct rows the new
      * read still produces, so a statement MGI has since withdrawn would outlive the report it came
      * from. Narrowing the delete to {@code SOURCE = 'MGI'} leaves every other EXTERNAL source alone.</p>
      *
-     * @param asserted the {@code MGI_Geno_DiseaseDO.rpt} stream
-     * @param refuted  the {@code MGI_Geno_NotDiseaseDO.rpt} stream, or null to skip the negatives
+     * @param asserted   the {@code MGI_Geno_DiseaseDO.rpt} stream
+     * @param refuted    the {@code MGI_Geno_NotDiseaseDO.rpt} stream, or null to skip the negatives
+     * @param mouseModel the {@code MGI_DiseaseMouseModel.rpt} stream, or null to skip it
      * @return how many relation rows were written
      */
-    public int produce( InputStream asserted, @Nullable InputStream refuted ) throws IOException {
+    public int produce( InputStream asserted, @Nullable InputStream refuted,
+            @Nullable InputStream mouseModel ) throws IOException {
         StopWatch timer = StopWatch.createStarted();
         OntologyXrefIndex xrefs = OntologyXrefIndex.fromSource(
                 OntologyServiceResolver.resolve( ontologies, XREF_SOURCE_TOKEN )
@@ -182,15 +242,31 @@ public class MgiRelationProducer {
         Date generatedAt = new Date();
         Taxon mouse = resolveMouse();
 
+        // 🛑 ONE set across all three reports, so first-wins really is first-wins. It used to be
+        // per-file, which meant the 5 pairs the two genotype reports state both ways were written
+        // TWICE -- once ASSERTED and once REFUTED, from the same source, with nothing to choose
+        // between them. Sharing it is what turns the read order below into a precedence rule.
+        Set<String> seen = new LinkedHashSet<>();
+        List<MgiDiseaseMouseModelReport.Entry> models = mouseModel != null
+                ? new ArrayList<>( MgiDiseaseMouseModelReport.parse( mouseModel ) )
+                : Collections.emptyList();
+
         Reading reading = new Reading();
         List<AnnotationRelation> rows = new ArrayList<>();
-        rows.addAll( read( asserted, AnnotationRelationStatus.ASSERTED, xrefs, bridge, mouse, generatedAt, reading ) );
+        // The precedence order; see the class note. Refutation before assertion, cited before uncited.
         if ( refuted != null ) {
-            rows.addAll( read( refuted, AnnotationRelationStatus.REFUTED, xrefs, bridge, mouse, generatedAt, reading ) );
+            rows.addAll( read( MgiDiseaseModelReport.parse( refuted ), AnnotationRelationStatus.REFUTED,
+                    xrefs, bridge, mouse, generatedAt, seen, reading.of( REFUTED_REPORT ) ) );
         }
+        rows.addAll( read( filter( models, true ), AnnotationRelationStatus.REFUTED,
+                xrefs, bridge, mouse, generatedAt, seen, reading.of( MOUSE_MODEL_REPORT ) ) );
+        rows.addAll( read( MgiDiseaseModelReport.parse( asserted ), AnnotationRelationStatus.ASSERTED,
+                xrefs, bridge, mouse, generatedAt, seen, reading.of( ASSERTED_REPORT ) ) );
+        rows.addAll( read( filter( models, false ), AnnotationRelationStatus.ASSERTED,
+                xrefs, bridge, mouse, generatedAt, seen, reading.of( MOUSE_MODEL_REPORT ) ) );
 
         log.info( "Read {} MGI relations ({} asserted, {} refuted) from {} statements in {} ms.{}",
-                rows.size(), reading.asserted, reading.refuted, reading.statements, timer.getTime(),
+                rows.size(), reading.asserted(), reading.refuted(), reading.statements(), timer.getTime(),
                 reading.report() );
 
         Integer written = transactionTemplate.execute( status -> {
@@ -204,37 +280,46 @@ public class MgiRelationProducer {
         return written != null ? written : 0;
     }
 
-    private List<AnnotationRelation> read( InputStream is, AnnotationRelationStatus status,
-            OntologyXrefIndex xrefs, OntologyXrefIndex bridge, @Nullable Taxon mouse, Date generatedAt,
-            Reading reading )
-            throws IOException {
+    /** The {@code NOT}-model half of the disease report, or the model half. */
+    private static List<MgiDiseaseModelReport.Entry> filter( List<MgiDiseaseMouseModelReport.Entry> entries,
+            boolean notModel ) {
+        List<MgiDiseaseModelReport.Entry> out = new ArrayList<>();
+        for ( MgiDiseaseMouseModelReport.Entry e : entries ) {
+            if ( e.isNotModel() == notModel ) {
+                out.add( e );
+            }
+        }
+        return out;
+    }
+
+    private List<AnnotationRelation> read( Collection<? extends MgiDiseaseModelReport.Entry> entries,
+            AnnotationRelationStatus status, OntologyXrefIndex xrefs, OntologyXrefIndex bridge,
+            @Nullable Taxon mouse, Date generatedAt, Set<String> seen, Tally tally ) {
         List<AnnotationRelation> out = new ArrayList<>();
-        Set<String> seen = new LinkedHashSet<>();
-        for ( MgiDiseaseModelReport.Entry e : MgiDiseaseModelReport.parse( is ) ) {
-            reading.statements++;
+        for ( MgiDiseaseModelReport.Entry e : entries ) {
+            tally.statements++;
             Set<String> translated = xrefs.resolve( e.getDoid() );
             if ( translated.isEmpty() ) {
-                reading.untranslatable++;
-                reading.unresolved.add( e.getDoid() );
+                tally.untranslatable++;
+                tally.unresolved.add( e.getDoid() );
                 continue;
             }
             for ( String mondoUri : translated ) {
                 String label = xrefs.labelOf( mondoUri );
                 if ( label == null ) {
-                    reading.unlabelled++;
+                    tally.unlabelled++;
                     continue;
                 }
                 // one allele may translate to several MONDO terms; the ambiguity is kept rather than
                 // resolved, exactly as the ontology producer keeps it
                 if ( !seen.add( e.getAlleleSymbol() + '\t' + mondoUri ) ) {
+                    // a report read earlier already claimed this pair, and its claim stands -- either
+                    // the same statement twice, or the contradiction the read order exists to settle
+                    tally.superseded++;
                     continue;
                 }
                 out.add( build( e, mondoUri, label, status, mouse, generatedAt ) );
-                if ( status == AnnotationRelationStatus.REFUTED ) {
-                    reading.refuted++;
-                } else {
-                    reading.asserted++;
-                }
+                tally.count( status );
                 // the same fact again, under whichever bridging terms cross-reference this allele
                 for ( String bridgedUri : bridge.resolve( e.getAlleleId() ) ) {
                     String bridgedLabel = bridge.labelOf( bridgedUri );
@@ -247,12 +332,8 @@ public class MgiRelationProducer {
                     b.setSubjectCategory( OntologyRelationSource.STRAIN.getCategory() );
                     b.setSubjectCategoryUri( OntologyRelationSource.STRAIN.getCategoryUri() );
                     out.add( b );
-                    reading.bridged++;
-                    if ( status == AnnotationRelationStatus.REFUTED ) {
-                        reading.refuted++;
-                    } else {
-                        reading.asserted++;
-                    }
+                    tally.bridged++;
+                    tally.count( status );
                 }
             }
         }
@@ -306,26 +387,80 @@ public class MgiRelationProducer {
         return s.length() <= VALUE_MAX ? s : s.substring( 0, VALUE_MAX );
     }
 
-    /**
-     * The tallies that make a run's coverage observable, for the reason the ontology producer has
-     * them: "the relation is missing" and "the identifier could not be translated" look identical from
-     * the table.
-     */
-    private static class Reading {
+    /** What one report contributed. */
+    private static class Tally {
         private int statements = 0;
         private int asserted = 0;
         private int refuted = 0;
         private int untranslatable = 0;
         private int bridged = 0;
         private int unlabelled = 0;
+        private int superseded = 0;
         private final Set<String> unresolved = new LinkedHashSet<>();
+
+        private void count( AnnotationRelationStatus status ) {
+            if ( status == AnnotationRelationStatus.REFUTED ) {
+                refuted++;
+            } else {
+                asserted++;
+            }
+        }
+    }
+
+    /**
+     * The tallies that make a run's coverage observable, for the reason the ontology producer has
+     * them: "the relation is missing" and "the identifier could not be translated" look identical from
+     * the table.
+     *
+     * <p>🛑 <b>Kept per report.</b> Three sources now feed one rebuild and they overlap heavily —
+     * measured 2026-08-30, 2,950 of the disease report's pairs are already in the genotype report. A
+     * single merged count answers neither of the questions actually asked of this run: what did the
+     * new file add, and how much of it did an earlier report already have. Re-deriving that means
+     * re-downloading three reports and writing a script, which is how the last person found out.</p>
+     */
+    private static class Reading {
+
+        /** Report name → its tally, in the order the reports were read. */
+        private final java.util.Map<String, Tally> byReport = new java.util.LinkedHashMap<>();
+
+        /**
+         * The tally for one report. The disease report asks for it twice — once for its {@code NOT}
+         * rows and once for its model rows — and gets the same one back, so its two passes read as
+         * one file.
+         */
+        private Tally of( String report ) {
+            return byReport.computeIfAbsent( report, k -> new Tally() );
+        }
+
+        private int statements() {
+            return byReport.values().stream().mapToInt( t -> t.statements ).sum();
+        }
+
+        private int asserted() {
+            return byReport.values().stream().mapToInt( t -> t.asserted ).sum();
+        }
+
+        private int refuted() {
+            return byReport.values().stream().mapToInt( t -> t.refuted ).sum();
+        }
 
         private String report() {
             StringBuilder sb = new StringBuilder();
-            sb.append( "\nstatements read\t" ).append( statements )
-                    .append( "\tuntranslatable DOID\t" ).append( untranslatable )
-                    .append( "\ttranslated but unnamed\t" ).append( unlabelled )
-                    .append( "\talso keyed under a bridging term\t" ).append( bridged );
+            sb.append( "\nreport\tstatements\tasserted\trefuted\tbridged\tuntranslatable DOID"
+                    + "\ttranslated but unnamed\talready claimed by an earlier report" );
+            for ( java.util.Map.Entry<String, Tally> e : byReport.entrySet() ) {
+                Tally t = e.getValue();
+                sb.append( '\n' ).append( e.getKey() )
+                        .append( '\t' ).append( t.statements )
+                        .append( '\t' ).append( t.asserted )
+                        .append( '\t' ).append( t.refuted )
+                        .append( '\t' ).append( t.bridged )
+                        .append( '\t' ).append( t.untranslatable )
+                        .append( '\t' ).append( t.unlabelled )
+                        .append( '\t' ).append( t.superseded );
+            }
+            Set<String> unresolved = new LinkedHashSet<>();
+            byReport.values().forEach( t -> unresolved.addAll( t.unresolved ) );
             if ( !unresolved.isEmpty() ) {
                 sb.append( "\nDOIDs MONDO does not cross-reference (" ).append( unresolved.size() )
                         .append( "): " );

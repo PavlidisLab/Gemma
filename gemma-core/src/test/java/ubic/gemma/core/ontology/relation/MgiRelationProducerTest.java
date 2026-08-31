@@ -70,6 +70,13 @@ class MgiRelationProducerTest {
                 "MP:0002064", pubmed, "MGI:97487", doid, "OMIM:1", "MGI:2166570" );
     }
 
+    /** The disease report's thirteen columns; column 8 is a reference COUNT and there is no PubMed one. */
+    private static String modelRow( String allele, String alleleId, String not, String doid ) {
+        return String.join( "\t", "a disease name", doid, not, allele + "/" + allele,
+                "involves: C57BL/6", allele, alleleId, "31", "JAX:003582", "RRID:MGI:1", "Mecp2",
+                "MGI:97487", "TIGM:IST11443F3" );
+    }
+
     private static InputStream report( String... rows ) {
         return new ByteArrayInputStream( String.join( "\n", rows ).getBytes( StandardCharsets.UTF_8 ) );
     }
@@ -90,7 +97,12 @@ class MgiRelationProducerTest {
     }
 
     private List<AnnotationRelation> produce( InputStream asserted, InputStream refuted ) throws Exception {
-        producer().produce( asserted, refuted );
+        return produce( asserted, refuted, null );
+    }
+
+    private List<AnnotationRelation> produce( InputStream asserted, InputStream refuted,
+            InputStream mouseModel ) throws Exception {
+        producer().produce( asserted, refuted, mouseModel );
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Collection<AnnotationRelation>> captor = ArgumentCaptor.forClass( Collection.class );
         verify( dao ).create( captor.capture() );
@@ -220,6 +232,129 @@ class MgiRelationProducerTest {
         assertThat( bridged.getObjectValueUri() ).isEqualTo( MONDO_RETT );
         assertThat( bridged.getPredicateUri() ).isEqualTo( rows.get( 0 ).getPredicateUri() );
         assertThat( bridged.getEvidence() ).isEqualTo( rows.get( 0 ).getEvidence() );
+    }
+
+    /**
+     * 🛑 The reason the disease report was added at all. It names 5,542 alleles to the genotype
+     * report's 4,130, and 2,770 of them appear in no genotype report — measured 2026-08-30. Uncited,
+     * because the report has no PubMed column and inventing one is not an option.
+     */
+    @Test
+    void theDiseaseReportContributesStatementsTheGenotypeReportsNeverName() throws Exception {
+        List<AnnotationRelation> rows = produce(
+                report( row( "Mecp2<tm1.1Bird>", "MGI:1857444", "11242117", "DOID:1206" ) ), null,
+                report( modelRow( "Tg(THY1-MAPT*P301S)2541Gdm", "MGI:3712983", "", "DOID:332" ) ) );
+
+        assertThat( rows )
+                .extracting( AnnotationRelation::getSubjectValue, AnnotationRelation::getObjectValueUri,
+                        AnnotationRelation::getStatus, AnnotationRelation::getEvidenceCode )
+                .containsExactlyInAnyOrder(
+                        org.assertj.core.api.Assertions.tuple( "Mecp2<tm1.1Bird>", MONDO_RETT,
+                                AnnotationRelationStatus.ASSERTED, GOEvidenceCode.TAS ),
+                        org.assertj.core.api.Assertions.tuple( "Tg(THY1-MAPT*P301S)2541Gdm", MONDO_ALS,
+                                AnnotationRelationStatus.ASSERTED, GOEvidenceCode.IIA ) );
+        assertThat( rows ).filteredOn( r -> r.getSubjectValue().startsWith( "Tg(" ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getEvidence() ).as( "no PubMed column, so no citation" ).isNull();
+                    assertThat( r.getSubjectValueUri() )
+                            .isEqualTo( "https://www.informatics.jax.org/allele/MGI:3712983" );
+                } );
+    }
+
+    /**
+     * 🛑 This report carries its refutations in a {@code NOT} column rather than in a separate file —
+     * 236 pairs on the 2026-08-30 read. Missing that column stores every one of them as support.
+     */
+    @Test
+    void theNotColumnOfTheDiseaseReportIsStoredAsARefutation() throws Exception {
+        List<AnnotationRelation> rows = produce(
+                report( row( "Mecp2<tm1.1Bird>", "MGI:1857444", "11242117", "DOID:1206" ) ), null,
+                report( modelRow( "Fgfr3<tm1Dor>", "MGI:1931521", "NOT", "DOID:332" ) ) );
+
+        assertThat( rows )
+                .extracting( AnnotationRelation::getSubjectValue, AnnotationRelation::getStatus )
+                .containsExactlyInAnyOrder(
+                        org.assertj.core.api.Assertions.tuple( "Mecp2<tm1.1Bird>", AnnotationRelationStatus.ASSERTED ),
+                        org.assertj.core.api.Assertions.tuple( "Fgfr3<tm1Dor>", AnnotationRelationStatus.REFUTED ) );
+    }
+
+    /**
+     * 🛑 Precedence, half one: within a status the CITED report wins. 2,950 of the disease report's
+     * pairs are already in the genotype report, and the disease report cannot cite anything — read it
+     * first and all 2,950 lose their PMIDs and drop from {@code TAS} to {@code IIA}, which is a
+     * measurable loss of evidence dressed up as a coverage gain.
+     */
+    @Test
+    void aCitedStatementIsNotReplacedByTheUncitedCopyOfItself() throws Exception {
+        List<AnnotationRelation> rows = produce(
+                report( row( "Mecp2<tm1.1Bird>", "MGI:1857444", "11242117", "DOID:1206" ) ), null,
+                report( modelRow( "Mecp2<tm1.1Bird>", "MGI:1857444", "", "DOID:1206" ) ) );
+
+        assertThat( rows ).singleElement().satisfies( r -> {
+            assertThat( r.getEvidenceCode() ).isEqualTo( GOEvidenceCode.TAS );
+            assertThat( r.getEvidence() ).isEqualTo( "PMID:11242117" );
+        } );
+    }
+
+    /**
+     * 🛑 Precedence, half two: a refutation is not overwritten by an assertion of the same pair. MGI
+     * publishes 15 pairs that are {@code NOT} in the disease report and asserted in the genotype
+     * report, and 20 the other way round. A curator saying no in as many words is the one claim this
+     * store cannot reconstruct from anything else, so it is what survives the collision.
+     */
+    @Test
+    void aRefutationSurvivesAnAssertionOfTheSamePair() throws Exception {
+        List<AnnotationRelation> rows = produce(
+                report( row( "Apoe<tm1Unc>", "MGI:1857129", "11242117", "DOID:1206" ) ), null,
+                report( modelRow( "Apoe<tm1Unc>", "MGI:1857129", "NOT", "DOID:1206" ) ) );
+
+        assertThat( rows ).singleElement()
+                .extracting( AnnotationRelation::getStatus )
+                .isEqualTo( AnnotationRelationStatus.REFUTED );
+    }
+
+    /**
+     * 🛑 The dedup set is shared across the reports, so the same pair in two of them is written ONCE.
+     * It used to be per-file: the 5 pairs the two genotype reports state both ways were stored twice,
+     * once ASSERTED and once REFUTED, from the same source and with nothing to choose between them.
+     */
+    @Test
+    void aPairBothGenotypeReportsStateIsWrittenOnceAsTheRefutation() throws Exception {
+        List<AnnotationRelation> rows = produce(
+                report( row( "Stat4<tm1Gru>", "MGI:1857438", "11242117", "DOID:1206" ) ),
+                report( row( "Stat4<tm1Gru>", "MGI:1857438", "9662399", "DOID:1206" ) ) );
+
+        assertThat( rows ).singleElement()
+                .extracting( AnnotationRelation::getStatus )
+                .isEqualTo( AnnotationRelationStatus.REFUTED );
+    }
+
+    /**
+     * 🛑 The bridge is what makes any of this reachable, and it has to reach the new report too — the
+     * point of reading it. Of the 29 MGI identifiers TGEMO cross-references, the genotype report names
+     * 3 and the disease report names 16, so most of the bridged rows can only come from here.
+     */
+    @Test
+    void theDiseaseReportIsBridgedOntoTheTermTheCorpusAnnotatesWith() throws Exception {
+        tgemoXrefs.add( new OntologyXref( "http://gemma.msl.ubc.ca/ont/TGEMO_00174", "MGI:3524957",
+                OntologyXref.Strength.EXACT, "APP/PS1" ) );
+
+        List<AnnotationRelation> rows = produce(
+                report( row( "Mecp2<tm1.1Bird>", "MGI:1857444", "1", "DOID:1206" ) ), null,
+                report( modelRow( "Tg(APPswe,PSEN1dE9)85Dbo", "MGI:3524957", "", "DOID:332" ) ) );
+
+        assertThat( rows ).extracting( AnnotationRelation::getSubjectValueUri )
+                .contains( "http://gemma.msl.ubc.ca/ont/TGEMO_00174" );
+        assertThat( rows ).filteredOn( r -> "http://gemma.msl.ubc.ca/ont/TGEMO_00174"
+                        .equals( r.getSubjectValueUri() ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getSubjectValue() ).isEqualTo( "APP/PS1" );
+                    assertThat( r.getSubjectCategory() ).isEqualTo( "strain" );
+                    assertThat( r.getObjectValueUri() ).isEqualTo( MONDO_ALS );
+                    assertThat( r.getStatus() ).isEqualTo( AnnotationRelationStatus.ASSERTED );
+                } );
     }
 
     /** An allele nothing cross-references is stored once, exactly as before. */
