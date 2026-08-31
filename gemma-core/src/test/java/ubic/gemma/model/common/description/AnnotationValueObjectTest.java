@@ -35,8 +35,8 @@ public class AnnotationValueObjectTest {
 
         AnnotationValueObject vo = new AnnotationValueObject( c );
 
-        assertThat( vo.getClassName() ).isEqualTo( "organism part" );
-        assertThat( vo.getTermName() ).isEqualTo( "liver" );
+        assertThat( vo.getCategory() ).isEqualTo( "organism part" );
+        assertThat( vo.getValue() ).isEqualTo( "liver" );
         assertThat( vo.getEvidenceCode() ).isEqualTo( "IEA" );
         assertThat( vo.getPredicate() ).isNull();
         assertThat( vo.getPredicateUri() ).isNull();
@@ -68,8 +68,8 @@ public class AnnotationValueObjectTest {
 
         // Shared Characteristic-shape fields stay populated for back-compat with consumers
         // that don't know about Statement — Statement aliases value → subject internally.
-        assertThat( vo.getClassName() ).isEqualTo( "treatment" );
-        assertThat( vo.getTermName() ).isEqualTo( "high fat diet" );
+        assertThat( vo.getCategory() ).isEqualTo( "treatment" );
+        assertThat( vo.getValue() ).isEqualTo( "high fat diet" );
         // The new Statement-only fields surface for consumers that DO know:
         assertThat( vo.getPredicate() ).isEqualTo( "has_dose" );
         assertThat( vo.getPredicateUri() ).isEqualTo( "http://purl.obolibrary.org/obo/RO_0002211" );

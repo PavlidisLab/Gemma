@@ -780,7 +780,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", list( String.class ) )
-                .containsExactly( "classUri", "className", "termUri", "termName" );
+                .containsExactly( "categoryUri", "category", "valueUri", "value" );
         verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), Collections.emptySet(), new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), eq( Collections.emptySet() ), eq( 100 ), eq( false ), eq( false ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
@@ -796,7 +796,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasFieldOrPropertyWithValue( "sort.orderBy", "numberOfExpressionExperiments" )
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", list( String.class ) )
-                .containsExactly( "classUri", "className", "termUri", "termName" );
+                .containsExactly( "categoryUri", "category", "valueUri", "value" );
         verify( expressionExperimentService ).getEnhancedFilters( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), isNull(), eq( 100 ), eq( false ), eq( false ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
@@ -828,7 +828,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", list( String.class ) )
-                .containsExactly( "classUri", "className", "termUri", "termName" );
+                .containsExactly( "categoryUri", "category", "valueUri", "value" );
         verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), isNull(), eq( 50 ), eq( false ), eq( false ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
@@ -4386,8 +4386,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 new ubic.gemma.model.common.description.AnnotationValueObject();
         tag.setId( 42L );
         tag.setObjectClass( "ExperimentTag" );
-        tag.setClassName( "disease" );
-        tag.setTermName( "glioma" );
+        tag.setCategory( "disease" );
+        tag.setValue( "glioma" );
         tag.setEvidenceCode( GOEvidenceCode.IEA.name() );
         when( expressionExperimentService.getAnnotations( any( ExpressionExperiment.class ), anyBoolean() ) )
                 .thenReturn( Collections.singleton( tag ) );

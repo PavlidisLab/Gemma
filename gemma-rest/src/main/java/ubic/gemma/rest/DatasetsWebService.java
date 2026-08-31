@@ -825,7 +825,7 @@ public class DatasetsWebService {
                 results.add( new AnnotationWithUsageStatisticsValueObject( e.getCharacteristic(), e.getNumberOfExpressionExperiments(), null ) );
             }
         }
-        return top( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className", "termUri", "termName" },
+        return top( results, query != null ? query.getValue() : null, filters, new String[] { "categoryUri", "category", "valueUri", "value" },
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ),
                 limit, inferredTerms )
                 .addWarnings( queryWarnings, "query", LocationType.QUERY );
@@ -4560,8 +4560,12 @@ public class DatasetsWebService {
         for ( AnnotationValueObject a : experimentLevelTags( ee ) ) {
             TagCommit tc = new TagCommit();
             tc.setGemmaId( a.getId() );
-            tc.setCategory( termRef( a.getClassName(), a.getClassUri() ) );
-            tc.setValue( termRef( a.getTermName(), a.getTermUri() ) );
+            tc.setCategory( termRef( a.getCategory(), a.getCategoryUri() ) );
+            // a.getValue() is the term, on every row that getAnnotations produces. It used to be a composed
+            // sentence on factor-value rows, and this loop escaped storing one only because
+            // experimentLevelTags filters to objectClass == ExperimentTag and a composed row was always a
+            // FactorValue row. That was luck; the read side no longer composes anything.
+            tc.setValue( termRef( a.getValue(), a.getValueUri() ) );
             tc.setSupportingEvidence( a.getSupportingEvidence() );
             // Captured so a restore puts the tag back with the code it had. Without it every restored tag comes
             // back as the IC the add path fills in, which would rewrite an IEA row on a restore that was meant
@@ -4581,8 +4585,8 @@ public class DatasetsWebService {
                 SampleCharacteristicCommit scc = new SampleCharacteristicCommit();
                 scc.setGemmaId( a.getId() );
                 scc.setBioassayShortName( gsm );
-                scc.setCategory( termRef( a.getClassName(), a.getClassUri() ) );
-                scc.setValue( termRef( a.getTermName(), a.getTermUri() ) );
+                scc.setCategory( termRef( a.getCategory(), a.getCategoryUri() ) );
+                scc.setValue( termRef( a.getValue(), a.getValueUri() ) );
                 scc.setSupportingEvidence( a.getSupportingEvidence() );
                 sampleChars.getItems().add( scc );
             }

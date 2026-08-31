@@ -35,13 +35,27 @@ import ubic.gemma.model.expression.experiment.Statement;
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @Data
-@EqualsAndHashCode(of = { "className", "classUri", "objectClass", "termUri", "termName" }, callSuper = true)
+// The statement labels are part of the identity because they are the only thing separating two
+// annotations that share a subject under one category -- "wild type genotype" bare and
+// "wild type genotype has background APP/PS1". Without them the two VOs compare equal whenever
+// their ids are null, and a Set of annotations silently keeps one.
+@EqualsAndHashCode(of = { "category", "categoryUri", "objectClass", "valueUri", "value",
+        "predicate", "object", "secondPredicate", "secondObject" }, callSuper = true)
 public class AnnotationValueObject extends IdentifiableValueObject<Characteristic> {
 
-    private String classUri;
-    private String className;
-    private String termUri;
-    private String termName;
+    /** Category URI. Same field as {@link Characteristic#getCategoryUri()}, under the same name. */
+    private String categoryUri;
+    /** Category label. Same field as {@link Characteristic#getCategory()}, under the same name. */
+    private String category;
+    /** URI of the annotated term. On a {@link Statement} row this is the subject's URI. */
+    private String valueUri;
+    /**
+     * Label of the annotated term — the value as curated. On a {@link Statement} row this is the
+     * subject's label, and the predicate / object labels stay in their own fields: this field never
+     * carries a composed sentence. {@link ubic.gemma.model.expression.experiment.FactorValueUtils#getSummaryString}
+     * is the separate sentence-builder for display.
+     */
+    private String value;
     @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "no constructor or caller ever populates it")
     private String description;
@@ -54,10 +68,10 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
      * {@code predicate*} / {@code object*} pair, together with the optional
      * {@code secondPredicate*} / {@code secondObject*} pair, exposes the Statement
      * relational shape to read-side consumers without breaking the Characteristic
-     * wire shape — {@link #termUri} carries the statement's subject URI (Statement aliases
-     * subject → value internally) and {@link #subject} its label. 🛑 {@link #termName} does
-     * NOT: on a statement row it is a composed sentence, which is why {@link #subject} exists.
+     * wire shape — {@link #valueUri} and {@link #value} carry the statement's subject URI and
+     * label (Statement aliases subject → value internally).
      */
+    @Nullable
     @Schema(description = "Predicate label of a Statement-backed annotation (e.g. \"has_dose\"). Null on plain Characteristic rows.")
     private String predicate;
     @Nullable
@@ -81,25 +95,6 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Nullable
     @Schema(description = "Second object URI for compound Statement annotations.")
     private String secondObjectUri;
-
-    /**
-     * Label of the statement's SUBJECT, whose URI is {@link #termUri}. Null on a plain
-     * {@link Characteristic}, where {@link #termName} is already the label.
-     * <p>
-     * Exists because {@link #termName} is not reversible on a statement row: it is composed by
-     * {@code StatementUtils.formatStatement} in at least three shapes — object then subject with the
-     * predicate dropped, subject/predicate/object spelled out, and the same with the predicate
-     * paraphrased. Only the first can be undone by subtracting the known object text, so a client
-     * holding {@code predicate} and {@code object} still cannot name the subject. The UI team measured
-     * 5 of 23 statement rows reversible across 15 datasets (2026-08-31) before this was added.
-     * <p>
-     * Added rather than normalising {@code termName}, which anything reading it today would shift
-     * under at once and silently.
-     */
-    @Nullable
-    @Schema(description = "Subject label of a Statement-backed annotation (e.g. \"Il10 [mouse] interleukin 10\"); "
-            + "its URI is termUri. Null on plain Characteristic rows, where termName is already the label.")
-    private String subject;
     @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentName;
@@ -136,21 +131,21 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
         super( id );
     }
 
-    public AnnotationValueObject( String classUri, String className, String termUri, String termName, Class<?> objectClass ) {
-        this.classUri = classUri;
-        this.className = className;
-        this.termUri = termUri;
-        this.termName = termName;
+    public AnnotationValueObject( String categoryUri, String category, String valueUri, String value, Class<?> objectClass ) {
+        this.categoryUri = categoryUri;
+        this.category = category;
+        this.valueUri = valueUri;
+        this.value = value;
         this.objectClass = formatObjectClass( objectClass );
     }
 
     public AnnotationValueObject( Characteristic c ) {
         super( c );
-        classUri = c.getCategoryUri();
-        className = c.getCategory();
+        categoryUri = c.getCategoryUri();
+        category = c.getCategory();
         // See CharacteristicUtils#canonicalUri: a read-time stand-in for the parked migration.
-        termUri = CharacteristicUtils.canonicalUri( c.getValueUri() );
-        termName = CharacteristicUtils.canonicalLabel( c.getValueUri(), c.getValue() );
+        valueUri = CharacteristicUtils.canonicalUri( c.getValueUri() );
+        value = CharacteristicUtils.canonicalLabel( c.getValueUri(), c.getValue() );
         evidenceCode = c.getEvidenceCode() != null ? c.getEvidenceCode().name() : null;
         if ( c instanceof Statement ) {
             Statement s = ( Statement ) c;
@@ -184,10 +179,10 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Override
     public String toString() {
         return "AnnotationValueObject{" +
-                "classUri='" + classUri + '\'' +
-                ", className='" + className + '\'' +
-                ", termUri='" + termUri + '\'' +
-                ", termName='" + termName + '\'' +
+                "categoryUri='" + categoryUri + '\'' +
+                ", category='" + category + '\'' +
+                ", valueUri='" + valueUri + '\'' +
+                ", value='" + value + '\'' +
                 '}';
     }
 }
