@@ -218,6 +218,11 @@ public class ExpressionExperimentServiceTest extends BaseTest5 {
         public UnitDao unitDao() {
             return mock();
         }
+
+        @Bean
+        public ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil tableMaintenanceUtil() {
+            return mock( ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.class );
+        }
     }
 
     @Autowired

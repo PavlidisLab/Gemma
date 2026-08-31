@@ -1300,10 +1300,25 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * {@link org.springframework.dao.OptimisticLockingFailureException} (the web layer maps it to 409).
      * A short-name change without {@link CurationCommitRequest#isShortNameChangeAllowed()} throws
      * {@link org.springframework.security.access.AccessDeniedException}, rolling the whole commit back.
+     * <p>
+     * {@code RUN_AS_AGENT} is what lets an applied commit refresh this experiment's
+     * {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} rows before returning:
+     * {@link ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil} is
+     * {@code @Secured("GROUP_AGENT")} and a curator holds {@code GROUP_USER}, so without the elevation the
+     * call fails on authorization, not on timing. {@code RunAsManagerImpl} swaps in a token carrying the
+     * caller's own authorities plus {@code GROUP_RUN_AS_AGENT} for the duration of this invocation, and the
+     * role hierarchy escalates that to {@code GROUP_AGENT} — the same mechanism
+     * {@link ubic.gemma.core.security.authentication.UserManager} and
+     * {@code ExpressionExperimentReportService} already use.
+     * <p>
+     * What that opens up, stated plainly: for the length of this call every {@code @Secured("GROUP_AGENT")}
+     * method reachable from the commit becomes callable. It grants no ACL permission (the ACL authorization
+     * strategy keys on {@code GROUP_ADMIN}, and the hierarchy runs {@code GROUP_ADMIN > GROUP_AGENT}, not the
+     * reverse), does not change the principal, and ends when the method returns.
      *
      * @return per-section change counts (identical whether applied or dry-run).
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT", "RUN_AS_AGENT" })
     CurationCommitResult commitCuration( ExpressionExperiment ee, CurationCommitRequest request, boolean dryRun );
 
     /**
