@@ -116,26 +116,58 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
             return; // resolveLabel already recorded URI_UNRESOLVED / UNVERIFIED, or nothing to compare
         }
 
+        // The label a category is expected to carry, with the ontology's obsolescence marker removed.
+        String expectedLabel = "category".equals( slot ) ? withoutObsoleteMarker( resolvedLabel ) : resolvedLabel;
+
         boolean labelRewritten;
         if ( StringUtils.isBlank( label ) ) {
             // a URI with no label supplied — fill in the canonical one rather than reject
-            canonicalLabelSetter.accept( resolvedLabel );
+            canonicalLabelSetter.accept( expectedLabel );
             labelRewritten = true;
-        } else if ( label.equals( resolvedLabel ) ) {
+        } else if ( label.equals( expectedLabel ) ) {
             labelRewritten = false; // exact match
-        } else if ( normalize( label ).equals( normalize( resolvedLabel ) ) ) {
+        } else if ( normalize( label ).equals( normalize( expectedLabel ) ) ) {
             // case / whitespace difference only — accept, but store the canonical form
-            canonicalLabelSetter.accept( resolvedLabel );
+            canonicalLabelSetter.accept( expectedLabel );
+            labelRewritten = true;
+        } else if ( normalize( label ).equals( normalize( resolvedLabel ) ) ) {
+            // the caller sent the ontology's obsolete spelling ("obsolete_disease"); accept it, store the
+            // name Gemma uses. Only reachable for a category whose marker was stripped above.
+            canonicalLabelSetter.accept( expectedLabel );
             labelRewritten = true;
         } else {
-            violations.add( new TermViolation( slot, label, uri, resolvedLabel, TermViolation.Reason.LABEL_MISMATCH ) );
+            violations.add( new TermViolation( slot, label, uri, expectedLabel, TermViolation.Reason.LABEL_MISMATCH ) );
             return;
         }
 
         if ( uriRewritten || labelRewritten ) {
-            canonicalizations.add( new TermCanonicalization( slot, label, resolvedLabel, submittedUri, canonicalUri ) );
+            canonicalizations.add( new TermCanonicalization( slot, label, expectedLabel, submittedUri, canonicalUri ) );
         }
     }
+
+    /**
+     * An ontology obsoletes a term by RENAMING it, not by removing it: EFO's {@code EFO_0000408} now reads
+     * {@code obsolete_disease} and {@code EFO_0000322} reads {@code obsolete_cell line}. Both are still Gemma's
+     * live categories for {@code disease} and {@code cell line} — {@code EFO_0000408} is what
+     * {@code EFO.factor.categories.txt} and {@link ubic.gemma.model.common.description.Categories#DISEASE} name,
+     * and Gemma stores both across the corpus — so the rename is the ontology's news about the TERM, not evidence
+     * that the submitted label is wrong.
+     * <p>
+     * Comparing against the marked label made every {@code disease} and {@code cell line} category a
+     * LABEL_MISMATCH, which closed {@code PUT /datasets/{id}/curation} to those two categories for every caller
+     * (cab, 2026-08-30). Stripping the marker in the CATEGORY slot is the same fold
+     * {@code AnnotationsWebService#categoryKey} already applies for the preferred-prefix table.
+     * <p>
+     * Scoped to categories on purpose. A VALUE resolving to an obsolete term is a separate question and is not
+     * touched here.
+     */
+    private static String withoutObsoleteMarker( String label ) {
+        Matcher m = OBSOLETE_LABEL_MARKER.matcher( label );
+        return m.lookingAt() ? label.substring( m.end() ) : label;
+    }
+
+    /** The prefix an ontology prepends to a term's label when it obsoletes it: {@code obsolete_x}, {@code obsolete x}. */
+    private static final Pattern OBSOLETE_LABEL_MARKER = Pattern.compile( "obsolete[_\\s]+", Pattern.CASE_INSENSITIVE );
 
     /**
      * Whether a resolver actually told us what a term is called.
