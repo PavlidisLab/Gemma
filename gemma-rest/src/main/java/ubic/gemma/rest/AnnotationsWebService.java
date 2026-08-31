@@ -4359,7 +4359,7 @@ public class AnnotationsWebService {
             for ( Long id : excludedExperimentIds ) {
                 exDigest ^= id;
             }
-            key = normalized + '' + uris.size() + '' + digest + '' + exDigest;
+            key = normalized + '\u0002' + uris.size() + '\u0002' + digest + '\u0002' + exDigest;
             org.springframework.cache.Cache.ValueWrapper hit = cache.get( key );
             if ( hit != null ) {
                 //noinspection unchecked
@@ -4958,24 +4958,24 @@ public class AnnotationsWebService {
         // cache without colliding with a different-query default-rank entry. STX separates the
         // header section from the query payload; SOH separates header fields.
         sb.append( rankName != null ? rankName : LuceneOrderRankingStrategy.NAME );
-        sb.append( '' );
+        sb.append( '\u0001' );
         sb.append( limit );
-        sb.append( '' );
+        sb.append( '\u0001' );
         sb.append( String.join( ",", prefixes ) );
-        sb.append( '' );
+        sb.append( '\u0001' );
         sb.append( upstream ? "u" : "l" );
-        sb.append( '' );
+        sb.append( '\u0002' );
         sb.append( exactLabel ? "e" : "s" );
-        sb.append( '' );
+        sb.append( '\u0002' );
         // Category affects whether synthetic gene rows are merged in, so it must key the cache
         // (lowercased + trimmed to canonicalize EFO label casing).
         sb.append( category != null ? category.trim().toLowerCase( Locale.ROOT ) : "" );
         // Taxon scopes the gene fan-out (mouse Il10 vs rat Il10 vs human Il10); a cached
         // "all-taxa" entry must not satisfy a "taxon=mouse" call. Use taxon id when present;
         // empty string = no constraint.
-        sb.append( '' );
+        sb.append( '\u0001' );
         sb.append( taxon != null && taxon.getId() != null ? "t" + taxon.getId() : "" );
-        sb.append( '' );
+        sb.append( '\u0002' );
         for ( int i = 0; i < values.size(); i++ ) {
             String v = values.get( i );
             if ( v == null ) continue;

@@ -1662,7 +1662,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private static String statementContentKey( String... fields ) {
-        return Stream.of( fields ).map( f -> f == null ? " " : f ).collect( Collectors.joining( "" ) );
+        return Stream.of( fields ).map( f -> f == null ? "\0" : f ).collect( Collectors.joining( "\u001F" ) );
     }
 
     /**

@@ -758,7 +758,7 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
     }
 
     private static String subjectKey( @Nullable String value, @Nullable String valueUri ) {
-        return ( value != null ? value : "" ) + " " + ( valueUri != null ? valueUri : "" );
+        return ( value != null ? value : "" ) + "\0" + ( valueUri != null ? valueUri : "" );
     }
 
     private static long asLong( @Nullable Object o ) {

@@ -288,6 +288,6 @@ class CrossReferences {
     }
 
     private static String key( String termUri, String curie ) {
-        return termUri + ' ' + curie;
+        return termUri + '\0' + curie;
     }
 }
