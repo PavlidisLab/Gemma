@@ -10170,12 +10170,23 @@ public class DatasetsWebService {
 
         private final List<FactorValueBasicValueObject> factorValues;
 
+        /**
+         * @param factorValues the subset's factor values, or null when it has none. 🛑 A single-cell
+         *                     subset is cut from a cell-level characteristic and never carries a
+         *                     factor value ({@code SingleCellExpressionExperimentSubSetServiceImpl}
+         *                     copies the characteristic rather than referencing an FV), so the map
+         *                     lookup that feeds this misses and hands over null. Dereferencing it
+         *                     made {@code GET /datasets/{id}/subSetGroups} a 500 on exactly the
+         *                     datasets the cell-type work lives on — 44580 failed while 38390, whose
+         *                     subsets are factor-cut, succeeded. Having no factor values is a normal
+         *                     state for a subset, not an error, so it yields an empty list.
+         */
         public ExpressionExperimentSubsetWithFactorValuesObject( ExpressionExperimentSubSet subset,
-                Set<FactorValue> factorValues,
+                @Nullable Set<FactorValue> factorValues,
                 @Nullable Map<ArrayDesign, ArrayDesignValueObject> id2advo,
                 boolean includeAssays, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap ) {
             super( subset, id2advo, assay2sourceAssayMap, includeAssays, true, true );
-            this.factorValues = factorValues.stream()
+            this.factorValues = factorValues == null ? Collections.emptyList() : factorValues.stream()
                     .map( FactorValueBasicValueObject::new )
                     .collect( Collectors.toList() );
         }

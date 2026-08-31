@@ -4898,4 +4898,24 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/404/sourceMetadata" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND );
     }
+
+    /**
+     * 🛑 A subset with no factor values is normal, not an error. Single-cell subsets are cut from a
+     * cell-level characteristic and never carry one, so the map lookup feeding the VO misses and
+     * hands over null — which made /subSetGroups a 500 on exactly those datasets (44580 failed,
+     * factor-cut 38390 succeeded).
+     */
+    @Test
+    public void testSubsetWithNoFactorValuesYieldsAnEmptyListNotANullPointer() {
+        ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+        subset.setId( 42L );
+        subset.setName( "GSE1 - astrocyte" );
+        subset.setSourceExperiment( ee );
+
+        DatasetsWebService.ExpressionExperimentSubsetWithFactorValuesObject vo =
+                new DatasetsWebService.ExpressionExperimentSubsetWithFactorValuesObject(
+                        subset, null, null, false, null );
+
+        assertThat( vo.getFactorValues() ).isEmpty();
+    }
 }
