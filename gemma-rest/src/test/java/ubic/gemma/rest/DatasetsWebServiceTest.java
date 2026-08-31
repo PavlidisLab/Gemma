@@ -1553,12 +1553,19 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // on it. Only this test's calls are the subject here.
         clearInvocations( outlierDetectionService );
 
+        // Absent, not false: a client must be able to tell "not computed" from "the algorithm ran and
+        // cleared this assay". Serializing false for both is the shape that misleads.
         assertThat( target( "/datasets/1/samples" ).request().get() )
-                .hasStatus( Response.Status.OK );
+                .hasStatus( Response.Status.OK )
+                .entityAsString().asInstanceOf( json() )
+                .doesNotHavePath( "$.data[0].predictedOutlier" );
         verify( outlierDetectionService, never() ).getOutlierDetails( any() );
 
+        when( outlierDetectionService.getOutlierDetails( ee ) ).thenReturn( Optional.of( Collections.emptyList() ) );
         assertThat( target( "/datasets/1/samples" ).queryParam( "includePredictedOutliers", "true" ).request().get() )
-                .hasStatus( Response.Status.OK );
+                .hasStatus( Response.Status.OK )
+                .entityAsString().asInstanceOf( json() )
+                .hasPath( "$.data[0].predictedOutlier" );
         verify( outlierDetectionService ).getOutlierDetails( ee );
     }
 

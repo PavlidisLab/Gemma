@@ -100,8 +100,18 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
 
     // if it was removed as an outlier
     private boolean outlier = false;
-    // if our algorithm says it might be an outlier.
-    private boolean predictedOutlier = false;
+    /**
+     * Whether the median-correlation algorithm flags this assay as a possible outlier.
+     * <p>
+     * Null when it was not computed, which is the default: the calculation loads the dataset's whole
+     * sample-correlation matrix, so the sample-listing routes only do it when asked
+     * ({@code ?includePredictedOutliers=true}). Absent therefore means "not computed" and is
+     * deliberately distinguishable from {@code false}, which means the algorithm ran and did not flag
+     * this assay. The curated {@link #outlier} flag is always populated either way.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean predictedOutlier;
     // to hold state change, initialized as this.outlier
     private boolean userFlaggedOutlier = false;
 

@@ -579,7 +579,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
-     * Set {@link BioAssayValueObject#isPredictedOutlier()} from the median-correlation algorithm.
+     * Set {@link BioAssayValueObject#getPredictedOutlier()} from the median-correlation algorithm.
      * <p>
      * This is expensive and does not scale with the number of VOs passed in: it loads the
      * experiment's whole N&times;N sample-correlation matrix ({@code SampleCoexpressionMatrix.coexpressionMatrix},
