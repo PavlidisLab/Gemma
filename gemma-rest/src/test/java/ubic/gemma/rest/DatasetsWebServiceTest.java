@@ -207,13 +207,15 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         @Bean
         public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService, SearchService searchService,
                 PublicationAssociationService publicationAssociationService, ArrayDesignService arrayDesignService,
-                BioAssayService bioAssayService ) {
+                BioAssayService bioAssayService, OutlierDetectionService outlierDetectionService ) {
             // 🛑 Take the arrayDesignService and bioAssayService BEANS, not fresh mocks. They used to be
             // constructed here, so the instance tests autowire and stub was not the instance this service
             // called — a stub could look set up and be inert, which is a silent way for a test to assert
             // nothing. The BioAssayService bean below already existed while this constructed its own; the
             // samples route reads through this one, so a test stubbing the bean stubbed nothing.
-            return new DatasetArgService( expressionExperimentService, searchService, arrayDesignService, bioAssayService, mock( OutlierDetectionService.class ),
+            // The OutlierDetectionService is taken as a bean for the same reason: a test that verifies the
+            // correlation matrix is NOT loaded has to hold the instance this service actually calls.
+            return new DatasetArgService( expressionExperimentService, searchService, arrayDesignService, bioAssayService, outlierDetectionService,
                     publicationAssociationService );
         }
 
@@ -495,6 +497,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @Autowired
     private BioAssayService bioAssayService;
+
+    @Autowired
+    private OutlierDetectionService outlierDetectionService;
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -1531,6 +1536,30 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
         assertThat( target( "/datasets/1/samples" ).queryParam( "exclude", "sample.characteristics" ).request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    /**
+     * The predicted-outlier flag costs the dataset's whole N&times;N sample-correlation matrix to compute,
+     * which is why it is opt-in: the cost is set by the correlation analysis, not the page size, and on
+     * the largest datasets it exceeds the request timeout. The assertion is that the detection service is
+     * not consulted at all by default — a cheaper-but-still-called path would still load the matrix.
+     */
+    @Test
+    public void testGetDatasetSamplesDoesNotComputePredictedOutliersByDefault() {
+        when( bioAssayService.loadValueObjects( any(), any(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.singletonList( sampleAssay() ) );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        // The mock is a context-scoped singleton, so /sample-correlation's own test leaves invocations
+        // on it. Only this test's calls are the subject here.
+        clearInvocations( outlierDetectionService );
+
+        assertThat( target( "/datasets/1/samples" ).request().get() )
+                .hasStatus( Response.Status.OK );
+        verify( outlierDetectionService, never() ).getOutlierDetails( any() );
+
+        assertThat( target( "/datasets/1/samples" ).queryParam( "includePredictedOutliers", "true" ).request().get() )
+                .hasStatus( Response.Status.OK );
+        verify( outlierDetectionService ).getOutlierDetails( ee );
     }
 
     @Test

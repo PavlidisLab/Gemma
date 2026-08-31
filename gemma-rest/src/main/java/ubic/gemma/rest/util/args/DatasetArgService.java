@@ -242,10 +242,12 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * mean-variance, geeq, curationDetails) is dead pre-fetch on this code
      * path. See {@code SAMPLES_DESIGN_PERF_RECCE.md} for the measurement.
      */
-    public List<BioAssayValueObject> getSamples( DatasetArg<?> arg ) {
+    public List<BioAssayValueObject> getSamples( DatasetArg<?> arg, boolean includePredictedOutliers ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getEntity( arg ) );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), null, true, true );
-        populateOutliers( ee, bioAssayValueObjects );
+        if ( includePredictedOutliers ) {
+            populateOutliers( ee, bioAssayValueObjects );
+        }
         return bioAssayValueObjects;
     }
 
@@ -267,19 +269,23 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * {@code BioAssay::getName} and apply a {@link BioAssayDimension} restriction that
      * is not expressible as an {@code id}-only cursor).
      */
-    public CursorPage<BioAssayValueObject> getSamplesByCursor( DatasetArg<?> arg, @Nullable Cursor cursor, int limit ) {
+    public CursorPage<BioAssayValueObject> getSamplesByCursor( DatasetArg<?> arg, @Nullable Cursor cursor, int limit,
+            boolean includePredictedOutliers ) {
         ExpressionExperiment ee = this.getEntity( arg );
         CursorPage<BioAssayValueObject> page = baService.loadValueObjectsByCursorForExpressionExperiment( ee, cursor, limit );
-        // populateOutliers takes the underlying VOs in place; the CursorPage's data
-        // list is what it iterates (CursorPage IS-A List<VO>).
-        populateOutliers( ee, page );
+        if ( includePredictedOutliers ) {
+            // populateOutliers takes the underlying VOs in place; the CursorPage's data
+            // list is what it iterates (CursorPage IS-A List<VO>).
+            populateOutliers( ee, page );
+        }
         return page;
     }
 
     /**
      * Obtain a collection of BioAssays that represent the experiments samples for a particular quantitation type.
      */
-    public List<BioAssayValueObject> getSamples( DatasetArg<?> datasetArg, QuantitationType qt ) {
+    public List<BioAssayValueObject> getSamples( DatasetArg<?> datasetArg, QuantitationType qt,
+            boolean includePredictedOutliers ) {
         ExpressionExperiment ee = service.thawLite( getEntity( datasetArg ) );
         List<BioAssay> bad = service.getBioAssayDimensionsWithAssays( ee, qt ).stream()
                 .map( BioAssayDimension::getBioAssays )
@@ -292,7 +298,9 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
         Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( ee, bad );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( bad, assay2sourceAssayMap, true, true );
-        populateOutliers( ee, bioAssayValueObjects );
+        if ( includePredictedOutliers ) {
+            populateOutliers( ee, bioAssayValueObjects );
+        }
         return bioAssayValueObjects;
     }
 
@@ -427,7 +435,8 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         return subSetGroups;
     }
 
-    public List<BioAssayValueObject> getSubSetSamples( DatasetArg<?> datasetArg, Long subSetId ) {
+    public List<BioAssayValueObject> getSubSetSamples( DatasetArg<?> datasetArg, Long subSetId,
+            boolean includePredictedOutliers ) {
         ExpressionExperiment ee = getEntity( datasetArg );
         ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
         if ( subset == null ) {
@@ -435,7 +444,9 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
         Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( subset.getSourceExperiment(), subset.getBioAssays() );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( subset.getBioAssays(), assay2sourceAssayMap, true, true );
-        populateOutliers( subset.getSourceExperiment(), bioAssayValueObjects );
+        if ( includePredictedOutliers ) {
+            populateOutliers( subset.getSourceExperiment(), bioAssayValueObjects );
+        }
         return bioAssayValueObjects;
     }
 
@@ -459,7 +470,8 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * source-assay map and outlier helpers both need, without forcing the full
      * {@code subset.bioAssays} collection to materialise (Hibernate lazy-loads on access).
      */
-    public CursorPage<BioAssayValueObject> getSubSetSamplesByCursor( DatasetArg<?> datasetArg, Long subSetId, @Nullable Cursor cursor, int limit ) {
+    public CursorPage<BioAssayValueObject> getSubSetSamplesByCursor( DatasetArg<?> datasetArg, Long subSetId,
+            @Nullable Cursor cursor, int limit, boolean includePredictedOutliers ) {
         ExpressionExperiment ee = getEntity( datasetArg );
         ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
         if ( subset == null ) {
@@ -500,7 +512,9 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         } else {
             page = rawPage;
         }
-        populateOutliers( subset.getSourceExperiment(), page );
+        if ( includePredictedOutliers ) {
+            populateOutliers( subset.getSourceExperiment(), page );
+        }
         return page;
     }
 
@@ -564,6 +578,21 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         return out;
     }
 
+    /**
+     * Set {@link BioAssayValueObject#isPredictedOutlier()} from the median-correlation algorithm.
+     * <p>
+     * This is expensive and does not scale with the number of VOs passed in: it loads the
+     * experiment's whole N&times;N sample-correlation matrix ({@code SampleCoexpressionMatrix.coexpressionMatrix},
+     * a LONGBLOB) to compute the prediction, so the cost is set by the correlation analysis, not by
+     * the page size. On experiments whose matrix is dimensioned over subset assays it reaches
+     * ~100&nbsp;MB and the request exceeds the 60&nbsp;s proxy timeout; because
+     * {@link OutlierDetectionService#getOutlierDetails} caches only on completion, a request that
+     * times out never populates the cache and the next one pays the same cost again.
+     * <p>
+     * Callers therefore opt in. The persisted, curator-facing
+     * {@link BioAssayValueObject#isOutlier()} flag is read from {@code BIO_ASSAY.IS_OUTLIER} by the
+     * VO constructor and is always present at no cost; only the algorithmic prediction needs this.
+     */
     public void populateOutliers( ExpressionExperiment ee, Collection<BioAssayValueObject> bioAssayValueObjects ) {
         outlierDetectionService.getOutlierDetails( ee ).ifPresent( outliers -> {
             Set<Long> predictedOutlierBioAssayIds = outliers.stream()

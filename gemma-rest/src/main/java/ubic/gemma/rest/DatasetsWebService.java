@@ -1226,7 +1226,12 @@ public class DatasetsWebService {
                     + "can be excluded. It is 21.5% of this response and carries the same rows as "
                     + "`sample.characteristics` plus a predicate and object, so a client that renders "
                     + "only subjects can decline it.")
-            @QueryParam("exclude") ExcludeArg<BioAssayValueObject> excludeArg
+            @QueryParam("exclude") ExcludeArg<BioAssayValueObject> excludeArg,
+            @Parameter(description = "Include `predictedOutlier`, the median-correlation algorithm's guess. "
+                    + "Off by default: computing it loads the dataset's whole sample-correlation matrix, which is "
+                    + "unrelated to the page size and can exceed the request timeout on large datasets. The curated "
+                    + "`outlier` flag is always returned regardless of this parameter.")
+            @QueryParam("includePredictedOutliers") @DefaultValue("false") boolean includePredictedOutliers
     ) {
         boolean excludeStatements = excludeArg != null
                 && excludeArg.getValue( SAMPLES_ALLOWED_EXCLUDE_FIELDS ).contains( "sample.statements" );
@@ -1239,20 +1244,20 @@ public class DatasetsWebService {
                 throw new BadRequestException( "Cursor pagination is not supported together with quantitationType / "
                         + "useProcessedQuantitationType; either drop the cursor or drop the QT parameters." );
             }
-            CursorPage<BioAssayValueObject> page = datasetArgService.getSamplesByCursor( datasetArg, cursorArg.getValue(), limitArg.getValue() );
+            CursorPage<BioAssayValueObject> page = datasetArgService.getSamplesByCursor( datasetArg, cursorArg.getValue(), limitArg.getValue(), includePredictedOutliers );
             dropSampleStatements( page, excludeStatements );
             return paginateByCursor( page, new String[] { "id" } );
         }
         if ( quantitationTypeArg != null ) {
             ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
             QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee );
-            return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg, qt ), excludeStatements ) );
+            return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg, qt, includePredictedOutliers ), excludeStatements ) );
         }
         if ( useProcessedQuantitationType ) {
             QuantitationType qt = datasetArgService.getPreferredQuantitationType( datasetArg );
-            return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg, qt ), excludeStatements ) );
+            return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg, qt, includePredictedOutliers ), excludeStatements ) );
         }
-        return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg ), excludeStatements ) );
+        return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg, includePredictedOutliers ), excludeStatements ) );
     }
 
     /**
@@ -10026,7 +10031,7 @@ public class DatasetsWebService {
                             .sorted( Comparator.comparing( QuantitationType::getName ) )
                             .map( qt -> new QuantitationTypeValueObject( qt, ee, quantitationTypeService.getDataVectorType( qt ) ) )
                             .collect( Collectors.toList() );
-                    return createSubSetGroup( e.getKey(), e.getValue(), ssvs, qts, false );
+                    return createSubSetGroup( e.getKey(), e.getValue(), ssvs, qts, false, false );
                 } )
                 .collect( Collectors.toList() ) );
     }
@@ -10037,7 +10042,10 @@ public class DatasetsWebService {
     @Operation(summary = "Obtain a specific subset group of a dataset")
     public ResponseDataObject<ExpressionExperimentSubSetGroupValueObject> getDatasetSubSetGroup(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("subSetGroup") Long bioAssayDimensionId
+            @PathParam("subSetGroup") Long bioAssayDimensionId,
+            @Parameter(description = "Include `predictedOutlier` on each subset's assays. Off by default: it loads the "
+                    + "dataset's whole sample-correlation matrix. The curated `outlier` flag is always returned.")
+            @QueryParam("includePredictedOutliers") @DefaultValue("false") boolean includePredictedOutliers
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         // this is preferred, because it does not require any data to be present
@@ -10050,14 +10058,14 @@ public class DatasetsWebService {
                 .sorted( Comparator.comparing( QuantitationType::getName ) )
                 .map( qt -> new QuantitationTypeValueObject( qt, ee, quantitationTypeService.getDataVectorType( qt ) ) )
                 .collect( Collectors.toList() );
-        return respond( createSubSetGroup( bad, expressionExperimentService.getSubSetsWithBioAssays( ee, bad ), ssvs, qts, true ) );
+        return respond( createSubSetGroup( bad, expressionExperimentService.getSubSetsWithBioAssays( ee, bad ), ssvs, qts, true, includePredictedOutliers ) );
     }
 
     private ExpressionExperimentSubSetGroupValueObject createSubSetGroup( BioAssayDimension bad,
             Collection<ExpressionExperimentSubSet> subsets,
             Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> ssvs,
             List<QuantitationTypeValueObject> qts,
-            boolean includeAssays ) {
+            boolean includeAssays, boolean includePredictedOutliers ) {
         Map<ExpressionExperimentSubSet, Set<FactorValue>> fvs = new HashMap<>();
         ssvs.forEach( ( ef, s2fv ) -> {
             s2fv.forEach( ( fv, s ) -> {
@@ -10089,7 +10097,7 @@ public class DatasetsWebService {
                         assay2sourceAssayMap = null;
                     }
                     ExpressionExperimentSubsetWithFactorValuesObject vo = new ExpressionExperimentSubsetWithFactorValuesObject( subset, fvs.get( subset ), id2advo, includeAssays, assay2sourceAssayMap );
-                    if ( includeAssays ) {
+                    if ( includeAssays && includePredictedOutliers ) {
                         datasetArgService.populateOutliers( subset.getSourceExperiment(), vo.getBioAssays() );
                     }
                     return vo;
@@ -10160,13 +10168,18 @@ public class DatasetsWebService {
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Include `predictedOutlier`, the median-correlation algorithm's guess. "
+                    + "Off by default: computing it loads the dataset's whole sample-correlation matrix, which is "
+                    + "unrelated to the page size and can exceed the request timeout on large datasets. The curated "
+                    + "`outlier` flag is always returned regardless of this parameter.")
+            @QueryParam("includePredictedOutliers") @DefaultValue("false") boolean includePredictedOutliers
     ) {
         if ( cursorArg != null ) {
-            CursorPage<BioAssayValueObject> page = datasetArgService.getSubSetSamplesByCursor( datasetArg, subSetId, cursorArg.getValue(), limitArg.getValue() );
+            CursorPage<BioAssayValueObject> page = datasetArgService.getSubSetSamplesByCursor( datasetArg, subSetId, cursorArg.getValue(), limitArg.getValue(), includePredictedOutliers );
             return paginateByCursor( page, new String[] { "id" } );
         }
-        return respond( datasetArgService.getSubSetSamples( datasetArg, subSetId ) );
+        return respond( datasetArgService.getSubSetSamples( datasetArg, subSetId, includePredictedOutliers ) );
     }
 
     /**

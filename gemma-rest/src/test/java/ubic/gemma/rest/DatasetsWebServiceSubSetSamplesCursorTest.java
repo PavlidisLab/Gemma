@@ -34,6 +34,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -88,9 +89,9 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
     @Test
     public void legacyModeWithoutCursorReturnsUnpaginatedResponseDataObject() {
         List<BioAssayValueObject> all = Arrays.asList( ba1, ba2 );
-        when( datasetArgService.getSubSetSamples( any( DatasetArg.class ), eq( SUBSET_ID ) ) ).thenReturn( all );
+        when( datasetArgService.getSubSetSamples( any( DatasetArg.class ), eq( SUBSET_ID ), anyBoolean() ) ).thenReturn( all );
 
-        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, limit( "20" ) );
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, limit( "20" ), false );
 
         assertThat( response ).isInstanceOf( ResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -98,7 +99,7 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
         assertThat( r.getData() ).containsExactly( ba1, ba2 );
 
         // Cursor helper must not be touched in legacy mode.
-        verify( datasetArgService, never() ).getSubSetSamplesByCursor( any( DatasetArg.class ), anyLong(), any(), anyInt() );
+        verify( datasetArgService, never() ).getSubSetSamplesByCursor( any( DatasetArg.class ), anyLong(), any(), anyInt(), anyBoolean() );
     }
 
     @Test
@@ -111,10 +112,10 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
                 /* nextCursor */ "next-cursor-token",
                 /* prevCursor */ "prev-cursor-token",
                 /* totalElements */ null );
-        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ) ) ).thenReturn( cp );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ), anyBoolean() ) ).thenReturn( cp );
 
         CursorArg arg = CursorArg.valueOf( c.encode() );
-        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, arg, limit( "20" ) );
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, arg, limit( "20" ), false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -128,7 +129,7 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
         assertThat( page.getLimit() ).isEqualTo( 20 );
 
         // Legacy helper must not be touched in cursor mode.
-        verify( datasetArgService, never() ).getSubSetSamples( any( DatasetArg.class ), anyLong() );
+        verify( datasetArgService, never() ).getSubSetSamples( any( DatasetArg.class ), anyLong(), anyBoolean() );
     }
 
     @Test
@@ -139,12 +140,12 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         CursorPage<BioAssayValueObject> cp = new CursorPage<>(
                 Collections.singletonList( ba2 ), null, 5, null, "prev", null );
-        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 5 ) ) ).thenReturn( cp );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 5 ), anyBoolean() ) ).thenReturn( cp );
 
-        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), limit( "5" ) );
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), limit( "5" ), false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
-        verify( datasetArgService ).getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 5 ) );
+        verify( datasetArgService ).getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 5 ), anyBoolean() );
     }
 
     @Test
@@ -157,9 +158,9 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
                 Collections.emptyList(),
                 Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ),
                 20, null, null, null );
-        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ) ) ).thenReturn( cp );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ), anyBoolean() ) ).thenReturn( cp );
 
-        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), limit( "20" ) );
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), limit( "20" ), false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
