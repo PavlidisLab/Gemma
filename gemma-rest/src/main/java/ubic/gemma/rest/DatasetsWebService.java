@@ -665,8 +665,14 @@ public class DatasetsWebService {
 
     @Value
     public static class CategoryWithUsageStatisticsValueObject implements UsageStatistics {
-        String classUri;
-        String className;
+        /**
+         * Named to match {@link ubic.gemma.model.common.description.Characteristic} and the curation
+         * write side, which both say {@code category} / {@code categoryUri}. This route said
+         * {@code className} / {@code classUri} for the same thing, so a caller reading categories here
+         * and filtering datasets by them was using two vocabularies for one concept.
+         */
+        String categoryUri;
+        String category;
         Long numberOfExpressionExperiments;
     }
 
@@ -716,7 +722,7 @@ public class DatasetsWebService {
                 .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return top( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ), maxResults, inferredTerms )
+        return top( results, query != null ? query.getValue() : null, filters, new String[] { "categoryUri", "category" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ), maxResults, inferredTerms )
                 .addWarnings( warnings, "query", LocationType.QUERY );
     }
 
