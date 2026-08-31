@@ -4226,6 +4226,43 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( cap.getValue().getName() ).isEqualTo( "New name" );
     }
 
+    /**
+     * A tag carrying nested statements must reach the commit as a {@link Statement}, not a bare
+     * Characteristic. cab reported it accepted and silently dropped: preflight said created=1, the commit
+     * returned 200 and minted a snapshot, and the stored row had PREDICATE NULL (GSE104324,
+     * CHARACTERISTIC 56965512, discriminator NULL = a plain Characteristic).
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationTagWithStatementsReachesTheCommitAsAStatement() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"tag-0\","
+                + "\"category\":{\"label\":\"cell type\"},"
+                + "\"value\":{\"label\":\"Schwann cell\"},"
+                + "\"statements\":{\"items\":[{"
+                + "\"category\":{\"label\":\"cell type\"},"
+                + "\"subject\":{\"label\":\"Schwann cell\"},"
+                + "\"predicate\":{\"label\":\"derives from part of\"},"
+                + "\"object\":{\"label\":\"sciatic nerve\"}}]},"
+                + "\"evidenceCode\":\"IEA\"}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        Characteristic ch = cap.getValue().getTagsToAdd().get( 0 ).getCharacteristic();
+        assertThat( ch ).isInstanceOf( Statement.class );
+        Statement st = ( Statement ) ch;
+        assertThat( st.getSubject() ).isEqualTo( "Schwann cell" );
+        assertThat( st.getPredicate() ).isEqualTo( "derives from part of" );
+        assertThat( st.getObject() ).isEqualTo( "sciatic nerve" );
+    }
+
     @Test
     @WithMockUser
     public void testCommitCurationRejectsUnknownSection() {
