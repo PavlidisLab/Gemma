@@ -9450,15 +9450,24 @@ public class DatasetsWebService {
     @Path("/{dataset}/sample-correlation")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the sample-sample correlation matrix + outlier classifications",
-            description = "Returns the regressed (best) sample correlation matrix UNMASKED, plus two parallel outlier-id lists: `actualOutlierBioAssayIds` (curator-flagged) and `predictedOutlierBioAssayIds` (algorithmic). The UI applies any visualization masking it wants. 404 if no correlation analysis has been computed for the dataset.",
+            description = "Returns the regressed (best) sample correlation matrix UNMASKED, plus two parallel outlier-id lists: `actualOutlierBioAssayIds` (curator-flagged) and `predictedOutlierBioAssayIds` (algorithmic). The UI applies any visualization masking it wants. 404 if no correlation analysis has been computed for the dataset. **Single-cell datasets return 404 by design**: their matrix is the pseudo-bulk grid (samples x cell types), so it correlates across cell types rather than across samples, and it is withheld while that is revised.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no sample correlation matrix.",
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist, has no sample correlation matrix, or is single-cell (see description).",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SampleCorrelationMatrixValueObject> getDatasetSampleCorrelation(
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        // 🛑 TEMPORARY (Paul, 2026-08-31): for a single-cell dataset this matrix is not over the
+        // experiment's samples. It is the pseudo-bulk grid — N = samples x cell types, e.g. 95 x 37 =
+        // 3515 for GSE282329 — so every correlation is taken across cell types, and the median-correlation
+        // outlier rule reads a rare cell type as an outlier for being rare. Rather than serve a number
+        // whose meaning we cannot defend, serve none while the per-cell-type design is settled.
+        if ( expressionExperimentService.isSingleCell( ee ) ) {
+            throw new NotFoundException( ee.getShortName() + " is a single-cell dataset; its sample correlation"
+                    + " matrix is computed across cell types and is not served while that is being revised." );
+        }
         DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
         if ( matrix == null ) {
             throw new NotFoundException( ee.getShortName() + " does not have a sample correlation matrix." );

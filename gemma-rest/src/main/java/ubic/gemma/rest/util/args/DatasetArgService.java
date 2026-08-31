@@ -594,6 +594,12 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * VO constructor and is always present at no cost; only the algorithmic prediction needs this.
      */
     public void populateOutliers( ExpressionExperiment ee, Collection<BioAssayValueObject> bioAssayValueObjects ) {
+        // 🛑 TEMPORARY (Paul, 2026-08-31): a single-cell dataset's correlation matrix spans cell types
+        // rather than samples, so the median-correlation prediction drawn from it is not defensible.
+        // Leave predictedOutlier unset (absent, meaning "not computed") rather than serve that.
+        if ( service.isSingleCell( ee ) ) {
+            return;
+        }
         outlierDetectionService.getOutlierDetails( ee ).ifPresent( outliers -> {
             Set<Long> predictedOutlierBioAssayIds = outliers.stream()
                     .map( OutlierDetails::getBioAssayId )

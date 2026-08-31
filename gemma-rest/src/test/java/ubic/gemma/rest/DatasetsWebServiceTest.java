@@ -3570,6 +3570,41 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( sampleCoexpressionAnalysisService ).loadBestMatrix( ee );
     }
 
+    /**
+     * 🛑 Temporary, pending the per-cell-type design. A single-cell dataset's correlation matrix is the
+     * pseudo-bulk grid (samples &times; cell types), so its correlations are taken across cell types and
+     * the median-correlation outlier rule reads a rare cell type as an outlier. The assertion that
+     * matters is that the matrix is never even loaded: returning it and letting the caller decide is
+     * exactly what we are stopping, and a 404 reached after the load would still cost ~100 MB.
+     */
+    @Test
+    public void testGetDatasetSampleCorrelationIsWithheldForSingleCell() {
+        when( expressionExperimentService.isSingleCell( ee ) ).thenReturn( true );
+        assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        verify( sampleCoexpressionAnalysisService, never() ).loadBestMatrix( any() );
+    }
+
+    /** The same dataset, not single-cell, still serves the matrix — the gate is the flag, not the route. */
+    @Test
+    public void testGetDatasetSampleCorrelationStillServedWhenNotSingleCell() {
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 100L );
+        List<BioAssay> assays = Collections.singletonList( a1 );
+        DenseDoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( new double[][] { { 1.0 } } );
+        matrix.setRowNames( assays );
+        matrix.setColumnNames( assays );
+        when( expressionExperimentService.isSingleCell( ee ) ).thenReturn( false );
+        when( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) ).thenReturn( matrix );
+        ee.getBioAssays().clear();
+        ee.getBioAssays().addAll( assays );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
+                .hasStatus( Response.Status.OK );
+        verify( sampleCoexpressionAnalysisService ).loadBestMatrix( ee );
+    }
+
     @Test
     public void testGetDatasetSampleCorrelationWhenDatasetMissingIs404() {
         assertThat( target( "/datasets/999/sample-correlation" ).request().get() )

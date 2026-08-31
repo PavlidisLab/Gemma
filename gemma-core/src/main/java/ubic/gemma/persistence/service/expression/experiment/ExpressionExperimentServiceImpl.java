@@ -2184,7 +2184,10 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isSingleCell( ExpressionExperiment ee ) {
+        // Reads the lazy characteristics collection and then hits the DAO, so it needs a session of its
+        // own when called from outside one (the REST layer does). isRNASeq below is already annotated.
         return ( ee.getCharacteristics().stream()
                 .anyMatch( c -> hasCategory( c, Categories.ASSAY ) && hasAnyValue( c,
                         Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY,
