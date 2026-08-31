@@ -19,7 +19,6 @@ import ubic.gemma.persistence.util.Sort;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import javax.annotation.CheckReturnValue;
 import org.springframework.lang.Nullable;
@@ -91,12 +90,4 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
     @Nullable
     Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resulSet );
 
-    /**
-     * Bin the raw or corrected p-values for a result set into a uniform histogram over {@code [0, 1]}.
-     *
-     * @see ExpressionAnalysisResultSetDao#binPvalues(Long, String, int)
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    @PreAuthorize("hasPermission(#resultSetId, 'ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet', 'READ') or hasPermission(#resultSetId, 'ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet', 'ADMINISTRATION')")
-    long[] binPvalues( Long resultSetId, String column, int numberOfBins );
 }

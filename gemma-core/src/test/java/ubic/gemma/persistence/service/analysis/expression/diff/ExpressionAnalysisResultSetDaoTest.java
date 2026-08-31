@@ -30,7 +30,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
@@ -172,52 +171,4 @@ public class ExpressionAnalysisResultSetDaoTest extends BaseDatabaseTest5 {
         assertThat( slice ).isEmpty();
     }
 
-    // -----------------------------------------------------------------------
-    // binPvalues — closes the native-SQL coverage gap from
-    // NATIVE_SQL_COVERAGE_AUDIT_2026_05_25.md Tier 1.
-    // -----------------------------------------------------------------------
-
-    @Test
-    public void testBinPvaluesRejectsNullResultSetId() {
-        assertThatThrownBy( () -> expressionAnalysisResultSetDao.binPvalues( null, "raw", 10 ) )
-                .isInstanceOf( IllegalArgumentException.class );
-    }
-
-    @Test
-    public void testBinPvaluesRejectsZeroBins() {
-        assertThatThrownBy( () -> expressionAnalysisResultSetDao.binPvalues( 1L, "raw", 0 ) )
-                .isInstanceOf( IllegalArgumentException.class );
-    }
-
-    @Test
-    public void testBinPvaluesRejectsUnknownColumn() {
-        assertThatThrownBy( () -> expressionAnalysisResultSetDao.binPvalues( 1L, "bogus", 10 ) )
-                .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "raw" )
-                .hasMessageContaining( "corrected" );
-    }
-
-    @Test
-    public void testBinPvaluesOnEmptyResultSetReturnsAllZeros() {
-        ExpressionExperiment sourceEE = new ExpressionExperiment();
-        sessionFactory.getCurrentSession().persist( sourceEE );
-        DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
-        dea.setExperimentAnalyzed( sourceEE );
-        ExpressionAnalysisResultSet ears = new ExpressionAnalysisResultSet();
-        dea.getResultSets().add( ears );
-        ears.setAnalysis( dea );
-        sessionFactory.getCurrentSession().persist( dea );
-        sessionFactory.getCurrentSession().flush();
-        // Empty result set: every bin should be zero, regardless of column choice.
-        long[] rawBins = expressionAnalysisResultSetDao.binPvalues( ears.getId(), "raw", 10 );
-        assertThat( rawBins ).hasSize( 10 );
-        for ( long n : rawBins ) {
-            assertThat( n ).isZero();
-        }
-        long[] correctedBins = expressionAnalysisResultSetDao.binPvalues( ears.getId(), "corrected", 20 );
-        assertThat( correctedBins ).hasSize( 20 );
-        for ( long n : correctedBins ) {
-            assertThat( n ).isZero();
-        }
-    }
 }
