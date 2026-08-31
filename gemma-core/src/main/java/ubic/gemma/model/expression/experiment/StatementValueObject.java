@@ -125,6 +125,26 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
     @Schema(description = "Verbatim provenance backing this statement — a JSON array of {quote, source, location} items the curation agents emitted. Null when none is recorded.")
     private JsonNode supportingEvidence;
 
+    /**
+     * How this statement was arrived at, as a {@link ubic.gemma.model.association.GOEvidenceCode} name
+     * ({@code IC}, {@code IEA}, {@code IIA}, {@code TAS}, …). The uppercase enum name is the wire form
+     * this field carries everywhere it appears — {@code AnnotationValueObject#evidenceCode} and
+     * {@code PublicationAssociationValueObject#evidenceCode} spell it the same way.
+     * <p>
+     * Storage is the {@code EVIDENCE_CODE} column {@link Statement} inherits from
+     * {@link ubic.gemma.model.common.description.Characteristic}; like {@link #supportingEvidence} it was
+     * never surfaced here, so a design write could not say who decided and a design read could not tell a
+     * curator's call from a program's.
+     * <p>
+     * Provenance rather than identity, so it is excluded from equals/hashCode and from {@link #COMPARATOR}
+     * for the same reason {@link #supportingEvidence} is: the comparator's ordering assigns annotation ids.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @EqualsAndHashCode.Exclude
+    @Schema(description = "How this statement was arrived at, as a GOEvidenceCode name (IC, IEA, IIA, TAS, …). Null when none is recorded.")
+    private String evidenceCode;
+
     public StatementValueObject() {
         super();
     }
@@ -148,6 +168,7 @@ public class StatementValueObject extends IdentifiableValueObject<Statement> imp
         this.secondObjectUri = CharacteristicUtils.canonicalUri( s.getSecondObjectUri() );
         this.secondObject = CharacteristicUtils.canonicalLabel( s.getSecondObjectUri(), s.getSecondObject() );
         this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( s.getSupportingEvidence() );
+        this.evidenceCode = s.getEvidenceCode() != null ? s.getEvidenceCode().name() : null;
     }
 
     @Override

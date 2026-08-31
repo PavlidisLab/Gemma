@@ -197,6 +197,49 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         assertThat( findAnnotation( "brain glioma" ) ).as( "tag was removed by deletedIds" ).isNull();
     }
 
+    /**
+     * The tags section had no transaction-boundary coverage for either provenance slot: the only guard was
+     * {@link #testCommitPersistsStatementSupportingEvidence}, on design statements. A mapper that accepted
+     * {@code supportingEvidence} and built a Characteristic without it, or a commit path that dropped it below
+     * the REST layer, would have been invisible — the request returns 200 either way and the only way to learn
+     * otherwise is to read the row back.
+     * <p>
+     * The evidence code is asserted in the same test because it shares that blind spot exactly, and because a
+     * stated code is the whole point: without one the tag is recorded as {@code IC}, a curator's own inference,
+     * whoever wrote it.
+     */
+    @Test
+    public void testCommitPersistsTagSupportingEvidenceAndEvidenceCode() {
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"T1\","
+                + "\"category\":{\"label\":\"disease\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_4\"},"
+                + "\"value\":{\"label\":\"brain glioma\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_0060108\"},"
+                + "\"evidenceCode\":\"IEA\","
+                + "\"supportingEvidence\":[{\"quote\":\"disease: glioblastoma\",\"source\":\"characteristic\","
+                + "\"location\":\"GSM1197956\"}]}]}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        AnnotationValueObject persisted = findAnnotation( "brain glioma" );
+        assertThat( persisted ).as( "tag was persisted" ).isNotNull();
+        assertThat( persisted.getSupportingEvidence() ).as( "evidence survived the round trip" ).isNotNull();
+        assertThat( persisted.getSupportingEvidence().get( 0 ).get( "location" ).asText() ).isEqualTo( "GSM1197956" );
+        assertThat( persisted.getEvidenceCode() ).isEqualTo( "IEA" );
+    }
+
+    /** Omitting the code leaves the add path's {@code IC} in place — the behaviour every tag on this route has had. */
+    @Test
+    public void testCommitWithoutAnEvidenceCodeStillRecordsIC() {
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"T1\","
+                + "\"category\":{\"label\":\"disease\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_4\"},"
+                + "\"value\":{\"label\":\"brain glioma\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_0060108\"}}]}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+        AnnotationValueObject persisted = findAnnotation( "brain glioma" );
+        assertThat( persisted ).as( "tag was persisted" ).isNotNull();
+        assertThat( persisted.getEvidenceCode() ).isEqualTo( "IC" );
+    }
+
     @Test
     public void testCommitSampleCharacteristic() {
         ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );

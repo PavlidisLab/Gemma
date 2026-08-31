@@ -1274,13 +1274,16 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * Whether any proposed statement carries supporting evidence that differs from what the statement it refers
-     * to already holds. Resolution mirrors {@link #updateFactorValueStatements}: by id when the payload supplies
-     * one, otherwise by content key. A proposed statement matching nothing is a creation, which
-     * {@link #statementsChanged} already counts, so it is not considered here.
+     * Whether any proposed statement carries provenance — supporting evidence or an evidence code — that differs
+     * from what the statement it refers to already holds. Resolution mirrors
+     * {@link #updateFactorValueStatements}: by id when the payload supplies one, otherwise by content key. A
+     * proposed statement matching nothing is a creation, which {@link #statementsChanged} already counts, so it
+     * is not considered here.
      * <p>
-     * Only non-null proposed evidence is compared, honouring the {@code null = "no change"} convention that
-     * {@link #applyStatementFields} writes under.
+     * Only non-null proposed values are compared, honouring the {@code null = "no change"} convention that
+     * {@link #applyStatementFields} writes under. Both slots go through this one comparison: an evidence code is
+     * as invisible to {@link #statementsChanged} as supporting evidence is, and a second check beside this one
+     * would be a second place for the no-op gate to disagree with the apply.
      */
     private static boolean statementEvidenceChanged( FactorValue cur, List<StatementValueObject> proposed ) {
         Map<Long, Statement> byId = new HashMap<>();
@@ -1292,15 +1295,21 @@ public class ExpressionExperimentServiceImpl
             byContent.putIfAbsent( statementContentKey( s ), s );
         }
         for ( StatementValueObject ps : proposed ) {
-            if ( ps.getSupportingEvidence() == null ) {
+            if ( ps.getSupportingEvidence() == null && ps.getEvidenceCode() == null ) {
                 continue;
             }
             Statement match = ps.getId() != null ? byId.get( ps.getId() ) : byContent.get( statementContentKey( ps ) );
             if ( match == null ) {
                 continue; // a creation; statementsChanged covers it
             }
-            String proposedEvidence = CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() );
-            if ( !Objects.equals( proposedEvidence, match.getSupportingEvidence() ) ) {
+            if ( ps.getSupportingEvidence() != null ) {
+                String proposedEvidence = CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() );
+                if ( !Objects.equals( proposedEvidence, match.getSupportingEvidence() ) ) {
+                    return true;
+                }
+            }
+            if ( ps.getEvidenceCode() != null
+                    && !Objects.equals( parseEvidenceCode( ps.getEvidenceCode() ), match.getEvidenceCode() ) ) {
                 return true;
             }
         }
@@ -1713,6 +1722,26 @@ public class ExpressionExperimentServiceImpl
         // client that doesn't carry provenance cannot wipe provenance somebody else recorded.
         if ( ps.getSupportingEvidence() != null ) {
             s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
+        }
+        // Same null = "no change" convention for the evidence code. A statement the payload says nothing about
+        // keeps whatever code it has, which for a new statement is none — the design path has never assigned one
+        // and that stays true for a caller that does not ask.
+        if ( ps.getEvidenceCode() != null ) {
+            s.setEvidenceCode( parseEvidenceCode( ps.getEvidenceCode() ) );
+        }
+    }
+
+    /**
+     * Resolve a {@link GOEvidenceCode} name, case-insensitively. The REST layer validates first and answers a
+     * 400; this is the guard for a direct service caller, and it names the offending value rather than letting
+     * {@code valueOf}'s bare message surface.
+     */
+    private static GOEvidenceCode parseEvidenceCode( String name ) {
+        try {
+            return GOEvidenceCode.valueOf( name.trim().toUpperCase( Locale.ROOT ) );
+        } catch ( IllegalArgumentException e ) {
+            throw new IllegalArgumentException( "Unknown evidence code '" + name
+                    + "'; expected a GOEvidenceCode name (IC, IEA, IIA, TAS, …).", e );
         }
     }
 

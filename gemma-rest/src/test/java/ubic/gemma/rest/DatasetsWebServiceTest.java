@@ -4305,6 +4305,155 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( req.getTagsUnchanged() ).isEqualTo( 1 ); // the gemmaId item
     }
 
+    /** Stub the load + commit a tags-section test needs, and return the captor for the request the mapper built. */
+    private ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> curationCaptor() {
+        return ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+    }
+
+    private void stubCommitOk() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+    }
+
+    /**
+     * The tag's {@code supportingEvidence} reaches the Characteristic handed to the service. The section had no
+     * coverage at all for this field — the only evidence guard was on design statements — so a mapper that
+     * accepted it and built a Characteristic without it would have been invisible here.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationTagCarriesSupportingEvidence() {
+        stubCommitOk();
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\"},\"supportingEvidence\":[{\"quote\":\"glioblastoma multiforme\","
+                + "\"source\":\"characteristic\",\"location\":\"GSM1\"}]}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap = curationCaptor();
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().getTagsToAdd().get( 0 ).getCharacteristic().getSupportingEvidence() )
+                .contains( "glioblastoma multiforme" );
+    }
+
+    /** A stated evidence code reaches the Characteristic instead of being left to the add path's default. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationTagCarriesEvidenceCode() {
+        stubCommitOk();
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\"},\"evidenceCode\":\"IEA\"}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap = curationCaptor();
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().getTagsToAdd().get( 0 ).getCharacteristic().getEvidenceCode() )
+                .isEqualTo( GOEvidenceCode.IEA );
+    }
+
+    /**
+     * Omitting the field leaves the Characteristic's code null, which is what hands the row to
+     * {@code ExpressionExperimentWriteServiceImpl#addCharacteristic}'s {@code IC} fallback — the code every tag
+     * written through this route has carried. The guard is that the mapper stamps NOTHING of its own: a server
+     * that picked a code here (from the caller's identity, say) would put a value nobody chose on the row.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationTagWithoutEvidenceCodeLeavesItUnset() {
+        stubCommitOk();
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\"}}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap = curationCaptor();
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().getTagsToAdd().get( 0 ).getCharacteristic().getEvidenceCode() ).isNull();
+    }
+
+    /**
+     * An unknown code is a 400, not a silent drop. Dropping it would leave the row on the server default while
+     * the caller believed it had set one — the failure this field exists to end.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRejectsUnknownEvidenceCode() {
+        stubCommitOk();
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t7\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\"},\"evidenceCode\":\"BOGUS\"}]}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "tags[clientRef=t7].evidenceCode" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** The preflight enforces the same gate, so a client catches a bad code on the dry run. */
+    @Test
+    @WithMockUser
+    public void testPreflightRejectsUnknownEvidenceCode() {
+        stubCommitOk();
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t7\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\"},\"evidenceCode\":\"BOGUS\"}]}}";
+        assertThat( target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /**
+     * A design factor-value statement carries its own code, normalized to the enum name. Sent lowercase here:
+     * the apply compares the proposed code against the stored uppercase one, so an un-normalized {@code "iea"}
+     * would read as a change on every re-send.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationDesignStatementCarriesEvidenceCode() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign() );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"F1\",\"name\":\"genotype\","
+                + "\"category\":{\"label\":\"genotype\"},\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\","
+                + "\"statements\":{\"items\":[{\"clientRef\":\"S1\",\"subject\":{\"label\":\"Utrn\"},"
+                + "\"evidenceCode\":\"iea\"}]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap = curationCaptor();
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().getProposedDesign().getExperimentalFactors() )
+                .filteredOn( f -> "genotype".equals( f.getName() ) )
+                .singleElement()
+                .satisfies( f -> assertThat( f.getValues().get( 0 ).getStatements() ).singleElement()
+                        .satisfies( s -> assertThat( s.getEvidenceCode() ).isEqualTo( "IEA" ) ) );
+    }
+
+    /** A bad code inside the design tree is rejected too, located in the design tree. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRejectsUnknownEvidenceCodeOnADesignStatement() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign() );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"F1\",\"name\":\"genotype\","
+                + "\"category\":{\"label\":\"genotype\"},\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\","
+                + "\"statements\":{\"items\":[{\"clientRef\":\"S1\",\"subject\":{\"label\":\"Utrn\"},"
+                + "\"evidenceCode\":\"BOGUS\"}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) )
+                    .contains( "design.factors[clientRef=F1].factorValues[clientRef=FV1].statements[clientRef=S1].evidenceCode" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
     @Test
     @WithMockUser
     public void testCommitCurationSampleCharacteristics() {
