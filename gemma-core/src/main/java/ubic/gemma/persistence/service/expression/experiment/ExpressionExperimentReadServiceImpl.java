@@ -735,9 +735,9 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         String[] ignoredPredicates = new String[] {
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // duration
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // delivered at dose
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // delivered for duration
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // has developmental stage
         };
         for ( Object[] row : expressionExperimentDao.getFactorValueAnnotationsWithParents( expressionExperiment ) ) {
             Statement c = ( Statement ) row[0];
@@ -780,9 +780,9 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         String[] ignoredPredicates = new String[] {
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // duration
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // delivered at dose
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // delivered for duration
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // has developmental stage
         };
         for ( Object[] row : expressionExperimentDao.getFactorValueAnnotationsWithParents( ee ) ) {
             Statement c = ( Statement ) row[0];
