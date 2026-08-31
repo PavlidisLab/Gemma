@@ -2343,6 +2343,11 @@ public class ExpressionExperimentServiceImpl
 
         ee = ensureInSession( ee );
 
+        // Same normalization as addAnnotation: the desired set is what gets written, so it lands as
+        // statements. Existing rows are left as they are — sameTag matches on content, so a plain
+        // stored tag and a bare desired statement still pair up and neither is churned.
+        desired = desired.stream().map( CharacteristicUtils::asStatement ).collect( Collectors.toList() );
+
         Collection<Characteristic> current = ee.getCharacteristics();
         List<Characteristic> toRemove = new ArrayList<>();
         List<Characteristic> toAdd = new ArrayList<>();
@@ -3150,6 +3155,10 @@ public class ExpressionExperimentServiceImpl
         Assert.notNull( vc, "Characteristic must not be null." );
         Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
         Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
+        // Experiment tags are statements; a bare one is a statement with no predicate or object. Doing
+        // this here rather than at each caller means every write path lands the same shape, including
+        // ones added later. sameTag compares content, so this changes no comparison.
+        vc = CharacteristicUtils.asStatement( vc );
         ee = ensureInSession( ee );
         for ( Characteristic existing : ee.getCharacteristics() ) {
             if ( sameTag( existing, vc ) ) {

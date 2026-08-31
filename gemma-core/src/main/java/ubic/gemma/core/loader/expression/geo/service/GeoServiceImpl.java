@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.common.description.BibliographicReferenceS
 import ubic.gemma.persistence.service.common.description.PublicationAssertion;
 import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.description.PublicationAssociation;
@@ -595,10 +596,22 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         ee = expressionExperimentService.thawLite( ee );
 
         if ( geoUpdateConfig.experimentTags ) {
-            // EE tags are often manually curated, so we don't want to overwrite them. Fortunately, the
-            // Characteristic.equals definition has really neat behavior for this
+            // EE tags are often manually curated, so we don't want to overwrite them: add only what is
+            // not already there.
+            // 🛑 The dedup is an explicit sameTag scan rather than Set.add's equals. Two reasons: the
+            // stored tags are persistent and the fresh ones transient, which is the mixed-collection
+            // hashCode trap, and Statement.equals returns false against a plain Characteristic — so once
+            // experiment tags are statements, an equals-based add would re-add every tag that is already
+            // there. sameTag compares content and is blind to both.
             for ( Characteristic newEeTag : freshFromGEO.getCharacteristics() ) {
-                if ( ee.getCharacteristics().add( newEeTag ) ) {
+                boolean present = false;
+                for ( Characteristic existing : ee.getCharacteristics() ) {
+                    if ( CharacteristicUtils.sameTag( existing, newEeTag ) ) {
+                        present = true;
+                        break;
+                    }
+                }
+                if ( !present && ee.getCharacteristics().add( newEeTag ) ) {
                     log.info( "Found a new experiment-level tag for " + geoAccession + ": " + newEeTag );
                     numNewCharacteristics++;
                 }

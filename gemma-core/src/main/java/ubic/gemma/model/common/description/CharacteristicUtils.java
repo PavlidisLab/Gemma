@@ -223,37 +223,110 @@ public class CharacteristicUtils {
     }
 
     /**
+     * Return {@code c} as a {@link Statement}, converting a plain {@link Characteristic} if needed.
+     * <p>
+     * Experiment-level tags are statements — a bare one is simply a statement with no predicate or
+     * object, which is byte-identical in storage to a plain characteristic apart from the discriminator.
+     * Normalizing on the way in means an existing tag and a newly written one always compare on content
+     * alone, and adding a predicate to a tag later is an update rather than a delete plus recreate.
+     * <p>
+     * 🛑 Do NOT substitute {@code Statement.Factory.newInstance( Characteristic )}: it copies only
+     * category and value, so it would silently drop the evidence code, the supporting evidence and the
+     * original value. Every field {@link Characteristic} declares is carried here.
+     *
+     * @return {@code c} itself when it is already a Statement, so an entity that is already persistent
+     *         keeps its identity and is never replaced by a copy.
+     */
+    public static Statement asStatement( Characteristic c ) {
+        if ( c instanceof Statement ) {
+            return ( Statement ) c;
+        }
+        Statement s = Statement.Factory.newInstance();
+        s.setCategory( c.getCategory() );
+        s.setCategoryUri( c.getCategoryUri() );
+        s.setValue( c.getValue() );
+        s.setValueUri( c.getValueUri() );
+        s.setEvidenceCode( c.getEvidenceCode() );
+        s.setOriginalValue( c.getOriginalValue() );
+        s.setSupportingEvidence( c.getSupportingEvidence() );
+        s.setDescription( c.getDescription() );
+        s.setName( c.getName() );
+        return s;
+    }
+
+    /**
      * Statement-aware equality for the "is this the same tag?" question driving the idempotent
      * set-replace annotation writes (experiment- and biomaterial-level).
      * <p>
-     * A {@link Statement} and a plain {@link Characteristic} with the same (category, value) are NOT
-     * the same tag — the Statement carries subject/predicate/object semantics the plain Characteristic
-     * lacks, so a wire-shape change (plain &harr; Statement) must round-trip as a drop+add, not a no-op.
-     * Two Statements additionally match on their predicate/object and second predicate/object pairs.
+     * Identity is the CONTENT — (category, value) plus the two predicate/object pairs — and never the
+     * Java type. A subject-only {@link Statement} and a plain {@link Characteristic} with the same
+     * (category, value) ARE the same tag: they are byte-identical in storage apart from the
+     * discriminator, so calling them different would mean an annotation that nobody edited compares as
+     * changed.
+     * <p>
+     * 🛑 This used to return false whenever one side was a Statement and the other was not, so that a
+     * plain &harr; Statement change round-tripped as drop+add. That rule cannot survive experiment tags
+     * being upgraded to statements: during the upgrade, one side of every comparison is whichever form
+     * the row or the caller happens to carry. Under the old rule an identical tag compares as different,
+     * which makes {@code addAnnotation} stop rejecting duplicates and makes
+     * {@code updateAnnotations} drop and re-add the entire set. Content equality makes the upgrade safe
+     * in both directions and in either order.
      * Comparisons delegate to {@link #equals(String, String, String, String)} (case-insensitive,
      * URI-aware). Used by both {@code ExpressionExperimentService.updateAnnotations} and
      * {@code BioMaterialService.updateAnnotations} so the two diff implementations cannot drift.
      */
     public static boolean sameTag( Characteristic a, Characteristic b ) {
-        boolean aIsStatement = a instanceof Statement;
-        boolean bIsStatement = b instanceof Statement;
-        if ( aIsStatement != bIsStatement ) {
+        if ( !equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
+                || !equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() ) ) {
             return false;
         }
-        boolean baseEqual = equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
-                && equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() );
-        if ( !baseEqual ) {
-            return false;
-        }
-        if ( !aIsStatement ) {
-            return true;
-        }
-        Statement sa = ( Statement ) a;
-        Statement sb = ( Statement ) b;
-        return equals( sa.getPredicate(), sa.getPredicateUri(), sb.getPredicate(), sb.getPredicateUri() )
-                && equals( sa.getObject(), sa.getObjectUri(), sb.getObject(), sb.getObjectUri() )
-                && equals( sa.getSecondPredicate(), sa.getSecondPredicateUri(), sb.getSecondPredicate(), sb.getSecondPredicateUri() )
-                && equals( sa.getSecondObject(), sa.getSecondObjectUri(), sb.getSecondObject(), sb.getSecondObjectUri() );
+        // A non-Statement reads as all-null on the statement slots, so a plain Characteristic and a
+        // Statement carrying no predicate/object compare equal, while either one differs from a
+        // composed Statement.
+        return equals( predicateOf( a ), predicateUriOf( a ), predicateOf( b ), predicateUriOf( b ) )
+                && equals( objectOf( a ), objectUriOf( a ), objectOf( b ), objectUriOf( b ) )
+                && equals( secondPredicateOf( a ), secondPredicateUriOf( a ), secondPredicateOf( b ), secondPredicateUriOf( b ) )
+                && equals( secondObjectOf( a ), secondObjectUriOf( a ), secondObjectOf( b ), secondObjectUriOf( b ) );
+    }
+
+    @Nullable
+    private static String predicateOf( Characteristic c ) {
+        return c instanceof Statement ? ( ( Statement ) c ).getPredicate() : null;
+    }
+
+    @Nullable
+    private static String predicateUriOf( Characteristic c ) {
+        return c instanceof Statement ? ( ( Statement ) c ).getPredicateUri() : null;
+    }
+
+    @Nullable
+    private static String objectOf( Characteristic c ) {
+        return c instanceof Statement ? ( ( Statement ) c ).getObject() : null;
+    }
+
+    @Nullable
+    private static String objectUriOf( Characteristic c ) {
+        return c instanceof Statement ? ( ( Statement ) c ).getObjectUri() : null;
+    }
+
+    @Nullable
+    private static String secondPredicateOf( Characteristic c ) {
+        return c instanceof Statement ? ( ( Statement ) c ).getSecondPredicate() : null;
+    }
+
+    @Nullable
+    private static String secondPredicateUriOf( Characteristic c ) {
+        return c instanceof Statement ? ( ( Statement ) c ).getSecondPredicateUri() : null;
+    }
+
+    @Nullable
+    private static String secondObjectOf( Characteristic c ) {
+        return c instanceof Statement ? ( ( Statement ) c ).getSecondObject() : null;
+    }
+
+    @Nullable
+    private static String secondObjectUriOf( Characteristic c ) {
+        return c instanceof Statement ? ( ( Statement ) c ).getSecondObjectUri() : null;
     }
 
     /**

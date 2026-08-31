@@ -1,6 +1,7 @@
 package ubic.gemma.model.common.description;
 
 import org.junit.jupiter.api.Test;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.expression.experiment.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,14 +55,28 @@ public class CharacteristicUtilsTest {
                 createCharacteristic( "treatment", null, "ibuprofen", null ) ) );
     }
 
+    /**
+     * Identity is the content, not the Java type. This is what makes upgrading experiment tags to
+     * statements safe: during the upgrade one side of a comparison carries whichever form the row or
+     * the caller happens to have, and treating those as different would make {@code addAnnotation} stop
+     * rejecting duplicates and {@code updateAnnotations} drop and re-add the whole set.
+     */
     @Test
-    public void testSameTagPlainVsStatementNeverEqual() {
-        // a plain Characteristic and a Statement with the same (category, value) are NOT the same tag —
-        // a wire-shape change must round-trip as drop+add, not a no-op
+    public void testSameTagComparesContentNotType() {
         Characteristic plain = createCharacteristic( "treatment", null, "high-fat diet", null );
-        Statement stmt = createStatement( "treatment", "high-fat diet", "for", "12 weeks" );
-        assertFalse( sameTag( plain, stmt ) );
-        assertFalse( sameTag( stmt, plain ) );
+
+        // a Statement carrying no predicate/object is the SAME tag as the plain characteristic:
+        // byte-identical in storage apart from the discriminator
+        Statement bare = createStatement( "treatment", "high-fat diet", null, null );
+        assertTrue( sameTag( plain, bare ) );
+        assertTrue( sameTag( bare, plain ) );
+
+        // but a composed Statement is still a different tag, in both directions
+        Statement composed = createStatement( "treatment", "high-fat diet", "for", "12 weeks" );
+        assertFalse( sameTag( plain, composed ) );
+        assertFalse( sameTag( composed, plain ) );
+        assertFalse( sameTag( bare, composed ) );
+        assertFalse( sameTag( composed, bare ) );
     }
 
     @Test
@@ -88,6 +103,41 @@ public class CharacteristicUtilsTest {
         diffSecond.setSecondPredicate( "at dose" );
         diffSecond.setSecondObject( "50%" );
         assertFalse( sameTag( base, diffSecond ) );
+    }
+
+    /**
+     * The converter must carry every field {@link Characteristic} declares, not just category and
+     * value. {@code Statement.Factory.newInstance( Characteristic )} copies only those two, so using it
+     * here would silently drop the evidence code, the supporting evidence and the original value — the
+     * provenance, on exactly the write path that records provenance.
+     */
+    @Test
+    public void testAsStatementCarriesEveryField() {
+        Characteristic c = createCharacteristic( "treatment", "http://x/EFO_1", "aspirin", "http://x/CHEBI_1" );
+        c.setEvidenceCode( GOEvidenceCode.IEA );
+        c.setOriginalValue( "Aspirin (300mg)" );
+        c.setSupportingEvidence( "[{\"quote\":\"aspirin was administered\"}]" );
+        c.setDescription( "a description" );
+
+        Statement s = CharacteristicUtils.asStatement( c );
+
+        assertEquals( "treatment", s.getCategory() );
+        assertEquals( "http://x/EFO_1", s.getCategoryUri() );
+        assertEquals( "aspirin", s.getSubject() );
+        assertEquals( "http://x/CHEBI_1", s.getSubjectUri() );
+        assertEquals( GOEvidenceCode.IEA, s.getEvidenceCode() );
+        assertEquals( "Aspirin (300mg)", s.getOriginalValue() );
+        assertEquals( "[{\"quote\":\"aspirin was administered\"}]", s.getSupportingEvidence() );
+        assertEquals( "a description", s.getDescription() );
+        // and it is the same tag as what it was converted from, so no diff sees a change
+        assertTrue( sameTag( c, s ) );
+    }
+
+    /** An already-persistent Statement must keep its identity, not be replaced by a copy. */
+    @Test
+    public void testAsStatementReturnsAStatementUnchanged() {
+        Statement s = createStatement( "treatment", "high-fat diet", "for", "12 weeks" );
+        assertSame( s, CharacteristicUtils.asStatement( s ) );
     }
 
     private Statement createStatement( String category, String subject, String predicate, String object ) {

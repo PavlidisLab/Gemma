@@ -1998,6 +1998,8 @@ public class GeoConverterImpl implements GeoConverter {
                 .filter( this::isSeriesTypeSupported )
                 .map( st -> convertSeriesType( series, st ) )
                 .filter( Objects::nonNull )
+                // experiment tags are statements; a bare one carries no predicate or object
+                .map( CharacteristicUtils::asStatement )
                 .collect( Collectors.toSet() );
         if ( !assayTypes.isEmpty() ) {
             log.info( String.format( "%s will be tagged with the following assay types: %s.", expExp,
@@ -2099,7 +2101,8 @@ public class GeoConverterImpl implements GeoConverter {
     private void convertAdditionalTags( GeoSeries series, ExpressionExperiment expressionExperiment ) {
         if ( isFacSorted( series ) ) {
             GeoConverterImpl.log.info( String.format( "%s will be tagged as FACS-sorted due to presence of keywords in its GEO series.", expressionExperiment ) );
-            expressionExperiment.getCharacteristics().add( Characteristic.Factory.newInstance( Categories.ASSAY, Values.FLUORESCENCE_ACTIVATED_CELL_SORTING ) );
+            expressionExperiment.getCharacteristics().add( CharacteristicUtils.asStatement(
+                    Characteristic.Factory.newInstance( Categories.ASSAY, Values.FLUORESCENCE_ACTIVATED_CELL_SORTING ) ) );
         }
     }
 
