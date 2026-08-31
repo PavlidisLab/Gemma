@@ -2623,29 +2623,24 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
      * the predicate is stored assertively and the negation lives only in {@code status}.
      *
      * <p>{@code includeRefuted} is exposed on {@code /relations} for auditability. This pins the
-     * asymmetry: the parameter must not reach the implies query even when a caller sends it. The two
-     * handlers build their {@code RelationQuery} separately today, and this fails the moment someone
-     * refactors them onto a shared builder — which is the only way this protection would be lost, and
-     * it would be lost silently, since an unrecognized parameter is ignored rather than rejected.</p>
+     * asymmetry: the parameter must not reach the implies query even when a caller sends it. Since
+     * {@code UnknownQueryParameterFilter} landed the request is refused outright rather than answered
+     * with the parameter dropped, so the query is never built at all. Declaring {@code includeRefuted}
+     * on this route — whether directly or by moving both handlers onto a shared builder — turns this
+     * 400 back into a 200 and fails here.</p>
      */
     @Test
     @WithMockUser
     public void testImpliesRefusesRefutedEvenWhenTheParameterIsSent() {
         when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
 
-        target( "/annotations/relations/implies" )
+        assertThat( target( "/annotations/relations/implies" )
                 .queryParam( "from", "http://purl.obolibrary.org/obo/MONDO_0005148" )
                 .queryParam( "includeRefuted", "true" )
-                .request().get();
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
 
-        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
-                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
-        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
-        assertThat( captor.getAllValues() )
-                .isNotEmpty()
-                .allSatisfy( q -> assertThat( q.isIncludeRefuted() )
-                        .withFailMessage( "/relations/implies must never ask for refuted rows" )
-                        .isFalse() );
+        verify( annotationRelationService, never() ).findRelations( any() );
     }
 
     /** The other half: on /relations the parameter does reach the query, or it is decorative. */

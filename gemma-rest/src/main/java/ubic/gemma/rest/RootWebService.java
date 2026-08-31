@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import ubic.gemma.rest.annotations.AllowsUnknownQueryParameters;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.concurrent.FutureUtils;
@@ -170,6 +171,7 @@ public class RootWebService {
     @Operation(summary = "Retrieve usage statistics of categories among datasets (alias of /datasets/categories)", hidden = true,
             responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "302",
                     description = "Redirection to /datasets/categories.") })
+    @AllowsUnknownQueryParameters
     public Response getCategoriesAlias( @Context UriInfo uriInfo ) {
         UriBuilder builder = uriInfo.getBaseUriBuilder()
                 .scheme( null ).host( null ).port( -1 )
