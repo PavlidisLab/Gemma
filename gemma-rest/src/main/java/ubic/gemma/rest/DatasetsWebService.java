@@ -208,6 +208,7 @@ import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
@@ -3226,7 +3227,16 @@ public class DatasetsWebService {
                     + "`sampleCharacteristics` (per-sample), and `curationDetails` (curationNote only — troubled / "
                     + "needsAttention 400 here and go through the ticket endpoints). New entities carry a `clientRef` "
                     + "(echoed as `clientRef → newGemmaId` in the report `idMap`); "
-                    + "deletions are declared via each section's `deletedIds`. A design change that would delete "
+                    + "deletions are declared via each section's `deletedIds`.\n\n"
+                    + "🛑 In `tags` and `sampleCharacteristics`, an item carrying a `gemmaId` is a KEEP-MARKER, not "
+                    + "an update: those sections are add/delete only, so the id is the only field read. Sending any "
+                    + "other field on such an item — `category`, `value`, `statements`, `supportingEvidence`, "
+                    + "`evidenceCode`, `bioassayShortName` — is a 400 naming every offending field, because "
+                    + "accepting it would report success for an edit that never happened. To change one of these, "
+                    + "drop the `gemmaId`, send the new content under a `clientRef`, and name the old id in the "
+                    + "section's `deletedIds`. The `design` section is different: a `gemmaId` factor / factor-value "
+                    + "/ statement IS updated in place from the fields it carries.\n\n"
+                    + "A design change that would delete "
                     + "differential-expression analyses requires `?force=true` (admin) or returns 409. "
                     + "Optimistic concurrency: `baseline.lastModified` (the dataset `lastUpdated` the draft was "
                     + "built against) is checked; a stale baseline returns 409. Requires `ACL_SECURABLE_EDIT`; a "
@@ -3336,6 +3346,10 @@ public class DatasetsWebService {
         // Accepted near-match / blank-fill label rewrites the validator applied to persisted annotations (tags +
         // sampleCharacteristics), echoed back in the report so the UI can silently update its chip labels.
         List<Canonicalization> canonicalizations = new ArrayList<>();
+        // Keep-markers that came decorated with content the keep path does not read. Accumulated across tags +
+        // sampleCharacteristics and rejected together (below), the same way term violations are, so a caller
+        // learns about every one of them in a single response instead of one per round trip.
+        List<String> decoratedKeepMarkers = new ArrayList<>();
 
         if ( body.getBasics() != null ) {
             CurationBasics b = body.getBasics();
@@ -3415,7 +3429,12 @@ public class DatasetsWebService {
             int idx = 0;
             for ( TagCommit tc : nullSafe( ts.getItems() ) ) {
                 if ( isExisting( tc, "tags item" ) ) {
-                    unchanged++; // gemmaId item = keep (absence never deletes; deletions are declared)
+                    // gemmaId item = keep (absence never deletes; deletions are declared). The id is the only
+                    // thing read here, so anything else the item carries is refused rather than dropped on the
+                    // floor -- there is no tag-update path, and a caller that decorated a keep-marker otherwise
+                    // gets a 200 for an edit that never happened.
+                    collectKeepMarkerDecoration( "tags", tc.getGemmaId(), tagDecoration( tc ), decoratedKeepMarkers );
+                    unchanged++;
                 } else {
                     String location = "tags[" + refOrIndex( tc.getClientRef(), idx ) + "]";
                     Characteristic ch = tagCommitToCharacteristic( tc, location );
@@ -3438,6 +3457,11 @@ public class DatasetsWebService {
             int idx = 0;
             for ( SampleCharacteristicCommit sc : nullSafe( scs.getItems() ) ) {
                 if ( isExisting( sc, "sampleCharacteristics item" ) ) {
+                    // Same keep-marker shape as tags, same silent discard, so the same refusal -- including
+                    // bioassayShortName, which on a keep-marker reads like "move this characteristic to that
+                    // sample" and does nothing of the sort.
+                    collectKeepMarkerDecoration( "sampleCharacteristics", sc.getGemmaId(),
+                            sampleCharacteristicDecoration( sc ), decoratedKeepMarkers );
                     unchanged++;
                 } else {
                     if ( StringUtils.isBlank( sc.getBioassayShortName() ) ) {
@@ -3457,6 +3481,18 @@ public class DatasetsWebService {
             request.setSampleCharsToAdd( adds );
             request.setSampleCharsToDelete( new ArrayList<>( nullSafe( scs.getDeletedIds() ) ) );
             request.setSampleCharsUnchanged( unchanged );
+        }
+
+        // Both id-addressed sections have been walked; refuse every decorated keep-marker at once. Placed here
+        // rather than inside either loop so a caller fixing a payload sees all of them in one response, and
+        // before anything writes -- so the preflight refuses exactly what the commit refuses.
+        if ( !decoratedKeepMarkers.isEmpty() ) {
+            throw new BadRequestException( "An item carrying a gemmaId is a keep-marker: its id is the only field "
+                    + "read, and every other field on it would be silently discarded, so it is refused instead. "
+                    + "Remove the fields listed below to keep the item as it is. To CHANGE it, drop the gemmaId, "
+                    + "send the new content as a clientRef item, and name the old id in the section's deletedIds "
+                    + "-- neither tags nor sampleCharacteristics has an in-place update. Offending items: "
+                    + String.join( "; ", decoratedKeepMarkers ) + "." );
         }
 
         if ( body.getCurationDetails() != null ) {
@@ -3850,7 +3886,13 @@ public class DatasetsWebService {
         private String evidenceCode;
     }
 
-    /** One experiment-level tag (CAB {@code TagCommit}); a statement-shaped tag rides its {@code statements}. */
+    /**
+     * One experiment-level tag (CAB {@code TagCommit}); a statement-shaped tag rides its {@code statements}.
+     * <p>
+     * 🛑 Every field below describes a NEW tag (one carrying a {@code clientRef}). An item carrying a
+     * {@code gemmaId} is a keep-marker — this section is add/delete only — and carrying any of these fields
+     * alongside the id is a 400, not an update.
+     */
     @Data
     @EqualsAndHashCode(callSuper = true)
     public static class TagCommit extends EntityRef {
@@ -3883,7 +3925,13 @@ public class DatasetsWebService {
         private String evidenceCode;
     }
 
-    /** One per-sample characteristic (CAB {@code SampleCharacteristicCommit}); the sample is a GSM short name. */
+    /**
+     * One per-sample characteristic (CAB {@code SampleCharacteristicCommit}); the sample is a GSM short name.
+     * <p>
+     * 🛑 Same keep-marker rule as {@link TagCommit}: these fields describe a new characteristic, and putting any
+     * of them on a {@code gemmaId} item is a 400. {@code bioassayShortName} included — a keep-marker cannot move
+     * a characteristic to another sample.
+     */
     @Data
     @EqualsAndHashCode(callSuper = true)
     public static class SampleCharacteristicCommit extends EntityRef {
@@ -4142,6 +4190,100 @@ public class DatasetsWebService {
             throw new BadRequestException( "Each " + what + " needs exactly one of gemmaId (existing) or clientRef (new)." );
         }
         return hasId;
+    }
+
+    // ── keep-marker decoration: the fields a gemmaId item carries that nothing reads ──
+    //
+    // `tags` and `sampleCharacteristics` are add/delete only. An item bearing a gemmaId therefore says exactly one
+    // thing -- "this row stays" -- and the mapper reads its id and nothing else. Every other field on it is
+    // content, and content on a keep-marker is discarded.
+    //
+    // `clientRef` is NOT in these lists and cannot reach them: isExisting already refuses an item carrying both
+    // gemmaId and clientRef, so by the time decoration is inspected the clientRef is known to be blank.
+    //
+    // Two callers share each list, which is why it lives in one place per type rather than at the use sites: the
+    // commit refuses these fields, and reconcileSnapshotForRestore clears them off the document the restore
+    // builds for itself (a snapshot faithfully records content that a keep-marker's commit was never going to
+    // apply). If the two ever disagreed, restore would 400 on documents this service wrote.
+
+    /** The fields a {@code tags} keep-marker carries beyond its id, in wire spelling. Empty = a bare keep-marker. */
+    private static List<String> tagDecoration( TagCommit tc ) {
+        List<String> fields = new ArrayList<>();
+        if ( tc.getCategory() != null ) {
+            fields.add( "category" );
+        }
+        if ( tc.getValue() != null ) {
+            fields.add( "value" );
+        }
+        if ( isPopulated( tc.getStatements() ) ) {
+            fields.add( "statements" );
+        }
+        if ( isPopulated( tc.getSupportingEvidence() ) ) {
+            fields.add( "supportingEvidence" );
+        }
+        if ( StringUtils.isNotBlank( tc.getEvidenceCode() ) ) {
+            fields.add( "evidenceCode" );
+        }
+        return fields;
+    }
+
+    private static void clearTagDecoration( TagCommit tc ) {
+        tc.setCategory( null );
+        tc.setValue( null );
+        tc.setStatements( new Section<>() );
+        tc.setSupportingEvidence( null );
+        tc.setEvidenceCode( null );
+    }
+
+    /** The fields a {@code sampleCharacteristics} keep-marker carries beyond its id, in wire spelling. */
+    private static List<String> sampleCharacteristicDecoration( SampleCharacteristicCommit sc ) {
+        List<String> fields = new ArrayList<>();
+        if ( StringUtils.isNotBlank( sc.getBioassayShortName() ) ) {
+            fields.add( "bioassayShortName" );
+        }
+        if ( sc.getCategory() != null ) {
+            fields.add( "category" );
+        }
+        if ( sc.getValue() != null ) {
+            fields.add( "value" );
+        }
+        if ( isPopulated( sc.getSupportingEvidence() ) ) {
+            fields.add( "supportingEvidence" );
+        }
+        return fields;
+    }
+
+    private static void clearSampleCharacteristicDecoration( SampleCharacteristicCommit sc ) {
+        sc.setBioassayShortName( null );
+        sc.setCategory( null );
+        sc.setValue( null );
+        sc.setSupportingEvidence( null );
+    }
+
+    /**
+     * Record one decorated keep-marker for the batched 400. The location is {@code <section>[gemmaId=N]} — the
+     * same {@code key=value} form {@link #refOrIndex} produces for a new item ({@code clientRef=t7}), with the
+     * key a keep-marker actually has; the index would identify the item less well than the id it sent.
+     */
+    private static void collectKeepMarkerDecoration( String section, @Nullable Long gemmaId, List<String> fields,
+            List<String> sink ) {
+        if ( !fields.isEmpty() ) {
+            sink.add( section + "[gemmaId=" + gemmaId + "] carries " + String.join( ", ", fields ) );
+        }
+    }
+
+    /**
+     * A section counts as carried only when it says something. Jackson materializes an omitted {@code statements}
+     * as an empty {@link Section}, so an absent one and an explicit {@code {"items":[],"deletedIds":[]}} are the
+     * same object here; neither can be an edit, and rejecting them would refuse a keep-marker that carries nothing.
+     */
+    private static boolean isPopulated( @Nullable Section<?> section ) {
+        return section != null && !( nullSafe( section.getItems() ).isEmpty() && nullSafe( section.getDeletedIds() ).isEmpty() );
+    }
+
+    /** A JSON {@code null} literal arrives as {@link com.fasterxml.jackson.databind.node.NullNode}, not as Java null. */
+    private static boolean isPopulated( @Nullable com.fasterxml.jackson.databind.JsonNode node ) {
+        return node != null && !node.isNull();
     }
 
     /** Resolve a list of GSM short names to biomaterial ids for this dataset; an unknown short name is a 400. */
@@ -4540,17 +4682,24 @@ public class DatasetsWebService {
             }
         }
 
-        reconcileIdSection( snapshot.getTags(), currentTagIds( ee ), "restore-t-" );
-        reconcileIdSection( snapshot.getSampleCharacteristics(), currentSampleCharacteristicIds( ee ), "restore-sc-" );
+        reconcileIdSection( snapshot.getTags(), currentTagIds( ee ), "restore-t-",
+                DatasetsWebService::clearTagDecoration );
+        reconcileIdSection( snapshot.getSampleCharacteristics(), currentSampleCharacteristicIds( ee ), "restore-sc-",
+                DatasetsWebService::clearSampleCharacteristicDecoration );
     }
 
     /**
      * Shared id reconciliation for the two flat, id-addressed sections (tags and sample characteristics):
      * a snapshot id that no longer resolves is re-sent as a create, and a live id the snapshot never mentioned
      * is added to {@code deletedIds}.
+     *
+     * @param clearDecoration strips the content off an item that keeps its id. A snapshot records content for
+     *                        every row, including the ones a restore only has to leave alone; the commit reads
+     *                        nothing but the id of such an item and refuses the rest, so the content is dropped
+     *                        here — where it is provably not being applied — instead of being sent to be refused.
      */
     private static <T extends EntityRef> void reconcileIdSection( @Nullable Section<T> section, Set<Long> liveIds,
-            String clientRefPrefix ) {
+            String clientRefPrefix, Consumer<T> clearDecoration ) {
         if ( section == null ) {
             return;
         }
@@ -4559,6 +4708,7 @@ public class DatasetsWebService {
         for ( T item : nullSafe( section.getItems() ) ) {
             if ( item.getGemmaId() != null && liveIds.contains( item.getGemmaId() ) ) {
                 kept.add( item.getGemmaId() );
+                clearDecoration.accept( item );
             } else {
                 item.setGemmaId( null );
                 item.setClientRef( clientRefPrefix + ( seq++ ) );

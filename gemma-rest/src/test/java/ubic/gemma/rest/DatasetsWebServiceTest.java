@@ -514,6 +514,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService curationLockService;
 
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService annotationSetService;
+
     private ExpressionExperiment ee;
 
     @BeforeEach
@@ -541,7 +544,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService );
     }
 
     private static final String HALLUCINATED_TAG_BODY = "{\"tags\":{\"items\":[{\"clientRef\":\"t7\","
@@ -4303,6 +4306,108 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( req.getTagsToAdd().get( 0 ).getCharacteristic().getValue() ).isEqualTo( "glioma" );
         assertThat( req.getTagsToDelete() ).containsExactly( 7L );
         assertThat( req.getTagsUnchanged() ).isEqualTo( 1 ); // the gemmaId item
+    }
+
+    /**
+     * A tags item bearing a gemmaId is a keep-marker: the section is add/delete only, so the mapper reads the id
+     * and nothing else. Decorating one used to be a 200 for an edit that never happened — a client that set
+     * {@code supportingEvidence} on an existing tag was told it had, and had not — so any other field is now a
+     * 400. Every offending field is named in one response: a caller told about them one at a time strips its
+     * payload one round trip at a time, and this fires mid-campaign.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitRejectsDecoratedTagKeepMarker() {
+        stubCommitOk();
+        String body = "{\"tags\":{\"items\":[{\"gemmaId\":42,\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\"},\"statements\":{\"items\":[{\"clientRef\":\"s1\"}]},"
+                + "\"supportingEvidence\":[{\"quote\":\"glioblastoma multiforme\"}],\"evidenceCode\":\"IEA\"}]}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) )
+                    .contains( "tags[gemmaId=42] carries category, value, statements, supportingEvidence, evidenceCode" )
+                    // the remedy, since the message is the whole diagnosis a mid-campaign caller gets
+                    .contains( "deletedIds" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /**
+     * The preflight shares the mapper, so it refuses exactly what the commit refuses. A dry run that accepted a
+     * payload the commit rejects would stop being a rehearsal.
+     */
+    @Test
+    @WithMockUser
+    public void testPreflightRejectsDecoratedTagKeepMarker() {
+        stubCommitOk();
+        String body = "{\"tags\":{\"items\":[{\"gemmaId\":42,\"supportingEvidence\":[{\"quote\":\"q\"}]}]}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "tags[gemmaId=42] carries supportingEvidence" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /**
+     * sampleCharacteristics has the same add/delete-only shape and discarded decoration the same way, so it gets
+     * the same refusal — {@code bioassayShortName} included, which on a keep-marker reads like "move this
+     * characteristic to that sample" and does nothing. Both sections report in one response, the way term
+     * violations do.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitRejectsDecoratedKeepMarkersInEverySectionAtOnce() {
+        stubCommitOk();
+        String body = "{\"tags\":{\"items\":[{\"gemmaId\":42,\"value\":{\"label\":\"glioma\"}}]},"
+                + "\"sampleCharacteristics\":{\"items\":[{\"gemmaId\":91,\"bioassayShortName\":\"GSM999\","
+                + "\"category\":{\"label\":\"organism part\"}}]}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) )
+                    .contains( "tags[gemmaId=42] carries value" )
+                    .contains( "sampleCharacteristics[gemmaId=91] carries bioassayShortName, category" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /**
+     * A restore replays a SNAPSHOT, and a snapshot records the content of every row — including the rows the
+     * restore only has to leave alone. The reconciliation strips that content off the items that keep their id,
+     * so the document the restore builds for itself is legal under the keep-marker rule the commit enforces.
+     * Nothing is lost: a decorated keep-marker's content was never applied.
+     * <p>
+     * Guards the one way this rule could break Gemma's own writes rather than a client's.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRestoreOfASnapshotWithSurvivingTagsIsNotRefusedAsDecorated() {
+        stubCommitOk();
+        ubic.gemma.model.common.description.AnnotationValueObject tag =
+                new ubic.gemma.model.common.description.AnnotationValueObject();
+        tag.setId( 42L );
+        tag.setObjectClass( "ExperimentTag" );
+        tag.setClassName( "disease" );
+        tag.setTermName( "glioma" );
+        tag.setEvidenceCode( GOEvidenceCode.IEA.name() );
+        when( expressionExperimentService.getAnnotations( any( ExpressionExperiment.class ), anyBoolean() ) )
+                .thenReturn( Collections.singleton( tag ) );
+
+        ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet set =
+                new ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet();
+        set.setId( 5L );
+        set.setRole( ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole.SNAPSHOT );
+        set.setInvestigation( ee );
+        // The tag survives, so the reconciliation keeps its id -- and has to drop the content beside it.
+        set.setPayloadJson( "{\"tags\":{\"items\":[{\"gemmaId\":42,\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\"},\"evidenceCode\":\"IEA\"}],\"deletedIds\":[]}}" );
+        when( annotationSetService.load( 5L ) ).thenReturn( set );
+
+        assertThat( target( "/datasets/1/annotation-sets/5/restore" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap = curationCaptor();
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().getTagsUnchanged() ).isEqualTo( 1 );
+        assertThat( cap.getValue().getTagsToAdd() ).isEmpty();
     }
 
     /** Stub the load + commit a tags-section test needs, and return the captor for the request the mapper built. */
