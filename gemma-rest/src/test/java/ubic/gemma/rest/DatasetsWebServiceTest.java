@@ -964,17 +964,19 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK )
                 .hasHeaderWithValue( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
-        // The display read stays filtered unless the caller asks otherwise.
-        verify( expressionExperimentService ).getAnnotations( ee, false );
+        // Everything the curator wrote, grounded or not. A caller cannot tell an incomplete list
+        // from a complete one by inspecting it, so the complete one is the default.
+        verify( expressionExperimentService ).getAnnotations( ee, true );
     }
 
     @Test
-    public void testGetDatasetAnnotationsIncludingFreeText() {
+    public void testGetDatasetAnnotationsExcludingFreeText() {
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
-        assertThat( target( "/datasets/1/annotations" ).queryParam( "includeFreeText", "true" ).request().get() )
+        assertThat( target( "/datasets/1/annotations" ).queryParam( "includeFreeText", "false" ).request().get() )
                 .hasStatus( Response.Status.OK );
-        verify( expressionExperimentService ).getAnnotations( ee, true );
+        // The grounded-only view is still reachable, it is just no longer what you get by accident.
+        verify( expressionExperimentService ).getAnnotations( ee, false );
     }
 
     @Test
