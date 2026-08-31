@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import ubic.gemma.rest.annotations.AllowsUnknownQueryParameters;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
@@ -129,6 +130,7 @@ public class AnnotationSetsWebService {
             description = "Redirects to /datasets with `curationDetails.needsAttention = true` applied.",
             responses = { @ApiResponse(responseCode = "302",
                     description = "Redirection to /datasets with the needs-attention filter applied.") })
+    @AllowsUnknownQueryParameters
     public Response getCandidates( @Context UriInfo uriInfo ) {
         UriBuilder builder = uriInfo.getBaseUriBuilder()
                 .scheme( null ).host( null ).port( -1 )
