@@ -138,6 +138,43 @@ public class ExpressionExperimentReadServiceAnnotationsTest {
                 .containsExactly( "ExperimentTag" );
     }
 
+    /**
+     * 🛑 The subject's label must be its own field. {@code termName} on a statement row is a composed
+     * sentence — here "wild type genotype has background APP/PS1" — and it is composed several ways, so
+     * a client holding the predicate and object still cannot subtract its way back to the subject.
+     */
+    @Test
+    public void getAnnotations_statementRow_carriesTheSubjectLabelSeparately() {
+        Statement decorated = statement( "wild type genotype", EFO_0005168, "has background", HAS_BACKGROUND_URI, "APP/PS1" );
+        when( expressionExperimentDao.getFactorValueAnnotationsWithParents( ee ) )
+                .thenReturn( Collections.singletonList( factorValueRow( decorated ) ) );
+
+        Set<AnnotationValueObject> annotations = service.getAnnotations( ee, false );
+
+        assertThat( annotations ).singleElement().satisfies( a -> {
+            assertThat( a.getSubject() ).isEqualTo( "wild type genotype" );
+            assertThat( a.getTermUri() ).isEqualTo( EFO_0005168 );
+            assertThat( a.getPredicate() ).isEqualTo( "has background" );
+            assertThat( a.getObject() ).isEqualTo( "APP/PS1" );
+            // the composed form stays exactly as it was; nothing reading it shifts
+            assertThat( a.getTermName() ).isEqualTo( "wild type genotype has background APP/PS1" );
+        } );
+    }
+
+    /** A plain tag has no statement, so it carries no separate subject — termName is already the label. */
+    @Test
+    public void getAnnotations_plainTag_hasNoSubject() {
+        when( expressionExperimentDao.getExperimentAnnotations( ee, false ) ).thenReturn( Collections.singletonList(
+                tag( "organism part", ORGANISM_PART_URI, "bone marrow", "http://purl.obolibrary.org/obo/UBERON_0002371" ) ) );
+
+        Set<AnnotationValueObject> annotations = service.getAnnotations( ee, false );
+
+        assertThat( annotations ).singleElement().satisfies( a -> {
+            assertThat( a.getSubject() ).isNull();
+            assertThat( a.getTermName() ).isEqualTo( "bone marrow" );
+        } );
+    }
+
     private static Characteristic tag( String category, String categoryUri, String value, String valueUri ) {
         Characteristic c = Characteristic.Factory.newInstance();
         c.setCategory( category );

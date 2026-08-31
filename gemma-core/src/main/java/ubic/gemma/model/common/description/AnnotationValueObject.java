@@ -54,10 +54,10 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
      * {@code predicate*} / {@code object*} pair, together with the optional
      * {@code secondPredicate*} / {@code secondObject*} pair, exposes the Statement
      * relational shape to read-side consumers without breaking the Characteristic
-     * wire shape — the existing {@link #termName} / {@link #termUri} fields still carry
-     * the statement's subject (Statement aliases subject → value internally).
+     * wire shape — {@link #termUri} carries the statement's subject URI (Statement aliases
+     * subject → value internally) and {@link #subject} its label. 🛑 {@link #termName} does
+     * NOT: on a statement row it is a composed sentence, which is why {@link #subject} exists.
      */
-    @Nullable
     @Schema(description = "Predicate label of a Statement-backed annotation (e.g. \"has_dose\"). Null on plain Characteristic rows.")
     private String predicate;
     @Nullable
@@ -81,6 +81,25 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Nullable
     @Schema(description = "Second object URI for compound Statement annotations.")
     private String secondObjectUri;
+
+    /**
+     * Label of the statement's SUBJECT, whose URI is {@link #termUri}. Null on a plain
+     * {@link Characteristic}, where {@link #termName} is already the label.
+     * <p>
+     * Exists because {@link #termName} is not reversible on a statement row: it is composed by
+     * {@code StatementUtils.formatStatement} in at least three shapes — object then subject with the
+     * predicate dropped, subject/predicate/object spelled out, and the same with the predicate
+     * paraphrased. Only the first can be undone by subtracting the known object text, so a client
+     * holding {@code predicate} and {@code object} still cannot name the subject. The UI team measured
+     * 5 of 23 statement rows reversible across 15 datasets (2026-08-31) before this was added.
+     * <p>
+     * Added rather than normalising {@code termName}, which anything reading it today would shift
+     * under at once and silently.
+     */
+    @Nullable
+    @Schema(description = "Subject label of a Statement-backed annotation (e.g. \"Il10 [mouse] interleukin 10\"); "
+            + "its URI is termUri. Null on plain Characteristic rows, where termName is already the label.")
+    private String subject;
     @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentName;

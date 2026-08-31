@@ -822,6 +822,10 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
      */
     private static AnnotationValueObject factorValueAnnotationVo( Statement c, String[] ignoredPredicates, FactorValue fv, @Nullable ExperimentalFactor ef ) {
         AnnotationValueObject vo = new AnnotationValueObject( c, FactorValue.class );
+        // The subject's label, before formatStatement composes it into a sentence. termName is not
+        // reversible: the predicate is dropped in one shape and paraphrased in another, so a client
+        // cannot subtract the object text and be left with the subject.
+        vo.setSubject( c.getValue() );
         vo.setTermName( formatStatement( c, ignoredPredicates ) );
         vo.setParentName( FactorValueUtils.getSummaryString( fv ) );
         if ( ef != null ) {
