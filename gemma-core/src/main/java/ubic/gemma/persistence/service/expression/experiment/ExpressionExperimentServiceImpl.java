@@ -2188,6 +2188,11 @@ public class ExpressionExperimentServiceImpl
     public boolean isSingleCell( ExpressionExperiment ee ) {
         // Reads the lazy characteristics collection and then hits the DAO, so it needs a session of its
         // own when called from outside one (the REST layer does). isRNASeq below is already annotated.
+        // 🛑 @Transactional alone is NOT enough: a caller outside a transaction hands us a DETACHED
+        // instance from a transaction that has already closed, and opening a new one does not re-attach
+        // it — ee.getCharacteristics() still throws LazyInitializationException. Re-attach explicitly.
+        // Caught live on GET /datasets/3937/sample-correlation, 2026-08-31.
+        ee = ensureInSession( ee );
         return ( ee.getCharacteristics().stream()
                 .anyMatch( c -> hasCategory( c, Categories.ASSAY ) && hasAnyValue( c,
                         Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY,
