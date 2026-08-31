@@ -204,13 +204,20 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
         assert newExperiments.size() == eeIds.size();
         Collection<ExpressionExperiment> basColl = new HashSet<>();
+        // Same rule as ExpressionExperimentSetServiceImpl.update: the set's taxon is a constraint
+        // it opted into, so a set that carries none accepts members of any taxon. Enforcing it
+        // unconditionally left a set that spans taxa unable to have its membership replaced at all,
+        // since no member can match a null taxon.
+        Taxon setTaxon = eeSet.getTaxon();
         for ( ExpressionExperiment experiment : newExperiments ) {
-            Taxon eeTaxon = expressionExperimentService.getTaxon( experiment );
+            if ( setTaxon != null ) {
+                Taxon eeTaxon = expressionExperimentService.getTaxon( experiment );
 
-            // make sure experiments being added are from the right taxon
-            if ( eeTaxon == null || !eeTaxon.equals( eeSet.getTaxon() ) ) {
-                throw new IllegalArgumentException(
-                        experiment + " is of the wrong taxon to add to eeset. EESet taxon is " + eeSet.getTaxon() );
+                // make sure experiments being added are from the right taxon
+                if ( eeTaxon == null || !eeTaxon.equals( setTaxon ) ) {
+                    throw new IllegalArgumentException(
+                            experiment + " is of the wrong taxon to add to eeset. EESet taxon is " + setTaxon );
+                }
             }
 
             basColl.add( experiment );
