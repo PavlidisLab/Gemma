@@ -188,6 +188,12 @@ public class ExpressionExperimentServiceImpl
      */
     @Autowired
     private SessionFactory sessionFactory;
+    /**
+     * Used by {@link #commitCuration} to bring {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} up to date for the
+     * one experiment the commit touched, inside the commit's own transaction.
+     */
+    @Autowired
+    private ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil tableMaintenanceUtil;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -2837,8 +2843,65 @@ public class ExpressionExperimentServiceImpl
             advanceLinkedCurationTickets( ee );
         }
 
+        // ── denormalized annotation table ──
+        if ( !dryRun ) {
+            refreshEe2c( ee, result );
+        }
+
         result.setNewLastUpdated( ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null );
         return result;
+    }
+
+    /**
+     * Bring {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} up to date for the one experiment this commit
+     * touched, in the commit's own transaction.
+     * <p>
+     * The table is denormalized and was refreshed only by the nightly Quartz job, which made a correct
+     * write read as a lost one: {@code EE2C_CHARACTERISTIC_FKC} is {@code ON DELETE CASCADE}, so a deleted
+     * annotation left EE2C immediately while an added one waited for the night. cab's first write-back
+     * (GSE197199, 2026-08-30) saw exactly that — one tag added and one removed in a single all-or-none
+     * commit, and only the removal visible in EE2C, which reads as a partial write of the one endpoint that
+     * guarantees it cannot happen. The nightly job stays; it remains the backstop for every other writer
+     * (GEO import, the CLI, direct SQL, single-cell assignments) and the repair path if this leg fails.
+     * <p>
+     * Three constraints shape what is called here.
+     * <p>
+     * <b>A narrowed level, never {@code null}.</b> The all-levels refresh unions five queries, two of which
+     * ({@code CellTypeAssignment}, {@code CellLevelCharacteristics}) no curation section can affect. On
+     * production's largest single-cell experiment (eid 42860, 1,681,672 EE2C rows) that union measured
+     * 159 s, of which 150 s was the cell-level branch; the three levels a commit can actually move measured
+     * 13-28 ms on that same experiment. Passing {@code null} would put a two-and-a-half-minute write
+     * transaction on a curator's save.
+     * <p>
+     * <b>Only when something changed.</b> A no-op or preflight commit pays nothing.
+     * {@code designUpdated} lumps sample-assignment moves (which do not reach EE2C) in with statement
+     * re-terms (which do), so an assignment-only design change does buy one upsert that changes no rows —
+     * ~13-30 ms, and separating the two would mean splitting a tally the wire format already publishes.
+     * <p>
+     * <b>Flush first.</b> The refresh is a native query that declares only the EE2C query space, so
+     * Hibernate's auto-flush will not notice pending {@code CHARACTERISTIC} inserts and the rebuild would
+     * read the pre-commit state — the very staleness this closes. The tag and sample-characteristic
+     * sections already flush after their adds; the design section does not, and neither flushes after a
+     * delete.
+     */
+    private void refreshEe2c( ExpressionExperiment ee, CurationCommitResult result ) {
+        List<Class<?>> levels = new ArrayList<>( 3 );
+        if ( result.getTagsCreated() > 0 || result.getTagsDeleted() > 0 ) {
+            levels.add( ExpressionExperiment.class );
+        }
+        if ( result.getSampleCharsCreated() > 0 || result.getSampleCharsDeleted() > 0 ) {
+            levels.add( BioMaterial.class );
+        }
+        if ( result.getDesignCreated() > 0 || result.getDesignDeleted() > 0 || result.getDesignUpdated() > 0 ) {
+            levels.add( ExperimentalDesign.class );
+        }
+        if ( levels.isEmpty() ) {
+            return;
+        }
+        sessionFactory.getCurrentSession().flush();
+        for ( Class<?> level : levels ) {
+            tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, level );
+        }
     }
 
     /**

@@ -273,6 +273,11 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         public UnitDao unitDao() {
             return mock();
         }
+
+        @Bean
+        public ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil tableMaintenanceUtil() {
+            return mock( ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.class );
+        }
     }
 
     @Autowired
@@ -314,14 +319,26 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     @Autowired
     private ExpressionExperimentSubSetReadService subSetReadService;
 
+    @Autowired
+    private ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Autowired
+    private ExpressionExperimentReadService readService;
+
+    @Autowired
+    private org.hibernate.SessionFactory sessionFactory;
+
     @BeforeEach
     public void setupMocks() {
         when( eeDao.getElementClass() ).thenAnswer( a -> ExpressionExperiment.class );
+        // commitCuration flushes before rebuilding EE2C; the mocked factory hands back no session otherwise.
+        when( sessionFactory.getCurrentSession() ).thenReturn( mock( org.hibernate.Session.class ) );
     }
 
     @AfterEach
     public void resetMocks() {
-        reset( bioAssayDimensionService, quantitationTypeService, eeDao );
+        reset( bioAssayDimensionService, quantitationTypeService, eeDao, tableMaintenanceUtil, readService,
+                sessionFactory );
     }
 
     @Test
@@ -940,6 +957,135 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         assertThat( treatedFv.getIsBaseline() )
                 .withFailMessage( "marking a second baseline must not silently unmark the first" )
                 .isTrue();
+    }
+
+    // ============================================================================================
+    // commitCuration() → EXPRESSION_EXPERIMENT2CHARACTERISTIC refresh
+    //
+    // The denormalized table used to move only on the nightly Quartz run, so an added annotation was
+    // invisible in it for a day while a deleted one vanished at once (EE2C_CHARACTERISTIC_FKC is
+    // ON DELETE CASCADE) — one all-or-none commit reading as a partial write. An applied commit now
+    // refreshes the levels it touched, in its own transaction.
+    //
+    // The level matters, not just the call: the all-levels union costs 159 s on production's largest
+    // single-cell experiment because of the cell-level branch, which no curation section can move.
+    // ============================================================================================
+
+    /** A tag add/remove reaches EE2C at the ExpressionExperiment level and at no other. */
+    @Test
+    public void testCommitCurationRefreshesEe2cAtTheExperimentLevelForATagChange() {
+        buildFixture();
+        Characteristic tag = Characteristic.Factory.newInstance();
+        tag.setId( 99L );
+        tag.setCategory( "organism part" );
+        tag.setValue( "brain" );
+        fixture.getCharacteristics().add( tag );
+        when( eeDao.load( 1L ) ).thenReturn( fixture );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setTagsPresent( true );
+        request.setTagsToDelete( Collections.singletonList( 99L ) );
+
+        CurationCommitResult result = svc.commitCuration( fixture, request, false );
+
+        assertThat( result.getTagsDeleted() ).isEqualTo( 1 );
+        verify( tableMaintenanceUtil ).updateExpressionExperiment2CharacteristicEntries( fixture, ExpressionExperiment.class );
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), eq( BioMaterial.class ) );
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), eq( ExperimentalDesign.class ) );
+        // never the whole union: that is the 159 s case
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), isNull() );
+    }
+
+    /** A per-sample characteristic change reaches EE2C at the BioMaterial level and at no other. */
+    @Test
+    public void testCommitCurationRefreshesEe2cAtTheBioMaterialLevelForASampleCharacteristicChange() {
+        buildFixture();
+        Characteristic sampleChar = Characteristic.Factory.newInstance();
+        sampleChar.setId( 555L );
+        sampleChar.setCategory( "organism part" );
+        sampleChar.setValue( "cortex" );
+        bm1000.getCharacteristics().add( sampleChar );
+        when( eeDao.load( 1L ) ).thenReturn( fixture );
+        when( readService.thawBioAssays( fixture ) ).thenReturn( fixture );
+        when( bioMaterialService.removeAnnotation( fixture, bm1000, 555L ) ).thenReturn( sampleChar );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setSampleCharsPresent( true );
+        request.setSampleCharsToDelete( Collections.singletonList( 555L ) );
+
+        CurationCommitResult result = svc.commitCuration( fixture, request, false );
+
+        assertThat( result.getSampleCharsDeleted() ).isEqualTo( 1 );
+        verify( tableMaintenanceUtil ).updateExpressionExperiment2CharacteristicEntries( fixture, BioMaterial.class );
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), eq( ExpressionExperiment.class ) );
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), eq( ExperimentalDesign.class ) );
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), isNull() );
+    }
+
+    /** Re-terming a statement on a kept factor value reaches EE2C at the ExperimentalDesign level. */
+    @Test
+    public void testCommitCurationRefreshesEe2cAtTheDesignLevelForAStatementReTerm() {
+        buildFixture();
+        when( eeDao.load( 1L ) ).thenReturn( fixture );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 100L ).getStatements().get( 0 ).setSubject( "control-edited" );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setDesignPresent( true );
+        request.setProposedDesign( proposal );
+
+        CurationCommitResult result = svc.commitCuration( fixture, request, false );
+
+        assertThat( result.getDesignUpdated() ).isGreaterThan( 0 );
+        verify( tableMaintenanceUtil ).updateExpressionExperiment2CharacteristicEntries( fixture, ExperimentalDesign.class );
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), eq( ExpressionExperiment.class ) );
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), eq( BioMaterial.class ) );
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), isNull() );
+    }
+
+    /**
+     * A preflight computes the same tallies without writing, so it must not rebuild EE2C either — the
+     * rebuild would publish annotations the dry run did not apply.
+     */
+    @Test
+    public void testCommitCurationDryRunRefreshesNothing() {
+        buildFixture();
+        Characteristic tag = Characteristic.Factory.newInstance();
+        tag.setId( 99L );
+        tag.setCategory( "organism part" );
+        tag.setValue( "brain" );
+        fixture.getCharacteristics().add( tag );
+        when( eeDao.load( 1L ) ).thenReturn( fixture );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setTagsPresent( true );
+        request.setTagsToDelete( Collections.singletonList( 99L ) );
+
+        CurationCommitResult result = svc.commitCuration( fixture, request, true );
+
+        assertThat( result.getTagsDeleted() ).isEqualTo( 1 );
+        verifyNoInteractions( tableMaintenanceUtil );
+    }
+
+    /** A commit whose sections all matched what was already stored pays for no rebuild. */
+    @Test
+    public void testCommitCurationWithNoChangeRefreshesNothing() {
+        buildFixture();
+        when( eeDao.load( 1L ) ).thenReturn( fixture );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setTagsPresent( true );
+        request.setTagsUnchanged( 3 );
+        request.setDesignPresent( true );
+        request.setProposedDesign( mirrorProposal() );
+
+        CurationCommitResult result = svc.commitCuration( fixture, request, false );
+
+        assertThat( result.getTagsCreated() ).isZero();
+        assertThat( result.getTagsDeleted() ).isZero();
+        assertThat( result.getDesignUpdated() ).isZero();
+        verifyNoInteractions( tableMaintenanceUtil );
     }
 
     private static FactorValueBasicValueObject proposalFv( ExperimentalDesignValueObject vo, long fvId ) {

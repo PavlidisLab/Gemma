@@ -23,6 +23,8 @@ import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
@@ -182,6 +184,26 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     /**
+     * MySQL index hint for {@link #EE2C_ED_FACTOR_ANNOTATIONS_QUERY}'s join onto {@code CHARACTERISTIC}.
+     * <p>
+     * Measured on production (2026-08-30): {@code CHARACTERISTIC.EXPERIMENTAL_FACTOR_FK} is NULL on all
+     * 10,790,475 rows, so {@code CHARACTERISTIC_EXPERIMENTAL_FACTOR_FKC} reports cardinality 1 and the
+     * optimizer costs a ref lookup at the whole table. It then picks {@code type: ALL} plus a block
+     * nested loop, and full-scans 10.8M rows (1.9 GB) to return nothing. That single branch was
+     * <em>12.1 s of the 12.5 s</em> a one-experiment EE2C refresh took, whatever the experiment's size;
+     * with the hint the same branch runs in 70 ms and a whole-experiment refresh drops to 15-30 ms for a
+     * typical dataset and 0.4 s for the largest conventional ones. Corpus-wide (the nightly job) the hint
+     * is neutral: 11.79 s hinted vs 11.80 s plain, because there the driving scan dominates.
+     * <p>
+     * Emitted only where the dialect parses it — see {@link #ee2cEdQuery()}. H2, which the unit tests run
+     * on even in {@code MODE=MYSQL}, rejects {@code FORCE INDEX} with a syntax error.
+     */
+    private static final String EE2C_ED_FACTOR_ANNOTATIONS_INDEX_HINT = " FORCE INDEX (CHARACTERISTIC_EXPERIMENTAL_FACTOR_FKC)";
+
+    /**
+     * Carries a {@code %s} slot for {@link #EE2C_ED_FACTOR_ANNOTATIONS_INDEX_HINT}; render it with
+     * {@link #ee2cEdQuery()} rather than using it directly.
+     *
      * @deprecated this is deprecated because {@link ExperimentalFactor#getAnnotations()} is also deprecated. However,
      * there's a possibility that this will be repurposed for annotating continuous FVs, see <a href="https://github.com/PavlidisLab/Gemma/issues/950">#950</a>
      * for more details.
@@ -193,7 +215,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join EXPERIMENTAL_DESIGN ED on I.EXPERIMENTAL_DESIGN_FK = ED.ID "
                     + "join EXPERIMENTAL_FACTOR EF on ED.ID = EF.EXPERIMENTAL_DESIGN_FK "
-                    + "join CHARACTERISTIC C on C.EXPERIMENTAL_FACTOR_FK = EF.ID "
+                    + "join CHARACTERISTIC C%s on C.EXPERIMENTAL_FACTOR_FK = EF.ID "
                     + "where I.class = 'ExpressionExperiment' "
                     + "and " + EE_EQUALS + " "
                     + "and " + CD_LAST_UPDATED_SINCE + " "
@@ -213,10 +235,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and " + EE_EQUALS + " "
                     + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) ";
-
-    private static final String EE2C_ED_QUERY = EE2C_ED_FACTOR_ANNOTATIONS_QUERY
-            + " union "
-            + EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY;
 
     private static final String EE2AD_QUERY = "insert into EXPRESSION_EXPERIMENT2ARRAY_DESIGN (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK) "
             + "select I.ID, AD.ID, FALSE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
@@ -334,6 +352,30 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         return updateExpressionExperiment2CharacteristicEntries( ee, level, null, false );
     }
 
+    /**
+     * The {@code ExperimentalDesign}-level branch, rendered for the running dialect.
+     *
+     * @see #EE2C_ED_FACTOR_ANNOTATIONS_INDEX_HINT
+     */
+    private String ee2cEdQuery() {
+        String hint = supportsMysqlIndexHints() ? EE2C_ED_FACTOR_ANNOTATIONS_INDEX_HINT : "";
+        return String.format( EE2C_ED_FACTOR_ANNOTATIONS_QUERY, hint )
+                + " union "
+                + EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY;
+    }
+
+    /**
+     * Whether the running dialect parses MySQL index hints. Answers false when there is no dialect to ask
+     * (a mocked session factory): omitting a hint is always semantically neutral, emitting an unparsable
+     * one is not.
+     */
+    private boolean supportsMysqlIndexHints() {
+        if ( !( sessionFactory instanceof SessionFactoryImplementor ) ) {
+            return false;
+        }
+        return !( ( ( SessionFactoryImplementor ) sessionFactory ).getJdbcServices().getDialect() instanceof H2Dialect );
+    }
+
     private int updateExpressionExperiment2CharacteristicEntries( @Nullable ExpressionExperiment ee, @Nullable Class<?> level, @Nullable Date sinceLastUpdate, boolean truncate ) {
         Assert.isTrue( sinceLastUpdate == null || !truncate, "Cannot perform a partial update with sinceLastUpdate with truncate." );
         StopWatch timer = StopWatch.createStarted();
@@ -347,13 +389,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + " union "
                     + EE2C_CLC_QUERY
                     + " union "
-                    + EE2C_ED_QUERY;
+                    + ee2cEdQuery();
         } else if ( level.equals( ExpressionExperiment.class ) ) {
             query = EE2C_EE_QUERY;
         } else if ( level.equals( BioMaterial.class ) ) {
             query = EE2C_BM_QUERY;
         } else if ( level.equals( ExperimentalDesign.class ) ) {
-            query = EE2C_ED_QUERY;
+            query = ee2cEdQuery();
         } else if ( level.equals( CellTypeAssignment.class ) ) {
             query = EE2C_CTA_QUERY;
         } else if ( level.equals( CellLevelCharacteristics.class ) ) {
