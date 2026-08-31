@@ -35,6 +35,10 @@ import java.util.List;
  * non-ontology URI (e.g. an NCBI gene), or the label matches (exactly, or after case/whitespace
  * normalization — in which case the stored label is rewritten to the canonical form). Everything else is a
  * {@link TermViolation}.
+ * <p>
+ * In the {@code category} slot the comparison ignores the {@code obsolete_} marker an ontology prepends when it
+ * deprecates a term, so a category Gemma still uses under its pre-deprecation name — {@code EFO_0000408}
+ * {@code disease}, {@code EFO_0000322} {@code cell line} — validates against that name.
  *
  * @author gemma
  */

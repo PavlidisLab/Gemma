@@ -425,4 +425,87 @@ public class OntologyTermValidatorImplTest {
         Characteristic c = characteristic( null, null, "RO_0002573", "http://x/CL_0000127" );
         assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
     }
+
+    private static final String DISEASE_URI = "http://www.ebi.ac.uk/efo/EFO_0000408";
+    private static final String CELL_LINE_URI = "http://www.ebi.ac.uk/efo/EFO_0000322";
+
+    /** Stub Gemma's published category list (what {@code OntologyService#getCategoryTerms} hands back). */
+    private void categoryTerms( String uri, String label ) {
+        OntologyTerm cat = mock( OntologyTerm.class );
+        when( cat.getUri() ).thenReturn( uri );
+        when( cat.getLabel() ).thenReturn( label );
+        when( ontologyService.getCategoryTerms() ).thenReturn( Collections.singleton( cat ) );
+    }
+
+    /**
+     * {@code EFO_0000408} is on Gemma's category list as {@code disease}, but EFO has obsoleted it and
+     * {@code getCategoryTerms} hands back EFO's live term, labelled {@code obsolete_disease}. Gemma must not
+     * refuse the name it uses for its own category (cab, 2026-08-30).
+     */
+    @Test
+    public void testObsoletedCategoryAcceptsTheNameGemmaUses() throws Exception {
+        categoryTerms( DISEASE_URI, "obsolete_disease" );
+        Characteristic c = characteristic( "disease", DISEASE_URI, "asthma", null );
+        assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+        assertEquals( "disease", c.getCategory() ); // stored as submitted, not as the marked label
+    }
+
+    /**
+     * {@code EFO_0000322} is NOT on the category list — {@code CLO_0000031} is the canonical cell-line category —
+     * so it resolves through the loaded ontologies, and to {@code obsolete_cell line}. Gemma stores it on a large
+     * part of the corpus, so a write carrying it has to be accepted too.
+     */
+    @Test
+    public void testObsoletedCategoryOffTheListAcceptsItsPreObsolescenceName() throws Exception {
+        localResolves( CELL_LINE_URI, "obsolete_cell line" );
+        Characteristic c = characteristic( "cell line", CELL_LINE_URI, "HeLa", null );
+        assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+        assertEquals( "cell line", c.getCategory() );
+    }
+
+    /** The carve-out drops a marker, it does not stop checking: a different category's name is still a mismatch. */
+    @Test
+    public void testWrongLabelOnAnObsoletedCategoryIsStillRejected() throws Exception {
+        categoryTerms( DISEASE_URI, "obsolete_disease" );
+        Characteristic c = characteristic( "cell type", DISEASE_URI, "asthma", null );
+        List<TermViolation> v = validator.validateAndCanonicalize( c );
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.LABEL_MISMATCH, v.get( 0 ).getReason() );
+        assertEquals( "category", v.get( 0 ).getSlot() );
+        assertEquals( "disease", v.get( 0 ).getResolvedLabel() ); // reported unmarked: the name to use
+    }
+
+    /** Categories only. A VALUE that resolves to an obsolete term is a different question and is not carved out. */
+    @Test
+    public void testObsoleteMarkerIsNotStrippedInTheValueSlot() throws Exception {
+        localResolves( DISEASE_URI, "obsolete_disease" );
+        Characteristic c = characteristic( null, null, "disease", DISEASE_URI );
+        List<TermViolation> v = validator.validateAndCanonicalize( c );
+        assertEquals( 1, v.size() );
+        assertEquals( "value", v.get( 0 ).getSlot() );
+        assertEquals( TermViolation.Reason.LABEL_MISMATCH, v.get( 0 ).getReason() );
+    }
+
+    /** The ontology's own spelling still validates, and is rewritten to the name Gemma stores. */
+    @Test
+    public void testCategorySentWithTheOntologysObsoleteSpellingIsCanonicalized() throws Exception {
+        categoryTerms( DISEASE_URI, "obsolete_disease" );
+        Characteristic c = characteristic( "obsolete_disease", DISEASE_URI, "asthma", null );
+        List<TermCanonicalization> canons = new ArrayList<>();
+        assertTrue( validator.validateAndCanonicalize( c, canons ).isEmpty() );
+        assertEquals( "disease", c.getCategory() );
+        assertEquals( 1, canons.size() );
+        assertEquals( "category", canons.get( 0 ).getSlot() );
+        assertEquals( "obsolete_disease", canons.get( 0 ).getSubmittedLabel() );
+        assertEquals( "disease", canons.get( 0 ).getCanonicalLabel() );
+    }
+
+    /** A category URI with no label fills in the unmarked name rather than minting {@code obsolete_disease}. */
+    @Test
+    public void testBlankCategoryLabelFilledWithTheUnmarkedName() throws Exception {
+        categoryTerms( DISEASE_URI, "obsolete_disease" );
+        Characteristic c = characteristic( null, DISEASE_URI, "asthma", null );
+        assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+        assertEquals( "disease", c.getCategory() );
+    }
 }
