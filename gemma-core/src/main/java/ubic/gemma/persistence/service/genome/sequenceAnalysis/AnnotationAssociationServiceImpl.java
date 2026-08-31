@@ -51,7 +51,7 @@ public class AnnotationAssociationServiceImpl extends AbstractService<Annotation
     public Collection<AnnotationValueObject> removeRootTerms( Collection<AnnotationValueObject> associations ) {
         Collection<AnnotationValueObject> cleanedUp = new ArrayList<>();
         for ( AnnotationValueObject avo : associations ) {
-            String term = avo.getTermName();
+            String term = avo.getValue();
             if ( term == null )
                 continue;
             if ( !( term.equals( "molecular_function" ) || term.equals( "biological_process" ) || term

@@ -1061,9 +1061,9 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 .count();
     }
 
-    private AnnotationValueObject findAnnotation( String termName ) {
+    private AnnotationValueObject findAnnotation( String value ) {
         Set<AnnotationValueObject> annotations = expressionExperimentService.getAnnotations( expressionExperimentService.load( ee.getId() ) );
-        return annotations.stream().filter( a -> termName.equals( a.getTermName() ) ).findFirst().orElse( null );
+        return annotations.stream().filter( a -> value.equals( a.getValue() ) ).findFirst().orElse( null );
     }
 
     // ── run provenance: which agent run applied this commit ───────────────────────────────────────────────

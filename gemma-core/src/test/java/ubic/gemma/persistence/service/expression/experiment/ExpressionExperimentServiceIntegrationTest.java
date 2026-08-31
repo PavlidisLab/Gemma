@@ -690,13 +690,13 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
         assertThat( expressionExperimentService.getAnnotations( ee ) )
                 .as( "the default read stays as it was — an unmapped tag is not shown" )
-                .extracting( AnnotationValueObject::getTermName )
+                .extracting( AnnotationValueObject::getValue )
                 .contains( "dimethyl sulfoxide" )
                 .doesNotContain( "HDP-101" );
 
         assertThat( expressionExperimentService.getAnnotations( ee, true ) )
                 .as( "curation read-back must show what was actually written" )
-                .extracting( AnnotationValueObject::getTermName )
+                .extracting( AnnotationValueObject::getValue )
                 .contains( "dimethyl sulfoxide", "HDP-101" );
     }
 

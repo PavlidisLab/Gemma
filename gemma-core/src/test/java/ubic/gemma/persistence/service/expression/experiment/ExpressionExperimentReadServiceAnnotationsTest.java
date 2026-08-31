@@ -36,8 +36,11 @@ import static org.mockito.Mockito.when;
  * De-duplication contract of {@link ExpressionExperimentReadServiceImpl#getAnnotations(ExpressionExperiment, boolean)}.
  * <p>
  * The three sources it aggregates (experiment tags, factor-value statements, sample characteristics) overlap, so the
- * aggregate is de-duplicated. The key is the (category, term name) pair; the two shapes below pin what that must and
- * must not collapse. Both were measured on production first, so neither is hypothetical.
+ * aggregate is de-duplicated. The key is the category, the term's value and the statement shape hanging off it; the
+ * shapes below pin what that must and must not collapse. Both collapse cases were measured on production first, so
+ * neither is hypothetical.
+ * <p>
+ * Also pins what {@code value} holds: the term, on every row. Nothing here composes a sentence.
  */
 @ExtendWith(MockitoExtension.class)
 public class ExpressionExperimentReadServiceAnnotationsTest {
@@ -48,6 +51,7 @@ public class ExpressionExperimentReadServiceAnnotationsTest {
     private static final String CL_1001610 = "http://purl.obolibrary.org/obo/CL_1001610";
     private static final String EFO_0005168 = "http://www.ebi.ac.uk/efo/EFO_0005168";
     private static final String HAS_BACKGROUND_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00216";
+    private static final String HAS_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/RO_0002200";
     private static final String TGEMO_00174 = "http://gemma.msl.ubc.ca/ont/TGEMO_00174";
 
     @Mock
@@ -78,7 +82,7 @@ public class ExpressionExperimentReadServiceAnnotationsTest {
         Set<AnnotationValueObject> annotations = service.getAnnotations( ee, false );
 
         assertThat( annotations )
-                .extracting( AnnotationValueObject::getClassName, AnnotationValueObject::getTermName )
+                .extracting( AnnotationValueObject::getCategory, AnnotationValueObject::getValue )
                 .containsExactlyInAnyOrder(
                         tuple( "cell type", "bone marrow hematopoietic cell" ),
                         tuple( "organism part", "bone marrow hematopoietic cell" ) );
@@ -99,9 +103,10 @@ public class ExpressionExperimentReadServiceAnnotationsTest {
 
     /**
      * Regression guard for the negative control measured on experiment 27103: two factor-value statements that share
-     * a term URI <em>and</em> a category, differing only in their predicate/object, both come back. They survive
-     * because the factor-value branch overrides {@code termName} with the formatted statement, so the two labels
-     * differ — adding the category to the key must not start collapsing them.
+     * a term URI <em>and</em> a category, differing only in their predicate/object, both come back. Both now report the
+     * same {@code value} — the term — so the predicate/object labels are the only thing keeping them apart, in the
+     * de-duplication key and in the VO's own equality. The statements carry no ids here on purpose: that is the state
+     * both gates have to hold up in, and it is the state a transient VO is in.
      */
     @Test
     public void getAnnotations_sameTermAndCategoryDifferingStatement_returnsBoth() {
@@ -114,10 +119,11 @@ public class ExpressionExperimentReadServiceAnnotationsTest {
         Set<AnnotationValueObject> annotations = service.getAnnotations( ee, false );
 
         assertThat( annotations )
-                .allSatisfy( a -> assertThat( a.getClassName() ).isEqualTo( "genotype" ) )
-                .allSatisfy( a -> assertThat( a.getTermUri() ).isEqualTo( EFO_0005168 ) )
-                .extracting( AnnotationValueObject::getTermName )
-                .containsExactlyInAnyOrder( "wild type genotype", "wild type genotype has background APP/PS1" );
+                .allSatisfy( a -> assertThat( a.getCategory() ).isEqualTo( "genotype" ) )
+                .allSatisfy( a -> assertThat( a.getValueUri() ).isEqualTo( EFO_0005168 ) )
+                .allSatisfy( a -> assertThat( a.getValue() ).isEqualTo( "wild type genotype" ) )
+                .extracting( AnnotationValueObject::getPredicate, AnnotationValueObject::getObject )
+                .containsExactlyInAnyOrder( tuple( null, null ), tuple( "has background", "APP/PS1" ) );
     }
 
     /**
@@ -139,12 +145,12 @@ public class ExpressionExperimentReadServiceAnnotationsTest {
     }
 
     /**
-     * 🛑 The subject's label must be its own field. {@code termName} on a statement row is a composed
-     * sentence — here "wild type genotype has background APP/PS1" — and it is composed several ways, so
-     * a client holding the predicate and object still cannot subtract its way back to the subject.
+     * 🛑 On a factor-value statement row {@code value} is the subject's label and nothing else. The
+     * predicate and object are returned in their own fields; a caller that wants
+     * "wild type genotype has background APP/PS1" builds it, and this route does not.
      */
     @Test
-    public void getAnnotations_statementRow_carriesTheSubjectLabelSeparately() {
+    public void getAnnotations_statementRow_valueIsTheTermNotASentence() {
         Statement decorated = statement( "wild type genotype", EFO_0005168, "has background", HAS_BACKGROUND_URI, "APP/PS1" );
         when( expressionExperimentDao.getFactorValueAnnotationsWithParents( ee ) )
                 .thenReturn( Collections.singletonList( factorValueRow( decorated ) ) );
@@ -152,26 +158,45 @@ public class ExpressionExperimentReadServiceAnnotationsTest {
         Set<AnnotationValueObject> annotations = service.getAnnotations( ee, false );
 
         assertThat( annotations ).singleElement().satisfies( a -> {
-            assertThat( a.getSubject() ).isEqualTo( "wild type genotype" );
-            assertThat( a.getTermUri() ).isEqualTo( EFO_0005168 );
+            assertThat( a.getValue() ).isEqualTo( "wild type genotype" );
+            assertThat( a.getValueUri() ).isEqualTo( EFO_0005168 );
             assertThat( a.getPredicate() ).isEqualTo( "has background" );
             assertThat( a.getObject() ).isEqualTo( "APP/PS1" );
-            // the composed form stays exactly as it was; nothing reading it shifts
-            assertThat( a.getTermName() ).isEqualTo( "wild type genotype has background APP/PS1" );
         } );
     }
 
-    /** A plain tag has no statement, so it carries no separate subject — termName is already the label. */
+    /**
+     * The second composition shape, and the one that hid the term worst: a reversed predicate
+     * ({@code RO_0002200 has phenotype}) put the object in front of the subject and dropped the predicate
+     * altogether, so "headache" was reported as "acute headache". The value is the subject either way.
+     */
     @Test
-    public void getAnnotations_plainTag_hasNoSubject() {
+    public void getAnnotations_reversedPredicateStatement_valueIsStillTheTerm() {
+        Statement reversed = statement( "headache", EFO_0005168, "has phenotype", HAS_PHENOTYPE_URI, "acute" );
+        when( expressionExperimentDao.getFactorValueAnnotationsWithParents( ee ) )
+                .thenReturn( Collections.singletonList( factorValueRow( reversed ) ) );
+
+        Set<AnnotationValueObject> annotations = service.getAnnotations( ee, false );
+
+        assertThat( annotations ).singleElement().satisfies( a -> {
+            assertThat( a.getValue() ).isEqualTo( "headache" );
+            assertThat( a.getPredicate() ).isEqualTo( "has phenotype" );
+            assertThat( a.getObject() ).isEqualTo( "acute" );
+        } );
+    }
+
+    /** A plain tag has no statement, so the predicate/object fields stay null and the value is the term. */
+    @Test
+    public void getAnnotations_plainTag_valueIsTheTermAndStatementFieldsAreNull() {
         when( expressionExperimentDao.getExperimentAnnotations( ee, false ) ).thenReturn( Collections.singletonList(
                 tag( "organism part", ORGANISM_PART_URI, "bone marrow", "http://purl.obolibrary.org/obo/UBERON_0002371" ) ) );
 
         Set<AnnotationValueObject> annotations = service.getAnnotations( ee, false );
 
         assertThat( annotations ).singleElement().satisfies( a -> {
-            assertThat( a.getSubject() ).isNull();
-            assertThat( a.getTermName() ).isEqualTo( "bone marrow" );
+            assertThat( a.getValue() ).isEqualTo( "bone marrow" );
+            assertThat( a.getPredicate() ).isNull();
+            assertThat( a.getObject() ).isNull();
         } );
     }
 
