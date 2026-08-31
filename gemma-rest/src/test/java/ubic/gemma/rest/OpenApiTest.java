@@ -298,6 +298,33 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
         assertions.assertAll();
     }
 
+    /**
+     * {@code GET /resultSets/{id}/pvalueDistribution} serves the stored histogram. The spec has to say
+     * so: the default column is the uncorrected one, {@code corrected} is not on the menu at all, and
+     * {@code bins} is capped at the stored bin count instead of the old 1..1000 range.
+     */
+    @Test
+    public void testPvalueDistributionAdvertisesTheStoredHistogramContract() {
+        Operation op = spec.getPaths().get( "/resultSets/{resultSet}/pvalueDistribution" ).getGet();
+        assertThat( op ).isNotNull();
+
+        Parameter column = op.getParameters().stream()
+                .filter( p -> "column".equals( p.getName() ) )
+                .findFirst().orElseThrow( () -> new AssertionError( "no 'column' parameter" ) );
+        assertThat( column.getSchema().getDefault() ).isEqualTo( "raw" );
+        assertThat( column.getSchema().getEnum() ).containsExactly( "raw" );
+
+        Parameter bins = op.getParameters().stream()
+                .filter( p -> "bins".equals( p.getName() ) )
+                .findFirst().orElseThrow( () -> new AssertionError( "no 'bins' parameter" ) );
+        assertThat( String.valueOf( bins.getSchema().getDefault() ) ).isEqualTo( "20" );
+        assertThat( bins.getSchema().getMaximum() ).isEqualByComparingTo( "100" );
+
+        assertThat( op.getDescription() )
+                .contains( "1, 2, 4, 5, 10, 20, 25, 50" )
+                .doesNotContain( "1000" );
+    }
+
     @Test
     public void testGetDatasetsCategories() {
         assertThat( spec.getPaths().get( "/datasets/categories" ).getGet().getResponses() )
