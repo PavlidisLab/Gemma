@@ -1705,20 +1705,39 @@ public class DatasetsWebService {
                         + "'. Use one of: curator, geo_submitter_link, external_import, agent." );
             }
         }
-        GOEvidenceCode evidenceCode = null;
-        if ( StringUtils.isNotBlank( entry.getEvidenceCode() ) ) {
-            try {
-                evidenceCode = GOEvidenceCode.valueOf( entry.getEvidenceCode().trim().toUpperCase() );
-            } catch ( IllegalArgumentException e ) {
-                throw new BadRequestException( "Unknown 'evidenceCode' " + entry.getEvidenceCode() + " in '" + field + "'." );
-            }
-        }
+        GOEvidenceCode evidenceCode = parseEvidenceCode( entry.getEvidenceCode(), field + ".evidenceCode" );
         if ( entry.getConfidence() != null && ( entry.getConfidence() < 0.0 || entry.getConfidence() > 1.0 ) ) {
             throw new BadRequestException( "'confidence' in '" + field + "' must be between 0 and 1." );
         }
         return new PublicationAssertion( ref, source, StringUtils.stripToNull( entry.getEvidence() ),
                 StringUtils.stripToNull( entry.getSupportingEvidence() ), evidenceCode, entry.getConfidence(),
                 StringUtils.stripToNull( entry.getAssertedBy() ) );
+    }
+
+    /**
+     * Resolve a wire evidence code to a {@link GOEvidenceCode}, or {@code null} when the caller sent nothing.
+     * <p>
+     * {@code GOEvidenceCode} has no {@code getDbValue()}: its constants are the codes themselves, and every
+     * surface that carries one — {@code AnnotationValueObject}, {@code PublicationAssociationValueObject},
+     * {@code PublicationEntry} here, {@code AnnotationDto} on the annotations route — spells it as the
+     * uppercase enum name. Accepted case-insensitively so a lowercase {@code "iea"} works.
+     * <p>
+     * An unrecognised code is a 400 naming the field. Dropping it instead would leave the annotation on the
+     * server default while the caller believes it set one, which is the failure this field exists to end.
+     *
+     * @param field where the code came from, for the error message (e.g. {@code tags[clientRef=t7]}).
+     */
+    @Nullable
+    private static GOEvidenceCode parseEvidenceCode( @Nullable String raw, String field ) {
+        if ( StringUtils.isBlank( raw ) ) {
+            return null;
+        }
+        try {
+            return GOEvidenceCode.valueOf( raw.trim().toUpperCase( Locale.ROOT ) );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( "Unknown 'evidenceCode' " + raw + " in '" + field
+                    + "'. Expected a GOEvidenceCode name, e.g. IC, IEA, IIA, TAS." );
+        }
     }
 
     /**
@@ -3223,6 +3242,13 @@ public class DatasetsWebService {
                     + "The report carries `newBaseline`, the dataset's `lastUpdated` after the commit: send it as "
                     + "`baseline.lastModified` on the next commit and a client can edit and commit repeatedly "
                     + "without re-reading the dataset between writes.\n\n"
+                    + "Provenance: a `tags` item and a `statements` item each accept `supportingEvidence` (opaque "
+                    + "JSON, stored verbatim) and `evidenceCode` (a GOEvidenceCode name — `IC`, `IEA`, `IIA`, "
+                    + "`TAS`, …, case-insensitive; an unknown one is a 400 on the commit and on the preflight). "
+                    + "Omitting `evidenceCode` preserves the behaviour this route has always had: a tag is "
+                    + "recorded as `IC` (curator inference) and a design statement keeps the code it has. The "
+                    + "server never picks a code from the caller's identity, so an automated client that should "
+                    + "not be claiming a curator's inference has to say so.\n\n"
                     + "Every 409 names which conflict it was in `errors[0].reason`, because the client's next "
                     + "move differs per case: `STALE_BASELINE` (re-read, rebuild the diff, commit again — the "
                     + "response deliberately does not hand back a fresher token, since committing over a change "
@@ -3391,8 +3417,9 @@ public class DatasetsWebService {
                 if ( isExisting( tc, "tags item" ) ) {
                     unchanged++; // gemmaId item = keep (absence never deletes; deletions are declared)
                 } else {
-                    Characteristic ch = tagCommitToCharacteristic( tc );
-                    collectTermViolations( ch, "tags[" + refOrIndex( tc.getClientRef(), idx ) + "]", tc.getClientRef(), termViolations, canonicalizations );
+                    String location = "tags[" + refOrIndex( tc.getClientRef(), idx ) + "]";
+                    Characteristic ch = tagCommitToCharacteristic( tc, location );
+                    collectTermViolations( ch, location, tc.getClientRef(), termViolations, canonicalizations );
                     adds.add( new CurationCommitRequest.TagAdd( tc.getClientRef(), ch ) );
                 }
                 idx++;
@@ -3806,6 +3833,21 @@ public class DatasetsWebService {
          */
         @Nullable
         private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
+        /**
+         * How this statement was arrived at, as a {@link GOEvidenceCode} name. Accepted case-insensitively; an
+         * unrecognised code is a 400 on the commit and on the preflight, never a silent drop.
+         * <p>
+         * Omitting it preserves the behaviour this route has always had, which differs by where the statement
+         * lands: a statement under {@code design.factors[].factorValues[].statements} keeps whatever code it
+         * carries (none, for a new one), while a statement-shaped {@code tags} item takes the {@code IC} the
+         * add path fills in. Nothing changes for a caller that does not send the field.
+         */
+        @Schema(description = "How this statement was arrived at, in the vocabulary annotations use: IC (curator inference), "
+                + "IEA (produced by software, unchecked), IIA (carried in from imported data), TAS (stated in a traceable source). "
+                + "Any GOEvidenceCode name is accepted, case-insensitively; an unknown one is rejected. Omit to keep today's "
+                + "behaviour — a design statement keeps the code it has, a tag gets IC.")
+        @Nullable
+        private String evidenceCode;
     }
 
     /** One experiment-level tag (CAB {@code TagCommit}); a statement-shaped tag rides its {@code statements}. */
@@ -3824,6 +3866,21 @@ public class DatasetsWebService {
          */
         @Nullable
         private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
+        /**
+         * How this tag was arrived at, as a {@link GOEvidenceCode} name. Same precedence as
+         * {@link #getSupportingEvidence()}: when the tag rides a statement, a code set on the statement wins and
+         * this is the fallback.
+         * <p>
+         * Omitted leaves the tag to the {@code IC} that
+         * {@code ExpressionExperimentWriteServiceImpl#addCharacteristic} fills in for a code-less add, which is
+         * what every tag written through this route has carried so far.
+         */
+        @Schema(description = "How this tag was arrived at, in the vocabulary annotations use: IC (curator inference), "
+                + "IEA (produced by software, unchecked), IIA (carried in from imported data), TAS (stated in a traceable source). "
+                + "Any GOEvidenceCode name is accepted, case-insensitively; an unknown one is rejected. Omit to keep today's "
+                + "behaviour, which records the tag as IC.")
+        @Nullable
+        private String evidenceCode;
     }
 
     /** One per-sample characteristic (CAB {@code SampleCharacteristicCommit}); the sample is a GSM short name. */
@@ -3893,6 +3950,7 @@ public class DatasetsWebService {
         Set<Long> mentionedFactorIds = new HashSet<>();
         List<ExperimentalDesignValueObject.ExperimentalFactorEntry> outFactors = new ArrayList<>();
 
+        int factorIdx = 0;
         for ( FactorCommit fc : nullSafe( fs.getItems() ) ) {
             String parentKey;
             ExperimentalDesignValueObject.ExperimentalFactorEntry curFactor = null;
@@ -3914,8 +3972,10 @@ public class DatasetsWebService {
             out.setDescription( fc.getDescription() );
             out.setType( fc.getType() );
             out.setCategory( ontologyToCharacteristic( fc.getCategory() ) );
-            out.setValues( mapFactorValues( fc, curFactor, parentKey, gsmToBmId, plan, bmToFvIds ) );
+            out.setValues( mapFactorValues( fc, curFactor, parentKey, gsmToBmId, plan, bmToFvIds,
+                    "design.factors[" + refOrIndex( fc.getClientRef(), factorIdx ) + "]" ) );
             outFactors.add( out );
+            factorIdx++;
         }
 
         // Carry forward untouched current factors verbatim (id + all FVs); their assignments already live in bmToFvIds.
@@ -3945,9 +4005,14 @@ public class DatasetsWebService {
         return out;
     }
 
+    /**
+     * @param location the factor's request-body location (e.g. {@code design.factors[clientRef=F1]}), extended
+     *                 per factor value and per statement so a rejected field can be named. Built the same way
+     *                 {@link #collectDesignTermViolations} builds its locations.
+     */
     private List<FactorValueBasicValueObject> mapFactorValues( FactorCommit fc,
             @Nullable ExperimentalDesignValueObject.ExperimentalFactorEntry curFactor, String parentKey,
-            Map<String, Long> gsmToBmId, DesignCommitPlan plan, Map<Long, Set<Long>> bmToFvIds ) {
+            Map<String, Long> gsmToBmId, DesignCommitPlan plan, Map<Long, Set<Long>> bmToFvIds, String location ) {
         Map<Long, FactorValueBasicValueObject> curFvs = new LinkedHashMap<>();
         if ( curFactor != null ) {
             for ( FactorValueBasicValueObject v : nullSafe( curFactor.getValues() ) ) {
@@ -3962,6 +4027,7 @@ public class DatasetsWebService {
         List<String> fvClientRefs = new ArrayList<>();
         List<FactorValueBasicValueObject> outValues = new ArrayList<>();
 
+        int fvIdx = 0;
         for ( FactorValueCommit fvc : nullSafe( fvs.getItems() ) ) {
             // null biomaterialShortNames = leave this FV's sample assignments untouched; a (possibly empty) list =
             // authoritative set-replace ([] clears). Same null-means-unchanged convention as isBaseline.
@@ -3996,8 +4062,10 @@ public class DatasetsWebService {
             out.setValue( fvc.getFreeTextLabel() );
             out.setBaseline( fvc.getBaseline() );
             out.setMeasurementObject( mapMeasurement( fvc.getMeasurement() ) );
-            out.setStatements( mapStatements( fvc, curFvs.get( fvc.getGemmaId() ) ) );
+            out.setStatements( mapStatements( fvc, curFvs.get( fvc.getGemmaId() ),
+                    location + ".factorValues[" + refOrIndex( fvc.getClientRef(), fvIdx ) + "]" ) );
             outValues.add( out );
+            fvIdx++;
         }
 
         // Carry forward untouched current factor values (declared-delete: only ids in deletedIds are removed).
@@ -4012,11 +4080,16 @@ public class DatasetsWebService {
         return outValues;
     }
 
-    private List<StatementValueObject> mapStatements( FactorValueCommit fvc, @Nullable FactorValueBasicValueObject curFv ) {
+    /**
+     * @param location the factor value's request-body location, extended per statement to name a rejected field.
+     */
+    private List<StatementValueObject> mapStatements( FactorValueCommit fvc,
+            @Nullable FactorValueBasicValueObject curFv, String location ) {
         Section<StatementCommit> ss = fvc.getStatements() != null ? fvc.getStatements() : new Section<>();
         Set<Long> stmtDeleted = new HashSet<>( nullSafe( ss.getDeletedIds() ) );
         Set<Long> mentioned = new HashSet<>();
         List<StatementValueObject> out = new ArrayList<>();
+        int idx = 0;
         for ( StatementCommit sc : nullSafe( ss.getItems() ) ) {
             StatementValueObject svo = new StatementValueObject();
             if ( isExisting( sc, "statement" ) ) {
@@ -4040,7 +4113,14 @@ public class DatasetsWebService {
                 svo.setObjectUri( sc.getObject().getUri() );
             }
             svo.setSupportingEvidence( sc.getSupportingEvidence() );
+            // Validated here rather than left to the service so an unknown code is a 400 on the preflight too,
+            // and normalized to the enum name so a lowercase "iea" does not reach the apply as a mismatch
+            // against the stored uppercase form. Null = "no change", the convention the whole payload follows.
+            GOEvidenceCode code = parseEvidenceCode( sc.getEvidenceCode(),
+                    location + ".statements[" + refOrIndex( sc.getClientRef(), idx ) + "].evidenceCode" );
+            svo.setEvidenceCode( code != null ? code.name() : null );
             out.add( svo );
+            idx++;
         }
         // Carry forward untouched current statements — the design apply replaces statements wholesale on a kept FV,
         // so an un-echoed statement would otherwise be deleted; re-emitting it (by id) preserves it.
@@ -4324,6 +4404,7 @@ public class DatasetsWebService {
                         sc.setPredicate( termRef( s.getPredicate(), s.getPredicateUri() ) );
                         sc.setObject( termRef( s.getObject(), s.getObjectUri() ) );
                         sc.setSupportingEvidence( s.getSupportingEvidence() );
+                        sc.setEvidenceCode( s.getEvidenceCode() );
                         fvc.getStatements().getItems().add( sc );
                     }
                     fc.getFactorValues().getItems().add( fvc );
@@ -4340,6 +4421,10 @@ public class DatasetsWebService {
             tc.setCategory( termRef( a.getClassName(), a.getClassUri() ) );
             tc.setValue( termRef( a.getTermName(), a.getTermUri() ) );
             tc.setSupportingEvidence( a.getSupportingEvidence() );
+            // Captured so a restore puts the tag back with the code it had. Without it every restored tag comes
+            // back as the IC the add path fills in, which would rewrite an IEA row on a restore that was meant
+            // to change nothing about it.
+            tc.setEvidenceCode( a.getEvidenceCode() );
             tags.getItems().add( tc );
         }
         doc.setTags( tags );
@@ -4618,8 +4703,11 @@ public class DatasetsWebService {
     /**
      * Build a {@link Characteristic} for a new experiment-level tag. A statement-shaped tag (one riding on
      * {@code statements}) becomes a single {@link Statement}; otherwise a plain category/value characteristic.
+     *
+     * @param location the item's request-body location (e.g. {@code tags[clientRef=t7]}), used to name the
+     *                 offending field when a stated evidence code is not a {@link GOEvidenceCode}.
      */
-    private static Characteristic tagCommitToCharacteristic( TagCommit tc ) {
+    private static Characteristic tagCommitToCharacteristic( TagCommit tc, String location ) {
         List<StatementCommit> statements = tc.getStatements() != null ? nullSafe( tc.getStatements().getItems() ) : Collections.emptyList();
         if ( !statements.isEmpty() ) {
             StatementCommit sc = statements.get( 0 );
@@ -4645,6 +4733,11 @@ public class DatasetsWebService {
             // Evidence on the statement wins; the tag-level field is the fallback for a plain tag.
             s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence(
                     sc.getSupportingEvidence() != null ? sc.getSupportingEvidence() : tc.getSupportingEvidence() ) );
+            // Same precedence for the evidence code. Left null when neither level states one, which is what
+            // hands the row to addCharacteristic's IC default — the code every tag on this route has carried.
+            s.setEvidenceCode( parseEvidenceCode(
+                    StringUtils.isNotBlank( sc.getEvidenceCode() ) ? sc.getEvidenceCode() : tc.getEvidenceCode(),
+                    location + ".evidenceCode" ) );
             return s;
         }
         if ( tc.getValue() == null || StringUtils.isBlank( tc.getValue().getLabel() ) ) {
@@ -4658,6 +4751,7 @@ public class DatasetsWebService {
         c.setValue( tc.getValue().getLabel() );
         c.setValueUri( tc.getValue().getUri() );
         c.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( tc.getSupportingEvidence() ) );
+        c.setEvidenceCode( parseEvidenceCode( tc.getEvidenceCode(), location + ".evidenceCode" ) );
         return c;
     }
 

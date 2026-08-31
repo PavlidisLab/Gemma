@@ -34,6 +34,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.test.BaseTest5;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -1410,6 +1411,58 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         assertThat( outcome.isApplied() ).isFalse();
         assertThat( controlFv.getCharacteristics() ).singleElement()
                 .satisfies( s -> assertThat( s.getSupportingEvidence() ).contains( "recorded earlier" ) );
+    }
+
+    /** An evidence code stated on a factor-value statement reaches the entity, so a design write can say how it was decided. */
+    @Test
+    public void testApplyWritesEvidenceCodeOntoAStatement() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        designFv( proposal, 100L ).getStatements().get( 0 ).setEvidenceCode( "IEA" );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getEvidenceCode() ).isEqualTo( GOEvidenceCode.IEA ) );
+    }
+
+    /**
+     * An evidence code is as invisible to the structural summary and to {@code statementsChanged} as supporting
+     * evidence is, so a code-only edit needs the same dedicated check or it is swallowed as a no-op.
+     */
+    @Test
+    public void testApplyEvidenceCodeOnlyEditIsNotANoOp() {
+        buildFixture();
+        controlFv.getCharacteristics().iterator().next().setEvidenceCode( GOEvidenceCode.IC );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        designFv( proposal, 100L ).getStatements().get( 0 ).setEvidenceCode( "IEA" );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getEvidenceCode() ).isEqualTo( GOEvidenceCode.IEA ) );
+    }
+
+    /**
+     * The evidence code follows the same {@code null = "no change"} convention as supporting evidence: a client
+     * that does not carry one cannot blank the code somebody else recorded, and omitting it changes nothing.
+     */
+    @Test
+    public void testApplyDoesNotWipeTheEvidenceCodeWhenThePayloadOmitsIt() {
+        buildFixture();
+        controlFv.getCharacteristics().iterator().next().setEvidenceCode( GOEvidenceCode.IEA );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        designFv( proposal, 100L ).getStatements().get( 0 ).setEvidenceCode( null );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isFalse();
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getEvidenceCode() ).isEqualTo( GOEvidenceCode.IEA ) );
     }
 
     /**
