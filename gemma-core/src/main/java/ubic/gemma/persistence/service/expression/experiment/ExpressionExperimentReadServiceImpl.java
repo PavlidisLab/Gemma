@@ -69,6 +69,7 @@ import ubic.gemma.persistence.util.Thaws;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -721,7 +722,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment, boolean includeFreeText ) {
         Set<AnnotationValueObject> annotations = new LinkedHashSet<>();
-        Set<String> seenTerms = new HashSet<>();
+        Set<List<String>> seenTerms = new HashSet<>();
 
         expressionExperimentDao.getExperimentAnnotations( expressionExperiment, false ).stream()
                 .filter( c -> filterExperimentAnnotations( c, includeFreeText ) )
@@ -764,7 +765,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee, boolean includeFreeText ) {
         Set<AnnotationValueObject> annotations = new HashSet<>();
-        Set<String> seenTerms = new HashSet<>();
+        Set<List<String>> seenTerms = new HashSet<>();
 
         // inherited from the EE
         expressionExperimentDao.getExperimentAnnotations( ee.getSourceExperiment(), false ).stream()
@@ -808,13 +809,16 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
      * those. {@code termName} is then overridden with the synthesized FV display label (subject plus the
      * non-ignored predicate/object pairs); {@code termUri} already resolves to the subject URI because a
      * {@link Statement} aliases subject &harr; value, so the constructor's {@code getValueUri()} yields it.
-     * The {@code seenTerms} dedup key is the (unchanged) {@code termName}.
+     * The overridden {@code termName} is half of the {@code seenTerms} dedup key (see {@link #dedupKey}), which is
+     * why two statements on the same subject that differ only in their predicate/object both survive: their formatted
+     * labels differ.
      * <p>
      * {@code parentName} is set to the owning factor value's summary and {@code parentOfParentName} to the experimental
      * factor's name, so a client can show the term in the context of its factor value and factor (e.g. "wild type" under
      * the "genotype" factor). Both come from the same widened query that produced the statement — no extra fetch. The
      * parent links are left for the client to build; only the display names are populated here. Because the results are
-     * de-duplicated by {@code termName}, a term appearing under more than one factor value keeps the first parent seen.
+     * de-duplicated by category and {@code termName}, a term appearing under more than one factor value of the same
+     * category keeps the first parent seen.
      */
     private static AnnotationValueObject factorValueAnnotationVo( Statement c, String[] ignoredPredicates, FactorValue fv, @Nullable ExperimentalFactor ef ) {
         AnnotationValueObject vo = new AnnotationValueObject( c, FactorValue.class );
@@ -827,12 +831,33 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     }
 
     /**
-     * Check if a term is novel and add it to the set of seen terms.
+     * Check if a term is novel and add it to the set of seen (category, term) pairs.
      */
-    private void addIfNovel( Collection<AnnotationValueObject> annotations, AnnotationValueObject term, Set<String> seenTerms ) {
-        if ( seenTerms.add( StringUtils.lowerCase( StringUtils.normalizeSpace( term.getTermName() ) ) ) ) {
+    private void addIfNovel( Collection<AnnotationValueObject> annotations, AnnotationValueObject term, Set<List<String>> seenTerms ) {
+        if ( seenTerms.add( dedupKey( term ) ) ) {
             annotations.add( term );
         }
+    }
+
+    /**
+     * De-duplication key for {@link #addIfNovel}: the category and the term name, each compared
+     * case- and whitespace-insensitively.
+     * <p>
+     * The category is part of the key because the same term under two categories is two distinct
+     * curation claims. {@code cell type = bone marrow hematopoietic cell} and
+     * {@code organism part = bone marrow hematopoietic cell} (both {@code CL_1001610}) are both stored
+     * on prod experiments, and a name-only key returned whichever row was read first — the second
+     * claim was invisible at the API boundary, which is also what {@code currentTagIds} in the REST
+     * curation-commit path reads to build its live-tag set.
+     * <p>
+     * {@code objectClass} is deliberately NOT part of the key: the same tag carried at the experiment,
+     * factor-value and sample levels still collapses to one entry, which is the point of aggregating
+     * the three sources.
+     */
+    private static List<String> dedupKey( AnnotationValueObject term ) {
+        return Arrays.asList(
+                StringUtils.lowerCase( StringUtils.normalizeSpace( term.getClassName() ) ),
+                StringUtils.lowerCase( StringUtils.normalizeSpace( term.getTermName() ) ) );
     }
 
     private boolean filterExperimentAnnotations( Characteristic c, boolean includeFreeText ) {
