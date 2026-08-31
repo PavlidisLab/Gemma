@@ -5,6 +5,7 @@ import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.ext.WriterInterceptorContext;
 import org.junit.jupiter.api.Test;
+import ubic.gemma.rest.AnalysisResultSetsWebService;
 import ubic.gemma.rest.annotations.GZIP;
 
 import java.io.IOException;
@@ -106,6 +107,21 @@ public class GzipHeaderDecoratorTest {
         }
     }
 
+    /**
+     * The {@code GET /resultSets} list route, driven off its real annotations rather than a fixture.
+     * <p>
+     * Every row of that listing repeats its parent {@code analysis} and its {@code experimentalFactors} verbatim,
+     * so the body is dominated by duplicated text: measured on gemma2 at {@code ?limit=20}, 229,515 bytes
+     * uncompressed against 5,777 gzipped. Compression is the whole reason the route is affordable, and losing it
+     * is invisible from the response body — only the missing {@code Content-Encoding} header shows it.
+     */
+    @Test
+    public void resultSetsListingIsCompressedThroughTheEncoder() throws IOException {
+        Annotation[] route = annotationsOfRoute( AnalysisResultSetsWebService.class, "getResultSets" );
+        assertThat( encodingSetBy( before, route, MediaType.APPLICATION_JSON ) ).isEqualTo( "gzip" );
+        assertThat( encodingSetBy( after, route, MediaType.APPLICATION_JSON ) ).isNull();
+    }
+
     // ---- helpers ---------------------------------------------------------
 
     /**
@@ -116,10 +132,15 @@ public class GzipHeaderDecoratorTest {
      */
     private String encodingSetBy( AbstractGzipHeaderDecorator decorator, String methodName, String contentType )
             throws IOException {
+        return encodingSetBy( decorator, annotationsOf( methodName ), contentType );
+    }
+
+    private String encodingSetBy( AbstractGzipHeaderDecorator decorator, Annotation[] annotations, String contentType )
+            throws IOException {
         MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
         headers.putSingle( "Content-Type", contentType );
         WriterInterceptorContext context = mock( WriterInterceptorContext.class );
-        when( context.getAnnotations() ).thenReturn( annotationsOf( methodName ) );
+        when( context.getAnnotations() ).thenReturn( annotations );
         when( context.getHeaders() ).thenReturn( headers );
         decorator.aroundWriteTo( context );
         Object encoding = headers.getFirst( "Content-Encoding" );
@@ -127,11 +148,19 @@ public class GzipHeaderDecoratorTest {
     }
 
     private static Annotation[] annotationsOf( String methodName ) {
-        for ( Method m : Fixtures.class.getDeclaredMethods() ) {
+        return annotationsOfRoute( Fixtures.class, methodName );
+    }
+
+    /**
+     * The annotations Jersey would hand the interceptor for a resource method, looked up by name so the test does
+     * not have to restate the route's parameter list.
+     */
+    private static Annotation[] annotationsOfRoute( Class<?> resource, String methodName ) {
+        for ( Method m : resource.getDeclaredMethods() ) {
             if ( m.getName().equals( methodName ) ) {
                 return m.getAnnotations();
             }
         }
-        throw new IllegalArgumentException( "No fixture method named " + methodName );
+        throw new IllegalArgumentException( "No method named " + methodName + " on " + resource.getName() );
     }
 }
