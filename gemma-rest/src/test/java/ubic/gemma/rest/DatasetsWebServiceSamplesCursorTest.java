@@ -28,6 +28,7 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.CursorArg;
 import ubic.gemma.rest.util.args.DatasetArg;
 import ubic.gemma.rest.util.args.DatasetArgService;
+import ubic.gemma.rest.util.args.ExcludeArg;
 import ubic.gemma.rest.util.args.LimitArg;
 import ubic.gemma.rest.util.args.QuantitationTypeArg;
 import ubic.gemma.rest.util.args.QuantitationTypeArgService;
@@ -47,7 +48,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link DatasetsWebService#getDatasetSamples(DatasetArg, QuantitationTypeArg, boolean, CursorArg, LimitArg)}
+ * {@link DatasetsWebService#getDatasetSamples(DatasetArg, QuantitationTypeArg, boolean, CursorArg, LimitArg, ExcludeArg)}
  * as step 1k of {@code CURSOR_PAGINATION_STEP1_PLAN.md}. Pure Mockito — the goal is to
  * verify the WebService routes cursor vs legacy modes to the right helper and emits the
  * right response wrapper, not to retest the DAO (covered by the broader DAO-cursor
@@ -98,7 +99,7 @@ public class DatasetsWebServiceSamplesCursorTest {
         List<BioAssayValueObject> all = Arrays.asList( ba1, ba2 );
         when( datasetArgService.getSamples( any( DatasetArg.class ) ) ).thenReturn( all );
 
-        Object response = webService.getDatasetSamples( datasetArg, null, false, null, limit( "20" ) );
+        Object response = webService.getDatasetSamples( datasetArg, null, false, null, limit( "20" ), null );
 
         assertThat( response ).isInstanceOf( ResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -122,7 +123,7 @@ public class DatasetsWebServiceSamplesCursorTest {
         when( datasetArgService.getSamplesByCursor( any( DatasetArg.class ), eq( c ), eq( 20 ) ) ).thenReturn( cp );
 
         CursorArg arg = CursorArg.valueOf( c.encode() );
-        Object response = webService.getDatasetSamples( datasetArg, null, false, arg, limit( "20" ) );
+        Object response = webService.getDatasetSamples( datasetArg, null, false, arg, limit( "20" ), null );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -149,7 +150,7 @@ public class DatasetsWebServiceSamplesCursorTest {
                 Collections.singletonList( ba2 ), null, 5, null, "prev", null );
         when( datasetArgService.getSamplesByCursor( any( DatasetArg.class ), eq( c ), eq( 5 ) ) ).thenReturn( cp );
 
-        Object response = webService.getDatasetSamples( datasetArg, null, false, CursorArg.valueOf( c.encode() ), limit( "5" ) );
+        Object response = webService.getDatasetSamples( datasetArg, null, false, CursorArg.valueOf( c.encode() ), limit( "5" ), null );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         verify( datasetArgService ).getSamplesByCursor( any( DatasetArg.class ), eq( c ), eq( 5 ) );
@@ -164,7 +165,7 @@ public class DatasetsWebServiceSamplesCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         QuantitationTypeArg<?> qtArg = QuantitationTypeArg.valueOf( "42" );
 
-        assertThatThrownBy( () -> webService.getDatasetSamples( datasetArg, qtArg, false, CursorArg.valueOf( c.encode() ), limit( "20" ) ) )
+        assertThatThrownBy( () -> webService.getDatasetSamples( datasetArg, qtArg, false, CursorArg.valueOf( c.encode() ), limit( "20" ), null ) )
                 .isInstanceOf( BadRequestException.class );
 
         verify( datasetArgService, never() ).getSamplesByCursor( any( DatasetArg.class ), any(), anyInt() );
@@ -177,7 +178,7 @@ public class DatasetsWebServiceSamplesCursorTest {
         // path also narrows by BioAssayDimension and is not id-cursorable.
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
 
-        assertThatThrownBy( () -> webService.getDatasetSamples( datasetArg, null, true, CursorArg.valueOf( c.encode() ), limit( "20" ) ) )
+        assertThatThrownBy( () -> webService.getDatasetSamples( datasetArg, null, true, CursorArg.valueOf( c.encode() ), limit( "20" ), null ) )
                 .isInstanceOf( BadRequestException.class );
 
         verify( datasetArgService, never() ).getSamplesByCursor( any( DatasetArg.class ), any(), anyInt() );

@@ -249,6 +249,7 @@ public class DatasetsWebService {
     // fields allowed to be excluded
     private static final Set<String> SCD_ALLOWED_EXCLUDE_FIELDS = new HashSet<>( Arrays.asList( "cellIds", "bioAssayIds", "cellTypeAssignments.cellTypeIds", "cellLevelCharacteristics.characteristicIds" ) );
     private static final Set<String> ANNOTATION_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "parentTerms" );
+    private static final Set<String> SAMPLES_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "sample.statements" );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -1194,6 +1195,7 @@ public class DatasetsWebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      */
     @GET
+    @GZIP
     @Path("/{dataset}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the samples of a dataset",
@@ -1219,8 +1221,15 @@ public class DatasetsWebService {
             @Parameter(description = "Opaque keyset-pagination cursor token; not supported in combination with `quantitationType` or `useProcessedQuantitationType`.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "List of fields to exclude from the payload. Only `sample.statements` "
+                    + "can be excluded. It is 21.5% of this response and carries the same rows as "
+                    + "`sample.characteristics` plus a predicate and object, so a client that renders "
+                    + "only subjects can decline it.")
+            @QueryParam("exclude") ExcludeArg<BioAssayValueObject> excludeArg
     ) {
+        boolean excludeStatements = excludeArg != null
+                && excludeArg.getValue( SAMPLES_ALLOWED_EXCLUDE_FIELDS ).contains( "sample.statements" );
         if ( cursorArg != null ) {
             // Mutual-exclusion: the QT-narrowed variants apply a BioAssayDimension restriction and sort
             // by assay name (see DatasetArgService.getSamples(DatasetArg, QuantitationType)); neither is
@@ -1231,18 +1240,37 @@ public class DatasetsWebService {
                         + "useProcessedQuantitationType; either drop the cursor or drop the QT parameters." );
             }
             CursorPage<BioAssayValueObject> page = datasetArgService.getSamplesByCursor( datasetArg, cursorArg.getValue(), limitArg.getValue() );
+            dropSampleStatements( page, excludeStatements );
             return paginateByCursor( page, new String[] { "id" } );
         }
         if ( quantitationTypeArg != null ) {
             ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
             QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee );
-            return respond( datasetArgService.getSamples( datasetArg, qt ) );
+            return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg, qt ), excludeStatements ) );
         }
         if ( useProcessedQuantitationType ) {
             QuantitationType qt = datasetArgService.getPreferredQuantitationType( datasetArg );
-            return respond( datasetArgService.getSamples( datasetArg, qt ) );
+            return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg, qt ), excludeStatements ) );
         }
-        return respond( datasetArgService.getSamples( datasetArg ) );
+        return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg ), excludeStatements ) );
+    }
+
+    /**
+     * Null out {@code sample.statements} on every assay when the caller excluded it, so the field is
+     * absent rather than empty — {@link BioMaterialValueObject#getStatements()} carries
+     * {@code @JsonInclude(NON_NULL)}, the same way {@code SingleCellDimensionValueObject} drops its
+     * excluded fields. An empty array would read as "this sample has no statements", which is a
+     * different claim from "you asked not to be sent them".
+     */
+    private static <T extends Collection<BioAssayValueObject>> T dropSampleStatements( T assays, boolean exclude ) {
+        if ( exclude ) {
+            for ( BioAssayValueObject ba : assays ) {
+                if ( ba.getSample() != null ) {
+                    ba.getSample().setStatements( null );
+                }
+            }
+        }
+        return assays;
     }
 
     /**
@@ -1557,6 +1585,7 @@ public class DatasetsWebService {
     }
 
     @GET
+    @GZIP
     @Path("/{dataset}/sourceMetadata")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the GEO record a dataset was built from",
@@ -2010,6 +2039,7 @@ public class DatasetsWebService {
     }
 
     @GET
+    @GZIP
     @Path("/{dataset}/auditEvents")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the audit events of a dataset",
@@ -2268,6 +2298,7 @@ public class DatasetsWebService {
     }
 
     @GET
+    @GZIP
     @Path("/{dataset}/annotation-sets")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
@@ -7528,6 +7559,7 @@ public class DatasetsWebService {
      */
     @GET
     @CacheControl(maxAge = 1200)
+    @GZIP
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the annotations of a dataset", responses = {
@@ -8910,6 +8942,7 @@ public class DatasetsWebService {
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234).
      */
     @GET
+    @GZIP
     @Path("/{dataset}/design")
     @Produces(MediaType.APPLICATION_JSON)
     // The @Operation annotation is intentionally identical to the one on getDatasetDesign() below. The two
@@ -9366,6 +9399,7 @@ public class DatasetsWebService {
      * tab's mean-variance scatter.
      */
     @GET
+    @GZIP
     @Path("/{dataset}/mean-variance")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the per-probe mean / variance for a dataset",
@@ -9407,6 +9441,7 @@ public class DatasetsWebService {
      * </ul>
      */
     @GET
+    @GZIP
     @Path("/{dataset}/sample-correlation")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the sample-sample correlation matrix + outlier classifications",

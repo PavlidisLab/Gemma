@@ -27,6 +27,8 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
@@ -41,6 +43,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 import ubic.gemma.model.expression.experiment.DesignPreflightReport;
 import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.model.expression.experiment.StatementValueObject;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
@@ -203,11 +206,14 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         @Bean
         public DatasetArgService datasetArgService( ExpressionExperimentService expressionExperimentService, SearchService searchService,
-                PublicationAssociationService publicationAssociationService, ArrayDesignService arrayDesignService ) {
-            // 🛑 Take the arrayDesignService BEAN, not a fresh mock. It used to construct its own, so the
-            // instance tests autowire and stub was not the instance this service called — a stub could look
-            // set up and be inert, which is a silent way for a test to assert nothing.
-            return new DatasetArgService( expressionExperimentService, searchService, arrayDesignService, mock( BioAssayService.class ), mock( OutlierDetectionService.class ),
+                PublicationAssociationService publicationAssociationService, ArrayDesignService arrayDesignService,
+                BioAssayService bioAssayService ) {
+            // 🛑 Take the arrayDesignService and bioAssayService BEANS, not fresh mocks. They used to be
+            // constructed here, so the instance tests autowire and stub was not the instance this service
+            // called — a stub could look set up and be inert, which is a silent way for a test to assert
+            // nothing. The BioAssayService bean below already existed while this constructed its own; the
+            // samples route reads through this one, so a test stubbing the bean stubbed nothing.
+            return new DatasetArgService( expressionExperimentService, searchService, arrayDesignService, bioAssayService, mock( OutlierDetectionService.class ),
                     publicationAssociationService );
         }
 
@@ -488,6 +494,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     private ArrayDesignService arrayDesignService;
 
     @Autowired
+    private BioAssayService bioAssayService;
+
+    @Autowired
     private TaskRunningService taskRunningService;
 
     @Autowired
@@ -544,7 +553,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService, bioAssayService );
     }
 
     private static final String HALLUCINATED_TAG_BODY = "{\"tags\":{\"items\":[{\"clientRef\":\"t7\","
@@ -1458,6 +1467,70 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/subSets/1" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    /**
+     * A sample assay carrying one bare statement, for the payload-shape tests below.
+     */
+    private BioAssayValueObject sampleAssay() {
+        BioMaterialValueObject sample = new BioMaterialValueObject( 10L );
+        sample.getStatements().add( new StatementValueObject() );
+        BioAssayValueObject assay = new BioAssayValueObject( 3000L );
+        assay.setSample( sample );
+        return assay;
+    }
+
+    /**
+     * 🛑 The route was not compressed, and that — not any single field — was the size of the problem.
+     * <p>
+     * {@code GET /datasets/3937/samples} sent 5,381,688 bytes for 278 samples with no
+     * {@code Content-Encoding}, and the same body gzips to 144,390 — a 37x reduction with no client
+     * change and no field removed, larger than every trim in this commit put together. Compression here
+     * is opt-in per endpoint via {@code @GZIP}, so a heavy new route is uncompressed by default and
+     * nothing says so; the annotation is the whole gate. Measured on production, {@code b5c6747f68}.
+     */
+    @Test
+    public void testGetDatasetSamplesIsCompressed() {
+        when( bioAssayService.loadValueObjects( any(), any(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.singletonList( sampleAssay() ) );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        assertThat( target( "/datasets/1/samples" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasEncoding( "gzip" );
+    }
+
+    /**
+     * {@code sample.statements} is 21.5% of the samples response and carries the same rows as
+     * {@code sample.characteristics} plus a predicate and object, so a client that renders only
+     * subjects can decline it. Excluded means absent, not empty — see
+     * {@link BioMaterialValueObject#getStatements()}.
+     */
+    @Test
+    public void testGetDatasetSamplesCanExcludeStatements() {
+        when( bioAssayService.loadValueObjects( any(), any(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.singletonList( sampleAssay() ) );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+
+        assertThat( target( "/datasets/1/samples" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entityAsString().asInstanceOf( json() )
+                .hasPath( "$.data[0].sample.statements" );
+
+        assertThat( target( "/datasets/1/samples" ).queryParam( "exclude", "sample.statements" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entityAsString().asInstanceOf( json() )
+                .doesNotHavePath( "$.data[0].sample.statements" );
+    }
+
+    /** An exclusion the route does not offer is a 400, not a silently ignored parameter. */
+    @Test
+    public void testGetDatasetSamplesRejectsAnUnsupportedExclusion() {
+        when( bioAssayService.loadValueObjects( any(), any(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.singletonList( sampleAssay() ) );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        assertThat( target( "/datasets/1/samples" ).queryParam( "exclude", "sample.characteristics" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
     }
 
     @Test

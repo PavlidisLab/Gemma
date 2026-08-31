@@ -19,13 +19,13 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.WithheldFromApi;
 import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
@@ -79,7 +79,16 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      * that writes experiment tags. {@link CharacteristicValueObject} has no predicate or object, so
      * before this the sample payload flattened such an annotation to its subject on every read — a
      * curator could write a predicated sample characteristic and never see it again.
+     * <p>
+     * Null, and so absent from the payload, when the caller opted out with
+     * {@code GET /datasets/{dataset}/samples?exclude=sample.statements}. It is 21.5% of that response
+     * and every row in it also appears under {@link #characteristics} minus the predicate and object,
+     * so a client that renders only subjects can decline it. It stays on by default: an opt-out that
+     * defaults to off would put predicated sample characteristics back out of sight, which is the
+     * thing this collection was added to end.
      */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<StatementValueObject> statements = new HashSet<>();
 
     /**
@@ -130,6 +139,24 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     @JsonIgnore
     private boolean basicFVs;
 
+    /**
+     * 🛑 This field's {@link JsonIgnore} does not hide it: the payload carries an {@code fvbasicVOs}
+     * key regardless.
+     * <p>
+     * Lombok generates the getter as {@code getFVBasicVOs()}, and a generated getter does not inherit
+     * the field's annotations. Jackson then derives an implicit property name from each accessor
+     * independently — {@code fVBasicVOs} from the field, {@code fvbasicVOs} from the getter (the bean
+     * de-capitalization rule lowercases the whole leading run of capitals in {@code FVBasicVOs}).
+     * Those two names are not equal, so Jackson never pairs the getter with the field, the
+     * {@code @JsonIgnore} applies only to the unpaired field, and the getter serializes as a property
+     * in its own right. The same shape on {@link #factorValueObjects} is harmless because its getter
+     * is {@code getFactorValueObjects()}, whose implicit name does match its field.
+     * <p>
+     * Repeating {@code @JsonIgnore} on {@link #getFVBasicVOs()} closes it, and is deliberately NOT done
+     * here: {@code fvbasicVOs} has live readers in the curation-agents repos, which are being moved off
+     * it separately. Do not delete the getter either — {@code BioAssayDimensionValueObject} calls
+     * {@link #getFactorValueObjects()} from Java, and Java-live is not the same as wire-live.
+     */
     @JsonIgnore
     private Collection<FactorValueBasicValueObject> fVBasicVOs = new HashSet<>();
 
@@ -149,13 +176,6 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     @WithheldFromApi(value = Reason.INTERNAL_ONLY,
             comment = "id cross-reference built for the Web editor")
     private Map<String, String> factorIdToFactorValueId;
-
-    /**
-     * Map of ids (factor232) to a representation of the factor (e.g., the name).
-     */
-    @Deprecated
-    @Schema(description = "This is deprecated, use the `factorValues` collection instead.", deprecated = true)
-    private Map<String, String> factors;
 
     @WithheldFromApi(value = Reason.REDUNDANT,
             comment = "duplicates the BioAssay payload")
@@ -202,7 +222,6 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.description = bm.getDescription();
 
         this.basicFVs = basic;
-        this.factors = new HashMap<>();
         this.factorValues = new HashMap<>();
         this.factorIdToFactorValueId = new HashMap<>();
         Set<FactorValue> fvs = allFactorValuesAndCharacteristics ? bm.getAllFactorValues() : bm.getFactorValues();
@@ -215,9 +234,6 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             ExperimentalFactor factor = fv.getExperimentalFactor();
             String factorId = String.format( "factor%d", factor.getId() );
             String factorValueId = String.format( "fv%d", fv.getId() );
-            if ( ModelUtils.isInitialized( factor ) ) {
-                this.factors.put( factorId, factor.getName() );
-            }
             if ( fv.getMeasurement() != null ) {
                 String value = fv.getMeasurement().getValue();
                 this.factorValues.put( factorValueId, value );

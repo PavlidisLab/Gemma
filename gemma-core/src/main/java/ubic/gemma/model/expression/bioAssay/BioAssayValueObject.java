@@ -15,11 +15,14 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
@@ -44,8 +47,34 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     private String metadata;
     @Nullable
     private DatabaseEntryValueObject accession;
+    /**
+     * The platform this assay was run on, serialized as {@link ArrayDesignReferenceValueObject} —
+     * {@code id}, {@code shortName}, {@code name}, {@code technologyType}.
+     * <p>
+     * The full platform VO is byte-identical across every assay of a dataset and was serialized once
+     * per assay: on {@code GET /datasets/3937/samples} (278 assays) the two platform fields were
+     * 706,120 of 5,265,852 bytes, 13.4% of the response, most of it 278 copies of one platform's
+     * 1.4 kB {@code description}. {@code GET /datasets/{id}/platforms?original=true} serves the full
+     * object once for callers that want the rest of it.
+     * <p>
+     * The Java type stays {@link ArrayDesignValueObject} because three in-JVM readers consume it —
+     * {@code BioAssayDimensionValueObject}, {@code DoubleVectorValueObject} and
+     * {@code DoubleVectorValueObjectUtils#toArrayDesign}, the last of which reads
+     * {@code getTaxonObject()}, absent from the reference shape. So this is a serialization
+     * projection, not a type change.
+     */
+    @JsonSerialize(converter = ArrayDesignReferenceValueObject.FromArrayDesignValueObject.class)
+    @Schema(implementation = ArrayDesignReferenceValueObject.class)
     private ArrayDesignValueObject arrayDesign;
+
+    /**
+     * The platform this assay was originally run on before a platform switch, or null if it was never
+     * switched. Projected to {@link ArrayDesignReferenceValueObject} for the same reason as
+     * {@link #arrayDesign}.
+     */
     @Nullable
+    @JsonSerialize(converter = ArrayDesignReferenceValueObject.FromArrayDesignValueObject.class)
+    @Schema(implementation = ArrayDesignReferenceValueObject.class)
     private ArrayDesignValueObject originalPlatform;
     private Date processingDate;
     private BioMaterialValueObject sample;
