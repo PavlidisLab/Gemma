@@ -4015,6 +4015,12 @@ public class DatasetsWebService {
          * 🛑 Per item and deliberate. A client that sets it on every tag has not made the check stricter,
          * it has turned the check off — and the ungrounded tags already on production are what that looks
          * like accumulated over years.
+         * <p>
+         * WHY the term was left ungrounded belongs in {@link #getSupportingEvidence()}, which is the
+         * mechanism this project already uses to document a curation decision (Paul, 2026-09-01). This
+         * flag records that the decision was made; the evidence records what it was. Nothing enforces the
+         * pairing, but a declared free-text tag with no supporting evidence is a decision nobody wrote
+         * down, and it will read later exactly like the oversight this gate exists to catch.
          */
         @Nullable
         private Boolean freeTextIntended;
