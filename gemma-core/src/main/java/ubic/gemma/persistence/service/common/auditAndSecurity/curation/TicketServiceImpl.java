@@ -44,6 +44,7 @@ import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -87,18 +88,64 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         Assert.notNull( type, "TicketType cannot be null." );
         Assert.hasText( title, "Title must be non-blank." );
         Assert.notEmpty( targets, "A ticket needs at least one target." );
+        return create( reporter, type, title, null, targets, false );
+    }
 
+    @Override
+    @Transactional
+    public Ticket getOrCreateScratchpad( Contact curator ) {
+        Assert.notNull( curator, "Curator cannot be null." );
+        Ticket existing = ticketDao.findScratchpad( curator );
+        if ( existing != null ) {
+            initializeForProjection( existing, true );
+            return existing;
+        }
+        // 🛑 Query-then-create. Two first-calls that both miss will both insert, because no unique
+        // index exists to stop them. The consequence is bounded rather than prevented: findScratchpad
+        // is oldest-id-wins, so a duplicate is a stray row and never a second identity. See
+        // TicketService#getOrCreateScratchpad.
+        //
+        // Not routed through openTicket: that method requires at least one target and a fresh
+        // scratchpad has none. The shared create() below is the same path minus that check.
+        Ticket created = create( curator, TicketType.SCRATCHPAD, scratchpadTitle( curator ),
+                SCRATCHPAD_BODY, Collections.emptyList(), true );
+        initializeForProjection( created, true );
+        return created;
+    }
+
+    /**
+     * Rendered by the ticket detail page like any other body. It says what the scratchpad is and how
+     * it is finished with, so the ticket explains itself where it turns up in a generic ticket list.
+     */
+    private static final String SCRATCHPAD_BODY = "Datasets you are currently working on."
+            + " Remove one when you are finished with it; the scratchpad itself stays open.";
+
+    /** {@code Scratchpad: alice}, or plain {@code Scratchpad} for a contact with no name. */
+    private static String scratchpadTitle( Contact curator ) {
+        String name = curator.getName();
+        return name != null && !name.trim().isEmpty() ? "Scratchpad: " + name.trim() : "Scratchpad";
+    }
+
+    /**
+     * The one create path: seed the timestamps, attach the targets, append the OPENED event, persist,
+     * and write the companion AuditTrail row. {@link #openTicket} adds the at-least-one-target check
+     * on top; {@link #getOrCreateScratchpad} deliberately does not.
+     */
+    private Ticket create( Contact reporter, TicketType type, String title, @Nullable String body,
+            Collection<TicketTarget> targets, boolean acceptsTargets ) {
         Ticket t = Ticket.Factory.newInstance( type, title, reporter );
         Date now = new Date();
         t.setCreatedAt( now );
         t.setUpdatedAt( now );
+        t.setBody( body );
+        t.setAcceptsTargets( acceptsTargets );
         for ( TicketTarget tgt : targets ) {
             tgt.setTicket( t );
             t.getTargets().add( tgt );
         }
         appendEvent( t, TicketEventType.OPENED, reporter, null );
         Ticket created = ticketDao.create( t );
-        // @Audited targets the first Auditable method argument; openTicket
+        // @Audited targets the first Auditable method argument; the create path
         // has none (the Ticket is constructed inside), so write the
         // companion AuditTrail row inline after persistence.
         auditTrailService.addUpdateEvent( created, TicketOpenedEvent.class,

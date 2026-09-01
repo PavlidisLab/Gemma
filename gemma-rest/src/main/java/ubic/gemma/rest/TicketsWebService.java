@@ -133,7 +133,10 @@ public class TicketsWebService {
                     + "Filter precedence note: `state` and `openOnly` are mutually exclusive — "
                     + "a passed `state` pins the predicate to that single state and the "
                     + "`openOnly` flag is ignored. With no `state` parameter, `openOnly=true` "
-                    + "retains its legacy OPEN+IN_PROGRESS semantics.",
+                    + "retains its legacy OPEN+IN_PROGRESS semantics.\n\n"
+                    + "Curator scratchpads are INCLUDED here and reachable with `type=SCRATCHPAD`. This is a "
+                    + "list, not a workload figure, so it is not filtered — the exclusion applies to the counts "
+                    + "on `GET /tickets/summary`. Use `GET /tickets/scratchpad` for the caller's own.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
@@ -192,6 +195,11 @@ public class TicketsWebService {
      * back a "My Queue" card in the curation-UI. Splits assigned tickets into open
      * (OPEN + IN_PROGRESS) and recently-resolved buckets — both capped per request
      * to keep the response compact.
+     * <p>
+     * Carries no scratchpad filter and needs none: every list here is scoped by ASSIGNEE, and a
+     * scratchpad is provisioned with a reporter and no assignee, so it does not reach this queue.
+     * The scratchpad has its own handle at {@code GET /tickets/scratchpad}; a curator who does
+     * assign one to themselves has asked for it in their queue.
      */
     @GET
     @Path("/mine")
@@ -247,6 +255,9 @@ public class TicketsWebService {
     /**
      * Lightweight counters about the calling admin's ticket workload. Cheap (two count
      * queries + one find for oldest-open); intended for top-of-page badges.
+     * <p>
+     * Assignee-scoped like {@link #getMyQueue}, so a scratchpad — reported by the curator, assigned
+     * to nobody — is already out of these counts without a type filter.
      */
     @GET
     @Path("/summary/me")
@@ -323,7 +334,12 @@ public class TicketsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Open-ticket roll-up across the corpus",
-            description = "Returns the total open ticket count and a per-{@link TicketType} breakdown. Cheap (single grouped count query); intended for the admin Systems Monitoring dashboard panel.",
+            description = "Returns the total open ticket count and a per-TicketType breakdown. Cheap (single grouped count query); intended for the admin Systems Monitoring dashboard panel.\n\n"
+                    + "`totalOpen` EXCLUDES scratchpads. A SCRATCHPAD ticket is never resolved — a curator "
+                    + "finishes with a dataset by removing it from the scratchpad — so counting one as open work "
+                    + "would add a permanent +1 per curator. The count is not hidden: it is reported as "
+                    + "`scratchpadOpen` and the `byType` breakdown still carries its `SCRATCHPAD` entry, so "
+                    + "`totalOpen + scratchpadOpen == sum(byType)`.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
@@ -332,11 +348,16 @@ public class TicketsWebService {
     public ResponseDataObject<OpenTicketSummaryResponse> getOpenTicketSummary() {
         java.util.Map<TicketType, Long> byType = ticketService.countOpenByType();
         long total = 0;
-        for ( Long v : byType.values() ) {
-            if ( v != null ) total += v;
+        for ( java.util.Map.Entry<TicketType, Long> e : byType.entrySet() ) {
+            // Scratchpads are open forever by design, so they are not curation work to be got
+            // through. They stay out of totalOpen and are reported on their own field instead;
+            // byType still carries the SCRATCHPAD entry, so the exclusion is visible and
+            // totalOpen + scratchpadOpen == sum(byType) holds.
+            if ( e.getValue() != null && e.getKey() != TicketType.SCRATCHPAD ) total += e.getValue();
         }
         OpenTicketSummaryResponse body = new OpenTicketSummaryResponse();
         body.totalOpen = total;
+        body.scratchpadOpen = byType.getOrDefault( TicketType.SCRATCHPAD, 0L );
         body.byType = new java.util.EnumMap<>( TicketType.class );
         // Ensure every enum value appears in the map even if count is zero — UI table
         // doesn't have to handle "missing key" vs "zero" specially.
@@ -347,8 +368,63 @@ public class TicketsWebService {
     }
 
     public static class OpenTicketSummaryResponse {
+        /**
+         * Open tickets across the corpus, EXCLUDING {@link TicketType#SCRATCHPAD}. See
+         * {@link #scratchpadOpen} — this is deliberately not the sum of {@link #byType}.
+         */
         public long totalOpen;
+        /**
+         * Open scratchpads, held out of {@link #totalOpen} so the exclusion is a number a caller can
+         * see and add back rather than a filter it has to know about. Equals the {@code SCRATCHPAD}
+         * entry of {@link #byType}, and roughly tracks the number of curators who have used one.
+         */
+        public long scratchpadOpen;
+        /** Per-type open counts. Every {@link TicketType} appears, including {@code SCRATCHPAD}. */
         public java.util.Map<TicketType, Long> byType;
+    }
+
+    /**
+     * The calling curator's scratchpad, provisioned on first access.
+     * <p>
+     * A scratchpad is one ticket per curator, kept open indefinitely, holding whatever they are
+     * currently looking at; finishing with a dataset means removing it with
+     * {@code DELETE /tickets/{id}/targets/{targetType}/{targetId}}, not resolving the ticket (Paul,
+     * 2026-08-31). This route exists so a client has a direct handle on it without listing and
+     * filtering — the dashboard pins it first, which is the client's job, not this route's.
+     * <p>
+     * ⚠️ The literal {@code /scratchpad} segment beats {@code /{id}}: JAX-RS sorts candidate methods
+     * by literal character count before template count (JSR-370 §3.7.2), so this never reaches
+     * {@link #getTicket} to be parsed as a {@code Long}. The sibling {@code /mine},
+     * {@code /summary} and {@code /summary/me} routes rely on the same rule.
+     */
+    @GET
+    @Path("/scratchpad")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Retrieve (and provision on first access) the calling curator's scratchpad",
+            description = "Returns the caller's SCRATCHPAD ticket, creating it if they do not have one yet. "
+                    + "The scratchpad is a single ticket per curator that stays open indefinitely; it carries "
+                    + "`acceptsTargets: true`, so datasets are added with `POST /tickets/{id}/targets` and — this "
+                    + "is how a scratchpad is finished with — removed again with "
+                    + "`DELETE /tickets/{id}/targets/{targetType}/{targetId}`. The response includes the full event "
+                    + "log, as `GET /tickets/{id}` does. Scratchpads are excluded from `totalOpen` on "
+                    + "`GET /tickets/summary` (reported separately as `scratchpadOpen`) because a ticket that is "
+                    + "never resolved is not outstanding work.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "401", description = "Not authenticated.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<TicketValueObject> getScratchpad() {
+        User me = userManager.getCurrentUser();
+        if ( me == null ) {
+            // Defensive — @PreAuthorize already excludes anonymous. Mirrors currentUserContactId().
+            throw new jakarta.ws.rs.NotAuthorizedException( "anonymous callers have no scratchpad" );
+        }
+        // The service initializes the lazy fields inside its transaction, so this projection is safe
+        // after it returns. See TicketServiceImpl#initializeForProjection.
+        Ticket scratchpad = ticketService.getOrCreateScratchpad( me );
+        return respond( TicketValueObject.from( scratchpad, true ) );
     }
 
     /**

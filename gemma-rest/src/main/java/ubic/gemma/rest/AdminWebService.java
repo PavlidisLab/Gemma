@@ -2644,10 +2644,24 @@ public class AdminWebService {
     }
 
     public static class TicketsBlock {
-        /** Open-ticket counts keyed by {@link TicketType#name()}. */
+        /**
+         * Open-ticket counts keyed by {@link TicketType#name()}. Includes {@code SCRATCHPAD}, which
+         * is what makes the exclusion in {@link #openCount} / {@link #oldestOpenAgeDays} visible:
+         * the gap between {@code openCount} and the sum of this map is the scratchpad count.
+         */
         public Map<String, Long> openCountByType;
+        /**
+         * Open tickets, EXCLUDING {@code SCRATCHPAD}. A scratchpad is never resolved — a curator
+         * finishes with a dataset by removing it from the scratchpad — so counting one here would
+         * add a permanent +1 per curator to the monitoring figure.
+         */
         public long openCount;
-        /** Days since the oldest non-terminal ticket was created; null when no open tickets exist. */
+        /**
+         * Days since the oldest non-terminal, non-{@code SCRATCHPAD} ticket was created; null when
+         * no open tickets exist. Scratchpads are excluded for the same reason as {@link #openCount},
+         * and the effect would be worse here: a scratchpad outlives every real ticket, so it would
+         * pin this to the age of the first one provisioned and it would never move again.
+         */
         @Nullable
         public Long oldestOpenAgeDays;
     }

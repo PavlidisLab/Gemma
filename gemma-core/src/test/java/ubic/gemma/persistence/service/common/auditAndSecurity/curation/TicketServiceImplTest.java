@@ -40,6 +40,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -358,6 +359,97 @@ public class TicketServiceImplTest {
                         || saved.getUpdatedAt().getTime() >= before.getTime(),
                 "updatedAt should advance" );
         verify( ticketDao ).save( t );
+    }
+
+    /* ---- scratchpad provisioning ---------------------------------------- */
+
+    /**
+     * First call mints it. The two properties asserted here are the ones that make it a scratchpad
+     * rather than an ordinary ticket: the type, and {@code acceptsTargets} — a scratchpad nothing can
+     * be added to is inert, and the flag defaults to false.
+     */
+    @Test
+    public void getOrCreateScratchpad_createsOneOnFirstCall() {
+        when( ticketDao.findScratchpad( reporter ) ).thenReturn( null );
+        stubDaoCreateEchoes();
+
+        Ticket t = service.getOrCreateScratchpad( reporter );
+
+        assertEquals( TicketType.SCRATCHPAD, t.getType() );
+        assertTrue( t.isAcceptsTargets(), "a scratchpad nothing can be added to is pointless" );
+        assertEquals( TicketState.OPEN, t.getState() );
+        assertSame( reporter, t.getReporter() );
+        assertTrue( t.getTargets().isEmpty(), "a fresh scratchpad holds nothing yet" );
+        assertTrue( t.getTitle().contains( "Scratchpad" ), "title was " + t.getTitle() );
+        assertTrue( containsEventOfType( t, TicketEventType.OPENED ) );
+        verify( ticketDao ).create( any( Ticket.class ) );
+    }
+
+    /** An existing scratchpad is handed back untouched — no second row, no second OPENED event. */
+    @Test
+    public void getOrCreateScratchpad_returnsTheExistingOne_withoutCreating() {
+        Ticket existing = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "Scratchpad: Reporter", reporter );
+        existing.setId( 77L );
+        existing.setAcceptsTargets( true );
+        when( ticketDao.findScratchpad( reporter ) ).thenReturn( existing );
+
+        Ticket t = service.getOrCreateScratchpad( reporter );
+
+        assertSame( existing, t );
+        assertTrue( t.getEvents().isEmpty(), "re-reading a scratchpad must not append to its log" );
+        verify( ticketDao, never() ).create( any( Ticket.class ) );
+    }
+
+    /**
+     * The duplicate guard as a caller experiences it: call twice, get one ticket. The DAO stub stores
+     * what create() was handed and hands it back to the next findScratchpad, which is what a committed
+     * row does. Nothing in the schema enforces this — see TicketService#getOrCreateScratchpad for the
+     * race that survives — but the query-then-create path itself must not mint a second one.
+     */
+    @Test
+    public void getOrCreateScratchpad_secondCallReturnsTheSameTicket_andCreatesOnlyOnce() {
+        java.util.concurrent.atomic.AtomicReference<Ticket> stored = new java.util.concurrent.atomic.AtomicReference<>();
+        when( ticketDao.findScratchpad( reporter ) ).thenAnswer( inv -> stored.get() );
+        when( ticketDao.create( any( Ticket.class ) ) ).thenAnswer( inv -> {
+            Ticket arg = inv.getArgument( 0 );
+            arg.setId( 4242L );
+            stored.set( arg );
+            return arg;
+        } );
+
+        Ticket first = service.getOrCreateScratchpad( reporter );
+        Ticket second = service.getOrCreateScratchpad( reporter );
+
+        assertSame( first, second, "a curator has ONE scratchpad" );
+        verify( ticketDao, org.mockito.Mockito.times( 1 ) ).create( any( Ticket.class ) );
+    }
+
+    /**
+     * The lookup is scoped by curator, not global. One curator already has a scratchpad and the other
+     * does not: the first must get theirs back and the second must get a new one of their own. A
+     * lookup that ignored the curator would hand the second curator the first one's, or miss the
+     * first's entirely.
+     */
+    @Test
+    public void getOrCreateScratchpad_isScopedToTheCurator() {
+        Ticket reportersOwn = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "Scratchpad: Reporter", reporter );
+        reportersOwn.setId( 88L );
+        when( ticketDao.findScratchpad( reporter ) ).thenReturn( reportersOwn );
+        when( ticketDao.findScratchpad( assignee ) ).thenReturn( null );
+        stubDaoCreateEchoes();
+
+        Ticket mine = service.getOrCreateScratchpad( reporter );
+        Ticket theirs = service.getOrCreateScratchpad( assignee );
+
+        assertSame( reportersOwn, mine );
+        assertNotSame( mine, theirs, "the other curator must not be handed this one's scratchpad" );
+        assertSame( assignee, theirs.getReporter() );
+        verify( ticketDao, org.mockito.Mockito.times( 1 ) ).create( any( Ticket.class ) );
+    }
+
+    @Test
+    public void getOrCreateScratchpad_rejectsANullCurator() {
+        assertThrows( IllegalArgumentException.class, () -> service.getOrCreateScratchpad( null ) );
     }
 
     @Test
