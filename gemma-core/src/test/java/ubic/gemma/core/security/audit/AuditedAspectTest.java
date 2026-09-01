@@ -138,6 +138,18 @@ public class AuditedAspectTest extends BaseTest5 {
         }
 
         /**
+         * The exact expression shape the curation commit uses to append a caller-supplied reason to
+         * the server's own note: mechanical description first, reason appended only when one was
+         * given. A deletion has no surviving annotation to carry evidence, so the audit note is the
+         * only place its reason can live.
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                messageSpel = "'Removed tag a = b' + (#reason != null ? ' \u2014 ' + #reason : '')" )
+        public void removeWithOptionalReason( FakeAuditable target, @Nullable String reason ) {
+            // no-op; the aspect resolves the note from #reason
+        }
+
+        /**
          * SpEL referencing the return value via {@code #result}. The aspect
          * is {@code @AfterReturning} so {@code #result} is fully populated.
          */
@@ -573,6 +585,40 @@ public class AuditedAspectTest extends BaseTest5 {
                 eq( "Removed sample because: low-quality" ),
                 eq( null ) );
         assertThat( collector.received ).hasSize( 1 );
+    }
+
+    /**
+     * A supplied reason joins the server's mechanical description rather than replacing it — cab's ask
+     * was explicitly "appended to the server's own note", so the description survives.
+     */
+    @Test
+    public void optionalReason_isAppendedToTheServersOwnNote() {
+        FakeAuditable target = new FakeAuditable( 140L );
+
+        annotatedService.removeWithOptionalReason( target, "redundant_with_bm_source: implied by the cell line" );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed tag a = b \u2014 redundant_with_bm_source: implied by the cell line" ),
+                eq( null ) );
+    }
+
+    /**
+     * 🛑 And no reason must leave the note exactly as it was. Every existing caller passes null, so a
+     * ternary that emitted a bare separator would rewrite the note on every audited write in Gemma.
+     */
+    @Test
+    public void noReason_leavesTheNoteUntouched() {
+        FakeAuditable target = new FakeAuditable( 141L );
+
+        annotatedService.removeWithOptionalReason( target, null );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed tag a = b" ),
+                eq( null ) );
     }
 
     @Test

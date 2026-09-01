@@ -301,6 +301,25 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Audited( value = TagAddedEvent.class,
             messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value + ' to biomaterial ' + #bm.id" )
     public Characteristic addAnnotation( ExpressionExperiment owner, BioMaterial bm, Characteristic vc ) {
+        return doAddAnnotation( owner, bm, vc );
+    }
+
+    /**
+     * Reason-carrying overload. A separate method rather than a parameter on the one above so every
+     * existing caller keeps its signature; the two differ only in the audit note the aspect writes.
+     * Both delegate to the same private body through a plain {@code this} call, which is not re-advised,
+     * so one call still writes one event.
+     */
+    @Override
+    @Transactional
+    @Audited( value = TagAddedEvent.class,
+            messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value + ' to biomaterial ' + #bm.id + (#reason != null ? ' \u2014 ' + #reason : '')" )
+    public Characteristic addAnnotation( ExpressionExperiment owner, BioMaterial bm, Characteristic vc,
+            @Nullable String reason ) {
+        return doAddAnnotation( owner, bm, vc );
+    }
+
+    private Characteristic doAddAnnotation( ExpressionExperiment owner, BioMaterial bm, Characteristic vc ) {
         Assert.notNull( owner, "Owner experiment must not be null." );
         Assert.notNull( vc, "Characteristic must not be null." );
         Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
@@ -328,6 +347,23 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
             messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value + ' from biomaterial ' + #bm.id" )
     @Nullable
     public Characteristic removeAnnotation( ExpressionExperiment owner, BioMaterial bm, Long annotationId ) {
+        return doRemoveAnnotation( owner, bm, annotationId );
+    }
+
+    /** Reason-carrying overload; see {@link #addAnnotation(ExpressionExperiment, BioMaterial, Characteristic, String)}. */
+    @Override
+    @Transactional
+    @AuditedConditional( value = TagRemovedEvent.class,
+            when = "#result != null",
+            messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value + ' from biomaterial ' + #bm.id + (#reason != null ? ' \u2014 ' + #reason : '')" )
+    @Nullable
+    public Characteristic removeAnnotation( ExpressionExperiment owner, BioMaterial bm, Long annotationId,
+            @Nullable String reason ) {
+        return doRemoveAnnotation( owner, bm, annotationId );
+    }
+
+    @Nullable
+    private Characteristic doRemoveAnnotation( ExpressionExperiment owner, BioMaterial bm, Long annotationId ) {
         Assert.notNull( owner, "Owner experiment must not be null." );
         Assert.notNull( annotationId, "Annotation id must not be null." );
         bm = Objects.requireNonNull( bioMaterialDao.load( bm.getId() ),

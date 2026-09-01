@@ -261,21 +261,47 @@ public class ExpressionExperimentDaoImpl
         getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".quantitationTypes", ee.getId() );
     }
 
+    //language=HQL
+    private static final String IDENTIFIERS_PROJECTION =
+            "select ee.id as id, ee.shortName as shortName, ee.name as name, accession.accession as accession "
+                    + "from ExpressionExperiment ee left join ee.accession accession ";
+
     @Override
     public List<Identifiers> loadAllIdentifiers() {
-        Query<Object[]> query = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee.id as id, ee.shortName as shortName, ee.name as name, accession.accession as accession from ExpressionExperiment ee "
-                        + "left join ee.accession accession "
-                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ), Object[].class );
+        return loadIdentifiers( null, false );
+    }
+
+    @Override
+    public List<Identifiers> loadIdentifiers( Collection<Long> ids ) {
+        Assert.notNull( ids, "Ids cannot be null; use loadAllIdentifiers() for the unscoped load." );
+        return loadIdentifiers( ids, true );
+    }
+
+    /**
+     * @param ids     the ids to restrict to, or {@code null} for every experiment
+     * @param scoped  whether {@code ids} is a real restriction (an empty scoped list means "none")
+     */
+    private List<Identifiers> loadIdentifiers( @Nullable Collection<Long> ids, boolean scoped ) {
+        if ( scoped && ( ids == null || ids.isEmpty() ) ) {
+            // An empty `in` list is not valid HQL, and the answer is knowable without asking.
+            return Collections.emptyList();
+        }
+        String hql = IDENTIFIERS_PROJECTION
+                + ( scoped ? "where ee.id in :ids " : "" )
+                + AclQueryUtils.formAclRestrictionClause( "ee.id" );
+        Query<Object[]> query = getSessionFactory().getCurrentSession().createQuery( hql, Object[].class );
+        if ( scoped ) {
+            query.setParameterList( "ids", optimizeParameterList( ids ) );
+        }
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         List<Identifiers> result = new ArrayList<>();
         for ( Object[] row : query.list() ) {
-            Identifiers ids = new Identifiers();
-            ids.setId( ( Long ) row[0] );
-            ids.setShortName( ( String ) row[1] );
-            ids.setName( ( String ) row[2] );
-            ids.setAccession( ( String ) row[3] );
-            result.add( ids );
+            Identifiers idf = new Identifiers();
+            idf.setId( ( Long ) row[0] );
+            idf.setShortName( ( String ) row[1] );
+            idf.setName( ( String ) row[2] );
+            idf.setAccession( ( String ) row[3] );
+            result.add( idf );
         }
         return result;
     }

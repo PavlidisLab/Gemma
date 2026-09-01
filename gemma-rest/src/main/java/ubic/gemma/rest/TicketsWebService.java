@@ -34,6 +34,9 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.util.CursorPage;
@@ -64,7 +67,9 @@ import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -97,13 +102,79 @@ public class TicketsWebService {
     private final TicketService ticketService;
     private final UserManager userManager;
     private final UserReadService userReadService;
+    private final ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    public TicketsWebService( TicketService ticketService, UserManager userManager, UserReadService userReadService ) {
+    public TicketsWebService( TicketService ticketService, UserManager userManager, UserReadService userReadService,
+            ExpressionExperimentService expressionExperimentService ) {
         this.ticketService = ticketService;
         this.userManager = userManager;
         this.userReadService = userReadService;
+        this.expressionExperimentService = expressionExperimentService;
     }
+
+    /**
+     * Fill in {@code displayLabel} / {@code displayName} on every EXPRESSION_EXPERIMENT target across
+     * the given tickets, in ONE query for the whole batch.
+     * <p>
+     * The fields have been on {@link TicketTargetValueObject} since Phase B-2 and nothing ever wrote
+     * them, so a ticket's targets arrived as bare ids and the navigator rendered "31491 (no title)"
+     * however many rows deep the ticket went. The UI resolved them itself at five requests per ticket
+     * (/datasets/{ids} caps limit at 100); a populated label makes that resolver dead code.
+     * <p>
+     * 🛑 Batched across ALL the tickets passed, not per ticket: the dashboard renders a page of them,
+     * and one query per ticket would just move uib's N+1 onto the server.
+     * <p>
+     * Ids the caller cannot read are not resolved and keep their null, which is the documented
+     * fallback — {@code loadIdentifiers} is ACL-filtered, so a ticket cannot be used to read out the
+     * name of a dataset the caller cannot see.
+     */
+    private void resolveTargetLabels( Collection<TicketValueObject> tickets ) {
+        Set<Long> eeIds = new HashSet<>();
+        for ( TicketValueObject t : tickets ) {
+            if ( t == null || t.getTargets() == null ) {
+                continue;
+            }
+            for ( TicketTargetValueObject tt : t.getTargets() ) {
+                if ( tt.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT && tt.getTargetId() != null ) {
+                    eeIds.add( tt.getTargetId() );
+                }
+            }
+        }
+        if ( eeIds.isEmpty() ) {
+            return;
+        }
+        Map<Long, ExpressionExperimentDao.Identifiers> byId = new HashMap<>();
+        for ( ExpressionExperimentDao.Identifiers i : expressionExperimentService.loadIdentifiers( eeIds ) ) {
+            byId.put( i.getId(), i );
+        }
+        for ( TicketValueObject t : tickets ) {
+            if ( t == null || t.getTargets() == null ) {
+                continue;
+            }
+            for ( TicketTargetValueObject tt : t.getTargets() ) {
+                ExpressionExperimentDao.Identifiers i = byId.get( tt.getTargetId() );
+                if ( i != null && tt.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT ) {
+                    tt.setDisplayLabel( i.getShortName() );
+                    tt.setDisplayName( i.getName() );
+                }
+            }
+        }
+    }
+
+    /** Single-ticket form of {@link #resolveTargetLabels(Collection)}; returns its argument. */
+    private TicketValueObject withTargetLabels( TicketValueObject vo ) {
+        resolveTargetLabels( Collections.singletonList( vo ) );
+        return vo;
+    }
+
+    /** Collection form of {@link #resolveTargetLabels(Collection)}; returns its argument. CursorPage is
+     * itself a List, so a page of tickets goes through here too. */
+    private <C extends Collection<TicketValueObject>> C withTargetLabels( C vos ) {
+        resolveTargetLabels( vos );
+        return vos;
+    }
+
 
     /**
      * List tickets with optional filters and offset/limit or cursor pagination.
@@ -178,7 +249,7 @@ public class TicketsWebService {
             CursorPage<Ticket> page = ticketService.findTicketsByCursor(
                     openOnly, assigneeId, priority, type, state, targetType, updatedSince,
                     cursorArg.getValue(), limit );
-            CursorPage<TicketValueObject> voPage = page.map( TicketValueObject::from );
+            CursorPage<TicketValueObject> voPage = withTargetLabels( page.map( TicketValueObject::from ) );
             return paginateByCursor( voPage, new String[] { "id" } );
         }
         int offset = offsetArg.getValue();
@@ -186,9 +257,9 @@ public class TicketsWebService {
                 type, state, targetType, updatedSince, offset, limit );
         long total = ticketService.countTickets( openOnly, assigneeId, priority,
                 type, state, targetType, updatedSince );
-        List<TicketValueObject> vos = tickets.stream()
+        List<TicketValueObject> vos = withTargetLabels( tickets.stream()
                 .map( TicketValueObject::from )
-                .collect( Collectors.toList() );
+                .collect( Collectors.toList() ) );
         Slice<TicketValueObject> slice = new Slice<>( vos, null, offset, limit, total );
         return paginate( slice, new String[] { "id" } );
     }
@@ -248,8 +319,8 @@ public class TicketsWebService {
         body.assigneeContactId = meId;
         body.openLimit = cappedLimit;
         body.resolvedWithinDays = resolvedWithinDays;
-        body.open = open.stream().map( TicketValueObject::from ).collect( Collectors.toList() );
-        body.recentlyResolved = recentlyResolved.stream().map( TicketValueObject::from ).collect( Collectors.toList() );
+        body.open = withTargetLabels( open.stream().map( TicketValueObject::from ).collect( Collectors.toList() ) );
+        body.recentlyResolved = withTargetLabels( recentlyResolved.stream().map( TicketValueObject::from ).collect( Collectors.toList() ) );
         body.openCount = body.open.size();
         body.recentlyResolvedCount = body.recentlyResolved.size();
         return respond( body );
@@ -427,7 +498,7 @@ public class TicketsWebService {
         // The service initializes the lazy fields inside its transaction, so this projection is safe
         // after it returns. See TicketServiceImpl#initializeForProjection.
         Ticket scratchpad = ticketService.getOrCreateScratchpad( me );
-        return respond( TicketValueObject.from( scratchpad, true ) );
+        return respond( withTargetLabels( TicketValueObject.from( scratchpad, true ) ) );
     }
 
     /**
@@ -501,7 +572,7 @@ public class TicketsWebService {
         // each event's actor) initialize INSIDE the service's @Transactional rather than
         // raising LazyInitializationException once the session closes. See
         // TicketServiceImpl.loadValueObject + the regression IT.
-        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
         if ( vo == null ) {
             throw new NotFoundException( "No ticket with id " + id );
         }
@@ -558,7 +629,7 @@ public class TicketsWebService {
                     .map( TicketEventValueObject::from );
             return paginateByCursor( page, new String[] { "id" } );
         }
-        TicketValueObject vo = TicketValueObject.from( t, true );
+        TicketValueObject vo = withTargetLabels( TicketValueObject.from( t, true ) );
         return respond( vo.getEvents() );
     }
 
@@ -646,7 +717,7 @@ public class TicketsWebService {
             created = ticketService.assign( created, reporter, assignee );
         }
         return Response.status( Response.Status.CREATED )
-                .entity( new ResponseDataObject<>( TicketValueObject.from( created, true ) ) )
+                .entity( new ResponseDataObject<>( withTargetLabels( TicketValueObject.from( created, true ) ) ) )
                 .build();
     }
 
@@ -748,7 +819,7 @@ public class TicketsWebService {
         // the service's @Transactional. Building from the handler-side `ticket` reference
         // would raise LazyInitializationException — same bug class as the GET path
         // (see TicketServiceImpl.loadValueObject + DetachedEntityRegression tests).
-        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
         if ( vo == null ) {
             // Race: ticket deleted between the mutation and the read. Surface as 404.
             throw new NotFoundException( "Ticket " + id + " disappeared after update." );
@@ -852,7 +923,7 @@ public class TicketsWebService {
                 alreadyPresent.add( ref.getTargetId() );
             }
         }
-        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
         if ( vo == null ) {
             throw new NotFoundException( "Ticket " + id + " disappeared after adding targets." );
         }
@@ -899,7 +970,7 @@ public class TicketsWebService {
         if ( removed == null ) {
             return Response.noContent().build();
         }
-        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
         if ( vo == null ) {
             throw new NotFoundException( "Ticket " + id + " disappeared after removing a target." );
         }
@@ -941,7 +1012,7 @@ public class TicketsWebService {
             // the update methods throw IAE when the targetRowId isn't on this ticket.
             throw new NotFoundException( e.getMessage() );
         }
-        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
         if ( vo == null ) {
             throw new NotFoundException( "Ticket " + id + " disappeared after target update." );
         }
@@ -986,7 +1057,7 @@ public class TicketsWebService {
         for ( Ticket t : tickets ) {
             out.add( TicketValueObject.from( t ) );
         }
-        return out;
+        return withTargetLabels( out );
     }
 
     /**
@@ -1031,7 +1102,7 @@ public class TicketsWebService {
             @org.springframework.lang.Nullable ubic.gemma.persistence.util.Cursor cursor, int limit ) {
         CursorPage<Ticket> page = ticketService.findOpenForTargetByCursor(
                 TicketTargetType.EXPRESSION_EXPERIMENT, eeId, cursor, limit );
-        return page.map( TicketValueObject::from );
+        return withTargetLabels( page.map( TicketValueObject::from ) );
     }
 
     /**
@@ -1047,7 +1118,7 @@ public class TicketsWebService {
             @org.springframework.lang.Nullable ubic.gemma.persistence.util.Cursor cursor, int limit ) {
         CursorPage<Ticket> page = ticketService.findOpenForTargetByCursor(
                 TicketTargetType.ARRAY_DESIGN, adId, cursor, limit );
-        return page.map( TicketValueObject::from );
+        return withTargetLabels( page.map( TicketValueObject::from ) );
     }
 
     /* ====== Request DTOs (kept inner-class for proximity to the endpoints) ====== */

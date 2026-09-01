@@ -77,6 +77,17 @@ public interface ExpressionExperimentDao
      */
     List<Identifiers> loadAllIdentifiers();
 
+    /**
+     * Load identifiers for the given experiments only.
+     * <p>
+     * Same projection and the same ACL restriction as {@link #loadAllIdentifiers()}: an id the caller
+     * cannot read simply does not come back, so a caller resolving names for a list it was handed
+     * cannot use this to learn about a dataset it could not otherwise see.
+     *
+     * @param ids the experiments to resolve; an empty collection yields an empty list without a query
+     */
+    List<Identifiers> loadIdentifiers( Collection<Long> ids );
+
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
     @Nullable

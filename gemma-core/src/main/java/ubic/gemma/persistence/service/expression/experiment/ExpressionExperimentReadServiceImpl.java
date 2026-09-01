@@ -177,6 +177,12 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
 
     @Override
     @Transactional(readOnly = true)
+    public List<ExpressionExperimentDao.Identifiers> loadIdentifiers( Collection<Long> ids ) {
+        return expressionExperimentDao.loadIdentifiers( ids );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames ) {
         List<ExpressionExperimentDao.Identifiers> allIds = expressionExperimentDao.loadAllIdentifiers();
         TreeMap<String, String> finalIds = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );

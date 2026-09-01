@@ -154,6 +154,13 @@ public interface BioMaterialService extends SecurableBaseService<BioMaterial>, S
     Characteristic addAnnotation( ExpressionExperiment owner, BioMaterial bm, Characteristic vc );
 
     /**
+     * As {@link #addAnnotation(ExpressionExperiment, BioMaterial, Characteristic)}, with a caller-supplied
+     * reason appended to the audit note after the server's own description.
+     */
+    Characteristic addAnnotation( ExpressionExperiment owner, BioMaterial bm, Characteristic vc,
+            @Nullable String reason );
+
+    /**
      * Per-tag remove of a characteristic from a biomaterial by id, the sample-level counterpart of
      * {@link ExpressionExperimentService#removeAnnotation(ExpressionExperiment, Long)}. Records a
      * {@link ubic.gemma.model.common.auditAndSecurity.eventType.TagRemovedEvent} on {@code owner}; returns
@@ -164,4 +171,12 @@ public interface BioMaterialService extends SecurableBaseService<BioMaterial>, S
     @Nullable
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     Characteristic removeAnnotation( ExpressionExperiment owner, BioMaterial bm, Long annotationId );
+
+    /**
+     * As {@link #removeAnnotation(ExpressionExperiment, BioMaterial, Long)}, with a caller-supplied reason
+     * appended to the audit note. A deletion has no surviving annotation to carry evidence, so this is the
+     * only place its reason can be recorded.
+     */
+    Characteristic removeAnnotation( ExpressionExperiment owner, BioMaterial bm, Long annotationId,
+            @Nullable String reason );
 }

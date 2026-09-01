@@ -1008,7 +1008,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         bm1000.getCharacteristics().add( sampleChar );
         when( eeDao.load( 1L ) ).thenReturn( fixture );
         when( readService.thawBioAssays( fixture ) ).thenReturn( fixture );
-        when( bioMaterialService.removeAnnotation( fixture, bm1000, 555L ) ).thenReturn( sampleChar );
+        when( bioMaterialService.removeAnnotation( fixture, bm1000, 555L, null ) ).thenReturn( sampleChar );
 
         CurationCommitRequest request = new CurationCommitRequest();
         request.setSampleCharsPresent( true );

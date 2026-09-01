@@ -86,6 +86,17 @@ public interface ExpressionExperimentReadService {
 
     SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames );
 
+    /**
+     * Resolve the short name and name of the given experiments, for callers that hold ids and need
+     * something a person can read.
+     * <p>
+     * ACL-filtered: an id the caller cannot read is absent from the result rather than throwing, so a
+     * caller labelling a list it was handed cannot learn about a dataset it could not otherwise see.
+     *
+     * @see ExpressionExperimentDao#loadIdentifiers(Collection)
+     */
+    List<ExpressionExperimentDao.Identifiers> loadIdentifiers( Collection<Long> ids );
+
     ExpressionExperiment reload( ExpressionExperiment ee );
 
     @Nullable

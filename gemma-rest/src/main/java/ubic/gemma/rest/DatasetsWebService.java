@@ -3510,6 +3510,10 @@ public class DatasetsWebService {
         // Commit + sign close the curation ticket that asked for the work; restore + preflight do not
         // (the commitCuration transaction still gates on !dryRun).
         request.setAdvanceLinkedTickets( advanceTickets );
+        // Blank is not a reason; normalize it away so a client sending "" does not append a bare
+        // separator to every audit note this commit writes.
+        request.setReason( StringUtils.trimToNull( body.getReason() ) );
+        request.setReasonCode( StringUtils.trimToNull( body.getReasonCode() ) );
         request.setExpectedLastUpdated( parseBaselineToken( body.getBaseline() != null ? body.getBaseline().getLastModified() : null ) );
 
         // Accumulate ontology-term grounding failures across every new/changed annotation in the document and
@@ -3812,6 +3816,37 @@ public class DatasetsWebService {
         private CurationDetailsCommit curationDetails;
         @Nullable
         private CurationRunRef run;
+        /**
+         * Why this commit was made. Appended to the audit-event note of every annotation the commit
+         * adds or removes, AFTER the server's own mechanical description ("Removed tag strain = CBA/J")
+         * rather than replacing it.
+         * <p>
+         * 🛑 It exists for DELETIONS. An addition justifies itself — {@code supportingEvidence} on the
+         * annotation records where the claim came from — but a deletion ends with no annotation to hang
+         * evidence off, so the record said what went and never why. This is the only class of curation
+         * change that could not say.
+         * <p>
+         * Per commit, not per change: one sentence covers the deletions in one commit, and a caller
+         * that commits one dataset at a time gets one note per dataset instead of one per tag. Not
+         * {@code curationDetails.curationNote}, which is dataset-scoped and overwrites.
+         */
+        @Nullable
+        private String reason;
+        /**
+         * An optional short key for {@code reason}, recorded verbatim and never interpreted, so that
+         * reasons written by different callers can be grouped by a later query rather than grepped.
+         * <p>
+         * 🛑 There is deliberately no vocabulary for this field. Gemma does not define the keys, does
+         * not validate them, and keeps no list. Send whatever short key your side uses; sending none is
+         * fine, and free text alone is a complete answer.
+         * <p>
+         * 🛑 It is NOT the audit-finding dismissal vocabulary. Dismissing a proposed finding and
+         * deleting a tag a curator previously asserted are different acts, and those keys are written
+         * about findings. What the right categories are for a tag deletion is an open question — which
+         * is why this field does not answer it.
+         */
+        @Nullable
+        private String reasonCode;
 
         @Nullable
         public CurationBaseline getBaseline() { return baseline; }
@@ -3837,6 +3872,12 @@ public class DatasetsWebService {
         @Nullable
         public CurationRunRef getRun() { return run; }
         public void setRun( @Nullable CurationRunRef run ) { this.run = run; }
+        @Nullable
+        public String getReason() { return reason; }
+        public void setReason( @Nullable String reason ) { this.reason = reason; }
+        @Nullable
+        public String getReasonCode() { return reasonCode; }
+        public void setReasonCode( @Nullable String reasonCode ) { this.reasonCode = reasonCode; }
     }
 
     /**

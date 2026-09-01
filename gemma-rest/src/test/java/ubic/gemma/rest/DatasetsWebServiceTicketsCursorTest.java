@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
@@ -79,6 +80,13 @@ public class DatasetsWebServiceTicketsCursorTest {
     private DatasetArgService datasetArgService;
     @Mock
     private TicketService ticketService;
+
+    /** Constructor dependency of TicketsWebService; it resolves ticket-target display labels. */
+
+    @Mock
+
+    private ExpressionExperimentService expressionExperimentService;
+
 
     @InjectMocks
     private TicketsWebService ticketsWebService;

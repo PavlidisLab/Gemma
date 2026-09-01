@@ -105,6 +105,9 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames );
 
+    /** @see ExpressionExperimentReadService#loadIdentifiers(Collection) */
+    List<ExpressionExperimentDao.Identifiers> loadIdentifiers( Collection<Long> ids );
+
     /**
      * @see ExpressionExperimentDao#reload(Identifiable)
      */
@@ -1342,6 +1345,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc );
 
     /**
+     * As {@link #addAnnotation(ExpressionExperiment, Characteristic)}, with a caller-supplied reason
+     * appended to the audit note after the server's own description.
+     */
+    Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc, @Nullable String reason );
+
+    /**
      * Remove a single experiment-level tag from {@code ee} by characteristic id. Counterpart to
      * {@link #addAnnotation(ExpressionExperiment, Characteristic)}.
      * <p>
@@ -1357,6 +1366,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId );
+
+    /**
+     * As {@link #removeAnnotation(ExpressionExperiment, Long)}, with a caller-supplied reason appended to
+     * the audit note. A deletion has no surviving annotation to carry evidence, so this is the only place
+     * its reason can be recorded.
+     */
+    Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId, @Nullable String reason );
 
     /**
      * @see ExpressionExperimentDao#thaw(ExpressionExperiment)

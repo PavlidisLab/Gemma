@@ -27,6 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.Response;
@@ -84,7 +85,8 @@ public class TicketsWebServiceScratchpadRoutingTest extends JerseyTest {
         GenericApplicationContext emptyContext = new GenericApplicationContext();
         emptyContext.refresh();
         return new ResourceConfig()
-                .register( new TicketsWebService( ticketService, userManager, userReadService ) )
+                .register( new TicketsWebService( ticketService, userManager, userReadService,
+                        mock( ExpressionExperimentService.class ) ) )
                 .register( JacksonFeature.class )
                 .property( "contextConfig", emptyContext )
                 // Same reason as BaseJerseyTest5: Jersey 3.1's resource-model validator treats this

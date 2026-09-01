@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.security.authentication.UserReadService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
@@ -78,6 +79,13 @@ public class TicketsWebServiceEventsCursorTest {
     @Mock
     @SuppressWarnings("unused")
     private UserReadService userReadService;
+
+    /** Constructor dependency of TicketsWebService; it resolves ticket-target display labels. */
+
+    @Mock
+
+    private ExpressionExperimentService expressionExperimentService;
+
 
     @InjectMocks
     private TicketsWebService webService;

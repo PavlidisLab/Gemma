@@ -234,6 +234,11 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    public List<ExpressionExperimentDao.Identifiers> loadIdentifiers( Collection<Long> ids ) {
+        return readService.loadIdentifiers( ids );
+    }
+
+    @Override
     public ExpressionExperiment reload( ExpressionExperiment ee ) {
         return readService.reload( ee );
     }
@@ -2539,6 +2544,21 @@ public class ExpressionExperimentServiceImpl
         return changed;
     }
 
+    /**
+     * The text this commit appends to each annotation audit note: the disposition key and the prose, or
+     * whichever of the two was supplied. Composed once here so every annotation the commit touches
+     * carries the same sentence, and so the key leads — that is the part a later query can group on.
+     */
+    @Nullable
+    private static String auditReason( CurationCommitRequest request ) {
+        String code = StringUtils.trimToNull( request.getReasonCode() );
+        String prose = StringUtils.trimToNull( request.getReason() );
+        if ( code == null ) {
+            return prose;
+        }
+        return prose == null ? code : code + ": " + prose;
+    }
+
     @Override
     @Transactional
     public CurationCommitResult commitCuration( ExpressionExperiment ee, CurationCommitRequest request, boolean dryRun ) {
@@ -2724,13 +2744,13 @@ public class ExpressionExperimentServiceImpl
                 deleted = request.getTagsToDelete().size();
             } else {
                 for ( Long id : request.getTagsToDelete() ) {
-                    if ( self.removeAnnotation( ee, id ) != null ) {
+                    if ( self.removeAnnotation( ee, id, auditReason( request ) ) != null ) {
                         deleted++;
                     }
                 }
                 List<CurationCommitRequest.TagAdd> adds = request.getTagsToAdd();
                 for ( CurationCommitRequest.TagAdd add : adds ) {
-                    self.addAnnotation( ee, add.getCharacteristic() );
+                    self.addAnnotation( ee, add.getCharacteristic(), auditReason( request ) );
                     created++;
                 }
                 if ( created > 0 ) {
@@ -2776,7 +2796,7 @@ public class ExpressionExperimentServiceImpl
                 }
                 for ( Long id : request.getSampleCharsToDelete() ) {
                     BioMaterial bm = charIdToBm.get( id );
-                    if ( bm != null && bioMaterialService.removeAnnotation( ee, bm, id ) != null ) {
+                    if ( bm != null && bioMaterialService.removeAnnotation( ee, bm, id, auditReason( request ) ) != null ) {
                         deleted++;
                     }
                 }
@@ -2787,7 +2807,7 @@ public class ExpressionExperimentServiceImpl
                         throw new IllegalArgumentException( "sampleCharacteristics references biomaterial "
                                 + add.getBioMaterialId() + " which is not part of " + ee.getShortName() + "." );
                     }
-                    bioMaterialService.addAnnotation( ee, bm, add.getCharacteristic() );
+                    bioMaterialService.addAnnotation( ee, bm, add.getCharacteristic(), auditReason( request ) );
                     created++;
                 }
                 if ( created > 0 ) {
@@ -3152,6 +3172,26 @@ public class ExpressionExperimentServiceImpl
     @Audited(value = TagAddedEvent.class,
             messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value")
     public Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc ) {
+        return doAddAnnotation( ee, vc );
+    }
+
+    /**
+     * Reason-carrying overload. Separate method rather than a parameter on the one above so that every
+     * existing caller and its tests keep the signature they have; the two differ only in the audit note
+     * the aspect writes.
+     * <p>
+     * 🛑 Both are audited and both delegate to the same private body. The delegation is a plain
+     * {@code this} call, so the inner method is NOT re-advised and one call still writes one event.
+     */
+    @Override
+    @Transactional
+    @Audited(value = TagAddedEvent.class,
+            messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value + (#reason != null ? ' \u2014 ' + #reason : '')")
+    public Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc, @Nullable String reason ) {
+        return doAddAnnotation( ee, vc );
+    }
+
+    private Characteristic doAddAnnotation( ExpressionExperiment ee, Characteristic vc ) {
         Assert.notNull( vc, "Characteristic must not be null." );
         Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
         Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
@@ -3184,6 +3224,22 @@ public class ExpressionExperimentServiceImpl
             messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value")
     @Nullable
     public Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId ) {
+        return doRemoveAnnotation( ee, annotationId );
+    }
+
+    /** Reason-carrying overload; see {@link #addAnnotation(ExpressionExperiment, Characteristic, String)}. */
+    @Override
+    @Transactional
+    @AuditedConditional(value = TagRemovedEvent.class,
+            when = "#result != null",
+            messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value + (#reason != null ? ' \u2014 ' + #reason : '')")
+    @Nullable
+    public Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId, @Nullable String reason ) {
+        return doRemoveAnnotation( ee, annotationId );
+    }
+
+    @Nullable
+    private Characteristic doRemoveAnnotation( ExpressionExperiment ee, Long annotationId ) {
         Assert.notNull( annotationId, "Annotation id must not be null." );
         ee = ensureInSession( ee );
         Characteristic target = null;

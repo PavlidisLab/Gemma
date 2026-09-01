@@ -100,6 +100,43 @@ public class CurationCommitRequest {
     private String splitRationale;
 
     // ── experiment-level tags (id-based: add clientRef items, remove deletedIds, keep gemmaId items) ──
+    /**
+     * Why this commit was made, in the curator's or agent's own words. Appended to the audit-event note
+     * of every annotation this commit adds or removes, after the server's own mechanical description.
+     * <p>
+     * 🛑 A DELETION is the reason this exists. An addition justifies itself — {@code supportingEvidence}
+     * on the annotation says where the claim came from — but a deletion ends with no annotation to hang
+     * evidence off, so before this the record said what went and never why. Per commit rather than per
+     * change: Paul's ruling of 2026-09-01, and enough for a caller that already commits one dataset at
+     * a time. It does NOT go near {@code curationDetails.curationNote}, which is dataset-scoped and
+     * overwrites.
+     */
+    @Nullable
+    private String reason;
+
+    /**
+     * An optional short key for {@link #reason}, recorded verbatim and never interpreted.
+     * <p>
+     * It exists so that reasons written by different callers can be GROUPED by a later query instead of
+     * grepped. That is all it does.
+     * <p>
+     * 🛑 There is deliberately NO vocabulary for it — not here, and not by reference to one kept
+     * elsewhere. Gemma does not define the keys, does not validate them, and does not have a list to
+     * drift out of date. Any list named in a review thread is a proposal by its author, not a contract
+     * with this field.
+     * <p>
+     * 🛑 In particular this is NOT the audit-finding dismissal vocabulary. Dismissing a proposed finding
+     * ("the agent's evidence doesn't support it", "outside this pass") and deleting a tag a curator
+     * previously asserted are different acts with different reasons, and the dismissal keys are written
+     * about findings throughout. Reusing them here would file two unlike decisions under one name.
+     * <p>
+     * Leaving the key free-form is the point: what a good vocabulary for tag deletion looks like is not
+     * yet known, and a fixed one chosen now would be a fixed one to live with. Let the keys that
+     * callers actually write show what the categories are, and constrain later if it is ever worth it.
+     */
+    @Nullable
+    private String reasonCode;
+
     private boolean tagsPresent;
     private List<TagAdd> tagsToAdd = new ArrayList<>();
     private List<Long> tagsToDelete = new ArrayList<>();
@@ -320,6 +357,24 @@ public class CurationCommitRequest {
 
     public void setTagsToAdd( List<TagAdd> tagsToAdd ) {
         this.tagsToAdd = tagsToAdd;
+    }
+
+    @Nullable
+    public String getReason() {
+        return reason;
+    }
+
+    @Nullable
+    public String getReasonCode() {
+        return reasonCode;
+    }
+
+    public void setReasonCode( @Nullable String reasonCode ) {
+        this.reasonCode = reasonCode;
+    }
+
+    public void setReason( @Nullable String reason ) {
+        this.reason = reason;
     }
 
     public List<Long> getTagsToDelete() {

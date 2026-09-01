@@ -350,8 +350,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
-        public TicketsWebService ticketsWebService( TicketService ticketService, UserManager userManager, UserReadService userReadService ) {
-            return new TicketsWebService( ticketService, userManager, userReadService );
+        public TicketsWebService ticketsWebService( TicketService ticketService, UserManager userManager,
+                UserReadService userReadService, ExpressionExperimentService expressionExperimentService ) {
+            return new TicketsWebService( ticketService, userManager, userReadService, expressionExperimentService );
         }
 
         // DatasetsWebService also @Autowires CurationWebService, GroupsWebService,
