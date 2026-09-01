@@ -274,7 +274,11 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
+        // The budget is what REMAINS of 30 s once the handler has done its own work, so pinning the exact
+        // value makes the assertion a stopwatch: under load it arrives as 29999 and the test fails for no
+        // reason. Two agents hit that on 2026-08-31. The sibling getParents assertion below already
+        // bounded it; this one did not.
+        verify( ontologyService ).getTerm( eq( "http://example.com/test" ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getParents( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
@@ -283,7 +287,11 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
+        // The budget is what REMAINS of 30 s once the handler has done its own work, so pinning the exact
+        // value makes the assertion a stopwatch: under load it arrives as 29999 and the test fails for no
+        // reason. Two agents hit that on 2026-08-31. The sibling getParents assertion below already
+        // bounded it; this one did not.
+        verify( ontologyService ).getTerm( eq( "http://example.com/test" ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verifyNoMoreInteractions( ontologyService );
     }
 
@@ -298,7 +306,11 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .entity()
                 .hasFieldOrPropertyWithValue( "error.code", 503 )
                 .hasFieldOrPropertyWithValue( "error.message", "HTTP 503 Service Unavailable" );
-        verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
+        // The budget is what REMAINS of 30 s once the handler has done its own work, so pinning the exact
+        // value makes the assertion a stopwatch: under load it arrives as 29999 and the test fails for no
+        // reason. Two agents hit that on 2026-08-31. The sibling getParents assertion below already
+        // bounded it; this one did not.
+        verify( ontologyService ).getTerm( eq( "http://example.com/test" ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getParents( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
@@ -308,7 +320,11 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         when( ontologyService.getTerm( eq( "http://example.com/test" ), anyLong(), any() ) ).thenReturn( term );
         assertThat( target( "/annotations/children" ).queryParam( "uri", "http://example.com/test" ).request().get() )
                 .hasStatus( Response.Status.OK );
-        verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
+        // The budget is what REMAINS of 30 s once the handler has done its own work, so pinning the exact
+        // value makes the assertion a stopwatch: under load it arrives as 29999 and the test fails for no
+        // reason. Two agents hit that on 2026-08-31. The sibling getParents assertion below already
+        // bounded it; this one did not.
+        verify( ontologyService ).getTerm( eq( "http://example.com/test" ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
