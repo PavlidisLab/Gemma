@@ -97,11 +97,16 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * of their datasets are troubled was being told "none", which is the one answer that is never
      * useful and never obviously wrong.
      * <p>
-     * So: the default still hides them, and a caller who names {@code curationDetails.troubled} in
-     * their own filter gets what they asked for.
+     * So: the default still hides them, and a caller who names the troubled flag in their own filter
+     * gets what they asked for. Either spelling counts: {@code curationDetails.troubled} on this
+     * entity, or the short alias {@code troubled}, which the API advertises as an alias for it and
+     * which {@link #resolveFilterablePropertyMeta(String)} resolves onto {@link #CURATION_DETAILS_ALIAS}.
      */
     protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
-        if ( shouldHideTroubled( filters, objectAlias ) ) {
+        // the short spelling names THIS entity's curation details, so it only speaks for the alias
+        // this DAO is filtering on; hiding an associated entity's trouble is a different question
+        String curationDetailsAlias = this.objectAlias.equals( objectAlias ) ? CURATION_DETAILS_ALIAS : null;
+        if ( shouldHideTroubled( filters, objectAlias, curationDetailsAlias ) ) {
             filters.and( objectAlias, "curationDetails.troubled", Boolean.class, Filter.Operator.eq, false );
         }
     }
@@ -111,18 +116,36 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * for a non-administrator also carries the ACL EXISTS clause, and test-created entities have no
      * ACL rows, so a DAO-level test of this rule would pass on an empty result either way.
      */
-    static boolean shouldHideTroubled( Filters filters, String objectAlias ) {
-        return !SecurityUtil.isUserAdmin() && !mentionsTroubled( filters, objectAlias );
+    static boolean shouldHideTroubled( Filters filters, String objectAlias, @Nullable String curationDetailsAlias ) {
+        return !SecurityUtil.isUserAdmin() && !mentionsTroubled( filters, objectAlias, curationDetailsAlias );
     }
 
     /**
      * Whether the caller's own filters already say something about the troubled flag on this alias.
+     * <p>
+     * 🛑 Both spellings the API accepts, or the rule is a trap. {@code curationDetails.troubled}
+     * arrives as that property name on the object alias, while the advertised alias {@code troubled}
+     * arrives as {@code troubled} on the joined curation-details alias — different pair, same column.
+     * Matching only the first left a caller who wrote {@code troubled = true} with
+     * {@code s.troubled = true and ee.curationDetails.troubled = false}: one association reached two
+     * ways, so an empty list where the flag was set, and no sign anything had been added.
+     *
+     * @param curationDetailsAlias alias the short spelling lands on, or {@code null} when the
+     *                             trouble being hidden belongs to an associated entity rather than
+     *                             this one, in which case the short spelling says nothing about it
      */
-    private static boolean mentionsTroubled( Filters filters, String objectAlias ) {
+    private static boolean mentionsTroubled( Filters filters, String objectAlias, @Nullable String curationDetailsAlias ) {
         for ( List<Filter> clause : filters ) {
             for ( Filter f : clause ) {
-                if ( f != null && "curationDetails.troubled".equals( f.getPropertyName() )
+                if ( f == null ) {
+                    continue;
+                }
+                if ( "curationDetails.troubled".equals( f.getPropertyName() )
                         && Objects.equals( objectAlias, f.getObjectAlias() ) ) {
+                    return true;
+                }
+                if ( curationDetailsAlias != null && "troubled".equals( f.getPropertyName() )
+                        && curationDetailsAlias.equals( f.getObjectAlias() ) ) {
                     return true;
                 }
             }

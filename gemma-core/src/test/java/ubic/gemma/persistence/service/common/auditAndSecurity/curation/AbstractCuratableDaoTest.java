@@ -51,7 +51,7 @@ public class AbstractCuratableDaoTest {
     /** The default is unchanged: an ordinary caller does not see troubled entities. */
     @Test
     public void testTroubledAreHiddenByDefault() {
-        assertThat( AbstractCuratableDao.shouldHideTroubled( Filters.empty(), "ee" ) ).isTrue();
+        assertThat( AbstractCuratableDao.shouldHideTroubled( Filters.empty(), "ee", "s" ) ).isTrue();
     }
 
     /**
@@ -67,7 +67,7 @@ public class AbstractCuratableDaoTest {
     public void testAskingAboutTroubleIsNotNegated() {
         Filters filters = Filters.by( "ee", "curationDetails.troubled", Boolean.class, Filter.Operator.eq, true );
 
-        assertThat( AbstractCuratableDao.shouldHideTroubled( filters, "ee" ) )
+        assertThat( AbstractCuratableDao.shouldHideTroubled( filters, "ee", "s" ) )
                 .as( "the caller's own condition stands, unargued with" )
                 .isFalse();
     }
@@ -77,8 +77,33 @@ public class AbstractCuratableDaoTest {
     public void testAnotherAliasDoesNotDisarmIt() {
         Filters filters = Filters.by( "ad", "curationDetails.troubled", Boolean.class, Filter.Operator.eq, true );
 
-        assertThat( AbstractCuratableDao.shouldHideTroubled( filters, "ee" ) )
+        assertThat( AbstractCuratableDao.shouldHideTroubled( filters, "ee", "s" ) )
                 .as( "the platform's trouble says nothing about the dataset's" )
+                .isTrue();
+    }
+
+    /**
+     * 🛑 The short spelling counts too. {@code troubled} is advertised as an alias for
+     * {@code curationDetails.troubled} and lands on the curation-details alias instead of the object
+     * alias; a rule matching only the long name left the short one hidden AND contradicted, so
+     * {@code filter=troubled = true} answered 0 where the flag was set on 4.
+     */
+    @Test
+    public void testTheAdvertisedShortAliasDisarmsItToo() {
+        Filters filters = Filters.by( "s", "troubled", Boolean.class, Filter.Operator.eq, true );
+
+        assertThat( AbstractCuratableDao.shouldHideTroubled( filters, "ee", "s" ) )
+                .as( "the spelling the API calls an alias behaves like one" )
+                .isFalse();
+    }
+
+    /** ...but only for the entity it belongs to: it is this dataset's flag, not its platform's. */
+    @Test
+    public void testTheShortAliasSaysNothingAboutAnAssociatedEntity() {
+        Filters filters = Filters.by( "s", "troubled", Boolean.class, Filter.Operator.eq, true );
+
+        assertThat( AbstractCuratableDao.shouldHideTroubled( filters, "ad", null ) )
+                .as( "the dataset's own trouble is not a statement about the platform's" )
                 .isTrue();
     }
 }
