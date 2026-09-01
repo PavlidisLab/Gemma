@@ -5993,8 +5993,12 @@ public class AnnotationsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Add a single annotation tag to a dataset",
-            description = "Adds one experiment-level annotation (tag) to the dataset. Emits a "
+    @Operation(summary = "Add a single annotation tag to a dataset (legacy path)",
+            deprecated = true,
+            description = "Legacy alias of `POST /datasets/{dataset}/annotations`, kept because the "
+                    + "curation-agents client already calls this path. New callers should use the "
+                    + "canonical one on the datasets resource.\n\n"
+                    + "Adds one experiment-level annotation (tag) to the dataset. Emits a "
                     + "TagAddedEvent on the dataset's audit trail. Duplicate tags (same category "
                     + "URI + value URI) are rejected with 409 Conflict. Requires GROUP_CURATOR or "
                     + "GROUP_ADMIN.",
@@ -6016,6 +6020,25 @@ public class AnnotationsWebService {
                     + "linkage is parked until the source-set → emitted-event audit link lands.")
             @QueryParam("annotationSetId") @Nullable Long annotationSetId
     ) {
+        return doAddDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg, body, annotationSetId );
+    }
+
+    /**
+     * Handler body for adding a single tag to a dataset, shared by this resource's legacy
+     * {@code /annotations/datasets/{dataset}/annotations} route and the canonical
+     * {@code POST /datasets/{dataset}/annotations} route declared on {@link DatasetsWebService}.
+     *
+     * <p>The route has to be declared on {@code DatasetsWebService} to be reachable at all: Jersey
+     * resolves {@code /datasets/*} against that resource's class-level {@code @Path("/datasets")}
+     * and never falls through to another root resource, so a method-level path of
+     * {@code /datasets/{dataset}/annotations} under {@code @Path("/annotations")} lands at
+     * {@code /annotations/datasets/{dataset}/annotations} instead. Passing the two collaborators in
+     * rather than injecting one resource into the other keeps both classes' Spring wiring — and the
+     * mocked test contexts built over it — unchanged.</p>
+     */
+    static Response doAddDatasetAnnotation( DatasetArgService datasetArgService,
+            ExpressionExperimentService expressionExperimentService,
+            DatasetArg<?> datasetArg, @Nullable AnnotationDto body, @Nullable Long annotationSetId ) {
         if ( body == null ) {
             throw new BadRequestException( "A request body is required." );
         }
@@ -6042,8 +6065,12 @@ public class AnnotationsWebService {
     @Path("/datasets/{dataset}/annotations/{annotationId}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Remove a single annotation tag from a dataset",
-            description = "Removes the annotation with the given id from the dataset. Emits a "
+    @Operation(summary = "Remove a single annotation tag from a dataset (legacy path)",
+            deprecated = true,
+            description = "Legacy alias of `DELETE /datasets/{dataset}/annotations/{annotationId}`, kept "
+                    + "because the curation-agents client already calls this path. New callers should "
+                    + "use the canonical one on the datasets resource.\n\n"
+                    + "Removes the annotation with the given id from the dataset. Emits a "
                     + "TagRemovedEvent. Returns 404 if no such annotation exists on this dataset. "
                     + "Requires GROUP_CURATOR or GROUP_ADMIN.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
@@ -6057,6 +6084,19 @@ public class AnnotationsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @PathParam("annotationId") Long annotationId
     ) {
+        return doRemoveDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg, annotationId );
+    }
+
+    /**
+     * Handler body for removing a single tag from a dataset, shared by this resource's legacy
+     * {@code /annotations/datasets/{dataset}/annotations/{annotationId}} route and the canonical
+     * {@code DELETE /datasets/{dataset}/annotations/{annotationId}} route declared on
+     * {@link DatasetsWebService}. See {@link #doAddDatasetAnnotation} for why the canonical route
+     * has to be declared over there.
+     */
+    static Response doRemoveDatasetAnnotation( DatasetArgService datasetArgService,
+            ExpressionExperimentService expressionExperimentService,
+            DatasetArg<?> datasetArg, @Nullable Long annotationId ) {
         if ( annotationId == null ) {
             throw new BadRequestException( "An annotation id is required." );
         }
@@ -6078,8 +6118,10 @@ public class AnnotationsWebService {
                     + "tag set, then applies adds and removes per-row in a single transaction. "
                     + "Emits one TagAddedEvent per add and one TagRemovedEvent per remove (NOT a "
                     + "single summary event). Idempotent: re-PUTing the same set yields an empty "
-                    + "diff and no events. Distinct from PUT /datasets/{id}/annotations on "
-                    + "DatasetsWebService, which emits a single aggregate ManualAnnotationEvent. "
+                    + "diff and no events. Stays on this path rather than moving to "
+                    + "PUT /datasets/{id}/annotations, which is a different operation on the same "
+                    + "resource — set-replace under ACL_SECURABLE_EDIT emitting a single aggregate "
+                    + "ManualAnnotationEvent. "
                     + "Requires GROUP_CURATOR or GROUP_ADMIN.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
