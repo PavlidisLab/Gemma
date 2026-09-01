@@ -1,3 +1,4 @@
+
 # Gemma — repo conventions for Claude Code
 
 Ground rules for adding features and tests in this repo. Project-specific; supplements (does not replace) the user-global `~/.claude/CLAUDE.md`.
@@ -36,6 +37,13 @@ Ground rules for adding features and tests in this repo. Project-specific; suppl
   ```
   (`-P 3307` / `-p1234` are the `docker-compose.yml` testdb coordinates. The container's root password is random — `MYSQL_RANDOM_ROOT_PASSWORD=yes` — so if the `gemmatest` grants themselves are missing, fix them through the container instead: `docker compose exec testdb mysql -uroot -p"$(docker compose logs testdb | grep 'GENERATED ROOT PASSWORD')"`, or just recreate the container.)
 - **Compile-clean is the bar for sub-agents.** `mvn -pl gemma-core compile test-compile -q` must pass after any sub-agent edit. Full `mvn verify` is reserved for orchestrator-led runs; it needs gemdtest creds and serializes against other parallel runs.
+- **Javadoc is a build gate, and `mvn verify` does not run it.** The `attach-javadocs` execution lives in the `release` profile of `pavlab-starter-parent`, which has no `<activation>` — Jenkins turns it on through the node's `settings.xml`, so every local `mvn verify` / `mvn package` / compile-clean check passes while javadoc is broken. It fails in the **Package** stage, after the whole suite has already gone green, and it fails per-module, so an error in `gemma-core` hides every error in `gemma-cli` and `gemma-rest`. Reproduce the CI step with:
+  ```bash
+  mvn -B -P release package -DskipTests
+  ```
+  `doclint` is `all,-missing`, so these two are hard errors (empty `<p>`, duplicate `@return`, and `@author` on a method are warnings only — 13 exist today and don't fail the build):
+  - **`reference not found`** — `{@link Foo}` where `Foo` isn't imported (a signature spelling the type out fully-qualified is the usual cause), or `{@link #method(A)}` naming an overload that doesn't exist. Copy the parameter list from the real signature.
+  - **`heading used out of sequence`** — the first heading in a doc comment must be `<h2>`. Javadoc has rendered the class title as `<h1>` since JDK 13; `<h3>` was right under JDK 8/11, which is why the habit persists. Deeper nesting is fine (`<h3>` under an `<h2>`).
 
 ## Parallel work (multi-agent renovations)
 

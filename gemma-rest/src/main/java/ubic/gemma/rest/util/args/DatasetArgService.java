@@ -252,7 +252,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
-     * Cursor-mode counterpart to {@link #getSamples(DatasetArg)} for the {@code GET
+     * Cursor-mode counterpart to {@link #getSamples(DatasetArg, boolean)} for the {@code GET
      * /datasets/{dataset}/samples} endpoint — see {@code CURSOR_PAGINATION_STEP1_PLAN.md}
      * step 1k. Walks the EE→bioAssays association directly via
      * {@link BioAssayService#loadValueObjectsByCursorForExpressionExperiment(ExpressionExperiment, Cursor, int)};
@@ -451,7 +451,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
-     * Cursor-mode counterpart to {@link #getSubSetSamples(DatasetArg, Long)} for the
+     * Cursor-mode counterpart to {@link #getSubSetSamples(DatasetArg, Long, boolean)} for the
      * {@code GET /datasets/{dataset}/subSets/{subSet}/samples} endpoint — see
      * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1u (the subset-scoped twin of step 1k
      * for {@code GET /datasets/{dataset}/samples}). Walks the

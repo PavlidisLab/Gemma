@@ -52,7 +52,7 @@ import java.util.Set;
  * {@link AnnotationRelationStatus#REFUTED}, which keeps them out of every read that asks what is
  * supported and out of every inference.</p>
  *
- * <h3>Three reports, one precedence order</h3>
+ * <h2>Three reports, one precedence order</h2>
  *
  * <p>{@code MGI_DiseaseMouseModel.rpt} is the disease-first view of the same curation and is the
  * larger of the two sources: 6,299 asserted (allele, DOID) pairs against the genotype report's 4,516,
