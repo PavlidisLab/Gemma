@@ -473,6 +473,17 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
 
     @Override
     @Transactional(readOnly = true)
+    public Map<Long, List<TicketSearchHitValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+            Collection<Long> targetIds ) {
+        Assert.notNull( targetType, "TargetType cannot be null." );
+        Assert.notNull( targetIds, "TargetIds cannot be null." );
+        // No initializeForProjection: the DAO projects scalars, so nothing lazy crosses the transaction
+        // boundary. That is the point of the VO — no reporter, assignee, targets or events to fetch.
+        return ticketDao.findOpenSummariesForTargets( targetType, targetIds );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Ticket> findAssignedTo( Contact assignee ) {
         Assert.notNull( assignee, "Assignee cannot be null." );
         return initializeForProjection( ticketDao.findAssignedTo( assignee ) );

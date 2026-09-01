@@ -219,6 +219,10 @@ public interface TicketService extends BaseService<Ticket> {
     /** @see TicketDao#findOpenForTarget */
     List<Ticket> findOpenForTarget( TicketTargetType targetType, Long targetId );
 
+    /** @see TicketDao#findOpenSummariesForTargets */
+    Map<Long, List<TicketSearchHitValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+            Collection<Long> targetIds );
+
     /** @see TicketDao#findAssignedTo */
     List<Ticket> findAssignedTo( Contact assignee );
 

@@ -24,6 +24,7 @@ import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,26 @@ public interface TicketDao extends BaseDao<Ticket> {
      * serves it without joining through {@code ticket_id}.
      */
     List<Ticket> findOpenForTarget( TicketTargetType targetType, Long targetId );
+
+    /**
+     * Bulk counterpart to {@link #findOpenForTarget}: the same open-ticket question asked about a
+     * whole page of targets in one query, keyed by target id.
+     * <p>
+     * Only target ids that are on at least one open ticket get a key. An absent id is on none — the
+     * same "key off presence" contract {@code findCurrentLocks} uses, so a page of fifty quiet
+     * datasets is not fifty empty lists.
+     * <p>
+     * The rows are {@link TicketSearchHitValueObject}s rather than {@link Ticket} entities because
+     * the caller wants "is it on one, and which", not the other members: a scratchpad holding five
+     * hundred datasets would otherwise ship five hundred target rows per experiment on the page.
+     * {@code targetCount} is counted by the database.
+     *
+     * @param targetType the target type all ids are interpreted as
+     * @param targetIds  the ids to ask about; an empty collection yields an empty map without a query
+     * @return target id → its open tickets, most recently updated first; ids with none are absent
+     */
+    Map<Long, List<TicketSearchHitValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+            Collection<Long> targetIds );
 
     /**
      * Find all tickets currently assigned to the given contact, regardless

@@ -63,9 +63,11 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -1002,6 +1004,20 @@ public class TicketsWebService {
      */
     public List<TicketValueObject> openTicketsForArrayDesign( Long adId ) {
         return loadOpenTargetingVOs( TicketTargetType.ARRAY_DESIGN, adId );
+    }
+
+    /**
+     * Public hook for {@link DatasetsWebService}'s bulk {@code POST /datasets/tickets}: the same
+     * question {@link #openTicketsForExpressionExperiment} answers for one dataset, asked about a
+     * page of them in one query.
+     * <p>
+     * Only datasets that ARE on an open ticket get a key; an absent id is on none. Callers must have
+     * filtered the ids for readability first — this reads the ticket table, which carries no ACL of
+     * its own.
+     */
+    public Map<Long, List<TicketSearchHitValueObject>> openTicketSummariesForExpressionExperiments(
+            Collection<Long> eeIds ) {
+        return ticketService.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT, eeIds );
     }
 
     /**

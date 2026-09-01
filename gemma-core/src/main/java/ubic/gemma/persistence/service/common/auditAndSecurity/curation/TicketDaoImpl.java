@@ -30,6 +30,7 @@ import ubic.gemma.persistence.util.Sort;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -38,6 +39,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
  * Hibernate implementation of {@link TicketDao}. Mirrors the lightweight CRUD
@@ -66,6 +68,39 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
                 .setParameter( "tid", targetId )
                 .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) )
                 .list();
+    }
+
+    @Override
+    public Map<Long, List<TicketSearchHitValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+            Collection<Long> targetIds ) {
+        if ( targetIds.isEmpty() ) {
+            // An empty `in` list is not valid HQL, and the answer is knowable without asking.
+            return Collections.emptyMap();
+        }
+        // Scope deliberately identical to findOpenForTarget — same (targetType, targetId) predicate over
+        // t.targets, same OPEN/IN_PROGRESS restriction, scratchpads included. A dataset's glyph on a list
+        // and its drawer come from the two routes, so a difference here would read as a bug in one of them.
+        // targetId trails the shared select list so rows 0..5 stay exactly what fromRow consumes.
+        //noinspection unchecked
+        List<Object[]> rows = ( List<Object[]> ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select " + SEARCH_HIT_SELECT_LIST + ", tgt.targetId "
+                                + "from Ticket t "
+                                + "join t.targets tgt "
+                                + "where tgt.targetType = :targetType "
+                                + "and tgt.targetId in :targetIds "
+                                + "and t.state in :openStates "
+                                + "order by t.updatedAt desc" )
+                .setParameter( "targetType", targetType )
+                .setParameterList( "targetIds", optimizeParameterList( targetIds ) )
+                .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) )
+                .list();
+        Map<Long, List<TicketSearchHitValueObject>> out = new LinkedHashMap<>();
+        for ( Object[] row : rows ) {
+            Long targetId = ( Long ) row[SEARCH_HIT_SELECT_LIST_WIDTH];
+            out.computeIfAbsent( targetId, k -> new ArrayList<>() )
+                    .add( TicketSearchHitValueObject.fromRow( row ) );
+        }
+        return out;
     }
 
     @Override
@@ -563,11 +598,20 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
      * @param ownScratchpadsVisible admit {@link TicketType#SCRATCHPAD} tickets reported by
      *                              {@code :scratchpadOwnerId}; when false no scratchpad is a hit
      */
+    /**
+     * The projection {@link TicketSearchHitValueObject#fromRow} reads, positionally. Shared by the
+     * ticket-search HQL and {@link #findOpenSummariesForTargets} so the two cannot drift apart: a
+     * query that needs further columns appends them AFTER these six.
+     */
+    static final String SEARCH_HIT_SELECT_LIST = "t.id, t.name, t.state, t.type, "
+            + "(select count(tt.id) from TicketTarget tt where tt.ticket = t), "
+            + "t.updatedAt";
+
+    /** How many columns {@link #SEARCH_HIT_SELECT_LIST} projects; the index of the first appended one. */
+    private static final int SEARCH_HIT_SELECT_LIST_WIDTH = 6;
+
     static String buildSearchHitHql( boolean byId, boolean openOnly, boolean ownScratchpadsVisible ) {
-        StringBuilder hql = new StringBuilder( "select t.id, t.name, t.state, t.type, "
-                + "(select count(tt.id) from TicketTarget tt where tt.ticket = t), "
-                + "t.updatedAt "
-                + "from Ticket t where " );
+        StringBuilder hql = new StringBuilder( "select " + SEARCH_HIT_SELECT_LIST + " from Ticket t where " );
         hql.append( byId
                 ? "t.id = :ticketId"
                 : "lower(t.name) like :titleFragment escape '" + SEARCH_LIKE_ESCAPE + "'" );

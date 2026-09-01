@@ -47,10 +47,12 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.TicketTargetStatusChan
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 
 import javax.sql.DataSource;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -719,6 +721,119 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         assertEquals( 2, hits.size() );
         assertEquals( newer.getId(), hits.get( 0 ).getId() );
         assertEquals( older.getId(), hits.get( 1 ).getId() );
+    }
+
+    /**
+     * A target-id range of this test's own, so a bulk assertion counts only its own fixtures:
+     * {@link #openWithTargets} seeds every other test's tickets at 1_000_000+, and those tickets
+     * stay visible to a query that asks by target id rather than by title.
+     */
+    private long freshTargetBase() {
+        return 5_000_000L + Math.floorMod( UUID.randomUUID().getMostSignificantBits(), 1_000_000L ) * 10L;
+    }
+
+    private Ticket openTargeting( TicketType type, String title, Long... targetIds ) {
+        Set<TicketTarget> targets = new HashSet<>();
+        for ( Long id : targetIds ) {
+            targets.add( TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, id ) );
+        }
+        return ticketService.openTicket( reporter, type, title, targets );
+    }
+
+    @Test
+    @DisplayName("bulk: a dataset on no open ticket gets NO key, so an absence means something")
+    public void bulkSummaries_quietDatasetIsAbsentNotEmpty() {
+        long base = freshTargetBase();
+        Long onATicket = base, quiet = base + 1;
+        openTargeting( TicketType.CURATION, "bulk-presence-" + UUID.randomUUID(), onATicket );
+        flushAndClear();
+
+        Map<Long, List<TicketSearchHitValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Arrays.asList( onATicket, quiet ) );
+
+        assertEquals( 1, byDataset.size() );
+        assertTrue( byDataset.containsKey( onATicket ) );
+        assertFalse( byDataset.containsKey( quiet ),
+                "an id with no open ticket must be ABSENT — an empty list would cost a page of them" );
+    }
+
+    @Test
+    @DisplayName("bulk: each dataset gets its OWN tickets, and a resolved one is not among them")
+    public void bulkSummaries_groupsByTargetAndExcludesResolved() {
+        long base = freshTargetBase();
+        Long a = base, b = base + 1;
+        Ticket both = openTargeting( TicketType.CURATION, "bulk-both-" + UUID.randomUUID(), a, b );
+        Ticket onlyA = openTargeting( TicketType.PRELOAD, "bulk-onlya-" + UUID.randomUUID(), a );
+        Ticket resolved = openTargeting( TicketType.GENERIC, "bulk-done-" + UUID.randomUUID(), b );
+        ticketService.transition( resolved, TicketState.RESOLVED, reporter, "done" );
+        flushAndClear();
+
+        Map<Long, List<TicketSearchHitValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Arrays.asList( a, b ) );
+
+        Set<Long> forA = new HashSet<>();
+        for ( TicketSearchHitValueObject h : byDataset.get( a ) ) {
+            forA.add( h.getId() );
+        }
+        assertEquals( new HashSet<>( Arrays.asList( both.getId(), onlyA.getId() ) ), forA,
+                "a dataset on two open tickets gets both, and only its own" );
+
+        assertEquals( Collections.singletonList( both.getId() ),
+                byDataset.get( b ).stream().map( TicketSearchHitValueObject::getId )
+                        .collect( java.util.stream.Collectors.toList() ),
+                "the RESOLVED ticket targeting b is not an open ticket" );
+    }
+
+    @Test
+    @DisplayName("bulk: the batched answer is the per-dataset answer, ticket for ticket")
+    public void bulkSummaries_agreeWithFindOpenForTarget() {
+        long base = freshTargetBase();
+        Long a = base, b = base + 1, quiet = base + 2;
+        openTargeting( TicketType.CURATION, "bulk-agree-1-" + UUID.randomUUID(), a, b );
+        openTargeting( TicketType.SCRATCHPAD, "bulk-agree-pad-" + UUID.randomUUID(), a );
+        flushAndClear();
+
+        // The glyph on the experiment list and the drawer behind it come from these two routes.
+        // A dataset that reads "on a ticket" in one and not the other is the bug this pins.
+        Map<Long, List<TicketSearchHitValueObject>> bulk =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Arrays.asList( a, b, quiet ) );
+        for ( Long id : Arrays.asList( a, b, quiet ) ) {
+            Set<Long> single = new HashSet<>();
+            for ( Ticket t : ticketDao.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, id ) ) {
+                single.add( t.getId() );
+            }
+            Set<Long> batched = new HashSet<>();
+            for ( TicketSearchHitValueObject h : bulk.getOrDefault( id, Collections.emptyList() ) ) {
+                batched.add( h.getId() );
+            }
+            assertEquals( single, batched, "the two routes disagree about dataset " + id );
+        }
+    }
+
+    @Test
+    @DisplayName("bulk: targetCount is the ticket's whole size, not the slice on this page")
+    public void bulkSummaries_targetCountIsTheWholeTicket() {
+        long base = freshTargetBase();
+        Long a = base, b = base + 1, c = base + 2;
+        openTargeting( TicketType.CURATION, "bulk-count-" + UUID.randomUUID(), a, b, c );
+        flushAndClear();
+
+        // Asked about ONE of the three members: the count still reports three.
+        Map<Long, List<TicketSearchHitValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Collections.singletonList( a ) );
+
+        assertEquals( 3L, byDataset.get( a ).get( 0 ).getTargetCount() );
+    }
+
+    @Test
+    @DisplayName("bulk: no ids is an empty map, not an invalid `in ()`")
+    public void bulkSummaries_emptyIdsIsAnEmptyMap() {
+        assertTrue( ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                Collections.emptyList() ).isEmpty() );
     }
 
     /**

@@ -98,6 +98,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
@@ -2058,6 +2059,81 @@ public class DatasetsWebService {
             return paginateByCursor( page, new String[] { "id" } );
         }
         return respond( ticketsWebService.openTicketsForExpressionExperiment( ee.getId() ) );
+    }
+
+    /**
+     * Maximum datasets per bulk ticket-membership request. Matches the bulk lock READ cap rather than
+     * the write cap: this is one query and holds nothing, and the caller is painting a list page.
+     */
+    private static final int MAX_DATASET_TICKETS_BULK = 1000;
+
+    /** Body for {@link #getDatasetTicketsBulk}. */
+    public static class DatasetTicketsBulkRequest {
+        @Nullable
+        private List<Long> datasetIds;
+
+        @Nullable
+        public List<Long> getDatasetIds() {
+            return datasetIds;
+        }
+
+        @com.fasterxml.jackson.annotation.JsonProperty("datasetIds")
+        public void setDatasetIds( @Nullable List<Long> datasetIds ) {
+            this.datasetIds = datasetIds;
+        }
+    }
+
+    @POST
+    @Path("/tickets")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Which open tickets hold each of these datasets",
+            description = "The bulk read of `GET /datasets/{dataset}/tickets`. Ticket membership is the one "
+                    + "thing an experiment-list row cannot get from the dataset itself, and asking per row is "
+                    + "a round-trip per row to paint one screen.\n\n"
+                    + "**Only datasets that are on an open ticket appear in the map.** An id that is absent is "
+                    + "on none — the same key-off-presence contract as `POST /datasets/curation/locks/query`, "
+                    + "so a page of fifty quiet rows is not fifty empty arrays. This makes the absence "
+                    + "meaningful: a caller that got a 200 can render \"not on a ticket\" rather than \"not "
+                    + "known\".\n\n"
+                    + "Each entry is a ticket SUMMARY — id, title, type, state, updatedAt, and a `targetCount` "
+                    + "the database counts. Not the targets: a scratchpad holding five hundred datasets would "
+                    + "otherwise ship five hundred rows per experiment on the page. Fetch "
+                    + "`GET /tickets/{id}` when the members are actually wanted.\n\n"
+                    + "Same scope as the single-dataset route: OPEN and IN_PROGRESS only, scratchpads included "
+                    + "(a dataset sitting in a curator's scratchpad is on a ticket). Tickets are ordered most "
+                    + "recently updated first.\n\n"
+                    + "A POST that only reads, for the same reason `POST /datasets/pipeline-status` is one — a "
+                    + "page of ids does not fit a query string. It writes nothing and takes no lock.\n\n"
+                    + "Datasets the caller cannot read are dropped rather than failing the request. Cap: "
+                    + MAX_DATASET_TICKETS_BULK + " ids.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Missing or empty `datasetIds`, or over the cap.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<Map<Long, List<TicketSearchHitValueObject>>> getDatasetTicketsBulk(
+            @Nullable DatasetTicketsBulkRequest body
+    ) {
+        if ( body == null || body.getDatasetIds() == null || body.getDatasetIds().isEmpty() ) {
+            throw new BadRequestException( "A request body with non-empty 'datasetIds' is required." );
+        }
+        // Deduplicated, caller order preserved — same handling as the other two bulk dataset reads.
+        List<Long> ids = new ArrayList<>( new LinkedHashSet<>( body.getDatasetIds() ) );
+        if ( ids.size() > MAX_DATASET_TICKETS_BULK ) {
+            throw new BadRequestException( "At most " + MAX_DATASET_TICKETS_BULK
+                    + " datasets per request; got " + ids.size() + ". Chunk the page." );
+        }
+        // Resolved first so the ticket lookup runs over readable ids only: the ticket table carries no ACL
+        // of its own, so a caller must not be able to learn that a dataset they cannot see is under review.
+        List<Long> readable = new ArrayList<>();
+        for ( ExpressionExperiment ee : resolveReadableDatasets( ids ) ) {
+            readable.add( ee.getId() );
+        }
+        if ( readable.isEmpty() ) {
+            return respond( Collections.emptyMap() );
+        }
+        return respond( ticketsWebService.openTicketSummariesForExpressionExperiments( readable ) );
     }
 
     /**
