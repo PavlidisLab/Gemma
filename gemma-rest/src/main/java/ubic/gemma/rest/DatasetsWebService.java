@@ -3534,6 +3534,14 @@ public class DatasetsWebService {
                 } else {
                     String location = "tags[" + refOrIndex( tc.getClientRef(), idx ) + "]";
                     Characteristic ch = tagCommitToCharacteristic( tc, location );
+                    // An experiment tag must be grounded unless the caller declares the free text deliberate.
+                    // 🛑 Sample characteristics are NOT gated this way: a GEO characteristic is a string the
+                    // submitter wrote, and requiring a URI there would refuse the corpus.
+                    if ( StringUtils.isBlank( ch.getValueUri() ) && !Boolean.TRUE.equals( tc.getFreeTextIntended() ) ) {
+                        termViolations.add( new OntologyTermValidationException.Located( location + ".value",
+                                new TermViolation( "value", ch.getValue(), null, null,
+                                        TermViolation.Reason.UNGROUNDED_NOT_DECLARED ) ) );
+                    }
                     collectTermViolations( ch, location, tc.getClientRef(), termViolations, canonicalizations );
                     adds.add( new CurationCommitRequest.TagAdd( tc.getClientRef(), ch ) );
                 }
@@ -3997,6 +4005,19 @@ public class DatasetsWebService {
         @Nullable
         private OntologyTermRef value;
         private Section<StatementCommit> statements = new Section<>();
+        /**
+         * Declares that this tag is meant to be free text — no {@code value.uri} — on purpose.
+         * <p>
+         * An experiment tag with no URI is refused by default: it is usually an oversight, and after the
+         * fact it is indistinguishable from a grounding the client intended and forgot. Setting this says
+         * the absence is a decision, and the tag is accepted.
+         * <p>
+         * 🛑 Per item and deliberate. A client that sets it on every tag has not made the check stricter,
+         * it has turned the check off — and the ungrounded tags already on production are what that looks
+         * like accumulated over years.
+         */
+        @Nullable
+        private Boolean freeTextIntended;
         /**
          * Verbatim provenance for this tag. Same shape and same null = "no change" convention as
          * {@link StatementCommit#getSupportingEvidence()}. When the tag rides a statement, evidence set on the

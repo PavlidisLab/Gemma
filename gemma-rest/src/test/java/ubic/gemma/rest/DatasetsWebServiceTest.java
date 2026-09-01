@@ -561,7 +561,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService, bioAssayService );
     }
 
-    private static final String HALLUCINATED_TAG_BODY = "{\"tags\":{\"items\":[{\"clientRef\":\"t7\","
+    private static final String HALLUCINATED_TAG_BODY = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t7\","
             + "\"value\":{\"label\":\"has_genotype\",\"uri\":\"http://purl.obolibrary.org/obo/TGEMO_00166\"}}]}}";
 
     /** A tag whose label doesn't match its URI is rejected with a structured, per-slot 400. */
@@ -4367,7 +4367,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
 
-        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"tag-0\","
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"tag-0\","
                 + "\"category\":{\"label\":\"cell type\"},"
                 + "\"value\":{\"label\":\"Schwann cell\"},"
                 + "\"statements\":{\"items\":[{"
@@ -4404,7 +4404,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
 
-        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"tag-0\","
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"tag-0\","
                 + "\"category\":{\"label\":\"cell type\"},\"value\":{\"label\":\"retinal cell\"},"
                 + "\"statements\":{\"items\":["
                 + "{\"subject\":{\"label\":\"retinal cell\"},\"predicate\":{\"label\":\"derives from cell line\"},\"object\":{\"label\":\"H9 cell\"}},"
@@ -4431,11 +4431,48 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
 
         String one = "{\"subject\":{\"label\":\"pyramidal neuron\"},\"predicate\":{\"label\":\"p\"},\"object\":{\"label\":\"o\"}}";
-        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"tag-0\","
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"tag-0\","
                 + "\"category\":{\"label\":\"cell type\"},\"value\":{\"label\":\"pyramidal neuron\"},"
                 + "\"statements\":{\"items\":[" + one + "," + one + "," + one + "]}}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    /**
+     * An experiment tag with no {@code value.uri} is refused unless the caller says the free text is
+     * deliberate. Paul's ruling, 2026-09-01: reject, but give the client a way to declare intent — an
+     * ungrounded tag is usually an oversight, and after the fact it cannot be told apart from a
+     * grounding somebody meant to do and forgot.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRejectsAnUndeclaredUngroundedTag() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\","
+                + "\"category\":{\"label\":\"cell line\",\"uri\":\"http://www.ebi.ac.uk/efo/EFO_0000322\"},"
+                + "\"value\":{\"label\":\"HT22\"}}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** Declaring it accepts the same tag — the gate is the declaration, not the absence of a URI. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationAcceptsADeclaredFreeTextTag() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\","
+                + "\"category\":{\"label\":\"cell line\",\"uri\":\"http://www.ebi.ac.uk/efo/EFO_0000322\"},"
+                + "\"value\":{\"label\":\"HT22\"},\"freeTextIntended\":true}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), any(), eq( false ) );
     }
 
     @Test
@@ -4649,7 +4686,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
 
-        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
                 + "\"value\":{\"label\":\"glioma\"}},{\"gemmaId\":42}],\"deletedIds\":[7]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
@@ -4789,7 +4826,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @WithMockUser
     public void testCommitCurationTagCarriesSupportingEvidence() {
         stubCommitOk();
-        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
                 + "\"value\":{\"label\":\"glioma\"},\"supportingEvidence\":[{\"quote\":\"glioblastoma multiforme\","
                 + "\"source\":\"characteristic\",\"location\":\"GSM1\"}]}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
@@ -4805,7 +4842,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @WithMockUser
     public void testCommitCurationTagCarriesEvidenceCode() {
         stubCommitOk();
-        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
                 + "\"value\":{\"label\":\"glioma\"},\"evidenceCode\":\"IEA\"}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
@@ -4825,7 +4862,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @WithMockUser
     public void testCommitCurationTagWithoutEvidenceCodeLeavesItUnset() {
         stubCommitOk();
-        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
                 + "\"value\":{\"label\":\"glioma\"}}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
@@ -4842,7 +4879,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @WithMockUser
     public void testCommitCurationRejectsUnknownEvidenceCode() {
         stubCommitOk();
-        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t7\",\"category\":{\"label\":\"disease\"},"
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t7\",\"category\":{\"label\":\"disease\"},"
                 + "\"value\":{\"label\":\"glioma\"},\"evidenceCode\":\"BOGUS\"}]}}";
         try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
             assertThat( r.getStatus() ).isEqualTo( 400 );
@@ -4856,7 +4893,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @WithMockUser
     public void testPreflightRejectsUnknownEvidenceCode() {
         stubCommitOk();
-        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t7\",\"category\":{\"label\":\"disease\"},"
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t7\",\"category\":{\"label\":\"disease\"},"
                 + "\"value\":{\"label\":\"glioma\"},\"evidenceCode\":\"BOGUS\"}]}}";
         assertThat( target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
