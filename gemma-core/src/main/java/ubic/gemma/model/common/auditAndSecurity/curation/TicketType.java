@@ -77,5 +77,18 @@ public enum TicketType {
      */
     AUDIT,
     /** Catch-all for tickets that don't fit a more specific category. */
-    GENERIC
+    GENERIC,
+    /**
+     * A curator's personal scratchpad: a ticket kept open indefinitely, holding whatever they are
+     * currently looking at.
+     * <p>
+     * 🛑 Finishing with a dataset means REMOVING it from the scratchpad, not resolving the ticket
+     * (Paul, 2026-08-31) — which is why removing a target matters as much as adding one here. One per
+     * curator, identified by its reporter, provisioned on first use rather than by a backfill.
+     * <p>
+     * It always has {@code acceptsTargets} set, and it should be excluded from anything counting open
+     * curation work: a scratchpad is never "done", so counting it as an open ticket would make every
+     * curator permanently behind.
+     */
+    SCRATCHPAD
 }

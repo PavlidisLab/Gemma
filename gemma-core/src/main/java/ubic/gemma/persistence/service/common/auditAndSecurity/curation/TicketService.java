@@ -18,6 +18,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
@@ -114,6 +115,49 @@ public interface TicketService extends BaseService<Ticket> {
      * @throws IllegalArgumentException if no target with the given row id
      *                                  exists on this ticket.
      */
+    /**
+     * Add a target to a ticket that was already opened.
+     * <p>
+     * Until this existed a ticket's targets were fixed at {@link #openTicket}: the other target methods
+     * only modify rows that are already there. The motivating case is a curator scratchpad — a ticket
+     * someone keeps adding experiments to as they meet them.
+     * <p>
+     * Two conditions, both refused with {@link IllegalStateException}:
+     * <ul>
+     *   <li>the ticket's {@code acceptsTargets} flag must be set. It is false by default and false on
+     *       every ticket predating the flag, so an agent-created ticket keeps the fixed batch it was
+     *       opened for unless someone deliberately opens it up.</li>
+     *   <li>the ticket must not be {@link TicketState#RESOLVED}, whatever the flag says, so a finished
+     *       ticket cannot quietly grow new work. The flag is not rewritten — reopening the ticket makes
+     *       it effective again.</li>
+     * </ul>
+     * A target already on the ticket is an {@link IllegalArgumentException}, matching how a duplicate
+     * experiment tag is refused rather than silently ignored.
+     *
+     * @return the ticket with the new target attached
+     */
+    Ticket addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor );
+
+    /**
+     * Remove a target from a ticket.
+     * <p>
+     * On a curator scratchpad this is what finishing with a dataset looks like — the ticket stays open
+     * and the dataset leaves it — so this is the counterpart of {@link #addTarget} rather than an
+     * afterthought.
+     * <p>
+     * Idempotent: removing a target the ticket does not have returns null rather than throwing, since
+     * the caller has already reached the state it asked for. A terminal ticket
+     * ({@code RESOLVED} / {@code CANCELLED}) refuses the change.
+     * <p>
+     * Removing a target whose status is past {@code NOT_DONE} is permitted — a scratchpad's rows are
+     * all NOT_DONE and refusing would make the common case pay for the rare one — so the removed
+     * status is returned and the caller decides what to say about it.
+     *
+     * @return the status the removed target had, or {@code null} if it was not on the ticket
+     */
+    @Nullable
+    TicketTargetStatus removeTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor );
+
     Ticket updateTargetStatus( Ticket ticket, Long targetId,
             ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus newStatus, Contact actor );
 

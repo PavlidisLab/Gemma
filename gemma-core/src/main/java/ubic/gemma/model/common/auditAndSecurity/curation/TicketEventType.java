@@ -32,6 +32,17 @@ public enum TicketEventType {
      * one of these per target completion, alongside a
      * {@code TicketTargetStatusChangedEvent} on the governance audit trail.
      */
+    /**
+     * An experiment (or other target) was added to the ticket after it was opened — only possible on a
+     * ticket whose {@code acceptsTargets} flag is set.
+     */
+    TARGET_ADDED,
+    /**
+     * A target was removed from the ticket. On a scratchpad this is what "finished with it" looks like,
+     * so the event stays even though the membership does not — "this was here and someone took it out"
+     * has to remain answerable.
+     */
+    TARGET_REMOVED,
     TARGET_STATUS_CHANGED,
 
     /** One per screening decision recorded on a target (see {@code ScreeningResult}). */

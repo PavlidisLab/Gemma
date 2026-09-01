@@ -54,6 +54,13 @@ public class TicketValueObject implements Serializable {
      */
     private TicketMode mode = TicketMode.MANUAL;
 
+    /**
+     * Whether experiments may be added to this ticket after it was opened. False unless a curator has
+     * opened the ticket up — a scratchpad. Note a RESOLVED ticket refuses additions even when this is
+     * true, so this alone does not tell a client the add will succeed.
+     */
+    private boolean acceptsTargets = false;
+
     @Nullable
     private Date dueDate;
 
@@ -103,6 +110,7 @@ public class TicketValueObject implements Serializable {
         vo.state = t.getState();
         vo.priority = t.getPriority();
         vo.mode = t.getMode() != null ? t.getMode() : TicketMode.MANUAL;
+        vo.acceptsTargets = t.isAcceptsTargets();
         vo.dueDate = t.getDueDate();
         if ( t.getReporter() != null ) {
             vo.reporterId = t.getReporter().getId();

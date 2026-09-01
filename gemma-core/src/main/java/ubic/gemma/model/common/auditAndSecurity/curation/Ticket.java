@@ -112,6 +112,24 @@ public class Ticket extends AbstractAuditable {
     @Column(name = "MODE", nullable = false, columnDefinition = "VARCHAR(16)")
     private TicketMode mode = TicketMode.MANUAL;
 
+    /**
+     * Whether experiments may be added to this ticket after it was opened.
+     * <p>
+     * A ticket's targets are otherwise fixed at creation: {@code openTicket} takes the collection and
+     * nothing adds to it afterwards. This flag turns a ticket into an open list — the motivating case
+     * being a curator scratchpad, a ticket someone keeps adding experiments to as they meet them rather
+     * than one describing a fixed batch of work.
+     * <p>
+     * False by default, and every ticket that predates the flag is false, so the agent-created tickets
+     * keep the fixed target list they were opened for.
+     * <p>
+     * 🛑 Necessary but not sufficient: a {@link TicketState#RESOLVED} ticket refuses additions whatever
+     * this says, so a finished ticket cannot quietly grow new work. That rule lives in the service so
+     * that reopening a ticket restores the flag's effect without rewriting the flag itself.
+     */
+    @Column(name = "ACCEPTS_TARGETS", nullable = false, columnDefinition = "TINYINT(1)")
+    private boolean acceptsTargets = false;
+
     @OneToMany(mappedBy = "ticket", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TicketTarget> targets = new HashSet<>();
 
@@ -181,6 +199,14 @@ public class Ticket extends AbstractAuditable {
 
     public TicketMode getMode() {
         return mode;
+    }
+
+    public boolean isAcceptsTargets() {
+        return acceptsTargets;
+    }
+
+    public void setAcceptsTargets( boolean acceptsTargets ) {
+        this.acceptsTargets = acceptsTargets;
     }
 
     public void setMode( TicketMode mode ) {

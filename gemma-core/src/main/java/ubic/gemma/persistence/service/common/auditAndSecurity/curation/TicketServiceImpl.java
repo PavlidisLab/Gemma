@@ -201,6 +201,98 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
 
     @Override
     @Transactional
+    public Ticket addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor ) {
+        Assert.notNull( ticket, "Ticket cannot be null." );
+        Assert.notNull( targetType, "targetType cannot be null." );
+        Assert.notNull( targetId, "targetId cannot be null." );
+        Assert.notNull( actor, "Actor cannot be null." );
+        Ticket attached = reattach( ticket );
+
+        if ( !attached.isAcceptsTargets() ) {
+            throw new IllegalStateException( "Ticket " + attached.getId()
+                    + " does not accept added targets. Its targets were fixed when it was opened;"
+                    + " set acceptsTargets to open it up." );
+        }
+        // State wins over the flag: a finished ticket cannot quietly grow new work. The flag is left
+        // alone, so reopening the ticket makes it effective again.
+        if ( isTerminal( attached.getState() ) ) {
+            throw new IllegalStateException( "Ticket " + attached.getId() + " is " + attached.getState()
+                    + " and does not accept added targets. Reopen it first." );
+        }
+        // Idempotent, not a conflict: a caller cannot know current membership at click time, and
+        // clicking twice must not error for reaching the state it asked for (uib, 2026-08-31).
+        for ( TicketTarget existing : attached.getTargets() ) {
+            if ( existing.getTargetType() == targetType && targetId.equals( existing.getTargetId() ) ) {
+                return attached;
+            }
+        }
+
+        TicketTarget tgt = new TicketTarget();
+        tgt.setTargetType( targetType );
+        tgt.setTargetId( targetId );
+        tgt.setTicket( attached );
+        attached.getTargets().add( tgt );
+        bumpUpdated( attached );
+
+        String summary = "added target " + targetId + " (" + targetType + ")";
+        appendEvent( attached, TicketEventType.TARGET_ADDED, actor, summary );
+        Ticket saved = ticketDao.save( attached );
+        // 🛑 Reuses TicketMetadataChangedEvent rather than introducing a TicketTargetAddedEvent.
+        // Gemma 1.0 (1.32.8) carries the five ticket AuditEventType classes but has no Ticket entity,
+        // and a sixth type it does not know would break its audit-trail reads -- the regression that
+        // backport was made to fix. The summary carries what actually happened.
+        auditTrailService.addUpdateEvent( saved, TicketMetadataChangedEvent.class, summary );
+        return saved;
+    }
+
+    @Override
+    @Transactional
+    public TicketTargetStatus removeTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor ) {
+        Assert.notNull( ticket, "Ticket cannot be null." );
+        Assert.notNull( targetType, "targetType cannot be null." );
+        Assert.notNull( targetId, "targetId cannot be null." );
+        Assert.notNull( actor, "Actor cannot be null." );
+        Ticket attached = reattach( ticket );
+
+        if ( isTerminal( attached.getState() ) ) {
+            throw new IllegalStateException( "Ticket " + attached.getId() + " is " + attached.getState()
+                    + " and cannot have targets removed. Reopen it first." );
+        }
+        TicketTarget found = null;
+        for ( TicketTarget t : attached.getTargets() ) {
+            if ( t.getTargetType() == targetType && targetId.equals( t.getTargetId() ) ) {
+                found = t;
+                break;
+            }
+        }
+        // Idempotent, same reasoning as addTarget: removing something that is not there has already
+        // reached the state the caller asked for. Null tells the route to answer 204.
+        if ( found == null ) {
+            return null;
+        }
+        // 🛑 Deliberately NOT refused when the target is past NOT_DONE. A scratchpad's rows are all
+        // NOT_DONE and blocking would make the common case pay for the rare one; the status is returned
+        // instead so the caller can say what it discarded and decide whether to have prompted.
+        TicketTargetStatus removedStatus = found.getStatus();
+        attached.getTargets().remove( found );
+        found.setTicket( null );
+        bumpUpdated( attached );
+
+        String summary = "removed target " + targetId + " (" + targetType + ", was " + removedStatus + ")";
+        appendEvent( attached, TicketEventType.TARGET_REMOVED, actor, summary );
+        Ticket saved = ticketDao.save( attached );
+        // Same reuse rationale as addTarget: no new AuditEventType, which Gemma 1.0 would not know.
+        auditTrailService.addUpdateEvent( saved, TicketMetadataChangedEvent.class, summary );
+        return removedStatus;
+    }
+
+    /** A finished ticket takes no target changes, whichever way it was finished. */
+    private static boolean isTerminal( TicketState state ) {
+        return state == TicketState.RESOLVED || state == TicketState.CANCELLED;
+    }
+
+    @Override
+    @Transactional
     public Ticket updateTargetStatus( Ticket ticket, Long targetId, TicketTargetStatus newStatus, Contact actor ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( targetId, "targetId cannot be null." );

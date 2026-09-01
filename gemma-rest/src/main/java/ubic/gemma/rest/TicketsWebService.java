@@ -59,6 +59,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Date;
@@ -488,6 +489,10 @@ public class TicketsWebService {
             created.setBody( req.getBody() );
             changedFields.add( "body" );
         }
+        if ( req.getAcceptsTargets() != null ) {
+            created.setAcceptsTargets( req.getAcceptsTargets() );
+            changedFields.add( "acceptsTargets" );
+        }
         if ( req.getMode() != null ) {
             created.setMode( req.getMode() );
             changedFields.add( "mode" );
@@ -569,6 +574,10 @@ public class TicketsWebService {
             ticket.setBody( req.getBody() );
             changedFields.add( "body" );
         }
+        if ( req.getAcceptsTargets() != null ) {
+            ticket.setAcceptsTargets( req.getAcceptsTargets() );
+            changedFields.add( "acceptsTargets" );
+        }
         if ( req.getMode() != null ) {
             ticket.setMode( req.getMode() );
             changedFields.add( "mode" );
@@ -647,6 +656,120 @@ public class TicketsWebService {
      * primary key (the row id), NOT the {@code targetId} field (which is
      * the FK to the targeted entity like an EE).</p>
      */
+    /**
+     * Add a target to a ticket that is open to additions.
+     * <p>
+     * The sibling of the PATCH below, which can only address a row that already exists and so cannot
+     * create membership. Until this route a ticket's targets were fixed at creation.
+     * <p>
+     * Refused with 409 when the ticket does not accept additions, when it is RESOLVED, or when the
+     * target is already on the ticket. The last is deliberately a 409 rather than a silent success:
+     * "it was already there" is something the caller wants to know, and it matches how a duplicate
+     * experiment tag is refused on {@code POST /annotations/datasets/{id}/annotations}.
+     */
+    @POST
+    @Path("/{id}/targets")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Add a target to a ticket that accepts additions",
+            description = "Appends targets to an existing ticket. Requires the ticket's `acceptsTargets` flag — it is "
+                    + "false by default, so a ticket's targets stay as they were opened unless a curator opens it up, "
+                    + "which is what makes a scratchpad. Idempotent on (targetType, targetId): re-adding is not an "
+                    + "error, and the response splits the ids into `added` and `alreadyPresent` so a bulk call can be "
+                    + "reported honestly. A RESOLVED or CANCELLED ticket is a 409, as is a ticket whose flag is off; "
+                    + "an empty `targets` array is a 400, since an add that adds nothing is the bug.")
+    public ResponseDataObject<AddTargetsResult> addTicketTarget(
+            @PathParam("id") Long id,
+            AddTargetRequest req
+    ) {
+        if ( req == null || req.getTargets() == null || req.getTargets().isEmpty() ) {
+            // An add that adds nothing is the bug, not a no-op worth honouring.
+            throw new BadRequestException( "Request body with a non-empty `targets` array is required." );
+        }
+        Ticket ticket = ticketService.load( id );
+        if ( ticket == null ) {
+            throw new NotFoundException( "No ticket with id " + id );
+        }
+        User actor = userManager.getCurrentUser();
+        if ( actor == null ) {
+            throw new BadRequestException( "No authenticated user resolved." );
+        }
+        List<Long> added = new ArrayList<>();
+        List<Long> alreadyPresent = new ArrayList<>();
+        for ( AddTargetRequest.TargetRef ref : req.getTargets() ) {
+            if ( ref == null || ref.getTargetId() == null ) {
+                throw new BadRequestException( "Each `targets` entry needs a `targetId`." );
+            }
+            TicketTargetType type = ref.getTargetType() != null ? ref.getTargetType() : TicketTargetType.EXPRESSION_EXPERIMENT;
+            int before = ticket.getTargets().size();
+            try {
+                ticket = ticketService.addTarget( ticket, type, ref.getTargetId(), actor );
+            } catch ( IllegalStateException e ) {
+                // flag off, or the ticket is finished — a conflict with the ticket's state, not a
+                // malformed request. Adding is idempotent, so a duplicate never reaches here.
+                throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+            }
+            if ( ticket.getTargets().size() > before ) {
+                added.add( ref.getTargetId() );
+            } else {
+                alreadyPresent.add( ref.getTargetId() );
+            }
+        }
+        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        if ( vo == null ) {
+            throw new NotFoundException( "Ticket " + id + " disappeared after adding targets." );
+        }
+        return respond( new AddTargetsResult( added, alreadyPresent, vo ) );
+    }
+
+    /**
+     * Remove a target from a ticket.
+     * <p>
+     * On a curator scratchpad this is what finishing looks like: the ticket stays open indefinitely and
+     * the dataset leaves it (Paul, 2026-08-31). Addressed by {@code (targetType, targetId)} rather than
+     * by row id, because the caller knows the experiment it is looking at, not the row id the server
+     * minted.
+     */
+    @DELETE
+    @Path("/{id}/targets/{targetType}/{targetId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Remove a target from a ticket",
+            description = "Removes one target, addressed by type and Gemma id. Idempotent: removing a target the "
+                    + "ticket does not have is a 204, not a 404 — the caller has already reached the state it asked "
+                    + "for. A RESOLVED or CANCELLED ticket is a 409. Removing a target whose status is past NOT_DONE "
+                    + "is permitted and the removed status is reported, so the caller can say what it discarded; the "
+                    + "membership goes but the TARGET_REMOVED event stays on the ticket log.")
+    public Response removeTicketTarget(
+            @PathParam("id") Long id,
+            @PathParam("targetType") TicketTargetType targetType,
+            @PathParam("targetId") Long targetId
+    ) {
+        Ticket ticket = ticketService.load( id );
+        if ( ticket == null ) {
+            throw new NotFoundException( "No ticket with id " + id );
+        }
+        User actor = userManager.getCurrentUser();
+        if ( actor == null ) {
+            throw new BadRequestException( "No authenticated user resolved." );
+        }
+        TicketTargetStatus removed;
+        try {
+            removed = ticketService.removeTarget( ticket, targetType, targetId, actor );
+        } catch ( IllegalStateException e ) {
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+        }
+        if ( removed == null ) {
+            return Response.noContent().build();
+        }
+        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        if ( vo == null ) {
+            throw new NotFoundException( "Ticket " + id + " disappeared after removing a target." );
+        }
+        return Response.ok( respond( new RemovedTargetResult( targetType, targetId, removed, vo ) ) ).build();
+    }
+
     @PATCH
     @Path("/{id}/targets/{targetRowId}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -800,6 +923,19 @@ public class TicketsWebService {
         @Nullable
         private TicketMode mode;
 
+        /**
+         * Whether experiments may be added to this ticket after it is opened — a curator scratchpad.
+         * Boxed on purpose: absent must be distinguishable from an explicit {@code false}, or an
+         * unrelated metadata edit would silently close an open scratchpad. Defaults to false.
+         */
+        @Nullable
+        private Boolean acceptsTargets;
+
+        @Nullable
+        public Boolean getAcceptsTargets() { return acceptsTargets; }
+        public void setAcceptsTargets( @Nullable Boolean acceptsTargets ) { this.acceptsTargets = acceptsTargets; }
+
+
         public TicketType getType() { return type; }
         public void setType( TicketType type ) { this.type = type; }
 
@@ -848,6 +984,81 @@ public class TicketsWebService {
         public void setStatus( @Nullable TicketTargetStatus status ) { this.status = status; }
     }
 
+    /** Body of {@code POST /tickets/{id}/targets}. */
+    public static class AddTargetRequest {
+        /**
+         * An array even though the UI sends one today: a bulk "add these twelve to a ticket" from the
+         * dashboard is the obvious next caller and should not need a second route or twelve round
+         * trips (uib, 2026-08-31).
+         */
+        @Nullable
+        private List<TargetRef> targets;
+
+        @Nullable
+        public List<TargetRef> getTargets() { return targets; }
+        public void setTargets( @Nullable List<TargetRef> targets ) { this.targets = targets; }
+
+        public static class TargetRef {
+            /** Defaults to {@link TicketTargetType#EXPRESSION_EXPERIMENT}, the case this route exists for. */
+            @Nullable
+            private TicketTargetType targetType;
+            @Nullable
+            private Long targetId;
+
+            @Nullable
+            public TicketTargetType getTargetType() { return targetType; }
+            public void setTargetType( @Nullable TicketTargetType targetType ) { this.targetType = targetType; }
+
+            @Nullable
+            public Long getTargetId() { return targetId; }
+            public void setTargetId( @Nullable Long targetId ) { this.targetId = targetId; }
+        }
+    }
+
+    /**
+     * Result of adding targets: which ids landed and which were already there.
+     * <p>
+     * The per-input split is what lets a caller report honestly on a bulk add, where one status code
+     * cannot say that eleven were added and one was already present.
+     */
+    public static class AddTargetsResult {
+        private final List<Long> added;
+        private final List<Long> alreadyPresent;
+        private final TicketValueObject ticket;
+
+        public AddTargetsResult( List<Long> added, List<Long> alreadyPresent, TicketValueObject ticket ) {
+            this.added = added;
+            this.alreadyPresent = alreadyPresent;
+            this.ticket = ticket;
+        }
+
+        public List<Long> getAdded() { return added; }
+        public List<Long> getAlreadyPresent() { return alreadyPresent; }
+        public TicketValueObject getTicket() { return ticket; }
+    }
+
+    /** Result of removing a target: what went, and what state it was in. */
+    public static class RemovedTargetResult {
+        private final TicketTargetType targetType;
+        private final Long targetId;
+        private final TicketTargetStatus status;
+        private final TicketValueObject ticket;
+
+        public RemovedTargetResult( TicketTargetType targetType, Long targetId, TicketTargetStatus status,
+                TicketValueObject ticket ) {
+            this.targetType = targetType;
+            this.targetId = targetId;
+            this.status = status;
+            this.ticket = ticket;
+        }
+
+        public TicketTargetType getTargetType() { return targetType; }
+        public Long getTargetId() { return targetId; }
+        public TicketTargetStatus getStatus() { return status; }
+        public TicketValueObject getTicket() { return ticket; }
+    }
+
+
     /**
      * Body for {@link #updateTicket(Long, UpdateTicketRequest)}. Distinguishes
      * "field absent" (no change) from "field present and null" (clear) for
@@ -878,6 +1089,19 @@ public class TicketsWebService {
         private boolean bodySet = false;
         @Nullable
         private TicketMode mode;
+
+        /**
+         * Whether experiments may be added to this ticket after it is opened — a curator scratchpad.
+         * Boxed on purpose: absent must be distinguishable from an explicit {@code false}, or an
+         * unrelated metadata edit would silently close an open scratchpad. Defaults to false.
+         */
+        @Nullable
+        private Boolean acceptsTargets;
+
+        @Nullable
+        public Boolean getAcceptsTargets() { return acceptsTargets; }
+        public void setAcceptsTargets( @Nullable Boolean acceptsTargets ) { this.acceptsTargets = acceptsTargets; }
+
 
         @Nullable
         public TicketState getState() { return state; }

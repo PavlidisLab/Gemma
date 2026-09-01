@@ -38,7 +38,9 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -46,6 +48,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -355,6 +358,139 @@ public class TicketServiceImplTest {
                         || saved.getUpdatedAt().getTime() >= before.getTime(),
                 "updatedAt should advance" );
         verify( ticketDao ).save( t );
+    }
+
+    @Test
+    public void addTarget_appendsTheTarget_andLogsTargetAdded() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "scratchpad", reporter );
+        t.setAcceptsTargets( true );
+        int eventsBefore = t.getEvents().size();
+        stubDaoSaveEchoes();
+
+        Ticket saved = service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter );
+
+        assertEquals( 1, saved.getTargets().size() );
+        TicketTarget added = saved.getTargets().iterator().next();
+        assertEquals( 4242L, added.getTargetId() );
+        assertEquals( TicketTargetType.EXPRESSION_EXPERIMENT, added.getTargetType() );
+        assertEquals( TicketTargetStatus.NOT_DONE, added.getStatus(), "a freshly added target is not done" );
+        assertSame( saved, added.getTicket(), "the back-reference must be set or the row orphans" );
+        assertEquals( eventsBefore + 1, saved.getEvents().size() );
+        assertTrue( containsEventOfType( saved, TicketEventType.TARGET_ADDED ) );
+    }
+
+    /**
+     * The flag is the whole gate. False is the default and the state of every ticket that predates it,
+     * so without this check an agent-created ticket's fixed batch could silently grow.
+     */
+    @Test
+    public void addTarget_refusesWhenTheTicketDoesNotAcceptAdditions() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "fixed-batch", reporter );
+        assertFalse( t.isAcceptsTargets(), "the flag must default to false" );
+
+        assertThrows( IllegalStateException.class,
+                () -> service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ) );
+        assertTrue( t.getTargets().isEmpty(), "nothing may be added when the gate refuses" );
+        verify( ticketDao, never() ).save( any( Ticket.class ) );
+    }
+
+    /** State wins over the flag: a finished ticket must not quietly grow new work. */
+    @Test
+    public void addTarget_refusesOnAResolvedTicketEvenWithTheFlagOn() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "done", reporter );
+        t.setAcceptsTargets( true );
+        t.setState( TicketState.RESOLVED );
+
+        assertThrows( IllegalStateException.class,
+                () -> service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ) );
+        assertTrue( t.getTargets().isEmpty() );
+        assertTrue( t.isAcceptsTargets(), "the flag must be left alone so reopening restores it" );
+        verify( ticketDao, never() ).save( any( Ticket.class ) );
+    }
+
+    /**
+     * Idempotent, NOT a conflict. uib's argument, which is the deciding one: the client cannot know
+     * membership at click time — a menu may have been open for a minute — and a curator clicking twice
+     * must not get an error for reaching the state they asked for, nor a duplicate row on a
+     * 500-target ticket.
+     */
+    @Test
+    public void addTarget_isIdempotentOnADuplicate() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "scratchpad", reporter );
+        t.setAcceptsTargets( true );
+        TicketTarget existing = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 4242L );
+        existing.setTicket( t );
+        t.getTargets().add( existing );
+
+        Ticket saved = service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter );
+
+        assertEquals( 1, saved.getTargets().size(), "the duplicate must not be appended" );
+        assertFalse( containsEventOfType( saved, TicketEventType.TARGET_ADDED ),
+                "a no-op must not pollute the event log" );
+        verify( ticketDao, never() ).save( any( Ticket.class ) );
+    }
+
+    /** A cancelled ticket is as finished as a resolved one; both refuse target changes. */
+    @Test
+    public void addTarget_refusesOnACancelledTicket() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "cancelled", reporter );
+        t.setAcceptsTargets( true );
+        t.setState( TicketState.CANCELLED );
+
+        assertThrows( IllegalStateException.class,
+                () -> service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ) );
+        assertTrue( t.getTargets().isEmpty() );
+    }
+
+    /**
+     * On a scratchpad, removing IS finishing (Paul, 2026-08-31) — the ticket stays open and the dataset
+     * leaves it — so this is the counterpart of addTarget, not an afterthought.
+     */
+    @Test
+    public void removeTarget_removesMembership_andLogsTargetRemoved() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "scratchpad", reporter );
+        t.setAcceptsTargets( true );
+        TicketTarget tgt = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 4242L );
+        tgt.setStatus( TicketTargetStatus.NOT_DONE );
+        tgt.setTicket( t );
+        t.getTargets().add( tgt );
+        stubDaoSaveEchoes();
+
+        TicketTargetStatus removed = service.removeTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter );
+
+        assertEquals( TicketTargetStatus.NOT_DONE, removed, "the caller is told what it discarded" );
+        assertTrue( t.getTargets().isEmpty() );
+        assertTrue( containsEventOfType( t, TicketEventType.TARGET_REMOVED ),
+                "membership goes, the history stays" );
+    }
+
+    /** Removing something that is not there has already reached the asked-for state. */
+    @Test
+    public void removeTarget_isIdempotentWhenAbsent() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "scratchpad", reporter );
+        t.setAcceptsTargets( true );
+
+        assertNull( service.removeTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ) );
+        verify( ticketDao, never() ).save( any( Ticket.class ) );
+    }
+
+    /**
+     * A completed target may be removed — a scratchpad's rows are all NOT_DONE and refusing would make
+     * the common case pay for the rare one. The status comes back so the caller can say what went.
+     */
+    @Test
+    public void removeTarget_allowsRemovingCompletedWork_butReportsIt() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "worklist", reporter );
+        t.setAcceptsTargets( true );
+        TicketTarget tgt = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 99L );
+        tgt.setStatus( TicketTargetStatus.DONE );
+        tgt.setTicket( t );
+        t.getTargets().add( tgt );
+        stubDaoSaveEchoes();
+
+        assertEquals( TicketTargetStatus.DONE,
+                service.removeTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 99L, reporter ) );
+        assertTrue( t.getTargets().isEmpty() );
     }
 
     @Test
