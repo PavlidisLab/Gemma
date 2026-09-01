@@ -688,16 +688,29 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         ee.getCharacteristics().add( freeText );
         expressionExperimentService.update( ee );
 
+        // 🛑 The default SHOWS the unmapped tag. It used to hide it, and this assertion used to say so;
+        // e849dfe347 flipped it on Paul's ruling that "annotations should ALWAYS show ALL the
+        // annotations, including ungrounded EEtags", because a caller could not tell an incomplete list
+        // from a complete one — it hid a real strain tag on GSE256180 and silently truncated a corpus
+        // snapshot. That commit updated ExpressionExperimentReadServiceAnnotationsTest and missed this
+        // test, which then asserted the behaviour the fix had just removed.
         assertThat( expressionExperimentService.getAnnotations( ee ) )
-                .as( "the default read stays as it was — an unmapped tag is not shown" )
+                .as( "the default read shows everything that was written, mapped or not" )
                 .extracting( AnnotationValueObject::getValue )
-                .contains( "dimethyl sulfoxide" )
-                .doesNotContain( "HDP-101" );
+                .contains( "dimethyl sulfoxide", "HDP-101" );
 
         assertThat( expressionExperimentService.getAnnotations( ee, true ) )
                 .as( "curation read-back must show what was actually written" )
                 .extracting( AnnotationValueObject::getValue )
                 .contains( "dimethyl sulfoxide", "HDP-101" );
+
+        // The filter itself still has to work when a caller asks for it explicitly — otherwise flipping
+        // the default would have quietly retired the parameter rather than changed what it defaults to.
+        assertThat( expressionExperimentService.getAnnotations( ee, false ) )
+                .as( "an explicit includeFreeText=false still drops the unmapped tag" )
+                .extracting( AnnotationValueObject::getValue )
+                .contains( "dimethyl sulfoxide" )
+                .doesNotContain( "HDP-101" );
     }
 
     @Test
