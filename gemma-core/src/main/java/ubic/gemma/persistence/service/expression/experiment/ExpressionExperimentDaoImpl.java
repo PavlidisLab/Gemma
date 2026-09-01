@@ -56,6 +56,9 @@ import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.*;
@@ -4499,6 +4502,33 @@ public class ExpressionExperimentDaoImpl
         return query;
     }
 
+    /**
+     * HQL boolean expression backing the {@code inCuration} filter: the dataset is flagged as needing
+     * attention, or a ticket that is still open targets it.
+     * <p>
+     * 🛑 The open-state set here must stay the set {@code TicketDao#findOpenForTarget} uses, or the
+     * experiment list and the dataset's own ticket drawer disagree about the same dataset.
+     * {@code ExpressionExperimentTicketFilterIT} asserts the two agree rather than trusting this
+     * comment.
+     * <p>
+     * The subquery is correlated on {@code (targetType, targetId)}, which is the
+     * {@code TICKET_TARGET_LOOKUP} index — the same access path the per-dataset lookup uses. Note the
+     * index is created by the Flyway migration and is NOT declared on the {@link TicketTarget} entity,
+     * so an entity-built schema (gemdtest) does not have it and this predicate scans there; that is a
+     * pre-existing drift, not something this filter introduced.
+     * <p>
+     * {@code s} is the curationDetails alias joined by every filtering query in this DAO; {@code ee}
+     * is the object alias.
+     */
+    //language=HQL
+    private static final String IN_CURATION_EXPRESSION = "(case when s.needsAttention = true or exists ("
+            + "select 1 from Ticket ict join ict.targets ictt "
+            + "where ictt.targetType = " + TicketTargetType.class.getName() + ".EXPRESSION_EXPERIMENT "
+            + "and ictt.targetId = " + ExpressionExperimentDao.OBJECT_ALIAS + ".id "
+            + "and ict.state in (" + TicketState.class.getName() + ".OPEN, "
+            + TicketState.class.getName() + ".IN_PROGRESS)"
+            + ") then true else false end)";
+
     @Override
     protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
         super.configureFilterableProperties( configurer );
@@ -4527,6 +4557,17 @@ public class ExpressionExperimentDaoImpl
         // property is unknown. It is registered by hand, like geeq.publicQualityScore, and resolved
         // to the ACL predicate in resolveFilterablePropertyMeta.
         configurer.registerProperty( "isPublic" );
+
+        // "In curation": needsAttention, OR on a ticket that is still open. Neither half is a
+        // stored flag, and the union is not derivable from any single column, so the metamodel
+        // walk cannot find it — registered by hand like isPublic beside it and resolved to an
+        // expression in resolveFilterablePropertyMeta.
+        //
+        // 🛑 NOT the same thing as curationDetails.curationPending on the VO. That one is read off
+        // the curation LOCK — true only while an unexpired lease is held, admin-only, and it
+        // lapses on its own — so it answers "is someone editing this right now", which is a
+        // handful of datasets at any instant. This answers "is this dataset work in progress".
+        configurer.registerProperty( "inCuration" );
 
         // the primary publication is not very useful, but its attached database entry is
         configurer.unregisterEntity( "primaryPublication.", BibliographicReference.class );
@@ -4621,6 +4662,13 @@ public class ExpressionExperimentDaoImpl
                 return FilterablePropertyMeta.builder()
                         .propertyName( "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)" )
                         .propertyType( Double.class );
+            case "inCuration":
+                return FilterablePropertyMeta.builder()
+                        .propertyName( IN_CURATION_EXPRESSION )
+                        .propertyType( Boolean.class )
+                        .description( "whether the dataset is work in progress: flagged as needing attention, "
+                                + "or targeted by a ticket that is still open. Derived, not stored. Distinct "
+                                + "from curationDetails.curationPending, which reports a live curation lock." );
             case "isPublic":
                 // "Public" means exactly what the anonymous branch of formAclRestrictionClause
                 // means: an ACE granting READ to the anonymous SID. Written as a case-expression so
