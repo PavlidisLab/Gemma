@@ -26,6 +26,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -43,7 +44,9 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -506,6 +509,63 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     @Transactional(readOnly = true)
     public Date findOldestOpenCreatedAt() {
         return ticketDao.findOldestOpenCreatedAt();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TicketSearchHitValueObject> searchTickets( String query, boolean openOnly,
+            @Nullable Long callerContactId, int limit ) {
+        Assert.notNull( query, "Query cannot be null." );
+        Assert.isTrue( limit > 0, "Limit must be greater than zero." );
+        String trimmed = query.trim();
+        if ( trimmed.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        List<TicketSearchHitValueObject> hits = new ArrayList<>( limit );
+        Long typedId = parseTicketId( trimmed );
+        if ( typedId != null ) {
+            // Looked up on its own rather than folded into the title query's ORDER BY: a ticket
+            // named by number can be older than the `limit` most recently touched title matches,
+            // and a hit pushed off the end of that window looks exactly like one that does not
+            // exist. A null here IS "no such ticket" — a non-hit, not a 404 for the caller.
+            TicketSearchHitValueObject byId = ticketDao.findSearchHitById( typedId, openOnly, callerContactId );
+            if ( byId != null ) {
+                hits.add( byId );
+            }
+        }
+        if ( hits.size() < limit ) {
+            for ( TicketSearchHitValueObject hit : ticketDao.findSearchHitsByTitle( trimmed, openOnly, callerContactId, limit ) ) {
+                if ( typedId != null && typedId.equals( hit.getId() ) ) {
+                    continue; // already listed first; a ticket titled "6" would otherwise appear twice
+                }
+                hits.add( hit );
+                if ( hits.size() == limit ) {
+                    break;
+                }
+            }
+        }
+        return hits;
+    }
+
+    /**
+     * Read the picker's contents as a ticket id, or {@code null} when they are not one.
+     * <p>
+     * Verbatim means verbatim: digits, nothing else. {@code "6"} is ticket 6; {@code "6 samples"},
+     * {@code "#6"}, {@code "-6"} and {@code " 6.0"} are title text and go only to the title query.
+     * Anything longer than 18 digits is title text too rather than a parse failure.
+     */
+    @Nullable
+    private static Long parseTicketId( String s ) {
+        if ( s.isEmpty() || s.length() > 18 ) {
+            return null;
+        }
+        for ( int i = 0; i < s.length(); i++ ) {
+            char c = s.charAt( i );
+            if ( c < '0' || c > '9' ) {
+                return null;
+            }
+        }
+        return Long.valueOf( s );
     }
 
     private static void bumpUpdated( Ticket t ) {

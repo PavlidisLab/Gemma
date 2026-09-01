@@ -23,6 +23,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -555,6 +556,116 @@ public class TicketServiceImplTest {
 
         assertThrows( IllegalArgumentException.class, () ->
                 service.updateTargetStatus( t, 9999L, TicketTargetStatus.DONE, reporter ) );
+    }
+
+    // ---------------------------------------------------------------------
+    // searchTickets — the ticket picker behind GET /tickets/search
+    // ---------------------------------------------------------------------
+
+    private static TicketSearchHitValueObject hit( long id, String title ) {
+        return new TicketSearchHitValueObject( id, title, TicketState.OPEN, TicketType.CURATION, 3L, new Date() );
+    }
+
+    @Test
+    public void searchTickets_listsTheVerbatimIdMatchFirst() {
+        when( ticketDao.findSearchHitById( eq( 6L ), anyBoolean(), any() ) )
+                .thenReturn( hit( 6L, "Reference 500 — ongoing curation review" ) );
+        // the title scan comes back updatedAt-desc and does not know about the id match
+        when( ticketDao.findSearchHitsByTitle( eq( "6" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( java.util.Arrays.asList( hit( 99L, "batch of 6" ), hit( 41L, "6 more" ) ) );
+
+        java.util.List<TicketSearchHitValueObject> hits = service.searchTickets( "6", true, null, 20 );
+
+        assertEquals( java.util.Arrays.asList( 6L, 99L, 41L ),
+                hits.stream().map( TicketSearchHitValueObject::getId ).collect( java.util.stream.Collectors.toList() ),
+                "the ticket whose id was typed comes first, then the title matches in the order the DAO gave them" );
+    }
+
+    /**
+     * A ticket whose title is also the number typed would otherwise be listed twice — once as the
+     * id match, once as a title match.
+     */
+    @Test
+    public void searchTickets_doesNotListTheIdMatchTwiceWhenItAlsoMatchesTheTitle() {
+        when( ticketDao.findSearchHitById( eq( 6L ), anyBoolean(), any() ) ).thenReturn( hit( 6L, "6" ) );
+        when( ticketDao.findSearchHitsByTitle( eq( "6" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( java.util.Arrays.asList( hit( 6L, "6" ), hit( 99L, "batch of 6" ) ) );
+
+        java.util.List<TicketSearchHitValueObject> hits = service.searchTickets( "6", true, null, 20 );
+
+        assertEquals( java.util.Arrays.asList( 6L, 99L ),
+                hits.stream().map( TicketSearchHitValueObject::getId ).collect( java.util.stream.Collectors.toList() ) );
+    }
+
+    /**
+     * A number that parses but names no ticket is a non-hit, not an error — the caller must not
+     * turn it into a 404, because the same string is still a legitimate title search.
+     */
+    @Test
+    public void searchTickets_idThatNamesNoTicket_yieldsNoHitRatherThanAnError() {
+        when( ticketDao.findSearchHitById( eq( 123456L ), anyBoolean(), any() ) ).thenReturn( null );
+        when( ticketDao.findSearchHitsByTitle( eq( "123456" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.singletonList( hit( 7L, "cohort 123456" ) ) );
+
+        java.util.List<TicketSearchHitValueObject> hits = service.searchTickets( "123456", true, null, 20 );
+
+        assertEquals( 1, hits.size() );
+        assertEquals( 7L, hits.get( 0 ).getId() );
+    }
+
+    @Test
+    public void searchTickets_nonNumericQuery_neverRunsTheIdLookup() {
+        when( ticketDao.findSearchHitsByTitle( eq( "reference" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.singletonList( hit( 6L, "Reference 500" ) ) );
+
+        service.searchTickets( "reference", true, null, 20 );
+
+        verify( ticketDao, never() ).findSearchHitById( any(), anyBoolean(), any() );
+    }
+
+    /**
+     * "Verbatim" excludes text that merely starts with digits: "6 samples" is a title, and reading
+     * it as ticket 6 would put an unrelated ticket at the top of the list.
+     */
+    @Test
+    public void searchTickets_digitsFollowedByText_isTitleTextNotAnId() {
+        when( ticketDao.findSearchHitsByTitle( eq( "6 samples" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        service.searchTickets( "6 samples", true, null, 20 );
+
+        verify( ticketDao, never() ).findSearchHitById( any(), anyBoolean(), any() );
+    }
+
+    @Test
+    public void searchTickets_passesOpenOnlyAndTheCallersContactIdToBothQueries() {
+        when( ticketDao.findSearchHitById( eq( 6L ), eq( false ), eq( 11L ) ) ).thenReturn( null );
+        when( ticketDao.findSearchHitsByTitle( eq( "6" ), eq( false ), eq( 11L ), eq( 20 ) ) )
+                .thenReturn( Collections.emptyList() );
+
+        service.searchTickets( "6", false, 11L, 20 );
+
+        verify( ticketDao ).findSearchHitById( 6L, false, 11L );
+        verify( ticketDao ).findSearchHitsByTitle( "6", false, 11L, 20 );
+    }
+
+    @Test
+    public void searchTickets_truncatesToTheLimit() {
+        when( ticketDao.findSearchHitById( eq( 6L ), anyBoolean(), any() ) ).thenReturn( hit( 6L, "six" ) );
+        when( ticketDao.findSearchHitsByTitle( eq( "6" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( java.util.Arrays.asList( hit( 99L, "a" ), hit( 98L, "b" ), hit( 97L, "c" ) ) );
+
+        java.util.List<TicketSearchHitValueObject> hits = service.searchTickets( "6", true, null, 2 );
+
+        assertEquals( java.util.Arrays.asList( 6L, 99L ),
+                hits.stream().map( TicketSearchHitValueObject::getId ).collect( java.util.stream.Collectors.toList() ),
+                "the id match must not be dropped to make room for a title match" );
+    }
+
+    @Test
+    public void searchTickets_blankQuery_returnsNothingAndQueriesNothing() {
+        assertTrue( service.searchTickets( "   ", true, null, 20 ).isEmpty() );
+        org.mockito.Mockito.verifyNoInteractions( ticketDao );
     }
 
     private static TicketEvent mostRecentEventOfType( Ticket t, TicketEventType type ) {

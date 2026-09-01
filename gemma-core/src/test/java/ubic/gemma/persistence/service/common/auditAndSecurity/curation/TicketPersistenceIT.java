@@ -31,6 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -583,6 +584,141 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
             }
         }
         assertTrue( sawEE && sawFV, "both target types should round-trip" );
+    }
+
+    // ---------------------------------------------------------------------
+    // GET /tickets/search — the HQL behind the ticket picker, against real MySQL
+    // ---------------------------------------------------------------------
+
+    /** Open a ticket with {@code n} distinct EE targets and a title unique to this test run. */
+    private Ticket openWithTargets( TicketType type, String title, int n ) {
+        Set<TicketTarget> targets = new HashSet<>();
+        for ( int i = 0; i < n; i++ ) {
+            targets.add( TicketTarget.Factory.newInstance(
+                    TicketTargetType.EXPRESSION_EXPERIMENT, ( long ) ( 1_000_000 + i ) ) );
+        }
+        return ticketService.openTicket( reporter, type, title, targets );
+    }
+
+    @Test
+    @DisplayName("search: targetCount is counted by the database, and matches the real target count")
+    public void search_targetCountIsCountedNotLoaded() {
+        String tag = "searchcount-" + UUID.randomUUID();
+        Ticket three = openWithTargets( TicketType.CURATION, tag + " three", 3 );
+        Ticket one = openWithTargets( TicketType.CURATION, tag + " one", 1 );
+        flushAndClear();
+
+        List<TicketSearchHitValueObject> hits = ticketDao.findSearchHitsByTitle( tag, true, null, 20 );
+
+        assertEquals( 2, hits.size() );
+        for ( TicketSearchHitValueObject h : hits ) {
+            if ( h.getId().equals( three.getId() ) ) {
+                assertEquals( 3L, h.getTargetCount() );
+            } else if ( h.getId().equals( one.getId() ) ) {
+                assertEquals( 1L, h.getTargetCount() );
+            } else {
+                throw new AssertionError( "unexpected hit " + h.getId() );
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("search: the title matches as a case-insensitive substring")
+    public void search_titleMatchesCaseInsensitiveSubstring() {
+        String tag = "SearchCase" + UUID.randomUUID().toString().replace( "-", "" );
+        Ticket t = openWithTargets( TicketType.CURATION, "Reference 500 — " + tag + " review", 2 );
+        flushAndClear();
+
+        // typed in the middle of the title, and in the wrong case
+        List<TicketSearchHitValueObject> hits =
+                ticketDao.findSearchHitsByTitle( tag.toLowerCase(), true, null, 20 );
+
+        assertEquals( 1, hits.size() );
+        assertEquals( t.getId(), hits.get( 0 ).getId() );
+    }
+
+    @Test
+    @DisplayName("search: an id lookup finds the ticket, and an id naming no ticket is simply null")
+    public void search_byIdFindsTheTicketOrNothing() {
+        Ticket t = openWithTargets( TicketType.CURATION, "search-by-id-" + UUID.randomUUID(), 4 );
+        flushAndClear();
+
+        TicketSearchHitValueObject hit = ticketDao.findSearchHitById( t.getId(), true, null );
+        assertNotNull( hit );
+        assertEquals( 4L, hit.getTargetCount() );
+        assertEquals( TicketState.OPEN, hit.getState() );
+
+        assertNull( ticketDao.findSearchHitById( 987_654_321L, true, null ),
+                "an id that names no ticket is a non-hit, not an error" );
+    }
+
+    @Test
+    @DisplayName("search: openOnly excludes a resolved ticket, and dropping it lets the ticket back in")
+    public void search_openOnlyExcludesResolvedTickets() {
+        String tag = "searchopen-" + UUID.randomUUID();
+        Ticket t = openWithTargets( TicketType.CURATION, tag, 1 );
+        ticketService.transition( t, TicketState.RESOLVED, reporter, "done" );
+        flushAndClear();
+
+        assertTrue( ticketDao.findSearchHitsByTitle( tag, true, null, 20 ).isEmpty() );
+        assertEquals( 1, ticketDao.findSearchHitsByTitle( tag, false, null, 20 ).size() );
+        assertNull( ticketDao.findSearchHitById( t.getId(), true, null ) );
+        assertNotNull( ticketDao.findSearchHitById( t.getId(), false, null ) );
+    }
+
+    @Test
+    @DisplayName("search: a scratchpad is offered to its own reporter and to nobody else")
+    public void search_scratchpadIsScopedToItsReporter() {
+        String tag = "searchpad-" + UUID.randomUUID();
+        Contact other = new Contact();
+        other.setName( "ticket-it-other-" + UUID.randomUUID() );
+        other = contactDao.create( other );
+
+        Ticket pad = openWithTargets( TicketType.SCRATCHPAD, tag, 2 );
+        flushAndClear();
+
+        assertEquals( 1, ticketDao.findSearchHitsByTitle( tag, true, reporter.getId(), 20 ).size(),
+                "a curator's own scratchpad is a reasonable place to file work" );
+        assertTrue( ticketDao.findSearchHitsByTitle( tag, true, other.getId(), 20 ).isEmpty(),
+                "another curator's scratchpad is not" );
+        assertTrue( ticketDao.findSearchHitsByTitle( tag, true, null, 20 ).isEmpty(),
+                "and an anonymous caller is offered nobody's" );
+        assertNotNull( ticketDao.findSearchHitById( pad.getId(), true, reporter.getId() ) );
+        assertNull( ticketDao.findSearchHitById( pad.getId(), true, other.getId() ) );
+    }
+
+    @Test
+    @DisplayName("search: a wildcard typed into the box is matched literally, not as a wildcard")
+    public void search_wildcardsInTheQueryAreEscaped() {
+        String tag = UUID.randomUUID().toString().replace( "-", "" );
+        Ticket literal = openWithTargets( TicketType.CURATION, tag + " 50% complete", 1 );
+        openWithTargets( TicketType.CURATION, tag + " 50 percent complete", 1 );
+        flushAndClear();
+
+        // scoped by the tag so the assertion counts only this test's two tickets. Unescaped, the
+        // '%' would make this match the "50 percent" title too.
+        List<TicketSearchHitValueObject> hits =
+                ticketDao.findSearchHitsByTitle( tag + " 50% comp", true, null, 20 );
+
+        assertEquals( 1, hits.size(), "'50% comp' is a literal fragment, not '50' + anything + ' comp'" );
+        assertEquals( literal.getId(), hits.get( 0 ).getId() );
+    }
+
+    @Test
+    @DisplayName("search: title hits come back most-recently-updated first")
+    public void search_titleHitsAreOrderedByUpdatedAtDesc() {
+        String tag = "searchorder-" + UUID.randomUUID();
+        Ticket older = openWithTargets( TicketType.CURATION, tag + " older", 1 );
+        Ticket newer = openWithTargets( TicketType.CURATION, tag + " newer", 1 );
+        older.setUpdatedAt( new Date( 1_600_000_000_000L ) );
+        newer.setUpdatedAt( new Date( 1_700_000_000_000L ) );
+        flushAndClear();
+
+        List<TicketSearchHitValueObject> hits = ticketDao.findSearchHitsByTitle( tag, true, null, 20 );
+
+        assertEquals( 2, hits.size() );
+        assertEquals( newer.getId(), hits.get( 0 ).getId() );
+        assertEquals( older.getId(), hits.get( 1 ).getId() );
     }
 
     /**

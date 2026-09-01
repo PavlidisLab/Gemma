@@ -28,6 +28,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -349,6 +350,63 @@ public class TicketsWebService {
     public static class OpenTicketSummaryResponse {
         public long totalOpen;
         public java.util.Map<TicketType, Long> byType;
+    }
+
+    /**
+     * Ticket picker: "choose a ticket by typing". Distinct from {@code GET /tickets?query=} in one
+     * respect that matters — a hit carries {@code targetCount}, not the {@code targets} array, so
+     * drawing twenty rows does not pull several hundred target rows to do it.
+     */
+    @GET
+    @Path("/search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Search tickets by id or title, for a ticket picker",
+            description = "Matches `query` against a ticket id typed verbatim — `6` finds ticket 6, listed first — "
+                    + "or, case-insensitively, against any substring of the title. A curator has whichever of the "
+                    + "two is to hand. A `query` that parses as an id but names no ticket is simply not a hit; it is "
+                    + "NOT a 404.\n\n"
+                    + "Hits are ordered exact-id-match first, then by `updatedAt` descending — the ticket wanted is "
+                    + "usually one being worked.\n\n"
+                    + "Each hit carries `targetCount` rather than the `targets` array, counted in SQL, so a picker "
+                    + "rendering 20 hits does not fetch the targets of each. Use `GET /tickets/{id}` for the targets "
+                    + "themselves.\n\n"
+                    + "`openOnly` defaults to **true**: work is rarely added to a closed ticket.\n\n"
+                    + "Scratchpad tickets (`type=SCRATCHPAD`) are offered only to the curator who reported them — "
+                    + "your own scratchpad is a reasonable place to file the experiment in hand, another curator's "
+                    + "is not — and to nobody when the caller is anonymous. This is a relevance rule, not an access "
+                    + "control: a scratchpad left out here is still readable through `GET /tickets` and "
+                    + "`GET /tickets/{id}`.\n\n"
+                    + "`limit` defaults to 20 and is refused with a 400 above 100 rather than silently clamped.")
+    public ResponseDataObject<List<TicketSearchHitValueObject>> searchTickets(
+            @Parameter(description = "A ticket id typed verbatim, or a fragment of a ticket title. Required.", required = true)
+            @QueryParam("query") String query,
+            @Parameter(description = "If true (the default), restrict to OPEN/IN_PROGRESS tickets.")
+            @QueryParam("openOnly") @DefaultValue("true") boolean openOnly,
+            @Parameter(description = "Maximum number of hits to return.",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1"))
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+    ) {
+        if ( query == null || query.trim().isEmpty() ) {
+            throw new BadRequestException( "A query must be supplied." );
+        }
+        // getValue() raises MalformedArgException — a 400 — above LimitArg.MAXIMUM rather than
+        // clamping, so a client asking for 500 is told no instead of quietly getting 100. Same
+        // rule the rest of this API already applies (/experiment-sets, /datasets/search).
+        int limit = limitArg.getValue();
+        return respond( ticketService.searchTickets( query, openOnly, callerContactIdOrNull(), limit ) );
+    }
+
+    /**
+     * The calling user's contact id, or null when the caller is anonymous.
+     * <p>
+     * Deliberately not {@link #currentUserContactId()}, which refuses anonymous callers: the ticket
+     * read surface is open to whoever the rest of the v2 read surface is open to, and this id is
+     * used only to decide whose scratchpad is worth offering.
+     */
+    @Nullable
+    private Long callerContactIdOrNull() {
+        User u = userManager.getCurrentUser();
+        return u != null ? u.getId() : null;
     }
 
     /**

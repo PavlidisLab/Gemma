@@ -16,6 +16,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
@@ -214,4 +215,41 @@ public interface TicketDao extends BaseDao<Ticket> {
      */
     @Nullable
     Date findOldestOpenCreatedAt();
+
+    /**
+     * Look one ticket up by id and project it to a {@link TicketSearchHitValueObject}, honouring the
+     * same visibility rules as {@link #findSearchHitsByTitle}. Backs the "typed a ticket number"
+     * half of {@code GET /tickets/search}.
+     * <p>
+     * Separate from the title query rather than folded into its {@code ORDER BY}: the ticket a
+     * curator names by number can be older than the {@code limit} most recently touched title
+     * matches, and a hit pushed off the end of that window is indistinguishable from one that does
+     * not exist.
+     *
+     * @param openOnly            if true, only OPEN/IN_PROGRESS tickets are hits
+     * @param scratchpadOwnerId   contact id of the caller, whose own {@link TicketType#SCRATCHPAD}
+     *                            tickets are hits; null admits nobody's
+     * @return the hit, or {@code null} when no ticket has that id or it is filtered out. An id that
+     *         names no ticket is a non-hit, never an error.
+     */
+    @Nullable
+    TicketSearchHitValueObject findSearchHitById( Long id, boolean openOnly, @Nullable Long scratchpadOwnerId );
+
+    /**
+     * Find tickets whose title contains {@code titleFragment}, case-insensitively, projected to
+     * {@link TicketSearchHitValueObject} and ordered by {@code updatedAt} descending. Backs the
+     * "typed some of the title" half of {@code GET /tickets/search}.
+     * <p>
+     * {@code targetCount} on each hit is counted by the database; no {@code TicketTarget} row is
+     * fetched, which is the point of the endpoint.
+     *
+     * @param titleFragment     matched as a substring; its {@code LIKE} wildcards are escaped, so a
+     *                          title fragment containing {@code %} or {@code _} matches literally
+     * @param openOnly          if true, only OPEN/IN_PROGRESS tickets are hits
+     * @param scratchpadOwnerId contact id of the caller, whose own {@link TicketType#SCRATCHPAD}
+     *                          tickets are hits; null admits nobody's
+     * @param limit             max rows to return; values &lt;= 0 are treated as "no limit"
+     */
+    List<TicketSearchHitValueObject> findSearchHitsByTitle( String titleFragment, boolean openOnly,
+            @Nullable Long scratchpadOwnerId, int limit );
 }

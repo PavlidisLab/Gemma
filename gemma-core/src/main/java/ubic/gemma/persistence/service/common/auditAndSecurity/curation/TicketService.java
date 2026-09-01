@@ -16,6 +16,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -232,4 +233,28 @@ public interface TicketService extends BaseService<Ticket> {
     /** @see TicketDao#findOldestOpenCreatedAt */
     @Nullable
     Date findOldestOpenCreatedAt();
+
+    /**
+     * Find tickets a curator could be meaning when they type into a ticket picker &mdash; backs
+     * {@code GET /tickets/search}. Exists because a flat dropdown of every open ticket stops being
+     * usable well before the corpus does.
+     * <p>
+     * {@code query} matches EITHER a ticket id typed verbatim (digits and nothing else: {@code "6"}
+     * is ticket 6, {@code "6 samples"} is title text) OR a case-insensitive substring of the title
+     * &mdash; a curator has whichever of the two is to hand. An id that parses but names no ticket
+     * simply contributes no hit; it is not an error, and the caller should not turn it into a 404.
+     * <p>
+     * Hits come back exact-id-first, then by {@code updatedAt} descending, truncated to
+     * {@code limit}. Each is a {@link TicketSearchHitValueObject}, whose {@code targetCount} is
+     * counted in SQL &mdash; no {@code TicketTarget} row is loaded.
+     *
+     * @param query           id or title fragment; blank yields no hits
+     * @param openOnly        restrict to OPEN/IN_PROGRESS. The REST default is true: work is rarely
+     *                        added to a closed ticket
+     * @param callerContactId the calling curator's contact id, or null when anonymous. Their own
+     *                        {@link TicketType#SCRATCHPAD} tickets are offered; nobody else's are
+     * @param limit           maximum hits; must be greater than zero
+     */
+    List<TicketSearchHitValueObject> searchTickets( String query, boolean openOnly,
+            @Nullable Long callerContactId, int limit );
 }
