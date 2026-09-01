@@ -7820,6 +7820,70 @@ public class DatasetsWebService {
         return respond( expressionExperimentService.getAnnotations( ee, true ) );
     }
 
+    /*
+     * Single-tag add / remove on /datasets/{dataset}/annotations. The handler bodies live on
+     * AnnotationsWebService next to the AnnotationDto they consume; these wrappers exist because
+     * Jersey resolves /datasets/* against this class's @Path("/datasets") and never falls through
+     * to another root resource, so the routes have to be declared here to be reachable — the same
+     * reason the per-dataset annotation-set routes above are declared here.
+     */
+
+    @POST
+    @Path("/{dataset}/annotations")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Add a single annotation tag to a dataset",
+            description = "Adds one experiment-level annotation (tag) to the dataset, leaving the rest of "
+                    + "the tag set alone — the additive counterpart to the set-replace `PUT` on this same "
+                    + "path. Emits a TagAddedEvent on the dataset's audit trail. Duplicate tags (same "
+                    + "category URI + value URI) are rejected with 409 Conflict. Requires GROUP_CURATOR or "
+                    + "GROUP_ADMIN.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Annotation created.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409", description = "An annotation with the same (category, value) already exists.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response addDatasetAnnotationTag(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable AnnotationsWebService.AnnotationDto body,
+            @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
+                    + "linkage is parked until the source-set → emitted-event audit link lands.")
+            @QueryParam("annotationSetId") @Nullable Long annotationSetId
+    ) {
+        return AnnotationsWebService.doAddDatasetAnnotation( datasetArgService, expressionExperimentService,
+                datasetArg, body, annotationSetId );
+    }
+
+    @DELETE
+    @Path("/{dataset}/annotations/{annotationId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Remove a single annotation tag from a dataset",
+            description = "Removes the annotation with the given id from the dataset. Emits a "
+                    + "TagRemovedEvent. Returns 404 if no such annotation exists on this dataset. "
+                    + "Requires GROUP_CURATOR or GROUP_ADMIN.",
+            security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Annotation removed."),
+                    @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset or annotation does not exist on this dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response removeDatasetAnnotationTag(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("annotationId") Long annotationId
+    ) {
+        return AnnotationsWebService.doRemoveDatasetAnnotation( datasetArgService, expressionExperimentService,
+                datasetArg, annotationId );
+    }
+
     /**
      * Convert a wire {@link AnnotationTagInput} to a {@link Characteristic}, building a {@link Statement}
      * (with the "Statement" discriminator and the predicate / object pair) when any statement field is set,

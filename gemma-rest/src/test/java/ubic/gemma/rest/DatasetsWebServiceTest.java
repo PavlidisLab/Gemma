@@ -993,6 +993,101 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService ).getAnnotations( ee, false );
     }
 
+    /*
+     * The single-tag add / remove verbs on /datasets/{id}/annotations. These were declared on
+     * AnnotationsWebService under its class-level @Path("/annotations"), which put them at
+     * /annotations/datasets/{id}/annotations and left POST /datasets/{id}/annotations answering
+     * 405 Method Not Allowed on production (gemma2 build af1f519bf081) — Jersey picks the resource
+     * class by path, and the datasets resource carried only GET and PUT. Asserting a real status
+     * here is what pins the routing: a 405 is what a missing route looks like.
+     */
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationTag() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> {
+                    Characteristic vc = a.getArgument( 1, Characteristic.class );
+                    vc.setId( 42L );
+                    return vc;
+                } );
+        String body = "{\"category\":\"organism part\",\"categoryUri\":\"http://purl.obolibrary.org/obo/UBERON_0000479\","
+                + "\"value\":\"liver\",\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\","
+                + "\"evidenceCode\":\"IEA\"}";
+        Response res = target( "/datasets/1/annotations" ).request().post( Entity.json( body ) );
+        assertThat( res.getStatus() ).isNotEqualTo( Response.Status.METHOD_NOT_ALLOWED.getStatusCode() );
+        assertThat( res )
+                .hasStatus( Response.Status.CREATED )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        ArgumentCaptor<Characteristic> captor = ArgumentCaptor.forClass( Characteristic.class );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), captor.capture() );
+        Characteristic sent = captor.getValue();
+        assertThat( sent.getCategory() ).isEqualTo( "organism part" );
+        assertThat( sent.getValue() ).isEqualTo( "liver" );
+        assertThat( sent.getValueUri() ).isEqualTo( "http://purl.obolibrary.org/obo/UBERON_0002107" );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationTagDuplicateReturnsConflict() {
+        // The duplicate is what proves the request reached the service rather than being turned
+        // away by the router: the service's IllegalArgumentException is what maps to 409.
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenThrow( new IllegalArgumentException( "duplicate" ) );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        assertThat( target( "/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CONFLICT );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), any( Characteristic.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationTagAcceptsAndDropsAnnotationSetId() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> a.getArgument( 1, Characteristic.class ) );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\"}";
+        assertThat( target( "/datasets/1/annotations" ).queryParam( "annotationSetId", "7" )
+                .request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        verify( expressionExperimentService ).addAnnotation( eq( ee ), any( Characteristic.class ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testRemoveDatasetAnnotationTag() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        Characteristic c = Characteristic.Factory.newInstance();
+        c.setId( 42L );
+        c.setCategory( "organism part" );
+        c.setValue( "liver" );
+        when( expressionExperimentService.removeAnnotation( ee, 42L ) ).thenReturn( c );
+        Response res = target( "/datasets/1/annotations/42" ).request().delete();
+        assertThat( res.getStatus() ).isNotEqualTo( Response.Status.METHOD_NOT_ALLOWED.getStatusCode() );
+        assertThat( res ).hasStatus( Response.Status.NO_CONTENT );
+        verify( expressionExperimentService ).removeAnnotation( ee, 42L );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testRemoveDatasetAnnotationTagNotFound() {
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        when( expressionExperimentService.removeAnnotation( ee, 999L ) ).thenReturn( null );
+        assertThat( target( "/datasets/1/annotations/999" ).request().delete() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        // An unrouted DELETE also answers 404, so the status alone cannot tell "no such annotation"
+        // apart from "no such route". The service call is what separates them.
+        verify( expressionExperimentService ).removeAnnotation( ee, 999L );
+    }
+
     @Test
     @WithMockUser
     public void testUpdateDatasetAnnotations() {
