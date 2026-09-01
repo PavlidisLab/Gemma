@@ -909,15 +909,19 @@ public class TicketsWebService {
                 throw new BadRequestException( "Each `targets` entry needs a `targetId`." );
             }
             TicketTargetType type = ref.getTargetType() != null ? ref.getTargetType() : TicketTargetType.EXPRESSION_EXPERIMENT;
-            int before = ticket.getTargets().size();
+            TicketService.TargetAddition outcome;
             try {
-                ticket = ticketService.addTarget( ticket, type, ref.getTargetId(), actor );
+                outcome = ticketService.addTarget( ticket, type, ref.getTargetId(), actor );
             } catch ( IllegalStateException e ) {
                 // flag off, or the ticket is finished — a conflict with the ticket's state, not a
                 // malformed request. Adding is idempotent, so a duplicate never reaches here.
                 throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
             }
-            if ( ticket.getTargets().size() > before ) {
+            // 🛑 The service says whether it added. Comparing ticket.getTargets().size() before and
+            // after -- which this did -- reads a LAZY collection on a ticket this handler holds
+            // detached, and threw LazyInitializationException before addTarget was ever reached.
+            ticket = outcome.getTicket();
+            if ( outcome.isAdded() ) {
                 added.add( ref.getTargetId() );
             } else {
                 alreadyPresent.add( ref.getTargetId() );

@@ -250,7 +250,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
 
     @Override
     @Transactional
-    public Ticket addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor ) {
+    public TicketService.TargetAddition addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( targetType, "targetType cannot be null." );
         Assert.notNull( targetId, "targetId cannot be null." );
@@ -272,7 +272,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         // clicking twice must not error for reaching the state it asked for (uib, 2026-08-31).
         for ( TicketTarget existing : attached.getTargets() ) {
             if ( existing.getTargetType() == targetType && targetId.equals( existing.getTargetId() ) ) {
-                return attached;
+                return new TicketService.TargetAddition( attached, false );
             }
         }
 
@@ -291,7 +291,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         // and a sixth type it does not know would break its audit-trail reads -- the regression that
         // backport was made to fix. The summary carries what actually happened.
         auditTrailService.addUpdateEvent( saved, TicketMetadataChangedEvent.class, summary );
-        return saved;
+        return new TicketService.TargetAddition( saved, true );
     }
 
     @Override

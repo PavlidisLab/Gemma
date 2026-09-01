@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.hibernate.LazyInitializationException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -60,6 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -959,6 +961,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
 
         private Long ticketId;
         private Long reporterId;
+        private Long scratchpadId;
 
         @BeforeEach
         public void seedCommitted() {
@@ -979,6 +982,10 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         @AfterEach
         public void cleanup() {
             new TransactionTemplate( txManager ).execute( status -> {
+                if ( scratchpadId != null ) {
+                    Ticket p = ticketDao.load( scratchpadId );
+                    if ( p != null ) ticketDao.remove( p );
+                }
                 if ( ticketId != null ) {
                     Ticket t = ticketDao.load( ticketId );
                     if ( t != null ) ticketDao.remove( t );
@@ -989,6 +996,46 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
                 }
                 return null;
             } );
+        }
+
+
+        /**
+         * {@code POST /tickets/{id}/targets} 500d on every call, for any target, new or previously
+         * removed (cab, 2026-09-01). The handler counted {@code ticket.getTargets()} before and after
+         * the add to decide whether to report the id as added — on the ticket it holds DETACHED, whose
+         * targets are LAZY. It threw before {@code addTarget} was reached, so the one verb that grows
+         * a queue never worked while its mocked test stayed green.
+         * <p>
+         * 🛑 This must live in the NOT_SUPPORTED class. Under the outer class's {@code @Transactional}
+         * the session stays open, the ticket never detaches, and the count succeeds — the assertion
+         * below cannot fail there, which is exactly how this shipped.
+         */
+        @Test
+        @DisplayName("addTarget says whether it added, on a ticket the caller holds detached")
+        public void addTarget_reportsWhatItDidWithoutReadingTheLazyCollection() {
+            Contact curator = new TransactionTemplate( txManager ).execute( status ->
+                    contactDao.load( reporterId ) );
+            assertNotNull( curator );
+            Ticket pad = new TransactionTemplate( txManager ).execute( status ->
+                    ticketService.getOrCreateScratchpad( curator ) );
+            assertNotNull( pad );
+            scratchpadId = pad.getId();
+
+            // exactly what the handler holds: loaded through the service, outside any transaction
+            Ticket detached = ticketService.load( scratchpadId );
+            assertNotNull( detached );
+            assertThrows( LazyInitializationException.class, () -> detached.getTargets().size(),
+                    "the targets of a detached ticket cannot be counted by the caller -- "
+                            + "the handler that tried is what produced the 500" );
+
+            long targetId = freshTargetBase();
+            TicketService.TargetAddition first = ticketService.addTarget( detached,
+                    TicketTargetType.EXPRESSION_EXPERIMENT, targetId, curator );
+            assertTrue( first.isAdded(), "a target new to the ticket is reported as added" );
+
+            TicketService.TargetAddition again = ticketService.addTarget( first.getTicket(),
+                    TicketTargetType.EXPRESSION_EXPERIMENT, targetId, curator );
+            assertFalse( again.isAdded(), "re-adding is idempotent and says so rather than erroring" );
         }
 
         /**

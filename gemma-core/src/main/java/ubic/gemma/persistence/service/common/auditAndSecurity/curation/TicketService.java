@@ -163,12 +163,41 @@ public interface TicketService extends BaseService<Ticket> {
      *       ticket cannot quietly grow new work. The flag is not rewritten — reopening the ticket makes
      *       it effective again.</li>
      * </ul>
-     * A target already on the ticket is an {@link IllegalArgumentException}, matching how a duplicate
-     * experiment tag is refused rather than silently ignored.
+     * Adding a target already on the ticket is idempotent: the ticket comes back unchanged and
+     * {@link TargetAddition#isAdded()} is false.
      *
-     * @return the ticket with the new target attached
+     * @return the saved ticket, and whether this call is what put the target on it
      */
-    Ticket addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor );
+    TargetAddition addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor );
+
+    /**
+     * What {@link #addTarget} did: the saved ticket, and whether the target was new to it.
+     * <p>
+     * 🛑 The flag is reported here rather than left for the caller to infer, because inferring it
+     * means measuring {@code ticket.getTargets()} before and after — a LAZY collection that a caller
+     * outside the service's transaction holds detached. {@code POST /tickets/{id}/targets} did
+     * exactly that and threw {@code LazyInitializationException} on every call, so the one verb that
+     * grows a queue was a 500 while its mocked test stayed green.
+     */
+    class TargetAddition {
+
+        private final Ticket ticket;
+        private final boolean added;
+
+        public TargetAddition( Ticket ticket, boolean added ) {
+            this.ticket = ticket;
+            this.added = added;
+        }
+
+        public Ticket getTicket() {
+            return ticket;
+        }
+
+        /** False when the target was already on the ticket. */
+        public boolean isAdded() {
+            return added;
+        }
+    }
 
     /**
      * Remove a target from a ticket.

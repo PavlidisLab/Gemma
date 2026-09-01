@@ -460,7 +460,7 @@ public class TicketServiceImplTest {
         int eventsBefore = t.getEvents().size();
         stubDaoSaveEchoes();
 
-        Ticket saved = service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter );
+        Ticket saved = service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ).getTicket();
 
         assertEquals( 1, saved.getTargets().size() );
         TicketTarget added = saved.getTargets().iterator().next();
@@ -515,7 +515,7 @@ public class TicketServiceImplTest {
         existing.setTicket( t );
         t.getTargets().add( existing );
 
-        Ticket saved = service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter );
+        Ticket saved = service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ).getTicket();
 
         assertEquals( 1, saved.getTargets().size(), "the duplicate must not be appended" );
         assertFalse( containsEventOfType( saved, TicketEventType.TARGET_ADDED ),
