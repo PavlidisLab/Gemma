@@ -19,6 +19,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
@@ -33,7 +34,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+
+import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
 
 /**
  * Hibernate implementation of {@link TicketDao}. Mirrors the lightweight CRUD
@@ -519,5 +523,110 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
                 .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) )
                 .setParameter( "excludedType", TicketType.SCRATCHPAD )
                 .uniqueResult();
+    }
+
+    /**
+     * Escape character for the {@code LIKE} pattern built from the caller's search text.
+     * Deliberately not a backslash: whether a backslash escapes anything depends on the server's
+     * {@code sql_mode}, and getting that wrong fails in the silent direction (matches nothing).
+     * Same character {@link ubic.gemma.persistence.util.FilterQueryUtils} uses for {@code ?filter=}.
+     */
+    static final char SEARCH_LIKE_ESCAPE = '~';
+
+    /**
+     * Build the {@code LIKE} pattern for a title search: a case-insensitive substring match against
+     * the lowercased {@code NAME} column.
+     * <p>
+     * The fragment's own wildcards are escaped, so a curator typing {@code 50%} looks for a title
+     * containing "50%" rather than one containing "50", and {@code TNF_alpha} does not match
+     * {@code TNFXalpha}. {@link Locale#ROOT} rather than the default locale so the case folding does
+     * not depend on the server's locale.
+     */
+    static String searchLikePattern( String titleFragment ) {
+        return "%" + escapeLike( titleFragment.toLowerCase( Locale.ROOT ), SEARCH_LIKE_ESCAPE ) + "%";
+    }
+
+    /**
+     * HQL behind both halves of {@code GET /tickets/search}, in one builder so the two cannot drift
+     * apart on what they consider a visible ticket.
+     * <p>
+     * The projection is scalar throughout &mdash; no {@link Ticket} entity is hydrated and the
+     * {@code targets} collection is never referenced. {@code targetCount} comes from a correlated
+     * {@code count()} over {@code TicketTarget}, which is the whole reason this endpoint exists
+     * rather than {@code GET /tickets?query=}: selecting the entity and reading
+     * {@code getTargets().size()} would fetch five hundred target rows to render one picker row.
+     * The select list is positional and is projected by
+     * {@link TicketSearchHitValueObject#fromRow(Object[])}.
+     *
+     * @param byId                  true for the exact-id lookup, false for the title substring scan
+     * @param openOnly              restrict to OPEN/IN_PROGRESS
+     * @param ownScratchpadsVisible admit {@link TicketType#SCRATCHPAD} tickets reported by
+     *                              {@code :scratchpadOwnerId}; when false no scratchpad is a hit
+     */
+    static String buildSearchHitHql( boolean byId, boolean openOnly, boolean ownScratchpadsVisible ) {
+        StringBuilder hql = new StringBuilder( "select t.id, t.name, t.state, t.type, "
+                + "(select count(tt.id) from TicketTarget tt where tt.ticket = t), "
+                + "t.updatedAt "
+                + "from Ticket t where " );
+        hql.append( byId
+                ? "t.id = :ticketId"
+                : "lower(t.name) like :titleFragment escape '" + SEARCH_LIKE_ESCAPE + "'" );
+        if ( openOnly ) {
+            hql.append( " and t.state in :openStates" );
+        }
+        // A curator's own scratchpad is a perfectly good place to file the experiment they are
+        // holding, so it stays offered; someone else's is not, so it does not. See the route
+        // description on TicketsWebService.searchTickets — this is relevance, not access control.
+        hql.append( ownScratchpadsVisible
+                ? " and ( t.type <> :scratchpadType or t.reporter.id = :scratchpadOwnerId )"
+                : " and t.type <> :scratchpadType" );
+        if ( !byId ) {
+            // Recency is the right tiebreak: the ticket wanted is usually one being worked. The
+            // id hit is put ahead of these by the service, not by an ORDER BY here.
+            hql.append( " order by t.updatedAt desc" );
+        }
+        return hql.toString();
+    }
+
+    /** Bind the parameters {@link #buildSearchHitHql} emits for everything but the match itself. */
+    private static void bindSearchHitFilters( org.hibernate.query.Query<?> q, boolean openOnly,
+            @Nullable Long scratchpadOwnerId ) {
+        if ( openOnly ) {
+            q.setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) );
+        }
+        q.setParameter( "scratchpadType", TicketType.SCRATCHPAD );
+        if ( scratchpadOwnerId != null ) {
+            q.setParameter( "scratchpadOwnerId", scratchpadOwnerId );
+        }
+    }
+
+    @Nullable
+    @Override
+    public TicketSearchHitValueObject findSearchHitById( Long id, boolean openOnly, @Nullable Long scratchpadOwnerId ) {
+        org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createQuery( buildSearchHitHql( true, openOnly, scratchpadOwnerId != null ) )
+                .setParameter( "ticketId", id );
+        bindSearchHitFilters( q, openOnly, scratchpadOwnerId );
+        Object[] row = ( Object[] ) q.uniqueResult();
+        return row == null ? null : TicketSearchHitValueObject.fromRow( row );
+    }
+
+    @Override
+    public List<TicketSearchHitValueObject> findSearchHitsByTitle( String titleFragment, boolean openOnly,
+            @Nullable Long scratchpadOwnerId, int limit ) {
+        org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createQuery( buildSearchHitHql( false, openOnly, scratchpadOwnerId != null ) )
+                .setParameter( "titleFragment", searchLikePattern( titleFragment ) );
+        bindSearchHitFilters( q, openOnly, scratchpadOwnerId );
+        if ( limit > 0 ) {
+            q.setMaxResults( limit );
+        }
+        //noinspection unchecked
+        List<Object[]> rows = ( List<Object[]> ) q.list();
+        List<TicketSearchHitValueObject> hits = new ArrayList<>( rows.size() );
+        for ( Object[] row : rows ) {
+            hits.add( TicketSearchHitValueObject.fromRow( row ) );
+        }
+        return hits;
     }
 }

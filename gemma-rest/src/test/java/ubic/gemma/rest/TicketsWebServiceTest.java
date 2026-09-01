@@ -27,6 +27,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -832,6 +833,137 @@ public class TicketsWebServiceTest {
         assertPreAuthorizeIsAuthenticated(
                 TicketsWebService.class.getMethod( "deleteTicket",
                         Long.class, String.class ) );
+    }
+
+    // ---------------------------------------------------------------------
+    // GET /tickets/search — the ticket picker
+    // ---------------------------------------------------------------------
+
+    private static TicketSearchHitValueObject searchHit( long id, String title, long targetCount ) {
+        return new TicketSearchHitValueObject( id, title, TicketState.OPEN, TicketType.CURATION,
+                targetCount, new Date( 1756675380000L ) );
+    }
+
+    @Test
+    public void searchTickets_returnsTheHitsInTheOrderTheServiceGaveThem() {
+        // deliberately neither id-ascending nor id-descending: the exact-id hit leads, and the
+        // title hits behind it are in updatedAt order, so a handler that re-sorted by anything
+        // would be caught here
+        when( ticketService.searchTickets( eq( "6" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Arrays.asList(
+                        searchHit( 6L, "Reference 500 — ongoing curation review", 500L ),
+                        searchHit( 99L, "batch of 6", 2L ),
+                        searchHit( 3L, "6 replicates", 1L ) ) );
+
+        ResponseDataObject<List<TicketSearchHitValueObject>> resp =
+                webService.searchTickets( "6", true, LimitArg.valueOf( "20" ) );
+
+        assertThat( resp.getData() ).extracting( TicketSearchHitValueObject::getId )
+                .containsExactly( 6L, 99L, 3L );
+        TicketSearchHitValueObject first = resp.getData().get( 0 );
+        assertThat( first.getTitle() ).isEqualTo( "Reference 500 — ongoing curation review" );
+        assertThat( first.getState() ).isEqualTo( TicketState.OPEN );
+        assertThat( first.getType() ).isEqualTo( TicketType.CURATION );
+        assertThat( first.getUpdatedAt() ).isEqualTo( new Date( 1756675380000L ) );
+        // a count, and no way to accidentally ship the rows it counts
+        assertThat( first.getTargetCount() ).isEqualTo( 500L );
+        assertThat( TicketSearchHitValueObject.class.getMethods() )
+                .as( "the picker row must not carry a targets collection" )
+                .noneMatch( m -> m.getName().equals( "getTargets" ) );
+    }
+
+    @Test
+    public void searchTickets_requiresAQuery() {
+        assertThatThrownBy( () -> webService.searchTickets( null, true, LimitArg.valueOf( "20" ) ) )
+                .isInstanceOf( BadRequestException.class );
+        assertThatThrownBy( () -> webService.searchTickets( "  ", true, LimitArg.valueOf( "20" ) ) )
+                .isInstanceOf( BadRequestException.class );
+        verify( ticketService, never() ).searchTickets( anyString(), anyBoolean(), any(), anyInt() );
+    }
+
+    /**
+     * A limit the endpoint will not honour is refused, not quietly reduced — a silent clamp teaches
+     * the client nothing about why it got 100 rows back when it asked for 500.
+     */
+    @Test
+    public void searchTickets_refusesALimitAboveTheMaximum_ratherThanClampingIt() {
+        assertThatThrownBy( () -> webService.searchTickets( "reference", true,
+                LimitArg.valueOf( String.valueOf( LimitArg.MAXIMUM + 1 ) ) ) )
+                .isInstanceOf( BadRequestException.class )
+                .hasMessageContaining( String.valueOf( LimitArg.MAXIMUM ) );
+        verify( ticketService, never() ).searchTickets( anyString(), anyBoolean(), any(), anyInt() );
+    }
+
+    @Test
+    public void searchTickets_acceptsALimitAtTheMaximum() {
+        when( ticketService.searchTickets( anyString(), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        webService.searchTickets( "reference", true, LimitArg.valueOf( String.valueOf( LimitArg.MAXIMUM ) ) );
+
+        verify( ticketService ).searchTickets( "reference", true, null, LimitArg.MAXIMUM );
+    }
+
+    /**
+     * The default lives in the {@code @DefaultValue} annotation, which JAX-RS applies during
+     * parameter binding — calling the method directly never sees it, so it is asserted on the wire
+     * contract itself.
+     */
+    @Test
+    public void searchTickets_openOnlyDefaultsToTrueOnTheWire() throws NoSuchMethodException {
+        java.lang.reflect.Method m = TicketsWebService.class.getMethod( "searchTickets",
+                String.class, boolean.class, LimitArg.class );
+        java.lang.annotation.Annotation[] openOnlyAnnotations = m.getParameterAnnotations()[1];
+        jakarta.ws.rs.DefaultValue defaultValue = null;
+        jakarta.ws.rs.QueryParam queryParam = null;
+        for ( java.lang.annotation.Annotation a : openOnlyAnnotations ) {
+            if ( a instanceof jakarta.ws.rs.DefaultValue ) defaultValue = ( jakarta.ws.rs.DefaultValue ) a;
+            if ( a instanceof jakarta.ws.rs.QueryParam ) queryParam = ( jakarta.ws.rs.QueryParam ) a;
+        }
+        assertThat( queryParam ).isNotNull();
+        assertThat( queryParam.value() ).isEqualTo( "openOnly" );
+        assertThat( defaultValue ).as( "openOnly must carry a @DefaultValue" ).isNotNull();
+        assertThat( defaultValue.value() )
+                .as( "work is rarely added to a closed ticket, so openOnly defaults to true" )
+                .isEqualTo( "true" );
+    }
+
+    @Test
+    public void searchTickets_openOnlyFalseIsPassedThrough() {
+        when( ticketService.searchTickets( anyString(), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        webService.searchTickets( "reference", false, LimitArg.valueOf( "20" ) );
+
+        verify( ticketService ).searchTickets( "reference", false, null, 20 );
+    }
+
+    /**
+     * The caller's identity decides whose scratchpad is worth offering, so it has to reach the
+     * service.
+     */
+    @Test
+    public void searchTickets_passesTheCallersContactId_forScratchpadScoping() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.searchTickets( anyString(), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        webService.searchTickets( "reference", true, LimitArg.valueOf( "20" ) );
+
+        verify( ticketService ).searchTickets( "reference", true, 42L, 20 );
+    }
+
+    @Test
+    public void searchTickets_anonymousCallerIsServedWithNoContactId() {
+        when( userManager.getCurrentUser() ).thenReturn( null );
+        when( ticketService.searchTickets( anyString(), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        webService.searchTickets( "reference", true, LimitArg.valueOf( "20" ) );
+
+        // null, not a 401: the ticket read surface is open, and an anonymous caller is simply
+        // offered nobody's scratchpad
+        verify( ticketService ).searchTickets( "reference", true, null, 20 );
     }
 
     private static void assertPreAuthorizeIsAuthenticated( java.lang.reflect.Method m ) {
