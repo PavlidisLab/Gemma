@@ -85,9 +85,29 @@ public interface AnnotationSetDao extends BaseDao<AnnotationSet> {
     int rebindInvestigation( Investigation from, Investigation to );
 
     /**
+     * Field a cross-experiment listing is ordered by. {@code a.id desc} is
+     * always appended as a tie-breaker, so a page boundary cannot swap two rows
+     * sharing a timestamp and hide one from the caller paging through.
+     */
+    enum SummarySort {
+        /** When the row was stored. */
+        CREATED_AT,
+        /**
+         * When the agent run happened, which is not when it was stored — a
+         * queue is ordered by the former.
+         * <p>
+         * 🛑 Only ever null on a non-AGENT set: {@code attach} stamps
+         * {@code ranAt = now} on an AGENT set that supplies none, so a caller
+         * who omits it gets `ranAt` equal to `createdAt` and the two orderings
+         * silently coincide. Nulls sort last under {@code desc}.
+         */
+        RAN_AT,
+        ID
+    }
+
+    /**
      * Cross-experiment thin metadata projection: every {@link AnnotationSet}
-     * matching the supplied filter, newest first, sliced by
-     * {@code offset / limit}.
+     * matching the supplied filter, sliced by {@code offset / limit}.
      *
      * @param roleFilter        optional role filter; {@code null} = all roles.
      * @param sourceFilter      optional source filter; {@code null} = all sources.
@@ -95,15 +115,18 @@ public interface AnnotationSetDao extends BaseDao<AnnotationSet> {
      * @param investigationIds  optional restriction to a set of investigation
      *                          ids; {@code null} or empty = no additional
      *                          filter (ACL enforced upstream).
+     * @param sort              field to order by; {@code null} = {@link SummarySort#CREATED_AT}.
+     * @param descending        newest / highest first.
      */
     List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
-            @Nullable List<Long> investigationIds, int offset, int limit );
+            @Nullable List<Long> investigationIds, int offset, int limit,
+            @Nullable SummarySort sort, boolean descending );
 
     /**
      * Cross-experiment count. Counterpart of
-     * {@link #listSummaries(AnnotationSetRole, AnnotationSetSource, String, List, int, int)}.
+     * {@link #listSummaries(AnnotationSetRole, AnnotationSetSource, String, List, int, int, SummarySort, boolean)}.
      */
     long countSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,

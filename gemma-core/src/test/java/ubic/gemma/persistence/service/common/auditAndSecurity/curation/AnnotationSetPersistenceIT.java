@@ -34,6 +34,11 @@ import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSummaryVal
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.PreboardedExperiment;
 import ubic.gemma.model.expression.experiment.WorkflowState;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.stream.Collectors;
 
 /**
  * Integration test for the V20/V21 {@code ANNOTATION_SET} schema migration and
@@ -301,5 +306,62 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         // Null means "not recorded", never "none" — a producer that predates run provenance says nothing.
         assertNull( reloaded.getRunSha() );
         assertNull( reloaded.getAgentName() );
+    }
+
+    /**
+     * A queue is ordered by when the RUN happened, not by when the row was stored, and the two
+     * disagree: a set carrying August's run can be written today. Ordering by `ranAt` was hardcoded
+     * to `createdAt desc` until cab asked for the queue view.
+     * <p>
+     * 🛑 Runs on real MySQL deliberately. The claim that a null `ranAt` sorts LAST under `desc` is
+     * MySQL's null-ordering rule; H2 is emulation and is not evidence for it.
+     */
+    @Test
+    @DisplayName("Cross-experiment list sorts by ranAt, nulls last, independent of createdAt")
+    public void listSummaries_sortsByRanAt() {
+        Calendar cal = Calendar.getInstance();
+        cal.set( 2026, Calendar.JUNE, 1, 0, 0, 0 );
+        cal.set( Calendar.MILLISECOND, 0 );
+        Date june = cal.getTime();
+        cal.set( 2026, Calendar.AUGUST, 1, 0, 0, 0 );
+        Date august = cal.getTime();
+
+        // stored oldest-run-first, so createdAt order is the REVERSE of ranAt order and a test that
+        // passed on either ordering cannot pass on both
+        Long juneId = annotationSetService.attach( preboarded, AnnotationSetRole.PROPOSAL,
+                AnnotationSetSource.AGENT, AgentCurationKind.PROPOSAL, "run-june-" + UUID.randomUUID(),
+                "agent-sort", null, null, june, "{}", null ).getAnnotationSet().getId();
+        Long augustId = annotationSetService.attach( preboarded, AnnotationSetRole.PROPOSAL,
+                AnnotationSetSource.AGENT, AgentCurationKind.PROPOSAL, "run-aug-" + UUID.randomUUID(),
+                "agent-sort", null, null, august, "{}", null ).getAnnotationSet().getId();
+        // 🛑 CURATOR, not AGENT: attach stamps ranAt = now on any AGENT set that does not supply one,
+        // so an agent set is never null here and only a non-agent set exercises the null ordering
+        Long noRunId = annotationSetService.attach( preboarded, AnnotationSetRole.PROPOSAL,
+                AnnotationSetSource.CURATOR, AgentCurationKind.PROPOSAL, "run-none-" + UUID.randomUUID(),
+                "agent-sort", null, null, null, "{}", null ).getAnnotationSet().getId();
+        flushAndClear();
+
+        List<Long> invIds = Collections.singletonList( preboarded.getId() );
+
+        List<Long> byRanAt = annotationSetService
+                .listSummaries( AnnotationSetRole.PROPOSAL, null, "agent-sort", invIds, 0, 10,
+                        AnnotationSetDao.SummarySort.RAN_AT, true )
+                .stream().map( AnnotationSetSummaryValueObject::getId ).collect( Collectors.toList() );
+        assertEquals( Arrays.asList( augustId, juneId, noRunId ), byRanAt,
+                "newest run first, and the set no run produced sorts last" );
+
+        List<Long> byCreatedAt = annotationSetService
+                .listSummaries( AnnotationSetRole.PROPOSAL, null, "agent-sort", invIds, 0, 10,
+                        AnnotationSetDao.SummarySort.CREATED_AT, true )
+                .stream().map( AnnotationSetSummaryValueObject::getId ).collect( Collectors.toList() );
+        assertEquals( noRunId, byCreatedAt.get( 0 ),
+                "createdAt order is the storage order, which is not the run order" );
+
+        List<Long> ascending = annotationSetService
+                .listSummaries( AnnotationSetRole.PROPOSAL, null, "agent-sort", invIds, 0, 10,
+                        AnnotationSetDao.SummarySort.RAN_AT, false )
+                .stream().map( AnnotationSetSummaryValueObject::getId ).collect( Collectors.toList() );
+        assertEquals( Arrays.asList( noRunId, juneId, augustId ), ascending,
+                "ascending reverses it, nulls first" );
     }
 }

@@ -267,9 +267,10 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     public List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
-            @Nullable List<Long> investigationIds, int offset, int limit ) {
+            @Nullable List<Long> investigationIds, int offset, int limit,
+            @Nullable AnnotationSetDao.SummarySort sort, boolean descending ) {
         return annotationSetDao.listSummaries( roleFilter, sourceFilter, createdByFilter,
-                investigationIds, offset, limit );
+                investigationIds, offset, limit, sort, descending );
     }
 
     @Override

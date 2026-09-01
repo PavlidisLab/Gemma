@@ -129,7 +129,8 @@ public class AnnotationSetDaoImpl extends AbstractDao<AnnotationSet>
     public List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
-            @Nullable List<Long> investigationIds, int offset, int limit ) {
+            @Nullable List<Long> investigationIds, int offset, int limit,
+            @Nullable SummarySort sort, boolean descending ) {
         boolean restrictByInv = investigationIds != null && !investigationIds.isEmpty();
         StringBuilder hql = new StringBuilder( SUMMARY_PROJECTION )
                 .append( " from AnnotationSet a" )
@@ -139,7 +140,21 @@ public class AnnotationSetDaoImpl extends AbstractDao<AnnotationSet>
         if ( restrictByInv ) {
             hql.append( " and a.investigation.id in (:invIds)" );
         }
-        hql.append( " order by a.createdAt desc, a.id desc" );
+        // the field comes from an enum, never from the caller's string, so it cannot reach HQL unchecked
+        String orderField;
+        switch ( sort != null ? sort : SummarySort.CREATED_AT ) {
+            case RAN_AT:
+                orderField = "a.ranAt";
+                break;
+            case ID:
+                orderField = "a.id";
+                break;
+            default:
+                orderField = "a.createdAt";
+        }
+        String direction = descending ? " desc" : " asc";
+        hql.append( " order by " ).append( orderField ).append( direction )
+                .append( ", a.id" ).append( direction );
         org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
                 .createQuery( hql.toString() )
                 .setParameter( "role", roleFilter )

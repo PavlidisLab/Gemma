@@ -201,7 +201,8 @@ public interface AnnotationSetService {
     List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
-            @Nullable List<Long> investigationIds, int offset, int limit );
+            @Nullable List<Long> investigationIds, int offset, int limit,
+            @Nullable AnnotationSetDao.SummarySort sort, boolean descending );
 
     long countSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,

@@ -59,6 +59,8 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.Annotatio
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetDao;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -303,7 +305,14 @@ public class AnnotationSetsWebService {
     @Path("/annotation-sets")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "Cross-experiment list of annotation sets (thin projection)")
+    @Operation(summary = "Cross-experiment list of annotation sets (thin projection)",
+            description = "Always the thin projection — there is no `shape` parameter here and no way to "
+                    + "ask for `payloadJson`; rows carry `payloadSize` instead. Fetch one whole set with "
+                    + "`GET /annotation-sets/{id}`.\n\n"
+                    + "`?sort=` takes `createdAt` (default), `ranAt` or `id`, prefixed `-` for descending "
+                    + "(the default) or `+` for ascending. 🛑 `ranAt` is when the agent RUN happened and "
+                    + "`createdAt` is when the row was stored; a queue wants the former, and sets no run "
+                    + "produced have no `ranAt` and sort last under `-ranAt`.")
     public PaginatedResponseDataObject<AnnotationSetSummaryResponse> listAnnotationSetsAcross(
             @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, `commit`, or `all` (default).")
             @QueryParam("role") @Nullable String role,
@@ -314,22 +323,64 @@ public class AnnotationSetsWebService {
             @Parameter(description = "Restrict to a comma-separated list of dataset (investigation) ids.")
             @QueryParam("datasetIds") @Nullable String datasetIds,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Order by `createdAt` (default), `ranAt` or `id`; `-` descending "
+                    + "(default), `+` ascending.",
+                    schema = @Schema(defaultValue = "-createdAt"))
+            @QueryParam("sort") @DefaultValue("-createdAt") String sort
     ) {
         AnnotationSetRole roleFilter = parseRoleFilter( role );
         AnnotationSetSource sourceFilter = parseSourceFilter( source );
         List<Long> invIds = parseDatasetIdsOrThrow( datasetIds );
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
+        boolean descending = !sort.startsWith( "+" );
+        AnnotationSetDao.SummarySort sortField = parseSummarySortOrThrow( sort );
         List<AnnotationSetSummaryValueObject> vos = annotationSetService.listSummaries(
-                roleFilter, sourceFilter, createdBy, invIds, offset, limit );
+                roleFilter, sourceFilter, createdBy, invIds, offset, limit, sortField, descending );
         long total = annotationSetService.countSummaries( roleFilter, sourceFilter, createdBy, invIds );
         List<AnnotationSetSummaryResponse> rows = new ArrayList<>( vos.size() );
         for ( AnnotationSetSummaryValueObject vo : vos ) {
             rows.add( toSummaryResponse( vo ) );
         }
-        Slice<AnnotationSetSummaryResponse> slice = new Slice<>( rows, null, offset, limit, total );
+        Slice<AnnotationSetSummaryResponse> slice = new Slice<>( rows,
+                Sort.by( null, sortFieldPropertyName( sortField ),
+                        descending ? Sort.Direction.DESC : Sort.Direction.ASC, Sort.NullMode.DEFAULT ),
+                offset, limit, total );
         return Responders.paginate( slice, new String[]{ "role" } );
+    }
+
+    /**
+     * Parse the {@code ?sort=} argument, which is a field name optionally prefixed {@code +} / {@code -}.
+     * <p>
+     * Named fields only: the DAO orders by an enum, so an unrecognized name has to fail here rather
+     * than fall through to a default, or a caller paging a queue by `ranAt` would silently be served
+     * `createdAt` order and could not tell.
+     */
+    private AnnotationSetDao.SummarySort parseSummarySortOrThrow( String sort ) {
+        String field = sort.startsWith( "+" ) || sort.startsWith( "-" ) ? sort.substring( 1 ) : sort;
+        switch ( field ) {
+            case "createdAt":
+                return AnnotationSetDao.SummarySort.CREATED_AT;
+            case "ranAt":
+                return AnnotationSetDao.SummarySort.RAN_AT;
+            case "id":
+                return AnnotationSetDao.SummarySort.ID;
+            default:
+                throw new BadRequestException( "Unknown sort field '" + field
+                        + "'. This endpoint sorts by: createdAt, ranAt, id." );
+        }
+    }
+
+    private static String sortFieldPropertyName( AnnotationSetDao.SummarySort sort ) {
+        switch ( sort ) {
+            case RAN_AT:
+                return "ranAt";
+            case ID:
+                return "id";
+            default:
+                return "createdAt";
+        }
     }
 
     /**
