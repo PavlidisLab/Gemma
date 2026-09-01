@@ -4390,6 +4390,54 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( st.getObject() ).isEqualTo( "sciatic nerve" );
     }
 
+    /**
+     * A tag carrying two statements must store BOTH pairs. The converter used to read {@code items[0]}
+     * and discard the rest, so a two-statement tag silently became a one-statement tag — cab lost six
+     * statements across five tags that way (2026-08-31) and only found it by reading SECOND_PREDICATE
+     * in the database, because a tag that lost a claim looks exactly like one that never made it.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationTagKeepsBothStatements() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"tag-0\","
+                + "\"category\":{\"label\":\"cell type\"},\"value\":{\"label\":\"retinal cell\"},"
+                + "\"statements\":{\"items\":["
+                + "{\"subject\":{\"label\":\"retinal cell\"},\"predicate\":{\"label\":\"derives from cell line\"},\"object\":{\"label\":\"H9 cell\"}},"
+                + "{\"subject\":{\"label\":\"retinal cell\"},\"predicate\":{\"label\":\"has modifier\"},\"object\":{\"label\":\"organoid\"}}"
+                + "]}}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        Statement st = ( Statement ) cap.getValue().getTagsToAdd().get( 0 ).getCharacteristic();
+        assertThat( st.getPredicate() ).isEqualTo( "derives from cell line" );
+        assertThat( st.getObject() ).isEqualTo( "H9 cell" );
+        assertThat( st.getSecondPredicate() ).isEqualTo( "has modifier" );
+        assertThat( st.getSecondObject() ).isEqualTo( "organoid" );
+    }
+
+    /** A row holds two pairs, so a third claim is refused rather than silently dropped. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRejectsAThirdStatementOnATag() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+
+        String one = "{\"subject\":{\"label\":\"pyramidal neuron\"},\"predicate\":{\"label\":\"p\"},\"object\":{\"label\":\"o\"}}";
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"tag-0\","
+                + "\"category\":{\"label\":\"cell type\"},\"value\":{\"label\":\"pyramidal neuron\"},"
+                + "\"statements\":{\"items\":[" + one + "," + one + "," + one + "]}}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
     @Test
     @WithMockUser
     public void testCommitCurationRejectsUnknownSection() {

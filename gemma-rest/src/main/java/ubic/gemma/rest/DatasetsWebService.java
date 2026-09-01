@@ -4960,6 +4960,16 @@ public class DatasetsWebService {
     private static Characteristic tagCommitToCharacteristic( TagCommit tc, String location ) {
         List<StatementCommit> statements = tc.getStatements() != null ? nullSafe( tc.getStatements().getItems() ) : Collections.emptyList();
         if ( !statements.isEmpty() ) {
+            // 🛑 A Statement row holds exactly TWO predicate/object pairs (Statement.getNumberOfStatements()
+            // is 2), so a third has nowhere to go. Refuse it rather than store the first two and drop the
+            // rest: a tag that lost a claim is indistinguishable from one that never made it, on the wire
+            // and in the render. cab lost six statements across five tags to exactly that silence
+            // (2026-08-31) and only found it by reading SECOND_PREDICATE in the database.
+            if ( statements.size() > 2 ) {
+                throw new BadRequestException( location + ": a tag holds at most two statements, and "
+                        + statements.size() + " were supplied. One characteristic row carries two"
+                        + " predicate/object pairs about the same subject; a third claim needs its own tag." );
+            }
             StatementCommit sc = statements.get( 0 );
             if ( sc.getSubject() == null || StringUtils.isBlank( sc.getSubject().getLabel() ) ) {
                 throw new BadRequestException( "A statement tag needs a 'subject'." );
@@ -4979,6 +4989,25 @@ public class DatasetsWebService {
             if ( sc.getObject() != null ) {
                 s.setObject( sc.getObject().getLabel() );
                 s.setObjectUri( sc.getObject().getUri() );
+            }
+            // A second item about the same subject becomes the row's second pair. It was previously read
+            // and discarded, which is what made a two-statement tag store one.
+            if ( statements.size() == 2 ) {
+                StatementCommit sc2 = statements.get( 1 );
+                if ( sc2.getSubject() != null && StringUtils.isNotBlank( sc2.getSubject().getLabel() )
+                        && !sc2.getSubject().getLabel().equals( s.getSubject() ) ) {
+                    throw new BadRequestException( location + ": both statements on a tag must share the"
+                            + " same subject — one row makes two claims about one subject. Got '"
+                            + s.getSubject() + "' and '" + sc2.getSubject().getLabel() + "'." );
+                }
+                if ( sc2.getPredicate() != null ) {
+                    s.setSecondPredicate( sc2.getPredicate().getLabel() );
+                    s.setSecondPredicateUri( sc2.getPredicate().getUri() );
+                }
+                if ( sc2.getObject() != null ) {
+                    s.setSecondObject( sc2.getObject().getLabel() );
+                    s.setSecondObjectUri( sc2.getObject().getUri() );
+                }
             }
             // Evidence on the statement wins; the tag-level field is the fallback for a plain tag.
             s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence(
