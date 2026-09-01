@@ -73,6 +73,24 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
                 .list();
     }
 
+    @Nullable
+    @Override
+    public Ticket findScratchpad( Contact curator ) {
+        // setMaxResults(1) + an explicit order rather than uniqueResult: nothing in the schema forbids
+        // a second row, and a duplicate must not turn every later read into a NonUniqueResultException.
+        // See TicketDao#findScratchpad.
+        //noinspection unchecked
+        List<Ticket> rows = ( List<Ticket> ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select t from Ticket t "
+                                + "where t.type = :type and t.reporter = :curator "
+                                + "order by t.id asc" )
+                .setParameter( "type", TicketType.SCRATCHPAD )
+                .setParameter( "curator", curator )
+                .setMaxResults( 1 )
+                .list();
+        return rows.isEmpty() ? null : rows.get( 0 );
+    }
+
     @Override
     public List<Ticket> findTickets( boolean openOnly, @Nullable Long assigneeId, @Nullable TicketPriority priority, int offset, int limit ) {
         return findTickets( openOnly, assigneeId, priority, null, null, null, null, offset, limit );
@@ -479,9 +497,13 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
 
     @Override
     public long countOpen() {
+        // Scratchpads are excluded: one per curator, never resolved, so they would add a permanent
+        // per-curator constant to every workload number. countOpenByType() still reports them, which
+        // is what keeps this exclusion visible to a caller. See TicketDao#countOpen.
         Long n = ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select count(t) from Ticket t where t.state in :openStates" )
+                        "select count(t) from Ticket t where t.state in :openStates and t.type <> :excludedType" )
                 .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) )
+                .setParameter( "excludedType", TicketType.SCRATCHPAD )
                 .uniqueResult();
         return n == null ? 0L : n;
     }
@@ -489,9 +511,13 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
     @Nullable
     @Override
     public Date findOldestOpenCreatedAt() {
+        // Same scratchpad exclusion as countOpen, and it matters more here: a scratchpad outlives
+        // every real ticket, so including it would freeze this number at the age of the first one
+        // provisioned. See TicketDao#findOldestOpenCreatedAt.
         return ( Date ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select min(t.createdAt) from Ticket t where t.state in :openStates" )
+                        "select min(t.createdAt) from Ticket t where t.state in :openStates and t.type <> :excludedType" )
                 .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) )
+                .setParameter( "excludedType", TicketType.SCRATCHPAD )
                 .uniqueResult();
     }
 }

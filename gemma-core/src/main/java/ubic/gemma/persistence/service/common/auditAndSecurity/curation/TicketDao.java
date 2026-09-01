@@ -51,6 +51,24 @@ public interface TicketDao extends BaseDao<Ticket> {
     List<Ticket> findAssignedTo( Contact assignee );
 
     /**
+     * Find the curator's scratchpad: the {@link TicketType#SCRATCHPAD} ticket they reported.
+     * <p>
+     * State is deliberately NOT part of the predicate — a curator has one scratchpad, and a cancelled
+     * one is still theirs (reopen it with {@code PUT /tickets/{id}} rather than getting a second).
+     * <p>
+     * 🛑 Ordered by {@code id} ascending and capped at one row rather than using a unique-result query.
+     * Nothing in the schema forbids two rows (see
+     * {@link TicketService#getOrCreateScratchpad(Contact)} for the race that could mint one), so a
+     * {@code uniqueResult} here would turn a stray duplicate into a hard failure on every subsequent
+     * read. Oldest-wins instead: the answer to "which one is the curator's scratchpad" stays the same
+     * row forever.
+     *
+     * @return the curator's scratchpad, or {@code null} if they have none yet
+     */
+    @Nullable
+    Ticket findScratchpad( Contact curator );
+
+    /**
      * Paged, filtered list query for the REST surface (Phase B-2). All filter
      * arguments are independently optional; passing {@code null} for each one
      * disables that filter. Results are ordered by {@code updatedAt} desc.
@@ -198,19 +216,33 @@ public interface TicketDao extends BaseDao<Ticket> {
     /**
      * Count open ({@code OPEN} + {@code IN_PROGRESS}) tickets grouped by
      * {@link TicketType}. Used by the admin curation-status surface.
+     * <p>
+     * Includes {@link TicketType#SCRATCHPAD}. This is the breakdown, not a workload figure, and it is
+     * what makes the scratchpad exclusion in {@link #countOpen()} visible rather than invisible: the
+     * difference between the two is exactly the SCRATCHPAD entry.
      */
     Map<TicketType, Long> countOpenByType();
 
     /**
-     * Count tickets in a non-terminal state ({@code OPEN} + {@code IN_PROGRESS}).
+     * Count tickets in a non-terminal state ({@code OPEN} + {@code IN_PROGRESS}), EXCLUDING
+     * {@link TicketType#SCRATCHPAD}.
+     * <p>
+     * 🛑 The scratchpad exclusion is the point of the method, not a detail. A scratchpad is never
+     * resolved — finishing with a dataset means removing it from the scratchpad, not closing the
+     * ticket (Paul, 2026-08-31) — so counting one as open curation work would add a permanent +1 per
+     * curator to every workload number. {@link #countOpenByType()} still reports it.
      */
     long countOpen();
 
     /**
      * @return the earliest {@code createdAt} across every ticket in a
-     *         non-terminal state, or {@code null} if no open tickets exist.
-     *         Used to surface "oldest open ticket age" on the admin
+     *         non-terminal state, EXCLUDING {@link TicketType#SCRATCHPAD}, or {@code null} if no
+     *         open tickets exist. Used to surface "oldest open ticket age" on the admin
      *         curation-status surface.
+     *         <p>
+     *         Same exclusion and same reason as {@link #countOpen()}, and it bites harder here: a
+     *         scratchpad outlives every real ticket, so including it would pin this number to the age
+     *         of the first scratchpad ever provisioned and it would never move again.
      */
     @Nullable
     Date findOldestOpenCreatedAt();

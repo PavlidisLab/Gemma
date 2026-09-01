@@ -54,6 +54,37 @@ public interface TicketService extends BaseService<Ticket> {
     Ticket openTicket( Contact reporter, TicketType type, String title, Collection<TicketTarget> targets );
 
     /**
+     * Return the curator's scratchpad, provisioning it on first call.
+     * <p>
+     * A scratchpad is a {@link TicketType#SCRATCHPAD} ticket kept open indefinitely, holding whatever
+     * the curator is currently looking at; finishing with a dataset means REMOVING it from the
+     * scratchpad, not resolving the ticket (Paul, 2026-08-31). It is created with
+     * {@code acceptsTargets = true}, because a scratchpad nothing can be added to is inert, and with
+     * no targets, which is why this does not delegate to {@link #openTicket} (that method requires at
+     * least one).
+     * <p>
+     * Identified by {@code type == SCRATCHPAD} and {@code reporter == curator}, with no state clause:
+     * a cancelled scratchpad is still the curator's, and comes back as-is for them to reopen through
+     * the normal state transition rather than being superseded by a fresh one.
+     * <p>
+     * 🛑 <b>Duplicate prevention is query-then-create inside one transaction, which is not a
+     * guarantee.</b> Nothing in the schema forbids a second row, so two first-calls that both run the
+     * SELECT before either commits will both insert. What IS guaranteed is that the identity never
+     * splits afterwards: {@link TicketDao#findScratchpad} orders by {@code id} ascending and takes
+     * one row, so every later call — this one included — returns the same ticket forever. A stray
+     * duplicate is an orphan row visible in {@code GET /tickets?type=SCRATCHPAD} and reachable by id,
+     * not a scratchpad that flips between two identities. Closing the window properly needs a unique
+     * index, which needs a migration.
+     * <p>
+     * The returned ticket has its lazy fields initialized for
+     * {@link TicketValueObject#from(Ticket, boolean)}, events included, so the REST layer can project
+     * it after the transaction ends.
+     *
+     * @param curator the scratchpad's owner; recorded as the ticket's reporter
+     */
+    Ticket getOrCreateScratchpad( Contact curator );
+
+    /**
      * Assign (or re-assign) the ticket. Appends an
      * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType#ASSIGNED}
      * event. Pass {@code assignee == null} to clear an assignment (still

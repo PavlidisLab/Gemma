@@ -275,6 +275,75 @@ public class TicketsWebServiceTest {
         assertThat( resp.getData().oldestOpenAgeDays ).isBetween( 9L, 11L );
     }
 
+    /* -------------- scratchpad (/tickets/scratchpad, /tickets/summary) -------------- */
+
+    /**
+     * The route provisions through the service and hands back the projection. The two VO fields
+     * asserted are what a client needs to recognize it and to know it can add to it.
+     */
+    @Test
+    public void getScratchpad_provisionsAndReturnsTheCallersOwn() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        Ticket pad = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "Scratchpad: alice", reporter );
+        pad.setId( 7L );
+        pad.setAcceptsTargets( true );
+        pad.setTargets( new HashSet<>() );
+        TicketEvent opened = TicketEvent.Factory.newInstance( TicketEventType.OPENED, reporter, null );
+        opened.setTicket( pad );
+        opened.setOccurredAt( new Date() );
+        pad.setEvents( new ArrayList<>( Collections.singletonList( opened ) ) );
+        when( ticketService.getOrCreateScratchpad( reporter ) ).thenReturn( pad );
+
+        ResponseDataObject<TicketValueObject> resp = webService.getScratchpad();
+
+        assertThat( resp.getData().getType() ).isEqualTo( TicketType.SCRATCHPAD );
+        assertThat( resp.getData().isAcceptsTargets() )
+                .as( "a scratchpad a client cannot add to is inert" )
+                .isTrue();
+        assertThat( resp.getData().getId() ).isEqualTo( 7L );
+        // the event log rides along, as it does on GET /tickets/{id}
+        assertThat( resp.getData().getEvents() ).hasSize( 1 );
+        verify( ticketService ).getOrCreateScratchpad( reporter );
+    }
+
+    @Test
+    public void getScratchpad_returns401_whenAnonymous() {
+        when( userManager.getCurrentUser() ).thenReturn( null );
+        assertThatThrownBy( () -> webService.getScratchpad() )
+                .isInstanceOf( NotAuthorizedException.class );
+        verify( ticketService, never() ).getOrCreateScratchpad( any() );
+    }
+
+    @Test
+    public void getScratchpad_requiresAuthentication() throws NoSuchMethodException {
+        assertPreAuthorizeIsAuthenticated( TicketsWebService.class.getMethod( "getScratchpad" ) );
+    }
+
+    /**
+     * A scratchpad is never resolved, so counting one as open work would put every curator
+     * permanently behind. It comes out of {@code totalOpen} — but it is NOT hidden: it is reported on
+     * its own field and still appears in the breakdown, so {@code totalOpen + scratchpadOpen} is the
+     * sum of {@code byType} and a caller can add it back.
+     */
+    @Test
+    public void getOpenTicketSummary_holdsScratchpadsOutOfTotalOpen_butStillReportsThem() {
+        java.util.Map<TicketType, Long> byType = new java.util.EnumMap<>( TicketType.class );
+        byType.put( TicketType.CURATION, 5L );
+        byType.put( TicketType.QUALITY_REVIEW, 2L );
+        byType.put( TicketType.SCRATCHPAD, 3L );
+        when( ticketService.countOpenByType() ).thenReturn( byType );
+
+        TicketsWebService.OpenTicketSummaryResponse body = webService.getOpenTicketSummary().getData();
+
+        assertThat( body.totalOpen ).as( "5 curation + 2 quality review, scratchpads excluded" ).isEqualTo( 7L );
+        assertThat( body.scratchpadOpen ).isEqualTo( 3L );
+        assertThat( body.byType ).containsEntry( TicketType.SCRATCHPAD, 3L );
+        long sum = body.byType.values().stream().mapToLong( Long::longValue ).sum();
+        assertThat( body.totalOpen + body.scratchpadOpen )
+                .as( "the exclusion must be recoverable from the payload, not invisible" )
+                .isEqualTo( sum );
+    }
+
     /** Helper: minimal Ticket carrying id, state, updatedAt. */
     private Ticket newTicket( long id, TicketState state, Date updatedAt ) {
         Ticket t = Ticket.Factory.newInstance( TicketType.GENERIC, "t-" + id, reporter );
