@@ -97,7 +97,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Slf4j
 public class PlatformsWebService {
 
-    private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
+    private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "The %s annotation file for platform %s does not exist or can not be accessed.";
     private static final String ERROR_ANNOTATION_FILE_CANNOT_BE_GENERATED = "Annotation file for platform %s is not on disk and this instance cannot generate it: %s";
     private static final String ERROR_NO_ALIGNMENTS = "Platform element %s on %s has no BLAT alignments that can be placed in the genome browser.";
 
@@ -802,10 +802,66 @@ public class PlatformsWebService {
     }
 
     /**
+     * Which of the three annotation-file flavours written by
+     * {@link ArrayDesignAnnotationService#create} to serve. The constant names are the accepted
+     * query values, and each carries the file-name suffix that identifies its file on disk.
+     * <p>
+     * Only {@link #standard} was reachable over HTTP before; the other two were generated on every
+     * GO-enabled run and then never served.
+     */
+    public enum AnnotationFileType {
+        /**
+         * Every GO term, including the parents implied by the term's ancestry.
+         */
+        standard( ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX ),
+        /**
+         * Biological-process terms only.
+         */
+        bioProcess( ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX ),
+        /**
+         * Directly-assigned GO terms only, without the implied parents.
+         */
+        noParents( ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX );
+
+        private final String suffix;
+
+        AnnotationFileType( String suffix ) {
+            this.suffix = suffix;
+        }
+
+        /**
+         * @return the suffix inserted between the munged platform short name and
+         * {@link ArrayDesignAnnotationService#ANNOTATION_FILE_SUFFIX}.
+         */
+        public String getSuffix() {
+            return suffix;
+        }
+    }
+
+    /**
+     * Resolve the {@code type} query parameter, case-insensitively.
+     * <p>
+     * An unknown value is a 400 naming the accepted ones. Falling back to the standard file instead
+     * would hand the caller a different platform's-worth of annotations than they asked for, with
+     * nothing in the response to say so.
+     */
+    private static AnnotationFileType parseAnnotationFileType( String raw ) {
+        for ( AnnotationFileType t : AnnotationFileType.values() ) {
+            if ( t.name().equalsIgnoreCase( raw.trim() ) ) {
+                return t;
+            }
+        }
+        throw new BadRequestException( "Unknown annotation file type '" + raw
+                + "'. Expected one of: standard, bioProcess, noParents." );
+    }
+
+    /**
      * Retrieves the annotation file for the given platform.
      *
      * @param platformArg can either be the ArrayDesign ID or its short name (e.g. "GPL1355" ). Retrieval by ID
      *                    is more efficient. Only platforms that user has access to will be available.
+     * @param typeArg     which annotation-file flavour to serve, see {@link AnnotationFileType}; defaults to
+     *                    {@code standard}, which is what this endpoint served unconditionally before.
      * @return the content of the annotation file of the given platform.
      */
     @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
@@ -813,33 +869,46 @@ public class PlatformsWebService {
     @Path("/{platform}/annotations")
     @Produces("text/tab-separated-values; charset=UTF-8")
     @Operation(summary = "Retrieve the annotations of a given platform",
-            description = "The following columns are available: ElementName, GeneSymbols, GOTerms, GemmaIDs, NCBIids. Older files might still use ProbeName instead of ElementName.",
+            description = "The following columns are available: ElementName, GeneSymbols, GOTerms, GemmaIDs, NCBIids. "
+                    + "Older files might still use ProbeName instead of ElementName. "
+                    + "The `type` parameter selects which of the three generated flavours to serve: `standard` "
+                    + "(default) has every GO term including the parents implied by the term's ancestry, "
+                    + "`bioProcess` keeps only biological-process terms, and `noParents` keeps only the directly "
+                    + "assigned terms. The non-standard flavours only exist for platforms whose annotations were "
+                    + "generated with GO loaded; requesting one that is absent regenerates all three.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(type = "string"),
-                                    examples = { @ExampleObject("classpath:/restapidocs/examples/platform-annotations.tsv") }))
+                                    examples = { @ExampleObject("classpath:/restapidocs/examples/platform-annotations.tsv") })),
+                    @ApiResponse(responseCode = "400", description = "The annotation file type is not a recognised value.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg,// Optional, default null
+            @Parameter(description = "Which annotation file to serve.", schema = @Schema(implementation = AnnotationFileType.class))
+            @QueryParam("type") @DefaultValue("standard") String typeArg,
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
         if ( force ) {
             checkIsAdmin();
         }
+        AnnotationFileType type = parseAnnotationFileType( typeArg );
         ArrayDesign arrayDesign = arrayDesignArgService.getEntity( platformArg );
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
-                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
+                + type.getSuffix()
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
         java.nio.file.Path file = annotationFileService.getAnnotDataDir().resolve( fileName );
         if ( force || !Files.exists( file ) ) {
             try {
                 // generate it. This will cause a delay, and potentially a time-out, but better than a 404
                 // To speed things up, we don't delete other files
+                // One create() writes all three flavours (the bioProcess / noParents pair is only
+                // written when GO is on, which it is here), so a miss on any type is served by this call.
                 annotationFileService.create( arrayDesign, true, false ); // include GO by default.
             } catch ( IOException e ) {
-                log.error( "Failed to generate annotation file for " + arrayDesign, e );
-                throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
+                log.error( "Failed to generate annotation files for " + arrayDesign, e );
+                throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, type, arrayDesign.getShortName() ) );
             } catch ( IllegalStateException e ) {
                 // create() refuses to run unless GO is loaded, so an instance started with
                 // load.geneOntology=false can never satisfy a cache miss here. Report that rather
@@ -851,7 +920,7 @@ public class PlatformsWebService {
             }
             // create() returns quietly for platforms with no gene mappings, leaving nothing on disk
             if ( !Files.exists( file ) ) {
-                throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
+                throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, type, arrayDesign.getShortName() ) );
             }
         }
         return Response.ok( file )

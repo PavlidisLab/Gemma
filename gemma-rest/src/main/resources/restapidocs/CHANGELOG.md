@@ -20,6 +20,11 @@ tailored to the processed data vectors.
 Add a `quantitationType` option to `getDatasetDesign` endpoint to generate a design matrix that is tailored to any data
 vectors.
 
+Add a `type` option to the `getPlatformAnnotations` endpoint to select which annotation file to serve: `standard`
+(the default, and what the endpoint served before), `bioProcess` (biological-process terms only) or `noParents`
+(directly assigned terms, without the implied parents). The latter two were already generated alongside the standard
+file whenever GO was loaded, but no endpoint exposed them.
+
 ### Update 2.9.3
 
 Add various single-cell metrics to the `BioAssayValueObject` model.

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.model.blacklist.BlacklistedPlatform;
@@ -22,6 +23,12 @@ import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.args.*;
+
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.core.Response;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,6 +52,9 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private TestAuthenticationUtils testAuthenticationUtils;
+
+    @Autowired
+    private ArrayDesignAnnotationService annotationFileService;
 
     /* fixtures */
     private ExpressionExperiment expressionExperiment;
@@ -401,5 +411,67 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest5 {
         } finally {
             testAuthenticationUtils.runAsAdmin();
         }
+    }
+
+    /**
+     * The endpoint served the standard flavour unconditionally until the {@code type} parameter
+     * existed, so the {@code _bioProcess} / {@code _noParents} files that {@code create()} writes on
+     * every GO-enabled run were unreachable. Each type must now resolve to its own file.
+     * <p>
+     * Files are planted on disk so the miss path never fires: generation needs GO loaded, which this
+     * context does not have, and the point here is the file-name resolution, not the generator.
+     */
+    @Test
+    public void testPlatformAnnotationsServesEachFileType() throws IOException {
+        Path dir = annotationFileService.getAnnotDataDir();
+        Files.createDirectories( dir );
+        String base = arrayDesign.getShortName().replace( "/", "_" );
+        Path standard = dir.resolve( base + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+        Path bioProcess = dir.resolve( base + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+        Path noParents = dir.resolve( base + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+        String platformId = arrayDesign.getId().toString();
+        try {
+            for ( Path f : new Path[] { standard, bioProcess, noParents } ) {
+                Files.write( f, "planted".getBytes() );
+            }
+
+            // the default is what the endpoint served before the parameter existed
+            assertThat( annotationFile( platformId, "standard" ) ).isEqualTo( standard );
+            assertThat( annotationFile( platformId, "bioProcess" ) ).isEqualTo( bioProcess );
+            assertThat( annotationFile( platformId, "noParents" ) ).isEqualTo( noParents );
+
+            // the query value is matched case-insensitively
+            assertThat( annotationFile( platformId, "BIOPROCESS" ) ).isEqualTo( bioProcess );
+        } finally {
+            for ( Path f : new Path[] { standard, bioProcess, noParents } ) {
+                Files.deleteIfExists( f );
+            }
+        }
+    }
+
+    /**
+     * An unknown type is a 400 naming the accepted values, not a silent fallback to the standard
+     * file — a caller asking for bioProcess must not be handed every GO term with nothing in the
+     * response to say so. Rejected before the platform is even looked up.
+     */
+    @Test
+    public void testPlatformAnnotationsRejectsAnUnknownFileType() {
+        assertThatThrownBy( () -> platformsWebService.getPlatformAnnotations(
+                PlatformArg.valueOf( arrayDesign.getId().toString() ), "bogus", false, false ) )
+                .isInstanceOf( BadRequestException.class )
+                .hasMessageContaining( "bogus" )
+                .hasMessageContaining( "noParents" );
+    }
+
+    /**
+     * @return the file the endpoint resolved for {@code type}, which it hands back as the response entity.
+     */
+    private Path annotationFile( String platformId, String type ) {
+        Response response = platformsWebService.getPlatformAnnotations(
+                PlatformArg.valueOf( platformId ), type, false, false );
+        assertThat( response.getStatus() ).isEqualTo( 200 );
+        return ( Path ) response.getEntity();
     }
 }
