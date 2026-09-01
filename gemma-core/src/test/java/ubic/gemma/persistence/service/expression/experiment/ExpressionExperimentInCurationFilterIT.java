@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -185,5 +186,43 @@ public class ExpressionExperimentInCurationFilterIT extends BaseSpringContextTes
                         .contains( id );
             }
         }
+    }
+
+    /**
+     * 🛑 This runs the HQL. The route that uses {@code loadIdentifiers} is covered by a mocked test, and
+     * a mock cannot fail on a malformed query — the first version of this method emitted
+     * {@code where ee.id in :ids where (1=1)}, because {@code formAclRestrictionClause} owns the
+     * {@code where}, and it passed every unit test and 500'd on every real ticket read.
+     */
+    @Test
+    @DisplayName("loadIdentifiers resolves the ids it is given, and only those")
+    public void loadIdentifiersReturnsTheRequestedExperiments() {
+        List<Long> asked = Arrays.asList( needsAttention.getId(), quiet.getId() );
+
+        Map<Long, String> byId = new java.util.HashMap<>();
+        for ( ExpressionExperimentDao.Identifiers i : expressionExperimentDao.loadIdentifiers( asked ) ) {
+            byId.put( i.getId(), i.getShortName() );
+        }
+
+        assertThat( byId.keySet() ).containsExactlyInAnyOrderElementsOf( asked );
+        assertThat( byId.get( needsAttention.getId() ) ).isEqualTo( needsAttention.getShortName() );
+        assertThat( byId.get( quiet.getId() ) ).isNotNull();
+    }
+
+    /** The unscoped sibling has to keep working — both share one query string. */
+    @Test
+    @DisplayName("loadAllIdentifiers still runs and covers the fixtures")
+    public void loadAllIdentifiersStillRuns() {
+        Set<Long> all = new HashSet<>();
+        for ( ExpressionExperimentDao.Identifiers i : expressionExperimentDao.loadAllIdentifiers() ) {
+            all.add( i.getId() );
+        }
+        assertThat( all ).contains( needsAttention.getId(), quiet.getId() );
+    }
+
+    @Test
+    @DisplayName("loadIdentifiers with no ids asks nothing and returns nothing")
+    public void loadIdentifiersEmptyIsEmpty() {
+        assertThat( expressionExperimentDao.loadIdentifiers( Collections.emptyList() ) ).isEmpty();
     }
 }

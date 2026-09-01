@@ -286,9 +286,13 @@ public class ExpressionExperimentDaoImpl
             // An empty `in` list is not valid HQL, and the answer is knowable without asking.
             return Collections.emptyList();
         }
+        // 🛑 formAclRestrictionClause OWNS the `where` — it returns " where (1=1)" on the admin path — so
+        // the id restriction is appended to it with `and`, never emitted as a second `where`. Getting
+        // that backwards produced `where ee.id in :ids where (1=1)`, which parses fine in Java and 500s
+        // in Hibernate on every call.
         String hql = IDENTIFIERS_PROJECTION
-                + ( scoped ? "where ee.id in :ids " : "" )
-                + AclQueryUtils.formAclRestrictionClause( "ee.id" );
+                + AclQueryUtils.formAclRestrictionClause( "ee.id" )
+                + ( scoped ? " and ee.id in :ids" : "" );
         Query<Object[]> query = getSessionFactory().getCurrentSession().createQuery( hql, Object[].class );
         if ( scoped ) {
             query.setParameterList( "ids", optimizeParameterList( ids ) );
