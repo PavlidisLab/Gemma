@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.Cursor;
@@ -100,7 +101,8 @@ public class DatasetsWebServiceSamplesCursorTest {
         List<BioAssayValueObject> all = Arrays.asList( ba1, ba2 );
         when( datasetArgService.getSamples( any( DatasetArg.class ), anyBoolean() ) ).thenReturn( all );
 
-        Object response = webService.getDatasetSamples( datasetArg, null, false, null, limit( "20" ), null, false );
+        // No limit: legacy mode is only reachable when the caller asked for no page size at all.
+        Object response = webService.getDatasetSamples( datasetArg, null, false, null, null, null, false );
 
         assertThat( response ).isInstanceOf( ResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -171,6 +173,61 @@ public class DatasetsWebServiceSamplesCursorTest {
 
         verify( datasetArgService, never() ).getSamplesByCursor( any( DatasetArg.class ), any(), anyInt(), anyBoolean() );
         verify( datasetArgService, never() ).getSamples( any( DatasetArg.class ), anyBoolean() );
+    }
+
+    /**
+     * 🛑 The route bound {@code limit} and then never used it outside cursor mode.
+     * <p>
+     * Measured on production ({@code gemma2}, dataset 7332 = GSE2109, 2158 samples):
+     * {@code GET /datasets/7332/samples?limit=20} answered with all 2158 assays — the same body as the
+     * no-parameter call, 22,846,518 bytes at the time — and nothing in it said the page size had been
+     * dropped. Truncating to 20 instead is no better: the legacy response is an unpaginated
+     * {@link ResponseDataObject} with no {@code totalElements} and no {@code nextCursor}, so it has
+     * nowhere to declare that 2138 rows were left out. A caller must not be able to receive a different
+     * number of rows than it asked for without being told, so the parameter is refused.
+     */
+    @Test
+    public void limitWithoutCursorIsRejectedAs400() {
+        assertThatThrownBy( () -> webService.getDatasetSamples( datasetArg, null, false, null, limit( "20" ), null, false ) )
+                .isInstanceOf( BadRequestException.class );
+
+        // Neither listing may run: the point is that no body is produced at all, not that a truncated one is.
+        verify( datasetArgService, never() ).getSamples( any( DatasetArg.class ), anyBoolean() );
+        verify( datasetArgService, never() ).getSamplesByCursor( any( DatasetArg.class ), any(), anyInt(), anyBoolean() );
+    }
+
+    /**
+     * The QT-narrowed listings are legacy-mode too, so they refuse a limit on the same grounds — the
+     * rejection is a property of "not paginating", not of the plain branch.
+     */
+    @Test
+    public void limitWithQuantitationTypeAndNoCursorIsRejectedAs400() {
+        QuantitationTypeArg<?> qtArg = QuantitationTypeArg.valueOf( "42" );
+
+        assertThatThrownBy( () -> webService.getDatasetSamples( datasetArg, qtArg, false, null, limit( "20" ), null, false ) )
+                .isInstanceOf( BadRequestException.class );
+        assertThatThrownBy( () -> webService.getDatasetSamples( datasetArg, null, true, null, limit( "20" ), null, false ) )
+                .isInstanceOf( BadRequestException.class );
+
+        verify( datasetArgService, never() ).getSamples( any( DatasetArg.class ), any( QuantitationType.class ), anyBoolean() );
+        verify( datasetArgService, never() ).getPreferredQuantitationType( any( DatasetArg.class ) );
+    }
+
+    /**
+     * Cursor mode still has a page size when the caller sends none — dropping {@code @DefaultValue("20")}
+     * from the parameter moved that default into the method, and it has to still be there.
+     */
+    @Test
+    public void cursorModeWithoutLimitUsesTheDefaultPageSize() {
+        Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
+        CursorPage<BioAssayValueObject> cp = new CursorPage<>(
+                Collections.singletonList( ba1 ), null, 20, null, null, null );
+        when( datasetArgService.getSamplesByCursor( any( DatasetArg.class ), eq( c ), eq( 20 ), anyBoolean() ) ).thenReturn( cp );
+
+        Object response = webService.getDatasetSamples( datasetArg, null, false, CursorArg.valueOf( c.encode() ), null, null, false );
+
+        assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
+        verify( datasetArgService ).getSamplesByCursor( any( DatasetArg.class ), eq( c ), eq( 20 ), anyBoolean() );
     }
 
     @Test

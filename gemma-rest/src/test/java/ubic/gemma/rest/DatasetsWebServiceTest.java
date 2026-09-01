@@ -1623,6 +1623,38 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .doesNotHavePath( "$.data[0].sample.statements" );
     }
 
+    /**
+     * 🛑 {@code limit} was bound by the route and then used only on the cursor branch, so a client asking
+     * for a page got the whole dataset instead, with nothing in the body saying so.
+     * <p>
+     * Measured on production ({@code gemma2}, dataset 7332 = GSE2109, 2158 samples):
+     * {@code ?limit=20} returned all 2158 assays, byte-identical to the no-parameter call. The legacy
+     * response has no {@code totalElements} and no {@code nextCursor}, so silently truncating to 20 would
+     * lose 2138 rows just as invisibly; the parameter is refused instead. {@code offset} on this route was
+     * already a 400 — it is not declared at all, so {@code UnknownQueryParameterFilter} catches it. That
+     * filter cannot see this case, because {@code limit} *is* declared; the route binds it and then has
+     * nothing to do with it.
+     */
+    @Test
+    public void testGetDatasetSamplesRejectsALimitItCannotHonour() {
+        // Stub the listing so the refusal is a decision, not a missing fixture.
+        when( bioAssayService.loadValueObjects( any(), any(), anyBoolean(), anyBoolean() ) )
+                .thenReturn( Collections.singletonList( sampleAssay() ) );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        // The mocks are context-scoped singletons; only this test's calls are the subject here.
+        clearInvocations( bioAssayService );
+
+        assertThat( target( "/datasets/1/samples" ).queryParam( "limit", "20" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+
+        // The sibling subset listing has the same shape and answers the same way.
+        assertThat( target( "/datasets/1/subSets/1/samples" ).queryParam( "limit", "20" ).request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
+
+        // The listing itself must not have run — a 400 that still paid for the query would be pointless.
+        verify( bioAssayService, never() ).loadValueObjects( any(), any(), anyBoolean(), anyBoolean() );
+    }
+
     /** An exclusion the route does not offer is a 400, not a silently ignored parameter. */
     @Test
     public void testGetDatasetSamplesRejectsAnUnsupportedExclusion() {

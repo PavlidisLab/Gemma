@@ -251,6 +251,20 @@ public class DatasetsWebService {
     private static final Set<String> ANNOTATION_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "parentTerms" );
     private static final Set<String> SAMPLES_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "sample.statements" );
 
+    /**
+     * Page size the sample listings use when cursor mode is selected without a {@code limit}.
+     * <p>
+     * Declared as a {@link String} because it is also spliced into the {@code @Parameter} description, and an
+     * annotation value has to be a compile-time constant. {@link #DEFAULT_CURSOR_LIMIT} parses it so the number
+     * is written once.
+     * <p>
+     * This is deliberately not a {@code @DefaultValue("20")} on the parameter: a {@code @DefaultValue} makes
+     * "no limit was sent" and "limit=20 was sent" arrive at the method as the same value, and the legacy branch
+     * has to tell them apart in order to refuse the second. See {@link #rejectLimitOutsideCursorMode(LimitArg)}.
+     */
+    private static final String DEFAULT_CURSOR_LIMIT_DOC = "20";
+    private static final int DEFAULT_CURSOR_LIMIT = Integer.parseInt( DEFAULT_CURSOR_LIMIT_DOC );
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -1173,7 +1187,8 @@ public class DatasetsWebService {
                     + "changed.\n\n"
                     + "🛑 Do not read the original platform out of `GET /datasets/{id}/samples` instead. It is "
                     + "per-assay there, so the whole assay list comes with it — megabytes for a line of text on "
-                    + "a large dataset — and that route's `limit` applies only in cursor mode.",
+                    + "a large dataset — and that route's `limit` applies only in cursor mode (it is a `400` "
+                    + "otherwise, so there is no cheap way to ask that route for a short answer).",
             responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -1205,13 +1220,16 @@ public class DatasetsWebService {
                     + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
                     + "the path-derived `expressionExperiment.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request). "
                     + "The `quantitationType` and `useProcessedQuantitationType` query parameters narrow the assays to a specific `BioAssayDimension` and intentionally remain offset-mode "
-                    + "(they sort by assay name and apply a dimension restriction that is not expressible as an `id`-only cursor); supplying `cursor` together with either of those is a `400`.",
+                    + "(they sort by assay name and apply a dimension restriction that is not expressible as an `id`-only cursor); supplying `cursor` together with either of those is a `400`. "
+                    + "`limit` only applies in cursor mode; supplying it without a `cursor` is a `400` rather than a full, unpaginated body that quietly ignored the page size.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
                                     ResponseDataObjectListBioAssayValueObject.class,
                                     CursorPaginatedResponseDataObjectBioAssayValueObject.class
                             }))),
+                    @ApiResponse(responseCode = "400", description = "`limit` was supplied without a `cursor`, or `cursor` was combined with `quantitationType` / `useProcessedQuantitationType`.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getDatasetSamples( // Params:
@@ -1220,8 +1238,9 @@ public class DatasetsWebService {
             @QueryParam("useProcessedQuantitationType") boolean useProcessedQuantitationType,
             @Parameter(description = "Opaque keyset-pagination cursor token; not supported in combination with `quantitationType` or `useProcessedQuantitationType`.")
             @QueryParam("cursor") CursorArg cursorArg,
-            @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Page size for cursor mode; defaults to " + DEFAULT_CURSOR_LIMIT_DOC + " there. "
+                    + "Legacy mode is unpaginated and cannot honour it, so supplying it without a `cursor` is a `400`.")
+            @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = "List of fields to exclude from the payload. Only `sample.statements` "
                     + "can be excluded. It is 21.5% of this response and carries the same rows as "
                     + "`sample.characteristics` plus a predicate and object, so a client that renders "
@@ -1244,10 +1263,11 @@ public class DatasetsWebService {
                 throw new BadRequestException( "Cursor pagination is not supported together with quantitationType / "
                         + "useProcessedQuantitationType; either drop the cursor or drop the QT parameters." );
             }
-            CursorPage<BioAssayValueObject> page = datasetArgService.getSamplesByCursor( datasetArg, cursorArg.getValue(), limitArg.getValue(), includePredictedOutliers );
+            CursorPage<BioAssayValueObject> page = datasetArgService.getSamplesByCursor( datasetArg, cursorArg.getValue(), cursorLimit( limitArg ), includePredictedOutliers );
             dropSampleStatements( page, excludeStatements );
             return paginateByCursor( page, new String[] { "id" } );
         }
+        rejectLimitOutsideCursorMode( limitArg );
         if ( quantitationTypeArg != null ) {
             ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
             QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee );
@@ -1258,6 +1278,40 @@ public class DatasetsWebService {
             return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg, qt, includePredictedOutliers ), excludeStatements ) );
         }
         return respond( dropSampleStatements( datasetArgService.getSamples( datasetArg, includePredictedOutliers ), excludeStatements ) );
+    }
+
+    /**
+     * Page size for a cursor-mode sample listing, defaulting to {@link #DEFAULT_CURSOR_LIMIT} when the caller
+     * sent no {@code limit}.
+     */
+    private static int cursorLimit( @Nullable LimitArg limitArg ) {
+        return limitArg != null ? limitArg.getValue() : DEFAULT_CURSOR_LIMIT;
+    }
+
+    /**
+     * Refuse a {@code limit} on a sample listing that is not in cursor mode.
+     * <p>
+     * The legacy sample listings answer with an unpaginated {@link ResponseDataObject} — no {@code totalElements},
+     * no {@code nextCursor} — so there is no field in which a truncation could be declared. That leaves two
+     * honest options and one dishonest one. Serving every row while a {@code limit} was asked for is the
+     * dishonest one, and it is what the route did: {@code GET /datasets/7332/samples?limit=20} on production
+     * returned all 2158 assays of GSE2109, 22,846,518 bytes, with nothing in the body marking the parameter as
+     * ignored. Truncating to the first 20 instead would drop 2138 rows just as silently, since the response
+     * cannot say that it did. So the parameter is rejected: the caller learns immediately that this listing
+     * does not paginate that way, and is pointed at {@code cursor}, which does.
+     * <p>
+     * This is the same rule {@code UnknownQueryParameterFilter} applies to a parameter the route cannot bind at
+     * all, one layer in — here the route binds {@code limit} and then cannot act on it, which the filter has no
+     * way to see.
+     *
+     * @throws BadRequestException if {@code limitArg} was supplied
+     */
+    private static void rejectLimitOutsideCursorMode( @Nullable LimitArg limitArg ) {
+        if ( limitArg != null ) {
+            throw new BadRequestException( "limit is only honoured in cursor mode; this listing is unpaginated and "
+                    + "would have returned every sample regardless. Pass a cursor to paginate, or drop limit to "
+                    + "accept the full list." );
+        }
     }
 
     /**
@@ -10226,13 +10280,16 @@ public class DatasetsWebService {
                     + "Cursor mode (available for consistency; a subset's assay list stays small — single-cell size is in cells, not assays): "
                     + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field along with a `limit`. "
                     + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
-                    + "the path-derived `subSet.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
+                    + "the path-derived `subSet.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request). "
+                    + "`limit` only applies in cursor mode; supplying it without a `cursor` is a `400` rather than a full, unpaginated body that quietly ignored the page size.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
                                     ResponseDataObjectListBioAssayValueObject.class,
                                     CursorPaginatedResponseDataObjectBioAssayValueObject.class
                             }))),
+                    @ApiResponse(responseCode = "400", description = "`limit` was supplied without a `cursor`.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset or subset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getDatasetSubSetSamples(
@@ -10240,8 +10297,9 @@ public class DatasetsWebService {
             @PathParam("subSet") Long subSetId,
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
-            @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Page size for cursor mode; defaults to " + DEFAULT_CURSOR_LIMIT_DOC + " there. "
+                    + "Legacy mode is unpaginated and cannot honour it, so supplying it without a `cursor` is a `400`.")
+            @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = "Include `predictedOutlier`, the median-correlation algorithm's guess. "
                     + "Off by default: computing it loads the dataset's whole sample-correlation matrix, which is "
                     + "unrelated to the page size and can exceed the request timeout on large datasets. The curated "
@@ -10249,9 +10307,10 @@ public class DatasetsWebService {
             @QueryParam("includePredictedOutliers") @DefaultValue("false") boolean includePredictedOutliers
     ) {
         if ( cursorArg != null ) {
-            CursorPage<BioAssayValueObject> page = datasetArgService.getSubSetSamplesByCursor( datasetArg, subSetId, cursorArg.getValue(), limitArg.getValue(), includePredictedOutliers );
+            CursorPage<BioAssayValueObject> page = datasetArgService.getSubSetSamplesByCursor( datasetArg, subSetId, cursorArg.getValue(), cursorLimit( limitArg ), includePredictedOutliers );
             return paginateByCursor( page, new String[] { "id" } );
         }
+        rejectLimitOutsideCursorMode( limitArg );
         return respond( datasetArgService.getSubSetSamples( datasetArg, subSetId, includePredictedOutliers ) );
     }
 
