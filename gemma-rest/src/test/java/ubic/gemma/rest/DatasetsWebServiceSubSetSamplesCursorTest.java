@@ -11,6 +11,7 @@
  */
 package ubic.gemma.rest;
 
+import jakarta.ws.rs.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -91,7 +93,8 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
         List<BioAssayValueObject> all = Arrays.asList( ba1, ba2 );
         when( datasetArgService.getSubSetSamples( any( DatasetArg.class ), eq( SUBSET_ID ), anyBoolean() ) ).thenReturn( all );
 
-        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, limit( "20" ), false );
+        // No limit: legacy mode is only reachable when the caller asked for no page size at all.
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, null, false );
 
         assertThat( response ).isInstanceOf( ResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -146,6 +149,38 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         verify( datasetArgService ).getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 5 ), anyBoolean() );
+    }
+
+    /**
+     * Same rule as the parent {@code /datasets/{id}/samples} listing: this route is unpaginated without a
+     * cursor and has no field in which to declare a truncation, so a {@code limit} it cannot honour is
+     * refused rather than dropped. Treated identically because the two routes have the same shape — a
+     * client that learned the parent's behaviour must not find the sibling silently different.
+     */
+    @Test
+    public void limitWithoutCursorIsRejectedAs400() {
+        assertThatThrownBy( () -> webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, limit( "20" ), false ) )
+                .isInstanceOf( BadRequestException.class );
+
+        verify( datasetArgService, never() ).getSubSetSamples( any( DatasetArg.class ), anyLong(), anyBoolean() );
+        verify( datasetArgService, never() ).getSubSetSamplesByCursor( any( DatasetArg.class ), anyLong(), any(), anyInt(), anyBoolean() );
+    }
+
+    /**
+     * Cursor mode still has a page size when the caller sends none — dropping {@code @DefaultValue("20")}
+     * from the parameter moved that default into the method, and it has to still be there.
+     */
+    @Test
+    public void cursorModeWithoutLimitUsesTheDefaultPageSize() {
+        Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
+        CursorPage<BioAssayValueObject> cp = new CursorPage<>(
+                Collections.singletonList( ba1 ), null, 20, null, null, null );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ), anyBoolean() ) ).thenReturn( cp );
+
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), null, false );
+
+        assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
+        verify( datasetArgService ).getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ), anyBoolean() );
     }
 
     @Test
