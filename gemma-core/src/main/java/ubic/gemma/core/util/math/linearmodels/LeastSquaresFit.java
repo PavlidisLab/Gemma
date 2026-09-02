@@ -98,6 +98,10 @@ public class LeastSquaresFit {
      * Fitted values
      */
     private DoubleMatrix2D fitted;
+    /**
+     * {@link #fitted} before missing cells are masked; see {@link #getFittedIncludingMissing()}.
+     */
+    private DoubleMatrix2D fittedIncludingMissing;
 
     /**
      * True if model includes intercept
@@ -418,6 +422,21 @@ public class LeastSquaresFit {
 
     public DoubleMatrix2D getFitted() {
         return fitted;
+    }
+
+    /**
+     * Fitted values before the cells whose input was missing are blanked out.
+     * <p>
+     * {@link #getFitted()} masks those cells, which is right for anything summarising the fit -- a sample that
+     * contributed nothing should not appear to have been predicted. This accessor keeps them, for the one case
+     * where the prediction for an excluded sample is the point: the sample-correlation matrix blanks flagged
+     * outliers before fitting, so they never influence the model, and their residual against that model is the
+     * evidence a curator reviews the outlier call against.
+     * <p>
+     * 🛑 Identical to {@link #getFitted()} when there are no missing values.
+     */
+    public DoubleMatrix2D getFittedIncludingMissing() {
+        return fittedIncludingMissing;
     }
 
     public int getResidualDof() {
@@ -1293,8 +1312,17 @@ public class LeastSquaresFit {
         // It is somewhat wasteful to hold on to this.
         this.fitted = solver.transpose(MatrixUtil.multWithMissing(A, coefficients));
 
+        // A.beta covers every row of the design, so a sample dropped from the fit for having a missing value
+        // still has a fitted value here. Keep it before it is masked away: it is the model's prediction for a
+        // sample that did not influence the model, which is exactly what is needed to place an excluded sample
+        // on the fit. See getFittedIncludingMissing().
         if (this.hasMissing) {
+            // only then does `fitted` lose anything, so only then is a copy worth its memory -- these matrices
+            // are one row per design element and the class already notes that holding `fitted` is wasteful
+            this.fittedIncludingMissing = this.fitted.copy();
             MatrixUtil.maskMissing(b, fitted);
+        } else {
+            this.fittedIncludingMissing = this.fitted;
         }
 
         this.residuals = b.copy().assign(fitted, Functions.minus);
@@ -1561,8 +1589,17 @@ public class LeastSquaresFit {
 
         this.fitted = solver.transpose(MatrixUtil.multWithMissing(A, coefficients));
 
+        // A.beta covers every row of the design, so a sample dropped from the fit for having a missing value
+        // still has a fitted value here. Keep it before it is masked away: it is the model's prediction for a
+        // sample that did not influence the model, which is exactly what is needed to place an excluded sample
+        // on the fit. See getFittedIncludingMissing().
         if (this.hasMissing) {
+            // only then does `fitted` lose anything, so only then is a copy worth its memory -- these matrices
+            // are one row per design element and the class already notes that holding `fitted` is wasteful
+            this.fittedIncludingMissing = this.fitted.copy();
             MatrixUtil.maskMissing(b, fitted);
+        } else {
+            this.fittedIncludingMissing = this.fitted;
         }
 
         this.residuals = b.copy().assign(fitted, Functions.minus);

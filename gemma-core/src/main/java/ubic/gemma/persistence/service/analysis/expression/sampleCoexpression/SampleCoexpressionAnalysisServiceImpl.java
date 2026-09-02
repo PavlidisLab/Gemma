@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.matrix.ObjectMatrix;
+import cern.colt.matrix.DoubleMatrix2D;
 import ubic.gemma.core.util.math.MatrixRowStats;
 import ubic.gemma.core.util.math.MatrixStats;
 import ubic.gemma.core.util.math.linearmodels.DesignMatrix;
@@ -324,11 +325,14 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                         .warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_DESIGN );
                 return null;
             }
-            mat = this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false, filterResult ) );
+            ExpressionDataDoubleMatrix unmasked = this.loadUnmaskedDataMatrix( ee, false, new ExpressionExperimentFilterResult() );
+            mat = unmasked != null
+                    ? this.regressMajorFactors( ee, maskOutlierColumns( unmasked ), unmasked )
+                    : this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false, filterResult ), null );
 
         } else {
             ExpressionDataDoubleMatrix unmasked = filterResult != null
-                    ? this.loadUnmaskedDataMatrix( ee, filterResult ) : null;
+                    ? this.loadUnmaskedDataMatrix( ee, true, filterResult ) : null;
             mat = unmasked != null ? unmasked : this.loadFilteredDataMatrix( ee, vectors, true, filterResult );
         }
 
@@ -361,7 +365,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Nullable
     private ExpressionDataDoubleMatrix loadUnmaskedDataMatrix( ExpressionExperiment ee,
-            ExpressionExperimentFilterResult filterResult ) throws FilteringException {
+            boolean requireSequences, ExpressionExperimentFilterResult filterResult ) throws FilteringException {
         if ( !hasFlaggedOutlier( ee ) ) {
             return null;
         }
@@ -377,7 +381,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             return null;
         }
         // the filter derives the platforms from the matrix itself
-        return new ExpressionExperimentFilter( cormatFilterConfig( true ) ).filter( unmasked, filterResult );
+        return new ExpressionExperimentFilter( cormatFilterConfig( requireSequences ) ).filter( unmasked, filterResult );
     }
 
     /**
@@ -386,6 +390,26 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      * ({@code thawLite} is {@code thawLiter} plus that collection). Walking it directly threw
      * {@code LazyInitializationException} and failed the whole run.
      */
+    /**
+     * A copy of {@code matrix} with the flagged assays' values blanked -- i.e. what the stored processed data
+     * looks like. Fitting on this keeps the model identical to what it has always been.
+     */
+    private static ExpressionDataDoubleMatrix maskOutlierColumns( ExpressionDataDoubleMatrix matrix ) {
+        DoubleMatrix<CompositeSequence, BioMaterial> copy = matrix.getMatrix().copy();
+        for ( int j = 0; j < matrix.columns(); j++ ) {
+            boolean outlier = false;
+            for ( BioAssay ba : matrix.getBioAssaysForColumn( j ) ) {
+                outlier |= ba.getIsOutlier();
+            }
+            if ( outlier ) {
+                for ( int i = 0; i < copy.rows(); i++ ) {
+                    copy.set( i, j, Double.NaN );
+                }
+            }
+        }
+        return matrix.withMatrix( copy );
+    }
+
     private boolean hasFlaggedOutlier( ExpressionExperiment ee ) {
         for ( BioAssay ba : expressionExperimentReadService.thawLite( ee ).getBioAssays() ) {
             if ( ba.getIsOutlier() ) {
@@ -457,13 +481,14 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      * @param mat the double matrix of processed vectors to regress
      * @return regressed double matrix
      */
-    private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat ) {
+    private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat,
+            @Nullable ExpressionDataDoubleMatrix unmasked ) {
         Set<ExperimentalFactor> importantFactors = this.getImportantFactors( ee );
         if ( !importantFactors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
             DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
             config.addFactorsToInclude( importantFactors );
-            mat = this.regressionResiduals( mat, config );
+            mat = this.regressionResiduals( mat, config, unmasked );
         }
         return mat;
     }
@@ -495,7 +520,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Nullable
     private ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
-            DifferentialExpressionAnalysisConfig config ) {
+            DifferentialExpressionAnalysisConfig config, @Nullable ExpressionDataDoubleMatrix unmasked ) {
 
         if ( config.getFactorsToInclude().isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_FACTORS );
@@ -538,6 +563,34 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
 
         DoubleMatrix2D residuals = fit.getResiduals();
+
+        // Place the samples that sat out the fit onto it.
+        //
+        // A flagged outlier is blank in `matrix`, so LeastSquaresFit drops it row by row and its residual comes
+        // back NaN -- which is why the regressed matrix never showed what an outlier correlated at, and outliers
+        // are found from this matrix. The model is unchanged by them, exactly as before; the only thing added is
+        // their distance from it, computed from the values they actually have.
+        if ( unmasked != null ) {
+            DoubleMatrix2D fittedIncludingMissing = fit.getFittedIncludingMissing();
+            DoubleMatrix<CompositeSequence, BioMaterial> unmaskedRaw = unmasked.getMatrix();
+            int filled = 0;
+            for ( int i = 0; i < residuals.rows(); i++ ) {
+                for ( int j = 0; j < residuals.columns(); j++ ) {
+                    if ( !Double.isNaN( residuals.get( i, j ) ) ) {
+                        continue;
+                    }
+                    double observed = unmaskedRaw.get( i, j );
+                    double predicted = fittedIncludingMissing.get( i, j );
+                    if ( !Double.isNaN( observed ) && !Double.isNaN( predicted ) ) {
+                        residuals.set( i, j, observed - predicted );
+                        filled++;
+                    }
+                }
+            }
+            if ( filled > 0 ) {
+                log.info( "Placed " + filled + " values onto the regression fit that did not contribute to it." );
+            }
+        }
 
         DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<>( residuals.toArray() );
         f.setRowNames( dmatrix.getMatrix().getRowNames() );
