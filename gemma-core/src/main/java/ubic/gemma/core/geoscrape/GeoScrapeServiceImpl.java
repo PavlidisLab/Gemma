@@ -648,7 +648,10 @@ public class GeoScrapeServiceImpl implements GeoScrapeService {
         TicketTarget target = TicketTarget.Factory.newInstance(
                 TicketTargetType.GEO_SCRAPE_WATERMARK, wm.getId() );
         try {
-            ticketService.openTicket( reporter, TicketType.GENERIC, title,
+            // SCREENING, not PRELOAD: the work this ticket asks for is the include/exclude decision on
+            // candidates that are not loaded yet. PRELOAD is the step after an include -- fetching sample
+            // metadata for a candidate already screened in.
+            ticketService.openTicket( reporter, TicketType.SCREENING, title,
                     Collections.singleton( target ) );
             log.info( "Opened GEO scrape batch ticket for watermark " + wm.getId()
                     + " (" + wm.getRecordsMatched() + " matches, "

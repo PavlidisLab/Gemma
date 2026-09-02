@@ -203,11 +203,14 @@ public class GeoScrapeServiceImplTest {
             assertThat( meta ).contains( "\"geoAccession\":\"GSE" );
         }
 
-        // One ticket opened, target shape correct
+        // ONE ticket for the whole batch, never one per candidate (Paul, 2026-09-02) -- the roll-up is what
+        // keeps the curator queue at one work item per scrape. Filed as SCREENING because the work it asks
+        // for is the include/exclude decision on candidates that are not loaded yet; PRELOAD is the step
+        // after an include, fetching sample metadata for a candidate already screened in.
         ArgumentCaptor<Collection<TicketTarget>> tgtCap = ArgumentCaptor.forClass( Collection.class );
         ArgumentCaptor<String> titleCap = ArgumentCaptor.forClass( String.class );
         verify( ticketService, times( 1 ) ).openTicket(
-                any( User.class ), eq( TicketType.GENERIC ), titleCap.capture(), tgtCap.capture() );
+                any( User.class ), eq( TicketType.SCREENING ), titleCap.capture(), tgtCap.capture() );
         assertThat( titleCap.getValue() ).matches( "GEO scrape \\d{4}-\\d{2}-\\d{2}: 2 candidates" );
         Collection<TicketTarget> targets = tgtCap.getValue();
         assertThat( targets ).hasSize( 1 );
