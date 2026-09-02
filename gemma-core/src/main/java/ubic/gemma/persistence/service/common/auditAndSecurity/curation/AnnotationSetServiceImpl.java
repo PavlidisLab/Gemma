@@ -319,6 +319,39 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         return a;
     }
 
+    @Nullable
+    @Override
+    @Transactional
+    public AnnotationSet updateProvenance( Long id, RunProvenance provenance ) {
+        Assert.notNull( id, "id must not be null." );
+        Assert.notNull( provenance, "provenance must not be null." );
+        AnnotationSet a = annotationSetDao.load( id );
+        if ( a == null ) return null;
+        if ( provenance.getAgentVersion() != null ) {
+            a.setAgentVersion( blankToNull( provenance.getAgentVersion() ) );
+        }
+        if ( provenance.getModel() != null ) {
+            a.setModel( blankToNull( provenance.getModel() ) );
+        }
+        if ( provenance.getRunSha() != null ) {
+            a.setRunSha( blankToNull( provenance.getRunSha() ) );
+        }
+        if ( provenance.getAgentName() != null ) {
+            a.setAgentName( blankToNull( provenance.getAgentName() ) );
+        }
+        if ( provenance.getRanAt() != null ) {
+            a.setRanAt( provenance.getRanAt() );
+        }
+        a.setUpdatedAt( new Date() );
+        annotationSetDao.update( a );
+        return a;
+    }
+
+    @Nullable
+    private static String blankToNull( String s ) {
+        return s.trim().isEmpty() ? null : s;
+    }
+
     @Override
     @Transactional
     public boolean delete( Long id ) {

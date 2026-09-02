@@ -227,6 +227,22 @@ public interface AnnotationSetService {
     AnnotationSet reopenSet( Long id );
 
     /**
+     * Correct the run-provenance envelope on an existing row in place, so a mis-stamped
+     * {@code agentVersion} / {@code model} / {@code agentName} / {@code runSha} / {@code ranAt} is
+     * fixed without the delete-and-recreate that mints a new id. Only the envelope moves; the set's
+     * content ({@code payloadJson}, {@code parkedElements}), its identity ({@code role},
+     * {@code source}, {@code runId}, {@code investigation}, {@code parent}) and its finalized status
+     * are untouched.
+     * <p>
+     * Per field: null leaves the stored value alone, and a blank string clears it. {@code ranAt} has
+     * no blank form, so it can be corrected but not cleared.
+     *
+     * @return the updated row, or null if no row has that id
+     */
+    @Nullable
+    AnnotationSet updateProvenance( Long id, RunProvenance provenance );
+
+    /**
      * Delete the row with the given id. Returns true if a row was
      * removed, false if no such row existed. Cascades on parent edges
      * are governed by {@code ON DELETE SET NULL}: descendants survive,

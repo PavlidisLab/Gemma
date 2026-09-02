@@ -309,6 +309,70 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
     }
 
     /**
+     * The reason the route exists: correcting a mis-stamped envelope used to mean delete + recreate,
+     * which mints a new id, and set ids are quoted across handoffs. So the id staying put is the
+     * assertion that matters, alongside the untouched fields.
+     */
+    @Test
+    @DisplayName("updateProvenance corrects the envelope in place, keeps the id, and leaves content alone")
+    public void updateProvenance_correctsInPlace() {
+        String runId = "run-" + UUID.randomUUID();
+        AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach(
+                preboarded, AnnotationSetRole.PROPOSAL, AnnotationSetSource.AGENT,
+                AgentCurationKind.PROPOSAL, runId, "agent-1",
+                new AnnotationSetService.RunProvenance( "0.9.0", "claude-sonnet-5", "4d8fdbc", "cell_type", null ),
+                "{\"factors\":[]}", null );
+        Long id = attached.getAnnotationSet().getId();
+        flushAndClear();
+
+        // Correct the model only; every other field is omitted and must survive.
+        AnnotationSet updated = annotationSetService.updateProvenance( id,
+                new AnnotationSetService.RunProvenance( null, "claude-opus-5", null, null, null ) );
+        assertNotNull( updated );
+        assertEquals( id, updated.getId(), "correcting the envelope must not mint a new id" );
+        flushAndClear();
+
+        AnnotationSet reloaded = annotationSetService.load( id );
+        assertNotNull( reloaded );
+        assertEquals( "claude-opus-5", reloaded.getModel() );
+        assertEquals( "0.9.0", reloaded.getAgentVersion(), "an omitted field is left alone" );
+        assertEquals( "4d8fdbc", reloaded.getRunSha() );
+        assertEquals( "cell_type", reloaded.getAgentName() );
+        // Envelope only: content and identity are not reachable through this call.
+        assertEquals( "{\"factors\":[]}", reloaded.getPayloadJson() );
+        assertEquals( runId, reloaded.getRunId() );
+        assertEquals( AnnotationSetRole.PROPOSAL, reloaded.getRole() );
+    }
+
+    @Test
+    @DisplayName("a blank string clears an envelope field, which null cannot express")
+    public void updateProvenance_blankClears() {
+        String runId = "run-" + UUID.randomUUID();
+        Long id = annotationSetService.attach(
+                preboarded, AnnotationSetRole.PROPOSAL, AnnotationSetSource.AGENT,
+                AgentCurationKind.PROPOSAL, runId, "agent-1",
+                new AnnotationSetService.RunProvenance( "0.9.0", "claude-sonnet-5", "4d8fdbc", "cell_type", null ),
+                "{}", null ).getAnnotationSet().getId();
+        flushAndClear();
+
+        annotationSetService.updateProvenance( id,
+                new AnnotationSetService.RunProvenance( null, null, "  ", null, null ) );
+        flushAndClear();
+
+        AnnotationSet reloaded = annotationSetService.load( id );
+        assertNotNull( reloaded );
+        assertNull( reloaded.getRunSha(), "a blank sha means the caller is retracting it" );
+        assertEquals( "cell_type", reloaded.getAgentName() );
+    }
+
+    @Test
+    @DisplayName("updateProvenance on an id that does not exist returns null, not an exception")
+    public void updateProvenance_unknownId() {
+        assertNull( annotationSetService.updateProvenance( -1L,
+                new AnnotationSetService.RunProvenance( "0.1.0", null, null, null, null ) ) );
+    }
+
+    /**
      * A queue is ordered by when the RUN happened, not by when the row was stored, and the two
      * disagree: a set carrying August's run can be written today. Ordering by `ranAt` was hardcoded
      * to `createdAt desc` until cab asked for the queue view.

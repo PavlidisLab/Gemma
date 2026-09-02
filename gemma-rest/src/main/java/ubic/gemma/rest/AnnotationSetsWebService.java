@@ -623,6 +623,47 @@ public class AnnotationSetsWebService {
         return Response.ok( toResponse( updated ) ).build();
     }
 
+    @PATCH
+    @Path("/annotation-sets/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Correct the run-provenance envelope on an annotation set",
+            description = "Fixes a mis-stamped `agentVersion` / `model` / `agentName` / `runSha` / "
+                    + "`ranAt` in place. Without it the only correction is delete-and-recreate, which "
+                    + "mints a new id, and set ids are quoted across handoffs.\n\n"
+                    + "Envelope only. The set's content (`payloadJson`, `parkedElements`), its identity "
+                    + "(`role`, `source`, `runId`, `investigation`, `parent`) and its finalized status are "
+                    + "not reachable here.\n\n"
+                    + "Per field: omit it to leave the stored value alone, send a blank string to clear "
+                    + "it. `ranAt` has no blank form, so it can be corrected but not cleared.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The envelope was updated.",
+                            content = @Content(schema = @Schema(implementation = AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "The body names no envelope field.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response updateAnnotationSetProvenance(
+            @PathParam("id") Long id,
+            @Nullable ProvenanceRequest body
+    ) {
+        // An unrecognized field name is dropped by the mapper, so a caller that misspelled one would
+        // otherwise get a 200 for a correction that never happened.
+        if ( body == null || ( body.agentVersion == null && body.model == null && body.runSha == null
+                && body.agentName == null && body.ranAt == null ) ) {
+            throw new BadRequestException( "Request body must name at least one of `agentVersion`, "
+                    + "`model`, `runSha`, `agentName`, `ranAt`." );
+        }
+        AnnotationSet updated = annotationSetService.updateProvenance( id,
+                new AnnotationSetService.RunProvenance( body.agentVersion, body.model, body.runSha,
+                        body.agentName, body.ranAt ) );
+        if ( updated == null ) {
+            throw new NotFoundException( "No annotation set with id " + id );
+        }
+        return Response.ok( toResponse( updated ) ).build();
+    }
+
     /**
      * Delete an annotation set by id. Descendants survive with their
      * {@code parent} cleared via FK {@code ON DELETE SET NULL}.
@@ -700,6 +741,32 @@ public class AnnotationSetsWebService {
         @JsonAlias("parent_id")
         @Nullable
         public Long parentId;
+    }
+
+    /**
+     * Body for {@link #updateAnnotationSetProvenance}. Every field is optional; an omitted one
+     * leaves the stored value alone.
+     */
+    public static class ProvenanceRequest {
+        @JsonProperty("agentVersion")
+        @JsonAlias("agent_version")
+        @Nullable
+        public String agentVersion;
+        @JsonProperty("model")
+        @Nullable
+        public String model;
+        @JsonProperty("runSha")
+        @JsonAlias("run_sha")
+        @Nullable
+        public String runSha;
+        @JsonProperty("agentName")
+        @JsonAlias("agent_name")
+        @Nullable
+        public String agentName;
+        @JsonProperty("ranAt")
+        @JsonAlias("ran_at")
+        @Nullable
+        public Date ranAt;
     }
 
     /**
