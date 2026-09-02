@@ -688,7 +688,14 @@ public class TicketsWebService {
             }
             targets.add( tt );
         }
-        Ticket created = ticketService.openTicket( reporter, req.getType(), req.getTitle(), targets );
+        Ticket created;
+        try {
+            created = ticketService.openTicket( reporter, req.getType(), req.getTitle(), targets );
+        } catch ( IllegalStateException e ) {
+            // a rule about the caller's existing tickets, not a malformed request -- currently the
+            // one-scratchpad-per-curator rule, which used to surface as a raw constraint violation
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+        }
 
         // Optional follow-up mutations seeded from the create payload.
         List<String> changedFields = new ArrayList<>();

@@ -90,6 +90,18 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         Assert.notNull( type, "TicketType cannot be null." );
         Assert.hasText( title, "Title must be non-blank." );
         Assert.notEmpty( targets, "A ticket needs at least one target." );
+        // 🛑 One scratchpad per curator is enforced by TICKET_ONE_SCRATCHPAD_PER_CURATOR (V40), and a
+        // constraint is not a refusal: without this the insert failed and the caller was handed
+        // "Duplicate entry '1' for key ..." inside a 500, which leaks the schema and names no remedy.
+        // Refuse here so the caller learns which ticket already holds the role (cab, 2026-09-01).
+        if ( type == TicketType.SCRATCHPAD ) {
+            Ticket existing = ticketDao.findScratchpad( reporter );
+            if ( existing != null ) {
+                throw new IllegalStateException( "A scratchpad already exists for this curator: ticket "
+                        + existing.getId() + ". A curator has exactly one; add targets to it rather than"
+                        + " opening another." );
+            }
+        }
         return create( reporter, type, title, null, targets, false );
     }
 
@@ -102,10 +114,11 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
             initializeForProjection( existing, true );
             return existing;
         }
-        // 🛑 Query-then-create. Two first-calls that both miss will both insert, because no unique
-        // index exists to stop them. The consequence is bounded rather than prevented: findScratchpad
-        // is oldest-id-wins, so a duplicate is a stray row and never a second identity. See
-        // TicketService#getOrCreateScratchpad.
+        // 🛑 Query-then-create, but no longer unguarded: TICKET_ONE_SCRATCHPAD_PER_CURATOR (V40) is a
+        // unique index on a virtual column that is REPORTER_FK for a SCRATCHPAD and NULL otherwise, so
+        // two concurrent first-calls no longer both insert -- the loser's insert fails. findScratchpad
+        // stays oldest-id-wins, so the identity cannot split either way.
+        // See TicketService#getOrCreateScratchpad.
         //
         // Not routed through openTicket: that method requires at least one target and a fresh
         // scratchpad has none. The shared create() below is the same path minus that check.

@@ -598,6 +598,36 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
     // ---------------------------------------------------------------------
 
     /** Open a ticket with {@code n} distinct EE targets and a title unique to this test run. */
+
+    /**
+     * {@code POST /tickets {"type":"SCRATCHPAD"}} answered 500 with the schema in the body —
+     * {@code Duplicate entry '1' for key 'TICKET_ONE_SCRATCHPAD_PER_CURATOR'} (cab, 2026-09-01, on
+     * gemma2). The rule is right and V40 enforces it; what was missing is a refusal in front of it,
+     * so a caller could not tell "you may not do this" from "Gemma is broken" and would retry.
+     * <p>
+     * The refusal names the ticket that already holds the role, because the caller's next move is to
+     * open that one rather than to try again.
+     */
+    @Test
+    @DisplayName("opening a second SCRATCHPAD is refused by the service, not by the constraint")
+    public void openTicket_secondScratchpadIsRefusedWithTheExistingId() {
+        Ticket pad = ticketService.getOrCreateScratchpad( reporter );
+        assertNotNull( pad.getId() );
+
+        Set<TicketTarget> targets = Collections.singleton(
+                TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, freshTargetBase() ) );
+        IllegalStateException e = assertThrows( IllegalStateException.class,
+                () -> ticketService.openTicket( reporter, TicketType.SCRATCHPAD,
+                        "second scratchpad " + UUID.randomUUID(), targets ),
+                "the service refuses before the insert, so the caller never sees the constraint" );
+        assertTrue( e.getMessage().contains( String.valueOf( pad.getId() ) ),
+                "the refusal must name the scratchpad that already exists: " + e.getMessage() );
+
+        // an ordinary ticket for the same reporter is unaffected -- the rule is SCRATCHPAD-only
+        assertNotNull( ticketService.openTicket( reporter, TicketType.CURATION,
+                "ordinary " + UUID.randomUUID(), targets ).getId() );
+    }
+
     private Ticket openWithTargets( TicketType type, String title, int n ) {
         Set<TicketTarget> targets = new HashSet<>();
         for ( int i = 0; i < n; i++ ) {
