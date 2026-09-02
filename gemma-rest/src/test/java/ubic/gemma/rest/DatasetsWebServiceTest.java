@@ -3952,6 +3952,220 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
+    // --- JSON precision: four significant digits on the bulk floating-point payloads -----
+
+    /**
+     * Mean-variance is the heaviest diagnostics payload — one mean and one variance per probe. It has no
+     * precision opt-out.
+     * <p>
+     * The second half of the assertion is the part that matters: {@code MeanVarianceRelation.getMeans()}
+     * hands back the loaded entity's own array, so rounding in place would corrupt it for every later reader.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceIsRoundedAndLeavesTheEntityArrayAlone() {
+        double[] means = { 7.607533048115258, 0.0, Double.NaN };
+        double[] variances = { 5.7612345678901e-4, 3.0812345678901, Double.POSITIVE_INFINITY };
+        ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation mvr =
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances );
+        ee.setMeanVarianceRelation( mvr );
+        when( expressionExperimentService.loadWithMeanVarianceRelation( ee.getId() ) ).thenReturn( ee );
+
+        try ( Response r = target( "/datasets/1/mean-variance" ).request().get() ) {
+            assertThat( r ).hasStatus( Response.Status.OK );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data.means[0]", 7.608 )
+                    .hasPathWithValue( "$.data.means[1]", 0.0 )
+                    // 5.76e-4 is one order of magnitude off a 0.001 floor; a decimal-places rounding would
+                    // flatten the informative low-variance end of the plot to zero.
+                    .hasPathWithValue( "$.data.variances[0]", 5.761E-4 )
+                    .hasPathWithValue( "$.data.variances[1]", 3.081 );
+        }
+
+        assertThat( mvr.getMeans()[0] ).isEqualTo( 7.607533048115258 );
+        assertThat( mvr.getVariances()[0] ).isEqualTo( 5.7612345678901e-4 );
+    }
+
+    // --- Mean-variance decimation -------------------------------------------------------
+
+    /**
+     * Two points that land in the same grid cell collapse to the first of them, and the pairing survives:
+     * the fixture makes every variance twice its mean, so an entry dropped from one array and not the other
+     * would re-pair every point after it and break that relation.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceKeepsOnePointPerCellAndStaysIndexParallel() {
+        // (0, 0) and (0.1, 0.2) both land in cell (0, 0) of the grid laid over means [0, 100] /
+        // variances [0, 200]; the second is the duplicate.
+        double[] means = { 0.0, 0.1, 50.0, 100.0 };
+        double[] variances = { 0.0, 0.2, 100.0, 200.0 };
+        DatasetsWebService.MeanVarianceValueObject vo = new DatasetsWebService.MeanVarianceValueObject(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+
+        assertThat( vo.getMeans() ).containsExactly( 0.0, 50.0, 100.0 );
+        assertThat( vo.getVariances() ).containsExactly( 0.0, 100.0, 200.0 );
+        assertThat( vo.getVariances() ).hasSameSizeAs( vo.getMeans() );
+        for ( int i = 0; i < vo.getMeans().length; i++ ) {
+            assertThat( vo.getVariances()[i] ).isEqualTo( 2 * vo.getMeans()[i] );
+        }
+    }
+
+    /**
+     * Points that each get their own cell come back untouched — thinning only ever removes a point that
+     * would be drawn on top of one already sent.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceLeavesWellSeparatedPointsAlone() {
+        double[] means = { 1.0, 2.0, 3.0, 4.0 };
+        double[] variances = { 0.1, 0.4, 0.9, 1.6 };
+        DatasetsWebService.MeanVarianceValueObject vo = new DatasetsWebService.MeanVarianceValueObject(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+
+        assertThat( vo.getMeans() ).containsExactly( 1.0, 2.0, 3.0, 4.0 );
+        assertThat( vo.getVariances() ).containsExactly( 0.1, 0.4, 0.9, 1.6 );
+    }
+
+    /**
+     * A point whose mean or variance is not finite has no position on the scatter, so it is dropped rather
+     * than keyed into the grid. Both arrays lose it together.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceDropsNonFinitePoints() {
+        double[] means = { 1.0, Double.NaN, 2.0, Double.POSITIVE_INFINITY, 3.0 };
+        double[] variances = { 10.0, 5.0, Double.NEGATIVE_INFINITY, 6.0, 30.0 };
+        DatasetsWebService.MeanVarianceValueObject vo = new DatasetsWebService.MeanVarianceValueObject(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+
+        assertThat( vo.getMeans() ).containsExactly( 1.0, 3.0 );
+        assertThat( vo.getVariances() ).containsExactly( 10.0, 30.0 );
+    }
+
+    /**
+     * The size guard: 30,000 points drawn from ten distinct coordinates come back as ten. This is the shape
+     * of the real saving — eid 1 sends 22,283 points of which 93% land where one has already been painted.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceCollapsesAHeavilyOverplottedDataset() {
+        double[] means = new double[30000];
+        double[] variances = new double[30000];
+        for ( int i = 0; i < means.length; i++ ) {
+            means[i] = i % 10;
+            variances[i] = i % 10;
+        }
+        DatasetsWebService.MeanVarianceValueObject vo = new DatasetsWebService.MeanVarianceValueObject(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+
+        assertThat( vo.getMeans() ).containsExactly( 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 );
+        assertThat( vo.getVariances() ).hasSameSizeAs( vo.getMeans() );
+    }
+
+    /**
+     * The thinned arrays are what actually goes on the wire.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceIsThinnedOnTheWire() {
+        double[] means = { 0.0, 0.1, 50.0, 100.0 };
+        double[] variances = { 0.0, 0.2, 100.0, 200.0 };
+        ee.setMeanVarianceRelation(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+        when( expressionExperimentService.loadWithMeanVarianceRelation( ee.getId() ) ).thenReturn( ee );
+
+        try ( Response r = target( "/datasets/1/mean-variance" ).request().get() ) {
+            assertThat( r ).hasStatus( Response.Status.OK );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data.means[0]", 0.0 )
+                    .hasPathWithValue( "$.data.means[1]", 50.0 )
+                    .hasPathWithValue( "$.data.means[2]", 100.0 )
+                    .doesNotHavePath( "$.data.means[3]" )
+                    .hasPathWithValue( "$.data.variances[1]", 100.0 )
+                    .doesNotHavePath( "$.data.variances[3]" );
+        }
+    }
+
+    /**
+     * SVD loadings serialize at a mean of ~20 characters each and nothing consumes the digits below it, so this route
+     * rounds with no opt-out. {@code SVDResult.getVariances()} / {@code getVMatrix().getRawMatrix()} are the
+     * result's own arrays, hence the non-mutation half.
+     */
+    @Test
+    public void testGetDatasetSvdIsRoundedAndLeavesTheResultArraysAlone() {
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 200L );
+        ubic.gemma.model.expression.biomaterial.BioMaterial m1 =
+                ubic.gemma.model.expression.biomaterial.BioMaterial.Factory.newInstance();
+        m1.setId( 300L );
+        double[][] rawV = { { 0.123456789, -0.987654321 } };
+        DenseDoubleMatrix<ubic.gemma.model.expression.biomaterial.BioMaterial, Integer> vMatrix =
+                new DenseDoubleMatrix<>( rawV );
+        vMatrix.setRowNames( Collections.singletonList( m1 ) );
+        vMatrix.setColumnNames( Arrays.asList( 0, 1 ) );
+        double[] rawVariances = { 0.4567890123456789 };
+        ubic.gemma.core.analysis.preprocess.svd.SVDResult svd =
+                mock( ubic.gemma.core.analysis.preprocess.svd.SVDResult.class );
+        when( svd.getBioAssays() ).thenReturn( Collections.singletonList( a1 ) );
+        when( svd.getBioMaterials() ).thenReturn( Collections.singletonList( m1 ) );
+        when( svd.getVariances() ).thenReturn( rawVariances );
+        when( svd.getVMatrix() ).thenReturn( vMatrix );
+        when( svdService.getSvd( ee ) ).thenReturn( svd );
+
+        try ( Response r = target( "/datasets/1/svd" ).request().get() ) {
+            assertThat( r ).hasStatus( Response.Status.OK );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data.variances[0]", 0.4568 )
+                    // "vmatrix", not "vMatrix": Jackson's legacy getter naming lowercases the whole leading
+                    // uppercase run of getVMatrix(). Pre-existing wire name, asserted so it stays put.
+                    .hasPathWithValue( "$.data.vmatrix[0][0]", 0.1235 )
+                    .hasPathWithValue( "$.data.vmatrix[0][1]", -0.9877 );
+        }
+
+        assertThat( rawVariances[0] ).isEqualTo( 0.4567890123456789 );
+        assertThat( rawV[0][0] ).isEqualTo( 0.123456789 );
+    }
+
+    /**
+     * Expression levels are a data-download surface, so rounding here is the default and {@code precise=true}
+     * is the opt-out. Both branches are asserted on the wire.
+     */
+    @Test
+    public void testGetDatasetsExpressionLevelsForGeneIsRoundedUnlessPreciseIsAsked() {
+        when( geneArgService.getEntity( any() ) ).thenReturn( new Gene() );
+        when( expressionExperimentService.loadIdsWithCache( any(), any( Sort.class ) ) )
+                .thenAnswer( a -> new ArrayList<>( Collections.singletonList( 1L ) ) );
+        when( processedExpressionDataVectorService.getExpressionLevelsByIds( any(), any(), anyBoolean(), any() ) )
+                .thenAnswer( a -> Collections.singletonList( expressionLevelsFixture() ) );
+
+        try ( Response r = target( "/datasets/expressions/genes/BRCA1" ).request().get() ) {
+            assertThat( r ).hasStatus( Response.Status.OK );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data[0].geneExpressionLevels[0].vectors[0].bioAssayExpressionLevels.BA1", 7.608 )
+                    .hasPathWithValue( "$.data[0].geneExpressionLevels[0].correctedPvalue", 1.235E-7 )
+                    .hasPathWithValue( "$.data[0].geneExpressionLevels[0].log2FoldChange", 2.718 );
+        }
+
+        try ( Response r = target( "/datasets/expressions/genes/BRCA1" ).queryParam( "precise", true ).request().get() ) {
+            assertThat( r ).hasStatus( Response.Status.OK );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data[0].geneExpressionLevels[0].vectors[0].bioAssayExpressionLevels.BA1", 7.607533048115258 )
+                    .hasPathWithValue( "$.data[0].geneExpressionLevels[0].correctedPvalue", 1.2345678901234E-7 )
+                    .hasPathWithValue( "$.data[0].geneExpressionLevels[0].log2FoldChange", 2.718281828459045 );
+        }
+    }
+
+    private static ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject expressionLevelsFixture() {
+        ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject vo =
+                new ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject();
+        ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject.GeneElementExpressionsValueObject gene =
+                new ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject.GeneElementExpressionsValueObject(
+                        "BRCA1", "breast cancer 1", 672, "ENSG00000012048",
+                        1.2345678901234E-7, 9.8765432109876E-11, 2.718281828459045,
+                        null, false, null );
+        Map<String, Double> levels = new LinkedHashMap<>();
+        levels.put( "BA1", 7.607533048115258 );
+        gene.getVectors().add(
+                new ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject.VectorElementValueObject( "probe_a", levels ) );
+        vo.getGeneExpressionLevels().add( gene );
+        return vo;
+    }
+
     // --- Preprocessing metadata files ----------------------------------------------------
 
     @Test

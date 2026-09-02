@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.util.RoundingUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.genome.Gene;
 
@@ -59,6 +60,24 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
                                 stats != null ? stats.log2FoldChange : null,
                                 vpgEntry.getValue(), keepGeneNonSpecific, conslidationMode ) );
             }
+        }
+    }
+
+    /**
+     * Round every expression value and per-gene statistic in this response to
+     * {@link RoundingUtils#JSON_SIGNIFICANT_DIGITS} significant digits.
+     * <p>
+     * Gemma's expression data descends from 16-bit measurements and these values are plotted rather than
+     * recomputed from; the digits this drops are also incompressible, so they cost the most on the largest
+     * responses. The REST layer applies this unless the caller asks for {@code precise=true}.
+     * <p>
+     * Mutates in place. That is safe here and only here: the producer builds a fresh value object per
+     * request, and {@code VectorElementValueObject} copies each vector's values into its own map, so the
+     * cached {@link DoubleVectorValueObject} arrays are never reached.
+     */
+    public void roundValuesForJson() {
+        for ( GeneElementExpressionsValueObject gene : geneExpressionLevels ) {
+            gene.roundValuesForJson();
         }
     }
 
@@ -185,6 +204,15 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
             return elements;
         }
 
+        void roundValuesForJson() {
+            this.correctedPvalue = RoundingUtils.round( this.correctedPvalue );
+            this.pvalue = RoundingUtils.round( this.pvalue );
+            this.log2FoldChange = RoundingUtils.round( this.log2FoldChange );
+            for ( VectorElementValueObject element : elements ) {
+                element.roundValuesForJson();
+            }
+        }
+
         private VectorElementValueObject pickMax( List<DoubleVectorValueObject> vectors ) {
             if ( vectors == null || vectors.size() <= 1 ) {
                 throw new IllegalArgumentException( GeneElementExpressionsValueObject.MSG_ERR_VECS_MAX );
@@ -287,6 +315,10 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
             for ( Map.Entry<String, Double> entry : bioAssayValues.entrySet() ) {
                 bioAssayExpressionLevels.put( entry.getKey(), entry.getValue() );
             }
+        }
+
+        void roundValuesForJson() {
+            bioAssayExpressionLevels.replaceAll( ( bioAssayName, level ) -> RoundingUtils.round( level ) );
         }
 
         private void extractProbeLevels( DoubleVectorValueObject vector ) {

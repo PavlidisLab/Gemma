@@ -61,7 +61,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link DatasetsWebService#getDatasetsExpressionLevelsForGene(GeneArg, ubic.gemma.rest.util.args.QueryArg, FilterArg, OffsetArg, LimitArg, Boolean, ubic.gemma.rest.util.args.ExpLevelConsolidationArg, CursorArg)}
+ * {@link DatasetsWebService#getDatasetsExpressionLevelsForGene(GeneArg, ubic.gemma.rest.util.args.QueryArg, FilterArg, OffsetArg, LimitArg, Boolean, ubic.gemma.rest.util.args.ExpLevelConsolidationArg, CursorArg, Boolean)}
  * and its taxon-scoped sibling, as step 1v of {@code CURSOR_PAGINATION_STEP1_PLAN.md}.
  * <p>
  * Pure Mockito - the WebService picks cursor vs offset mode and emits the right wrapper.
@@ -141,7 +141,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
 
         Object response = webService.getDatasetsExpressionLevelsForGene(
                 geneArg( "1" ), /* queryArg */ null, filter( "" ), offset( "0" ), limit( "20" ),
-                false, null, /* cursorArg */ null );
+                false, null, /* cursorArg */ null, /* precise */ false );
 
         assertThat( response ).isInstanceOf( QueriedAndFilteredAndInferredAndPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -170,7 +170,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
 
         Object response = webService.getDatasetsExpressionLevelsForGene(
                 geneArg( "1" ), null, filter( "" ), offset( "0" ), limit( "2" ),
-                false, null, /* cursorArg */ null );
+                false, null, /* cursorArg */ null, /* precise */ false );
 
         // No cursor on this call - still legacy mode. Switch to cursor mode below.
         assertThat( response ).isInstanceOf( QueriedAndFilteredAndInferredAndPaginatedResponseDataObject.class );
@@ -181,7 +181,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
         Cursor first = new Cursor( "+datasetId", new Object[] { 0L }, Cursor.Direction.FORWARD );
         Object cursorResp = webService.getDatasetsExpressionLevelsForGene(
                 geneArg( "1" ), null, filter( "" ), offset( "0" ), limit( "2" ),
-                false, null, CursorArg.valueOf( first.encode() ) );
+                false, null, CursorArg.valueOf( first.encode() ), /* precise */ false );
 
         assertThat( cursorResp ).isInstanceOf( QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject.class );
         assertThat( cursorResp ).isInstanceOf( QueriedAndFilteredAndCursorPaginatedResponseDataObject.class );
@@ -218,7 +218,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
         Cursor c = new Cursor( "+datasetId", new Object[] { 20L }, Cursor.Direction.FORWARD );
         Object response = webService.getDatasetsExpressionLevelsForGene(
                 geneArg( "1" ), null, filter( "" ), offset( "0" ), limit( "5" ),
-                false, null, CursorArg.valueOf( c.encode() ) );
+                false, null, CursorArg.valueOf( c.encode() ), /* precise */ false );
 
         @SuppressWarnings("unchecked")
         QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> page =
@@ -240,7 +240,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
         Cursor c = new Cursor( "+datasetId", new Object[] { 0L }, Cursor.Direction.FORWARD );
         Object response = webService.getDatasetsExpressionLevelsForGene(
                 geneArg( "1" ), null, filter( "" ), offset( "0" ), limit( "20" ),
-                false, null, CursorArg.valueOf( c.encode() ) );
+                false, null, CursorArg.valueOf( c.encode() ), /* precise */ false );
 
         @SuppressWarnings("unchecked")
         QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> page =
@@ -267,7 +267,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
         Cursor c = new Cursor( "+datasetId", new Object[] { 40L }, Cursor.Direction.BACKWARD );
         Object response = webService.getDatasetsExpressionLevelsForGene(
                 geneArg( "1" ), null, filter( "" ), offset( "0" ), limit( "2" ),
-                false, null, CursorArg.valueOf( c.encode() ) );
+                false, null, CursorArg.valueOf( c.encode() ), /* precise */ false );
 
         @SuppressWarnings("unchecked")
         QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> page =
@@ -307,7 +307,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
         Cursor c = new Cursor( "+datasetId", new Object[] { 0L }, Cursor.Direction.FORWARD );
         Object response = webService.getDatasetsExpressionLevelsForGene(
                 geneArg( "1" ), null, filter( "" ), offset( "0" ), limit( "20" ),
-                false, null, CursorArg.valueOf( c.encode() ) );
+                false, null, CursorArg.valueOf( c.encode() ), /* precise */ false );
 
         @SuppressWarnings("unchecked")
         QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject<ExperimentExpressionLevelsValueObject> page =
@@ -333,7 +333,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
         Cursor c = new Cursor( "+datasetId", new Object[] { 0L }, Cursor.Direction.FORWARD );
         webService.getDatasetsExpressionLevelsForGene(
                 geneArg( "1" ), null, filter( "" ), offset( "0" ), limit( "20" ),
-                false, null, CursorArg.valueOf( c.encode() ) );
+                false, null, CursorArg.valueOf( c.encode() ), /* precise */ false );
 
         assertThat( captor.getValue() ).containsExactly( gene );
     }
@@ -347,7 +347,7 @@ public class DatasetsWebServiceExpressionLevelsForGeneCursorTest {
         try {
             webService.getDatasetsExpressionLevelsForGene(
                     geneArg( "1" ), null, filter( "" ), offset( "0" ), limit( "20" ),
-                    false, null, CursorArg.valueOf( c.encode() ) );
+                    false, null, CursorArg.valueOf( c.encode() ), /* precise */ false );
             assert false : "expected MalformedArgException";
         } catch ( ubic.gemma.rest.util.MalformedArgException e ) {
             assertThat( e.getMessage() ).contains( "sort spec" );
