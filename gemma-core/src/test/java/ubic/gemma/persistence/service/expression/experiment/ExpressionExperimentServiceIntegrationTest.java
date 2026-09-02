@@ -36,6 +36,13 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -60,6 +67,7 @@ import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -84,6 +92,12 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     private ExpressionExperimentSetService expressionExperimentSetService;
     @Autowired
     private BioMaterialService bioMaterialService;
+    @Autowired
+    private FactorValueService factorValueService;
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+    @Autowired
+    private SessionFactory sessionFactory;
     @Autowired
     private SecurityService securityService;
     @Autowired
@@ -776,6 +790,86 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
      * characteristic, and filling the sequences in built a BioSequence + Gene + GeneProduct + BLAT
      * result graph per probe.
      */
+    /**
+     * Editing a factor value's statements must not duplicate its BIO_MATERIAL_FACTOR_VALUES row.
+     * <p>
+     * {@link FactorValue#hashCode()} used to hash the factor value's statements, so adding one moved the
+     * object to a different bucket of the {@link java.util.HashSet} {@link BioMaterial} keeps its factor
+     * values in. Hibernate's load-time snapshot of that @ManyToMany still recorded the old position, so the
+     * next flush emitted an INSERT for a join row that was already there. 19 datasets of a 500-dataset
+     * curation run died on {@code Duplicate entry '520917-172185'} (cab, 2026-09-01).
+     * <p>
+     * It needs both halves, which is why neither alone was ever reported: the statement edit moves the hash,
+     * and a second, unrelated factor value being attached to the same sample is what dirties the collection
+     * and forces it to flush.
+     */
+    @Test
+    // One session must span load -> mutate the statements -> attach the second factor value -> flush, because
+    // the bug is Hibernate's load-time snapshot of that collection disagreeing with where the element now
+    // hashes. Service-managed transactions would open a session per call and there would be no snapshot to
+    // disagree with -- the same shape the real commit runs in, inside applyDesignChange's transaction.
+    @org.springframework.transaction.annotation.Transactional
+    public void testEditingAStatementDoesNotDuplicateTheSampleFactorValueRow() {
+        ExpressionExperiment ee = createExpressionExperiment();
+        BioMaterial bm = ee.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .filter( b -> b != null && !b.getFactorValues().isEmpty() )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "fixture has no sample carrying a factor value" ) );
+        FactorValue existing = bm.getFactorValues().iterator().next();
+        ExperimentalFactor factor = existing.getExperimentalFactor();
+
+        // The second factor value has to come from a DIFFERENT factor: a sample carrying two values of one
+        // factor is refused as an invalid design, which is also why cab only ever hit this with a NEW factor
+        // in the same document.
+        ExperimentalFactor other = ExperimentalFactor.Factory.newInstance();
+        other.setName( "reproduction factor " + RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
+        other.setType( FactorType.CATEGORICAL );
+        other.setExperimentalDesign( factor.getExperimentalDesign() );
+        other.setSecurityOwner( ee );
+        other = experimentalFactorService.create( other );
+
+        FactorValue extra = FactorValue.Factory.newInstance();
+        extra.setExperimentalFactor( other );
+        extra.setSecurityOwner( ee );
+        Statement s = Statement.Factory.newInstance();
+        s.setCategory( "treatment" );
+        s.setSubject( "reproduction guard " + RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
+        extra.getCharacteristics().add( s );
+        extra = factorValueService.create( extra );
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        BioMaterial reloaded = bioMaterialService.thaw(
+                requireNonNull( bioMaterialService.load( bm.getId() ) ) );
+        FactorValue toEdit = reloaded.getFactorValues().stream()
+                .filter( f -> f.getId().equals( existing.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "the sample lost its factor value across the reload" ) );
+
+        // 1. move the factor value's hash by editing its statements
+        Statement added = Statement.Factory.newInstance();
+        added.setCategory( "treatment" );
+        added.setSubject( "moves the hash " + RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
+        toEdit.getCharacteristics().add( added );
+
+        // 2. dirty the join collection the moved element lives in
+        reloaded.getFactorValues().add( requireNonNull( factorValueService.load( extra.getId() ) ) );
+        bioMaterialService.update( reloaded );
+
+        // Before the fix this threw on the duplicate join row rather than reaching the assertions.
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        BioMaterial after = bioMaterialService.thaw(
+                requireNonNull( bioMaterialService.load( bm.getId() ) ) );
+        assertThat( after.getFactorValues() ).extracting( FactorValue::getId )
+                .as( "the edited factor value is still attached, exactly once" )
+                .contains( existing.getId() )
+                .doesNotHaveDuplicates();
+    }
+
     private ExpressionExperiment newCompleteExperiment() {
         return testHelper.getTestExpressionExperimentWithAllDependencies( false );
     }

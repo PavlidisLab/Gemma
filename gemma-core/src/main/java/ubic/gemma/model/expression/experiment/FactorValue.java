@@ -232,8 +232,20 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
 
     @Override
     public int hashCode() {
-        // experimentalFactor is lazy-loaded, so it cannot be used in the hashCode() implementation
-        return Objects.hash( getMeasurement(), getCharacteristics() );
+        // Constant on purpose. The previous Objects.hash( getMeasurement(), getCharacteristics() ) moved
+        // whenever a statement was added to, removed from or re-termed on this factor value, because a Set's
+        // hash is the sum of its elements' and Statement hashes its predicate/object content. BioMaterial
+        // holds its factor values in a HashSet mapped @ManyToMany onto BIO_MATERIAL_FACTOR_VALUES, so an
+        // element whose hash moved mid-transaction is no longer where Hibernate's load-time snapshot recorded
+        // it, and the flush emits an INSERT for a join row that already exists: 19 of a 500-dataset curation
+        // run died on `Duplicate entry '520917-172185'` (cab, 2026-09-01, GSE117511 and 18 others). It took a
+        // commit that BOTH edited an existing factor value's statements and assigned a new factor value to the
+        // same biomaterial — the edit moved the hash, the assignment forced the collection to flush.
+        //
+        // experimentalFactor is lazy-loaded and the id flips null → value on persist, so neither of those can
+        // be hashed either. That leaves nothing stable to hash, and a constant is always correct: it costs a
+        // linear scan within one bucket, over collections that hold a handful of factor values.
+        return getClass().hashCode();
     }
 
     @Override

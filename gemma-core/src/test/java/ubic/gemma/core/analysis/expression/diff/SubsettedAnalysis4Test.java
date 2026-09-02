@@ -103,7 +103,10 @@ public class SubsettedAnalysis4Test extends BaseTest5 {
                 FactorValue.Factory.newInstance( cellTypeFactor, Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct4", null ) )
         };
         for ( int i = 0; i < 4; i++ ) {
-            fvs[i].setId( 2 + ( long ) i );
+            // From 3: ids 1 and 2 are the treatment factor's values above. FactorValue#equals compares by id
+            // when both have one, so a cell-type value sharing controlFv's id 2 IS controlFv as far as any
+            // Set or Map is concerned — across two different factors.
+            fvs[i].setId( 3 + ( long ) i );
         }
         cellTypeFactor.getFactorValues().addAll( Arrays.asList( fvs ) );
 
