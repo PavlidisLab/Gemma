@@ -29,10 +29,11 @@ import ubic.gemma.core.util.math.MatrixRowStats;
 import ubic.gemma.core.util.math.MatrixStats;
 import ubic.gemma.core.util.math.linearmodels.DesignMatrix;
 import ubic.gemma.core.util.math.linearmodels.LeastSquaresFit;
-import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterResult;
+import ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
@@ -40,7 +41,6 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -53,6 +53,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -104,6 +105,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Autowired
     private ExpressionExperimentReadService expressionExperimentReadService;
+    @Autowired
+    private SampleCoexpressionAuditService sampleCoexpressionAuditService;
 
     @Override
     @Transactional(readOnly = true)
@@ -148,9 +151,14 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
-        SampleCoexpressionMatrix matrix = this.getMatrix( ee, false, vectors );
-        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( ee, true, vectors );
-        return new PreparedCoexMatrices( matrix, regressedMatrix );
+        // Only the unregressed leg's attrition is recorded: it is the one whose filter describes the dataset as
+        // stored. The regressed leg runs with requireSequences=false and its rows are residuals, so its counts
+        // would answer a different question.
+        ExpressionExperimentFilterResult filterResult = new ExpressionExperimentFilterResult();
+        SampleCoexpressionMatrix matrix = this.getMatrix( ee, false, vectors, filterResult );
+        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( ee, true, vectors, null );
+        return new PreparedCoexMatrices( matrix, regressedMatrix,
+                matrix != null ? toAttritionPayload( cormatFilterConfig( true ), filterResult ) : null );
     }
 
 
@@ -164,7 +172,6 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    @Audited(value = SampleCorrelationAnalysisEvent.class, message = "Sample correlation has been computed.")
     public DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee, PreparedCoexMatrices matrices ) {
         SampleCoexpressionMatrix matrix = matrices.matrix;
 
@@ -192,10 +199,10 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         this.logCormatStatus( analysis, true );
         analysis = sampleCoexpressionAnalysisDao.create( analysis );
 
-        // Phase A spot-migration: the @Audited annotation on this method (see
-        // signature above) now writes the SampleCorrelationAnalysisEvent
-        // automatically on successful return. AuditedAspect locates the
-        // first Auditable arg (ee) and delegates to AuditTrailService.
+        // The SampleCorrelationAnalysisEvent used to come from an @Audited annotation on this method. The
+        // attrition payload is produced in prepare(), not passed in, so the aspect could not reach it from
+        // these arguments; the co-bean call below is a proxied @Audited method that can take it.
+        sampleCoexpressionAuditService.recordSampleCorrelationAnalysis( thawedee, matrices.getFilterAttrition() );
 
         return toDoubleMatrix( analysis.getBestCoexpressionMatrix() );
     }
@@ -264,11 +271,11 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     @Nullable
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
-            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, @Nullable ExpressionExperimentFilterResult filterResult ) throws FilteringException {
         SampleCoexpressionAnalysisServiceImpl.log.info( String
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_COMPUTING_SCM, ee.getId(), regress ) );
 
-        ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, vectors );
+        ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, vectors, filterResult );
         if ( mat == null ) {
             log.warn( "Could not get data matrix for " + ee );
             return null;
@@ -301,7 +308,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     @Nullable
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
-            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, @Nullable ExpressionExperimentFilterResult filterResult ) throws FilteringException {
         if ( vectors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
             return null;
@@ -314,17 +321,34 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                         .warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_DESIGN );
                 return null;
             }
-            mat = this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false ) );
+            mat = this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false, filterResult ) );
 
         } else {
-            mat = this.loadFilteredDataMatrix( ee, vectors, true );
+            mat = this.loadFilteredDataMatrix( ee, vectors, true, filterResult );
         }
 
         return mat;
     }
 
     private ExpressionDataDoubleMatrix loadFilteredDataMatrix( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences,
+            @Nullable ExpressionExperimentFilterResult filterResult ) throws FilteringException {
+        ExpressionExperimentFilterConfig fConfig = cormatFilterConfig( requireSequences );
+        return filterResult != null
+                ? expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false, filterResult )
+                : expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false );
+    }
+
+    /**
+     * The filter settings the sample-correlation matrix is built under.
+     * <p>
+     * Extracted so {@link #prepare} can describe the run in the audit payload without restating them -- two copies
+     * would drift, and the recorded attrition is only interpretable against the settings that produced it.
+     *
+     * @param requireSequences false for the regressed leg: loads using new array designs will fail, so that leg
+     *                         allows the special case where there are no sequences.
+     */
+    static ExpressionExperimentFilterConfig cormatFilterConfig( boolean requireSequences ) {
         ExpressionExperimentFilterConfig fConfig = new ExpressionExperimentFilterConfig();
         fConfig.setIgnoreMinimumDesignElementsThreshold( true );
         fConfig.setIgnoreMinimumSamplesThreshold( true );
@@ -335,8 +359,39 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // call could not be recovered afterwards. Consumers that want them excluded mask at the point of
         // use -- see GeeqServiceImpl.getCormat. Precedent for turning it off: ExpressionDataFileHelperService.
         fConfig.setMaskOutliers( false );
-        // Loads using new array designs will fail. So we allow special case where there are no sequences.
-        return expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false );
+        return fConfig;
+    }
+
+    /**
+     * Convert a completed filter run into the audit payload shape. Stages are emitted in the order
+     * {@link ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter} applies them, including the
+     * ones that were skipped -- a skipped stage still carries its row count, so the funnel reads continuously and
+     * a reader can tell "this filter removed nothing" from "this filter did not run".
+     */
+    static SampleCorrelationAnalysisPayload toAttritionPayload( ExpressionExperimentFilterConfig config,
+            ExpressionExperimentFilterResult result ) {
+        List<SampleCorrelationAnalysisPayload.FilterStage> stages = Arrays.asList(
+                new SampleCorrelationAnalysisPayload.FilterStage( "noSequences", result.isNoSequencesFilterApplied(),
+                        result.getAfterNoSequencesFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "affyControls", result.isAffyControlsFilterApplied(),
+                        result.getAfterAffyControlsFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "outliers", result.isOutliersFilterApplied(),
+                        result.getAfterOutliersFilter(), result.getColumnsAfterOutliersFilter() ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "minPresent", result.isMinPresentFilterApplied(),
+                        result.getAfterMinPresentFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "zeroVariance", result.isZeroVarianceFilterApplied(),
+                        result.getAfterZeroVarianceFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "lowExpression", result.isLowExpressionFilterApplied(),
+                        result.getAfterLowExpressionFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "lowVariance", result.isLowVarianceFilterApplied(),
+                        result.getAfterLowVarianceFilter(), null ) );
+        return new SampleCorrelationAnalysisPayload(
+                new SampleCorrelationAnalysisPayload.FilterConfig( config.isRequireSequences(), config.isMaskOutliers(),
+                        config.isIgnoreMinimumSamplesThreshold(), config.isIgnoreMinimumDesignElementsThreshold(),
+                        config.getLowExpressionCut(), config.getHighExpressionCut(), config.getLowVarianceCut(),
+                        config.getLowDistinctValueCut(), config.getMinPresentFraction(), config.getMinPresentCount() ),
+                stages, result.getStartingRows(), result.getStartingColumns(), result.getFinalRows(),
+                result.getFinalColumns() );
     }
 
     /**

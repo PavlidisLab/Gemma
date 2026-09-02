@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
+import ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
 
 import org.springframework.lang.Nullable;
@@ -24,12 +25,34 @@ import org.springframework.lang.Nullable;
 public class PreparedCoexMatrices {
 
     public PreparedCoexMatrices( @Nullable SampleCoexpressionMatrix matrix, @Nullable SampleCoexpressionMatrix regressedMatrix ) {
+        this( matrix, regressedMatrix, null );
+    }
+
+    public PreparedCoexMatrices( @Nullable SampleCoexpressionMatrix matrix, @Nullable SampleCoexpressionMatrix regressedMatrix,
+            @Nullable SampleCorrelationAnalysisPayload filterAttrition ) {
         this.matrix = matrix;
         this.regressedMatrix = regressedMatrix;
+        this.filterAttrition = filterAttrition;
     }
 
     @Nullable
     SampleCoexpressionMatrix matrix;
     @Nullable
     SampleCoexpressionMatrix regressedMatrix;
+
+    /**
+     * Per-stage row and column attrition from the filter that produced {@link #matrix}, carried here so
+     * {@link SampleCoexpressionAnalysisServiceImpl#compute} can record it on the audit event. Null when the
+     * unregressed matrix could not be built, since there is then no filter run to describe.
+     * <p>
+     * 🛑 Do NOT serialise this object itself onto the audit row -- it holds the correlation matrices. Only
+     * {@link #getFilterAttrition()} belongs in an audit payload.
+     */
+    @Nullable
+    SampleCorrelationAnalysisPayload filterAttrition;
+
+    @Nullable
+    public SampleCorrelationAnalysisPayload getFilterAttrition() {
+        return filterAttrition;
+    }
 }

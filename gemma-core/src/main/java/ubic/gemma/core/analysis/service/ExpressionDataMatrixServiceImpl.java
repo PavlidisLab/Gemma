@@ -88,15 +88,21 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException {
+        return this.getFilteredMatrix( ee, dataVectors, filterConfig, logTransform, new ExpressionExperimentFilterResult() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform, ExpressionExperimentFilterResult result ) throws FilteringException {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        return this.getFilteredMatrix( ee, dataVectors, arrayDesignsUsed, filterConfig, logTransform );
+        return this.getFilteredMatrix( ee, dataVectors, arrayDesignsUsed, filterConfig, logTransform, result );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, ExpressionExperimentFilterConfig filterConfig,
             boolean logTransform ) throws FilteringException {
-        return this.getFilteredMatrix( null, dataVectors, Collections.singleton( arrayDesign ), filterConfig, logTransform );
+        return this.getFilteredMatrix( null, dataVectors, Collections.singleton( arrayDesign ), filterConfig, logTransform, new ExpressionExperimentFilterResult() );
     }
 
     @Override
@@ -207,7 +213,8 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
      * @throws NoDesignElementsException if filtering results in no row left in the expression matrix
      */
     private ExpressionDataDoubleMatrix getFilteredMatrix( @Nullable ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors,
-            Collection<ArrayDesign> arrayDesignsUsed, ExpressionExperimentFilterConfig filterConfig, boolean logTransform
+            Collection<ArrayDesign> arrayDesignsUsed, ExpressionExperimentFilterConfig filterConfig, boolean logTransform,
+            ExpressionExperimentFilterResult result
     ) throws FilteringException {
         if ( dataVectors.isEmpty() ) {
             // Surface this as a filtering failure so the REST layer can downgrade to an empty/204 response
@@ -221,7 +228,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         if ( logTransform ) {
             eeDoubleMatrix = logTransform( eeDoubleMatrix, arrayDesignsUsed );
         }
-        return new ExpressionExperimentFilter( filterConfig ).filter( eeDoubleMatrix, arrayDesignsUsed, new ExpressionExperimentFilterResult() );
+        return new ExpressionExperimentFilter( filterConfig ).filter( eeDoubleMatrix, arrayDesignsUsed, result );
     }
 
     /**
