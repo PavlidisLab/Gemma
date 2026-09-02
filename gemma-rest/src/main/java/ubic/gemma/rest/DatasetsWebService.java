@@ -5862,8 +5862,9 @@ public class DatasetsWebService {
     @Path("/{dataset}/pipelineStatus")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the per-step pipeline status of a dataset",
-            description = "Returns a snapshot of each preprocessing/analysis step (`batchInfo`, `preprocess`, `pca`, "
-                    + "`dea`, `coexpression`, `missingValue`) with its last-run date, audit-event class name, and "
+            description = "Returns a snapshot of each preprocessing/analysis step (`batchInfo`, `preprocess`, "
+                    + "`batchCorrection`, `pca`, `sampleCorrelation`, `meanVariance`, `dea`, `coexpression`, "
+                    + "`missingValue`) with its last-run date, audit-event class name, and "
                     + "state (`ok`, `failed`, `notRun`, `notApplicable`, or `stale`). `stale` means the step ran "
                     + "successfully and its input has changed since, so the result survives but no longer describes "
                     + "what it was computed from. Two things invalidate a step: the experimental design changing, "
