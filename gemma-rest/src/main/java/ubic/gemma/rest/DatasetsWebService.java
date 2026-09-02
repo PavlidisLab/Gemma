@@ -9746,10 +9746,15 @@ public class DatasetsWebService {
     @Path("/{dataset}/mean-variance")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the per-probe mean / variance for a dataset",
-            description = "Returns parallel mean[] and variance[] arrays computed by the mean-variance step. "
-                    + "404 if the dataset has no MeanVarianceRelation. Note: design-element ids and names are "
-                    + "currently omitted (Gemma's MeanVarianceRelation stores only the numeric arrays); the UI "
-                    + "indexes by position.",
+            description = "Returns parallel mean[] and variance[] arrays computed by the mean-variance step; a "
+                    + "point is (means[i], variances[i]). 404 if the dataset has no MeanVarianceRelation. "
+                    + "Note: design-element ids and names are currently omitted (Gemma's MeanVarianceRelation "
+                    + "stores only the numeric arrays); the UI indexes by position. The arrays hold one entry "
+                    + "per plotted point rather than one per probe: values are rounded to "
+                    + RoundingUtils.JSON_SIGNIFICANT_DIGITS + " significant digits and then thinned to one "
+                    + "point per cell of a fixed grid over the data's range, since at the size this scatter is "
+                    + "drawn most points fall where another has already been painted. Points with a non-finite "
+                    + "mean or variance are omitted.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no mean-variance relation.",
@@ -10781,12 +10786,29 @@ public class DatasetsWebService {
     }
 
     /**
-     * Wire shape for {@link #getDatasetMeanVariance}: parallel mean / variance arrays per probe.
+     * Wire shape for {@link #getDatasetMeanVariance}: parallel mean / variance arrays.
      * Design-element ids / names and the optional limma/edgeR fit curve are placeholders for now:
      * Gemma's {@link MeanVarianceRelation} stores only the numeric arrays.
+     * <p>
+     * The arrays hold one entry per plotted point, not one per probe — see
+     * {@link #MeanVarianceValueObject(MeanVarianceRelation)}.
      */
     @Value
     public static class MeanVarianceValueObject {
+
+        /**
+         * Grid the points are thinned onto: one point survives per cell, the first that lands in it.
+         * <p>
+         * Measured on eid 1, at the size the scatter is actually drawn, 93% of its 22,283 points land on a
+         * pixel that is already painted. Same dataset, means and variances end to end: 883.0 KB raw /
+         * 382.6 KB gzipped as served, 346.0 KB / 101.0 KB after rounding, 19.8 KB / 7.6 KB after this grid.
+         * <p>
+         * Fixed, with no query parameter to choose it: the UI card is a few hundred pixels wide and resizes
+         * with the browser window, so a wire parameter would be pinned to a CSS box. The consequence is that
+         * the plot cannot be zoomed into without re-fetching against a finer grid. There is no zoom today.
+         */
+        private static final int GRID_COLUMNS = 200;
+        private static final int GRID_ROWS = 133;
 
         /**
          * Reserved — Gemma's {@link MeanVarianceRelation} does not currently carry design-element
@@ -10802,12 +10824,13 @@ public class DatasetsWebService {
         String[] designElementNames;
 
         /**
-         * Per-probe means (typically log-CPM or normalized intensity).
+         * Means (typically log-CPM or normalized intensity), one per surviving point.
          */
         double[] means;
 
         /**
-         * Per-probe variances (squared SD or robust variance), parallel to {@link #means}.
+         * Variances (squared SD or robust variance), parallel to {@link #means}: a point is
+         * {@code (means[i], variances[i])}.
          */
         double[] variances;
 
@@ -10836,14 +10859,75 @@ public class DatasetsWebService {
          * part of the plot.
          * <p>
          * Copies: {@code mvr.getMeans()} is the loaded entity's own array.
+         * <p>
+         * Rounded first, then thinned onto {@link #GRID_COLUMNS} × {@link #GRID_ROWS}. That order matters:
+         * keying the grid off the unrounded value and emitting the rounded one lets the two disagree, so a
+         * cell could keep a point whose emitted coordinates belong to a neighbour.
          */
         public MeanVarianceValueObject( MeanVarianceRelation mvr ) {
             this.designElementIds = null;
             this.designElementNames = null;
-            this.means = RoundingUtils.roundedCopy( mvr.getMeans() );
-            this.variances = RoundingUtils.roundedCopy( mvr.getVariances() );
+            double[][] points = decimate(
+                    RoundingUtils.roundedCopy( mvr.getMeans() ),
+                    RoundingUtils.roundedCopy( mvr.getVariances() ) );
+            this.means = points[0];
+            this.variances = points[1];
             this.fit = null;
             this.source = null;
+        }
+
+        /**
+         * Keep the first point in each cell of a {@link #GRID_COLUMNS} × {@link #GRID_ROWS} grid laid over
+         * the data's own min/max range, and drop the rest. Returns {@code { means, variances }}.
+         * <p>
+         * Both arrays are rebuilt in the same pass so they stay index-parallel — dropping an entry from one
+         * and not the other would silently re-pair every point after it. After thinning, index i no longer
+         * corresponds to probe i; nothing reads it that way, because this value object carries no probe
+         * identity to correlate against.
+         * <p>
+         * Points with a non-finite mean or variance are dropped. They have no position on the scatter this
+         * feeds, so sending them draws nothing, and NaN must never reach a grid key.
+         */
+        private static double[][] decimate( double[] means, double[] variances ) {
+            // The two columns are stored as independent arrays on MeanVarianceRelation, so a pair only
+            // exists as far as the shorter of them.
+            int n = Math.min( means.length, variances.length );
+            double minMean = Double.POSITIVE_INFINITY, maxMean = Double.NEGATIVE_INFINITY;
+            double minVariance = Double.POSITIVE_INFINITY, maxVariance = Double.NEGATIVE_INFINITY;
+            for ( int i = 0; i < n; i++ ) {
+                if ( !Double.isFinite( means[i] ) || !Double.isFinite( variances[i] ) ) {
+                    continue;
+                }
+                minMean = Math.min( minMean, means[i] );
+                maxMean = Math.max( maxMean, means[i] );
+                minVariance = Math.min( minVariance, variances[i] );
+                maxVariance = Math.max( maxVariance, variances[i] );
+            }
+            double meanSpan = maxMean - minMean;
+            double varianceSpan = maxVariance - minVariance;
+            boolean[] occupied = new boolean[GRID_COLUMNS * GRID_ROWS];
+            double[] keptMeans = new double[Math.min( n, occupied.length )];
+            double[] keptVariances = new double[keptMeans.length];
+            int kept = 0;
+            for ( int i = 0; i < n; i++ ) {
+                double mean = means[i], variance = variances[i];
+                if ( !Double.isFinite( mean ) || !Double.isFinite( variance ) ) {
+                    continue;
+                }
+                // A span of zero means every finite point shares one coordinate; they all collapse onto the
+                // first column or row rather than dividing by zero.
+                int column = meanSpan > 0 ? ( int ) ( ( mean - minMean ) / meanSpan * ( GRID_COLUMNS - 1 ) ) : 0;
+                int row = varianceSpan > 0 ? ( int ) ( ( variance - minVariance ) / varianceSpan * ( GRID_ROWS - 1 ) ) : 0;
+                int cell = row * GRID_COLUMNS + column;
+                if ( occupied[cell] ) {
+                    continue;
+                }
+                occupied[cell] = true;
+                keptMeans[kept] = mean;
+                keptVariances[kept] = variance;
+                kept++;
+            }
+            return new double[][] { Arrays.copyOf( keptMeans, kept ), Arrays.copyOf( keptVariances, kept ) };
         }
 
         @Value

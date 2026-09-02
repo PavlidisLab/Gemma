@@ -3985,6 +3985,102 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( mvr.getVariances()[0] ).isEqualTo( 5.7612345678901e-4 );
     }
 
+    // --- Mean-variance decimation -------------------------------------------------------
+
+    /**
+     * Two points that land in the same grid cell collapse to the first of them, and the pairing survives:
+     * the fixture makes every variance twice its mean, so an entry dropped from one array and not the other
+     * would re-pair every point after it and break that relation.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceKeepsOnePointPerCellAndStaysIndexParallel() {
+        // (0, 0) and (0.1, 0.2) both land in cell (0, 0) of the grid laid over means [0, 100] /
+        // variances [0, 200]; the second is the duplicate.
+        double[] means = { 0.0, 0.1, 50.0, 100.0 };
+        double[] variances = { 0.0, 0.2, 100.0, 200.0 };
+        DatasetsWebService.MeanVarianceValueObject vo = new DatasetsWebService.MeanVarianceValueObject(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+
+        assertThat( vo.getMeans() ).containsExactly( 0.0, 50.0, 100.0 );
+        assertThat( vo.getVariances() ).containsExactly( 0.0, 100.0, 200.0 );
+        assertThat( vo.getVariances() ).hasSameSizeAs( vo.getMeans() );
+        for ( int i = 0; i < vo.getMeans().length; i++ ) {
+            assertThat( vo.getVariances()[i] ).isEqualTo( 2 * vo.getMeans()[i] );
+        }
+    }
+
+    /**
+     * Points that each get their own cell come back untouched — thinning only ever removes a point that
+     * would be drawn on top of one already sent.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceLeavesWellSeparatedPointsAlone() {
+        double[] means = { 1.0, 2.0, 3.0, 4.0 };
+        double[] variances = { 0.1, 0.4, 0.9, 1.6 };
+        DatasetsWebService.MeanVarianceValueObject vo = new DatasetsWebService.MeanVarianceValueObject(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+
+        assertThat( vo.getMeans() ).containsExactly( 1.0, 2.0, 3.0, 4.0 );
+        assertThat( vo.getVariances() ).containsExactly( 0.1, 0.4, 0.9, 1.6 );
+    }
+
+    /**
+     * A point whose mean or variance is not finite has no position on the scatter, so it is dropped rather
+     * than keyed into the grid. Both arrays lose it together.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceDropsNonFinitePoints() {
+        double[] means = { 1.0, Double.NaN, 2.0, Double.POSITIVE_INFINITY, 3.0 };
+        double[] variances = { 10.0, 5.0, Double.NEGATIVE_INFINITY, 6.0, 30.0 };
+        DatasetsWebService.MeanVarianceValueObject vo = new DatasetsWebService.MeanVarianceValueObject(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+
+        assertThat( vo.getMeans() ).containsExactly( 1.0, 3.0 );
+        assertThat( vo.getVariances() ).containsExactly( 10.0, 30.0 );
+    }
+
+    /**
+     * The size guard: 30,000 points drawn from ten distinct coordinates come back as ten. This is the shape
+     * of the real saving — eid 1 sends 22,283 points of which 93% land where one has already been painted.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceCollapsesAHeavilyOverplottedDataset() {
+        double[] means = new double[30000];
+        double[] variances = new double[30000];
+        for ( int i = 0; i < means.length; i++ ) {
+            means[i] = i % 10;
+            variances[i] = i % 10;
+        }
+        DatasetsWebService.MeanVarianceValueObject vo = new DatasetsWebService.MeanVarianceValueObject(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+
+        assertThat( vo.getMeans() ).containsExactly( 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 );
+        assertThat( vo.getVariances() ).hasSameSizeAs( vo.getMeans() );
+    }
+
+    /**
+     * The thinned arrays are what actually goes on the wire.
+     */
+    @Test
+    public void testGetDatasetMeanVarianceIsThinnedOnTheWire() {
+        double[] means = { 0.0, 0.1, 50.0, 100.0 };
+        double[] variances = { 0.0, 0.2, 100.0, 200.0 };
+        ee.setMeanVarianceRelation(
+                ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation.Factory.newInstance( means, variances ) );
+        when( expressionExperimentService.loadWithMeanVarianceRelation( ee.getId() ) ).thenReturn( ee );
+
+        try ( Response r = target( "/datasets/1/mean-variance" ).request().get() ) {
+            assertThat( r ).hasStatus( Response.Status.OK );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data.means[0]", 0.0 )
+                    .hasPathWithValue( "$.data.means[1]", 50.0 )
+                    .hasPathWithValue( "$.data.means[2]", 100.0 )
+                    .doesNotHavePath( "$.data.means[3]" )
+                    .hasPathWithValue( "$.data.variances[1]", 100.0 )
+                    .doesNotHavePath( "$.data.variances[3]" );
+        }
+    }
+
     /**
      * SVD loadings serialize at a mean of ~20 characters each and nothing consumes the digits below it, so this route
      * rounds with no opt-out. {@code SVDResult.getVariances()} / {@code getVMatrix().getRawMatrix()} are the
