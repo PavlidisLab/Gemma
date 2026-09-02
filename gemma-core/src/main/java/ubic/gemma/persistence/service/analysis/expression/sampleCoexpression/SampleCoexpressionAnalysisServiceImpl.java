@@ -380,8 +380,14 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         return new ExpressionExperimentFilter( cormatFilterConfig( true ) ).filter( unmasked, filterResult );
     }
 
+    /**
+     * 🛑 Thaws before reading the assays. Callers reach {@link #prepare} with an experiment thawed to different
+     * depths -- the CLI hands over a {@code thawLiter} one, which does NOT initialize {@code bioAssays}
+     * ({@code thawLite} is {@code thawLiter} plus that collection). Walking it directly threw
+     * {@code LazyInitializationException} and failed the whole run.
+     */
     private boolean hasFlaggedOutlier( ExpressionExperiment ee ) {
-        for ( BioAssay ba : ee.getBioAssays() ) {
+        for ( BioAssay ba : expressionExperimentReadService.thawLite( ee ).getBioAssays() ) {
             if ( ba.getIsOutlier() ) {
                 return true;
             }
