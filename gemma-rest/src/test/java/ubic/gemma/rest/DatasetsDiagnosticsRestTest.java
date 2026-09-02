@@ -363,7 +363,8 @@ public class DatasetsDiagnosticsRestTest extends BaseJerseyIntegrationTest5 {
     public void testGetDatasetSampleCorrelationWhenNoneIs404() {
         NotFoundException nfe = catchThrowableOfType( NotFoundException.class,
                 () -> datasetsWebService.getDatasetSampleCorrelation(
-                        DatasetArg.valueOf( eeWithoutMvr.getId().toString() ) ) );
+                        DatasetArg.valueOf( eeWithoutMvr.getId().toString() ),
+                        DatasetsWebService.CorrelationMatrixChoice.best ) );
         assertThat( nfe ).isNotNull();
         assertThat( target( "/datasets/" + eeWithoutMvr.getId() + "/sample-correlation" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND );

@@ -3747,7 +3747,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         } );
         matrix.setRowNames( assays );
         matrix.setColumnNames( assays );
-        when( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) ).thenReturn( matrix );
+        when( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) ).thenReturn( matrix );
         // Handler now thaws bioassays + reads outlier flags. Stub so the thawed EE
         // surfaces with the same BioAssays the matrix is keyed on, so the actualOutlierBioAssayIds
         // path can iterate without NPE.
@@ -3761,16 +3761,117 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasFieldOrProperty( "data" )
                 .extracting( "data.bioAssayIds", list( Integer.class ) )
                 .containsExactly( 100, 101, 102 );
-        verify( sampleCoexpressionAnalysisService ).loadBestMatrix( ee );
+        verify( sampleCoexpressionAnalysisService ).loadRegressedMatrix( ee );
     }
 
     @Test
     public void testGetDatasetSampleCorrelationWhenNoneIs404() {
-        when( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) ).thenReturn( null );
+        when( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) ).thenReturn( null );
+        when( sampleCoexpressionAnalysisService.loadFullMatrix( ee ) ).thenReturn( null );
         assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( sampleCoexpressionAnalysisService ).loadBestMatrix( ee );
+        verify( sampleCoexpressionAnalysisService ).loadRegressedMatrix( ee );
+    }
+
+    /**
+     * Three decimals, and a masked cell stays masked. {@code Math.round} on NaN yields 0.0, which would read
+     * as "these two samples do not correlate" — the opposite of "we do not know".
+     */
+    @Test
+    public void testSampleCorrelationValuesAreRoundedAndKeepNaN() {
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 100L );
+        BioAssay a2 = BioAssay.Factory.newInstance( "BA2" );
+        a2.setId( 101L );
+        List<BioAssay> assays = Arrays.asList( a1, a2 );
+        DenseDoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( new double[][] {
+                { 1.0, 0.8231947345733643 },
+                { 0.8231947345733643, Double.NaN }
+        } );
+        matrix.setRowNames( assays );
+        matrix.setColumnNames( assays );
+        when( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) ).thenReturn( matrix );
+        ee.getBioAssays().clear();
+        ee.getBioAssays().addAll( assays );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+
+        try ( Response r = target( "/datasets/1/sample-correlation" ).request().get() ) {
+            String body = r.readEntity( String.class );
+            assertThat( body ).contains( "0.823" ).doesNotContain( "0.8231947" );
+            assertThat( body ).contains( "NaN" );
+        }
+    }
+
+    /** The default is `best`, and the response says which of the two it actually got. */
+    @Test
+    public void testSampleCorrelationSaysWhichMatrixItReturned() {
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 100L );
+        List<BioAssay> assays = Collections.singletonList( a1 );
+        DenseDoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( new double[][] { { 1.0 } } );
+        matrix.setRowNames( assays );
+        matrix.setColumnNames( assays );
+        ee.getBioAssays().clear();
+        ee.getBioAssays().addAll( assays );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+
+        when( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) ).thenReturn( matrix );
+        try ( Response r = target( "/datasets/1/sample-correlation" ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            assertThat( r.readEntity( String.class ) ).contains( "\"matrix\":\"regressed\"" );
+        }
+    }
+
+    /** No regressed matrix: `best` falls back to the full one and says so, rather than implying regression. */
+    @Test
+    public void testSampleCorrelationBestFallsBackToFullAndSaysSo() {
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 100L );
+        List<BioAssay> assays = Collections.singletonList( a1 );
+        DenseDoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( new double[][] { { 1.0 } } );
+        matrix.setRowNames( assays );
+        matrix.setColumnNames( assays );
+        ee.getBioAssays().clear();
+        ee.getBioAssays().addAll( assays );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+
+        when( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) ).thenReturn( null );
+        when( sampleCoexpressionAnalysisService.loadFullMatrix( ee ) ).thenReturn( matrix );
+        try ( Response r = target( "/datasets/1/sample-correlation" ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            assertThat( r.readEntity( String.class ) ).contains( "\"matrix\":\"full\"" );
+        }
+    }
+
+    /** `matrix=full` takes the full one even when a regressed one exists — that is the whole point. */
+    @Test
+    public void testSampleCorrelationFullIsServedOnRequestEvenWhenRegressedExists() {
+        BioAssay a1 = BioAssay.Factory.newInstance( "BA1" );
+        a1.setId( 100L );
+        List<BioAssay> assays = Collections.singletonList( a1 );
+        DenseDoubleMatrix<BioAssay, BioAssay> full = new DenseDoubleMatrix<>( new double[][] { { 1.0 } } );
+        full.setRowNames( assays );
+        full.setColumnNames( assays );
+        ee.getBioAssays().clear();
+        ee.getBioAssays().addAll( assays );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( sampleCoexpressionAnalysisService.loadFullMatrix( ee ) ).thenReturn( full );
+
+        try ( Response r = target( "/datasets/1/sample-correlation" ).queryParam( "matrix", "full" ).request().get() ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            assertThat( r.readEntity( String.class ) ).contains( "\"matrix\":\"full\"" );
+        }
+        verify( sampleCoexpressionAnalysisService, never() ).loadRegressedMatrix( any() );
+    }
+
+    /** `matrix=regressed` never silently substitutes the full one; a dataset without one 404s. */
+    @Test
+    public void testSampleCorrelationRegressedDoesNotFallBack() {
+        when( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) ).thenReturn( null );
+        assertThat( target( "/datasets/1/sample-correlation" ).queryParam( "matrix", "regressed" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+        verify( sampleCoexpressionAnalysisService, never() ).loadFullMatrix( any() );
     }
 
     /**
@@ -3786,7 +3887,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( sampleCoexpressionAnalysisService, never() ).loadBestMatrix( any() );
+        verify( sampleCoexpressionAnalysisService, never() ).loadRegressedMatrix( any() );
+        verify( sampleCoexpressionAnalysisService, never() ).loadFullMatrix( any() );
     }
 
     /** The same dataset, not single-cell, still serves the matrix — the gate is the flag, not the route. */
@@ -3799,20 +3901,21 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         matrix.setRowNames( assays );
         matrix.setColumnNames( assays );
         when( expressionExperimentService.isSingleCell( ee ) ).thenReturn( false );
-        when( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) ).thenReturn( matrix );
+        when( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) ).thenReturn( matrix );
         ee.getBioAssays().clear();
         ee.getBioAssays().addAll( assays );
         when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
         assertThat( target( "/datasets/1/sample-correlation" ).request().get() )
                 .hasStatus( Response.Status.OK );
-        verify( sampleCoexpressionAnalysisService ).loadBestMatrix( ee );
+        verify( sampleCoexpressionAnalysisService ).loadRegressedMatrix( ee );
     }
 
     @Test
     public void testGetDatasetSampleCorrelationWhenDatasetMissingIs404() {
         assertThat( target( "/datasets/999/sample-correlation" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND );
-        verify( sampleCoexpressionAnalysisService, never() ).loadBestMatrix( any() );
+        verify( sampleCoexpressionAnalysisService, never() ).loadRegressedMatrix( any() );
+        verify( sampleCoexpressionAnalysisService, never() ).loadFullMatrix( any() );
     }
 
     // --- Diagnostics: mean-variance ------------------------------------------------------

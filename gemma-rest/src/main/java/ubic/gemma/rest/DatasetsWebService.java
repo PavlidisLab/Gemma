@@ -9781,13 +9781,15 @@ public class DatasetsWebService {
     @Path("/{dataset}/sample-correlation")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the sample-sample correlation matrix + outlier classifications",
-            description = "Returns the regressed (best) sample correlation matrix UNMASKED, plus two parallel outlier-id lists: `actualOutlierBioAssayIds` (curator-flagged) and `predictedOutlierBioAssayIds` (algorithmic). The UI applies any visualization masking it wants. 404 if no correlation analysis has been computed for the dataset. **Single-cell datasets return 404 by design**: their matrix is the pseudo-bulk grid (samples x cell types), so it correlates across cell types rather than across samples, and it is withheld while that is revised.",
+            description = "Returns a sample correlation matrix UNMASKED, plus two parallel outlier-id lists: `actualOutlierBioAssayIds` (curator-flagged) and `predictedOutlierBioAssayIds` (algorithmic). The UI applies any visualization masking it wants.\n\nGemma stores two matrices per analysis and `?matrix=` picks one: `regressed` (the dataset's important factors regressed out), `full` (none regressed), or `best` (the default: regressed where it exists, else full). The response's `matrix` field says which one it holds. `matrix=regressed` 404s on a dataset that has no regressed matrix -- it is only computed when the design has factors above the SVD importance threshold.\n\nCorrelations are rounded to three decimals; at full precision the digits are incompressible and dominate the payload.\n\n404 if no correlation analysis has been computed for the dataset. **Single-cell datasets return 404 by design**: their matrix is the pseudo-bulk grid (samples x cell types), so it correlates across cell types rather than across samples, and it is withheld while that is revised.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist, has no sample correlation matrix, or is single-cell (see description).",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SampleCorrelationMatrixValueObject> getDatasetSampleCorrelation(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Which stored matrix to return: `best` (the regressed one where it exists, else the full one), `regressed`, or `full`.")
+            @QueryParam("matrix") @DefaultValue("best") CorrelationMatrixChoice which
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         // 🛑 TEMPORARY (Paul, 2026-08-31): for a single-cell dataset this matrix is not over the
@@ -9799,9 +9801,27 @@ public class DatasetsWebService {
             throw new NotFoundException( ee.getShortName() + " is a single-cell dataset; its sample correlation"
                     + " matrix is computed across cell types and is not served while that is being revised." );
         }
-        DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
+        // `best` is resolved here rather than through loadBestMatrix so the response can say WHICH matrix it
+        // holds: loadBestMatrix returns regressed-or-full and the caller cannot tell them apart, and a panel
+        // captioned "regressed" over a full matrix is worse than an uncaptioned one.
+        DoubleMatrix<BioAssay, BioAssay> matrix;
+        String matrixKind;
+        if ( which == CorrelationMatrixChoice.full ) {
+            matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
+            matrixKind = "full";
+        } else {
+            matrix = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
+            matrixKind = "regressed";
+            if ( matrix == null && which == CorrelationMatrixChoice.best ) {
+                matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
+                matrixKind = "full";
+            }
+        }
         if ( matrix == null ) {
-            throw new NotFoundException( ee.getShortName() + " does not have a sample correlation matrix." );
+            throw new NotFoundException( which == CorrelationMatrixChoice.regressed
+                    ? ee.getShortName() + " has no regressed sample correlation matrix; it is only computed when the"
+                            + " design has factors above the SVD importance threshold. Ask for matrix=full or matrix=best."
+                    : ee.getShortName() + " does not have a sample correlation matrix." );
         }
         // Thaw bioassays so isOutlier reads from the persisted set.
         ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
@@ -9822,7 +9842,12 @@ public class DatasetsWebService {
             // Detection is best-effort; if it throws (empty matrix, etc.) just leave the set empty.
             log.warn( "predicted-outlier detection failed for " + thawed.getShortName() + ": " + e.getMessage() );
         }
-        return respond( new SampleCorrelationMatrixValueObject( matrix, actualOutliers, predictedOutliers ) );
+        return respond( new SampleCorrelationMatrixValueObject( matrix, matrixKind, actualOutliers, predictedOutliers ) );
+    }
+
+    /** Which of the two stored sample-correlation matrices {@link #getDatasetSampleCorrelation} should return. */
+    public enum CorrelationMatrixChoice {
+        best, regressed, full
     }
 
     /**
@@ -10667,6 +10692,12 @@ public class DatasetsWebService {
         Long[] predictedOutlierBioAssayIds;
 
         /**
+         * Which stored matrix this is: {@code "regressed"} (major factors regressed out) or {@code "full"}
+         * (none regressed). A caller asking for {@code best} gets one or the other and this is how it tells.
+         */
+        String matrix;
+
+        /**
          * Currently always {@code null}; placeholder for a probe-filter caption once
          * {@link SampleCoexpressionAnalysisService} surfaces it.
          */
@@ -10679,16 +10710,38 @@ public class DatasetsWebService {
         @Nullable
         String method;
 
-        public SampleCorrelationMatrixValueObject( DoubleMatrix<BioAssay, BioAssay> matrix,
+        public SampleCorrelationMatrixValueObject( DoubleMatrix<BioAssay, BioAssay> matrix, String matrixKind,
                 Set<Long> actualOutlierIds, Set<Long> predictedOutlierIds ) {
             List<BioAssay> rowAssays = matrix.getRowNames();
             this.bioAssayIds = rowAssays.stream().map( BioAssay::getId ).toArray( Long[]::new );
             this.bioAssayShortNames = rowAssays.stream().map( BioAssay::getName ).toArray( String[]::new );
-            this.values = matrix.getRawMatrix();
+            this.values = roundToThreeDecimals( matrix.getRawMatrix() );
+            this.matrix = matrixKind;
             this.actualOutlierBioAssayIds = actualOutlierIds.stream().sorted().toArray( Long[]::new );
             this.predictedOutlierBioAssayIds = predictedOutlierIds.stream().sorted().toArray( Long[]::new );
             this.filterDescription = null;
             this.method = "pearson";
+        }
+
+        /**
+         * A full-precision double serializes as ~17 digits that gzip cannot compress, and three decimals is
+         * finer than a correlation heatmap can show. Measured on eid 3937 (278 samples): 564 KB gzipped at
+         * full precision, 101 KB at three decimals.
+         * <p>
+         * Copies rather than rounding in place — {@code getRawMatrix()} hands back the loaded matrix's own
+         * backing array. NaN is preserved: a masked cell must stay masked, and {@code Math.round} would
+         * turn it into 0.0, which reads as "these samples do not correlate".
+         */
+        private static double[][] roundToThreeDecimals( double[][] raw ) {
+            double[][] out = new double[raw.length][];
+            for ( int i = 0; i < raw.length; i++ ) {
+                out[i] = new double[raw[i].length];
+                for ( int j = 0; j < raw[i].length; j++ ) {
+                    double v = raw[i][j];
+                    out[i][j] = Double.isFinite( v ) ? Math.round( v * 1000.0 ) / 1000.0 : v;
+                }
+            }
+            return out;
         }
     }
 
