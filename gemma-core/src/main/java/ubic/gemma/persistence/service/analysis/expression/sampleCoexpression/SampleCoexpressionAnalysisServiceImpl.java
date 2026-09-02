@@ -31,6 +31,9 @@ import ubic.gemma.core.util.math.linearmodels.DesignMatrix;
 import ubic.gemma.core.util.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterResult;
 import ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload;
@@ -324,7 +327,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             mat = this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false, filterResult ) );
 
         } else {
-            mat = this.loadFilteredDataMatrix( ee, vectors, true, filterResult );
+            ExpressionDataDoubleMatrix unmasked = filterResult != null
+                    ? this.loadUnmaskedDataMatrix( ee, filterResult ) : null;
+            mat = unmasked != null ? unmasked : this.loadFilteredDataMatrix( ee, vectors, true, filterResult );
         }
 
         return mat;
@@ -337,6 +342,51 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         return filterResult != null
                 ? expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false, filterResult )
                 : expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false );
+    }
+
+    /**
+     * The unregressed matrix, built from data in which flagged outliers were never blanked.
+     * <p>
+     * This is the one place in Gemma that does not read the stored processed vectors, and it is deliberate: the
+     * correlation matrix is what a curator reviews an outlier call against, and the stored data has the flagged
+     * sample's values replaced by NaN, so every correlation involving it was absent -- the evidence for the call
+     * could not be recovered. Everything else (differential expression, SVD, visualization, export) still reads
+     * the masked vectors.
+     * <p>
+     * The mask is applied before quantile normalization, so nothing can undo it after the fact; the values only
+     * exist by rebuilding from raw. That rebuild is skipped entirely when the dataset has no flagged assay, since
+     * the stored vectors are then already unmasked and identical.
+     *
+     * @return the unmasked matrix, or null to fall back to the stored vectors
+     */
+    @Nullable
+    private ExpressionDataDoubleMatrix loadUnmaskedDataMatrix( ExpressionExperiment ee,
+            ExpressionExperimentFilterResult filterResult ) throws FilteringException {
+        if ( !hasFlaggedOutlier( ee ) ) {
+            return null;
+        }
+        ExpressionDataDoubleMatrix unmasked;
+        try {
+            unmasked = processedExpressionDataVectorService.computeUnmaskedProcessedDataMatrix( ee, true );
+        } catch ( QuantitationTypeDetectionException | QuantitationTypeConversionException e ) {
+            // A dataset whose raw data cannot be reprocessed still gets a correlation matrix -- the masked one,
+            // which is what it had before. Failing the whole run to preserve outlier evidence would be a poor
+            // trade.
+            log.warn( "Could not rebuild unmasked data for " + ee + "; the correlation matrix will keep the "
+                    + "flagged samples masked.", e );
+            return null;
+        }
+        // the filter derives the platforms from the matrix itself
+        return new ExpressionExperimentFilter( cormatFilterConfig( true ) ).filter( unmasked, filterResult );
+    }
+
+    private boolean hasFlaggedOutlier( ExpressionExperiment ee ) {
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getIsOutlier() ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -58,6 +58,57 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
         expressionExperimentService.removeProcessedDataVectors( expressionExperiment );
 
+        ComputedProcessedData computed = computeProcessedData( expressionExperiment, ignoreQuantitationMismatch, summary, true );
+        return persist( expressionExperiment, computed, summary );
+    }
+
+    @Override
+    public ExpressionDataDoubleMatrix computeUnmaskedProcessedDataMatrix( ExpressionExperiment expressionExperiment,
+            boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        ComputedProcessedData computed = computeProcessedData( expressionExperiment, ignoreQuantitationMismatch,
+                new ProcessedExpressionDataVectorCreationSummary(), false );
+        Collection<ProcessedExpressionDataVector> vectors = new HashSet<>( computed.data.size() );
+        for ( Map.Entry<CompositeSequence, double[]> e : computed.data.entrySet() ) {
+            ProcessedExpressionDataVector vec = ProcessedExpressionDataVector.Factory.newInstance();
+            vec.setExpressionExperiment( expressionExperiment );
+            vec.setQuantitationType( computed.processedQt );
+            vec.setBioAssayDimension( computed.dimension );
+            vec.setDesignElement( e.getKey() );
+            vec.setDataAsDoubles( e.getValue() );
+            vectors.add( vec );
+        }
+        return new ExpressionDataDoubleMatrix( expressionExperiment, vectors );
+    }
+
+    /**
+     * The output of the processing pipeline, before anything is written.
+     */
+    private static class ComputedProcessedData {
+        final Map<CompositeSequence, double[]> data;
+        final BioAssayDimension dimension;
+        final QuantitationType processedQt;
+        final Map<CompositeSequence, int[]> numberOfCells;
+
+        ComputedProcessedData( Map<CompositeSequence, double[]> data, BioAssayDimension dimension,
+                QuantitationType processedQt, Map<CompositeSequence, int[]> numberOfCells ) {
+            this.data = data;
+            this.dimension = dimension;
+            this.processedQt = processedQt;
+            this.numberOfCells = numberOfCells;
+        }
+    }
+
+    /**
+     * Run the processing pipeline and hand back the result without persisting any of it.
+     *
+     * @param maskOutliers whether to blank the values of assays flagged as outliers. Always true when creating the
+     *                     stored processed data -- every consumer of that expects them masked. False only for the
+     *                     sample-correlation matrix, which is the evidence a curator reviews an outlier call
+     *                     against and is useless with the flagged sample's values removed from it.
+     */
+    private ComputedProcessedData computeProcessedData( ExpressionExperiment expressionExperiment,
+            boolean ignoreQuantitationMismatch, ProcessedExpressionDataVectorCreationSummary summary,
+            boolean maskOutliers ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         log.info( "Computing processed expression vectors for " + expressionExperiment );
 
         Collection<RawExpressionDataVector> rawPreferredDataVectors = expressionExperimentService.getPreferredRawDataVectors( expressionExperiment );
@@ -97,7 +148,16 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
             maskMissingValues( preferredData, missingValueVectors, dimension, summary );
         }
 
-        maskOutliers( preferredData, dimension, summary );
+        // Outlier columns never define the quantile reference, whether or not their values are masked.
+        //
+        // 🛑 Masking alone does NOT keep them out of it: the normalizer imputes a missing cell with its ROW MEAN,
+        // so an all-NaN outlier column arrives as a synthetic average sample and still pulls the reference toward
+        // the centre. Naming them explicitly is what actually excludes them -- and it is what makes the unmasked
+        // variant usable at all, since real outlier values in the reference would shift every other column.
+        boolean[] referenceColumns = referenceColumns( dimension );
+        if ( maskOutliers ) {
+            maskOutliers( preferredData, dimension, summary );
+        }
 
         /*
          * Note that we used to not normalize count data, but we've removed this restriction; and in any case we have
@@ -120,12 +180,20 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
             summary.addComment( m );
         } else {
             log.info( "Normalizing the data" );
-            quantileNormalize( preferredData );
+            quantileNormalize( preferredData, referenceColumns );
             processedQt.setIsNormalized( true );
             summary.setQuantileNormalized( true );
         }
 
-        processedQt = quantitationTypeService.create( processedQt, ProcessedExpressionDataVector.class );
+        return new ComputedProcessedData( preferredData, dimension, processedQt, numberOfCells );
+    }
+
+    private QuantitationType persist( ExpressionExperiment expressionExperiment, ComputedProcessedData computed,
+            ProcessedExpressionDataVectorCreationSummary summary ) {
+        Map<CompositeSequence, double[]> preferredData = computed.data;
+        BioAssayDimension dimension = computed.dimension;
+        Map<CompositeSequence, int[]> numberOfCells = computed.numberOfCells;
+        QuantitationType processedQt = quantitationTypeService.create( computed.processedQt, ProcessedExpressionDataVector.class );
 
         /*
          * Done with processing, now build the vectors and persist; Do a sanity check that we don't have more than we
@@ -321,7 +389,38 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
     /**
      * Quantile normalize data. This should be one of the last steps in processing before persisting
      */
-    private void quantileNormalize( Map<CompositeSequence, double[]> vectors ) {
+    /**
+     * One flag per assay, false for those flagged as outliers, or null when there are none -- which is the common
+     * case and lets the normalizer take its plain path.
+     */
+    @Nullable
+    private boolean[] referenceColumns( BioAssayDimension dimension ) {
+        List<BioAssay> bioAssays = dimension.getBioAssays();
+        boolean[] include = new boolean[bioAssays.size()];
+        boolean anyOutlier = false;
+        for ( int i = 0; i < bioAssays.size(); i++ ) {
+            boolean outlier = bioAssays.get( i ).getIsOutlier();
+            include[i] = !outlier;
+            anyOutlier |= outlier;
+        }
+        if ( !anyOutlier ) {
+            return null;
+        }
+        log.info( "Excluding " + ( bioAssays.size() - countTrue( include ) ) + " outlier assays from the quantile reference distribution." );
+        return include;
+    }
+
+    private static int countTrue( boolean[] flags ) {
+        int n = 0;
+        for ( boolean b : flags ) {
+            if ( b ) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    private void quantileNormalize( Map<CompositeSequence, double[]> vectors, @Nullable boolean[] referenceColumns ) {
         Assert.isTrue( vectors.size() >= MIN_SIZE_FOR_RENORMALIZATION,
                 "At least " + MIN_SIZE_FOR_RENORMALIZATION + " vector are required for renormalization." );
 
@@ -350,7 +449,7 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         assert mat.rows() == rows;
 
         DoubleMatrix<CompositeSequence, Integer> normalizedMat = new QuantileNormalizer<CompositeSequence, Integer>()
-                .normalize( mat );
+                .normalize( mat, referenceColumns );
 
         assert normalizedMat.columns() == cols;
         assert normalizedMat.rows() == rows;

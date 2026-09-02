@@ -10,6 +10,7 @@ import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionExcep
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.core.security.audit.AuditedOnError;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.security.audit.payload.ProcessedVectorComputationPayload;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -112,6 +113,13 @@ public class ProcessedExpressionDataVectorServiceImpl
         // cached vectors are no-longer valid
         cachedProcessedExpressionDataVectorService.evict( expressionExperiment );
         return qt;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionDataDoubleMatrix computeUnmaskedProcessedDataMatrix( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        return processedExpressionDataVectorCreationHelperService
+                .computeUnmaskedProcessedDataMatrix( expressionExperiment, ignoreQuantitationMismatch );
     }
 
     @Override

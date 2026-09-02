@@ -18,6 +18,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.matrix.datafilter.RowMissingFilter;
 import cern.colt.list.DoubleArrayList;
@@ -40,6 +42,33 @@ public class MatrixNormalizer<R, C> {
      * @return
      */
     public DoubleMatrix<R, C> quantileNormalize( DoubleMatrix<R, C> matrix ) {
+        return quantileNormalize( matrix, null );
+    }
+
+    /**
+     * Quantile-normalize, optionally computing the reference distribution from a subset of the columns.
+     * <p>
+     * Every column is still mapped onto the reference -- the excluded ones are placed on the same scale as the
+     * rest, they just do not get a say in what that scale is.
+     * <p>
+     * 🛑 Excluding a column is NOT the same as it being missing. {@link #imputeMissing} fills a missing cell with
+     * its ROW MEAN, so a column of all-NaN becomes a synthetic average sample and still contributes to the
+     * reference -- pulling it toward the centre. That is what an outlier-masked column does today. Passing the
+     * outlier columns here instead keeps them out of the reference, which is what masking was meant to achieve.
+     *
+     * @param includeInReference one flag per column, true to let it define the reference distribution; null means
+     *                           every column contributes, which is the historical behaviour
+     */
+    public DoubleMatrix<R, C> quantileNormalize( DoubleMatrix<R, C> matrix, @Nullable boolean[] includeInReference ) {
+        if ( includeInReference != null ) {
+            Assert.isTrue( includeInReference.length == matrix.columns(),
+                    "includeInReference must have one entry per column." );
+            boolean any = false;
+            for ( boolean b : includeInReference ) {
+                any |= b;
+            }
+            Assert.isTrue( any, "At least one column must define the reference distribution." );
+        }
 
         RowMissingFilter<DoubleMatrix<R, C>, R, C, Double> f = new RowMissingFilter<>();
         f.setMinPresentCount( 1 );
@@ -72,8 +101,19 @@ public class MatrixNormalizer<R, C> {
          */
         DoubleArrayList rowMeans = new DoubleArrayList( sortedData.rows() );
         for ( int i = 0; i < sortedData.rows(); i++ ) {
-            double mean = Descriptive.mean( new DoubleArrayList( sortedData.getRow( i ) ) );
-            rowMeans.add( mean );
+            double[] row = sortedData.getRow( i );
+            DoubleArrayList contributing;
+            if ( includeInReference == null ) {
+                contributing = new DoubleArrayList( row );
+            } else {
+                contributing = new DoubleArrayList( row.length );
+                for ( int j = 0; j < row.length; j++ ) {
+                    if ( includeInReference[j] ) {
+                        contributing.add( row[j] );
+                    }
+                }
+            }
+            rowMeans.add( Descriptive.mean( contributing ) );
         }
 
         for ( int j = 0; j < sortedData.columns(); j++ ) {

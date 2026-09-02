@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.analysis.preprocess.normalize;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.math.MatrixNormalizer;
 
@@ -38,9 +39,17 @@ import ubic.gemma.core.util.math.MatrixNormalizer;
 public class QuantileNormalizer<R, C> {
 
     public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix ) {
+        return normalize( dataMatrix, null );
+    }
 
+    /**
+     * Normalize, letting only some columns define the reference distribution.
+     *
+     * @param includeInReference one flag per column; null means every column contributes
+     * @see MatrixNormalizer#quantileNormalize(DoubleMatrix, boolean[])
+     */
+    public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix, @Nullable boolean[] includeInReference ) {
         MatrixNormalizer<R, C> m = new MatrixNormalizer<>();
-        return m.quantileNormalize( dataMatrix );
-
+        return m.quantileNormalize( dataMatrix, includeInReference );
     }
 }
