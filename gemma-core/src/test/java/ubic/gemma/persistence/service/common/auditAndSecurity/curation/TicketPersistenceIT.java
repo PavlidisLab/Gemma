@@ -29,6 +29,9 @@ import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
@@ -1036,6 +1039,39 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
             TicketService.TargetAddition again = ticketService.addTarget( first.getTicket(),
                     TicketTargetType.EXPRESSION_EXPERIMENT, targetId, curator );
             assertFalse( again.isAdded(), "re-adding is idempotent and says so rather than erroring" );
+        }
+
+
+        /**
+         * {@code GET /tickets/{id}/events} answered 500 "Could not initialize proxy [Contact#1] - no
+         * session" in BOTH of its modes (found on gemma2, 2026-09-01). Cursor mode called
+         * {@code findEventsByCursor} and mapped to VOs afterwards; legacy mode built the VO from a
+         * detached entity. Each event's actor is a LAZY {@code @ManyToOne}, and
+         * {@code TicketEventValueObject.from} reads it for every row, so any ticket whose events have
+         * an actor -- every ticket, since events record who acted -- failed.
+         * <p>
+         * The sibling one line above it, {@code findOpenForTargetByCursor}, was already initializing.
+         * This one was left behind.
+         */
+        @Test
+        @DisplayName("the event log projects outside the transaction, in both cursor and VO form")
+        public void eventProjectionSurvivesDetachment() {
+            // cursor mode: the page is mapped to VOs after the service transaction closes
+            Ticket loaded = ticketService.load( ticketId );
+            assertNotNull( loaded );
+            CursorPage<TicketEvent> page = ticketService.findEventsByCursor( loaded, null, 20 );
+            assertFalse( page.isEmpty(), "the seeded ticket has at least its OPENED event" );
+            List<TicketEventValueObject> vos = page.map( TicketEventValueObject::from );
+            for ( TicketEventValueObject vo : vos ) {
+                assertNotNull( vo.getActorName(),
+                        "each event's actor must be initialized by the service, not read here" );
+            }
+
+            // legacy mode reads the same log off the VO the service projects
+            TicketValueObject full = ticketService.loadValueObject( ticketId, true );
+            assertNotNull( full );
+            assertFalse( full.getEvents().isEmpty(), "the event log must survive the projection" );
+            assertNotNull( full.getEvents().get( 0 ).getActorName(), "actor must be initialized" );
         }
 
         /**

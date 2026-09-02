@@ -463,6 +463,18 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         return tickets;
     }
 
+    /**
+     * The event-page counterpart. A page of {@link TicketEvent} carries no Ticket to walk, and the
+     * one lazy field on an event is its actor — which {@link TicketEventValueObject#from} reads for
+     * every row, after this transaction has closed.
+     */
+    private <T extends List<TicketEvent>> T initializeEventsForProjection( T events ) {
+        for ( TicketEvent e : events ) {
+            if ( e.getActor() != null ) Hibernate.initialize( e.getActor() );
+        }
+        return events;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<Ticket> findOpenForTarget( TicketTargetType targetType, Long targetId ) {
@@ -546,7 +558,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     @Transactional(readOnly = true)
     public CursorPage<TicketEvent> findEventsByCursor( Ticket ticket, @Nullable Cursor cursor, int limit ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
-        return ticketDao.findEventsByCursor( ticket, cursor, limit );
+        return initializeEventsForProjection( ticketDao.findEventsByCursor( ticket, cursor, limit ) );
     }
 
     @Override

@@ -624,12 +624,20 @@ public class TicketsWebService {
             throw new NotFoundException( "No ticket with id " + id );
         }
         if ( cursorArg != null ) {
+            // the service initializes each event's actor; the map() below runs after its transaction
             CursorPage<TicketEventValueObject> page = ticketService
                     .findEventsByCursor( t, cursorArg.getValue(), limitArg.getValue() )
                     .map( TicketEventValueObject::from );
             return paginateByCursor( page, new String[] { "id" } );
         }
-        TicketValueObject vo = withTargetLabels( TicketValueObject.from( t, true ) );
+        // 🛑 Projected by the service, inside its transaction. Building the VO here from the entity
+        // `t` above -- which this did -- reads the event log and each event's actor on a ticket
+        // loaded and detached, and answered 500 "Could not initialize proxy [Contact#1] - no
+        // session" for every ticket whose events have an actor, which is all of them.
+        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        if ( vo == null ) {
+            throw new NotFoundException( "No ticket with id " + id );
+        }
         return respond( vo.getEvents() );
     }
 
