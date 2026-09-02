@@ -17,6 +17,7 @@ package ubic.gemma.rest;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,6 +38,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import ubic.gemma.core.security.audit.AuditEventPayload;
+import ubic.gemma.core.security.audit.payload.DifferentialExpressionAnalysisPayload;
+import ubic.gemma.core.security.audit.payload.ProcessedVectorComputationPayload;
+import ubic.gemma.core.security.audit.payload.ReleaseDetailsUpdatePayload;
+import ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload;
+import ubic.gemma.core.security.audit.payload.SampleRemovalPayload;
+import ubic.gemma.core.security.audit.payload.SingleCellAggregationPayload;
+import ubic.gemma.core.security.audit.payload.SingleCellSubSetsCreatedPayload;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -275,6 +284,29 @@ public class DatasetsWebService {
      * string; it parses what we wrote ourselves, so it needs no configuration.
      */
     private final ObjectMapper sourceMetadataMapper = new ObjectMapper();
+
+    /**
+     * Reads {@code AUDIT_EVENT.PAYLOAD} back into its record type.
+     * <p>
+     * Every payload record has to be registered, not just the one this class reads. {@code AuditEventPayload}
+     * carries {@code @JsonTypeInfo(use = NAME)} with no {@code @JsonSubTypes} list, so a mapper that has not been
+     * told about a record cannot resolve its type id -- and the pipeline-status read walks the latest event of
+     * EVERY step, most of which carry a payload of some other type. Registering only the one being looked for
+     * turns each of those into a parse failure and a warning per dataset per read.
+     * <p>
+     * Unknown properties are ignored so that a payload written by a newer build -- one that has added a field --
+     * still deserialises here.
+     */
+    private static final ObjectMapper auditPayloadMapper = newAuditPayloadMapper();
+
+    private static ObjectMapper newAuditPayloadMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure( DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false );
+        mapper.registerSubtypes( DifferentialExpressionAnalysisPayload.class, ProcessedVectorComputationPayload.class,
+                ReleaseDetailsUpdatePayload.class, SampleCorrelationAnalysisPayload.class, SampleRemovalPayload.class,
+                SingleCellAggregationPayload.class, SingleCellSubSetsCreatedPayload.class );
+        return mapper;
+    }
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
     @Autowired
@@ -6326,8 +6358,34 @@ public class DatasetsWebService {
                 }
             }
         }
+        AuditEventPayload payload = readAuditPayload( winner );
         return new PipelineStatusValueObject.PipelineStepValueObject( desc.stepKey, state,
-                winner.getDate(), eventTypeName, winner.getNote() );
+                winner.getDate(), eventTypeName, winner.getNote(),
+                payload instanceof SampleCorrelationAnalysisPayload
+                        ? ( SampleCorrelationAnalysisPayload ) payload : null,
+                payload instanceof ProcessedVectorComputationPayload
+                        ? ( ProcessedVectorComputationPayload ) payload : null );
+    }
+
+    /**
+     * Deserialise the structured payload an audit event carries, when it carries one.
+     * <p>
+     * A null here is the ordinary case and never an error: payloads only began being written with the Phase C
+     * audit migration, so every step that last ran before it has none. A row whose JSON does not parse is logged
+     * and treated the same way -- a malformed audit payload is not a reason to fail a status read.
+     */
+    @Nullable
+    private AuditEventPayload readAuditPayload( AuditEvent event ) {
+        String json = event.getPayload();
+        if ( StringUtils.isBlank( json ) ) {
+            return null;
+        }
+        try {
+            return auditPayloadMapper.readValue( json, AuditEventPayload.class );
+        } catch ( JsonProcessingException e ) {
+            log.warn( "Could not parse the audit payload of {}; reporting the step without it.", event, e );
+            return null;
+        }
     }
 
     /**

@@ -2805,6 +2805,170 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 } );
     }
 
+    /**
+     * The sample-correlation step carries the filter attrition recorded when the matrix was computed.
+     * <p>
+     * The JSON is produced the way {@code AuditedAspect} produces it -- through the polymorphic
+     * {@code AuditEventPayload} type, so the {@code @type} discriminator is present. That is the half that
+     * breaks silently: a reader whose mapper has not been told about the subtype cannot resolve the type id,
+     * and the endpoint would answer with the step present and the attrition quietly absent.
+     */
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusCarriesFilterAttrition() throws Exception {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+
+        ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload payload =
+                new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload(
+                        new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload.FilterConfig(
+                                true, false, true, true, 0.2, 1.0, 0.5, 0.5, 0.3, 7 ),
+                        java.util.Arrays.asList(
+                                new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload.FilterStage(
+                                        "noSequences", true, 900, null ),
+                                new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload.FilterStage(
+                                        "outliers", false, 900, 12 ) ),
+                        1000, 12, 850, 12 );
+        com.fasterxml.jackson.databind.ObjectMapper aspectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        String json = aspectMapper.writeValueAsString( ( ubic.gemma.core.security.audit.AuditEventPayload ) payload );
+        org.assertj.core.api.Assertions.assertThat( json ).contains( "@type" );
+
+        AuditEvent event = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "ok", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent(), json );
+        stubLastEvents( Collections.singletonMap(
+                ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent.class, event ) );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    Map<String, Object> sc = findStep( steps, "sampleCorrelation" );
+                    org.assertj.core.api.Assertions.assertThat( sc.get( "status" ) ).isEqualTo( "ok" );
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> attrition = ( Map<String, Object> ) sc.get( "filterAttrition" );
+                    org.assertj.core.api.Assertions.assertThat( attrition )
+                            .as( "the recorded attrition, parsed back out of the audit payload" )
+                            .isNotNull()
+                            .containsEntry( "startingRows", 1000 )
+                            .containsEntry( "finalRows", 850 )
+                            .containsEntry( "finalColumns", 12 );
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> config = ( Map<String, Object> ) attrition.get( "config" );
+                    org.assertj.core.api.Assertions.assertThat( config )
+                            .as( "the settings the counts are only interpretable against" )
+                            .isNotNull()
+                            .containsEntry( "requireSequences", true )
+                            .containsEntry( "maskOutliers", false );
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> stages = ( List<Map<String, Object>> ) attrition.get( "stages" );
+                    org.assertj.core.api.Assertions.assertThat( stages ).hasSize( 2 );
+                    org.assertj.core.api.Assertions.assertThat( stages.get( 0 ) )
+                            .containsEntry( "filter", "noSequences" )
+                            .containsEntry( "applied", true )
+                            .containsEntry( "rowsAfter", 900 );
+                    org.assertj.core.api.Assertions.assertThat( stages.get( 1 ) )
+                            .as( "a skipped stage still reports its row count, so the funnel reads continuously" )
+                            .containsEntry( "applied", false )
+                            .containsEntry( "columnsAfter", 12 );
+                } );
+    }
+
+    /**
+     * The preprocess step carries what the processed-vector creation did to the data. This payload has been
+     * written since the Phase C audit migration and nothing served it, which is why the diagnostics footer had
+     * nothing to show for "normalization".
+     * <p>
+     * It also guards the reader against a trap the single-payload version had: the status read walks the latest
+     * event of every step, so a mapper registered for only one payload record cannot resolve any of the others
+     * and turns each into a parse failure -- silently, since the step still reports.
+     */
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusCarriesProcessedVectorDetails() throws Exception {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+
+        ubic.gemma.core.security.audit.payload.ProcessedVectorComputationPayload payload =
+                new ubic.gemma.core.security.audit.payload.ProcessedVectorComputationPayload(
+                        "Counts", "log2cpm", 4, 0, true, null );
+        String json = new com.fasterxml.jackson.databind.ObjectMapper()
+                .writeValueAsString( ( ubic.gemma.core.security.audit.AuditEventPayload ) payload );
+
+        AuditEvent event = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "ok", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent(), json );
+        stubLastEvents( Collections.singletonMap(
+                ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent.class, event ) );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    Map<String, Object> pp = findStep( steps, "preprocess" );
+                    org.assertj.core.api.Assertions.assertThat( pp.get( "status" ) ).isEqualTo( "ok" );
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> pv = ( Map<String, Object> ) pp.get( "processedVectors" );
+                    org.assertj.core.api.Assertions.assertThat( pv )
+                            .as( "what preprocessing did to the data, read back out of the audit payload" )
+                            .isNotNull()
+                            .containsEntry( "rawQuantitationType", "Counts" )
+                            .containsEntry( "processedQuantitationType", "log2cpm" )
+                            .containsEntry( "numberOfMaskedMissingValues", 4 )
+                            .containsEntry( "quantileNormalized", true );
+                    org.assertj.core.api.Assertions.assertThat( pp.get( "filterAttrition" ) )
+                            .as( "a payload of another type must not be reported as filter attrition" )
+                            .isNull();
+                } );
+    }
+
+    /**
+     * Every correlation matrix computed before the payload existed carries no payload at all. That reads as
+     * absent, not as an error and not as "nothing was filtered" -- and the rest of the step still reports.
+     */
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusWithoutFilterAttritionStillReportsTheStep() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        AuditEvent event = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "ok", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent() );
+        stubLastEvents( Collections.singletonMap(
+                ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent.class, event ) );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    Map<String, Object> sc = findStep( steps, "sampleCorrelation" );
+                    org.assertj.core.api.Assertions.assertThat( sc.get( "status" ) ).isEqualTo( "ok" );
+                    org.assertj.core.api.Assertions.assertThat( sc.get( "eventType" ) )
+                            .isEqualTo( "SampleCorrelationAnalysisEvent" );
+                    org.assertj.core.api.Assertions.assertThat( sc.get( "filterAttrition" ) ).isNull();
+                } );
+    }
+
+    /**
+     * A payload that does not parse must not take the status read down with it.
+     */
+    @Test
+    @WithMockUser
+    public void testGetDatasetPipelineStatusSurvivesAnUnparseableAuditPayload() {
+        mockPipelineFixture( ubic.gemma.model.expression.arrayDesign.TechnologyType.ONECOLOR );
+        AuditEvent event = AuditEvent.Factory.newInstance( new Date( 1_700_000_000_000L ), AuditAction.UPDATE, "ok", null, null,
+                new ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent(), "{not json" );
+        stubLastEvents( Collections.singletonMap(
+                ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent.class, event ) );
+
+        assertThat( target( "/datasets/1/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data.steps", list( Map.class ) )
+                .satisfies( steps -> {
+                    Map<String, Object> sc = findStep( steps, "sampleCorrelation" );
+                    org.assertj.core.api.Assertions.assertThat( sc.get( "status" ) ).isEqualTo( "ok" );
+                    org.assertj.core.api.Assertions.assertThat( sc.get( "filterAttrition" ) ).isNull();
+                } );
+    }
+
     @Test
     @WithMockUser
     public void testGetDatasetPipelineStatusPcaFailed() {

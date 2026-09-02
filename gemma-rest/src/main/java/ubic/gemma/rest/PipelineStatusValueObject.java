@@ -2,6 +2,9 @@ package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import ubic.gemma.core.security.audit.payload.ProcessedVectorComputationPayload;
+import ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -199,17 +202,57 @@ public class PipelineStatusValueObject {
         @JsonProperty("details")
         @JsonAlias({ "message" })
         private String message;
+        /**
+         * How many design elements and samples each filter removed while the step ran, and the filter settings
+         * that produced those numbers. Only the {@code sampleCorrelation} step carries it.
+         * <p>
+         * 🛑 {@code null} means NOT RECORDED, never "nothing was filtered". Filtering is not part of
+         * preprocessing and nothing about it was stored before this field existed, so every dataset whose
+         * correlation matrix predates it reads null until something recomputes the matrix.
+         * <p>
+         * 🛑 These counts describe the filter the correlation matrix was built under, which is not the one the
+         * "filtered" data download uses -- that path builds its own configuration. {@code config} is served
+         * alongside for exactly that reason; the counts are not interpretable without it.
+         */
+        @Nullable
+        @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+        private SampleCorrelationAnalysisPayload filterAttrition;
+        /**
+         * What the processed-vector creation did to the data: which raw quantitation type it started from, which
+         * one it produced, how many cells were masked for missing values and for outliers, and whether the result
+         * was quantile-normalized. Only the {@code preprocess} step carries it.
+         * <p>
+         * 🛑 This is as close as Gemma comes to a "normalization method", and it is not one -- there is no stored
+         * algorithm name. {@code quantileNormalized} is a single recorded fact; everything else about how the
+         * values are scaled is described by the preferred quantitation type's flags, served by
+         * {@code GET /datasets/{id}/quantitationTypes}.
+         * <p>
+         * 🛑 {@code null} means not recorded. The payload has been written since the Phase C audit migration, so
+         * this is populated for anything preprocessed since -- but not for older runs.
+         */
+        @Nullable
+        @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+        private ProcessedVectorComputationPayload processedVectors;
 
         public PipelineStepValueObject() {
         }
 
         public PipelineStepValueObject( String step, String state, @Nullable Date lastRun,
                 @Nullable String eventType, @Nullable String message ) {
+            this( step, state, lastRun, eventType, message, null, null );
+        }
+
+        public PipelineStepValueObject( String step, String state, @Nullable Date lastRun,
+                @Nullable String eventType, @Nullable String message,
+                @Nullable SampleCorrelationAnalysisPayload filterAttrition,
+                @Nullable ProcessedVectorComputationPayload processedVectors ) {
             this.step = step;
             this.state = state;
             this.lastRun = lastRun;
             this.eventType = eventType;
             this.message = message;
+            this.filterAttrition = filterAttrition;
+            this.processedVectors = processedVectors;
         }
     }
 }
