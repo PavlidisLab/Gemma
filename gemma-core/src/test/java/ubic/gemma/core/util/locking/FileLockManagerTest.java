@@ -15,6 +15,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 public class FileLockManagerTest {
 
@@ -80,6 +81,107 @@ public class FileLockManagerTest {
     /**
      * Relies on the {@code /proc/locks} pseudo-file, which only exists on Linux.
      */
+    /**
+     * 🛑 A shared lock is often taken only to ask "does this file exist?", and it must not answer by creating
+     * the directory the file would have lived in.
+     * <p>
+     * Gemma 1.0's QC page probes all nine metadata types for every dataset regardless of platform. Each probe
+     * took a shared lock, whose lock file needed a parent, so the parent chain was created -- leaving ~15,000
+     * empty {@code MultiQCReports/} directories in the production metadata tree, one per microarray dataset
+     * that can never have an RNA-Seq report.
+     */
+    @Test
+    public void testSharedLockOnAMissingDirectoryCreatesNothing() throws IOException {
+        Path dir = Files.createTempDirectory( "test" );
+        Path missingParent = dir.resolve( "GSE1.microarray" ).resolve( "MultiQCReports" );
+        Path probed = missingParent.resolve( "multiqc_report.html" );
+
+        try ( LockedPath lock = fileLockManager.acquirePathLock( probed, false ) ) {
+            assertThat( lock.isShared() ).isTrue();
+            assertThat( lock.getPath() ).isEqualTo( probed );
+        }
+
+        assertThat( missingParent ).doesNotExist();
+        assertThat( dir.resolve( "GSE1.microarray" ) ).doesNotExist();
+        assertThat( probed.resolveSibling( "multiqc_report.html.lock" ) ).doesNotExist();
+    }
+
+    /**
+     * The counterpart: an exclusive acquirer still gets its directory chain. {@code copyMetadataFileInternal}
+     * takes the lock BEFORE creating the parent directories, so removing this would break every metadata write.
+     */
+    @Test
+    public void testExclusiveLockStillCreatesItsDirectoryChain() throws IOException {
+        Path dir = Files.createTempDirectory( "test" );
+        Path target = dir.resolve( "GSE1" ).resolve( "MultiQCReports" ).resolve( "multiqc_report.html" );
+
+        try ( LockedPath lock = fileLockManager.acquirePathLock( target, true ) ) {
+            assertThat( lock.isShared() ).isFalse();
+            assertThat( target.getParent() ).isDirectory();
+        }
+    }
+
+    /**
+     * Once the directory exists a writer can be mid-copy into it, so the real file lock comes back and
+     * reader/writer coordination is what it always was. Degrading is only for the case where the file cannot
+     * possibly exist.
+     */
+    @Test
+    public void testSharedLockIsARealFileLockOnceTheDirectoryExists() throws IOException {
+        Path dir = Files.createTempDirectory( "test" );
+        Path present = dir.resolve( "multiqc_report.html" );
+
+        try ( LockedPath lock = fileLockManager.acquirePathLock( present, false ) ) {
+            assertThat( lock.isShared() ).isTrue();
+            assertThat( fileLockManager.getLockInfo( present ).getReadHoldCount() ).isEqualTo( 1 );
+        }
+    }
+
+    /**
+     * A degraded shared lock upgrades into a real one: {@code toExclusive()} re-acquires from scratch, which is
+     * how a probe that decides to write still coordinates properly.
+     */
+    @Test
+    public void testDegradedSharedLockCanStillBeUpgraded() throws IOException {
+        Path dir = Files.createTempDirectory( "test" );
+        Path target = dir.resolve( "GSE1" ).resolve( "MultiQCReports" ).resolve( "multiqc_report.html" );
+
+        try ( LockedPath shared = fileLockManager.acquirePathLock( target, false ) ) {
+            assertThat( target.getParent() ).doesNotExist();
+            try ( LockedPath exclusive = shared.toExclusive() ) {
+                assertThat( exclusive.isShared() ).isFalse();
+                assertThat( target.getParent() ).isDirectory();
+            }
+        }
+    }
+
+    /**
+     * A read-only directory is a read-only directory, not an error. Reading a tree another deployment owns --
+     * Gemma 1.0's metadata tree, mounted into the 2.0 container -- must not require write access to it.
+     */
+    @Test
+    @EnabledOnOs({ OS.LINUX, OS.MAC })
+    public void testSharedLockUnderAReadOnlyDirectoryDoesNotThrow() throws IOException {
+        Path dir = Files.createTempDirectory( "test" );
+        Path readOnly = Files.createDirectory( dir.resolve( "readonly" ) );
+        Path target = readOnly.resolve( "multiqc_report.html" );
+        Files.write( target, new byte[] { 'x' } );
+        assertThat( readOnly.toFile().setWritable( false, false ) ).isTrue();
+        // running as root defeats the permission bits entirely
+        assumeThat( Files.isWritable( readOnly ) ).isFalse();
+
+        try {
+            try ( LockedPath lock = fileLockManager.acquirePathLock( target, false ) ) {
+                assertThat( lock.isShared() ).isTrue();
+                assertThat( Files.readAllBytes( lock.getPath() ) ).containsExactly( ( byte ) 'x' );
+            }
+            assertThat( target.resolveSibling( "multiqc_report.html.lock" ) ).doesNotExist();
+        } finally {
+            //noinspection ResultOfMethodCallIgnored
+            readOnly.toFile().setWritable( true, true );
+        }
+    }
+
     @Test
     @EnabledOnOs(OS.LINUX)
     public void testGetLockInfo() throws IOException {

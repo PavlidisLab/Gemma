@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -106,7 +107,7 @@ public class FileLockManagerImpl implements FileLockManager {
 
     @Override
     public LockedPath acquirePathLock( Path path, boolean exclusive ) {
-        ReadWriteLock rwLock = fileLocks.computeIfAbsent( path, this::createReadWriteLock );
+        ReadWriteLock rwLock = obtainLock( path, exclusive );
         log.debug( "Acquiring " + ( exclusive ? "exclusive" : "shared" ) + " lock on " + path + "..." );
         if ( exclusive ) {
             rwLock.writeLock().lock();
@@ -121,7 +122,7 @@ public class FileLockManagerImpl implements FileLockManager {
 
     @Override
     public LockedPath tryAcquirePathLock( Path path, boolean exclusive, long timeout, TimeUnit timeUnit ) throws TimeoutException, InterruptedException {
-        ReadWriteLock rwLock = fileLocks.computeIfAbsent( path, this::createReadWriteLock );
+        ReadWriteLock rwLock = obtainLock( path, exclusive );
         log.debug( "Acquiring " + ( exclusive ? "exclusive" : "shared" ) + " lock on " + path + "..." );
         if ( exclusive ) {
             if ( rwLock.writeLock().tryLock( timeout, timeUnit ) ) {
@@ -170,6 +171,50 @@ public class FileLockManagerImpl implements FileLockManager {
             BufferedWriter bufferedWriter = Files.newBufferedWriter( path, openOptions );
             return new LockedPathWriter( bufferedWriter, lockedPath );
         }
+    }
+
+    /**
+     * Resolve the lock to acquire for {@code path}, creating the on-disk lock file only when one is warranted.
+     * <p>
+     * 🛑 Taking a file lock COSTS A DIRECTORY. {@link #createReadWriteLock} creates the lock file's parent chain
+     * before it knows whether anything will ever be written there, so a shared lock taken merely to ask "does
+     * this file exist?" leaves the directory behind. That is not hypothetical: Gemma 1.0's QC page probes all
+     * nine {@code ExpressionExperimentMetaFileType}s for every dataset regardless of platform, and its metadata
+     * tree holds ~15,000 empty {@code MultiQCReports/} directories -- one per microarray dataset that can never
+     * have an RNA-Seq report. 12,760 of the 27,780 such directories hold an actual report.
+     * <p>
+     * So a SHARED acquirer whose lock file cannot be created without inventing a directory, or whose directory is
+     * read-only, gets a lock that lives only in this JVM. Nothing is lost by it: a file that has no directory
+     * cannot exist, so there is no writer to coordinate with, and every shared caller checks readability (or
+     * fails opening) immediately afterwards. Once the directory does exist -- which is the moment a writer could
+     * be mid-copy -- the real file lock is taken again and reader/writer coordination is exactly as before.
+     * <p>
+     * EXCLUSIVE acquirers keep the old behaviour and must: {@code copyMetadataFileInternal} takes the lock first
+     * and creates the parent directories second, so the lock file has to be able to make its own way there.
+     * <p>
+     * Degraded locks are deliberately NOT cached in {@link #fileLocks}: that map is the file-lock registry the
+     * {@code /admin} lock views read, and an entry holding no channel would report a lock that does not exist.
+     * An acquirer that later needs exclusivity goes through {@link LockedPathImpl#toExclusive()}, which
+     * re-acquires from scratch and gets a real file lock.
+     */
+    private ReadWriteLock obtainLock( Path path, boolean exclusive ) {
+        ReadWriteFileLock existing = fileLocks.get( path );
+        if ( existing != null ) {
+            return existing;
+        }
+        if ( !exclusive && !canCreateLockFileWithoutCreatingDirectories( path ) ) {
+            log.debug( "No writable directory for a lock file beside " + path + "; taking an in-JVM shared lock only." );
+            return new ReentrantReadWriteLock();
+        }
+        return fileLocks.computeIfAbsent( path, this::createReadWriteLock );
+    }
+
+    /**
+     * Whether a lock file could be created beside {@code path} as things stand -- without creating anything.
+     */
+    private boolean canCreateLockFileWithoutCreatingDirectories( Path path ) {
+        Path parent = resolveLockPath( path ).getParent();
+        return parent != null && Files.isDirectory( parent ) && Files.isWritable( parent );
     }
 
     private ReadWriteFileLock createReadWriteLock( Path path ) {
