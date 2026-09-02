@@ -82,6 +82,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyTermValidator;
 import ubic.gemma.core.ontology.TermCanonicalization;
 import ubic.gemma.core.ontology.TermViolation;
+import ubic.gemma.core.util.RoundingUtils;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
@@ -7616,6 +7617,12 @@ public class DatasetsWebService {
     private static final String PVALUE_THRESHOLD_DESCRIPTION = "Maximum threshold on the corrected P-value to retain a result. The threshold is inclusive (i.e. 0.05 will match results with corrected P-values lower or equal to 0.05).";
     private static final int GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DEFAULT_LIMIT = 20;
 
+    private static final String PRECISE_DESCRIPTION = "Serialize expression values and per-gene statistics at "
+            + "full double precision. They are otherwise rounded to " + RoundingUtils.JSON_SIGNIFICANT_DIGITS
+            + " significant digits. The dropped digits are below the resolution of the 16-bit measurements "
+            + "the data descends from, and are incompressible, so they cost the most where the payload is "
+            + "largest.";
+
     /**
      * Obtain differential expression analysis results for a given gene.
      */
@@ -9964,6 +9971,19 @@ public class DatasetsWebService {
     }
 
     /**
+     * Round an expression-level payload for the wire unless the caller opted out with {@code precise=true}.
+     *
+     * @see ExperimentExpressionLevelsValueObject#roundValuesForJson()
+     */
+    private List<ExperimentExpressionLevelsValueObject> applyJsonPrecision(
+            List<ExperimentExpressionLevelsValueObject> vos, boolean precise ) {
+        if ( !precise ) {
+            vos.forEach( ExperimentExpressionLevelsValueObject::roundValuesForJson );
+        }
+        return vos;
+    }
+
+    /**
      * Retrieve the expression levels of a given gene across all datasets.
      */
     @GET
@@ -9991,9 +10011,10 @@ public class DatasetsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
-            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
-        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntity( geneArg ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate, cursorArg );
+        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntity( geneArg ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate, cursorArg, precise );
     }
 
     /**
@@ -10024,12 +10045,13 @@ public class DatasetsWebService {
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
-            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
-        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntityWithTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate, cursorArg );
+        return getDatasetsExpressionLevelsForGeneInTaxonInternal( geneArgService.getEntityWithTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ), queryArg, filterArg, offsetArg, limitArg, keepNonSpecific, consolidate, cursorArg, precise );
     }
 
-    private Object getDatasetsExpressionLevelsForGeneInTaxonInternal( Gene gene, @Nullable QueryArg queryArg, FilterArg<ExpressionExperiment> filterArg, OffsetArg offsetArg, LimitArg limitArg, boolean keepNonSpecific, @Nullable ExpLevelConsolidationArg consolidate, @Nullable CursorArg cursorArg ) {
+    private Object getDatasetsExpressionLevelsForGeneInTaxonInternal( Gene gene, @Nullable QueryArg queryArg, FilterArg<ExpressionExperiment> filterArg, OffsetArg offsetArg, LimitArg limitArg, boolean keepNonSpecific, @Nullable ExpLevelConsolidationArg consolidate, @Nullable CursorArg cursorArg, boolean precise ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filter = datasetArgService.getFilters( filterArg, null, inferredTerms );
         Sort sort = datasetArgService.getSort( SortArg.valueOf( "+id" ) );
@@ -10047,18 +10069,18 @@ public class DatasetsWebService {
             // intersection are applied identically to the offset variant; only the slicing
             // strategy changes. totalElements is omitted (cursor mode does not count per request).
             CursorPage<ExperimentExpressionLevelsValueObject> page = sliceExpressionLevelsByCursor(
-                    datasetIds, gene, keepNonSpecific, consolidate, cursorArg.getValue(), limitArg.getValue() );
+                    datasetIds, gene, keepNonSpecific, consolidate, cursorArg.getValue(), limitArg.getValue(), precise );
             return new QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObject<>(
                     page, queryArg != null ? queryArg.getValue() : null, filter, new String[] { "datasetId" }, inferredTerms )
                     .addWarnings( warnings, "query", LocationType.QUERY );
         }
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
-        Slice<ExperimentExpressionLevelsValueObject> slice = new Slice<>( processedExpressionDataVectorService
+        Slice<ExperimentExpressionLevelsValueObject> slice = new Slice<>( applyJsonPrecision( processedExpressionDataVectorService
                 .getExpressionLevelsByIds( sliceIds( datasetIds, offset, limit ),
                         Collections.singleton( gene ),
                         keepNonSpecific,
-                        consolidate == null ? null : consolidate.getValue() ), sort, offset, limit, ( long ) datasetIds.size() );
+                        consolidate == null ? null : consolidate.getValue() ), precise ), sort, offset, limit, ( long ) datasetIds.size() );
         return paginate( slice, queryArg != null ? queryArg.getValue() : null, filter, new String[] { "datasetId" }, inferredTerms )
                 .addWarnings( warnings, "query", LocationType.QUERY );
     }
@@ -10076,7 +10098,7 @@ public class DatasetsWebService {
      */
     private CursorPage<ExperimentExpressionLevelsValueObject> sliceExpressionLevelsByCursor(
             List<Long> datasetIds, Gene gene, boolean keepNonSpecific,
-            @Nullable ExpLevelConsolidationArg consolidate, @Nullable Cursor cursor, int limit ) {
+            @Nullable ExpLevelConsolidationArg consolidate, @Nullable Cursor cursor, int limit, boolean precise ) {
         if ( limit <= 0 ) {
             throw new MalformedArgException( "Cursor page limit must be > 0.", null );
         }
@@ -10137,9 +10159,9 @@ public class DatasetsWebService {
 
         List<ExperimentExpressionLevelsValueObject> data = windowIds.isEmpty()
                 ? Collections.emptyList()
-                : processedExpressionDataVectorService.getExpressionLevelsByIds( windowIds,
+                : applyJsonPrecision( processedExpressionDataVectorService.getExpressionLevelsByIds( windowIds,
                 Collections.singleton( gene ), keepNonSpecific,
-                consolidate == null ? null : consolidate.getValue() );
+                consolidate == null ? null : consolidate.getValue() ), precise );
 
         String nextCursor = null;
         String prevCursor = null;
@@ -10205,13 +10227,14 @@ public class DatasetsWebService {
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("genes") GeneArrayArg genes, // Required
             @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
+            @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
-        return respond( processedExpressionDataVectorService
+        return respond( applyJsonPrecision( processedExpressionDataVectorService
                 .getExpressionLevels( datasetArgService.getEntities( datasets ),
                         geneArgService.getEntitiesWithTaxon( genes, taxonArgService.getEntity( taxonArg ) ),
                         keepNonSpecific,
-                        consolidate == null ? null : consolidate.getValue() )
+                        consolidate == null ? null : consolidate.getValue() ), precise )
         );
     }
 
@@ -10225,12 +10248,13 @@ public class DatasetsWebService {
             @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
                     keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") ExpLevelConsolidationArg
-                    consolidate // Optional, default everything is returned
+                    consolidate, // Optional, default everything is returned
+            @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
-        return respond( processedExpressionDataVectorService
+        return respond( applyJsonPrecision( processedExpressionDataVectorService
                 .getExpressionLevels( datasetArgService.getEntities( datasets ),
                         geneArgService.getEntities( genes ), keepNonSpecific,
-                        consolidate == null ? null : consolidate.getValue() )
+                        consolidate == null ? null : consolidate.getValue() ), precise )
         );
     }
 
@@ -10268,12 +10292,13 @@ public class DatasetsWebService {
             @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
                     keepNonSpecific, // Optional, default false
             @QueryParam("consolidate") ExpLevelConsolidationArg
-                    consolidate // Optional, default everything is returned
+                    consolidate, // Optional, default everything is returned
+            @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
-        return respond( processedExpressionDataVectorService
+        return respond( applyJsonPrecision( processedExpressionDataVectorService
                 .getExpressionLevelsPca( datasetArgService.getEntities( datasets ), limit.getValueNoMaximum(),
                         component, keepNonSpecific,
-                        consolidate == null ? null : consolidate.getValue() )
+                        consolidate == null ? null : consolidate.getValue() ), precise )
         );
     }
 
@@ -10320,15 +10345,16 @@ public class DatasetsWebService {
             @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION) @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
             @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
             @Parameter(description = "Keep results from non-specific probes.") @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @Parameter(description = "Strategy for consolidating expression of multiple probes for a given gene.") @QueryParam("consolidate") ExpLevelConsolidationArg consolidate // Optional, default everything is returned
+            @Parameter(description = "Strategy for consolidating expression of multiple probes for a given gene.") @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
+            @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
         if ( diffExSet == null ) {
             throw new BadRequestException( "The 'diffExSet' query parameter must be supplied." );
         }
-        return respond( processedExpressionDataVectorService
+        return respond( applyJsonPrecision( processedExpressionDataVectorService
                 .getExpressionLevelsDiffEx( datasetArgService.getEntities( datasets ),
                         diffExSet, threshold, limit.getValueNoMaximum(), keepNonSpecific,
-                        consolidate == null ? null : consolidate.getValue() )
+                        consolidate == null ? null : consolidate.getValue() ), precise )
         );
     }
 
@@ -10646,11 +10672,20 @@ public class DatasetsWebService {
         double[] variances;
         double[][] vMatrix;
 
+        /**
+         * Both numeric payloads are rounded to {@link RoundingUtils#JSON_SIGNIFICANT_DIGITS} significant
+         * digits, with no opt-out: this is a diagnostic, and nothing recomputes from it. On eid 2800 the
+         * loadings serialize at a mean of 19.7 characters each, which is what makes the matrix the largest
+         * part of the response.
+         * <p>
+         * {@link RoundingUtils#roundedCopy(double[][])} copies — {@code getVariances()} and
+         * {@code getRawMatrix()} both hand back the SVDResult's own backing arrays.
+         */
         public SimpleSVDValueObject( SVDResult svd ) {
             bioAssayIds = svd.getBioAssays().stream().map( BioAssay::getId ).collect( Collectors.toList() );
             bioMaterialIds = svd.getBioMaterials().stream().map( BioMaterial::getId ).collect( Collectors.toList() );
-            variances = svd.getVariances();
-            vMatrix = svd.getVMatrix().getRawMatrix();
+            variances = RoundingUtils.roundedCopy( svd.getVariances() );
+            vMatrix = RoundingUtils.roundedCopy( svd.getVMatrix().getRawMatrix() );
         }
     }
 
@@ -10789,11 +10824,24 @@ public class DatasetsWebService {
         @Nullable
         String source;
 
+        /**
+         * Rounded to {@link RoundingUtils#JSON_SIGNIFICANT_DIGITS} significant digits with no opt-out, as on
+         * {@link SimpleSVDValueObject}. This is the heaviest payload on the diagnostics tab — one mean and
+         * one variance per probe, at 17 significant digits each. Measured on eid 1 (22,283 probes): 883 KB
+         * as served and 346 KB rounded, decompressed; 382.6 KB and 101.0 KB gzipped.
+         * <p>
+         * Significant digits rather than decimal places matters here specifically: eid 1's variances bottom
+         * out at 5.76e-4, one order of magnitude off a 0.001 floor, so a fixed three-decimal rounding would
+         * flatten a lower-variance dataset's low end to 0.000 — and the low-variance end is the informative
+         * part of the plot.
+         * <p>
+         * Copies: {@code mvr.getMeans()} is the loaded entity's own array.
+         */
         public MeanVarianceValueObject( MeanVarianceRelation mvr ) {
             this.designElementIds = null;
             this.designElementNames = null;
-            this.means = mvr.getMeans();
-            this.variances = mvr.getVariances();
+            this.means = RoundingUtils.roundedCopy( mvr.getMeans() );
+            this.variances = RoundingUtils.roundedCopy( mvr.getVariances() );
             this.fit = null;
             this.source = null;
         }
