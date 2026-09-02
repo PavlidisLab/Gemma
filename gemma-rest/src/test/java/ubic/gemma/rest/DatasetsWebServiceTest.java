@@ -613,6 +613,81 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
     }
 
+    /**
+     * A {@code deletedIds} entry naming a statement that is not on that factor value is refused.
+     * <p>
+     * The delete is a suppression of the carry-forward, so an id that is not among the factor value's
+     * current statements suppresses nothing and the commit answered 200 with {@code deleted: 0} — which
+     * reads exactly like a delete that worked. A caller recorded eight such deletions against eid 6146 on
+     * 2026-09-01; the ids were real {@code CHARACTERISTIC} rows on no factor value of that dataset.
+     */
+    @Test
+    public void testCommitRefusesDeletedIdThatIsNotOnThatFactorValue() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( designWithOneStatement( 10L, 20L, 30L ) );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":20,"
+                + "\"statements\":{\"items\":[],\"deletedIds\":[999]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "999" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** The id that IS on the factor value is accepted, so the refusal is about membership, not about deleting. */
+    @Test
+    public void testCommitAcceptsDeletedIdThatIsOnThatFactorValue() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( designWithOneStatement( 10L, 20L, 30L ) );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":20,"
+                + "\"statements\":{\"items\":[],\"deletedIds\":[30]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isNotEqualTo( 400 );
+        }
+    }
+
+    /** A factor {@code deletedIds} naming a factor of another dataset is refused the same way. */
+    @Test
+    public void testCommitRefusesFactorDeletedIdThatIsNotOnThisDataset() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( designWithOneStatement( 10L, 20L, 30L ) );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[],\"deletedIds\":[77]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "77" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** One factor, one factor value, one statement — the current state the mapper carries forward from. */
+    private static ExperimentalDesignValueObject designWithOneStatement( Long factorId, Long fvId, Long stmtId ) {
+        StatementValueObject stmt = new StatementValueObject();
+        stmt.setId( stmtId );
+        stmt.setSubject( "astrocyte" );
+        ubic.gemma.model.expression.experiment.FactorValueBasicValueObject fv =
+                new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject();
+        fv.setId( fvId );
+        fv.setStatements( Collections.singletonList( stmt ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        factor.setId( factorId );
+        factor.setName( "cell type" );
+        factor.setValues( Collections.singletonList( fv ) );
+        ExperimentalDesignValueObject design = new ExperimentalDesignValueObject();
+        design.setExperimentalFactors( Collections.singletonList( factor ) );
+        return design;
+    }
+
     /** Preflight enforces the same gate, so a client catches the failure on the dry run. */
     @Test
     public void testPreflightRejectsUngroundedTerm() {

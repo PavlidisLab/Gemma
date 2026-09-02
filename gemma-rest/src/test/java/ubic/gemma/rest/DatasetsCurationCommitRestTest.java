@@ -494,6 +494,50 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     }
 
     /**
+     * A statement {@code deletedIds} entry naming a row that is not on that factor value is refused rather
+     * than absorbed. It used to answer 200 with {@code deleted: 0}: the delete is a suppression of the
+     * carry-forward, so an id that was never carried forward suppresses nothing and reads exactly like a
+     * delete that worked. A caller recorded eight such deletions against eid 6146 on 2026-09-01.
+     */
+    @Test
+    public void testCommitRefusesStatementDeletedIdThatIsNotOnThatFactorValue() {
+        ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = before.getExperimentalFactors().stream()
+                .filter( f -> !f.getValues().isEmpty() )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "seeded design has no factor with values" ) );
+        FactorValueBasicValueObject target = factor.getValues().get( 0 );
+
+        // 987654321 is a well-formed id that is simply not one of this factor value's statements.
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":" + factor.getId() + ","
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":" + target.getId() + ",\"statements\":{"
+                + "\"items\":[],\"deletedIds\":[987654321]"
+                + "}}]}}]}}}";
+
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
+            assertThat( r.readEntity( String.class ) ).contains( "987654321" );
+        }
+    }
+
+    /**
+     * The dry run refuses it too, so a client can find out its document is stale without writing anything.
+     */
+    @Test
+    public void testDryRunRefusesTheSameUnmatchedDeletedId() {
+        ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = before.getExperimentalFactors().stream()
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "seeded design has no factors" ) );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[],\"deletedIds\":[987654321]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).queryParam( "dryRun", true )
+                .request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
+        }
+    }
+
+    /**
      * W11 — a factor description-only edit reaches the database. Nothing structural moves, so this used to be
      * short-circuited as a no-op and dropped without a word; the client saw 200 and no change.
      */

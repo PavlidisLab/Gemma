@@ -4235,6 +4235,8 @@ public class DatasetsWebService {
 
         Section<FactorCommit> fs = dc.getFactors() != null ? dc.getFactors() : new Section<>();
         Set<Long> factorDeleted = new HashSet<>( nullSafe( fs.getDeletedIds() ) );
+        requireDeletableIds( factorDeleted, curFactors.keySet(), "design.factors",
+                "factors of this dataset" );
         Set<Long> mentionedFactorIds = new HashSet<>();
         List<ExperimentalDesignValueObject.ExperimentalFactorEntry> outFactors = new ArrayList<>();
 
@@ -4311,6 +4313,8 @@ public class DatasetsWebService {
         }
         Section<FactorValueCommit> fvs = fc.getFactorValues() != null ? fc.getFactorValues() : new Section<>();
         Set<Long> fvDeleted = new HashSet<>( nullSafe( fvs.getDeletedIds() ) );
+        requireDeletableIds( fvDeleted, curFvs.keySet(), location + ".factorValues",
+                "values of that factor" );
         Set<Long> mentionedFvIds = new HashSet<>();
         List<String> fvClientRefs = new ArrayList<>();
         List<FactorValueBasicValueObject> outValues = new ArrayList<>();
@@ -4375,6 +4379,17 @@ public class DatasetsWebService {
             @Nullable FactorValueBasicValueObject curFv, String location ) {
         Section<StatementCommit> ss = fvc.getStatements() != null ? fvc.getStatements() : new Section<>();
         Set<Long> stmtDeleted = new HashSet<>( nullSafe( ss.getDeletedIds() ) );
+        // A statement id repeats once per predicate/object pair it carries, so the present-id set is deduped.
+        Set<Long> curStatementIds = new HashSet<>();
+        if ( curFv != null ) {
+            for ( StatementValueObject s : nullSafe( curFv.getStatements() ) ) {
+                if ( s.getId() != null ) {
+                    curStatementIds.add( s.getId() );
+                }
+            }
+        }
+        requireDeletableIds( stmtDeleted, curStatementIds, location + ".statements",
+                "on that factor value" );
         Set<Long> mentioned = new HashSet<>();
         List<StatementValueObject> out = new ArrayList<>();
         int idx = 0;
@@ -4420,6 +4435,31 @@ public class DatasetsWebService {
             }
         }
         return out;
+    }
+
+    /**
+     * Refuse a {@code deletedIds} entry that names nothing on the entity it is nested under.
+     * <p>
+     * A delete in the design section is a suppression: the mapper carries the current entities forward and
+     * drops the ones named here, so an id that is not among them suppresses nothing and the commit answers
+     * 200 with {@code deleted: 0}. That is indistinguishable from a delete that worked. On 2026-09-01 a
+     * caller recorded eight statement deletions against eid 6146 that never happened — the ids were real
+     * {@code CHARACTERISTIC} rows but belonged to no factor value of that dataset — and the curation UI
+     * checkpoints a draft on the same 200. An unmatched id is a client bug or a stale document; neither is
+     * something to absorb quietly.
+     */
+    private static void requireDeletableIds( Collection<Long> deletedIds, Set<Long> presentIds,
+            String location, String what ) {
+        List<Long> unmatched = deletedIds.stream()
+                .filter( Objects::nonNull )
+                .filter( id -> !presentIds.contains( id ) )
+                .distinct()
+                .sorted()
+                .collect( Collectors.toList() );
+        if ( !unmatched.isEmpty() ) {
+            throw new BadRequestException( location + ".deletedIds references ids that are not "
+                    + what + ": " + unmatched + "." );
+        }
     }
 
     /** Validate the gemmaId-XOR-clientRef rule; {@code true} = existing entity (has gemmaId), {@code false} = new. */
