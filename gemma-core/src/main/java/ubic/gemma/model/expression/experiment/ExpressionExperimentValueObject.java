@@ -165,6 +165,39 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     private String technologyType;
 
+    /**
+     * Whether this is a single-cell experiment, i.e. it has a preferred single-cell quantitation type.
+     * <p>
+     * That is the same condition every single-cell route resolves against
+     * ({@code getPreferredSingleCellQuantitationType}), so a dataset this reports true for is one
+     * {@code /cellTypeAssignment} and {@code /singleCellDimension} can actually serve. 546 datasets on prod —
+     * 29 more than {@code SINGLE_CELL_DIMENSION_EXPERIMENT} indexes, which is why the flag and not that table
+     * decides this.
+     * <p>
+     * It is here rather than on the details VO because {@code technologyType} does not answer the question —
+     * eid 79038 is single-cell and reads {@code GENELIST}, the generic-platform placeholder — which left
+     * clients inferring modality from a regex over platform and assay strings, blind to a dataset annotated
+     * with none of the expected words and fooled by a title that merely mentions single cell (uib, 2026-09-03).
+     */
+    private boolean isSingleCell;
+
+    /**
+     * Total number of cells, or {@code null} when this is not a single-cell experiment or the count has not
+     * been computed. Denormalized on the experiment itself, so it costs nothing to serve.
+     * <p>
+     * 🛑 Not a substitute for {@link #isSingleCell}: 63 of the 546 single-cell datasets on prod have no count.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCells;
+
+    /**
+     * Number of cell IDs in the preferred single-cell dimension, or {@code null} when there is none.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCellIds;
+
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CharacteristicValueObject> characteristics;
@@ -246,6 +279,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         if ( ee.getTaxon() != null ) {
             this.taxonObject = new TaxonValueObject( ee.getTaxon() );
         }
+
+        // Denormalized on the experiment; isSingleCell and numberOfCellIds need a query and are filled in by
+        // ExpressionExperimentDaoImpl#populateSingleCellInfo, one batched query per page.
+        this.numberOfCells = ee.getNumberOfCells();
 
         // Counts
         if ( ModelUtils.isInitialized( ee.getBioAssays() ) ) {
@@ -364,6 +401,18 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Deprecated
     public int getBioAssayCount() {
         return numberOfBioAssays;
+    }
+
+    /**
+     * Lombok would name these {@code isSingleCell} / {@code setSingleCell}; the wire name and the convention
+     * these flags follow in this class is {@code getIsX} / {@code setIsX} (see {@link #getIsPublic()}).
+     */
+    public boolean getIsSingleCell() {
+        return this.isSingleCell;
+    }
+
+    public void setIsSingleCell( boolean isSingleCell ) {
+        this.isSingleCell = isSingleCell;
     }
 
     @Override

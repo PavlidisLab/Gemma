@@ -261,6 +261,7 @@ public class DatasetsWebService {
 
     // fields allowed to be excluded
     private static final Set<String> SCD_ALLOWED_EXCLUDE_FIELDS = new HashSet<>( Arrays.asList( "cellIds", "bioAssayIds", "cellTypeAssignments.cellTypeIds", "cellLevelCharacteristics.characteristicIds" ) );
+    private static final Set<String> CTA_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "cellTypeIds" );
     private static final Set<String> ANNOTATION_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "parentTerms" );
     private static final Set<String> SAMPLES_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "sample.statements" );
 
@@ -8888,6 +8889,8 @@ public class DatasetsWebService {
             // TODO: implement CellTypeAssignmentArg
             @Parameter(description = "The name of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaName,
             @Parameter(description = "The protocol of the cell type assignment to retrieve. This cannot be used in combination with `cellTypeAssignment`.") @QueryParam("protocol") String protocolName,
+            @Parameter(description = "Exclude `cellTypeIds`, the one-entry-per-cell array, from the output. The per-cell-type tally in `numberOfAssignedCellsByCellType` is unaffected, so a client that only needs the counts can drop the array.")
+            @QueryParam("exclude") ExcludeArg<CellTypeAssignmentValueObject> excludeArg,
             @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
             @Context HttpHeaders headers
     ) {
@@ -8924,6 +8927,9 @@ public class DatasetsWebService {
         }
         MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
         if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            if ( excludeArg != null ) {
+                throw new BadRequestException( "The 'exclude' query parameter cannot be used with the TSV output." );
+            }
             return ( StreamingOutput ) output -> {
                 try ( Writer w = new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) {
                     CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
@@ -8932,7 +8938,9 @@ public class DatasetsWebService {
                 }
             };
         } else {
-            return respond( new CellTypeAssignmentValueObject( cta, false ) );
+            boolean excludeCellTypeIds = excludeArg != null
+                    && excludeArg.getValue( CTA_ALLOWED_EXCLUDE_FIELDS ).contains( "cellTypeIds" );
+            return respond( new CellTypeAssignmentValueObject( cta, excludeCellTypeIds ) );
         }
     }
 

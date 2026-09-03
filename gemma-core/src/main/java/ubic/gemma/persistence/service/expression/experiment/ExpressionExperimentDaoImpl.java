@@ -2555,6 +2555,55 @@ public class ExpressionExperimentDaoImpl
     protected void postProcessValueObjects( List<ExpressionExperimentValueObject> results ) {
         populatePlatforms( results );
         populateDateCreated( results );
+        populateSingleCellInfo( results );
+    }
+
+    /**
+     * Fill in {@code isSingleCell} and {@code numberOfCellIds} for a page of VOs in one query.
+     * <p>
+     * The single-cell test is "has a quantitation type flagged single-cell-preferred" — the same condition
+     * {@code SingleCellExpressionExperimentService#getPreferredSingleCellQuantitationType} resolves against, so
+     * this cannot report true for a dataset the single-cell routes would then 404 on. Batched rather than read
+     * off the entity because {@code ee.quantitationTypes} is lazy and touching it per VO is an N+1 on every
+     * dataset listing.
+     * <p>
+     * 🛑 The cell-id count comes from {@code SingleCellDimensionExperiment}, and that table is NOT a complete
+     * index of single-cell experiments: 29 of the 546 on prod carry the preferred quantitation type and have no
+     * row in it (measured 2026-09-03). Driving the query off the row instead of the flag would silently call
+     * those 29 bulk. They get {@code isSingleCell} true and a null count, which is the honest answer.
+     */
+    private void populateSingleCellInfo( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                // 🛑 scd is joined explicitly. Writing scde.singleCellDimension.numberOfCellIds in the select
+                // instead makes an IMPLICIT join, which Hibernate resolves as an INNER join even off a
+                // left-joined alias — so every experiment without a SingleCellDimensionExperiment row drops out
+                // of the result and reads as bulk, which is the 29 this method exists to keep.
+                .createQuery( "select ee.id, scd.numberOfCellIds "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.quantitationTypes qt "
+                        + "left join SingleCellDimensionExperiment scde "
+                        + "on scde.expressionExperiment = ee and scde.quantitationType = qt "
+                        + "left join scde.singleCellDimension scd "
+                        + "where qt.isSingleCellPreferred = true and ee.id in (:ids)" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, Integer> numberOfCellIdsByEe = new HashMap<>();
+        Set<Long> singleCellEeIds = new HashSet<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> {
+                    Long eeId = ( Long ) row[0];
+                    singleCellEeIds.add( eeId );
+                    if ( row[1] != null ) {
+                        numberOfCellIdsByEe.put( eeId, ( Integer ) row[1] );
+                    }
+                } );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setIsSingleCell( singleCellEeIds.contains( eevo.getId() ) );
+            eevo.setNumberOfCellIds( numberOfCellIdsByEe.get( eevo.getId() ) );
+        }
     }
 
     @Override

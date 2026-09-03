@@ -906,10 +906,36 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         vector.setDataAsDoubles( new double[] { 1.0, 2.0, 1.0, 2.0 } );
         vector.setDataIndices( new int[] { 0, 1, 2, 4 } );
         ee.getSingleCellExpressionDataVectors().add( vector );
+        ee.setNumberOfCells( 4 );
         sessionFactory.getCurrentSession().persist( ee );
         sessionFactory.getCurrentSession().flush();
         ExpressionExperimentValueObject eevo = expressionExperimentDao.loadValueObject( ee );
         assertNotNull( eevo );
+        // The modality has to be readable off the dataset itself. technologyType does not answer it — a
+        // single-cell dataset can read GENELIST — which had clients guessing from a platform-name regex.
+        assertTrue( eevo.getIsSingleCell() );
+        assertEquals( Integer.valueOf( 4 ), eevo.getNumberOfCells() );
+        // No SingleCellDimensionExperiment row here, and deliberately still single-cell: 29 datasets on prod
+        // are in exactly this state. The count is unknown, the modality is not.
+        assertNull( eevo.getNumberOfCellIds() );
+    }
+
+    /** And an ordinary dataset says so, rather than leaving the client to infer it. */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectWithoutSingleCellDataIsNotSingleCell() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject eevo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( eevo );
+        assertFalse( eevo.getIsSingleCell() );
+        assertNull( eevo.getNumberOfCells() );
+        assertNull( eevo.getNumberOfCellIds() );
     }
 
     /**
