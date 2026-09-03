@@ -77,6 +77,23 @@ public class TicketValueObject implements Serializable {
     @Nullable
     private String assigneeName;
 
+    /**
+     * What the screen that produced this ticket asked, verbatim and opaque.
+     *
+     * @see Ticket#getPayload()
+     */
+    @Nullable
+    private String payload;
+
+    /**
+     * Which schema {@link #payload} follows; null when the writer declared none.
+     * <p>
+     * On the wire beside the payload on purpose — a version a client cannot read is a version that does not
+     * exist for it.
+     */
+    @Nullable
+    private Integer payloadSchemaVersion;
+
     private Date createdAt;
     private Date updatedAt;
 
@@ -121,6 +138,8 @@ public class TicketValueObject implements Serializable {
             vo.assigneeId = t.getAssignee().getId();
             vo.assigneeName = ContactUtils.displayName( t.getAssignee() );
         }
+        vo.payload = t.getPayload();
+        vo.payloadSchemaVersion = t.getPayloadSchemaVersion();
         vo.createdAt = t.getCreatedAt();
         vo.updatedAt = t.getUpdatedAt();
         vo.externalIssueUrl = t.getExternalIssueUrl();

@@ -167,6 +167,58 @@ class TicketValueObjectTest {
     }
 
     /**
+     * The screen's own definition reaches the wire, opaque and verbatim.
+     * <p>
+     * Title, body and targets say which experiments need work; nothing said what question was put to the
+     * curator — its summary, its scrape window, the verbs on its buttons, the fields to show per candidate.
+     * {@code body} is a string and a TicketEvent payload is per-event, so a screening ticket could only ever
+     * render as the fixed GEO-scrape table and the generic screens degraded to blank columns (uib, 2026-09-03).
+     */
+    @Test
+    void from_carriesTheScreenPayloadVerbatim() {
+        Ticket t = newTicket();
+        String payload = "{\"screen_summary\":\"12 GEO series matched\","
+                + "\"decision\":{\"confirm_label\":\"Confirm\",\"reject_label\":\"Reject\"}}";
+        t.setPayload( payload );
+        t.setPayloadSchemaVersion( 2 );
+
+        TicketValueObject vo = TicketValueObject.from( t );
+
+        // verbatim: Gemma neither parses nor re-serializes it, so the bytes a client reads are the bytes
+        // the producing agent wrote
+        assertThat( vo.getPayload() ).isEqualTo( payload );
+        assertThat( vo.getPayloadSchemaVersion() ).isEqualTo( 2 );
+    }
+
+    /**
+     * A ticket without a screen behind it says so with nulls rather than an empty object — "no payload" and
+     * "a payload declaring nothing" are different answers, and every ticket that exists today is the first.
+     */
+    @Test
+    void from_leavesThePayloadNullForAnOrdinaryTicket() {
+        TicketValueObject vo = TicketValueObject.from( newTicket() );
+
+        assertThat( vo.getPayload() ).isNull();
+        assertThat( vo.getPayloadSchemaVersion() ).isNull();
+    }
+
+    /**
+     * The version is independent of the payload: a writer that declares none still gets its payload served.
+     * Serving the blob but withholding the version is the failure {@code Investigation.sourceMetadata} shipped
+     * with — a consumer could not tell which document shape it held except by guessing at the keys.
+     */
+    @Test
+    void from_servesAPayloadWhoseWriterDeclaredNoSchemaVersion() {
+        Ticket t = newTicket();
+        t.setPayload( "{\"screen_summary\":\"…\"}" );
+
+        TicketValueObject vo = TicketValueObject.from( t );
+
+        assertThat( vo.getPayload() ).isNotNull();
+        assertThat( vo.getPayloadSchemaVersion() ).isNull();
+    }
+
+    /**
      * A curator whose Contact name was never filled in still has a username, and the ticket surfaces
      * are the only place a client can learn who a reporter id belongs to — {@code /users/{x}} takes a
      * username, not an id, so a null here leaves the reader with nothing (uib, 2026-09-02).

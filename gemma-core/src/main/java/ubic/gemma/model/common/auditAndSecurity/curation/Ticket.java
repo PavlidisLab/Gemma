@@ -14,6 +14,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -129,6 +130,34 @@ public class Ticket extends AbstractAuditable {
      */
     @Column(name = "ACCEPTS_TARGETS", nullable = false, columnDefinition = "TINYINT(1)")
     private boolean acceptsTargets = false;
+
+    /**
+     * What the screen that produced this ticket asked — its summary, the window it scraped, the verbs on its
+     * buttons, and the fields the producing agent wants shown per candidate.
+     * <p>
+     * 🛑 Opaque to Gemma, exactly as {@code Investigation.sourceMetadata} is: the schema belongs to the agents
+     * repo and nothing here parses, validates, filters or indexes it. Title, body and targets say which
+     * experiments need work; this says what question was put to the curator, which no other field can carry —
+     * {@code body} is a string and {@link TicketEvent#getPayload()} is per-event.
+     * <p>
+     * Set at creation. A screen's definition describes the question that was asked, so rewriting it later
+     * would rewrite what curators were shown; edits are deliberately not offered.
+     */
+    @Lob
+    @Nullable
+    @Column(name = "PAYLOAD", columnDefinition = "json")
+    private String payload;
+
+    /**
+     * Which schema {@link #payload} follows, or null when the writer declared none.
+     * <p>
+     * Ships with the payload rather than after it. {@code Investigation.sourceMetadata} had a version column
+     * from the start and did not serialize it, which left a consumer holding a blob unable to tell one
+     * document shape from another except by guessing at its keys (uib, 2026-09-03). Null is a real answer.
+     */
+    @Nullable
+    @Column(name = "PAYLOAD_SCHEMA_VERSION", columnDefinition = "INTEGER")
+    private Integer payloadSchemaVersion;
 
     @OneToMany(mappedBy = "ticket", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TicketTarget> targets = new HashSet<>();
@@ -299,6 +328,24 @@ public class Ticket extends AbstractAuditable {
         return Objects.equals( this.getName(), that.getName() )
                 && this.type == that.type
                 && Objects.equals( this.createdAt, that.createdAt );
+    }
+
+    @Nullable
+    public String getPayload() {
+        return payload;
+    }
+
+    public void setPayload( @Nullable String payload ) {
+        this.payload = payload;
+    }
+
+    @Nullable
+    public Integer getPayloadSchemaVersion() {
+        return payloadSchemaVersion;
+    }
+
+    public void setPayloadSchemaVersion( @Nullable Integer payloadSchemaVersion ) {
+        this.payloadSchemaVersion = payloadSchemaVersion;
     }
 
     public static final class Factory {
