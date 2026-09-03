@@ -2,8 +2,8 @@
 
 Runbook for putting `gemma-rest.war` where `Gemma.war` currently serves, without
 touching Apache, the vhost, or any port. Written 2026-08-28 against the live
-state of chalmers; every fact below was read off the host rather than assumed,
-and the appendix says how to re-check each one.
+state of chalmers and re-verified 2026-09-02; every fact below was read off the
+host rather than assumed, and the appendix says how to re-check each one.
 
 Companion documents:
 - [`GEMMA_WEB_RETIREMENT_PLAN.md`](GEMMA_WEB_RETIREMENT_PLAN.md) — the module
@@ -32,7 +32,9 @@ Tomcat 10.1.
 
 Everything instance-specific — ports, config, logs, JVM settings, the webapp —
 lives in `CATALINA_BASE`. The Tomcat *install* is a separate, swappable
-`CATALINA_HOME`. Migrating the version means repointing one variable.
+`CATALINA_HOME`, and repointing that one variable is most of the migration. The
+remainder is the `conf/` symlinks this instance happens to carry into a third
+Tomcat tree — see "Verified current state".
 
     systemd  tomcat@gemma-staging
       ├─ EnvironmentFile   /etc/tomcat/tomcat.conf
@@ -74,9 +76,11 @@ output will not show `/var`.
 
     bin/setenv.sh          JAVA_HOME=/usr/lib/jvm/java-25-openjdk, -XX:+UseZGC,
                            -Xms10g -Xmx80g, JDWP 5559, JMX 5560
-    conf/server.xml        one live connector (below)
-    conf/context.xml       .
-    conf/jmxremote.*       .
+    conf/server.xml        real file, one live connector (below)
+    conf/context.xml       real file, generic
+    conf/jmxremote.*       real files
+    conf/Catalina/localhost/   empty — no per-context descriptors to port
+    conf/*                 EVERYTHING ELSE IS A SYMLINK — see below
     lib/log4j2.xml         written by the gemma-web deploy (jenkins, Aug 26)
     Gemma.properties       runtime config
     Gemma.war              the gemma-web WAR
@@ -86,7 +90,35 @@ output will not show `/var`.
 
 The exploded application is `webapps/ROOT/`, **not** `webapps/Gemma/` — the
 context comes from the `ROOT.war` symlink, so the WAR's own filename is
-irrelevant. `/var/local/tomcat/gemma` (the dev instance) has the identical shape.
+irrelevant.
+
+**The instance config is symlinked into a *third* Tomcat.** This is the single
+most important thing the first draft of this plan got wrong, and it is the reason
+the swap is not a one-variable change:
+
+    conf/catalina.properties   → /usr/local/tomcat/conf/catalina.properties
+    conf/web.xml               → /usr/local/tomcat/conf/web.xml
+    conf/logging.properties    → /usr/local/tomcat/conf/logging.properties
+    conf/catalina.policy       → /usr/local/tomcat/conf/catalina.policy
+    conf/tomcat-users.xml|xsd  → /usr/local/tomcat/conf/…
+    conf/jaspic-providers.*    → /usr/local/tomcat/conf/…
+
+    /usr/local/tomcat → apache-tomcat-9.0.94     (hand-unpacked tarball;
+                                                  also the tomcat user's $HOME)
+
+So the instance today runs the **RPM 9.0.117 engine** (`CATALINA_HOME=/usr/share/tomcat`)
+against **9.0.94 configuration**. Harmless while both halves are Tomcat 9.
+
+It stops being harmless at 10.1. `conf/web.xml` is the global default servlet
+descriptor, and the Tomcat 9 copy declares
+`xmlns="http://xmlns.jcp.org/xml/ns/javaee"` — the javaee namespace, which is
+precisely the mismatch this migration exists to eliminate. **These symlinks must
+be repointed at the new install** (migration step 3).
+
+`/var/local/tomcat/gemma` (the dev instance) has the same *webapps* shape but a
+different *conf* shape: its symlinks go to `/usr/share/tomcat/conf/`, the RPM
+tree, not to `/usr/local/tomcat`. Do not assume the two instances migrate
+identically.
 
 **The only live connector** — everything else in `server.xml` is inside XML
 comments (the 8080 executor connector, both 8443 SSL connectors, and the AJP 8009
@@ -123,23 +155,57 @@ once gemma-web is genuinely gone.
 1. **`gemma-rest.war` is present.** The Jenkins `Deploy Gemma REST` stage puts it
    at `/var/local/tomcat/gemma-staging/gemma-rest.war` on any `hotfix-*` build.
    Confirm it is there and recent before starting.
-2. **Check the common loader.** The instance has no `conf/catalina.properties`,
-   so `common.loader` comes from `CATALINA_HOME`. If `${catalina.base}/lib` is
-   not on it, `lib/log4j2.xml` stops being found. Both stock Tomcat 10.1 and the
-   RHEL package normally include it; verify rather than assume:
+2. **Add `gemma.anonymousAuth.key` to the instance `Gemma.properties`.** This is
+   a hard blocker, not a caution — gemma-rest will refuse to start without it.
+
+   `SentinelPropertyValidator` (added 2026-05-22 in `24b31839c7`) is
+   `@Profile({PRODUCTION, DEV})`, and `setenv.sh` activates
+   `-Dspring.profiles.active=production,metrics`, so it runs here. It throws
+   `IllegalStateException` for any guarded key still matching `X{4,32}`. Audit of
+   the live staging file:
+
+       mail.username             set
+       gemma.db.password         set
+       gemma.runas.password      set
+       gemma.agent.password      set
+       gemma.anonymousAuth.key   ABSENT → resolves to XXXXXXXX from
+                                 default.properties:151 → THROWS
+
+   Any random string works — it backs Spring Security's anonymous-token equality
+   check and is not shared with anything external. The escape hatch
+   `gemma.sentinels.ignore=true` exists but sets aside the check for every key,
+   so prefer setting the value.
+
+   The 1.32.8 `Gemma.war` currently serving predates the validator, which is why
+   staging is up today despite the gap.
+
+3. **Check the common loader.** `common.loader` decides whether
+   `${catalina.base}/lib` is searched, and so whether `lib/log4j2.xml` is found
+   at all. It comes from `conf/catalina.properties`, which — see above — is a
+   symlink into Tomcat 9.0.94 today and will point at the new install after
+   migration step 3. Stock Tomcat 10.1 ships the entry; verify rather than
+   assume:
 
        grep -n "^common.loader" /opt/apache-tomcat-10.1.x/conf/catalina.properties
 
-3. **Confirm how `Gemma.properties` is discovered** and that the mechanism still
-   holds under the new install. It sits at the instance root, which is not on the
-   classpath by default.
-4. **Know who owns `:8080`.** It is listening on chalmers even though
+4. **`Gemma.properties` discovery — resolved, no action needed.** Recorded here
+   because the first draft left it open. It is not a classpath lookup:
+   `SettingsConfig.settingsPropertySources()` reads
+   `System.getenv("CATALINA_BASE")` and appends `Gemma.properties`, with
+   precedence `-Dgemma.config` → `$CATALINA_BASE` → `$HOME`.
+   `/etc/tomcat/conf.d/pavlab-base.conf` does `export CATALINA_BASE=…`, so the
+   value reaches the JVM environment. The lookup keys off `CATALINA_BASE` and
+   never `CATALINA_HOME`, so **the Tomcat swap cannot affect it.**
+
+5. **Know who owns `:8080`.** It is listening on chalmers even though
    `gemma-staging` has no live 8080 connector, and `ports.list` assigns 8081 to
    `gemma` and 8180 to `gotrack`. Not in this path, but do not assume 8080 is free.
 
 ## Migration
 
-Root is required for steps 1, 2 and 5.
+Pre-flight 2 (the `gemma.anonymousAuth.key` line) needs only the `tomcat` user
+and can be done ahead of the window. Everything below needs root, and steps 1–5
+are one maintenance window.
 
     # 1. install Tomcat 10.1.x (match or exceed the pom's 10.1.34)
     #    local disk, not /space — avoids an NFS dependency at boot
@@ -148,13 +214,27 @@ Root is required for steps 1, 2 and 5.
     chown -R root:tomcat /opt/apache-tomcat-10.1.x
 
     # 2. point ONLY this instance at it
+    #    /etc/sysconfig/tomcat@gemma-staging does not exist yet: the unit declares
+    #    it as EnvironmentFile=-/etc/sysconfig/tomcat@%i, and the leading `-` makes
+    #    it optional. Creating it is what activates it. It loads AFTER
+    #    /etc/tomcat/tomcat.conf, so its CATALINA_HOME wins; %i scopes it to this
+    #    instance alone.
     echo 'CATALINA_HOME=/opt/apache-tomcat-10.1.x' > /etc/sysconfig/tomcat@gemma-staging
 
-    # 3. swap which WAR is ROOT
+    # 3. repoint the config symlinks off Tomcat 9.0.94 (see "Verified current state")
+    #    web.xml is the one that must move: the 9.x copy is javaee-namespaced.
+    cd /var/local/tomcat/gemma-staging/conf
+    for f in catalina.properties catalina.policy logging.properties web.xml \
+             tomcat-users.xml tomcat-users.xsd \
+             jaspic-providers.xml jaspic-providers.xsd; do
+        ln -sfT /opt/apache-tomcat-10.1.x/conf/"$f" "$f"
+    done
+    #    server.xml, context.xml, jmxremote.* and Catalina/ are real files: leave them.
+
+    # 4. swap which WAR is ROOT, and drop the stale exploded app so Tomcat
+    #    re-expands from the new WAR
     cd /var/local/tomcat/gemma-staging
     ln -sfT ../gemma-rest.war webapps/ROOT.war
-
-    # 4. drop the stale exploded app so Tomcat re-expands from the new WAR
     rm -rf webapps/ROOT
 
     # 5. restart
@@ -164,6 +244,21 @@ Root is required for steps 1, 2 and 5.
 untouched. The existing drop-in
 `/etc/systemd/system/tomcat@gemma-staging.service.d/override.conf`
 (`Restart=on-failure`) continues to apply.
+
+### Why the CATALINA_HOME override survives
+
+Two mechanisms, both verified on the host, and the swap depends on both:
+
+1. `preamble` re-sources `tomcat.conf` only `if [ -z "${TOMCAT_CFG_LOADED}" ]`,
+   and `tomcat.conf` sets `TOMCAT_CFG_LOADED="1"` — which systemd has already
+   placed in the environment. The re-source is skipped, so the override stands.
+2. `CATALINA_HOME` is assigned in exactly one place across `tomcat.conf`, all of
+   `/etc/tomcat/conf.d/`, and the instance `setenv.sh`: `tomcat.conf:26`. Nothing
+   downstream of systemd overwrites it.
+
+Note that `conf.d/*.conf` IS sourced unconditionally — only `tomcat.conf` is
+gated — which is what keeps `pavlab-base.conf` (and through it `CATALINA_BASE`
+and `setenv.sh`) applying normally.
 
 ## Verification
 
@@ -177,14 +272,21 @@ untouched. The existing drop-in
 Check the log for the Swagger UI at `/resources/restapidocs` too — that path has
 its own Apache rule and is gemma-rest's sole home for it now.
 
-## Rollback — two steps, not one
+## Rollback — every change comes back, not just the ROOT symlink
 
 Because Tomcat 10.1 will not run the `javax`-based `Gemma.war` either, reverting
-the symlink alone is **not** sufficient. Both changes must come back:
+the ROOT symlink alone is **not** sufficient. All three changes must come back:
 
     ln -sfT ../Gemma.war /var/local/tomcat/gemma-staging/webapps/ROOT.war
     rm -rf /var/local/tomcat/gemma-staging/webapps/ROOT
     rm -f /etc/sysconfig/tomcat@gemma-staging
+    # and put the config symlinks back where migration step 3 found them
+    cd /var/local/tomcat/gemma-staging/conf
+    for f in catalina.properties catalina.policy logging.properties web.xml \
+             tomcat-users.xml tomcat-users.xsd \
+             jaspic-providers.xml jaspic-providers.xsd; do
+        ln -sfT /usr/local/tomcat/conf/"$f" "$f"
+    done
     systemctl restart tomcat@gemma-staging
 
 `Gemma.war` is never deleted by this procedure, so the old application stays one
@@ -193,9 +295,16 @@ restart away for as long as the file is kept.
 ## Risks and open questions
 
 - **Brief outage.** One process per port, so this is stop-then-start on 8100.
-- **`common.loader` / `log4j2.xml`** — see pre-flight 2. The most likely thing to
+- **`gemma.anonymousAuth.key`** — pre-flight 2. Verified failing today; fix
+  before the window.
+- **The `conf/` symlinks into Tomcat 9.0.94** — migration step 3. `web.xml` is
+  the one that will actually bite.
+- **`common.loader` / `log4j2.xml`** — pre-flight 3. The most likely thing to
   break quietly.
-- **`Gemma.properties` discovery** — see pre-flight 3.
+- **A Slack bot token sits in plaintext in `bin/setenv.sh`**, on the
+  `-Dgemma.slack.token=` line of a file that is group-readable. Out of scope for
+  the migration itself, but it should be rotated and moved into
+  `Gemma.properties` (mode `0660`, as the DB password already is).
 - **`/etc/tomcat/tomcat.conf` sets a javax-era global**
   `JAVA_OPTS=-Djavax.sql.DataSource.Factory=org.apache.commons.dbcp.BasicDataSourceFactory`,
   applied to every instance on the host. Probably inert for gemma-rest, but worth
@@ -208,8 +317,10 @@ restart away for as long as the file is kept.
 
 ## Afterwards: the other two instances
 
-`/var/local/tomcat/gemma` on chalmers (dev) has the identical layout and can take
-the same treatment with its own `/etc/sysconfig/tomcat@gemma`. Production is
+`/var/local/tomcat/gemma` on chalmers (dev) can take the same treatment with its
+own `/etc/sysconfig/tomcat@gemma`, but its `conf/` symlinks point at
+`/usr/share/tomcat/conf/` rather than `/usr/local/tomcat/conf/` — migration
+step 3 has to be rewritten for it, not copied. Production is
 `moe:/var/local/tomcat/gemma`, which this plan has **not** inspected — verify its
 connector set and vhost separately before assuming symmetry.
 
@@ -227,3 +338,21 @@ connector set and vhost separately before assuming symmetry.
     cat /usr/libexec/tomcat/server /usr/libexec/tomcat/preamble
     cat /etc/tomcat/conf.d/pavlab-base.conf
     grep -vE '^\s*#|^\s*$' /etc/tomcat/tomcat.conf
+    ls -la /var/local/tomcat/gemma-staging/conf/          # the symlink targets
+    readlink -f /usr/local/tomcat
+    grep -rn CATALINA_HOME /etc/tomcat/tomcat.conf /etc/tomcat/conf.d/ \
+        /var/local/tomcat/gemma-staging/bin/setenv.sh     # expect exactly one hit
+    grep -m1 -o 'xmlns="[^"]*"' /usr/share/tomcat/conf/web.xml
+
+`Gemma.properties` sentinel audit — prints key status, never values:
+
+    f=/var/local/tomcat/gemma-staging/Gemma.properties
+    for k in mail.username gemma.db.password gemma.runas.password \
+             gemma.anonymousAuth.key gemma.agent.password; do
+      v=$(grep -E "^\s*${k//./\\.}\s*=" "$f" | tail -1 | cut -d= -f2-)
+      case "$v" in
+        "")            echo "$k ABSENT" ;;
+        XXXX*)         echo "$k SENTINEL" ;;
+        *)             echo "$k set" ;;
+      esac
+    done
