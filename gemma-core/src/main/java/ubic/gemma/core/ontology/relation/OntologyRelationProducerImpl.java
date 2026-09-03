@@ -108,6 +108,17 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
     }
 
     @Override
+    public java.util.Collection<String> getTargetOntologiesFor( java.util.Collection<String> sources ) {
+        Set<String> wanted = new LinkedHashSet<>();
+        for ( OntologyRelationSource source : OntologyRelationSource.ALL ) {
+            if ( sources.contains( source.getName() ) ) {
+                wanted.addAll( source.getTargetOntologyTokens() );
+            }
+        }
+        return wanted;
+    }
+
+    @Override
     public Collection<String> getSupportedSources() {
         List<String> names = new ArrayList<>( OntologyRelationSource.ALL.size() );
         for ( OntologyRelationSource source : OntologyRelationSource.ALL ) {
@@ -420,7 +431,14 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
             // targets is anonymous in its own model. Ask the vocabulary that owns the term, then the
             // cross-reference source, before giving up -- otherwise the whole source reads as
             // unlabelled targets and writes nothing.
-            nativeLabel = labelOf( objectUri, xrefOntology );
+            // Ask the vocabulary the source declares its targets live in FIRST. The xref ontology is
+            // MONDO, which knows nothing about a UBERON class, so a CL target could never be named
+            // through it: the first --source CL run against prod wrote 3 rows and reported
+            // "target absent from the loaded model 1205" (2026-09-02).
+            nativeLabel = labelOfAny( objectUri, source.getTargetOntologyTokens() );
+            if ( nativeLabel == null ) {
+                nativeLabel = labelOf( objectUri, xrefOntology );
+            }
             if ( nativeLabel == null ) {
                 nativeLabel = xrefs.labelOf( objectUri );
             }
@@ -515,6 +533,26 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
      * {@code -base} artifact makes this common, which is why every row carries its
      * {@code SOURCE_VERSION}.</p>
      */
+    /**
+     * The label the first of {@code tokens} that is loaded and knows {@code uri} gives it.
+     *
+     * <p>🛑 A token that resolves to nothing, or to an ontology that is not loaded, yields null here
+     * and the row is then dropped for having no {@code OBJECT_VALUE}. That is the shape of the failure
+     * to look for when a source reads the right number of axioms and writes almost nothing --
+     * {@code UpdateOntologyRelationsCli} has to warm these, and it only knows to because the source
+     * names them.</p>
+     */
+    @Nullable
+    private String labelOfAny( String uri, java.util.Collection<String> tokens ) {
+        for ( String token : tokens ) {
+            String label = loadedOntology( token ).map( o -> labelOf( uri, o ) ).orElse( null );
+            if ( label != null ) {
+                return label;
+            }
+        }
+        return null;
+    }
+
     @Nullable
     private String labelOf( String uri, @Nullable ubic.gemma.core.ontology.providers.OntologyService ontology ) {
         if ( ontology == null ) {

@@ -59,4 +59,16 @@ public interface OntologyRelationProducer {
      * The sources this producer can read, in the order it reads them.
      */
     Collection<String> getSupportedSources();
+
+    /**
+     * Tokens for the vocabularies the named sources point at but do NOT merge, and therefore cannot
+     * name a target out of.
+     *
+     * <p>🛑 A caller warming ontologies has to include these or the read finds every axiom and drops
+     * every row for a null {@code OBJECT_VALUE}, while still reporting success. {@code --source CL}
+     * wrote 3 rows of an expected 1,203 that way on 2026-09-02.</p>
+     *
+     * @param sources source names; unknown ones are ignored
+     */
+    java.util.Collection<String> getTargetOntologiesFor( java.util.Collection<String> sources );
 }

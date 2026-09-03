@@ -165,14 +165,21 @@ class OntologyRelationSource {
     private final String resolverToken;
     private final String namespace;
     private final Category subjectCategory;
+    private final List<String> targetOntologyTokens;
     private final Map<String, Relation> relations;
 
     private OntologyRelationSource( String name, String resolverToken, String namespace,
             Category subjectCategory, List<Relation> relations ) {
+        this( name, resolverToken, namespace, subjectCategory, Collections.emptyList(), relations );
+    }
+
+    private OntologyRelationSource( String name, String resolverToken, String namespace,
+            Category subjectCategory, List<String> targetOntologyTokens, List<Relation> relations ) {
         this.name = name;
         this.resolverToken = resolverToken;
         this.namespace = namespace;
         this.subjectCategory = subjectCategory;
+        this.targetOntologyTokens = Collections.unmodifiableList( new java.util.ArrayList<>( targetOntologyTokens ) );
         Map<String, Relation> byUri = new LinkedHashMap<>();
         for ( Relation r : relations ) {
             byUri.put( r.getPropertyUri(), r );
@@ -206,6 +213,23 @@ class OntologyRelationSource {
      */
     String getNamespace() {
         return namespace;
+    }
+
+    /**
+     * Vocabularies this source's targets live in, which it does NOT merge and therefore cannot name.
+     *
+     * <p>🛑 The producer needs these loaded to put an {@code OBJECT_VALUE} on a row, and
+     * {@code OBJECT_VALUE} is NOT NULL, so a missing one is a silently dropped row rather than an
+     * error. Measured 2026-09-02: the first {@code --source CL} run against prod wrote <b>3</b> rows
+     * and reported {@code target absent from the loaded model 1205}, because the CLI warms only the
+     * sources being rebuilt plus MONDO and {@code cl-base} does not merge UBERON.</p>
+     *
+     * <p>Empty for CLO and CHEBI, whose targets are either their own classes or foreign identifiers
+     * translated through MONDO -- CLO ships the UBERON, DOID, CL and NCBITaxon classes it references,
+     * which is exactly why this gap did not show up until a {@code -base} artifact was read.</p>
+     */
+    List<String> getTargetOntologyTokens() {
+        return targetOntologyTokens;
     }
 
     /**
@@ -367,7 +391,7 @@ class OntologyRelationSource {
      * {@code OBJECT_VALUE} is NOT NULL, so without it every row would be dropped.</p>
      */
     static final OntologyRelationSource CL = new OntologyRelationSource( "CL", "CL", OBO + "CL_",
-            Categories.CELL_TYPE, Arrays.asList(
+            Categories.CELL_TYPE, Collections.singletonList( "UBERON" ), Arrays.asList(
             new Relation( OBO + "BFO_0000050", "part of", Categories.ORGANISM_PART, false ),
             new Relation( OBO + "RO_0002100", "has soma location", Categories.ORGANISM_PART, false ) ) );
 
