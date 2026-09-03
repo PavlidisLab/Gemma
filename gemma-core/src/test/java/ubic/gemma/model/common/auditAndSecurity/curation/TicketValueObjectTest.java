@@ -173,14 +173,14 @@ class TicketValueObjectTest {
      */
     @Test
     void from_namesAReporterByUsername_whenTheContactNameIsMissing() {
-        User curator = User.Factory.newInstance( "administrator" );
+        User curator = User.Factory.newInstance( "amaximo" );
         curator.setId( 52731L );
         Ticket t = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "Scratchpad", curator );
         t.setAssignee( curator );
 
         TicketValueObject vo = TicketValueObject.from( t );
 
-        assertThat( vo.getReporterName() ).isEqualTo( "administrator" );
-        assertThat( vo.getAssigneeName() ).isEqualTo( "administrator" );
+        assertThat( vo.getReporterName() ).isEqualTo( "amaximo" );
+        assertThat( vo.getAssigneeName() ).isEqualTo( "amaximo" );
     }
 }

@@ -393,14 +393,14 @@ public class TicketServiceImplTest {
      */
     @Test
     public void getOrCreateScratchpad_titlesItByUsername_whenTheContactNameIsMissing() {
-        User nameless = User.Factory.newInstance( "administrator" );
+        User nameless = User.Factory.newInstance( "amaximo" );
         nameless.setId( 52731L );
         when( ticketDao.findScratchpad( nameless ) ).thenReturn( null );
         stubDaoCreateEchoes();
 
         Ticket t = service.getOrCreateScratchpad( nameless );
 
-        assertEquals( "Scratchpad: administrator", t.getTitle() );
+        assertEquals( "Scratchpad: amaximo", t.getTitle() );
     }
 
     /** An existing scratchpad is handed back untouched — no second row, no second OPENED event. */
