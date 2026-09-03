@@ -320,6 +320,21 @@ public class OntologyConfig {
     }
 
     /**
+     * The entailed CL cell type &rarr; anatomical structure locations, from a reviewed file.
+     *
+     * <p>Beside the other two file-backed producers and wired the same way. It reads no ontology
+     * model at all: the rows were adjudicated offline and are shipped as a classpath resource, so
+     * the only collaborators are the DAO and a transaction.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.ClInferredLocationProducer clInferredLocationProducer(
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager ) {
+        return new ubic.gemma.core.ontology.relation.ClInferredLocationProducer( annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ) );
+    }
+
+    /**
      * MGI's genotype-to-disease reports as {@code EXTERNAL} relations.
      *
      * <p>Declared here beside {@link #ontologyRelationProducer} because it shares the one thing that

@@ -82,6 +82,8 @@ class OntologyRelationProducerImplTest {
     private static final String HAS_SOMA_LOCATION = OBO + "RO_0002100";
     private static final String UBERON_RETINA = OBO + "UBERON_0000966";
     private static final String UBERON_CEREBELLAR_CORTEX = OBO + "UBERON_0002129";
+    private static final String UBERON_ANATOMICAL_SYSTEM = OBO + "UBERON_0000467";
+    private static final String UBERON_NERVOUS_SYSTEM = OBO + "UBERON_0001016";
 
     private static final String IMATINIB = OBO + "CHEBI_45783";
     private static final String HAS_ROLE = OBO + "RO_0000087";
@@ -107,6 +109,9 @@ class OntologyRelationProducerImplTest {
         when( transactionTemplate.execute( any() ) ).thenAnswer( inv ->
                 ( ( TransactionCallback<?> ) inv.getArgument( 0 ) ).doInTransaction( null ) );
 
+        uberonTerms.put( UBERON_ANATOMICAL_SYSTEM, term( UBERON_ANATOMICAL_SYSTEM, "anatomical system" ) );
+        uberonTerms.put( UBERON_NERVOUS_SYSTEM, termWithParent( UBERON_NERVOUS_SYSTEM, "nervous system",
+                uberonTerms.get( UBERON_ANATOMICAL_SYSTEM ) ) );
         uberonTerms.put( UBERON_RETINA, term( UBERON_RETINA, "retina" ) );
         uberonTerms.put( UBERON_CEREBELLAR_CORTEX, term( UBERON_CEREBELLAR_CORTEX, "cerebellar cortex" ) );
         mondoTerms.put( MONDO_ALZHEIMER, term( MONDO_ALZHEIMER, "Alzheimer disease" ) );
@@ -131,6 +136,13 @@ class OntologyRelationProducerImplTest {
         // across three runs of one artifact. A mock returns empty for an unstubbed default method, so
         // stubbing only the old one made every row silently disappear.
         when( t.getDirectRestrictions() ).thenReturn( Arrays.asList( restrictions ) );
+        return t;
+    }
+
+    /** A target with an is_a parent, which is how the anatomical-system check reaches UBERON_0000467. */
+    private static OntologyTerm termWithParent( String uri, String label, OntologyTerm parent ) {
+        OntologyTerm t = term( uri, label );
+        when( t.getParents( false ) ).thenReturn( Collections.singleton( parent ) );
         return t;
     }
 
@@ -796,5 +808,29 @@ class OntologyRelationProducerImplTest {
                 .findFirst().orElseThrow( AssertionError::new );
         assertThat( r.getObjectValue() ).isEqualTo( "glial cell" );
         assertThat( r.getObjectCategory() ).isEqualTo( "cell type" );
+    }
+
+    /**
+     * 🛑 A whole-body system locates nothing, and on CL every such row is the same tautology:
+     * {@code neural cell -> nervous system}, {@code vein endothelial cell of respiratory system ->
+     * respiratory system}. Six reached prod on 2026-09-02 and were deleted by hand; without this a
+     * rebuild puts them straight back, which is why the rule belongs here and not only in the
+     * offline table that produced the delete list.
+     */
+    @Test
+    void aTargetThatIsAWholeBodySystemIsNotWorthARow() {
+        clTerms.put( MUELLER_CELL, term( MUELLER_CELL, "neural cell",
+                restriction( PART_OF, "part of", unnamed( UBERON_NERVOUS_SYSTEM ) ) ) );
+
+        assertThat( produce( "CL" ) ).isEmpty();
+    }
+
+    /** ...while an ORGAN is exactly the fact worth having, however unlovely UBERON's label. */
+    @Test
+    void anOrganTargetIsKept() {
+        clTerms.put( PURKINJE_CELL, term( PURKINJE_CELL, "cerebellar Purkinje cell",
+                restriction( PART_OF, "part of", unnamed( UBERON_CEREBELLAR_CORTEX ) ) ) );
+
+        assertThat( produce( "CL" ) ).hasSize( 1 );
     }
 }
