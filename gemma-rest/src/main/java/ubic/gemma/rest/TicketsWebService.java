@@ -36,6 +36,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.PreboardedExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
@@ -103,19 +104,23 @@ public class TicketsWebService {
     private final UserManager userManager;
     private final UserReadService userReadService;
     private final ExpressionExperimentService expressionExperimentService;
+    private final PreboardedExperimentService preboardedExperimentService;
 
     @Autowired
     public TicketsWebService( TicketService ticketService, UserManager userManager, UserReadService userReadService,
-            ExpressionExperimentService expressionExperimentService ) {
+            ExpressionExperimentService expressionExperimentService,
+            PreboardedExperimentService preboardedExperimentService ) {
         this.ticketService = ticketService;
         this.userManager = userManager;
         this.userReadService = userReadService;
         this.expressionExperimentService = expressionExperimentService;
+        this.preboardedExperimentService = preboardedExperimentService;
     }
 
     /**
-     * Fill in {@code displayLabel} / {@code displayName} on every EXPRESSION_EXPERIMENT target across
-     * the given tickets, in ONE query for the whole batch.
+     * Fill in {@code displayLabel} / {@code displayName} on every EXPRESSION_EXPERIMENT target, and
+     * {@code displayLabel} on every PREBOARDED_EXPERIMENT target, across the given tickets — one query per
+     * kind for the whole batch.
      * <p>
      * The fields have been on {@link TicketTargetValueObject} since Phase B-2 and nothing ever wrote
      * them, so a ticket's targets arrived as bare ids and the navigator rendered "31491 (no title)"
@@ -131,32 +136,52 @@ public class TicketsWebService {
      */
     private void resolveTargetLabels( Collection<TicketValueObject> tickets ) {
         Set<Long> eeIds = new HashSet<>();
+        Set<Long> preboardedIds = new HashSet<>();
         for ( TicketValueObject t : tickets ) {
             if ( t == null || t.getTargets() == null ) {
                 continue;
             }
             for ( TicketTargetValueObject tt : t.getTargets() ) {
-                if ( tt.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT && tt.getTargetId() != null ) {
+                if ( tt.getTargetId() == null ) {
+                    continue;
+                }
+                if ( tt.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT ) {
                     eeIds.add( tt.getTargetId() );
+                } else if ( tt.getTargetType() == TicketTargetType.PREBOARDED_EXPERIMENT ) {
+                    preboardedIds.add( tt.getTargetId() );
                 }
             }
         }
-        if ( eeIds.isEmpty() ) {
+        if ( eeIds.isEmpty() && preboardedIds.isEmpty() ) {
             return;
         }
         Map<Long, ExpressionExperimentDao.Identifiers> byId = new HashMap<>();
         for ( ExpressionExperimentDao.Identifiers i : expressionExperimentService.loadIdentifiers( eeIds ) ) {
             byId.put( i.getId(), i );
         }
+        // One query for every preboarded target across the whole page, for the same reason the EE lookup is
+        // batched: a batch triage ticket carries every candidate from its scrape, so per-target loads would
+        // put the navigator's N+1 on the server instead of the client.
+        Map<Long, String> preboardedAccessions = preboardedIds.isEmpty()
+                ? Collections.emptyMap()
+                : preboardedExperimentService.loadAccessions( preboardedIds );
         for ( TicketValueObject t : tickets ) {
             if ( t == null || t.getTargets() == null ) {
                 continue;
             }
             for ( TicketTargetValueObject tt : t.getTargets() ) {
-                ExpressionExperimentDao.Identifiers i = byId.get( tt.getTargetId() );
-                if ( i != null && tt.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT ) {
-                    tt.setDisplayLabel( i.getShortName() );
-                    tt.setDisplayName( i.getName() );
+                if ( tt.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT ) {
+                    ExpressionExperimentDao.Identifiers i = byId.get( tt.getTargetId() );
+                    if ( i != null ) {
+                        tt.setDisplayLabel( i.getShortName() );
+                        tt.setDisplayName( i.getName() );
+                    }
+                } else if ( tt.getTargetType() == TicketTargetType.PREBOARDED_EXPERIMENT ) {
+                    String accession = preboardedAccessions.get( tt.getTargetId() );
+                    if ( accession != null ) {
+                        // A preboarded row has no name of its own -- it is an accession Gemma has not loaded.
+                        tt.setDisplayLabel( accession );
+                    }
                 }
             }
         }

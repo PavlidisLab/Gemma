@@ -108,6 +108,24 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
                 .get( PreboardedExperiment.class, id );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    @SuppressWarnings("unchecked")
+    public java.util.Map<Long, String> loadAccessions( java.util.Collection<Long> ids ) {
+        if ( ids == null || ids.isEmpty() ) {
+            return java.util.Collections.emptyMap();
+        }
+        java.util.List<Object[]> rows = sessionFactory.getCurrentSession()
+                .createQuery( "select p.id, p.accession from PreboardedExperiment p where p.id in :ids" )
+                .setParameterList( "ids", ids )
+                .list();
+        java.util.Map<Long, String> byId = new java.util.HashMap<>( rows.size() );
+        for ( Object[] r : rows ) {
+            byId.put( ( Long ) r[0], ( String ) r[1] );
+        }
+        return byId;
+    }
+
     @Nullable
     @Override
     @Transactional(readOnly = true)

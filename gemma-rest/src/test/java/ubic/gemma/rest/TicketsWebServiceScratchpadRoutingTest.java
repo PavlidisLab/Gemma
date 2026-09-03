@@ -86,7 +86,8 @@ public class TicketsWebServiceScratchpadRoutingTest extends JerseyTest {
         emptyContext.refresh();
         return new ResourceConfig()
                 .register( new TicketsWebService( ticketService, userManager, userReadService,
-                        mock( ExpressionExperimentService.class ) ) )
+                        mock( ExpressionExperimentService.class ),
+                        mock( ubic.gemma.persistence.service.expression.experiment.PreboardedExperimentService.class ) ) )
                 .register( JacksonFeature.class )
                 .property( "contextConfig", emptyContext )
                 // Same reason as BaseJerseyTest5: Jersey 3.1's resource-model validator treats this

@@ -46,6 +46,17 @@ public interface PreboardedExperimentService {
     PreboardedExperiment load( Long id );
 
     /**
+     * Accessions for a set of preboarded ids, in ONE query.
+     * <p>
+     * Batched on purpose: the ticket navigator resolves the labels for a whole page of tickets at once, and
+     * a batch triage ticket carries every candidate from its scrape. Resolving one id at a time would put an
+     * N+1 on the server, which is the thing {@code TicketsWebService.resolveTargetLabels} exists to avoid.
+     *
+     * @return accession by id; ids that do not exist are simply absent
+     */
+    java.util.Map<Long, String> loadAccessions( java.util.Collection<Long> ids );
+
+    /**
      * @return the preboarded with the given accession, or {@code null}.
      */
     @Nullable
