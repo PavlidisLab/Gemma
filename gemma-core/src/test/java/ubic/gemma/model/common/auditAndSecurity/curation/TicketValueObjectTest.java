@@ -13,6 +13,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.User;
 
 import java.util.Date;
 
@@ -163,5 +164,23 @@ class TicketValueObjectTest {
         TicketTarget tt = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 1L );
 
         assertThat( tt.getStatus() ).isEqualTo( TicketTargetStatus.NOT_DONE );
+    }
+
+    /**
+     * A curator whose Contact name was never filled in still has a username, and the ticket surfaces
+     * are the only place a client can learn who a reporter id belongs to — {@code /users/{x}} takes a
+     * username, not an id, so a null here leaves the reader with nothing (uib, 2026-09-02).
+     */
+    @Test
+    void from_namesAReporterByUsername_whenTheContactNameIsMissing() {
+        User curator = User.Factory.newInstance( "administrator" );
+        curator.setId( 52731L );
+        Ticket t = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "Scratchpad", curator );
+        t.setAssignee( curator );
+
+        TicketValueObject vo = TicketValueObject.from( t );
+
+        assertThat( vo.getReporterName() ).isEqualTo( "administrator" );
+        assertThat( vo.getAssigneeName() ).isEqualTo( "administrator" );
     }
 }

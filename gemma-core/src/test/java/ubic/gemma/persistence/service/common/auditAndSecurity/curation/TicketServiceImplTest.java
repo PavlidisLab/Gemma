@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
@@ -384,6 +385,22 @@ public class TicketServiceImplTest {
         assertTrue( t.getTitle().contains( "Scratchpad" ), "title was " + t.getTitle() );
         assertTrue( containsEventOfType( t, TicketEventType.OPENED ) );
         verify( ticketDao ).create( any( Ticket.class ) );
+    }
+
+    /**
+     * The title names the owner, and a curator whose Contact name was never filled in is named by
+     * their username rather than losing their identity to a bare "Scratchpad" (uib, 2026-09-02).
+     */
+    @Test
+    public void getOrCreateScratchpad_titlesItByUsername_whenTheContactNameIsMissing() {
+        User nameless = User.Factory.newInstance( "administrator" );
+        nameless.setId( 52731L );
+        when( ticketDao.findScratchpad( nameless ) ).thenReturn( null );
+        stubDaoCreateEchoes();
+
+        Ticket t = service.getOrCreateScratchpad( nameless );
+
+        assertEquals( "Scratchpad: administrator", t.getTitle() );
     }
 
     /** An existing scratchpad is handed back untouched — no second row, no second OPENED event. */

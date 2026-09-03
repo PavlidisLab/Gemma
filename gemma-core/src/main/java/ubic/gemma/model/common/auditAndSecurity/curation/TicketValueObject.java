@@ -13,6 +13,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import lombok.Data;
 import org.springframework.lang.Nullable;
+import ubic.gemma.model.common.auditAndSecurity.ContactUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -114,11 +115,11 @@ public class TicketValueObject implements Serializable {
         vo.dueDate = t.getDueDate();
         if ( t.getReporter() != null ) {
             vo.reporterId = t.getReporter().getId();
-            vo.reporterName = t.getReporter().getName();
+            vo.reporterName = ContactUtils.displayName( t.getReporter() );
         }
         if ( t.getAssignee() != null ) {
             vo.assigneeId = t.getAssignee().getId();
-            vo.assigneeName = t.getAssignee().getName();
+            vo.assigneeName = ContactUtils.displayName( t.getAssignee() );
         }
         vo.createdAt = t.getCreatedAt();
         vo.updatedAt = t.getUpdatedAt();
