@@ -775,4 +775,26 @@ class OntologyRelationProducerImplTest {
                 .containsExactly( "UBERON" );
         assertThat( producer().getTargetOntologiesFor( Collections.singletonList( "CLO" ) ) ).isEmpty();
     }
+
+    /**
+     * 🛑 Not every CL location axiom points at UBERON: 5 of the 1,208 in {@code cl-base} point at
+     * another CL class, and {@code oligodendrocyte precursor cell part_of glial cell} reached prod on
+     * 2026-09-02 filed as an ORGANISM PART, because the source named one fixed object category. The
+     * target's own vocabulary decides it.
+     */
+    @Test
+    void aLocationTargetThatIsItselfACellTypeIsNotFiledAsAnOrganismPart() {
+        String opc = OBO + "CL_0002453";
+        String glialCell = OBO + "CL_0000125";
+        clTerms.put( glialCell, term( glialCell, "glial cell" ) );
+        clTerms.put( opc, term( opc, "oligodendrocyte precursor cell",
+                restriction( PART_OF, "part of", term( glialCell, "glial cell" ) ) ) );
+
+        List<AnnotationRelation> rows = produce( "CL" );
+
+        AnnotationRelation r = rows.stream().filter( x -> opc.equals( x.getSubjectValueUri() ) )
+                .findFirst().orElseThrow( AssertionError::new );
+        assertThat( r.getObjectValue() ).isEqualTo( "glial cell" );
+        assertThat( r.getObjectCategory() ).isEqualTo( "cell type" );
+    }
 }
