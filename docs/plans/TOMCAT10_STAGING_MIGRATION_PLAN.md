@@ -179,16 +179,49 @@ once gemma-web is genuinely gone.
    The 1.32.8 `Gemma.war` currently serving predates the validator, which is why
    staging is up today despite the gap.
 
-3. **Check the common loader.** `common.loader` decides whether
-   `${catalina.base}/lib` is searched, and so whether `lib/log4j2.xml` is found
-   at all. It comes from `conf/catalina.properties`, which — see above — is a
-   symlink into Tomcat 9.0.94 today and will point at the new install after
-   migration step 3. Stock Tomcat 10.1 ships the entry; verify rather than
-   assume:
+3. **Pin log4j at the instance config, or lose the log files.** One line in
+   `bin/setenv.sh`, alongside the `gemma.log.dir` line already there:
+
+       export CATALINA_OPTS="$CATALINA_OPTS -Dlog4j2.configurationFile=$CATALINA_BASE/lib/log4j2.xml"
+
+   Without it, application logging on staging silently moves to the journal.
+   gemma-rest carries `src/main/resources/log4j2.xml`, which lands at
+   `WEB-INF/classes/log4j2.xml` in the WAR. `WEB-INF/classes` is searched ahead
+   of the common loader, so log4j-core resolves the WAR's copy and the
+   instance's `lib/log4j2.xml` never loads. The WAR's config is a single
+   `Console` appender targeting `SYSTEM_OUT`; the unit is `Type=simple` with no
+   `StandardOutput=`, so that is journald.
+
+   What stops being written is the six `RollingFile` appenders in
+   `lib/log4j2.xml` — `gemma.log`, `gemma-errors.log`, `gemma-warnings.log`,
+   `gemma-audit.log`, `gemma-annotations.log`, `gemma-javascript.log`, all under
+   `${gemma.log.dir}` = `$CATALINA_BASE/logs`, where 1112 files have
+   accumulated. `setenv.sh` is keyed to `CATALINA_BASE`, so this survives the
+   Tomcat swap like the rest of the JVM settings.
+
+   Note the property is JVM-wide, not per-context. Fine here — `gemma-staging`
+   serves only ROOT — but it would need rethinking on an instance hosting
+   several applications.
+
+   The alternative is to accept the journal and drop the line; see "Logging"
+   under Verification for how to read it either way. What is not an option is
+   leaving this undecided, because the failure mode is silent.
+
+4. **Check the common loader.** `common.loader` decides whether
+   `${catalina.base}/lib` is searched. It comes from `conf/catalina.properties`,
+   which — see above — is a symlink into Tomcat 9.0.94 today and will point at
+   the new install after migration step 3. Stock Tomcat 10.1 ships the entry;
+   verify rather than assume:
 
        grep -n "^common.loader" /opt/apache-tomcat-10.1.x/conf/catalina.properties
 
-4. **`Gemma.properties` discovery — resolved, no action needed.** Recorded here
+   Lower stakes than the first draft of this plan claimed. It was called "the
+   most likely thing to break quietly" on the assumption that `lib/log4j2.xml`
+   was found through the common loader. It is not — see pre-flight 3, which
+   decides logging regardless of what `common.loader` says. The entry still
+   matters for anything else an operator drops into `lib/`.
+
+5. **`Gemma.properties` discovery — resolved, no action needed.** Recorded here
    because the first draft left it open. It is not a classpath lookup:
    `SettingsConfig.settingsPropertySources()` reads
    `System.getenv("CATALINA_BASE")` and appends `Gemma.properties`, with
@@ -197,14 +230,16 @@ once gemma-web is genuinely gone.
    value reaches the JVM environment. The lookup keys off `CATALINA_BASE` and
    never `CATALINA_HOME`, so **the Tomcat swap cannot affect it.**
 
-5. **Know who owns `:8080`.** It is listening on chalmers even though
+6. **Know who owns `:8080`.** It is listening on chalmers even though
    `gemma-staging` has no live 8080 connector, and `ports.list` assigns 8081 to
    `gemma` and 8180 to `gotrack`. Not in this path, but do not assume 8080 is free.
 
 ## Migration
 
-Pre-flight 2 (the `gemma.anonymousAuth.key` line) needs only the `tomcat` user
-and can be done ahead of the window. Everything below needs root, and steps 1–5
+Pre-flight 2 and 3 — the `gemma.anonymousAuth.key` line in `Gemma.properties`
+and the `log4j2.configurationFile` line in `bin/setenv.sh` — need only the
+`tomcat` user and should be done ahead of the window, since neither takes effect
+until the restart in step 5 anyway. Everything below needs root, and steps 1–5
 are one maintenance window.
 
     # 1. install Tomcat 10.1.x (match or exceed the pom's 10.1.34)
@@ -267,10 +302,36 @@ and `setenv.sh`) applying normally.
     curl -sS -o /dev/null -w '%{http_code}\n' http://localhost:8100/rest/v2/
     curl -sS https://staging-gemma.msl.ubc.ca/rest/v2/                 # through Apache
     ls /var/local/tomcat/gemma-staging/webapps/ROOT/                   # re-expanded from gemma-rest.war
+
+Check that the Swagger UI at `/resources/restapidocs` came up too — that path has
+its own Apache rule and is gemma-rest's sole home for it now. It ships inside the
+WAR at `resources/restapidocs/`, so its absence means the WAR did not expand, not
+that Apache is misrouting.
+
+### Logging — where to actually look
+
+Depends on pre-flight 3, and the two answers are in different places:
+
+    # with the setenv.sh pin (the RollingFile appenders keep working)
+    tail -f /var/local/tomcat/gemma-staging/logs/gemma.log
+    tail -f /var/local/tomcat/gemma-staging/logs/gemma-errors.log
+
+    # without it (the WAR's Console appender, so stdout → journald)
+    journalctl -u tomcat@gemma-staging -f
+
+    # confirm which one is live
+    ps -eo args | grep catalina | grep -o 'log4j2.configurationFile=[^ ]*'
+
+Tomcat's own logging is unaffected either way — `catalina.*.log` and
+`localhost_access_log.*.txt` come from `conf/logging.properties` (JULI), not
+log4j, and keep landing in `logs/`:
+
     tail -100 /var/local/tomcat/gemma-staging/logs/catalina.*.log
 
-Check the log for the Swagger UI at `/resources/restapidocs` too — that path has
-its own Apache rule and is gemma-rest's sole home for it now.
+Startup failures are the case worth rehearsing: if the context dies before
+log4j initialises — the `gemma.anonymousAuth.key` throw in pre-flight 2 is
+exactly this shape — the stack trace goes to `catalina.*.log`, not to
+`gemma-errors.log`. Look there first when the app does not come up at all.
 
 ## Rollback — every change comes back, not just the ROOT symlink
 
@@ -292,6 +353,12 @@ the ROOT symlink alone is **not** sufficient. All three changes must come back:
 `Gemma.war` is never deleted by this procedure, so the old application stays one
 restart away for as long as the file is kept.
 
+The two pre-flight edits do **not** need reverting. `gemma.anonymousAuth.key` is
+a real value gemma-web reads too, and the `log4j2.configurationFile` pin names
+the same `lib/log4j2.xml` gemma-web was already using — under a rollback it
+re-states what was implicit rather than changing anything. Leave both in place;
+they are what makes a second attempt cheap.
+
 ## Risks and open questions
 
 - **Brief outage.** One process per port, so this is stop-then-start on 8100.
@@ -299,8 +366,12 @@ restart away for as long as the file is kept.
   before the window.
 - **The `conf/` symlinks into Tomcat 9.0.94** — migration step 3. `web.xml` is
   the one that will actually bite.
-- **`common.loader` / `log4j2.xml`** — pre-flight 3. The most likely thing to
-  break quietly.
+- **Application logging moves to the journal** unless the `setenv.sh` pin from
+  pre-flight 3 is in place. The quietest failure in this plan: the service comes
+  up, answers requests, and reports healthy while `gemma.log` and
+  `gemma-errors.log` simply stop growing.
+- **`common.loader`** — pre-flight 4. Now a minor item; it no longer decides
+  logging.
 - **A Slack bot token sits in plaintext in `bin/setenv.sh`**, on the
   `-Dgemma.slack.token=` line of a file that is group-readable. Out of scope for
   the migration itself, but it should be rotated and moved into
@@ -314,6 +385,16 @@ restart away for as long as the file is kept.
   branches and a 2.0 branch coexist, they take turns writing into this directory:
   the older branch's `Gemma.war` pushes become harmless once ROOT points
   elsewhere, but its `lib/log4j2.xml` push still lands on the shared instance.
+
+  The pin from pre-flight 3 sharpens this. `lib/log4j2.xml` stops being a file
+  only gemma-web cared about and becomes the file gemma-rest's logging is aimed
+  at — while a 1.32.x build still overwrites it on every deploy, because those
+  branches predate the gemma-web removal and their `deploy.sh` rsyncs
+  `src/main/config/log4j2.xml` into `lib/`. The content that lands is the
+  gemma-web configuration, whose appenders are the ones named above, so this is
+  survivable rather than broken. It is still a shared mutable file with two
+  writers, and worth remembering when logging changes shape without anyone
+  having touched the 2.0 branch.
 
 ## Afterwards: the other two instances
 
@@ -343,6 +424,15 @@ connector set and vhost separately before assuming symmetry.
     grep -rn CATALINA_HOME /etc/tomcat/tomcat.conf /etc/tomcat/conf.d/ \
         /var/local/tomcat/gemma-staging/bin/setenv.sh     # expect exactly one hit
     grep -m1 -o 'xmlns="[^"]*"' /usr/share/tomcat/conf/web.xml
+
+Which log4j configuration the WAR will actually use — run against the built
+artifact, before it ever reaches the server:
+
+    unzip -l gemma-rest/target/gemma-rest.war | grep log4j2.xml
+    unzip -p gemma-rest/target/gemma-rest.war WEB-INF/classes/log4j2.xml \
+        | grep -E '<(Console|RollingFile|File) '
+    # and the instance config it would otherwise have used
+    grep -E 'fileName=' /var/local/tomcat/gemma-staging/lib/log4j2.xml
 
 `Gemma.properties` sentinel audit — prints key status, never values:
 
