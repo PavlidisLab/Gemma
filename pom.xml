@@ -1596,6 +1596,26 @@
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
 					</additionalJOptions>
+					<!--
+					    KEEP IN SYNC with the maven-javadoc-plugin configuration in <build>
+					    above. The two are separate configurations that Maven does not share:
+					    `mvn javadoc:aggregate` reads the build one, while the aggregate REPORT
+					    run by maven-site-plugin reads this one. Anything added there and not
+					    here passes locally and fails in the Deploy Maven website stage.
+					    That is how the @todo registration below came to be missing: five
+					    "unknown tag" errors that only the site stage could see.
+					-->
+					<additionalOptions>
+						<additionalOption>-Xmaxerrs 100000</additionalOption>
+						<additionalOption>-Xmaxwarns 100000</additionalOption>
+					</additionalOptions>
+					<tags>
+						<tag>
+							<name>todo</name>
+							<placement>a</placement>
+							<head>To Do:</head>
+						</tag>
+					</tags>
 				</configuration>
 				<reportSets>
 					<!--

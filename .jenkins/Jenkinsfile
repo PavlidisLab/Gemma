@@ -253,7 +253,22 @@ pipeline {
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                         lock('database/gemdtest') {
-                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -DskipJavadoc -DskipWebpack'
+                            // -Dgemma.hibernate.hbm2ddl.auto=create is required, not optional.
+                            // default.properties leaves gemma.hibernate.hbm2ddl.auto empty, so without
+                            // it Hibernate materializes no schema, and applicationContext-dataSourceInitializer
+                            // then runs sql/init-acls.sql against a database with no acl_entry table:
+                            //   ALTER TABLE acl_entry ADD COLUMN audit_success ...
+                            //   -> Table 'gemdtest.acl_entry' doesn't exist
+                            // That fails the dataSourceInitializer bean, which fails the whole
+                            // applicationContext-*.xml context, and every test sharing it is then
+                            // reported as "ApplicationContext failure threshold (1) exceeded" -- hundreds
+                            // of cascading errors whose real cause appears once, far above them.
+                            //
+                            // The dependency arrived with the schema-native ACL work (74982e6f16,
+                            // 6e5a3c90ae, 2026-05-18) and init-acls.sql says so in its header. It went
+                            // unnoticed because CLAUDE.md's canonical local invocation passes the flag
+                            // and this stage never ran on a branch carrying the change until hotfix-2.0.
+                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -DskipJavadoc -DskipWebpack -Dgemma.hibernate.hbm2ddl.auto=create'
                         }
                     }
                     post {
