@@ -86,6 +86,10 @@ public enum RelationInferenceDirection {
             "http://purl.obolibrary.org/obo/CLO_0000179",      // is disease model for
             "http://purl.obolibrary.org/obo/CLO_0037207",      // derives from organism
             "http://purl.obolibrary.org/obo/CLO_0037208",      // derives from anatomic part
+            // a cell type implies the structure it sits in; the structure implies nothing about
+            // which of its many cell types is meant. Same shape as CLO_0037208 above.
+            "http://purl.obolibrary.org/obo/BFO_0000050",       // part of -- Mueller cell implies retina
+            "http://purl.obolibrary.org/obo/RO_0002100",        // has soma location -- CL locates most neurons this way
             "http://purl.obolibrary.org/obo/CLO_0037209",      // derived from cell
             "http://purl.obolibrary.org/obo/CLO_0037210",      // derives from cell line cell
             "http://purl.obolibrary.org/obo/CLO_0037227",
