@@ -33,6 +33,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 
@@ -63,6 +65,8 @@ public class TicketsWebServiceTargetLabelsTest {
     private ubic.gemma.core.security.authentication.UserReadService userReadService;
     @Mock
     private ExpressionExperimentService expressionExperimentService;
+    @Mock
+    private ubic.gemma.persistence.service.expression.experiment.PreboardedExperimentService preboardedExperimentService;
 
     @InjectMocks
     private TicketsWebService ticketsWebService;
@@ -162,5 +166,44 @@ public class TicketsWebServiceTargetLabelsTest {
         ticketsWebService.openTicketsForExpressionExperiment( 1L );
 
         verify( expressionExperimentService, times( 0 ) ).loadIdentifiers( anyCollection() );
+    }
+
+    /**
+     * A preboarded target is labelled by its accession — the batch triage ticket carries every candidate
+     * from a scrape, and a curator opening it should see GSE numbers rather than bare ids.
+     * <p>
+     * A preboarded row has no name of its own; it is an accession Gemma has not loaded, so only
+     * {@code displayLabel} is set. Resolved in ONE query for the whole page, like the EE targets.
+     */
+    @Test
+    @DisplayName("preboarded targets are labelled by accession, in one query")
+    public void preboardedTargetsAreLabelledByAccession() {
+        Ticket t = new Ticket();
+        t.setId( 7L );
+        t.setName( "GEO scrape 2026-09-02: 2 candidates" );
+        t.setType( TicketType.SCREENING );
+        Set<TicketTarget> targets = new LinkedHashSet<>();
+        targets.add( TicketTarget.Factory.newInstance( TicketTargetType.PREBOARDED_EXPERIMENT, 11L ) );
+        targets.add( TicketTarget.Factory.newInstance( TicketTargetType.PREBOARDED_EXPERIMENT, 12L ) );
+        t.setTargets( targets );
+        when( ticketService.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, 99L ) )
+                .thenReturn( Collections.singletonList( t ) );
+        Map<Long, String> accessions = new HashMap<>();
+        accessions.put( 11L, "GSE111" );
+        accessions.put( 12L, "GSE222" );
+        when( preboardedExperimentService.loadAccessions( anyCollection() ) ).thenReturn( accessions );
+
+        List<TicketValueObject> vos = ticketsWebService.openTicketsForExpressionExperiment( 99L );
+
+        Map<Long, String> got = new HashMap<>();
+        for ( TicketTargetValueObject tt : vos.get( 0 ).getTargets() ) {
+            got.put( tt.getTargetId(), tt.getDisplayLabel() );
+        }
+        assertThat( got ).containsEntry( 11L, "GSE111" ).containsEntry( 12L, "GSE222" );
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Collection<Long>> asked = ArgumentCaptor.forClass( Collection.class );
+        verify( preboardedExperimentService, times( 1 ) ).loadAccessions( asked.capture() );
+        assertThat( asked.getValue() ).containsExactlyInAnyOrder( 11L, 12L );
     }
 }

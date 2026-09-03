@@ -38,6 +38,18 @@ public enum TicketTargetType {
      */
     GEO_SCRAPE_WATERMARK,
     /**
+     * A {@link ubic.gemma.model.expression.experiment.PreboardedExperiment} — a GEO accession Gemma knows
+     * about but has not loaded. Used for the batch triage ticket: ONE ticket per scrape carrying every
+     * candidate from that batch as a target.
+     * <p>
+     * 🛑 One ticket for the batch, never one per candidate (Paul, 2026-09-02) — the point is to keep the
+     * curator queue at one work item per scrape. This type exists so that ticket can name what a curator
+     * actually acts on. It replaces hanging the ticket off {@link #GEO_SCRAPE_WATERMARK}, which is the
+     * scraper's own resume cursor: once the agent scrapes on its own side, the cursor is the agent's
+     * bookkeeping and Gemma has no row to point at.
+     */
+    PREBOARDED_EXPERIMENT,
+    /**
      * A {@link ubic.gemma.model.common.description.BibliographicReference}
      * (PubMed-style publication). Used by agent-driven literature workflows
      * — e.g. an agent files a {@link TicketType#LITERATURE_SEARCH} ticket

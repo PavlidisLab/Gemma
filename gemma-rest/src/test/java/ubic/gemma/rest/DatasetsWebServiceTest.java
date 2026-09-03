@@ -352,7 +352,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         @Bean
         public TicketsWebService ticketsWebService( TicketService ticketService, UserManager userManager,
                 UserReadService userReadService, ExpressionExperimentService expressionExperimentService ) {
-            return new TicketsWebService( ticketService, userManager, userReadService, expressionExperimentService );
+            return new TicketsWebService( ticketService, userManager, userReadService, expressionExperimentService,
+                    mock( ubic.gemma.persistence.service.expression.experiment.PreboardedExperimentService.class ) );
         }
 
         // DatasetsWebService also @Autowires CurationWebService, GroupsWebService,
