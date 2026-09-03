@@ -1578,6 +1578,17 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
+				<!--
+				    Pinned because <pluginManagement> does NOT apply to <reporting> plugins:
+				    without a version here Maven resolves whatever it finds, which was 3.12.0
+				    locally and 3.3.2 on the Jenkins agent. Two machines running different
+				    doclint versions over the same sources is not a reproducible gate. 3.3.2
+				    matches what CI already ran and what attach-javadocs uses in <build>, so
+				    this pins current behaviour rather than changing it. Moving to 3.12.0 is a
+				    separate job: it is stricter, and test-aggregate reports 34 errors in test
+				    sources under it.
+				-->
+				<version>3.3.2</version>
 				<configuration>
 					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>

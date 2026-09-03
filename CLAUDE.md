@@ -16,6 +16,18 @@ Ground rules for adding features and tests in this repo. Project-specific; suppl
   mvn -pl gemma-core verify -Dgemma.hibernate.hbm2ddl.auto=create
   ```
   The gemdtest password defaults to `1234` (`default.properties`), which matches the `testdb` service in `docker-compose.yml` — no override needed. Pass `-Dgemma.testdb.password=…` only if your local MySQL's `gemmatest` account uses a different password (it's a throwaway local-dev credential, not a secret).
+
+  **`-Dgemma.hibernate.hbm2ddl.auto=create` is required, not a convenience.** `default.properties:292` leaves the property EMPTY, so without it Hibernate materializes no schema and `applicationContext-dataSourceInitializer` runs `sql/init-acls.sql` against an empty database:
+  ```
+  Failed to execute SQL script statement #2 of [sql/init-acls.sql]:
+      ALTER TABLE acl_entry ADD COLUMN audit_success BIT NOT NULL DEFAULT 0
+  Caused by: Table 'gemdtest.acl_entry' doesn't exist
+  ```
+  `init-acls.sql` says so in its own header — Hibernate creates `acl_sid` / `acl_object_identity` / `acl_entry` from gsec's HBM mappings *on hbm2ddl=create*; only `acl_class` is created by the script. The dependency arrived with the schema-native ACL work (`74982e6f16`, `6e5a3c90ae`).
+
+  **The failure mode is the trap, not the fix.** One failed bean fails the whole `applicationContext-*.xml` context, and every test sharing it is then reported as `IllegalState ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context`. That produces hundreds of identical errors (476 in one CI run) that are all symptoms — the real cause appears exactly once, far above them. **Always search for the first `Failed to load ApplicationContext` / `Caused by:` before reading anything else**; the threshold lines carry no diagnostic content.
+
+  This bit CI rather than developers: the Jenkins integration stage did not pass the flag, so it could never have passed, while everyone locally followed the invocation above. Fixed in `.jenkins/Jenkinsfile`; keep the flag there.
 - **gemdtest auto-reset (default path)** — `CreateDatabasePopulator` runs at test context startup (default `gemma.testdb.initialize=true`) and drops+recreates `gemdtest` before Flyway + Hibernate rebuild it. This requires the test user (`gemmatest`) to hold the server-level CREATE privilege on top of the database-scoped grant; one-time fix:
   ```sql
   -- Run once as root; lets `gemmatest` recreate gemdtest after the populator drops it
@@ -43,7 +55,14 @@ Ground rules for adding features and tests in this repo. Project-specific; suppl
   ```
   `doclint` is `all,-missing`, so these two are hard errors (empty `<p>`, duplicate `@return`, and `@author` on a method are warnings only — 13 exist today and don't fail the build):
   - **`reference not found`** — `{@link Foo}` where `Foo` isn't imported (a signature spelling the type out fully-qualified is the usual cause), or `{@link #method(A)}` naming an overload that doesn't exist. Copy the parameter list from the real signature.
-  - **`heading used out of sequence`** — the first heading in a doc comment must be `<h2>`. Javadoc has rendered the class title as `<h1>` since JDK 13; `<h3>` was right under JDK 8/11, which is why the habit persists. Deeper nesting is fine (`<h3>` under an `<h2>`).
+  - **`heading used out of sequence`** — the first heading in a **class** doc comment must be `<h2>`. Javadoc has rendered the class title as `<h1>` since JDK 13; `<h3>` was right under JDK 8/11, which is why the habit persists. Deeper nesting is fine (`<h3>` under an `<h2>`). **In a *method* doc comment the first heading must be `<h4>`** — the implicit preceding heading there is `<h3>` (class `<h1>` → "Method Detail" `<h2>` → the method `<h3>`), so an `<h2>` inside a method comment is an error, which reads as a contradiction of the rule above until you notice the two are different contexts.
+- **`mvn -P release package` does NOT cover the Maven site stage.** It exercises `attach-javadocs` from `<build>`; the **Deploy Maven website** stage runs `mvn site-deploy`, whose `aggregate` / `test-aggregate` reports read the SEPARATE `maven-javadoc-plugin` configuration under **`<reporting>`** (`pom.xml` ~1580). The two blocks are near-copies that drift, and Maven shares nothing between them:
+  - Config added to one and not the other passes locally and fails in CI. That is how the `@todo` `<tags>` registration went missing from `<reporting>` and produced five `unknown tag. Unregistered custom tag?` errors that only the site stage could see. There is a KEEP IN SYNC comment on the reporting block; honour it.
+  - `<pluginManagement>` does **not** apply to `<reporting>` plugins. The reporting javadoc version is pinned to `3.3.2` for that reason — unpinned, it resolved 3.12.0 locally and 3.3.2 on the agent, so the two machines ran different doclint versions over the same sources. Do not remove that `<version>`.
+  - Reproduce the site stage with `mvn -B site` (full reactor). Do **not** use `-N`: a non-recursive run has no module classpaths and buries the real errors under thousands of bogus `cannot find symbol` / `package does not exist` lines.
+  - A javadoc **resolution** error (e.g. `wrong number of type arguments`) aborts before doclint runs, so it masks every tag/heading error in the same module. Expect a second wave after fixing one.
+  - `test-aggregate` javadocs `src/test/java`. It reports 34 errors under 3.12.0 and is unexercised until `aggregate` passes; test sources are held to the same doclint bar as main.
+- **A dependency version can differ per module and only `javadoc:aggregate` will notice.** `gemma-core` pinned `spring-retry` to `1.0.3.RELEASE` while `gemma-cli` / `gemma-rest` resolved `2.0.12` through the parent BOM, which remanages transitives. Per-module javadoc compiles each module against its own classpath and passes; the aggregate report merges all three, the newer jar wins, and gemma-core's sources fail against an API that changed shape. Check with `mvn dependency:tree -Dincludes=<group>:<artifact>` across the reactor before assuming a version is uniform.
 
 ## Parallel work (multi-agent renovations)
 
