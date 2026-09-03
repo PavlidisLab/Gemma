@@ -66,7 +66,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * if the mapping invariants here drift, the L2 staleness path becomes live
  * again and this guard will trip first.
  *
- * @see HIBERNATE6_CASCADE_AUDIT.md finding #6
+ * <p>See {@code docs/audit/HIBERNATE6_CASCADE_AUDIT.md} finding #6. A bare @see cannot
+ * name a Markdown file -- javadoc resolves its argument as a type or URL.
  * @see <a href="ab8b4c443c">AuditEvent cache-staleness fix</a>
  * @see <a href="02c87a91ed">Preemptive HBM fix</a>
  */

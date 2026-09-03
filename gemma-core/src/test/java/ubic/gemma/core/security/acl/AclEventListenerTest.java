@@ -548,7 +548,7 @@ public class AclEventListenerTest {
 
     /**
      * Mockito-backed substitute for {@link SessionFactoryImplementor} →
-     * {@link MappingMetamodel} → {@link EntityPersister}. Each registered entity class gets
+     * {@code MappingMetamodel} → {@code EntityPersister}. Each registered entity class gets
      * an EntityPersister whose {@code getPropertyTypes()} / {@code getPropertyValue} /
      * {@code getPropertyCascadeStyles} answer based on the per-entity setup the test provides.
      */

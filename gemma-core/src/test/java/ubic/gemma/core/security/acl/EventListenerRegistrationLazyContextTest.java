@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
  * Regression guard for the CLI-only failure in which the Hibernate event listeners were
  * never registered.
  *
- * <h3>Why the existing coverage missed it</h3>
+ * <h2>Why the existing coverage missed it</h2>
  * {@code AclAdviceTest.testExpressionExperimentAcls} already deletes an experiment and
  * asserts its ACLs are gone, and it passed throughout the three months the listener was
  * dead in production. It could not have failed: no test context registers

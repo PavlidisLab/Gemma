@@ -39,9 +39,9 @@ import javax.sql.DataSource;
 import java.util.Properties;
 
 /**
- * JUnit 5 (Jupiter) counterpart of {@link BaseDatabaseTest}.
+ * JUnit 5 (Jupiter) counterpart of {@code BaseDatabaseTest}.
  * <p>
- * Where {@link BaseDatabaseTest} inherits {@code AbstractTransactionalJUnit4SpringContextTests}
+ * Where {@code BaseDatabaseTest} inherits {@code AbstractTransactionalJUnit4SpringContextTests}
  * to get JUnit 4-style per-test transaction wrapping, this base uses Spring's
  * {@link Transactional} annotation directly. {@code @Transactional} at the class
  * level — combined with the {@code SpringExtension} inherited from

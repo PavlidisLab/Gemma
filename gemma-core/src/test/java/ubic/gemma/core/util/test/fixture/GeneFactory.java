@@ -64,7 +64,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * Design notes (HB6-relevant):
  * <ul>
  *   <li>{@code build()} persists the gene via
- *       {@link GeneService#create(Gene)} so ACL / audit listeners fire on the
+ *       {@code GeneService#create(Gene)} so ACL / audit listeners fire on the
  *       production code path.</li>
  *   <li>{@link GeneProduct}s are attached via
  *       {@code gene.getProducts().add(gp)} (mutate, don't replace) before
@@ -167,7 +167,7 @@ public class GeneFactory {
 
         /**
          * Build, persist, and return the gene. Goes through
-         * {@link GeneService#create(Gene)} so the production code path
+         * {@code GeneService#create(Gene)} so the production code path
          * fires (audit + ACL listeners).
          */
         public Gene build() {

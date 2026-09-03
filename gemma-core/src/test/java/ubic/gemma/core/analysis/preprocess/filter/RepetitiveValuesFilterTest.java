@@ -170,7 +170,7 @@ public class RepetitiveValuesFilterTest {
 
     /**
      * A probe that is the highest-expressed in every sample holds one single rank throughout, because
-     * {@link ubic.gemma.core.util.math.MatrixStats#ranksByColumn} ranks within a column across design elements. It has
+     * ranking runs within a column across design elements. It has
      * a distinct value in every sample and can be differentially expressed, so the rank-based mode must keep it; only
      * rows whose own values repeat are removable.
      */
