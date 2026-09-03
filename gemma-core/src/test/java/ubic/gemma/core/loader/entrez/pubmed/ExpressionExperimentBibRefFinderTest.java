@@ -19,92 +19,56 @@
 package ubic.gemma.core.loader.entrez.pubmed;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
-import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableExtension;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabases;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
+ * Resolution is exercised against a stubbed {@link GeoBrowser} rather than live Entrez.
+ * <p>
+ * These assertions used to be driven by feeding SOFT text to a package-private parser, because the
+ * finder scraped {@code acc.cgi} and had no seam. It now goes through {@code esearch}/{@code esummary}
+ * via {@link GeoBrowser}, which is injectable, so the same behaviours — order, de-duplication, the
+ * empty case — are pinned at the boundary the class actually has.
+ *
  * @author pavlidis
  */
-@Tag("geo")
-// paired with @Tag("geo") so the class is filtered from the default suite; geo is a
-// descriptive marker and is not excluded on its own (tag taxonomy in pom.xml).
-@Tag("slow")
-@ExtendWith(NetworkAvailableExtension.class)
 public class ExpressionExperimentBibRefFinderTest {
 
-    @Test
-    @Tag("slow")
-    @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")
-    public void testLocatePrimaryReference() throws IOException {
-        ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( Settings.getString( "entrez.efetch.apikey" ) );
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( ExternalDatabases.GEO );
-        de.setAccession( "GSE3023" );
-        de.setExternalDatabase( ed );
-        ee.setAccession( de );
-        BibliographicReference bibref = finder.locatePrimaryReference( ee );
-        assertNotNull( bibref );
-        assertEquals( "Differential gene expression in anatomical compartments of the human eye.",
-                bibref.getTitle() );
+    private static final String ACCESSION = "GSE99114";
+
+    private static ExpressionExperimentBibRefFinder finderReturning( String... pubMedIds ) throws IOException {
+        GeoRecord record = new GeoRecord();
+        record.setGeoAccession( ACCESSION );
+        record.setPubMedIds( Arrays.asList( pubMedIds ) );
+        GeoBrowser browser = mock( GeoBrowser.class );
+        when( browser.getGeoRecord( eq( GeoRecordType.SERIES ), eq( ACCESSION ) ) ).thenReturn( record );
+        return new ExpressionExperimentBibRefFinder( browser, null );
     }
 
     @Test
-    @Tag("slow")
-    @NetworkAvailable(url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi")
-    public void testLocatePrimaryReferenceInvalidGSE() throws IOException {
-        ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( Settings.getString( "entrez.efetch.apikey" ) );
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( ExternalDatabases.GEO );
-        de.setAccession( "GSE30231111111111111" );
-        de.setExternalDatabase( ed );
-        ee.setAccession( de );
-        BibliographicReference bibref = finder.locatePrimaryReference( ee );
-        assertNull( bibref );
-    }
-
-    private static int parse( String soft ) throws IOException {
-        return ExpressionExperimentBibRefFinder.parseSeriesPubMedId( new BufferedReader( new StringReader( soft ) ), "GSE99114" );
+    public void testTheSeriesPubMedIdIsTheAuthoritativeLink() throws IOException {
+        assertEquals( 38064339, finderReturning( "38064339" ).locatePubMedId( ACCESSION ) );
     }
 
     @Test
-    public void testParseSeriesPubMedIdFromSoft() throws IOException {
-        // the acc.cgi ...&targ=self&form=text view: !Series_pubmed_id is the authoritative link
-        String soft = "^SERIES = GSE99114\n"
-                + "!Series_title = A dataset\n"
-                + "!Series_pubmed_id = 38064339\n"
-                + "!Series_summary = something\n";
-        assertEquals( 38064339, parse( soft ) );
-    }
-
-    @Test
-    public void testParseSeriesPubMedIdReturnsFirstWhenMultiple() throws IOException {
+    public void testReturnsFirstWhenMultiple() throws IOException {
         // multi-paper series: the first is taken as primary (curator confirms), the rest logged
-        String soft = "^SERIES = GSE99114\n"
-                + "!Series_pubmed_id = 38064339\n"
-                + "!Series_pubmed_id = 30255127\n";
-        assertEquals( 38064339, parse( soft ) );
-    }
-
-    private static java.util.List<Integer> parseAll( String soft ) throws IOException {
-        return ExpressionExperimentBibRefFinder.parseSeriesPubMedIds( new BufferedReader( new StringReader( soft ) ), "GSE99114" );
+        assertEquals( 38064339, finderReturning( "38064339", "30255127" ).locatePubMedId( ACCESSION ) );
     }
 
     /**
@@ -115,34 +79,82 @@ public class ExpressionExperimentBibRefFinderTest {
      */
     @Test
     public void testEveryPubMedIdIsReadableNotJustTheFirst() throws IOException {
-        String soft = "^SERIES = GSE99114\n"
-                + "!Series_pubmed_id = 38064339\n"
-                + "!Series_pubmed_id = 30255127\n";
-        assertEquals( java.util.Arrays.asList( 38064339, 30255127 ), parseAll( soft ) );
+        ExpressionExperimentBibRefFinder finder = finderReturning( "38064339", "30255127" );
+        assertEquals( Arrays.asList( 38064339, 30255127 ), finder.locatePubMedIds( ACCESSION ) );
         // the single-id form still answers exactly as it did
-        assertEquals( 38064339, parse( soft ) );
+        assertEquals( 38064339, finder.locatePubMedId( ACCESSION ) );
     }
 
     @Test
     public void testARepeatedIdIsOnePaper() throws IOException {
         // GEO does list the same id more than once in a record; that is one paper, not two
-        String soft = "^SERIES = GSE99114\n"
-                + "!Series_pubmed_id = 38064339\n"
-                + "!Series_pubmed_id = 38064339\n";
-        assertEquals( java.util.Collections.singletonList( 38064339 ), parseAll( soft ) );
+        assertEquals( Collections.singletonList( 38064339 ),
+                finderReturning( "38064339", "38064339" ).locatePubMedIds( ACCESSION ) );
+    }
+
+    @Test
+    public void testANonNumericIdIsSkippedRatherThanFatal() throws IOException {
+        assertEquals( Collections.singletonList( 38064339 ),
+                finderReturning( "not-a-pmid", "38064339" ).locatePubMedIds( ACCESSION ) );
     }
 
     @Test
     public void testNoPublicationIsAnEmptyListNotAZero() throws IOException {
-        String soft = "^SERIES = GSE99114\n!Series_title = A dataset with no publication\n";
-        assertTrue( parseAll( soft ).isEmpty() );
+        assertTrue( finderReturning().locatePubMedIds( ACCESSION ).isEmpty() );
     }
 
     @Test
-    public void testParseSeriesPubMedIdAbsent() throws IOException {
-        // a series with no linked paper (or a bad accession's error page) yields -1
-        String soft = "^SERIES = GSE99114\n"
-                + "!Series_title = A dataset with no publication\n";
-        assertEquals( -1, parse( soft ) );
+    public void testNoPublicationIsMinusOneForTheSingleIdForm() throws IOException {
+        // a series with no linked paper yields -1
+        assertEquals( -1, finderReturning().locatePubMedId( ACCESSION ) );
+    }
+
+    @Test
+    public void testANonSeriesAccessionIsEmpty() throws IOException {
+        GeoBrowser browser = mock( GeoBrowser.class );
+        ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( browser, null );
+        assertTrue( finder.locatePubMedIds( "GPL1234" ).isEmpty() );
+        assertEquals( -1, finder.locatePubMedId( "GDS1234" ) );
+    }
+
+    /**
+     * The distinction the reCAPTCHA incident turned on. GEO being unreadable must not arrive as an
+     * empty list, because callers write "GEO states no publication" findings off an empty list —
+     * {@code VerifyPublicationEvidenceCli} records {@code geo_states_none} with a dated evidence
+     * string. An unknown answer throws instead, so no finding can be built from it.
+     */
+    @Test
+    public void testAnUnreadableGeoThrowsRatherThanLookingLikeNoPublication() throws IOException {
+        GeoBrowser browser = mock( GeoBrowser.class );
+        when( browser.getGeoRecord( eq( GeoRecordType.SERIES ), eq( ACCESSION ) ) )
+                .thenThrow( new IOException( "GEO served an HTML challenge page" ) );
+        assertThatThrownBy( () -> new ExpressionExperimentBibRefFinder( browser, null ).locatePubMedIds( ACCESSION ) )
+                .isInstanceOf( IOException.class );
+    }
+
+    /**
+     * Likewise for an accession GEO has no record of: we have learned nothing about its publications,
+     * which is not the same as learning that it has none.
+     */
+    @Test
+    public void testAnAbsentRecordThrowsRatherThanLookingLikeNoPublication() throws IOException {
+        GeoBrowser browser = mock( GeoBrowser.class );
+        when( browser.getGeoRecord( eq( GeoRecordType.SERIES ), any( String.class ) ) ).thenReturn( null );
+        assertThatThrownBy( () -> new ExpressionExperimentBibRefFinder( browser, null ).locatePubMedIds( ACCESSION ) )
+                .isInstanceOf( IOException.class )
+                .hasMessageContaining( ACCESSION );
+    }
+
+    /**
+     * A record that carries no PubMed list at all is GEO stating none, not a failure.
+     */
+    @Test
+    public void testARecordWithNoPubMedListIsEmpty() throws IOException {
+        GeoRecord record = new GeoRecord();
+        record.setGeoAccession( ACCESSION );
+        GeoBrowser browser = mock( GeoBrowser.class );
+        when( browser.getGeoRecord( eq( GeoRecordType.SERIES ), eq( ACCESSION ) ) ).thenReturn( record );
+        List<Integer> ids = new ExpressionExperimentBibRefFinder( browser, null ).locatePubMedIds( ACCESSION );
+        assertThat( ids ).isEmpty();
     }
 }
