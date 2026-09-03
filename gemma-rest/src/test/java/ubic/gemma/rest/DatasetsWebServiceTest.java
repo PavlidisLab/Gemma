@@ -417,6 +417,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
+        public ubic.gemma.core.analysis.preprocess.qc.SequencingQcMetricsService sequencingQcMetricsService() {
+            return mock( ubic.gemma.core.analysis.preprocess.qc.SequencingQcMetricsService.class );
+        }
+
+        @Bean
         public ubic.gemma.persistence.service.expression.experiment.FactorValueService factorValueService() {
             return mock( ubic.gemma.persistence.service.expression.experiment.FactorValueService.class );
         }

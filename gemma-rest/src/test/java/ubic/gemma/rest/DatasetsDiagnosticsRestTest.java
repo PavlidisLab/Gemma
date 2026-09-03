@@ -475,4 +475,55 @@ public class DatasetsDiagnosticsRestTest extends BaseJerseyIntegrationTest5 {
                         DatasetArg.valueOf( eeWithMvr.getId().toString() ), body ) );
         assertThat( bre ).isNotNull();
     }
+
+    // ---------------------------------------------------------------------
+    // qc-metrics endpoint
+    // ---------------------------------------------------------------------
+
+    /**
+     * A dataset with no MultiQC report and no sequencing read counts has nothing to show, so the
+     * endpoint 404s rather than returning an empty row per assay.
+     */
+    @Test
+    public void testGetDatasetQcMetricsWhenThereIsNothingIs404() {
+        NotFoundException nfe = catchThrowableOfType( NotFoundException.class,
+                () -> datasetsWebService.getDatasetQcMetrics(
+                        DatasetArg.valueOf( eeWithoutMvr.getId().toString() ) ) );
+        assertThat( nfe ).isNotNull();
+
+        assertThat( target( "/datasets/" + eeWithoutMvr.getId() + "/qc-metrics" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    /**
+     * Most RNA-seq assays carry a read count in the database while only a minority of datasets have
+     * a MultiQC report, so a read count alone has to answer 200 — with {@code reportPresent} false
+     * so the caller can tell the two apart.
+     */
+    @Test
+    public void testGetDatasetQcMetricsServesTheDatabaseReadCountWithoutAReport() {
+        ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( eeWithMvr );
+        BioAssay first = thawed.getBioAssays().iterator().next();
+        first.setSequenceReadCount( 4525602L );
+        bioAssayService.update( first );
+
+        DatasetsWebService.SequencingQcMetricsValueObject vo = datasetsWebService
+                .getDatasetQcMetrics( DatasetArg.valueOf( eeWithMvr.getId().toString() ) ).getData();
+
+        assertThat( vo.isReportPresent() ).isFalse();
+        assertThat( vo.getMetrics() ).isEmpty();
+        assertThat( vo.getUnmatchedKeys() ).isEmpty();
+        assertThat( vo.getSamples() ).hasSize( thawed.getBioAssays().size() );
+        DatasetsWebService.SampleQcMetricsValueObject row = vo.getSamples().stream()
+                .filter( s -> s.getBioAssayId().equals( first.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "no row for bioAssay " + first.getId() ) );
+        assertThat( row.getReadCount() ).isEqualTo( 4525602L );
+        assertThat( row.getReadCountSource() ).isEqualTo( "bioAssay" );
+        assertThat( row.getValues() ).isEmpty();
+        assertThat( row.getRuns() ).isEmpty();
+
+        assertThat( target( "/datasets/" + eeWithMvr.getId() + "/qc-metrics" ).request().get() )
+                .hasStatus( Response.Status.OK );
+    }
 }

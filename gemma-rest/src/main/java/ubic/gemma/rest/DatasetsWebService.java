@@ -68,6 +68,8 @@ import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.qc.SequencingQcMetrics;
+import ubic.gemma.core.analysis.preprocess.qc.SequencingQcMetricsService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService;
@@ -387,6 +389,8 @@ public class DatasetsWebService {
     private OutlierFlaggingService outlierFlaggingService;
     @Autowired
     private OutlierDetectionService outlierDetectionService;
+    @Autowired
+    private SequencingQcMetricsService sequencingQcMetricsService;
     @Autowired
     private FactorValueService factorValueService;
     @Autowired
@@ -9919,6 +9923,230 @@ public class DatasetsWebService {
     /** Which of the two stored sample-correlation matrices {@link #getDatasetSampleCorrelation} should return. */
     public enum CorrelationMatrixChoice {
         best, regressed, full
+    }
+
+    /**
+     * Retrieves the per-sample sequencing QC metrics for a dataset — read depth, mapping rate,
+     * duplication and the rest of the RNA-Seq pipeline's MultiQC general statistics — keyed by
+     * bioAssay id.
+     * <p>
+     * These are independent of expression similarity, which is the outlier detector's only input,
+     * so they are the second piece of evidence when judging a low-correlation sample. Nothing here
+     * feeds {@link OutlierDetectionService}; the endpoint is read-only evidence.
+     *
+     * @see SequencingQcMetricsService
+     */
+    @GET
+    @GZIP
+    @Path("/{dataset}/qc-metrics")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve per-sample sequencing QC metrics for a dataset",
+            description = "Returns one row per bioAssay carrying the RNA-Seq pipeline's MultiQC general statistics — "
+                    + "read depth, mapping rate, duplication, GC, mismatch rate — plus a `metrics` list describing "
+                    + "each metric name (title, description, module, unit, plotting range). GSM-to-bioAssay resolution "
+                    + "happens server-side, so no caller has to match accession strings.\n\n"
+                    + "Report rows are not all at sample level. A row whose key IS the assay's accession lands in "
+                    + "`values`; a row keyed by a sequencing run or one mate of a paired run (`GSM123_1`, "
+                    + "`GSM123_SRR456_2`) lands in that sample's `runs` list, verbatim and UNAGGREGATED — summarizing "
+                    + "them would need a per-metric rule (a mean for a rate, a sum for a count) that is recorded "
+                    + "nowhere. The split follows the module: measured over 80 production reports, STAR/RSEM metrics "
+                    + "(`uniquely_mapped_percent`, `total_reads`, `alignable_percent`, `mismatch_rate`) were "
+                    + "sample-level in 76-79 of them, while FastQC metrics (`percent_duplicates`, `percent_gc`) were "
+                    + "sample-level in 5. Rows keyed by an SRA run accession alone cannot be joined — Gemma does not "
+                    + "record those — and are listed in `unmatchedKeys` rather than dropped silently.\n\n"
+                    + "`readCount` is filled from the report's `total_reads` where the report has a sample-level row "
+                    + "and from `BioAssay.sequenceReadCount` otherwise; `readCountSource` says which. A dataset with "
+                    + "no MultiQC report but read counts in the database still answers 200, with `reportPresent` "
+                    + "false and only `readCount` populated.\n\n"
+                    + "404 when the dataset has neither a MultiQC report nor a read count on any assay. Fewer than "
+                    + "half of all datasets carry a report, since the pipeline writes one only for RNA-Seq; "
+                    + "microarray datasets have no equivalent here.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist, or has neither a MultiQC report nor any sequencing read counts.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<SequencingQcMetricsValueObject> getDatasetQcMetrics( // Params:
+            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        // the service reads accessions and read counts off the assays, which are lazy on the entity
+        // getEntity() returns
+        ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
+        SequencingQcMetrics metrics;
+        try {
+            metrics = sequencingQcMetricsService.getSequencingQcMetrics( thawed )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName()
+                            + " has neither an RNA-Seq pipeline report nor sequencing read counts." ) );
+        } catch ( IOException e ) {
+            log.error( "Failed to read the RNA-Seq pipeline report for " + ee, e );
+            throw new InternalServerErrorException( e );
+        }
+        return respond( new SequencingQcMetricsValueObject( metrics ) );
+    }
+
+    /**
+     * Wire shape for {@link #getDatasetQcMetrics}.
+     */
+    @Value
+    public static class SequencingQcMetricsValueObject {
+
+        /**
+         * True when a MultiQC report was found and read. When false the rows carry only
+         * {@link SampleQcMetricsValueObject#getReadCount()}, taken from the database.
+         */
+        boolean reportPresent;
+
+        /**
+         * One entry per metric name appearing in {@link SampleQcMetricsValueObject#getValues()} or
+         * in a sample's runs, in the order MultiQC lists them. Every field but {@code name} may be
+         * null: MultiQC's general-stats headers describe only the columns it chose to display.
+         */
+        List<QcMetricDefinitionValueObject> metrics;
+
+        /**
+         * One entry per bioAssay of the dataset, ordered by bioAssay id, including assays the
+         * report says nothing about.
+         */
+        List<SampleQcMetricsValueObject> samples;
+
+        /**
+         * Report row keys that matched no bioAssay — mostly SRA run accessions, which the
+         * FASTQ-level modules key by and which Gemma does not record.
+         */
+        List<String> unmatchedKeys;
+
+        public SequencingQcMetricsValueObject( SequencingQcMetrics metrics ) {
+            this.reportPresent = metrics.isReportPresent();
+            this.metrics = metrics.getMetrics().stream()
+                    .map( QcMetricDefinitionValueObject::new )
+                    .collect( Collectors.toList() );
+            this.samples = metrics.getSamples().stream()
+                    .map( SampleQcMetricsValueObject::new )
+                    .collect( Collectors.toList() );
+            this.unmatchedKeys = metrics.getUnmatchedKeys();
+        }
+    }
+
+    /**
+     * Wire shape for one metric column of {@link SequencingQcMetricsValueObject}.
+     */
+    @Value
+    public static class QcMetricDefinitionValueObject {
+
+        /** Key this metric appears under in a sample's {@code values}, e.g. {@code uniquely_mapped_percent}. */
+        String name;
+
+        /** Short column label MultiQC uses, e.g. {@code % Aligned}. */
+        @Nullable
+        String title;
+
+        /** Longer description, e.g. {@code % Uniquely mapped reads}. */
+        @Nullable
+        String description;
+
+        /** Module that produced the metric, e.g. {@code STAR}, {@code fastqc}. */
+        @Nullable
+        String namespace;
+
+        /** Unit suffix to render after the value, e.g. {@code %}. */
+        @Nullable
+        String suffix;
+
+        /** Lower end of MultiQC's plotting range, when it declares one. */
+        @Nullable
+        Double min;
+
+        /** Upper end of MultiQC's plotting range, when it declares one. */
+        @Nullable
+        Double max;
+
+        /** True when MultiQC hides this column by default in its own report. */
+        boolean hidden;
+
+        public QcMetricDefinitionValueObject( SequencingQcMetrics.MetricDefinition d ) {
+            this.name = d.getName();
+            this.title = d.getTitle();
+            this.description = d.getDescription();
+            this.namespace = d.getNamespace();
+            this.suffix = d.getSuffix();
+            this.min = d.getMin();
+            this.max = d.getMax();
+            this.hidden = d.isHidden();
+        }
+    }
+
+    /**
+     * Wire shape for one bioAssay's row of {@link SequencingQcMetricsValueObject}.
+     */
+    @Value
+    public static class SampleQcMetricsValueObject {
+
+        Long bioAssayId;
+
+        /** The assay's accession — a GSM for GEO data — which is what the report keys its rows by. */
+        @Nullable
+        String accession;
+
+        /** The assay's name, for axis labels. */
+        @Nullable
+        String name;
+
+        /**
+         * Whether the assay is flagged as an outlier ({@link BioAssay#getIsOutlier()}), so a caller
+         * plotting these against the correlation matrix does not need a second request.
+         */
+        boolean outlier;
+
+        /**
+         * Sample-level metrics, from report rows keyed by this assay's accession. Empty when the
+         * report has no sample-level row for it.
+         */
+        Map<String, Double> values;
+
+        /**
+         * Rows below the sample level — one per sequencing run, or per mate of a paired run.
+         * Passed through unaggregated; see the endpoint description.
+         */
+        List<RunQcMetricsValueObject> runs;
+
+        /**
+         * Sequencing depth, from the report's {@code total_reads} where present and from
+         * {@link BioAssay#getSequenceReadCount()} otherwise. Null when neither has one.
+         */
+        @Nullable
+        Long readCount;
+
+        /** Where {@link #getReadCount()} came from: {@code report}, {@code bioAssay}, or null. */
+        @Nullable
+        String readCountSource;
+
+        public SampleQcMetricsValueObject( SequencingQcMetrics.SampleMetrics s ) {
+            this.bioAssayId = s.getBioAssayId();
+            this.accession = s.getAccession();
+            this.name = s.getName();
+            this.outlier = s.isOutlier();
+            this.values = s.getValues();
+            this.runs = s.getRuns().stream().map( RunQcMetricsValueObject::new ).collect( Collectors.toList() );
+            this.readCount = s.getReadCount();
+            this.readCountSource = s.getReadCountSource();
+        }
+    }
+
+    /**
+     * Wire shape for one sub-sample report row of {@link SampleQcMetricsValueObject}.
+     */
+    @Value
+    public static class RunQcMetricsValueObject {
+
+        /** The report's own row key, e.g. {@code GSM5029427_1} or {@code GSM5029427_SRR13191146_2}. */
+        String key;
+
+        Map<String, Double> values;
+
+        public RunQcMetricsValueObject( SequencingQcMetrics.RunMetrics r ) {
+            this.key = r.getKey();
+            this.values = r.getValues();
+        }
     }
 
     /**
