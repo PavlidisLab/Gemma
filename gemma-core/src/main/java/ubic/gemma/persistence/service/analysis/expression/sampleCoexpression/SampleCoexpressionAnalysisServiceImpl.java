@@ -192,7 +192,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         // this one is optional
         if ( regressedMatrix == null ) {
-            log.warn( "Regressed coexpression matrix could not be computed, review experimental design? Experiment " + thawedee );
+            // Absent for two different reasons, and only one is a problem: no factor passed the SVD importance
+            // threshold (normal, logged above as such), or the regression was attempted and failed.
+            log.info( "No regressed coexpression matrix for " + thawedee + "; the full matrix is what will be served." );
         }
 
         SampleCoexpressionAnalysis analysis = SampleCoexpressionAnalysis.Factory.newInstance( thawedee, // Analyzed experiment
@@ -484,13 +486,22 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat,
             @Nullable ExpressionDataDoubleMatrix unmasked ) {
         Set<ExperimentalFactor> importantFactors = this.getImportantFactors( ee );
-        if ( !importantFactors.isEmpty() ) {
-            SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
-            DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-            config.addFactorsToInclude( importantFactors );
-            mat = this.regressionResiduals( mat, config, unmasked );
+        if ( importantFactors.isEmpty() ) {
+            // No regressed matrix, rather than an unregressed one stored under that name.
+            //
+            // Returning `mat` here stored a copy of the FULL matrix as the regressed one, so a client asking
+            // for `regressed` was handed something nothing had been regressed out of and could not tell.
+            // `GET /sample-correlation?matrix=regressed` already promises the opposite -- "it is only computed
+            // when the design has factors above the SVD importance threshold" -- and 404s when absent, while
+            // `matrix=best` falls back to `full` and says so in the response. Storing nothing makes that true.
+            log.info( "No factors passed the SVD importance threshold for " + ee
+                    + "; no regressed correlation matrix will be stored. This is not a failure." );
+            return null;
         }
-        return mat;
+        SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.addFactorsToInclude( importantFactors );
+        return this.regressionResiduals( mat, config, unmasked );
     }
 
     private Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee ) {
