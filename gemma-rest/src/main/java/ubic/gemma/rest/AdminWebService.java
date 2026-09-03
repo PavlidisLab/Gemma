@@ -1660,11 +1660,17 @@ public class AdminWebService {
      * </ul>
      */
     @POST
+    /**
+     * @deprecated The curation agent scrapes GEO itself ({@code scrape_geo_and_open_triage.py}) and opens its
+     * own triage ticket. Still functional; see {@link ubic.gemma.core.geoscrape.GeoScrapeService} for what an
+     * agent-side replacement has to reproduce -- the preboarded rows, the watermark, and ONE batch ticket.
+     */
+    @Deprecated
     @Path("/tasks/geo-scrape")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Submit a GEO scrape & preboard run (async, or sync dry-run)",
+    @Operation(deprecated = true, summary = "DEPRECATED -- superseded by the curation agent's own scraping (scrape_geo_and_open_triage.py). Submit a GEO scrape & preboard run (async, or sync dry-run)",
             description = "Iterates recent GEO records, filters to human/mouse/rat expression profiling, evaluates the registered matchers (subset selectable via `criteria`: {brain, scbrain, tfperturb}). With dryRun=false (default) creates PreboardedExperiment rows and returns 202 + async task ID. With dryRun=true evaluates only and returns 200 + the candidate list inline (no watermark, no preboarded rows, no ticket). "
                     + "DRY RUNS MUST BE KEPT SMALL: the sync branch is subject to the 60-second proxy timeout in front of this API, "
                     + "and the scrape grows superlinearly because every Entrez call passes through a global rate gate "
@@ -1738,10 +1744,15 @@ public class AdminWebService {
      * been run.
      */
     @GET
+    /**
+     * @deprecated Reads the watermark written by the deprecated in-Gemma scrape. An agent that scrapes on its
+     * own side is the author of its own run records; this only ever sees runs Gemma performed.
+     */
+    @Deprecated
     @Path("/geo-scrape/last")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Most recent GEO scrape watermark",
+    @Operation(deprecated = true, summary = "DEPRECATED -- superseded by the curation agent's own scraping (scrape_geo_and_open_triage.py). Most recent GEO scrape watermark",
             description = "Returns the most recently created GeoScrapeWatermark row (IN_PROGRESS / COMPLETED / FAILED / CANCELLED), or 404 if no scrape has ever been run.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
