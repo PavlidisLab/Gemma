@@ -72,6 +72,33 @@ public class PreboardedWebServiceTest {
         lenient().when( preboardedService.load( 9876L ) ).thenReturn( preboarded );
     }
 
+    /**
+     * The payload is opaque to Gemma, so the only way a consumer can tell which document shape it holds is the
+     * schema version. It was on the entity and not on the wire, which left "read the version before assuming
+     * keys" as advice a client could not act on (uib, 2026-09-03).
+     */
+    @Test
+    public void getPreboarded_carriesTheSchemaVersionAlongsideThePayload() {
+        preboarded.setSourceMetadata( "{\"geoAccession\":\"GSE12345\"}" );
+        preboarded.setSourceMetadataSchemaVersion( 1 );
+
+        PreboardedWebService.PreboardedResponse body = webService.getPreboarded( 9876L );
+
+        assertThat( body.identifyingMetadata ).isEqualTo( "{\"geoAccession\":\"GSE12345\"}" );
+        assertThat( body.sourceMetadataSchemaVersion ).isEqualTo( 1 );
+    }
+
+    /** Null is a real answer — the scrape path leaves it unset, and "unset" is what distinguishes those rows. */
+    @Test
+    public void getPreboarded_schemaVersionIsNullWhenTheWriterSetNone() {
+        preboarded.setSourceMetadata( "{\"geoAccession\":\"GSE12345\"}" );
+
+        PreboardedWebService.PreboardedResponse body = webService.getPreboarded( 9876L );
+
+        assertThat( body.identifyingMetadata ).isNotNull();
+        assertThat( body.sourceMetadataSchemaVersion ).isNull();
+    }
+
     @Test
     public void createPreboarded_freshAccessionReturns201() throws Exception {
         when( preboardedService.createPreboarded( eq( "GSE99" ), anyString(), any() ) )
