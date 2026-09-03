@@ -11,6 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.core.context.TestComponent;
@@ -60,6 +61,41 @@ public class FactorValueValueObjectSerializerTest extends BaseTest5 {
         // both rows are listed either way: the two arrays are one collection, not two kinds of thing
         assertEquals( 2, objectMapper.readTree( objectMapper.writeValueAsString( fvvo ) ).get( "statements" ).size() );
         assertEquals( 2, objectMapper.readTree( objectMapper.writeValueAsString( fvvo ) ).get( "characteristics" ).size() );
+    }
+
+    /**
+     * The baseline designation reaches the wire.
+     * <p>
+     * This serializer replaces the bean path for every factor value the API returns, and it hand-writes the
+     * fields — so the {@code @JsonProperty("isBaseline")} on the VO was dead, and no endpoint said which factor
+     * value was the reference level even though 665 rows on prod are marked. A design GET could not tell a
+     * curator, and a GET → PUT round-trip could not carry the designation back.
+     */
+    @Test
+    public void aBaselineFactorValueSaysSoOnTheWire() throws JsonProcessingException {
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
+        fv.setIsBaseline( true );
+
+        JsonAssert.with( objectMapper.writeValueAsString( new FactorValueValueObject( fv ) ) )
+                .assertEquals( "$.isBaseline", true );
+        JsonAssert.with( objectMapper.writeValueAsString( new FactorValueBasicValueObject( fv ) ) )
+                .assertEquals( "$.isBaseline", true );
+    }
+
+    /**
+     * Absent, not false, when nothing was designated. The flag is three-valued on write — null means "no
+     * change" — so a rendered {@code false} has to keep meaning "explicitly not the baseline".
+     */
+    @Test
+    public void anUndesignatedFactorValueOmitsTheFlagRatherThanSayingFalse() throws JsonProcessingException {
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
+
+        assertFalse( objectMapper.readTree( objectMapper.writeValueAsString( new FactorValueBasicValueObject( fv ) ) )
+                .has( "isBaseline" ) );
     }
 
     /**
