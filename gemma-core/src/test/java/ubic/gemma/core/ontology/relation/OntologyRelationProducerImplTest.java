@@ -95,6 +95,7 @@ class OntologyRelationProducerImplTest {
     private final Map<String, OntologyTerm> chebiTerms = new LinkedHashMap<>();
     private final Map<String, OntologyTerm> tgemoTerms = new LinkedHashMap<>();
     private final Map<String, OntologyTerm> clTerms = new LinkedHashMap<>();
+    private final Map<String, OntologyTerm> uberonTerms = new LinkedHashMap<>();
     private final Map<String, OntologyTerm> mondoTerms = new LinkedHashMap<>();
     private final List<OntologyXref> xrefs = new ArrayList<>();
 
@@ -106,6 +107,8 @@ class OntologyRelationProducerImplTest {
         when( transactionTemplate.execute( any() ) ).thenAnswer( inv ->
                 ( ( TransactionCallback<?> ) inv.getArgument( 0 ) ).doInTransaction( null ) );
 
+        uberonTerms.put( UBERON_RETINA, term( UBERON_RETINA, "retina" ) );
+        uberonTerms.put( UBERON_CEREBELLAR_CORTEX, term( UBERON_CEREBELLAR_CORTEX, "cerebellar cortex" ) );
         mondoTerms.put( MONDO_ALZHEIMER, term( MONDO_ALZHEIMER, "Alzheimer disease" ) );
         mondoTerms.put( MONDO_AML, term( MONDO_AML, "acute myeloid leukemia" ) );
         mondoTerms.put( MONDO_BREAST_ADENOCARCINOMA, term( MONDO_BREAST_ADENOCARCINOMA, "breast adenocarcinoma" ) );
@@ -173,6 +176,7 @@ class OntologyRelationProducerImplTest {
                 ontology( "chebiOntology", "254", chebiTerms, Collections.emptyList() ),
                 ontology( "gemmaOntology", "2026-08-30", tgemoTerms, Collections.emptyList() ),
                 ontology( "cellTypeOntology", "2026-06-08", clTerms, Collections.emptyList() ),
+                ontology( "uberonOntology", "2026-07-01", uberonTerms, Collections.emptyList() ),
                 ontology( "mondoOntology", "2026-08-04", mondoTerms, xrefs ) );
         return new OntologyRelationProducerImpl( ontologies, dao, transactionTemplate, taxonService, null );
     }
@@ -678,7 +682,7 @@ class OntologyRelationProducerImplTest {
     @Test
     void aCellTypePartOfAnAnatomicalStructureBecomesARelation() {
         clTerms.put( MUELLER_CELL, term( MUELLER_CELL, "Mueller cell",
-                restriction( PART_OF, "part of", term( UBERON_RETINA, "retina" ) ) ) );
+                restriction( PART_OF, "part of", unnamed( UBERON_RETINA ) ) ) );
 
         List<AnnotationRelation> rows = produce( "CL" );
 
@@ -706,7 +710,7 @@ class OntologyRelationProducerImplTest {
     void aNeuronsSomaLocationIsReadToo() {
         clTerms.put( PURKINJE_CELL, term( PURKINJE_CELL, "cerebellar Purkinje cell",
                 restriction( HAS_SOMA_LOCATION, "has soma location",
-                        term( UBERON_CEREBELLAR_CORTEX, "cerebellar cortex" ) ) ) );
+                        unnamed( UBERON_CEREBELLAR_CORTEX ) ) ) );
 
         List<AnnotationRelation> rows = produce( "CL" );
 
@@ -728,5 +732,47 @@ class OntologyRelationProducerImplTest {
                 restriction( OBO + "RO_0002220", "adjacent to", term( UBERON_RETINA, "retina" ) ) ) );
 
         assertThat( produce( "CL" ) ).isEmpty();
+    }
+
+    /**
+     * A target as {@code cl-base} actually presents one: a URI with no label, because CL does not merge
+     * the UBERON classes it points at.
+     */
+    private static OntologyTerm unnamed( String uri ) {
+        OntologyTerm t = mock( OntologyTerm.class );
+        when( t.getUri() ).thenReturn( uri );
+        when( t.getLabel() ).thenReturn( null );
+        return t;
+    }
+
+    /**
+     * 🛑 The regression this exists for, and it cost a wasted prod run. {@code cl-base} does not merge
+     * UBERON, so every target is anonymous in CL's own model; {@code OBJECT_VALUE} is NOT NULL, so an
+     * unnamed target is a DROPPED ROW. The naming fallback consulted only the xref ontology, which is
+     * MONDO and knows nothing about a UBERON class. The first {@code --source CL} run against prod
+     * wrote 3 rows of an expected 1,203 and reported success, with
+     * {@code target absent from the loaded model 1205} the only sign.
+     *
+     * <p>Drop UBERON from the fixture and this goes to zero rows -- which is the shape of the bug, and
+     * why it was invisible: a run that reads every axiom and writes nothing still exits 0.</p>
+     */
+    @Test
+    void aTargetTheSourceCannotNameIsNamedFromTheVocabularyThatOwnsIt() {
+        clTerms.put( MUELLER_CELL, term( MUELLER_CELL, "Mueller cell",
+                restriction( PART_OF, "part of", unnamed( UBERON_RETINA ) ) ) );
+
+        List<AnnotationRelation> rows = produce( "CL" );
+
+        assertThat( rows ).hasSize( 1 );
+        assertThat( rows.get( 0 ).getObjectValue() ).isEqualTo( "retina" );
+        assertThat( rows.get( 0 ).getObjectValueUri() ).isEqualTo( UBERON_RETINA );
+    }
+
+    /** The source has to NAME the vocabularies it points at, or the CLI cannot know to warm them. */
+    @Test
+    void aSourceDeclaresTheVocabulariesItPointsAtButDoesNotMerge() {
+        assertThat( producer().getTargetOntologiesFor( Collections.singletonList( "CL" ) ) )
+                .containsExactly( "UBERON" );
+        assertThat( producer().getTargetOntologiesFor( Collections.singletonList( "CLO" ) ) ).isEmpty();
     }
 }

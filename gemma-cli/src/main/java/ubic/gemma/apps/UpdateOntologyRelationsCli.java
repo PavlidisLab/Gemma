@@ -112,6 +112,11 @@ public class UpdateOntologyRelationsCli extends AbstractAuthenticatedCLI {
         Set<String> wanted = new LinkedHashSet<>(
                 sources != null && !sources.isEmpty() ? sources : ontologyRelationProducer.getSupportedSources() );
         wanted.add( XREF_ONTOLOGY );
+        // 🛑 And the vocabularies those sources point at but do not merge. Without this the read finds
+        // every axiom and then cannot name the target, so the rows are dropped for a null OBJECT_VALUE
+        // and the run reports success: --source CL wrote 3 rows of an expected 1203 on 2026-09-02,
+        // with "target absent from the loaded model 1205" the only sign.
+        wanted.addAll( ontologyRelationProducer.getTargetOntologiesFor( wanted ) );
 
         List<ubic.gemma.core.ontology.providers.OntologyService> toLoad = new ArrayList<>();
         for ( String token : wanted ) {
