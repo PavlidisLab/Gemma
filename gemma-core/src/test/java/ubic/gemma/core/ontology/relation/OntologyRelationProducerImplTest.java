@@ -76,6 +76,13 @@ class OntologyRelationProducerImplTest {
     private static final String HAS_DISEASE = OBO + "RO_0016002";
     private static final String MONDO_AML = OBO + "MONDO_0018874";
 
+    private static final String MUELLER_CELL = OBO + "CL_0000636";
+    private static final String PURKINJE_CELL = OBO + "CL_0000121";
+    private static final String PART_OF = OBO + "BFO_0000050";
+    private static final String HAS_SOMA_LOCATION = OBO + "RO_0002100";
+    private static final String UBERON_RETINA = OBO + "UBERON_0000966";
+    private static final String UBERON_CEREBELLAR_CORTEX = OBO + "UBERON_0002129";
+
     private static final String IMATINIB = OBO + "CHEBI_45783";
     private static final String HAS_ROLE = OBO + "RO_0000087";
     private static final String ANTINEOPLASTIC_AGENT = OBO + "CHEBI_35610";
@@ -87,6 +94,7 @@ class OntologyRelationProducerImplTest {
     private final Map<String, OntologyTerm> cloTerms = new LinkedHashMap<>();
     private final Map<String, OntologyTerm> chebiTerms = new LinkedHashMap<>();
     private final Map<String, OntologyTerm> tgemoTerms = new LinkedHashMap<>();
+    private final Map<String, OntologyTerm> clTerms = new LinkedHashMap<>();
     private final Map<String, OntologyTerm> mondoTerms = new LinkedHashMap<>();
     private final List<OntologyXref> xrefs = new ArrayList<>();
 
@@ -164,6 +172,7 @@ class OntologyRelationProducerImplTest {
                 ontology( "cellLineOntology", "2026-06-19", cloTerms, Collections.emptyList() ),
                 ontology( "chebiOntology", "254", chebiTerms, Collections.emptyList() ),
                 ontology( "gemmaOntology", "2026-08-30", tgemoTerms, Collections.emptyList() ),
+                ontology( "cellTypeOntology", "2026-06-08", clTerms, Collections.emptyList() ),
                 ontology( "mondoOntology", "2026-08-04", mondoTerms, xrefs ) );
         return new OntologyRelationProducerImpl( ontologies, dao, transactionTemplate, taxonService, null );
     }
@@ -550,7 +559,7 @@ class OntologyRelationProducerImplTest {
 
     @Test
     void theSupportedSourcesAreTheOnesTheAllowListNames() {
-        assertThat( producer().getSupportedSources() ).containsExactly( "CLO", "CHEBI", "TGEMO" );
+        assertThat( producer().getSupportedSources() ).containsExactly( "CLO", "CHEBI", "TGEMO", "CL" );
     }
 
     /**
@@ -658,5 +667,66 @@ class OntologyRelationProducerImplTest {
         assertThat( rows ).hasSize( 1 );
         assertThat( rows.get( 0 ).getObjectValue() ).isEqualTo( "Alzheimer disease" );
         assertThat( rows.get( 0 ).getObjectValueUri() ).isEqualTo( MONDO_ALZHEIMER );
+    }
+
+    /**
+     * The case that motivated reading CL at all: {@code CL_0000636} carries {@code part of retina}
+     * asserted on the class in {@code cl-base}, and prod held zero CL rows because
+     * {@link OntologyRelationSource#ALL} did not name the source. Nothing here is inferred -- the axiom
+     * was there the whole time with no reader.
+     */
+    @Test
+    void aCellTypePartOfAnAnatomicalStructureBecomesARelation() {
+        clTerms.put( MUELLER_CELL, term( MUELLER_CELL, "Mueller cell",
+                restriction( PART_OF, "part of", term( UBERON_RETINA, "retina" ) ) ) );
+
+        List<AnnotationRelation> rows = produce( "CL" );
+
+        assertThat( rows ).hasSize( 1 );
+        AnnotationRelation r = rows.get( 0 );
+        assertThat( r.getSubjectValue() ).isEqualTo( "Mueller cell" );
+        assertThat( r.getSubjectValueUri() ).isEqualTo( MUELLER_CELL );
+        assertThat( r.getSubjectCategory() ).isEqualTo( "cell type" );
+        assertThat( r.getPredicate() ).isEqualTo( "part of" );
+        assertThat( r.getPredicateUri() ).isEqualTo( PART_OF );
+        assertThat( r.getObjectValue() ).isEqualTo( "retina" );
+        assertThat( r.getObjectValueUri() ).isEqualTo( UBERON_RETINA );
+        assertThat( r.getObjectCategory() ).isEqualTo( "organism part" );
+        assertThat( r.getSource() ).isEqualTo( "CL" );
+        assertThat( r.getSourceVersion() ).isEqualTo( "2026-06-08" );
+    }
+
+    /**
+     * 🛑 {@code has soma location} is not decoration. CL locates most NEURONS with it rather than
+     * {@code part of}, because an axon leaves the structure its soma sits in -- 250 of the 1,203
+     * CL-to-UBERON location axioms in {@code cl-base} 2026-06-08. Reading only {@code part of} drops a
+     * fifth of the source, and drops it silently, since the run still reports success.
+     */
+    @Test
+    void aNeuronsSomaLocationIsReadToo() {
+        clTerms.put( PURKINJE_CELL, term( PURKINJE_CELL, "cerebellar Purkinje cell",
+                restriction( HAS_SOMA_LOCATION, "has soma location",
+                        term( UBERON_CEREBELLAR_CORTEX, "cerebellar cortex" ) ) ) );
+
+        List<AnnotationRelation> rows = produce( "CL" );
+
+        assertThat( rows ).hasSize( 1 );
+        assertThat( rows.get( 0 ).getPredicateUri() ).isEqualTo( HAS_SOMA_LOCATION );
+        assertThat( rows.get( 0 ).getObjectValueUri() ).isEqualTo( UBERON_CEREBELLAR_CORTEX );
+        assertThat( rows.get( 0 ).getObjectCategory() ).isEqualTo( "organism part" );
+    }
+
+    /**
+     * Adjacency is not membership, so {@code RO_0002220 adjacent to} is off the allow-list even though
+     * CL states it between a cell type and an anatomical structure 13 times. It is sanctioned in
+     * {@code Relation.terms.txt} for curated use, which is exactly why the exclusion needs a guard: a
+     * reader could add it believing the vocabulary had already blessed it.
+     */
+    @Test
+    void anAdjacencyAxiomIsNotReadAsALocation() {
+        clTerms.put( MUELLER_CELL, term( MUELLER_CELL, "Mueller cell",
+                restriction( OBO + "RO_0002220", "adjacent to", term( UBERON_RETINA, "retina" ) ) ) );
+
+        assertThat( produce( "CL" ) ).isEmpty();
     }
 }

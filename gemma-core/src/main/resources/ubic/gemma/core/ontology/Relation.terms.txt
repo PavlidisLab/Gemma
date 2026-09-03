@@ -29,3 +29,5 @@ http://purl.obolibrary.org/obo/CLO_0037207	derives from organism
 http://purl.obolibrary.org/obo/CLO_0037208	derives from anatomic part
 http://purl.obolibrary.org/obo/CLO_0037227	cell line cell derived from anatomical part
 http://purl.obolibrary.org/obo/CLO_0037229	cell line cell derived from organism
+http://purl.obolibrary.org/obo/BFO_0000050	part of
+http://purl.obolibrary.org/obo/RO_0002100	has soma location

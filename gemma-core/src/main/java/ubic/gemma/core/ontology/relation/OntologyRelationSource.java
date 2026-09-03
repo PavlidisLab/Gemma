@@ -345,5 +345,31 @@ class OntologyRelationSource {
             new Relation( OBO + "RO_0016002", "has disease", Categories.DISEASE, false, false,
                     Categories.GENOTYPE ) ) );
 
-    static final List<OntologyRelationSource> ALL = Collections.unmodifiableList( Arrays.asList( CLO, CHEBI, TGEMO ) );
+    /**
+     * CL -- where a cell type sits anatomically, which CL asserts on the class and nothing read.
+     *
+     * <p>Measured on {@code cl-base} 2026-06-08, the artifact Gemma loads: 1,208 location axioms over
+     * 1,180 CL classes, 1,203 of them targeting UBERON. Every one is asserted on the class itself --
+     * {@code cl-base} and the full merged {@code cl.json} carry the identical count, so CL does not
+     * propagate these down {@code is_a} and neither does anything here. A cell type whose only
+     * location comes from an ancestor is NOT produced: the entailment is valid and frequently useless
+     * ({@code Mueller cell} inherits {@code part of photoreceptor array} from {@code retinal cell}),
+     * and sorting the useful ones out is a separate piece of work.</p>
+     *
+     * <p>🛑 Two properties, not one. {@code BFO_0000050 part of} carries 953 of the edges and
+     * {@code RO_0002100 has soma location} another 250 -- the latter is how CL locates most neurons,
+     * because an axon leaves the structure its soma sits in. Reading only {@code part of} silently
+     * drops a fifth of the source. {@code RO_0002220 adjacent to} is deliberately absent: adjacency is
+     * not membership.</p>
+     *
+     * <p>⚠️ {@code cl-base} does not merge UBERON, so these targets are anonymous in CL's own model and
+     * are named from the owning ontology by the producer's fallback -- the same path TGEMO needed.
+     * {@code OBJECT_VALUE} is NOT NULL, so without it every row would be dropped.</p>
+     */
+    static final OntologyRelationSource CL = new OntologyRelationSource( "CL", "CL", OBO + "CL_",
+            Categories.CELL_TYPE, Arrays.asList(
+            new Relation( OBO + "BFO_0000050", "part of", Categories.ORGANISM_PART, false ),
+            new Relation( OBO + "RO_0002100", "has soma location", Categories.ORGANISM_PART, false ) ) );
+
+    static final List<OntologyRelationSource> ALL = Collections.unmodifiableList( Arrays.asList( CLO, CHEBI, TGEMO, CL ) );
 }
