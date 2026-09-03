@@ -392,8 +392,15 @@ class OntologyRelationSource {
      */
     static final OntologyRelationSource CL = new OntologyRelationSource( "CL", "CL", OBO + "CL_",
             Categories.CELL_TYPE, Collections.singletonList( "UBERON" ), Arrays.asList(
-            new Relation( OBO + "BFO_0000050", "part of", Categories.ORGANISM_PART, false ),
-            new Relation( OBO + "RO_0002100", "has soma location", Categories.ORGANISM_PART, false ) ) );
+            // 🛑 The TARGET's vocabulary decides the category, not a fixed one. These properties are
+            // overwhelmingly CL->UBERON (1,203 of 1,208 axioms in cl-base), but the remainder point at
+            // another CL class -- oligodendrocyte precursor cell part_of glial cell -- and a fixed
+            // "organism part" files a cell type as an anatomical structure. Three such rows reached
+            // prod on 2026-09-02 before this was noticed. CATEGORY_BY_VOCABULARY already knows CL_ is a
+            // cell type and UBERON_ an organism part; a target in neither gets a null category, which
+            // is the honest answer rather than a guess.
+            new Relation( OBO + "BFO_0000050", "part of", null, false, true ),
+            new Relation( OBO + "RO_0002100", "has soma location", null, false, true ) ) );
 
     static final List<OntologyRelationSource> ALL = Collections.unmodifiableList( Arrays.asList( CLO, CHEBI, TGEMO, CL ) );
 }
