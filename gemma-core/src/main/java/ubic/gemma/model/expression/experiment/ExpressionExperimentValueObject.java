@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
@@ -197,6 +198,20 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer numberOfCellIds;
+
+    /**
+     * The other parts of the study this dataset was split off from, empty when it was not split.
+     * <p>
+     * Gemma splits an experiment by a factor — usually organism part for single-cell data — and names each
+     * part {@code Split part N of: … [organism part = …]}. That title tells a reader siblings exist and gives
+     * them no way to reach one: 52 of 100 sampled single-cell datasets are split parts over 32 parent studies,
+     * and neither the curation UI nor the browser could follow the link, because the field lived on a VO only
+     * {@code /experiment-sets/{id}/datasets} serves (uib, 2026-09-03).
+     * <p>
+     * References rather than whole VOs: a sibling is rendered as a name and a link, and the previous full-VO
+     * form cost a {@code loadValueObjectsByIds} per split experiment.
+     */
+    private List<ExpressionExperimentReferenceValueObject> otherParts = new ArrayList<>();
 
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)

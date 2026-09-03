@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentReferenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Filter;
@@ -918,6 +919,59 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         // No SingleCellDimensionExperiment row here, and deliberately still single-cell: 29 datasets on prod
         // are in exactly this state. The count is unknown, the modality is not.
         assertNull( eevo.getNumberOfCellIds() );
+    }
+
+    /**
+     * A split part names its siblings on the dataset itself.
+     * <p>
+     * Gemma splits an experiment by a factor and titles each part "Split part N of: …", which tells a reader
+     * siblings exist and gives no way to reach one — 52 of 100 sampled single-cell datasets are split parts
+     * (uib, 2026-09-03), and the field lived on a VO only /experiment-sets/{id}/datasets serves.
+     */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectCarriesTheOtherPartsOfASplitStudy() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment part1 = new ExpressionExperiment();
+        part1.setShortName( "Study-2024.1" );
+        part1.setName( "Split part 1 of: Study [organism part = visual cortex]" );
+        part1.setTaxon( taxon );
+        ExpressionExperiment part2 = new ExpressionExperiment();
+        part2.setShortName( "Study-2024.2" );
+        part2.setName( "Split part 2 of: Study [organism part = hippocampus]" );
+        part2.setTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( part1 );
+        sessionFactory.getCurrentSession().persist( part2 );
+        part1.getOtherParts().add( part2 );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( part1 );
+        assertNotNull( vo );
+        assertEquals( 1, vo.getOtherParts().size() );
+        ExpressionExperimentReferenceValueObject sibling = vo.getOtherParts().get( 0 );
+        assertEquals( part2.getId(), sibling.getId() );
+        assertEquals( "Study-2024.2", sibling.getShortName() );
+        // the title is the only place the distinguishing factor value appears, so a reference that carries
+        // only the short name cannot tell one sibling from another
+        assertEquals( "Split part 2 of: Study [organism part = hippocampus]", sibling.getName() );
+    }
+
+    /** An unsplit dataset gets an empty list, not null — one shape for every dataset. */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectOtherPartsIsEmptyForAnUnsplitDataset() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertNotNull( vo.getOtherParts() );
+        assertTrue( vo.getOtherParts().isEmpty() );
     }
 
     /** And an ordinary dataset says so, rather than leaving the client to infer it. */

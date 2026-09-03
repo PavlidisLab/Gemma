@@ -2452,17 +2452,10 @@ public class ExpressionExperimentDaoImpl
                             .orElse( 0 );
                     vo.setNumberOfBioAssays( bioAssayCount );
 
-                    Set<Long> otherPartsIds = details.stream()
-                            .map( ExpressionExperimentDetail::getOtherPartId )
-                            .filter( Objects::nonNull )
-                            .collect( Collectors.toSet() );
-
-                    List<ExpressionExperimentValueObject> otherPartsVos = loadValueObjectsByIds( otherPartsIds ).stream()
-                            .sorted( Comparator.comparing( ExpressionExperimentValueObject::getShortName ) ).collect( Collectors.toList() );
-
-                    // other parts (maybe fetch in details query?)
-                    vo.setOtherParts( otherPartsVos );
                 }
+
+                // One batched query for the whole page, replacing a loadValueObjectsByIds per split experiment.
+                populateOtherParts( vos );
 
                 try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
                     populateAnalysisInformation( vos, cacheable );
@@ -2556,6 +2549,39 @@ public class ExpressionExperimentDaoImpl
         populatePlatforms( results );
         populateDateCreated( results );
         populateSingleCellInfo( results );
+        populateOtherParts( results );
+    }
+
+    /**
+     * Fill in {@code otherParts} — the sibling datasets of a study Gemma split — for a page of VOs in one query.
+     * <p>
+     * Compact references, not whole VOs: the details path used to run a {@code loadValueObjectsByIds} per split
+     * experiment to render what a client shows as a name and a link.
+     * <p>
+     * The relation is bidirectional and not reliably written from both ends (see {@code remove}), so this reads
+     * it in the stored direction only, which is the direction {@code SplitExperimentService} writes.
+     */
+    private void populateOtherParts( Collection<? extends ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, op.id, op.shortName, op.name "
+                        + "from ExpressionExperiment ee join ee.otherParts op "
+                        + "where ee.id in (:ids)" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, List<ExpressionExperimentReferenceValueObject>> byEe = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> byEe.computeIfAbsent( ( Long ) row[0], k -> new ArrayList<>() )
+                        .add( new ExpressionExperimentReferenceValueObject( ( Long ) row[1], ( String ) row[2],
+                                ( String ) row[3] ) ) );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            List<ExpressionExperimentReferenceValueObject> parts = byEe.getOrDefault( eevo.getId(), new ArrayList<>() );
+            parts.sort( Comparator.comparing( ExpressionExperimentReferenceValueObject::getShortName,
+                    Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+            eevo.setOtherParts( parts );
+        }
     }
 
     /**

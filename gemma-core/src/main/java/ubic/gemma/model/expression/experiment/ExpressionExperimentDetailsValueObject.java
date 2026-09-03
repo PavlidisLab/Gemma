@@ -115,11 +115,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     // -- the field had no reader anywhere in the codebase -- and which now collides with the base
     // field every filtered read populates.
 
-    // if it was split.
-    /**
-     * Experiments that are related to this one via the splitting of a source experiment.
-     */
-    private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
+    // otherParts moved to ExpressionExperimentValueObject, as compact references rather than whole VOs, so
+    // that GET /datasets/{id} carries the split linkage too.
 
     private CitationValueObject primaryCitation;
     /**
