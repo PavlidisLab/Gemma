@@ -71,6 +71,7 @@
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetTriage"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetDisposition"/>
+        <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDecision"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.CurationLock"/>
         <mapping class="ubic.gemma.model.common.auditAndSecurity.curation.Ticket"/>

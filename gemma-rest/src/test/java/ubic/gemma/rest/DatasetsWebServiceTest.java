@@ -387,6 +387,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationDecisionService curationDecisionService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationDecisionService.class );
+        }
+
+        @Bean
         public ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService curationLockService() {
             return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService.class );
         }

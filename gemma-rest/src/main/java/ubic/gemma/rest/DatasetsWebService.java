@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ubic.gemma.core.security.SecurityService;
@@ -100,6 +101,11 @@ import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDecision;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDecisionScope;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDecisionType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TriageJudgeKind;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationDecisionService;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
@@ -366,6 +372,9 @@ public class DatasetsWebService {
     /** Used by the snapshot/restore pair to load a stored payload; the delegating routes go through the web service above. */
     @Autowired
     private AnnotationSetService annotationSetService;
+
+    @Autowired
+    private CurationDecisionService curationDecisionService;
     @Autowired
     private AnnotationSetTriageService annotationSetTriageService;
     @Autowired
@@ -2492,6 +2501,211 @@ public class DatasetsWebService {
             @QueryParam("shape") @Nullable String shape
     ) {
         return annotationSetsWebService.listAnnotationSets( datasetArg, role, source, createdBy, shape );
+    }
+
+    /* ============== curation decisions (refusals) ============== */
+
+    /**
+     * Record a curator's standing ruling that a change must NOT be made -- or,
+     * rarely, that one may be.
+     */
+    @POST
+    @Path("/{dataset}/curation/decisions")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Record a refusal (or an approval) on a dataset",
+            description = "A refusal has nothing to commit -- the whole content is the \"no\" -- so this is "
+                    + "where it lives. Without it a curator who rules against a proposed edit can only "
+                    + "delete the proposal, losing the fact that they considered it, or leave it, where it "
+                    + "reads as pending forever.\n\n"
+                    + "`decision` is `refused` or `allowed`. `scope` is `item` (this tag, this deletion), "
+                    + "`key` (everything under a key, INCLUDING siblings not yet proposed) or `proposal` "
+                    + "(a whole annotation set, which `annotationSetId` names instead of a key).\n\n"
+                    + "🛑 `decisionKey` describes WHAT was ruled on, not which proposed item was in front of "
+                    + "the curator. The point of a refusal is that the same edit is not proposed again next "
+                    + "quarter, and next quarter's proposal is a new item with a new id -- so a ruling keyed "
+                    + "on an item can never match the thing it exists to prevent. It is opaque here: Gemma "
+                    + "never parses curation content, so the producer computes and matches it.\n\n"
+                    + "🛑 GEMMA RECORDS A REFUSAL AND DOES NOT ENFORCE ONE. A commit that violates a standing "
+                    + "refusal is not rejected. The gate belongs on the proposing side, where the key means "
+                    + "something.\n\n"
+                    + "`reason` is REQUIRED -- a refusal has no other content, and a later reader needs it to "
+                    + "judge whether the refusal still applies. Free text.\n\n"
+                    + "Append-only: lifting a refusal means posting `allowed`, not deleting the `refused`, so "
+                    + "why it was refused survives the reversal. `?onBehalfOf=` names the deciding curator "
+                    + "when an agent relays the call; honoured only for `GROUP_AGENT` / `GROUP_ADMIN`.\n\n"
+                    + "Per dataset. A ruling that applies corpus-wide is a CONVENTION and belongs in the "
+                    + "curation rules the agent reads, not here.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "The decision was recorded.",
+                            content = @Content(schema = @Schema(implementation = CurationDecisionResponse.class))),
+                    @ApiResponse(responseCode = "400",
+                            description = "A field is missing or names no value, `reason` is blank, or the "
+                                    + "scope disagrees with the key / proposal given.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No such dataset or annotation set.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response recordCurationDecision(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Who is deciding. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
+            @Nullable CurationDecisionRequest body
+    ) {
+        if ( body == null ) {
+            throw new BadRequestException( "Request body is required." );
+        }
+        CurationDecisionType decision;
+        CurationDecisionScope scope;
+        try {
+            decision = CurationDecisionType.fromDbValue( body.decision );
+            scope = CurationDecisionScope.fromDbValue( body.scope );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( e.getMessage() );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        AnnotationSet answered = null;
+        if ( body.annotationSetId != null ) {
+            answered = annotationSetService.load( body.annotationSetId );
+            if ( answered == null ) {
+                throw new NotFoundException( "No annotation set with id " + body.annotationSetId );
+            }
+        }
+        String decidedBy = SecurityUtil.resolveActingIdentity( onBehalfOf );
+        TriageJudgeKind kind = resolveDecisionJudgeKind( body.judgeKind, onBehalfOf );
+        CurationDecision d;
+        try {
+            d = curationDecisionService.decide( ee, decision, scope, body.decisionKey,
+                    answered, body.reason, decidedBy, kind );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( e.getMessage(), e );
+        }
+        return Response.status( Response.Status.CREATED ).entity( toDecisionResponse( d ) ).build();
+    }
+
+    /**
+     * The standing refusals on a dataset, or the whole decision log.
+     */
+    @GET
+    @Path("/{dataset}/curation/decisions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Read the standing refusals on a dataset",
+            description = "By default one row per key: the STANDING decision, which is the most recent. "
+                    + "Pass `?history=true` for the full append-only sequence, newest first, reversed "
+                    + "decisions included.\n\n"
+                    + "A key whose latest row is `allowed` appears here as allowed rather than vanishing: "
+                    + "\"refused, then lifted\" and \"never ruled on\" are different states and the caller "
+                    + "decides what each means.\n\n"
+                    + "🛑 The scope is part of what a decision supersedes. A ruling on one item does not "
+                    + "reverse a ruling on the whole key it belongs to, nor the other way round, so this can "
+                    + "return an `item` row and a `key` row that look contradictory and are not.")
+    public Response getCurationDecisions(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Return every decision rather than the standing one per key.")
+            @QueryParam("history") @DefaultValue("false") boolean history
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        List<CurationDecision> rows = history
+                ? curationDecisionService.findByInvestigation( ee )
+                : curationDecisionService.standingFor( ee );
+        List<CurationDecisionResponse> out = new ArrayList<>( rows.size() );
+        for ( CurationDecision d : rows ) {
+            out.add( toDecisionResponse( d ) );
+        }
+        return Response.ok( out ).build();
+    }
+
+    /**
+     * Who decided: a person, or a machine. Taken from the caller rather than
+     * inferred from the transport, for the reason the triage endpoint gives --
+     * the agent authenticates as whichever account runs it, which today is a
+     * human administrator, so inferring from the principal reports CURATOR for
+     * an agent's own rulings.
+     */
+    private static TriageJudgeKind resolveDecisionJudgeKind( @Nullable String declared,
+            @Nullable String onBehalfOf ) {
+        if ( declared != null && !declared.isBlank() ) {
+            try {
+                return TriageJudgeKind.fromDbValue( declared );
+            } catch ( IllegalArgumentException e ) {
+                throw new BadRequestException( "Unknown judgeKind '" + declared
+                        + "'; expected agent or curator." );
+            }
+        }
+        boolean decidedForSomeoneNamed = onBehalfOf != null && !onBehalfOf.isBlank();
+        return !decidedForSomeoneNamed && SecurityUtil.isUserAgent()
+                ? TriageJudgeKind.AGENT : TriageJudgeKind.CURATOR;
+    }
+
+    private static CurationDecisionResponse toDecisionResponse( CurationDecision d ) {
+        CurationDecisionResponse r = new CurationDecisionResponse();
+        r.id = d.getId();
+        r.datasetId = d.getInvestigation() != null ? d.getInvestigation().getId() : null;
+        r.decision = d.getDecision() != null ? d.getDecision().getDbValue() : null;
+        r.scope = d.getScope() != null ? d.getScope().getDbValue() : null;
+        r.decisionKey = d.getDecisionKey();
+        r.annotationSetId = d.getAnnotationSet() != null ? d.getAnnotationSet().getId() : null;
+        r.reason = d.getReason();
+        r.decidedBy = d.getDecidedBy();
+        r.judgeKind = d.getJudgeKind() != null ? d.getJudgeKind().getDbValue() : null;
+        r.decidedAt = d.getDecidedAt();
+        return r;
+    }
+
+    /** Body for {@link #recordCurationDecision}. */
+    public static class CurationDecisionRequest {
+        @Schema(allowableValues = { "refused", "allowed" })
+        @JsonProperty("decision")
+        public String decision;
+        @Schema(allowableValues = { "item", "key", "proposal" })
+        @JsonProperty("scope")
+        public String scope;
+        /**
+         * WHAT was ruled on, in your own terms -- not which proposed item was
+         * in front of the curator. Required except for scope `proposal`.
+         */
+        @JsonProperty("decisionKey")
+        @JsonAlias("decision_key")
+        @Nullable
+        public String decisionKey;
+        /** The proposal answered. Required for scope `proposal`, optional otherwise. */
+        @JsonProperty("annotationSetId")
+        @JsonAlias("annotation_set_id")
+        @Nullable
+        public Long annotationSetId;
+        /** Why. REQUIRED -- a refusal has no other content. Free text. */
+        @JsonProperty("reason")
+        public String reason;
+        @Schema(allowableValues = { "agent", "curator" })
+        @JsonProperty("judgeKind")
+        @Nullable
+        public String judgeKind;
+    }
+
+    /** Wire shape of one curation decision. */
+    public static class CurationDecisionResponse {
+        public Long id;
+        @JsonProperty("datasetId")
+        public Long datasetId;
+        @Schema(allowableValues = { "refused", "allowed" })
+        public String decision;
+        @Schema(allowableValues = { "item", "key", "proposal" })
+        public String scope;
+        @JsonProperty("decisionKey")
+        @Nullable
+        public String decisionKey;
+        @JsonProperty("annotationSetId")
+        @Nullable
+        public Long annotationSetId;
+        public String reason;
+        @JsonProperty("decidedBy")
+        public String decidedBy;
+        @Schema(allowableValues = { "agent", "curator" })
+        @JsonProperty("judgeKind")
+        public String judgeKind;
+        @JsonProperty("decidedAt")
+        public Date decidedAt;
     }
 
     /* ============== curation lock ============== */
