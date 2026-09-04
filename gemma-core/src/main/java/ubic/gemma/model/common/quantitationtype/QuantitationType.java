@@ -20,6 +20,7 @@ package ubic.gemma.model.common.quantitationtype;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
+import org.hibernate.annotations.ColumnDefault;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -82,8 +83,13 @@ public class QuantitationType extends AbstractDescribable {
      * Indicate which set of {@link ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector} is
      * preferred.
      */
-    // this needs a default to remain backward-compatible with 1.31, it can be removed once the release is out
-    @Column(name = "IS_SINGLE_CELL_PREFERRED", nullable = false, columnDefinition = "TINYINT default false")
+    // this needs a default to remain backward-compatible with 1.31, it can be removed once the release is out.
+    // The DEFAULT goes in @ColumnDefault, NOT in columnDefinition: schema validation compares the
+    // columnDefinition string against information_schema COLUMN_TYPE, which never carries a DEFAULT
+    // clause, so "TINYINT default false" fails to match a plain "tinyint" -- even one Hibernate
+    // generated itself from this mapping. @ColumnDefault emits the same DDL without being compared.
+    @ColumnDefault("false")
+    @Column(name = "IS_SINGLE_CELL_PREFERRED", nullable = false, columnDefinition = "TINYINT")
     private boolean isSingleCellPreferred;
 
     /**
