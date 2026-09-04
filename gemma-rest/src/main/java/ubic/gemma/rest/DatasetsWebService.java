@@ -2480,11 +2480,16 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         CurationDocument snapshot = readSnapshotPayload( setId, ee );
-        reconcileSnapshotForRestore( snapshot, ee );
+        Map<String, Long> reidentified = reconcileSnapshotForRestore( snapshot, ee );
         // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
         // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
         snapshot.setBaseline( null );
-        return respond( doCommitCuration( datasetArg, snapshot, dryRun, force, false, null, false ) );
+        CurationCommitReport report = doCommitCuration( datasetArg, snapshot, dryRun, force, false, null, false );
+        // Attached on BOTH the dry run and the apply. The dry run is the only step a human reads before
+        // deciding, and its section tallies say "one tag created" for an entity that is really being
+        // re-identified -- measured 2026-09-03: tag 9018 came back as 9019 and nothing in the preview said so.
+        report.setReidentified( reidentified );
+        return respond( report );
     }
 
     @GET
@@ -5177,7 +5182,11 @@ public class DatasetsWebService {
      * <em>identity</em>. Recreated factor values get fresh ids, and any analysis that survived the intervening
      * run is cascaded again on the way back.
      */
-    private void reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee ) {
+    /**
+     * @return {@code clientRef -> the gemmaId that will NOT survive}, for every entity the restore has to
+     *         recreate rather than update. Empty when the replay is fully id-stable.
+     */
+    private Map<String, Long> reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee ) {
         ExperimentalDesignValueObject current = expressionExperimentService.getExperimentalDesignValueObject( ee );
         Set<Long> liveFactorIds = new HashSet<>();
         Set<Long> liveFvIds = new HashSet<>();
@@ -5194,6 +5203,7 @@ public class DatasetsWebService {
             }
         }
 
+        Map<String, Long> reidentified = new LinkedHashMap<>();
         int seq = 0;
         Set<Long> snapshotFactorIds = new HashSet<>();
         Set<Long> snapshotFvIds = new HashSet<>();
@@ -5203,23 +5213,32 @@ public class DatasetsWebService {
                 if ( fc.getGemmaId() != null && liveFactorIds.contains( fc.getGemmaId() ) ) {
                     snapshotFactorIds.add( fc.getGemmaId() );
                 } else {
+                    Long lost = fc.getGemmaId();
+                    String ref = "restore-f-" + ( seq++ );
                     fc.setGemmaId( null );
-                    fc.setClientRef( "restore-f-" + ( seq++ ) );
+                    fc.setClientRef( ref );
+                    reidentified.put( ref, lost );
                 }
                 for ( FactorValueCommit fvc : nullSafe( fc.getFactorValues().getItems() ) ) {
                     // a factor value cannot keep its id under a factor that is being recreated
                     if ( fc.getGemmaId() != null && fvc.getGemmaId() != null && liveFvIds.contains( fvc.getGemmaId() ) ) {
                         snapshotFvIds.add( fvc.getGemmaId() );
                     } else {
+                        Long lost = fvc.getGemmaId();
+                        String ref = "restore-fv-" + ( seq++ );
                         fvc.setGemmaId( null );
-                        fvc.setClientRef( "restore-fv-" + ( seq++ ) );
+                        fvc.setClientRef( ref );
+                        reidentified.put( ref, lost );
                     }
                     for ( StatementCommit sc : nullSafe( fvc.getStatements().getItems() ) ) {
                         if ( fvc.getGemmaId() != null && sc.getGemmaId() != null && liveStatementIds.contains( sc.getGemmaId() ) ) {
                             snapshotStatementIds.add( sc.getGemmaId() );
                         } else {
+                            Long lost = sc.getGemmaId();
+                            String ref = "restore-s-" + ( seq++ );
                             sc.setGemmaId( null );
-                            sc.setClientRef( "restore-s-" + ( seq++ ) );
+                            sc.setClientRef( ref );
+                            reidentified.put( ref, lost );
                         }
                     }
                     // statements present now but not in the snapshot were added since: drop them
@@ -5248,9 +5267,10 @@ public class DatasetsWebService {
         }
 
         reconcileIdSection( snapshot.getTags(), currentTagIds( ee ), "restore-t-",
-                DatasetsWebService::clearTagDecoration );
+                DatasetsWebService::clearTagDecoration, reidentified );
         reconcileIdSection( snapshot.getSampleCharacteristics(), currentSampleCharacteristicIds( ee ), "restore-sc-",
-                DatasetsWebService::clearSampleCharacteristicDecoration );
+                DatasetsWebService::clearSampleCharacteristicDecoration, reidentified );
+        return reidentified;
     }
 
     /**
@@ -5264,7 +5284,7 @@ public class DatasetsWebService {
      *                        here — where it is provably not being applied — instead of being sent to be refused.
      */
     private static <T extends EntityRef> void reconcileIdSection( @Nullable Section<T> section, Set<Long> liveIds,
-            String clientRefPrefix, Consumer<T> clearDecoration ) {
+            String clientRefPrefix, Consumer<T> clearDecoration, Map<String, Long> reidentified ) {
         if ( section == null ) {
             return;
         }
@@ -5275,8 +5295,14 @@ public class DatasetsWebService {
                 kept.add( item.getGemmaId() );
                 clearDecoration.accept( item );
             } else {
+                Long lost = item.getGemmaId();
+                String ref = clientRefPrefix + ( seq++ );
                 item.setGemmaId( null );
-                item.setClientRef( clientRefPrefix + ( seq++ ) );
+                item.setClientRef( ref );
+                // The moment identity is lost, recorded so a DRY RUN can say so. Everything downstream
+                // sees only "one item will be created", which reads like a restoration rather than a
+                // re-identification; the old id is knowable only here, before the commit runs.
+                reidentified.put( ref, lost );
             }
         }
         for ( Long liveId : liveIds ) {
@@ -5667,6 +5693,17 @@ public class DatasetsWebService {
          */
         @Nullable
         private final Date newBaseline;
+        /**
+         * {@code clientRef -> the gemmaId that will NOT survive}, for every entity a RESTORE has to recreate
+         * rather than update in place. Empty on an id-stable replay and on an ordinary commit.
+         * <p>
+         * 🛑 This is the only field that distinguishes "this content comes back" from "this content comes back
+         * under a NEW id". The section tallies cannot: they report such an entity as {@code created}, which
+         * reads like a restoration. Anything keyed on the old id -- a per-finding disposition, an external
+         * ledger row -- dangles the moment the restore applies, and on the DRY RUN this is the only warning a
+         * curator gets. Pair it with {@link #getIdMap()} on an applied restore to read old id -> new id.
+         */
+        private Map<String, Long> reidentified = Collections.emptyMap();
         private final String error;
 
         private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
@@ -5731,6 +5768,10 @@ public class DatasetsWebService {
         @Nullable
         public Date getNewBaseline() { return newBaseline; }
         public Map<String, Long> getIdMap() { return idMap; }
+        public Map<String, Long> getReidentified() { return reidentified; }
+        void setReidentified( Map<String, Long> reidentified ) {
+            this.reidentified = reidentified != null ? reidentified : Collections.emptyMap();
+        }
         public Map<String, CurationSectionChange> getChanges() { return changes; }
         public List<Long> getAuditEventIds() { return auditEventIds; }
         public List<Canonicalization> getCanonicalizations() { return canonicalizations; }
