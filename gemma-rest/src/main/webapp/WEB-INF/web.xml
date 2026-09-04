@@ -176,6 +176,25 @@
     </filter>
 
     <!--
+        Serves the Swagger UI landing page for the directory URL /resources/restapidocs/,
+        forwarding it to index.html (and redirecting the slashless form to add the slash).
+
+        This does NOT duplicate <welcome-file-list> below. Welcome-file resolution applies
+        to a directory request that falls through to the default ("/") servlet mapping, and
+        nothing here is mapped to "/" — DefaultServlet is mapped to /resources/* and a set
+        of extension globs, so the prefix mapping claims the request and the welcome-file
+        machinery never runs. Tomcat still recognises the path as a directory (it 302s the
+        slashless form) but then 404s the trailing-slash form.
+
+        Only /resources/restapidocs/ needs this. Everything else under /resources/ is a
+        real file request, and /rest/v2/** is Jersey.
+    -->
+    <filter>
+        <filter-name>restapidocsIndexRewriteFilter</filter-name>
+        <filter-class>ubic.gemma.rest.servlet.RestapidocsIndexRewriteFilter</filter-class>
+    </filter>
+
+    <!--
         Filter ordering. Servlet spec evaluates <filter-mapping> elements in the
         order they appear in the descriptor. We need:
           1. encodingFilter (set charset before anything reads the body)
@@ -186,6 +205,8 @@
           4. requestIdMdcFilter        (populates MDC requestId + userId for log
                                         correlation — must run after the security
                                         chain so SecurityContextHolder is set)
+          5. restapidocsIndexRewriteFilter (forwards one directory URL to index.html;
+                                        last because it ends the chain for that path)
     -->
     <filter-mapping>
         <filter-name>encodingFilter</filter-name>
@@ -204,6 +225,13 @@
     <filter-mapping>
         <filter-name>requestIdMdcFilter</filter-name>
         <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <!-- Two exact patterns, not a prefix: the forward target
+         /resources/restapidocs/index.html must NOT re-enter this filter. -->
+    <filter-mapping>
+        <filter-name>restapidocsIndexRewriteFilter</filter-name>
+        <url-pattern>/resources/restapidocs</url-pattern>
+        <url-pattern>/resources/restapidocs/</url-pattern>
     </filter-mapping>
 
     <!--
@@ -264,8 +292,9 @@
         is now a static HTML file served directly by the DefaultServlet — gemma-rest
         deliberately has no JSP support (no DispatcherServlet, no <jsp-config>). The
         page derives the context path client-side from window.location.pathname so the
-        same file works for any deploy path. See RestapidocsIndexRewriteFilter for the
-        /resources/restapidocs/ -> /resources/restapidocs/index.html rewrite.
+        same file works for any deploy path. The directory URL /resources/restapidocs/
+        is forwarded here by restapidocsIndexRewriteFilter, declared above; this prefix
+        mapping is why the welcome-file list cannot do it.
     -->
     <servlet>
         <servlet-name>default</servlet-name>
@@ -292,11 +321,21 @@
     </servlet-mapping>
 
     <!--
-        Welcome file. /resources/restapidocs/ (and / once the WAR is at ROOT)
-        falls through to index.html via DefaultServlet's welcome-file machinery
-        instead of 404'ing on the directory path. This replaces the
-        RestapidocsIndexRewriteFilter mentioned in the comment above (which was
-        never actually implemented).
+        Welcome file. Kept for a future "/" mapping (e.g. if the WAR ever serves a
+        landing page at the context root), but it does NOT serve
+        /resources/restapidocs/ today and never has.
+
+        Welcome-file resolution applies to a directory request that falls through to
+        the default ("/") servlet mapping. Nothing here is mapped to "/", and the
+        DefaultServlet above is mapped to /resources/* — that prefix mapping claims
+        /resources/restapidocs/ directly, so the welcome-file machinery never runs and
+        the request 404s. That is what restapidocsIndexRewriteFilter is mapped for.
+
+        This block was added in d1b0a53831 (2026-05-22) to fix exactly that 404 and did
+        not, which was not noticed because the two deployments that surface it
+        (gemma2.msl.ubc.ca, staging-gemma) proxy only /resources/restapidocs/ and
+        /rest/v2/, while gemma.msl.ubc.ca proxies everything to a 1.x Tomcat that
+        resolves the welcome file. Verify against a directory URL, not index.html.
     -->
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
