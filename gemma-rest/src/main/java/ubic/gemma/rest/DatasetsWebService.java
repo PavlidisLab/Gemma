@@ -3868,6 +3868,13 @@ public class DatasetsWebService {
          * that commits one dataset at a time gets one note per dataset instead of one per tag. Not
          * {@code curationDetails.curationNote}, which is dataset-scoped and overwrites.
          */
+        @Schema(description = "Why this commit was made. APPENDED to the audit-event note of every "
+                + "annotation the commit adds or removes, after the server's own mechanical "
+                + "description (\"Removed tag strain = CBA/J\") rather than replacing it. It exists "
+                + "for DELETIONS: an addition justifies itself through `supportingEvidence` on the "
+                + "annotation, but a deletion ends with no annotation to hang evidence off. Per "
+                + "commit, not per change. Not `curationDetails.curationNote`, which is "
+                + "dataset-scoped and overwrites.")
         @Nullable
         private String reason;
         /**
@@ -3883,6 +3890,20 @@ public class DatasetsWebService {
          * about findings. What the right categories are for a tag deletion is an open question — which
          * is why this field does not answer it.
          */
+        @Schema(description = "An optional short key for `reason`, recorded VERBATIM and never "
+                + "interpreted, so reasons written by different callers can be grouped by a later "
+                + "query rather than grepped. Both fields reach the same place: the note carries "
+                + "`reasonCode: reason` when both are sent, and whichever one was sent when only "
+                + "one is, with the key leading because that is the part a query groups on.\n\n"
+                + "🛑 FREE TEXT, and deliberately so — there is no vocabulary for this field. Gemma "
+                + "does not define the keys, does not validate them, and keeps no list. Send "
+                + "whatever short key your side uses; sending none is fine, and free text alone is "
+                + "a complete answer. What a good vocabulary for tag deletion looks like is not yet "
+                + "known, and a fixed one chosen now would be a fixed one to live with.\n\n"
+                + "🛑 It is NOT the audit-finding dismissal vocabulary. Dismissing a proposed "
+                + "finding and deleting a tag a curator previously asserted are different acts with "
+                + "different reasons; per-finding dismissals belong on "
+                + "`POST /annotation-sets/{id}/dispositions`.")
         @Nullable
         private String reasonCode;
 
