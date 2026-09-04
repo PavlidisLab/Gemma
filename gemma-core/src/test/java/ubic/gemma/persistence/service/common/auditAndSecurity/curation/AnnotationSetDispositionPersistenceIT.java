@@ -130,7 +130,8 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
         AnnotationSetDisposition first = dispositionService.rule( audit, "f1",
                 FindingDisposition.ACCEPTED, "alice", TriageJudgeKind.CURATOR, null );
         AnnotationSetDisposition second = dispositionService.rule( audit, "f1",
-                FindingDisposition.NEEDS_MORE_INFO, "alice", TriageJudgeKind.CURATOR, null );
+                FindingDisposition.NEEDS_MORE_INFO, "alice", TriageJudgeKind.CURATOR,
+                "which strain the congenic donor was" );
         // Force the collision the millisecond-precision column allows rather than waiting for
         // one: without the id tiebreaker the winner here is whichever row MySQL yields first.
         Date sameInstant = new Date();
@@ -149,7 +150,7 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
     @DisplayName("NEEDS_MORE_INFO -- the longest value -- survives the VARCHAR(16) column")
     public void longestEnumValue_roundTrips() {
         dispositionService.rule( audit, "f1", FindingDisposition.NEEDS_MORE_INFO,
-                "alice", TriageJudgeKind.CURATOR, null );
+                "alice", TriageJudgeKind.CURATOR, "the GEO record does not say" );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
 
@@ -192,6 +193,37 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
                 dispositionService.standingForIds( Arrays.asList( audit.getId(), second.getId() ) );
         assertThat( batched ).containsOnlyKeys( audit.getId() );
         assertThat( batched.get( audit.getId() ) ).containsOnlyKeys( "f1" );
+    }
+
+    @Test
+    @DisplayName("needs_more_info without a reason is refused -- it would not differ from no ruling")
+    public void needsMoreInfoWithoutReason_isRefused() {
+        assertThatThrownBy( () -> dispositionService.rule( audit, "f1",
+                FindingDisposition.NEEDS_MORE_INFO, "alice", TriageJudgeKind.CURATOR, null ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "needs_more_info" );
+
+        // A blank one is the same thing wearing whitespace.
+        assertThatThrownBy( () -> dispositionService.rule( audit, "f1",
+                FindingDisposition.NEEDS_MORE_INFO, "alice", TriageJudgeKind.CURATOR, "   " ) )
+                .isInstanceOf( IllegalArgumentException.class );
+
+        // Nothing was written by either attempt.
+        assertThat( dispositionService.findBySet( audit ) ).isEmpty();
+    }
+
+    @Test
+    @DisplayName("the other two values still take a ruling with no reason, and keep one when given")
+    public void acceptedAndDismissed_reasonStaysOptional() {
+        // 🛑 The producing side treats a reason on these two as an error; Gemma deliberately does
+        // not. This field's stated purpose is that a DISMISSED says what was wrong with the
+        // finding -- that is what lets the agent stop emitting it -- so refusing it here would
+        // forbid the case the column exists for.
+        assertThat( dispositionService.rule( audit, "f1", FindingDisposition.ACCEPTED,
+                "alice", TriageJudgeKind.CURATOR, null ).getReason() ).isNull();
+        assertThat( dispositionService.rule( audit, "f2", FindingDisposition.DISMISSED,
+                "alice", TriageJudgeKind.CURATOR, "the evidence quote is the wrong sample" )
+                .getReason() ).isEqualTo( "the evidence quote is the wrong sample" );
     }
 
     @Test

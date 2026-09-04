@@ -51,7 +51,18 @@ public interface AnnotationSetDispositionService {
      *                   "has a person ruled on this" does not depend on
      *                   knowing every agent run id.
      * @param reason     why; what the agent needs in order to stop emitting a
-     *                   finding it got wrong. Optional.
+     *                   finding it got wrong. Optional on
+     *                   {@link FindingDisposition#ACCEPTED} and
+     *                   {@link FindingDisposition#DISMISSED}, REQUIRED on
+     *                   {@link FindingDisposition#NEEDS_MORE_INFO} — see
+     *                   below. Free text either way; there is no vocabulary.
+     * @throws IllegalArgumentException if {@code disposition} is
+     *                   {@link FindingDisposition#NEEDS_MORE_INFO} and no
+     *                   non-blank reason came with it. That value's entire
+     *                   content IS the reason: without the blocker, "a human
+     *                   looked and stopped" cannot be told apart from nobody
+     *                   having looked, which is the collapse that having no
+     *                   stored {@code PENDING} exists to prevent.
      * @throws IllegalStateException if the set is already finalized. A review
      *                               that has been closed out is not still
      *                               taking rulings, and accepting one would

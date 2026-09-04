@@ -630,6 +630,12 @@ public class AnnotationSetsWebService {
                     + "curation store's own per-finding vocabulary, adopted here rather than "
                     + "re-spelled. There is no `pending`: a finding nobody has ruled on has no row, "
                     + "so absence is the state.\n\n"
+                    + "🛑 `reason` is REQUIRED for `needs_more_info` and optional for the other two. "
+                    + "That value's entire content is the reason — `accepted` and `dismissed` are "
+                    + "self-describing, but \"a human looked and stopped\" without the blocker "
+                    + "cannot be told apart from nobody having looked. Free text; there is no "
+                    + "vocabulary for it. The producing side enforces the same rule, so a ruling "
+                    + "without one is a row it would refuse to construct.\n\n
                     + "🛑 Not `/triage`, which rules on the whole set. A curator routinely accepts "
                     + "one finding and rejects another on the same target, and one set-level verdict "
                     + "cannot carry that outcome.\n\n"
@@ -644,7 +650,8 @@ public class AnnotationSetsWebService {
                     @ApiResponse(responseCode = "201", description = "The ruling was recorded.",
                             content = @Content(schema = @Schema(implementation = DispositionResponse.class))),
                     @ApiResponse(responseCode = "400",
-                            description = "`targetId` or `disposition` is missing, or `disposition` names no value.",
+                            description = "`targetId` or `disposition` is missing, `disposition` names no value, "
+                                    + "or `needs_more_info` came without a `reason`.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -677,6 +684,10 @@ public class AnnotationSetsWebService {
         try {
             d = annotationSetDispositionService.rule( set, body.targetId, disposition,
                     decidedBy, kind, body.reason );
+        } catch ( IllegalArgumentException e ) {
+            // A reason missing on needs_more_info: the caller sent a ruling that cannot be told
+            // apart from no ruling, which is a bad request rather than a server fault.
+            throw new BadRequestException( e.getMessage(), e );
         } catch ( IllegalStateException e ) {
             // Finalized: the review has been closed out, and a ruling dated after the
             // finalization that summarized it would contradict its own summary.
@@ -739,6 +750,10 @@ public class AnnotationSetsWebService {
         /**
          * Why. What the agent needs in order to stop emitting a finding it got
          * wrong; the disposition alone records the decision but not the cause.
+         * <p>
+         * REQUIRED when {@code disposition} is {@code needs_more_info}, whose
+         * entire content is the reason; optional otherwise. Free text — there
+         * is no vocabulary, deliberately, on either side of the wire.
          */
         @JsonProperty("reason")
         @Nullable

@@ -78,6 +78,19 @@ public class AnnotationSetDispositionServiceImpl implements AnnotationSetDisposi
                     + " was finalized at " + annotationSet.getFinalizedAt()
                     + " and is not taking rulings; reopen it first." );
         }
+        String reasonToStore = truncate( reason );
+        // NEEDS_MORE_INFO is the one value whose entire content is the reason. ACCEPTED and
+        // DISMISSED are self-describing -- the finding says what was accepted or dismissed --
+        // but "a human looked and stopped" without the blocker is indistinguishable from nobody
+        // having looked, which is the collapse having no stored PENDING exists to prevent. The
+        // requirement keeps that distinction from eroding from the other side, and the producing
+        // side enforces the same rule (curation-agents `agents/audit/schemas.py`), so a row
+        // accepted here without one is a row it would refuse to construct.
+        if ( disposition == FindingDisposition.NEEDS_MORE_INFO && reasonToStore == null ) {
+            throw new IllegalArgumentException( "A reason is required for disposition"
+                    + " 'needs_more_info' -- it is what says which follow-up is missing."
+                    + " Without it the ruling cannot be told apart from nobody having looked." );
+        }
 
         AnnotationSetDisposition d = new AnnotationSetDisposition();
         d.setAnnotationSet( annotationSet );
@@ -86,7 +99,7 @@ public class AnnotationSetDispositionServiceImpl implements AnnotationSetDisposi
         d.setDecidedBy( decidedBy );
         d.setJudgeKind( judgeKind );
         d.setDecidedAt( new Date() );
-        d.setReason( truncate( reason ) );
+        d.setReason( reasonToStore );
         return annotationSetDispositionDao.create( d );
     }
 
