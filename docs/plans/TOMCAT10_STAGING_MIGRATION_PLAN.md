@@ -112,8 +112,10 @@ against **9.0.94 configuration**. Harmless while both halves are Tomcat 9.
 It stops being harmless at 10.1. `conf/web.xml` is the global default servlet
 descriptor, and the Tomcat 9 copy declares
 `xmlns="http://xmlns.jcp.org/xml/ns/javaee"` — the javaee namespace, which is
-precisely the mismatch this migration exists to eliminate. **These symlinks must
-be repointed at the new install** (migration step 3).
+precisely the mismatch this migration exists to eliminate. The 10.1.59 tree
+declares `xmlns="https://jakarta.ee/xml/ns/jakartaee"` (verified 2026-09-03), so
+the two are genuinely different files and not merely different copies.
+**These symlinks must be repointed at the new install** (migration step 3).
 
 `/var/local/tomcat/gemma` (the dev instance) has the same *webapps* shape but a
 different *conf* shape: its symlinks go to `/usr/share/tomcat/conf/`, the RPM
@@ -207,13 +209,18 @@ once gemma-web is genuinely gone.
    under Verification for how to read it either way. What is not an option is
    leaving this undecided, because the failure mode is silent.
 
-4. **Check the common loader.** `common.loader` decides whether
-   `${catalina.base}/lib` is searched. It comes from `conf/catalina.properties`,
-   which — see above — is a symlink into Tomcat 9.0.94 today and will point at
-   the new install after migration step 3. Stock Tomcat 10.1 ships the entry;
-   verify rather than assume:
+4. **Check the common loader — VERIFIED 2026-09-03, no action needed.**
+   `common.loader` decides whether `${catalina.base}/lib` is searched. It comes
+   from `conf/catalina.properties`, which — see above — is a symlink into Tomcat
+   9.0.94 today and will point at the new install after migration step 3.
+   Confirmed on the installed 10.1.59 tree:
 
-       grep -n "^common.loader" /opt/apache-tomcat-10.1.x/conf/catalina.properties
+       # grep -n "^common.loader" /opt/apache-tomcat-10.1.59/conf/catalina.properties
+       53:common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"
+
+   `${catalina.base}/lib` is present and searched first, so `lib/log4j2.xml`
+   resolves exactly as it does under Tomcat 9. Re-check only if the install is
+   replaced with a differently-configured tree.
 
    Lower stakes than the first draft of this plan claimed. It was called "the
    most likely thing to break quietly" on the assumption that `lib/log4j2.xml`
@@ -244,9 +251,14 @@ are one maintenance window.
 
     # 1. install Tomcat 10.1.x (match or exceed the pom's 10.1.34)
     #    local disk, not /space — avoids an NFS dependency at boot
-    cd /opt && curl -fLO https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.x/bin/apache-tomcat-10.1.x.tar.gz
-    tar xzf apache-tomcat-10.1.x.tar.gz
-    chown -R root:tomcat /opt/apache-tomcat-10.1.x
+    #    DONE 2026-09-03: /opt/apache-tomcat-10.1.59 exists, root:tomcat.
+    #    Note its conf/ is mode 0700 (root-only), where the 9.0.94 install uses
+    #    0770 root:tomcat. Nothing in the launch path reads conf/ as the tomcat
+    #    user, so this is not a blocker -- but it is a difference worth making
+    #    deliberately rather than inheriting from the tarball umask.
+    cd /opt && curl -fLO https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.59/bin/apache-tomcat-10.1.59.tar.gz
+    tar xzf apache-tomcat-10.1.59.tar.gz
+    chown -R root:tomcat /opt/apache-tomcat-10.1.59
 
     # 2. point ONLY this instance at it
     #    /etc/sysconfig/tomcat@gemma-staging does not exist yet: the unit declares
@@ -254,7 +266,14 @@ are one maintenance window.
     #    it optional. Creating it is what activates it. It loads AFTER
     #    /etc/tomcat/tomcat.conf, so its CATALINA_HOME wins; %i scopes it to this
     #    instance alone.
-    echo 'CATALINA_HOME=/opt/apache-tomcat-10.1.x' > /etc/sysconfig/tomcat@gemma-staging
+    #    Written via tee: with `sudo echo ... > file` the redirect is performed by
+    #    YOUR shell before sudo runs, so the write is attempted as your own user and
+    #    fails with "Permission denied". tee puts the write inside the elevated process.
+    echo 'CATALINA_HOME=/opt/apache-tomcat-10.1.59' | sudo tee /etc/sysconfig/tomcat@gemma-staging
+    #    Verify -- a missing or misnamed file fails SILENTLY, because the unit declares
+    #    it as EnvironmentFile=-/etc/sysconfig/tomcat@%i and the leading `-` means
+    #    optional. Tomcat would simply start on 9.0.117 again with no error.
+    cat /etc/sysconfig/tomcat@gemma-staging
 
     # 3. repoint the config symlinks off Tomcat 9.0.94 (see "Verified current state")
     #    web.xml is the one that must move: the 9.x copy is javaee-namespaced.
@@ -262,7 +281,7 @@ are one maintenance window.
     for f in catalina.properties catalina.policy logging.properties web.xml \
              tomcat-users.xml tomcat-users.xsd \
              jaspic-providers.xml jaspic-providers.xsd; do
-        ln -sfT /opt/apache-tomcat-10.1.x/conf/"$f" "$f"
+        ln -sfT /opt/apache-tomcat-10.1.59/conf/"$f" "$f"
     done
     #    server.xml, context.xml, jmxremote.* and Catalina/ are real files: leave them.
 
@@ -298,7 +317,7 @@ and `setenv.sh`) applying normally.
 ## Verification
 
     systemctl status tomcat@gemma-staging
-    ps -eo args | grep catalina | grep -o 'catalina.home=[^ ]*'     # → /opt/apache-tomcat-10.1.x
+    ps -eo args | grep catalina | grep -o 'catalina.home=[^ ]*'     # → /opt/apache-tomcat-10.1.59
     curl -sS -o /dev/null -w '%{http_code}\n' http://localhost:8100/rest/v2/
     curl -sS https://staging-gemma.msl.ubc.ca/rest/v2/                 # through Apache
     ls /var/local/tomcat/gemma-staging/webapps/ROOT/                   # re-expanded from gemma-rest.war
