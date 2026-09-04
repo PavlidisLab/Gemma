@@ -2446,7 +2446,15 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/annotation-sets/{setId}/restore")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
+    // GROUP_AGENT included deliberately, and it grants no capability the agent lacks: a restore
+    // REPLAYS the snapshot through PUT /datasets/{id}/curation, which is
+    // @Secured({"GROUP_USER", "ACL_SECURABLE_EDIT"}) and already open to agents -- an agent that
+    // wanted this could post the snapshot document to the commit route itself. Without it the
+    // actor that makes a change cannot revert it: gemmaAgent took a snapshot (201) and was
+    // refused the replay (403), which is the one asymmetry that makes an edit irreversible for
+    // the party performing it. Every neighbouring route here (submit, snapshot, list) already
+    // includes GROUP_AGENT.
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Restore a dataset's curation from a SNAPSHOT, or compare it with the present.",
             description = "Replays the snapshot's `CurationDocument` through the ordinary all-or-none commit, so "
                     + "there is no second diff implementation that could disagree with the first.\n\n"
