@@ -35,6 +35,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test replacements for GEO terms.
+ * <p>
+ * 🛑 GEO IMPORT NO LONGER APPLIES THIS FILE (Paul, 2026-09-04) — {@code GeoConverterImpl} stopped
+ * consulting {@code valueStringToOntologyTermMappings.txt}, so a submitter's text now survives
+ * import unchanged and grounding is a curation decision. This test still earns its place because
+ * {@code LoadSimpleExpressionDataCli} reads the same file, and an unresolvable URI there is still a
+ * defect. Do not read a green run here as evidence about anything on the GEO path.
  */
 @Slf4j
 @Tag("slow")
