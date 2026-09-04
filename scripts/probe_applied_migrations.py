@@ -165,10 +165,14 @@ def resolve_credentials(args: argparse.Namespace) -> Credentials:
 
 @dataclass(frozen=True)
 class Check:
-    kind: str          # table | column | index | fk_cascade | no_table | no_index
+    kind: str          # table | column | column_type | not_null | index | fk_cascade | no_table | no_index
     obj: str           # table name
     member: str = ""   # column / index / constraint name
     label: str = ""
+    # Only meaningful for column_type: the information_schema DATA_TYPE the
+    # column must have. A MODIFY COLUMN migration changes a type in place, so
+    # presence of the column proves nothing — only its type does.
+    expected: str = ""
 
     def describe(self) -> str:
         if self.label:
@@ -179,6 +183,10 @@ class Check:
             return f"table {self.obj} absent"
         if self.kind == "column":
             return f"{self.obj}.{self.member}"
+        if self.kind == "column_type":
+            return f"{self.obj}.{self.member} is {self.expected.upper()}"
+        if self.kind == "not_null":
+            return f"{self.obj}.{self.member} NOT NULL"
         if self.kind == "index":
             return f"index {self.member} on {self.obj}"
         if self.kind == "no_index":
@@ -198,6 +206,14 @@ def no_tbl(name: str) -> Check:
 
 def col(table: str, column: str) -> Check:
     return Check("column", table, column)
+
+
+def col_type(table: str, column: str, data_type: str) -> Check:
+    return Check("column_type", table, column, expected=data_type)
+
+
+def not_null(table: str, column: str) -> Check:
+    return Check("not_null", table, column)
 
 
 def idx(table: str, index: str) -> Check:
@@ -311,6 +327,47 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration("V25", "pipeline_batch_throttle",
               (col("PIPELINE_JOB_BATCH", "MAX_CONCURRENT"),
                col("PIPELINE_JOB_BATCH", "HELD"))),
+    Migration("V26", "annotation_relation",
+              (tbl("ANNOTATION_RELATION"),)),
+    Migration("V27", "annotation_relation_status",
+              (col("ANNOTATION_RELATION", "STATUS"),)),
+    Migration("V28", "annotation_relation_evidence",
+              (col("ANNOTATION_RELATION", "EVIDENCE"),
+               col("ANNOTATION_RELATION", "SUPPORTING_EVIDENCE"))),
+    # MODIFY COLUMN, not ADD: the column exists either way, so only its type
+    # separates applied from not.
+    Migration("V29", "widen_bib_ref_annotation_term",
+              (col_type("BIB_REF_ANNOTATION", "TERM", "text"),)),
+    Migration("V30", "annotation_set_triage",
+              (col("ANNOTATION_SET", "TRIAGE"), col("ANNOTATION_SET", "TRIAGED_BY"),
+               col("ANNOTATION_SET", "TRIAGED_AT")),
+              caveat="V32 moves triage into its own table and drops these three "
+                     "columns; if V32 ran, V30 is unknowable from the schema"),
+    Migration("V31", "curation_lock",
+              (tbl("CURATION_LOCK"),)),
+    Migration("V32", "annotation_set_triage_rows",
+              (tbl("ANNOTATION_SET_TRIAGE"),)),
+    Migration("V33", "annotation_set_agent_name_and_run_sha",
+              (col("ANNOTATION_SET", "RUN_SHA"), col("ANNOTATION_SET", "AGENT_NAME"))),
+    Migration("V34", "curation_lock_holder_identity",
+              (col("CURATION_LOCK", "RUN_ID"), col("CURATION_LOCK", "AGENT_NAME"))),
+    Migration("V35", "ticket_target_screening_result",
+              (col("TICKET_TARGET", "SCREENING_RESULT"),
+               col("TICKET_TARGET", "SCREENING_RESULT_REASON"))),
+    # V36-V38 tighten nullability on columns that already exist. Presence proves
+    # nothing here either — IS_NULLABLE is the fingerprint.
+    Migration("V36", "bio_assay_sample_used_not_null",
+              (not_null("BIO_ASSAY", "SAMPLE_USED_FK"),)),
+    Migration("V37", "array_design_curation_details_not_null",
+              (not_null("ARRAY_DESIGN", "CURATION_DETAILS_FK"),)),
+    Migration("V38", "vector_quantitation_type_not_null",
+              (not_null("RAW_EXPRESSION_DATA_VECTOR", "QUANTITATION_TYPE_FK"),
+               not_null("PROCESSED_EXPRESSION_DATA_VECTOR", "QUANTITATION_TYPE_FK"))),
+    Migration("V39", "ticket_accepts_targets",
+              (col("TICKET", "ACCEPTS_TARGETS"),)),
+    Migration("V40", "ticket_scratchpad_unique_per_curator",
+              (col("TICKET", "SCRATCHPAD_OWNER_FK"),
+               idx("TICKET", "TICKET_ONE_SCRATCHPAD_PER_CURATOR"))),
 )
 
 
@@ -322,11 +379,16 @@ class Schema:
     """Case-insensitive snapshot of the bits of information_schema we need."""
 
     def __init__(self, tables: set[str], columns: set[tuple[str, str]],
-                 indexes: set[tuple[str, str]], cascading_fks: set[tuple[str, str]]):
+                 indexes: set[tuple[str, str]], cascading_fks: set[tuple[str, str]],
+                 column_types: dict[str, str] | None = None,
+                 not_null_columns: set[tuple[str, str]] | None = None):
         self.tables = tables
         self.columns = columns
         self.indexes = indexes
         self.cascading_fks = cascading_fks
+        self.column_types = column_types or {}
+        self.not_null_columns = not_null_columns or set()
+        self.server = ""   # @@hostname, filled in by load_schema
 
     def holds(self, check: Check) -> bool:
         o, m = check.obj.upper(), check.member.upper()
@@ -336,6 +398,10 @@ class Schema:
             return o not in self.tables
         if check.kind == "column":
             return (o, m) in self.columns
+        if check.kind == "column_type":
+            return self.column_types.get(f"{o}.{m}") == check.expected.upper()
+        if check.kind == "not_null":
+            return (o, m) in self.not_null_columns
         if check.kind == "index":
             return (o, m) in self.indexes
         if check.kind == "no_index":
@@ -350,8 +416,17 @@ QUERIES = {
               "WHERE TABLE_SCHEMA = DATABASE()",
     "columns": "SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS "
                "WHERE TABLE_SCHEMA = DATABASE()",
+    # Keyed "TABLE.COLUMN" so the (col1, col2) row shape still carries a value.
+    "column_types": "SELECT CONCAT(TABLE_NAME, '.', COLUMN_NAME), DATA_TYPE "
+                    "FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()",
+    "not_null_columns": "SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS "
+                        "WHERE TABLE_SCHEMA = DATABASE() AND IS_NULLABLE = 'NO'",
     "indexes": "SELECT TABLE_NAME, INDEX_NAME FROM information_schema.STATISTICS "
                "WHERE TABLE_SCHEMA = DATABASE()",
+    # Reported in the header. With --login-path the host lives inside
+    # ~/.mylogin.cnf and never reaches argv, so asking the server is the only
+    # way the report can name the database it actually probed.
+    "server": "SELECT @@hostname, ''",
     "cascading_fks": "SELECT TABLE_NAME, CONSTRAINT_NAME "
                      "FROM information_schema.REFERENTIAL_CONSTRAINTS "
                      "WHERE CONSTRAINT_SCHEMA = DATABASE() AND DELETE_RULE = 'CASCADE'",
@@ -393,7 +468,12 @@ def load_schema(creds: Credentials, args: argparse.Namespace,
         return {(a.upper(), b.upper()) for a, b in run_mysql(QUERIES[key], creds, args, option_file)}
 
     tables = {a for a, _ in fetch("tables")}
-    return Schema(tables, fetch("columns"), fetch("indexes"), fetch("cascading_fks"))
+    column_types = dict(fetch("column_types"))
+    schema = Schema(tables, fetch("columns"), fetch("indexes"), fetch("cascading_fks"),
+                    column_types, fetch("not_null_columns"))
+    server = run_mysql(QUERIES["server"], creds, args, option_file)
+    schema.server = server[0][0] if server else ""
+    return schema
 
 
 # ---------------------------------------------------------------------------
@@ -454,9 +534,10 @@ def load_baseline(explicit: str | None) -> str | None:
 
 
 def render(results: list[tuple[Migration, str, list[str]]], creds: Credentials,
-           args: argparse.Namespace, used_baseline: bool = False) -> str:
+           args: argparse.Namespace, used_baseline: bool = False,
+           server: str = "") -> str:
     lines = [
-        f"# Applied-migration probe — {args.host or 'localhost'}/{args.database}",
+        f"# Applied-migration probe — {server or args.host or 'localhost'}/{args.database}",
         "",
         f"Credential source: {creds.source}",
         "",
@@ -588,7 +669,7 @@ def main() -> int:
             os.unlink(option_file)
 
     results = [(m, *verdict(m, schema, baseline)) for m in MIGRATIONS]
-    report = render(results, creds, args, baseline is not None)
+    report = render(results, creds, args, baseline is not None, schema.server)
 
     if args.out:
         with open(args.out, "w") as fh:
