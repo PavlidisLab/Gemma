@@ -5257,6 +5257,8 @@ public class DatasetsWebService {
                         if ( !snapshotFvIds.contains( liveId ) ) {
                             fc.getFactorValues().getDeletedIds().add( liveId );
                             deleted.add( liveId );
+                            // and everything that goes with it -- see the cascade note below
+                            deleted.addAll( statementIdsOf( current, liveId ) );
                         }
                     }
                 }
@@ -5265,6 +5267,18 @@ public class DatasetsWebService {
                 if ( !snapshotFactorIds.contains( liveId ) ) {
                     snapshot.getDesign().getFactors().getDeletedIds().add( liveId );
                     deleted.add( liveId );
+                    // 🛑 THE CASCADE, NOT JUST THE PARENT. Deleting a factor deletes its factor
+                    // values and their statements, and those ids stop resolving too. Naming only the
+                    // factor made the list arithmetically consistent with nothing: cab measured a
+                    // restore reporting `design.deleted: 4` beside a single id, where the other three
+                    // were the factor's values. A consumer keyed on a factor-value id -- which is how
+                    // curation findings address them -- would then read "no exposure" and be wrong,
+                    // which is worse than the silence this field replaced.
+                    // Free: `current` is already loaded, so these are reads of a VO in hand.
+                    for ( Long fvId : factorValueIdsOf( current, liveId ) ) {
+                        deleted.add( fvId );
+                        deleted.addAll( statementIdsOf( current, fvId ) );
+                    }
                 }
             }
         }
