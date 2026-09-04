@@ -36,11 +36,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Test replacements for GEO terms.
  * <p>
- * 🛑 GEO IMPORT NO LONGER APPLIES THIS FILE (Paul, 2026-09-04) — {@code GeoConverterImpl} stopped
- * consulting {@code valueStringToOntologyTermMappings.txt}, so a submitter's text now survives
- * import unchanged and grounding is a curation decision. This test still earns its place because
- * {@code LoadSimpleExpressionDataCli} reads the same file, and an unresolvable URI there is still a
- * defect. Do not read a green run here as evidence about anything on the GEO path.
+ * 🛑 NOTHING APPLIES THIS FILE ANY MORE (Paul, 2026-09-04). Both loaders that read it —
+ * {@code GeoConverterImpl} and {@code LoadSimpleExpressionDataCli} — stopped, so a submitter's text
+ * survives import unchanged and grounding is a curation decision.
+ * <p>
+ * This test is deliberately kept live anyway, and it is the only thing standing between the table
+ * and silent rot: the file is a reviewed body of value → term decisions worth preserving for a
+ * future curation-side suggester, and an unresolvable URI in it is still a defect worth failing on.
+ * Do NOT read a green run here as evidence about any import path — there is no longer one.
  */
 @Slf4j
 @Tag("slow")
