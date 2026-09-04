@@ -202,6 +202,7 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
          * else in the run would show it.</p>
          */
         private int labelledFromSource = 0;
+        private int anatomicalSystemTargets = 0;
         private int readFailures = 0;
         /**
          * Restrictions on an allow-listed property that were rejected because they are not an
@@ -257,6 +258,7 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
             sb.append( "dropped\tanonymous target (nested axiom)\t" ).append( anonymousTargets )
                     .append( "\tuntranslatable foreign target\t" ).append( untranslatable )
                     .append( "\ttarget absent from the loaded model\t" ).append( unlabelledTargets )
+                    .append( "\tanatomical system target\t" ).append( anatomicalSystemTargets )
                     .append( "\tunreadable class\t" ).append( readFailures ).append( '\n' );
             if ( labelledFromSource > 0 ) {
                 sb.append( "recovered\ttarget absent from the loaded model, named from the source\t" )
@@ -423,6 +425,12 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
             return rows;
         }
 
+        if ( source.skipsAnatomicalSystemTargets()
+                && isAnatomicalSystem( objectUri, source.getTargetOntologyTokens() ) ) {
+            reading.anatomicalSystemTargets++;
+            return Collections.emptyList();
+        }
+
         String nativeLabel = target.getLabel();
         if ( nativeLabel == null ) {
             // 🛑 Same trap as the translated branch above, reached a different way. A source that does
@@ -542,6 +550,36 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
      * {@code UpdateOntologyRelationsCli} has to warm these, and it only knows to because the source
      * names them.</p>
      */
+    private static final String ANATOMICAL_SYSTEM = "http://purl.obolibrary.org/obo/UBERON_0000467";
+
+    /**
+     * Whether a target is a whole-body system rather than an organ, tissue or region.
+     *
+     * <p>UBERON's own classification rather than a tuned threshold, deliberately. Two alternatives
+     * were measured on the same data and both are wrong: dropping subjects with many CL descendants
+     * takes {@code cardiac muscle cell -> primary circulatory organ} with it, which is the heart and
+     * is exactly the fact worth having; and dropping objects shared by many subjects is worse still,
+     * since {@code thymus} has 41 subjects and {@code retina} 74 and every one of those rows is
+     * informative.</p>
+     */
+    private boolean isAnatomicalSystem( String uri, java.util.Collection<String> tokens ) {
+        for ( String token : tokens ) {
+            OntologyTerm term = loadedOntology( token ).map( o -> o.getTerm( uri ) ).orElse( null );
+            if ( term == null ) {
+                continue;
+            }
+            if ( ANATOMICAL_SYSTEM.equals( term.getUri() ) ) {
+                return true;
+            }
+            for ( OntologyTerm parent : term.getParents( false ) ) {
+                if ( ANATOMICAL_SYSTEM.equals( parent.getUri() ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Nullable
     private String labelOfAny( String uri, java.util.Collection<String> tokens ) {
         for ( String token : tokens ) {

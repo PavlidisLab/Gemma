@@ -87,6 +87,10 @@ public enum RelationTopicality {
             "http://purl.obolibrary.org/obo/CLO_0037227",      // cell line cell derived from anatomical part
             "http://purl.obolibrary.org/obo/CLO_0037229",      // cell line cell derived from organism
             "http://purl.obolibrary.org/obo/ENVO_01003004",    // derives from part of -- cell line -> brain
+            // where a cell type sits anatomically is a property of the cell type, not something one
+            // experiment did to it -- a Mueller cell is in the retina in every experiment there is
+            "http://purl.obolibrary.org/obo/BFO_0000050",       // part of -- CL's cell type -> UBERON
+            "http://purl.obolibrary.org/obo/RO_0002100",        // has soma location -- ditto, for neurons
             "http://purl.obolibrary.org/obo/RO_0000087",       // has role -- CHEBI's drug -> role
             "http://purl.obolibrary.org/obo/RO_0003301",       // has role in modeling
             "http://gemma.msl.ubc.ca/ont/TGEMO_00201",         // has child with disease

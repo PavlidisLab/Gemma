@@ -650,13 +650,34 @@ public class ExpressionExperimentServiceImpl
                             } else if ( existingFv != null && pv.getStatements() != null ) {
                                 Set<Long> existingStmtIds = existingFv.getCharacteristics().stream()
                                         .map( Statement::getId ).collect( Collectors.toSet() );
+                                Map<Long, Integer> proposedPerStatement = new HashMap<>();
                                 for ( StatementValueObject ps : pv.getStatements() ) {
-                                    if ( ps.getId() != null && !existingStmtIds.contains( ps.getId() ) ) {
+                                    if ( ps.getId() == null ) {
+                                        continue;
+                                    }
+                                    if ( !existingStmtIds.contains( ps.getId() ) ) {
                                         DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
                                                 "UNKNOWN_STATEMENT_ID",
                                                 "Statement id " + ps.getId() + " does not belong to factor value " + pv.getId() + "." );
                                         b.setFactorValueId( pv.getId() );
                                         b.setStatementId( ps.getId() );
+                                        report.getBlockers().add( b );
+                                    }
+                                    proposedPerStatement.merge( ps.getId(), 1, Integer::sum );
+                                }
+                                // Two entries for one id is the normal shape of a compound statement on the wire
+                                // (see unflattenStatements). A statement holds two object slots and no more, so a
+                                // third entry has nowhere to go — refuse it here rather than let the extra clause
+                                // be silently dropped on the way in.
+                                for ( Map.Entry<Long, Integer> e : proposedPerStatement.entrySet() ) {
+                                    if ( e.getValue() > 2 ) {
+                                        DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                                "STATEMENT_ID_REPEATED",
+                                                "Statement id " + e.getKey() + " appears " + e.getValue()
+                                                        + " times on factor value " + pv.getId()
+                                                        + "; a statement carries at most two objects." );
+                                        b.setFactorValueId( pv.getId() );
+                                        b.setStatementId( e.getKey() );
                                         report.getBlockers().add( b );
                                     }
                                 }
@@ -1270,7 +1291,7 @@ public class ExpressionExperimentServiceImpl
                 // Attaching provenance to an otherwise-unchanged statement leaves the content keys identical, so
                 // statementsChanged cannot see it. Without this an evidence-only write is swallowed exactly the
                 // way a factor description-only write used to be.
-                if ( pv.getStatements() != null && statementEvidenceChanged( cur, pv.getStatements() ) ) {
+                if ( pv.getStatements() != null && statementEvidenceChanged( cur, proposedStatements( pv ) ) ) {
                     edited.add( cur );
                     continue;
                 }
@@ -1368,7 +1389,7 @@ public class ExpressionExperimentServiceImpl
      * has always resolved the two projections together; this is the same resolution, read-only.
      */
     private static boolean statementsChanged( FactorValue cur, FactorValueBasicValueObject pv ) {
-        List<StatementValueObject> proposed = pv.getStatements() != null ? pv.getStatements() : Collections.emptyList();
+        List<StatementValueObject> proposed = proposedStatements( pv );
         Map<String, Integer> currentKeys = new HashMap<>();
         Map<Long, Statement> existingById = new HashMap<>();
         for ( Statement s : cur.getCharacteristics() ) {
@@ -1505,10 +1526,8 @@ public class ExpressionExperimentServiceImpl
         if ( pv.getBaseline() != null ) {
             fv.setIsBaseline( pv.getBaseline() );
         }
-        if ( pv.getStatements() != null ) {
-            for ( StatementValueObject ps : pv.getStatements() ) {
-                fv.getCharacteristics().add( buildStatement( ps ) );
-            }
+        for ( StatementValueObject ps : proposedStatements( pv ) ) {
+            fv.getCharacteristics().add( buildStatement( ps ) );
         }
         if ( pv.getMeasurementObject() != null ) {
             applyMeasurementFields( fv, pv.getMeasurementObject() );
@@ -1546,7 +1565,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     private void updateFactorValueStatements( FactorValue existing, FactorValueBasicValueObject pv ) {
-        List<StatementValueObject> proposedStatements = pv.getStatements() != null ? pv.getStatements() : Collections.emptyList();
+        List<StatementValueObject> proposedStatements = proposedStatements( pv );
         List<CharacteristicValueObject> proposedCharacteristics = pv.getCharacteristics() != null ? pv.getCharacteristics() : Collections.emptyList();
 
         Map<Long, Statement> existingById = existing.getCharacteristics().stream()
@@ -1702,6 +1721,88 @@ public class ExpressionExperimentServiceImpl
         }
         return proposedUri.equals( CharacteristicUtils.canonicalUri( storedUri ) )
                 && Objects.equals( proposedLabel, CharacteristicUtils.canonicalLabel( storedUri, storedLabel ) );
+    }
+
+    /**
+     * Re-join the halves of a compound statement that the wire format splits apart.
+     * <p>
+     * A statement carrying two objects reaches clients as <em>two</em> entries in {@code statements[]} sharing
+     * one id, the second putting the second clause under the generic {@code predicate} / {@code object} keys.
+     * That flattening is the settled contract (#814, {@code dff752727c}) and is why
+     * {@link StatementValueObject}'s {@code second*} slots are withheld from the API. The write path never
+     * learned the inverse: both entries claimed the same row, {@link #applyStatementFields} ran twice, and each
+     * run wrote the {@code second*} slots as null because neither entry carries them. A GET followed by an
+     * unedited PUT therefore dropped the second clause of every compound statement it touched.
+     * <p>
+     * Rows with no id cannot be two halves of one statement and pass through untouched, in order. A third row
+     * claiming one id is refused by the preflight ({@code STATEMENT_ID_REPEATED}) before anything reaches here,
+     * so the extras dropped below are unreachable from an accepted payload.
+     *
+     * @param proposed statements exactly as the payload carried them
+     * @return one entry per statement, with both object slots filled; never the caller's own instances, since
+     * the same payload is walked again by the preflight
+     */
+    private static List<StatementValueObject> unflattenStatements( List<StatementValueObject> proposed ) {
+        List<StatementValueObject> out = new ArrayList<>( proposed.size() );
+        Map<Long, StatementValueObject> firstById = new HashMap<>();
+        for ( StatementValueObject ps : proposed ) {
+            if ( ps.getId() == null ) {
+                out.add( ps );
+                continue;
+            }
+            StatementValueObject first = firstById.get( ps.getId() );
+            if ( first == null ) {
+                StatementValueObject copy = copyStatementValueObject( ps );
+                firstById.put( ps.getId(), copy );
+                out.add( copy );
+                continue;
+            }
+            if ( first.getSecondPredicate() != null || first.getSecondObject() != null ) {
+                continue;
+            }
+            first.setSecondPredicate( ps.getPredicate() );
+            first.setSecondPredicateUri( ps.getPredicateUri() );
+            first.setSecondObject( ps.getObject() );
+            first.setSecondObjectUri( ps.getObjectUri() );
+            // Provenance rides on whichever half recorded it; the serializer emits it on neither, so this only
+            // matters for a hand-built payload that puts it on the second row.
+            if ( first.getSupportingEvidence() == null ) {
+                first.setSupportingEvidence( ps.getSupportingEvidence() );
+            }
+            if ( first.getEvidenceCode() == null ) {
+                first.setEvidenceCode( ps.getEvidenceCode() );
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The statements a factor-value payload proposes, with split compound statements re-joined.
+     *
+     * @see #unflattenStatements(List)
+     */
+    private static List<StatementValueObject> proposedStatements( FactorValueBasicValueObject pv ) {
+        return pv.getStatements() != null ? unflattenStatements( pv.getStatements() ) : Collections.emptyList();
+    }
+
+    private static StatementValueObject copyStatementValueObject( StatementValueObject ps ) {
+        StatementValueObject copy = new StatementValueObject();
+        copy.setId( ps.getId() );
+        copy.setCategory( ps.getCategory() );
+        copy.setCategoryUri( ps.getCategoryUri() );
+        copy.setSubject( ps.getSubject() );
+        copy.setSubjectUri( ps.getSubjectUri() );
+        copy.setPredicate( ps.getPredicate() );
+        copy.setPredicateUri( ps.getPredicateUri() );
+        copy.setObject( ps.getObject() );
+        copy.setObjectUri( ps.getObjectUri() );
+        copy.setSecondPredicate( ps.getSecondPredicate() );
+        copy.setSecondPredicateUri( ps.getSecondPredicateUri() );
+        copy.setSecondObject( ps.getSecondObject() );
+        copy.setSecondObjectUri( ps.getSecondObjectUri() );
+        copy.setSupportingEvidence( ps.getSupportingEvidence() );
+        copy.setEvidenceCode( ps.getEvidenceCode() );
+        return copy;
     }
 
     private Statement buildStatement( StatementValueObject ps ) {

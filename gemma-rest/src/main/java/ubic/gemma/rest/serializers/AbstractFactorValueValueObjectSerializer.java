@@ -41,6 +41,15 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         }
         serializeInternal( factorValueValueObject, jsonGenerator, serializerProvider );
         jsonGenerator.writeBooleanField( "isMeasurement", factorValueValueObject.isMeasurement() );
+        // Absent rather than false when unset, matching the field's own @JsonInclude(NON_NULL): the flag is
+        // three-valued on write, where null means "no change", so a rendered false has to mean "explicitly
+        // not the baseline" and nothing else. This serializer replaces the bean path for every factor value
+        // the API returns, so until it wrote the flag no endpoint did -- 665 factor values were marked
+        // baseline in the database and none of them said so on the wire, which is also what made a design
+        // GET -> PUT round-trip unable to carry the designation back.
+        if ( factorValueValueObject.getBaseline() != null ) {
+            jsonGenerator.writeBooleanField( "isBaseline", factorValueValueObject.getBaseline() );
+        }
         if ( factorValueValueObject.getMeasurementObject() != null ) {
             jsonGenerator.writeObjectField( "measurement", factorValueValueObject.getMeasurementObject() );
         }

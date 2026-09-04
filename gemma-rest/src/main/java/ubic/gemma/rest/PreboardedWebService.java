@@ -320,6 +320,7 @@ public class PreboardedWebService {
         // experiments too, not only preboarded ones). The RESPONSE field keeps its name: it is on
         // the wire and renaming it would break clients.
         r.identifyingMetadata = skel.getSourceMetadata();
+        r.sourceMetadataSchemaVersion = skel.getSourceMetadataSchemaVersion();
         WorkflowState ws = skel.getWorkflowState();
         r.state = ws != null ? ws.name() : null;
         r.enteredCurrentStateAt = skel.getWorkflowStateEnteredAt();
@@ -464,6 +465,19 @@ public class PreboardedWebService {
         @JsonProperty("identifyingMetadata")
         @Nullable
         public String identifyingMetadata;
+        /**
+         * Which schema {@link #identifyingMetadata} follows, or null when the writer set none.
+         * <p>
+         * The payload is opaque to Gemma and its schema is owned by the agents repo, so a consumer has to
+         * be told which document shape it is holding: a v1 row is the per-sample view built at import from
+         * the parsed GeoSeries/GeoSample (tens of KB), a null row is the scrape path's compact record (a few
+         * KB). Without this a client can only guess from the keys, which is the guessing the version exists
+         * to prevent — and normalizing the CASE of the keys, which is the documented contract, does not tell
+         * you what they MEAN (uib, 2026-09-03). Null is a real answer, not a missing one.
+         */
+        @JsonProperty("sourceMetadataSchemaVersion")
+        @Nullable
+        public Integer sourceMetadataSchemaVersion;
         public String state;
         @JsonProperty("enteredCurrentStateAt")
         @Nullable

@@ -456,6 +456,61 @@ public class TicketsWebServiceTest {
         verify( ticketService ).openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Test ticket" ), any() );
     }
 
+    /**
+     * A screening agent opens a ticket and says what its screen asked. The payload is stored verbatim and
+     * comes back on the created ticket, so the UI can render the question rather than a fixed GEO-scrape
+     * table with Include/Exclude (uib, 2026-09-03).
+     */
+    @Test
+    public void testCreateTicket_carriesTheScreenPayload() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Screen" ), any() ) )
+                .thenReturn( ticket );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.GENERIC );
+        req.setTitle( "Screen" );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        req.setTargets( Collections.singletonList( tr ) );
+        String payload = "{\"screen_summary\":\"12 series matched\","
+                + "\"decision\":{\"confirm_label\":\"Confirm\",\"reject_label\":\"Reject\"}}";
+        req.setPayload( payload );
+        req.setPayloadSchemaVersion( 2 );
+
+        Response resp = webService.createTicket( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.CREATED.getStatusCode() );
+        assertThat( ticket.getPayload() ).isEqualTo( payload );
+        assertThat( ticket.getPayloadSchemaVersion() ).isEqualTo( 2 );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<TicketValueObject> body = ( ResponseDataObject<TicketValueObject> ) resp.getEntity();
+        assertThat( body.getData().getPayload() ).isEqualTo( payload );
+        assertThat( body.getData().getPayloadSchemaVersion() ).isEqualTo( 2 );
+    }
+
+    /** An ordinary ticket carries none, and creating one must not invent an empty payload. */
+    @Test
+    public void testCreateTicket_withoutAPayloadLeavesItUnset() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Plain" ), any() ) )
+                .thenReturn( ticket );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.GENERIC );
+        req.setTitle( "Plain" );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        req.setTargets( Collections.singletonList( tr ) );
+
+        webService.createTicket( req );
+
+        assertThat( ticket.getPayload() ).isNull();
+        assertThat( ticket.getPayloadSchemaVersion() ).isNull();
+    }
+
     @Test
     public void testCreateTicket_missingTitle_throws400() {
         // Title validation runs before user resolution; no stubbing needed.

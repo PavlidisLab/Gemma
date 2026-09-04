@@ -1089,6 +1089,129 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         verifyNoInteractions( tableMaintenanceUtil );
     }
 
+    // ============================================================================================
+    // Compound statements survive the wire round-trip (gembro, 2026-09-03).
+    //
+    // A statement with two objects does not reach a client as one entry: AbstractFactorValueValueObjectSerializer
+    // splits it into TWO entries in statements[] sharing one id, the second carrying the second clause under the
+    // generic predicate/object keys. That is the settled wire contract (#814). What was missing was the inverse
+    // on the way in — both entries claimed the same row and each wrote the second* slots as null, so a GET
+    // followed by an unedited PUT flattened the statement. 9,031 statements on prod carry a second object.
+    // ============================================================================================
+
+    /** Give FV 100's statement two objects, the shape the flattening exists for. */
+    private Statement makeControlStatementCompound() {
+        Statement s = controlFv.getCharacteristics().iterator().next();
+        s.setPredicate( "has dose" );
+        s.setObject( "10 mg" );
+        s.setSecondPredicate( "has duration" );
+        s.setSecondObject( "12 weeks" );
+        return s;
+    }
+
+    /**
+     * Rewrite one factor value's statements the way the serializer puts them on the wire: a compound statement
+     * becomes two entries sharing the statement id, neither carrying the second* fields.
+     */
+    private static void flattenStatementsAsSerializerDoes( FactorValueBasicValueObject pv ) {
+        List<StatementValueObject> flattened = new ArrayList<>();
+        for ( StatementValueObject svo : pv.getStatements() ) {
+            StatementValueObject first = new StatementValueObject();
+            first.setId( svo.getId() );
+            first.setCategory( svo.getCategory() );
+            first.setCategoryUri( svo.getCategoryUri() );
+            first.setSubject( svo.getSubject() );
+            first.setSubjectUri( svo.getSubjectUri() );
+            first.setPredicate( svo.getPredicate() );
+            first.setPredicateUri( svo.getPredicateUri() );
+            first.setObject( svo.getObject() );
+            first.setObjectUri( svo.getObjectUri() );
+            flattened.add( first );
+            if ( svo.getSecondObject() == null ) {
+                continue;
+            }
+            StatementValueObject second = new StatementValueObject();
+            second.setId( svo.getId() );
+            second.setCategory( svo.getCategory() );
+            second.setCategoryUri( svo.getCategoryUri() );
+            second.setSubject( svo.getSubject() );
+            second.setSubjectUri( svo.getSubjectUri() );
+            second.setPredicate( svo.getSecondPredicate() );
+            second.setPredicateUri( svo.getSecondPredicateUri() );
+            second.setObject( svo.getSecondObject() );
+            second.setObjectUri( svo.getSecondObjectUri() );
+            flattened.add( second );
+        }
+        pv.setStatements( flattened );
+    }
+
+    /**
+     * The curator edits the subject and nothing else. The second clause is not theirs to lose: it rode in on the
+     * second wire entry, which carries it under the generic object keys, and the write has to put it back where
+     * it came from.
+     */
+    @Test
+    public void testApplyEditingAFlattenedStatementKeepsItsSecondObject() {
+        buildFixture();
+        Statement stored = makeControlStatementCompound();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        FactorValueBasicValueObject pv = proposalFv( proposal, 100L );
+        flattenStatementsAsSerializerDoes( pv );
+        assertThat( pv.getStatements() ).hasSize( 2 ); // the shape under test: two entries, one id
+        pv.getStatements().forEach( svo -> svo.setSubject( "vehicle" ) );
+
+        DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
+
+        assertThat( outcome.isApplied() ).isTrue();
+        assertThat( controlFv.getCharacteristics() ).hasSize( 1 );
+        assertThat( stored.getSubject() ).isEqualTo( "vehicle" );
+        assertThat( stored.getPredicate() ).isEqualTo( "has dose" );
+        assertThat( stored.getObject() ).isEqualTo( "10 mg" );
+        assertThat( stored.getSecondPredicate() ).isEqualTo( "has duration" );
+        assertThat( stored.getSecondObject() ).isEqualTo( "12 weeks" );
+    }
+
+    /**
+     * And the echo is a no-op: before the halves were re-joined, one entry became two content keys neither of
+     * which matched the stored statement, so an unedited round-trip counted as an edit on every compound
+     * statement in the design.
+     */
+    @Test
+    public void testPreviewEchoingTheWireFormIsNotAnEdit() {
+        buildFixture();
+        makeControlStatementCompound();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        flattenStatementsAsSerializerDoes( proposalFv( proposal, 100L ) );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() ).isEmpty();
+        assertThat( report.getSummary().getFactorValuesToUpdate() ).isZero();
+    }
+
+    /** A statement holds two objects and no more, so a third entry for one id is refused rather than dropped. */
+    @Test
+    public void testPreviewRefusesAThirdEntryForOneStatementId() {
+        buildFixture();
+        makeControlStatementCompound();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        FactorValueBasicValueObject pv = proposalFv( proposal, 100L );
+        flattenStatementsAsSerializerDoes( pv );
+        StatementValueObject extra = new StatementValueObject();
+        extra.setId( pv.getStatements().get( 0 ).getId() );
+        extra.setCategory( "treatment" );
+        extra.setSubject( "control" );
+        extra.setPredicate( "has route" );
+        extra.setObject( "oral" );
+        pv.getStatements().add( extra );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() )
+                .extracting( DesignPreflightReport.Blocker::getType )
+                .contains( "STATEMENT_ID_REPEATED" );
+    }
+
     private static FactorValueBasicValueObject proposalFv( ExperimentalDesignValueObject vo, long fvId ) {
         return designFv( vo, fvId );
     }

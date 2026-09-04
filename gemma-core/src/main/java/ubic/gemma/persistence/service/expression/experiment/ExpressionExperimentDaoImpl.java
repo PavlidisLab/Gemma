@@ -2452,17 +2452,10 @@ public class ExpressionExperimentDaoImpl
                             .orElse( 0 );
                     vo.setNumberOfBioAssays( bioAssayCount );
 
-                    Set<Long> otherPartsIds = details.stream()
-                            .map( ExpressionExperimentDetail::getOtherPartId )
-                            .filter( Objects::nonNull )
-                            .collect( Collectors.toSet() );
-
-                    List<ExpressionExperimentValueObject> otherPartsVos = loadValueObjectsByIds( otherPartsIds ).stream()
-                            .sorted( Comparator.comparing( ExpressionExperimentValueObject::getShortName ) ).collect( Collectors.toList() );
-
-                    // other parts (maybe fetch in details query?)
-                    vo.setOtherParts( otherPartsVos );
                 }
+
+                // One batched query for the whole page, replacing a loadValueObjectsByIds per split experiment.
+                populateOtherParts( vos );
 
                 try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
                     populateAnalysisInformation( vos, cacheable );
@@ -2555,6 +2548,88 @@ public class ExpressionExperimentDaoImpl
     protected void postProcessValueObjects( List<ExpressionExperimentValueObject> results ) {
         populatePlatforms( results );
         populateDateCreated( results );
+        populateSingleCellInfo( results );
+        populateOtherParts( results );
+    }
+
+    /**
+     * Fill in {@code otherParts} — the sibling datasets of a study Gemma split — for a page of VOs in one query.
+     * <p>
+     * Compact references, not whole VOs: the details path used to run a {@code loadValueObjectsByIds} per split
+     * experiment to render what a client shows as a name and a link.
+     * <p>
+     * The relation is bidirectional and not reliably written from both ends (see {@code remove}), so this reads
+     * it in the stored direction only, which is the direction {@code SplitExperimentService} writes.
+     */
+    private void populateOtherParts( Collection<? extends ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, op.id, op.shortName, op.name "
+                        + "from ExpressionExperiment ee join ee.otherParts op "
+                        + "where ee.id in (:ids)" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, List<ExpressionExperimentReferenceValueObject>> byEe = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> byEe.computeIfAbsent( ( Long ) row[0], k -> new ArrayList<>() )
+                        .add( new ExpressionExperimentReferenceValueObject( ( Long ) row[1], ( String ) row[2],
+                                ( String ) row[3] ) ) );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            List<ExpressionExperimentReferenceValueObject> parts = byEe.getOrDefault( eevo.getId(), new ArrayList<>() );
+            parts.sort( Comparator.comparing( ExpressionExperimentReferenceValueObject::getShortName,
+                    Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+            eevo.setOtherParts( parts );
+        }
+    }
+
+    /**
+     * Fill in {@code isSingleCell} and {@code numberOfCellIds} for a page of VOs in one query.
+     * <p>
+     * The single-cell test is "has a quantitation type flagged single-cell-preferred" — the same condition
+     * {@code SingleCellExpressionExperimentService#getPreferredSingleCellQuantitationType} resolves against, so
+     * this cannot report true for a dataset the single-cell routes would then 404 on. Batched rather than read
+     * off the entity because {@code ee.quantitationTypes} is lazy and touching it per VO is an N+1 on every
+     * dataset listing.
+     * <p>
+     * 🛑 The cell-id count comes from {@code SingleCellDimensionExperiment}, and that table is NOT a complete
+     * index of single-cell experiments: 29 of the 546 on prod carry the preferred quantitation type and have no
+     * row in it (measured 2026-09-03). Driving the query off the row instead of the flag would silently call
+     * those 29 bulk. They get {@code isSingleCell} true and a null count, which is the honest answer.
+     */
+    private void populateSingleCellInfo( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                // 🛑 scd is joined explicitly. Writing scde.singleCellDimension.numberOfCellIds in the select
+                // instead makes an IMPLICIT join, which Hibernate resolves as an INNER join even off a
+                // left-joined alias — so every experiment without a SingleCellDimensionExperiment row drops out
+                // of the result and reads as bulk, which is the 29 this method exists to keep.
+                .createQuery( "select ee.id, scd.numberOfCellIds "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.quantitationTypes qt "
+                        + "left join SingleCellDimensionExperiment scde "
+                        + "on scde.expressionExperiment = ee and scde.quantitationType = qt "
+                        + "left join scde.singleCellDimension scd "
+                        + "where qt.isSingleCellPreferred = true and ee.id in (:ids)" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, Integer> numberOfCellIdsByEe = new HashMap<>();
+        Set<Long> singleCellEeIds = new HashSet<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> {
+                    Long eeId = ( Long ) row[0];
+                    singleCellEeIds.add( eeId );
+                    if ( row[1] != null ) {
+                        numberOfCellIdsByEe.put( eeId, ( Integer ) row[1] );
+                    }
+                } );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setIsSingleCell( singleCellEeIds.contains( eevo.getId() ) );
+            eevo.setNumberOfCellIds( numberOfCellIdsByEe.get( eevo.getId() ) );
+        }
     }
 
     @Override

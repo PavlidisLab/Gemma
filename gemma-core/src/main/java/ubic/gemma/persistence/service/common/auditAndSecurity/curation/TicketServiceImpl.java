@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.ContactUtils;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult;
@@ -135,10 +136,14 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
     private static final String SCRATCHPAD_BODY = "Datasets you are currently working on."
             + " Remove one when you are finished with it; the scratchpad itself stays open.";
 
-    /** {@code Scratchpad: alice}, or plain {@code Scratchpad} for a contact with no name. */
+    /**
+     * {@code Scratchpad: alice}, or plain {@code Scratchpad} for a contact with neither a name nor a
+     * username. The title is persisted at creation, so an existing scratchpad keeps whatever it was
+     * minted with; {@link TicketValueObject}'s {@code reporterName} is the live reading of the owner.
+     */
     private static String scratchpadTitle( Contact curator ) {
-        String name = curator.getName();
-        return name != null && !name.trim().isEmpty() ? "Scratchpad: " + name.trim() : "Scratchpad";
+        String name = ContactUtils.displayName( curator );
+        return name != null ? "Scratchpad: " + name : "Scratchpad";
     }
 
     /**

@@ -49,6 +49,13 @@ public class UpdateOntologyRelationsCli extends AbstractAuthenticatedCLI {
     @Autowired
     private OntologyRelationProducer ontologyRelationProducer;
 
+    /**
+     * The entailed CL locations, which come from a reviewed file rather than a Jena model and so
+     * cannot ride on the source loop above. Rebuilt only when its source is named or nothing is.
+     */
+    @Autowired
+    private ubic.gemma.core.ontology.relation.ClInferredLocationProducer clInferredLocationProducer;
+
     @Autowired(required = false)
     private List<ubic.gemma.core.ontology.providers.OntologyService> ontologies;
 
@@ -66,7 +73,7 @@ public class UpdateOntologyRelationsCli extends AbstractAuthenticatedCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Rebuild the ONTOLOGY rows of ANNOTATION_RELATION from what CLO and CHEBI assert";
+        return "Rebuild the ONTOLOGY rows of ANNOTATION_RELATION from what CLO, CHEBI, TGEMO and CL assert, plus the reviewed CL_INFERRED locations";
     }
 
     @Override
@@ -96,6 +103,13 @@ public class UpdateOntologyRelationsCli extends AbstractAuthenticatedCLI {
         int written = tableMaintenanceUtil.updateOntologyRelationEntries( sources );
         log.info( "Wrote " + written + " ONTOLOGY relation rows."
                 + " Per-property coverage is in the log above, one tab-separated block per source." );
+        // 🛑 A separate delete-and-insert narrowed to its OWN source. It shares BASIS with the loop
+        // above, so it must never be folded into that delete: doing so would take CL's asserted rows
+        // with it and this job cannot rebuild those.
+        if ( sources == null || sources.isEmpty()
+                || sources.contains( ubic.gemma.core.ontology.relation.ClInferredLocationProducer.SOURCE ) ) {
+            written += clInferredLocationProducer.produce();
+        }
         RestCacheEviction.evictAfterRebuild( gemmaRestApiClient, log );
     }
 

@@ -13,6 +13,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import lombok.Data;
 import org.springframework.lang.Nullable;
+import ubic.gemma.model.common.auditAndSecurity.ContactUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -76,6 +77,23 @@ public class TicketValueObject implements Serializable {
     @Nullable
     private String assigneeName;
 
+    /**
+     * What the screen that produced this ticket asked, verbatim and opaque.
+     *
+     * @see Ticket#getPayload()
+     */
+    @Nullable
+    private String payload;
+
+    /**
+     * Which schema {@link #payload} follows; null when the writer declared none.
+     * <p>
+     * On the wire beside the payload on purpose — a version a client cannot read is a version that does not
+     * exist for it.
+     */
+    @Nullable
+    private Integer payloadSchemaVersion;
+
     private Date createdAt;
     private Date updatedAt;
 
@@ -114,12 +132,14 @@ public class TicketValueObject implements Serializable {
         vo.dueDate = t.getDueDate();
         if ( t.getReporter() != null ) {
             vo.reporterId = t.getReporter().getId();
-            vo.reporterName = t.getReporter().getName();
+            vo.reporterName = ContactUtils.displayName( t.getReporter() );
         }
         if ( t.getAssignee() != null ) {
             vo.assigneeId = t.getAssignee().getId();
-            vo.assigneeName = t.getAssignee().getName();
+            vo.assigneeName = ContactUtils.displayName( t.getAssignee() );
         }
+        vo.payload = t.getPayload();
+        vo.payloadSchemaVersion = t.getPayloadSchemaVersion();
         vo.createdAt = t.getCreatedAt();
         vo.updatedAt = t.getUpdatedAt();
         vo.externalIssueUrl = t.getExternalIssueUrl();

@@ -115,11 +115,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     // -- the field had no reader anywhere in the codebase -- and which now collides with the base
     // field every filtered read populates.
 
-    // if it was split.
-    /**
-     * Experiments that are related to this one via the splitting of a source experiment.
-     */
-    private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
+    // otherParts moved to ExpressionExperimentValueObject, as compact references rather than whole VOs, so
+    // that GET /datasets/{id} carries the split linkage too.
 
     private CitationValueObject primaryCitation;
     /**
@@ -135,21 +132,9 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     private String QChtml;
 
-    /**
-     * Indicate if this experiment is a single-cell experiment.
-     */
-    private boolean isSingleCell;
-    /**
-     * The number of cells this experiment has.
-     * @see ExpressionExperiment#getNumberOfCells()
-     */
-    @Nullable
-    private Integer numberOfCells;
-    /**
-     * The number of cell IDs that the preferred single-cell dimension has.
-     * @see SingleCellDimension#getNumberOfCellIds()
-     */
-    private Integer numberOfCellIds;
+    // isSingleCell / numberOfCells / numberOfCellIds moved to ExpressionExperimentValueObject, where they are
+    // actually populated. Declared here since 2024 and never written by anything: every response carrying this
+    // VO said isSingleCell=false and numberOfCells=null regardless of the data.
     /**
      * Indicate if this experiment has a Cell Browser associated with it.
      */
@@ -231,13 +216,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return hasMultipleTechnologyTypes;
     }
 
-    public boolean getIsSingleCell() {
-        return isSingleCell;
-    }
-
-    public void setIsSingleCell( boolean isSingleCell ) {
-        this.isSingleCell = isSingleCell;
-    }
 
     public boolean getIsRNASeq() {
         return isRNASeq;

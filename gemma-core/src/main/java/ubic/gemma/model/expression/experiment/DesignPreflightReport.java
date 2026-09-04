@@ -110,7 +110,7 @@ public class DesignPreflightReport implements Serializable {
     public static class Blocker implements Serializable {
         private static final long serialVersionUID = 1L;
 
-        @Schema(description = "Stable identifier for this blocker kind, e.g. UNKNOWN_FACTOR_VALUE_ID, FACTOR_TYPE_CHANGE_WITH_VALUES, ORPHAN_STATEMENT, ASSIGNMENT_REFERENCES_DELETED_FV.")
+        @Schema(description = "Stable identifier for this blocker kind, e.g. UNKNOWN_FACTOR_VALUE_ID, FACTOR_TYPE_CHANGE_WITH_VALUES, ORPHAN_STATEMENT, ASSIGNMENT_REFERENCES_DELETED_FV, STATEMENT_ID_REPEATED.")
         private String type;
 
         private String message;

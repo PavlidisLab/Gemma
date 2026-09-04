@@ -4,12 +4,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 
 import org.springframework.lang.Nullable;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +46,18 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
     private Integer numberOfAssignedCells;
 
     /**
+     * How many cells carry each cell type, keyed by the {@link CharacteristicValueObject#getId() id} of the entry
+     * in {@link #cellTypes}. {@code null} when the indices are unavailable.
+     * <p>
+     * The tally comes off the same {@code cellTypeIndices} array {@link #cellTypeIds} is built from, so it costs
+     * one extra pass and no extra query. It exists because the per-cell array was the only way to answer "how
+     * many astrocytes" — 89,700 entries and 809 KB on one dataset to recover ten numbers (uib, 2026-09-03) —
+     * and a client that only needs the tally can now exclude the array outright.
+     */
+    @Nullable
+    private Map<Long, Integer> numberOfAssignedCellsByCellType;
+
+    /**
      * Indicate if this assignment is the preferred one.
      */
     private boolean isPreferred;
@@ -60,6 +75,30 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
             } catch ( IndexOutOfBoundsException e ) {
                 // this may happen because getCellType() can fail if the data we have is incorrect, but we don't want to
                 // break the VO serialization which would break the REST API.
+                log.warn( "Cell type indices are invalid for " + cellTypeAssignment + "." );
+            }
+        }
+        int[] indices = cellTypeAssignment.getCellTypeIndices();
+        if ( indices != null ) {
+            Map<Long, Integer> tally = new LinkedHashMap<>();
+            for ( Characteristic ct : cellTypeAssignment.getCellTypes() ) {
+                if ( ct.getId() != null ) {
+                    tally.put( ct.getId(), 0 );
+                }
+            }
+            try {
+                for ( int i : indices ) {
+                    if ( i == CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
+                        continue;
+                    }
+                    Long id = cellTypeAssignment.getCellTypes().get( i ).getId();
+                    if ( id != null ) {
+                        tally.merge( id, 1, Integer::sum );
+                    }
+                }
+                numberOfAssignedCellsByCellType = tally;
+            } catch ( IndexOutOfBoundsException e ) {
+                // same reason as above: bad indices must not break the whole response
                 log.warn( "Cell type indices are invalid for " + cellTypeAssignment + "." );
             }
         }

@@ -233,6 +233,22 @@ class OntologyRelationSource {
     }
 
     /**
+     * Whether a target that is a whole-body anatomical system should be skipped.
+     *
+     * <p>🛑 On CL these are tautologies of one shape -- {@code neural cell -> nervous system},
+     * {@code vein endothelial cell of respiratory system -> respiratory system}, the last restating
+     * the subject's own name. A system locates nothing, which is the whole point of the relation.
+     * Six such rows reached prod on 2026-09-02 and were deleted by hand; without this a rebuild puts
+     * them straight back.</p>
+     *
+     * <p>Off for the other sources, whose objects are diseases, roles and cell lines rather than
+     * anatomy, so the question does not arise.</p>
+     */
+    boolean skipsAnatomicalSystemTargets() {
+        return this == CL;
+    }
+
+    /**
      * What every subject in this source is. CLO classes are cell lines and CHEBI classes are chemicals;
      * neither ontology needs to be asked term by term.
      */

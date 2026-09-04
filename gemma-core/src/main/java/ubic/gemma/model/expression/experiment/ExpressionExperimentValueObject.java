@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
@@ -165,6 +166,53 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     private String technologyType;
 
+    /**
+     * Whether this is a single-cell experiment, i.e. it has a preferred single-cell quantitation type.
+     * <p>
+     * That is the same condition every single-cell route resolves against
+     * ({@code getPreferredSingleCellQuantitationType}), so a dataset this reports true for is one
+     * {@code /cellTypeAssignment} and {@code /singleCellDimension} can actually serve. 546 datasets on prod —
+     * 29 more than {@code SINGLE_CELL_DIMENSION_EXPERIMENT} indexes, which is why the flag and not that table
+     * decides this.
+     * <p>
+     * It is here rather than on the details VO because {@code technologyType} does not answer the question —
+     * eid 79038 is single-cell and reads {@code GENELIST}, the generic-platform placeholder — which left
+     * clients inferring modality from a regex over platform and assay strings, blind to a dataset annotated
+     * with none of the expected words and fooled by a title that merely mentions single cell (uib, 2026-09-03).
+     */
+    private boolean isSingleCell;
+
+    /**
+     * Total number of cells, or {@code null} when this is not a single-cell experiment or the count has not
+     * been computed. Denormalized on the experiment itself, so it costs nothing to serve.
+     * <p>
+     * 🛑 Not a substitute for {@link #isSingleCell}: 63 of the 546 single-cell datasets on prod have no count.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCells;
+
+    /**
+     * Number of cell IDs in the preferred single-cell dimension, or {@code null} when there is none.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCellIds;
+
+    /**
+     * The other parts of the study this dataset was split off from, empty when it was not split.
+     * <p>
+     * Gemma splits an experiment by a factor — usually organism part for single-cell data — and names each
+     * part {@code Split part N of: … [organism part = …]}. That title tells a reader siblings exist and gives
+     * them no way to reach one: 52 of 100 sampled single-cell datasets are split parts over 32 parent studies,
+     * and neither the curation UI nor the browser could follow the link, because the field lived on a VO only
+     * {@code /experiment-sets/{id}/datasets} serves (uib, 2026-09-03).
+     * <p>
+     * References rather than whole VOs: a sibling is rendered as a name and a link, and the previous full-VO
+     * form cost a {@code loadValueObjectsByIds} per split experiment.
+     */
+    private List<ExpressionExperimentReferenceValueObject> otherParts = new ArrayList<>();
+
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CharacteristicValueObject> characteristics;
@@ -246,6 +294,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         if ( ee.getTaxon() != null ) {
             this.taxonObject = new TaxonValueObject( ee.getTaxon() );
         }
+
+        // Denormalized on the experiment; isSingleCell and numberOfCellIds need a query and are filled in by
+        // ExpressionExperimentDaoImpl#populateSingleCellInfo, one batched query per page.
+        this.numberOfCells = ee.getNumberOfCells();
 
         // Counts
         if ( ModelUtils.isInitialized( ee.getBioAssays() ) ) {
@@ -364,6 +416,18 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Deprecated
     public int getBioAssayCount() {
         return numberOfBioAssays;
+    }
+
+    /**
+     * Lombok would name these {@code isSingleCell} / {@code setSingleCell}; the wire name and the convention
+     * these flags follow in this class is {@code getIsX} / {@code setIsX} (see {@link #getIsPublic()}).
+     */
+    public boolean getIsSingleCell() {
+        return this.isSingleCell;
+    }
+
+    public void setIsSingleCell( boolean isSingleCell ) {
+        this.isSingleCell = isSingleCell;
     }
 
     @Override

@@ -744,6 +744,16 @@ public class TicketsWebService {
             created.setMode( req.getMode() );
             changedFields.add( "mode" );
         }
+        // Create-only: the payload records what question the screen asked, so rewriting it later would
+        // rewrite what curators were shown. PATCH deliberately does not offer it.
+        if ( req.getPayload() != null ) {
+            created.setPayload( req.getPayload() );
+            changedFields.add( "payload" );
+        }
+        if ( req.getPayloadSchemaVersion() != null ) {
+            created.setPayloadSchemaVersion( req.getPayloadSchemaVersion() );
+            changedFields.add( "payloadSchemaVersion" );
+        }
         if ( !changedFields.isEmpty() ) {
             // No TicketEvent for metadata edits, but the governance audit
             // trail picks up the change via @Audited(TicketMetadataChangedEvent).
@@ -1196,9 +1206,28 @@ public class TicketsWebService {
         @Nullable
         private Boolean acceptsTargets;
 
+        /**
+         * What the screen that produced this ticket asked — opaque JSON, stored and served verbatim.
+         * Gemma never parses it; the schema belongs to the producing agent.
+         */
+        @Nullable
+        private String payload;
+
+        /** Which schema {@link #payload} follows. Null means the writer declared none. */
+        @Nullable
+        private Integer payloadSchemaVersion;
+
         @Nullable
         public Boolean getAcceptsTargets() { return acceptsTargets; }
         public void setAcceptsTargets( @Nullable Boolean acceptsTargets ) { this.acceptsTargets = acceptsTargets; }
+
+        @Nullable
+        public String getPayload() { return payload; }
+        public void setPayload( @Nullable String payload ) { this.payload = payload; }
+
+        @Nullable
+        public Integer getPayloadSchemaVersion() { return payloadSchemaVersion; }
+        public void setPayloadSchemaVersion( @Nullable Integer payloadSchemaVersion ) { this.payloadSchemaVersion = payloadSchemaVersion; }
 
 
         public TicketType getType() { return type; }
