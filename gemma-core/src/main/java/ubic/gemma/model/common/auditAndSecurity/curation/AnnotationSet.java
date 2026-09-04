@@ -187,9 +187,14 @@ public class AnnotationSet extends AbstractIdentifiable {
     /**
      * The structured annotation payload as a JSON string. The shape is
      * owned by the producer (the curation-agents client for {@code AGENT}
-     * source; the curation-UI for {@code CURATOR}); Gemma persists it
-     * verbatim. MySQL stores this as a native {@code JSON} column (V20), H2
-     * as {@code CLOB} (H2 has no JSON type).
+     * source; the curation-UI for {@code CURATOR}); Gemma does not interpret
+     * it. MySQL stores this as a native {@code JSON} column (V20), H2 as
+     * {@code CLOB} (H2 has no JSON type).
+     * <p>
+     * Not byte-preserved: MySQL normalises a {@code JSON} value on write,
+     * stripping insignificant whitespace and reordering object keys, so
+     * {@code {"v":2}} reads back as {@code {"v": 2}}. The document round-trips,
+     * the bytes do not. Compare payloads as parsed JSON, never as strings.
      * <p>
      * The JDBC type is pinned explicitly rather than left to {@code @Lob}.
      * {@code @Lob} resolves to {@code Types#CLOB}, but Connector/J reports a

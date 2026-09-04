@@ -34,6 +34,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSummaryVal
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.PreboardedExperiment;
 import ubic.gemma.model.expression.experiment.WorkflowState;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -66,6 +68,29 @@ import java.util.stream.Collectors;
  */
 @Transactional
 public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+
+    /**
+     * Compare two JSON payloads as documents, not as bytes.
+     * <p>
+     * PAYLOAD_JSON is a MySQL {@code JSON} column, and MySQL normalises on write -- it strips
+     * insignificant whitespace and reorders object keys, so {@code {"v":2}} comes back as
+     * {@code {"v": 2}}. The value is therefore not byte-preserved, and asserting on the exact
+     * string tests MySQL's formatter rather than Gemma.
+     * <p>
+     * These assertions used to pass only because gemdtest built the column as LONGTEXT while
+     * production has always had JSON, so the test environment was storing payloads verbatim in a
+     * way production never did. That divergence is gone; this compares what actually matters,
+     * which is that the same JSON document round-trips.
+     */
+    private static void assertPayloadEquals( String expected, String actual ) {
+        try {
+            assertEquals( JSON.readTree( expected ), JSON.readTree( actual ) );
+        } catch ( JsonProcessingException e ) {
+            throw new AssertionError( "payload is not valid JSON: " + actual, e );
+        }
+    }
 
     @Autowired
     private AnnotationSetService annotationSetService;
@@ -137,7 +162,7 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
 
         AnnotationSet reloaded = annotationSetDao.load( firstId );
         assertNotNull( reloaded );
-        assertEquals( "{\"v\":2}", reloaded.getPayloadJson() );
+        assertPayloadEquals( "{\"v\":2}", reloaded.getPayloadJson() );
         assertEquals( "[\"factor:1:0\"]", reloaded.getParkedElements() );
     }
 
@@ -339,7 +364,7 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         assertEquals( "4d8fdbc", reloaded.getRunSha() );
         assertEquals( "cell_type", reloaded.getAgentName() );
         // Envelope only: content and identity are not reachable through this call.
-        assertEquals( "{\"factors\":[]}", reloaded.getPayloadJson() );
+        assertPayloadEquals( "{\"factors\":[]}", reloaded.getPayloadJson() );
         assertEquals( runId, reloaded.getRunId() );
         assertEquals( AnnotationSetRole.PROPOSAL, reloaded.getRole() );
     }
