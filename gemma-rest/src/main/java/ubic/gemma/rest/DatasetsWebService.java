@@ -2480,7 +2480,7 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         CurationDocument snapshot = readSnapshotPayload( setId, ee );
-        Map<String, Long> reidentified = reconcileSnapshotForRestore( snapshot, ee );
+        RestoreIdentityDelta identity = reconcileSnapshotForRestore( snapshot, ee );
         // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
         // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
         snapshot.setBaseline( null );
@@ -2488,7 +2488,7 @@ public class DatasetsWebService {
         // Attached on BOTH the dry run and the apply. The dry run is the only step a human reads before
         // deciding, and its section tallies say "one tag created" for an entity that is really being
         // re-identified -- measured 2026-09-03: tag 9018 came back as 9019 and nothing in the preview said so.
-        report.setReidentified( reidentified );
+        report.setIdentityDelta( identity.reidentified, identity.deleted );
         return respond( report );
     }
 
@@ -5183,10 +5183,9 @@ public class DatasetsWebService {
      * run is cascaded again on the way back.
      */
     /**
-     * @return {@code clientRef -> the gemmaId that will NOT survive}, for every entity the restore has to
-     *         recreate rather than update. Empty when the replay is fully id-stable.
+     * @return the identity delta the replay implies, in BOTH eras -- see {@link RestoreIdentityDelta}.
      */
-    private Map<String, Long> reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee ) {
+    private RestoreIdentityDelta reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee ) {
         ExperimentalDesignValueObject current = expressionExperimentService.getExperimentalDesignValueObject( ee );
         Set<Long> liveFactorIds = new HashSet<>();
         Set<Long> liveFvIds = new HashSet<>();
@@ -5204,6 +5203,7 @@ public class DatasetsWebService {
         }
 
         Map<String, Long> reidentified = new LinkedHashMap<>();
+        List<Long> deleted = new ArrayList<>();
         int seq = 0;
         Set<Long> snapshotFactorIds = new HashSet<>();
         Set<Long> snapshotFvIds = new HashSet<>();
@@ -5246,6 +5246,7 @@ public class DatasetsWebService {
                         for ( Long liveId : statementIdsOf( current, fvc.getGemmaId() ) ) {
                             if ( !snapshotStatementIds.contains( liveId ) ) {
                                 fvc.getStatements().getDeletedIds().add( liveId );
+                                deleted.add( liveId );
                             }
                         }
                     }
@@ -5255,6 +5256,7 @@ public class DatasetsWebService {
                     for ( Long liveId : factorValueIdsOf( current, fc.getGemmaId() ) ) {
                         if ( !snapshotFvIds.contains( liveId ) ) {
                             fc.getFactorValues().getDeletedIds().add( liveId );
+                            deleted.add( liveId );
                         }
                     }
                 }
@@ -5262,15 +5264,16 @@ public class DatasetsWebService {
             for ( Long liveId : liveFactorIds ) {
                 if ( !snapshotFactorIds.contains( liveId ) ) {
                     snapshot.getDesign().getFactors().getDeletedIds().add( liveId );
+                    deleted.add( liveId );
                 }
             }
         }
 
         reconcileIdSection( snapshot.getTags(), currentTagIds( ee ), "restore-t-",
-                DatasetsWebService::clearTagDecoration, reidentified );
+                DatasetsWebService::clearTagDecoration, reidentified, deleted );
         reconcileIdSection( snapshot.getSampleCharacteristics(), currentSampleCharacteristicIds( ee ), "restore-sc-",
-                DatasetsWebService::clearSampleCharacteristicDecoration, reidentified );
-        return reidentified;
+                DatasetsWebService::clearSampleCharacteristicDecoration, reidentified, deleted );
+        return new RestoreIdentityDelta( reidentified, deleted );
     }
 
     /**
@@ -5284,7 +5287,8 @@ public class DatasetsWebService {
      *                        here — where it is provably not being applied — instead of being sent to be refused.
      */
     private static <T extends EntityRef> void reconcileIdSection( @Nullable Section<T> section, Set<Long> liveIds,
-            String clientRefPrefix, Consumer<T> clearDecoration, Map<String, Long> reidentified ) {
+            String clientRefPrefix, Consumer<T> clearDecoration, Map<String, Long> reidentified,
+            List<Long> deleted ) {
         if ( section == null ) {
             return;
         }
@@ -5308,6 +5312,9 @@ public class DatasetsWebService {
         for ( Long liveId : liveIds ) {
             if ( !kept.contains( liveId ) ) {
                 section.getDeletedIds().add( liveId );
+                // The LIVE id the restore is about to remove -- a different era from `reidentified`,
+                // and the one a ruling made against the CURRENT curation is keyed on.
+                deleted.add( liveId );
             }
         }
     }
@@ -5665,6 +5672,25 @@ public class DatasetsWebService {
         return l != null ? l : Collections.emptyList();
     }
 
+    /**
+     * The identity consequences of replaying a snapshot, in the two eras a caller may have keyed on.
+     *
+     * <p>🛑 They are DIFFERENT ERAS and a consumer usually needs both. {@code reidentified} names ids as
+     * the SNAPSHOT recorded them — already gone, and what a ruling made BEFORE the intervening edit is
+     * keyed on. {@code deleted} names ids that are live RIGHT NOW and that the restore will remove — what
+     * a ruling made AFTER that edit is keyed on, which is the commoner case when findings are generated
+     * against current curation.</p>
+     */
+    private static final class RestoreIdentityDelta {
+        private final Map<String, Long> reidentified;
+        private final List<Long> deleted;
+
+        private RestoreIdentityDelta( Map<String, Long> reidentified, List<Long> deleted ) {
+            this.reidentified = reidentified;
+            this.deleted = deleted;
+        }
+    }
+
     /** The server's reply — mirrors CAB's {@code CurationCommitReport}. */
     public static class CurationCommitReport {
         private final boolean applied;
@@ -5694,16 +5720,28 @@ public class DatasetsWebService {
         @Nullable
         private final Date newBaseline;
         /**
-         * {@code clientRef -> the gemmaId that will NOT survive}, for every entity a RESTORE has to recreate
-         * rather than update in place. Empty on an id-stable replay and on an ordinary commit.
+         * {@code clientRef -> the gemmaId THE SNAPSHOT RECORDED} for content the restore must recreate because
+         * that id no longer resolves. Empty on an id-stable replay and on an ordinary commit.
          * <p>
-         * 🛑 This is the only field that distinguishes "this content comes back" from "this content comes back
-         * under a NEW id". The section tallies cannot: they report such an entity as {@code created}, which
-         * reads like a restoration. Anything keyed on the old id -- a per-finding disposition, an external
-         * ledger row -- dangles the moment the restore applies, and on the DRY RUN this is the only warning a
-         * curator gets. Pair it with {@link #getIdMap()} on an applied restore to read old id -> new id.
+         * 🛑 This is a SNAPSHOT-ERA id and is already gone; it is not the id the restore is about to delete --
+         * see {@link #getDeletedIdentities()} for that. It answers "a ruling made before the intervening edit
+         * was keyed on this". Pair it with {@link #getIdMap()} on an APPLIED restore to read
+         * snapshot id -> new id.
+         * <p>
+         * Distinguishing this from the section tallies is the point: they report such an entity as
+         * {@code created}, which reads like a restoration rather than a re-identification.
          */
         private Map<String, Long> reidentified = Collections.emptyMap();
+        /**
+         * The LIVE gemmaIds this restore will DELETE -- the entities present now that the snapshot has no
+         * counterpart for. Empty on an ordinary commit.
+         * <p>
+         * 🛑 The other era, and usually the one that matters more: a curator rules on the CURRENT curation, so
+         * a finding's target carries the id that is live now, and that is precisely what a restore removes.
+         * {@code changes.<section>.deleted} counts these and does not name them. Union this with
+         * {@link #getReidentified()} to enumerate every id that will stop resolving, BEFORE applying.
+         */
+        private List<Long> deletedIdentities = Collections.emptyList();
         private final String error;
 
         private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
@@ -5769,8 +5807,10 @@ public class DatasetsWebService {
         public Date getNewBaseline() { return newBaseline; }
         public Map<String, Long> getIdMap() { return idMap; }
         public Map<String, Long> getReidentified() { return reidentified; }
-        void setReidentified( Map<String, Long> reidentified ) {
+        public List<Long> getDeletedIdentities() { return deletedIdentities; }
+        void setIdentityDelta( @Nullable Map<String, Long> reidentified, @Nullable List<Long> deleted ) {
             this.reidentified = reidentified != null ? reidentified : Collections.emptyMap();
+            this.deletedIdentities = deleted != null ? deleted : Collections.emptyList();
         }
         public Map<String, CurationSectionChange> getChanges() { return changes; }
         public List<Long> getAuditEventIds() { return auditEventIds; }
