@@ -342,14 +342,20 @@ public class Statement extends Characteristic {
                 && CharacteristicUtils.equals( secondObject, secondObjectUri, that.secondObject, that.secondObjectUri );
     }
 
+    /**
+     * Constant, inherited in spirit from {@link Characteristic#hashCode()} and
+     * restated here only to say why the predicate fields are NOT hashed.
+     *
+     * <p>This hashed the predicate and object terms on top of the superclass's
+     * mutable category/value hash. Every one of those fields is edited in place
+     * by curation, and a Statement lives in {@code FactorValue}'s
+     * {@code Set<Statement>}, so an edit moved the element to a stale bucket.
+     * See {@link Characteristic#hashCode()} for the full reasoning and for the
+     * rule about not keying large maps by these types.</p>
+     */
     @Override
     public int hashCode() {
-        // don't both hashing labels unless the URI is null
-        return super.hashCode() + 31 * Objects.hash(
-                StringUtils.lowerCase( predicateUri != null ? predicateUri : predicate ),
-                StringUtils.lowerCase( objectUri != null ? objectUri : object ),
-                StringUtils.lowerCase( secondPredicateUri != null ? secondPredicateUri : secondPredicate ),
-                StringUtils.lowerCase( secondObjectUri != null ? secondObjectUri : secondObject ) );
+        return getClass().hashCode();
     }
 
     @Override
