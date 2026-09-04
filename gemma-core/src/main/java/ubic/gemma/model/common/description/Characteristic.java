@@ -327,10 +327,18 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
      * bulk keying: building a 5000-entry {@code HashMap} keyed by transient
      * Characteristics measured 1141 ms this way versus 42 ms before.
      * ⇒ <b>Do not key a large map by Characteristic.</b> Use a
-     * {@link java.util.TreeMap} with {@link #getComparator()}, which collapses
-     * exactly the pairs {@link #equals} considers equal, or key by id. The
-     * annotation usage-frequency aggregations in
-     * {@code ExpressionExperimentDaoImpl} are the precedent.</p>
+     * {@link java.util.TreeMap}, or key by id. The annotation usage-frequency
+     * aggregations in {@code ExpressionExperimentDaoImpl} are the precedent.</p>
+     *
+     * <p>🛑 Pick the comparator by what the keys are. {@link #getComparator()}
+     * breaks the tie on id, so a map built from TRANSIENT keys (a GROUP BY
+     * projection, say) and probed with a persisted characteristic misses:
+     * id-vs-null is never zero, even though {@link #equals} calls the two equal.
+     * For those maps use {@link #getByCategoryAndValueComparator()} (or
+     * {@link #getByCategoryComparator()} when the value is not part of the key),
+     * which collapses exactly the pairs {@link #equals} considers equal. Reserve
+     * {@link #getComparator()} for maps whose keys are all persisted and where
+     * two distinct rows sharing a term must stay distinct.</p>
      */
     @Override
     public int hashCode() {
