@@ -261,6 +261,14 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
             attached.setTitle( ticket.getTitle() );
             attached.setBody( ticket.getBody() );
             attached.setMode( ticket.getMode() );
+            // 🛑 EVERY metadata field a caller may mutate has to be listed here, and the cost of
+            // forgetting one is silent. POST /tickets builds its 201 from the DETACHED instance the
+            // caller mutated, so an omitted field is echoed back to the client as if it were stored
+            // and is null on the next GET -- which is exactly how payload/payloadSchemaVersion
+            // behaved from V41 until 2026-09-04. The create path always takes this branch, because
+            // `created` comes from an earlier transaction and reattach() loads a fresh instance.
+            attached.setPayload( ticket.getPayload() );
+            attached.setPayloadSchemaVersion( ticket.getPayloadSchemaVersion() );
         }
         bumpUpdated( attached );
         return ticketDao.save( attached );
