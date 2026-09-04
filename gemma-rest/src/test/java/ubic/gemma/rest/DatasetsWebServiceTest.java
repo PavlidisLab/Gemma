@@ -382,6 +382,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetDispositionService annotationSetDispositionService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetDispositionService.class );
+        }
+
+        @Bean
         public ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService curationLockService() {
             return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService.class );
         }

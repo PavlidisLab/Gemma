@@ -43,6 +43,9 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
 
     private static final String DRAFT_RUN_ID_PREFIX = "draft-";
 
+    /** Cap matching {@code ANNOTATION_SET.FINALIZED_NOTES VARCHAR(2048)}. */
+    private static final int MAX_FINALIZED_NOTES_LENGTH = 2048;
+
     private final AnnotationSetDao annotationSetDao;
 
     @Autowired
@@ -286,16 +289,26 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     @Nullable
     @Override
     @Transactional
-    public AnnotationSet finalizeSet( Long id, @Nullable String finalizedBy ) {
+    public AnnotationSet finalizeSet( Long id, @Nullable String finalizedBy, @Nullable String notes ) {
         Assert.notNull( id, "id must not be null." );
         AnnotationSet a = annotationSetDao.load( id );
         if ( a == null ) return null;
+        String trimmedNotes = truncateNotes( notes );
         if ( a.getFinalizedAt() != null ) {
+            // Already closed. Re-stamping the timestamp would rewrite when the decision was
+            // made, so it stays; but a note that arrives now is recorded rather than dropped,
+            // since a caller cannot tell a silently discarded sentence from a stored one.
+            if ( trimmedNotes != null && !trimmedNotes.equals( a.getFinalizedNotes() ) ) {
+                a.setFinalizedNotes( trimmedNotes );
+                a.setUpdatedAt( new Date() );
+                annotationSetDao.update( a );
+            }
             return a;
         }
         Date now = new Date();
         a.setFinalizedAt( now );
         a.setFinalizedBy( finalizedBy );
+        a.setFinalizedNotes( trimmedNotes );
         a.setUpdatedAt( now );
         annotationSetDao.update( a );
         return a;
@@ -314,6 +327,8 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         Date now = new Date();
         a.setFinalizedAt( null );
         a.setFinalizedBy( null );
+        // The note explains one closure; keeping it would attach those words to the next one.
+        a.setFinalizedNotes( null );
         a.setUpdatedAt( now );
         annotationSetDao.update( a );
         return a;
@@ -350,6 +365,27 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     @Nullable
     private static String blankToNull( String s ) {
         return s.trim().isEmpty() ? null : s;
+    }
+
+    /**
+     * Trim, blank-to-null, and cut to {@code FINALIZED_NOTES VARCHAR(2048)}.
+     * <p>
+     * Truncated rather than rejected, matching how a triage note is handled:
+     * losing the tail of an explanation is a smaller harm than refusing a
+     * closure the curator has already decided on, and the closure is the part
+     * that matters.
+     */
+    @Nullable
+    private static String truncateNotes( @Nullable String notes ) {
+        if ( notes == null ) {
+            return null;
+        }
+        String trimmed = notes.trim();
+        if ( trimmed.isEmpty() ) {
+            return null;
+        }
+        return trimmed.length() <= MAX_FINALIZED_NOTES_LENGTH
+                ? trimmed : trimmed.substring( 0, MAX_FINALIZED_NOTES_LENGTH );
     }
 
     @Override

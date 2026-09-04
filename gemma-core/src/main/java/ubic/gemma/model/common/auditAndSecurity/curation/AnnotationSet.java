@@ -154,6 +154,18 @@ public class AnnotationSet extends AbstractIdentifiable {
     @Column(name = "FINALIZED_BY", columnDefinition = "VARCHAR(255)")
     private String finalizedBy;
 
+    /**
+     * The curator's closing note on this finalization — why the review ended
+     * the way it did.
+     * <p>
+     * Cleared on reopen: a note explains one closure, so carrying it across
+     * would attach one closure's words to the next. {@code null} means no note
+     * was written; a blank one is normalized to {@code null} on write so
+     * "did they say anything" has a single answer.
+     */
+    @Column(name = "FINALIZED_NOTES", columnDefinition = "VARCHAR(2048)")
+    private String finalizedNotes;
+
     @Column(name = "AGENT_VERSION", columnDefinition = "VARCHAR(255)")
     private String agentVersion;
 
@@ -294,6 +306,14 @@ public class AnnotationSet extends AbstractIdentifiable {
 
     public void setFinalizedBy( String finalizedBy ) {
         this.finalizedBy = finalizedBy;
+    }
+
+    public String getFinalizedNotes() {
+        return finalizedNotes;
+    }
+
+    public void setFinalizedNotes( String finalizedNotes ) {
+        this.finalizedNotes = finalizedNotes;
     }
 
     public String getAgentVersion() {

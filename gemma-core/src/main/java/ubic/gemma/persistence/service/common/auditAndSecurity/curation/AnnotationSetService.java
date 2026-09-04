@@ -214,14 +214,31 @@ public interface AnnotationSetService {
      * marking a DRAFT as "done editing" or a SNAPSHOT as the polished
      * canonical view. Idempotent: a row already finalized returns
      * unchanged (no re-stamp).
+     *
+     * @param notes the curator's closing note, or {@code null}. Trimmed, and
+     *              truncated to fit rather than rejected — losing the tail of
+     *              an explanation is a smaller harm than refusing a closure
+     *              the curator has already decided on. A blank note is stored
+     *              as {@code null}.
+     *              <p>
+     *              🛑 The one thing this is NOT idempotent about. A set that
+     *              is already finalized is still re-stamped with a non-blank
+     *              {@code notes}, because dropping the sentence and answering
+     *              200 is the exact failure the parameter exists to fix; a
+     *              caller cannot tell that from a successful write. Everything
+     *              else about the row stays as it was.
      */
     @Nullable
-    AnnotationSet finalizeSet( Long id, @Nullable String finalizedBy );
+    AnnotationSet finalizeSet( Long id, @Nullable String finalizedBy, @Nullable String notes );
 
     /**
-     * Clear {@code finalizedAt} + {@code finalizedBy} on the row,
-     * reopening a finalized DRAFT or unblessing a polished SNAPSHOT.
-     * Idempotent: a row already not finalized returns unchanged.
+     * Clear {@code finalizedAt} + {@code finalizedBy} + {@code finalizedNotes}
+     * on the row, reopening a finalized DRAFT or unblessing a polished
+     * SNAPSHOT. Idempotent: a row already not finalized returns unchanged.
+     *
+     * <p>The note goes with the closure it explains. Carrying it across a
+     * reopen would attach one closure's words to the next one, and the UI
+     * pre-fills the re-close box from the value it read BEFORE reopening.</p>
      */
     @Nullable
     AnnotationSet reopenSet( Long id );

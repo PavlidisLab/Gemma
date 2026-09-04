@@ -35,9 +35,14 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ClientErrorException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
@@ -49,12 +54,15 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetDisposition;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSummaryValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetTriage;
+import ubic.gemma.model.common.auditAndSecurity.curation.FindingDisposition;
 import ubic.gemma.model.common.auditAndSecurity.curation.TriageJudgeKind;
 import ubic.gemma.model.common.auditAndSecurity.curation.TriageVerdict;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetDispositionService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService;
@@ -115,6 +123,9 @@ public class AnnotationSetsWebService {
 
     @Autowired
     private AnnotationSetTriageService annotationSetTriageService;
+
+    @Autowired
+    private AnnotationSetDispositionService annotationSetDispositionService;
 
     @Autowired
     private CurationLockService curationLockService;
@@ -207,11 +218,27 @@ public class AnnotationSetsWebService {
             return Response.ok( rows ).build();
         }
         List<AnnotationSet> sets = annotationSetService.findByInvestigation( ee, roleFilter );
-        List<AnnotationSetResponse> rows = new ArrayList<>( sets.size() );
+        List<AnnotationSet> kept = new ArrayList<>( sets.size() );
         for ( AnnotationSet a : sets ) {
             if ( sourceFilter != null && a.getSource() != sourceFilter ) continue;
             if ( createdBy != null && !createdBy.equals( a.getCreatedBy() ) ) continue;
-            rows.add( toResponse( a ) );
+            kept.add( a );
+        }
+        // One query for the whole page rather than one per set: a dataset routinely carries
+        // several sets, and folding dispositions in one at a time makes this list an N+1.
+        Set<Long> keptIds = new LinkedHashSet<>();
+        for ( AnnotationSet a : kept ) {
+            keptIds.add( a.getId() );
+        }
+        Map<Long, Map<String, AnnotationSetDisposition>> standing =
+                annotationSetDispositionService.standingForIds( keptIds );
+        List<AnnotationSetResponse> rows = new ArrayList<>( kept.size() );
+        for ( AnnotationSet a : kept ) {
+            // A set with no rulings gets an empty list rather than null: on this route
+            // dispositions WERE loaded, and "loaded, none found" is a different fact from
+            // "not loaded" for a client deciding whether to make a second call.
+            rows.add( toResponse( a,
+                    standing.getOrDefault( a.getId(), Collections.emptyMap() ) ) );
         }
         return Response.ok( rows ).build();
     }
@@ -395,7 +422,7 @@ public class AnnotationSetsWebService {
             @PathParam("id") Long id
     ) {
         AnnotationSet a = requireLoad( id, "id" );
-        return Responders.respond( toResponse( a ) );
+        return Responders.respond( toResponse( a, annotationSetDispositionService.standingFor( a ) ) );
     }
 
     /**
@@ -413,18 +440,45 @@ public class AnnotationSetsWebService {
             description = "`?onBehalfOf=` records the finalizing curator when the call is relayed "
                     + "by an agent, so `finalizedBy` names the person who decided rather than the "
                     + "software that transmitted it. Honoured only for `GROUP_AGENT` / "
-                    + "`GROUP_ADMIN`.")
+                    + "`GROUP_ADMIN`.\n\n"
+                    + "The body is optional and carries one field, `note` — the curator's closing "
+                    + "sentence, echoed back as `finalizedNotes`. Trimmed, and cut to 2048 "
+                    + "characters rather than refused.\n\n"
+                    + "🛑 The note is the one part of this that is not idempotent. A second call on "
+                    + "an already-finalized set leaves `finalizedAt` / `finalizedBy` alone — "
+                    + "re-stamping them would rewrite when the decision was made — but a non-blank "
+                    + "`note` IS recorded, because answering 200 to a dropped sentence is "
+                    + "indistinguishable from storing it. Reopening clears the note: it explains "
+                    + "one closure and carrying it forward would attach those words to the next.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The set is finalized.",
+                            content = @Content(schema = @Schema(implementation = AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response finalizeAnnotationSet(
             @PathParam("id") Long id,
             @Parameter(description = "Who is finalizing. Agents and admins only.")
-            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
+            @Nullable FinalizeRequest body
     ) {
         String by = resolveCurator( onBehalfOf );
-        AnnotationSet updated = annotationSetService.finalizeSet( id, by );
+        AnnotationSet updated = annotationSetService.finalizeSet( id, by,
+                body != null ? body.note : null );
         if ( updated == null ) {
             throw new NotFoundException( "No annotation set with id " + id );
         }
         return Response.ok( toResponse( updated ) ).build();
+    }
+
+    /** Body for {@link #finalizeAnnotationSet}; optional, and one field. */
+    public static class FinalizeRequest {
+        /**
+         * The curator's closing note on this finalization. Optional — closing
+         * without one is the ordinary case.
+         */
+        @JsonProperty("note")
+        @Nullable
+        public String note;
     }
 
     /* ============== triage ============== */
@@ -556,6 +610,168 @@ public class AnnotationSetsWebService {
         boolean ruledForSomeoneNamed = onBehalfOf != null && !onBehalfOf.isBlank();
         return !ruledForSomeoneNamed && SecurityUtil.isUserAgent()
                 ? TriageJudgeKind.AGENT : TriageJudgeKind.CURATOR;
+    }
+
+    /* ============== per-finding dispositions ============== */
+
+    /**
+     * Record a curator's ruling on ONE finding inside an audit set.
+     *
+     * <p>Append-only: a curator who changes their mind adds a row rather than
+     * replacing one, and the read folds to the newest per finding.</p>
+     */
+    @POST
+    @Path("/annotation-sets/{id}/dispositions")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Rule on one finding inside an annotation set",
+            description = "`disposition` is one of `accepted`, `dismissed`, `needs_more_info` — the "
+                    + "curation store's own per-finding vocabulary, adopted here rather than "
+                    + "re-spelled. There is no `pending`: a finding nobody has ruled on has no row, "
+                    + "so absence is the state.\n\n"
+                    + "🛑 Not `/triage`, which rules on the whole set. A curator routinely accepts "
+                    + "one finding and rejects another on the same target, and one set-level verdict "
+                    + "cannot carry that outcome.\n\n"
+                    + "`targetId` names the finding in the PRODUCER's own numbering and is opaque "
+                    + "here — the payload is stored as JSON text and never parsed, so an id naming "
+                    + "no finding is accepted and only the producer can tell.\n\n"
+                    + "Rulings are append-only, so this always writes a new row; `GET` returns the "
+                    + "standing ruling per finding and `?history=true` the full sequence. "
+                    + "`?onBehalfOf=` records the ruling curator when the call is relayed by an "
+                    + "agent, and is honoured only for `GROUP_AGENT` / `GROUP_ADMIN`.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "The ruling was recorded.",
+                            content = @Content(schema = @Schema(implementation = DispositionResponse.class))),
+                    @ApiResponse(responseCode = "400",
+                            description = "`targetId` or `disposition` is missing, or `disposition` names no value.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "409",
+                            description = "The set is finalized and is not taking rulings; reopen it first.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response ruleOnFinding(
+            @PathParam("id") Long id,
+            @Parameter(description = "Who is ruling. Agents and admins only.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
+            @Nullable DispositionRequest body
+    ) {
+        if ( body == null || body.targetId == null || body.targetId.isBlank() ) {
+            throw new BadRequestException( "Request body must include `targetId` naming the finding." );
+        }
+        if ( body.disposition == null || body.disposition.isBlank() ) {
+            throw new BadRequestException( "Request body must include `disposition`"
+                    + " (accepted|dismissed|needs_more_info)." );
+        }
+        FindingDisposition disposition;
+        try {
+            disposition = FindingDisposition.fromDbValue( body.disposition );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( e.getMessage() );
+        }
+        AnnotationSet set = requireLoad( id, "id" );
+        String decidedBy = resolveCurator( onBehalfOf );
+        TriageJudgeKind kind = resolveJudgeKind( body.judgeKind, onBehalfOf );
+        AnnotationSetDisposition d;
+        try {
+            d = annotationSetDispositionService.rule( set, body.targetId, disposition,
+                    decidedBy, kind, body.reason );
+        } catch ( IllegalStateException e ) {
+            // Finalized: the review has been closed out, and a ruling dated after the
+            // finalization that summarized it would contradict its own summary.
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+        }
+        return Response.status( Response.Status.CREATED ).entity( toDispositionResponse( d ) ).build();
+    }
+
+    /**
+     * The rulings on an annotation set's findings — the standing one per
+     * finding, or the whole sequence.
+     */
+    @GET
+    @Path("/annotation-sets/{id}/dispositions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Read the per-finding rulings on an annotation set",
+            description = "By default one row per finding: the STANDING ruling, which is the most "
+                    + "recent. Pass `?history=true` for the full append-only sequence, most recent "
+                    + "first, superseded rulings included — that is where a ruling that moved is "
+                    + "visible. An empty list means nobody has ruled on any finding.")
+    public Response getDispositions(
+            @PathParam("id") Long id,
+            @Parameter(description = "Return every ruling rather than the standing one per finding.")
+            @QueryParam("history") @DefaultValue("false") boolean history
+    ) {
+        AnnotationSet set = requireLoad( id, "id" );
+        List<AnnotationSetDisposition> rows = history
+                ? annotationSetDispositionService.findBySet( set )
+                : new ArrayList<>( annotationSetDispositionService.standingFor( set ).values() );
+        List<DispositionResponse> out = new ArrayList<>( rows.size() );
+        for ( AnnotationSetDisposition d : rows ) {
+            out.add( toDispositionResponse( d ) );
+        }
+        return Response.ok( out ).build();
+    }
+
+    private static DispositionResponse toDispositionResponse( AnnotationSetDisposition d ) {
+        DispositionResponse r = new DispositionResponse();
+        r.id = d.getId();
+        r.annotationSetId = d.getAnnotationSet() != null ? d.getAnnotationSet().getId() : null;
+        r.targetId = d.getTargetId();
+        r.disposition = d.getDisposition() != null ? d.getDisposition().getDbValue() : null;
+        r.decidedBy = d.getDecidedBy();
+        r.judgeKind = d.getJudgeKind() != null ? d.getJudgeKind().getDbValue() : null;
+        r.decidedAt = d.getDecidedAt();
+        r.reason = d.getReason();
+        return r;
+    }
+
+    /** Body for {@link #ruleOnFinding}. */
+    public static class DispositionRequest {
+        /** Which finding, in the producer's own numbering. */
+        @JsonProperty("targetId")
+        @JsonAlias("target_id")
+        public String targetId;
+        @Schema(allowableValues = { "accepted", "dismissed", "needs_more_info" })
+        @JsonProperty("disposition")
+        public String disposition;
+        /**
+         * Why. What the agent needs in order to stop emitting a finding it got
+         * wrong; the disposition alone records the decision but not the cause.
+         */
+        @JsonProperty("reason")
+        @Nullable
+        public String reason;
+        /**
+         * {@code agent} or {@code curator} — who decided. Send it; the
+         * fallback guesses from the transport and guesses wrong whenever the
+         * agent runs as a human account.
+         */
+        @Schema(allowableValues = { "agent", "curator" })
+        @JsonProperty("judgeKind")
+        @Nullable
+        public String judgeKind;
+    }
+
+    /** Wire shape of one per-finding ruling. */
+    public static class DispositionResponse {
+        public Long id;
+        @JsonProperty("annotationSetId")
+        public Long annotationSetId;
+        @JsonProperty("targetId")
+        public String targetId;
+        @Schema(allowableValues = { "accepted", "dismissed", "needs_more_info" })
+        public String disposition;
+        @JsonProperty("decidedBy")
+        public String decidedBy;
+        @Schema(allowableValues = { "agent", "curator" })
+        @JsonProperty("judgeKind")
+        public String judgeKind;
+        @JsonProperty("decidedAt")
+        public Date decidedAt;
+        @Nullable
+        public String reason;
     }
 
     private static TriageResponse toTriageResponse( AnnotationSetTriage t ) {
@@ -819,6 +1035,10 @@ public class AnnotationSetsWebService {
         @JsonProperty("finalizedBy")
         @Nullable
         public String finalizedBy;
+        /** The curator's closing note on this finalization; cleared on reopen. */
+        @JsonProperty("finalizedNotes")
+        @Nullable
+        public String finalizedNotes;
         @JsonProperty("agentVersion")
         @Nullable
         public String agentVersion;
@@ -841,6 +1061,17 @@ public class AnnotationSetsWebService {
         @JsonProperty("parkedElements")
         @Nullable
         public String parkedElements;
+        /**
+         * The STANDING ruling on each finding — most recent per {@code targetId},
+         * not the full append-only sequence; {@code GET
+         * /annotation-sets/{id}/dispositions?history=true} is where a ruling that
+         * moved is visible. Present on the full shape so a review panel does not
+         * have to make a second call per set; {@code null} rather than empty when
+         * dispositions were not loaded for this response.
+         */
+        @JsonProperty("dispositions")
+        @Nullable
+        public List<DispositionResponse> dispositions;
     }
 
     /**
@@ -1045,6 +1276,18 @@ public class AnnotationSetsWebService {
     }
 
     private static AnnotationSetResponse toResponse( AnnotationSet a ) {
+        return toResponse( a, null );
+    }
+
+    /**
+     * @param standing the standing ruling per finding, or {@code null} when
+     *                 dispositions were not loaded — which leaves
+     *                 {@link AnnotationSetResponse#dispositions} null rather
+     *                 than empty, so "none loaded" and "none exist" stay
+     *                 distinguishable on the wire.
+     */
+    private static AnnotationSetResponse toResponse( AnnotationSet a,
+            @Nullable Map<String, AnnotationSetDisposition> standing ) {
         AnnotationSetResponse r = new AnnotationSetResponse();
         r.id = a.getId();
         r.datasetId = a.getInvestigation() != null ? a.getInvestigation().getId() : null;
@@ -1065,6 +1308,14 @@ public class AnnotationSetsWebService {
         r.ranAt = a.getRanAt();
         r.payloadJson = a.getPayloadJson();
         r.parkedElements = a.getParkedElements();
+        r.finalizedNotes = a.getFinalizedNotes();
+        if ( standing != null ) {
+            List<DispositionResponse> rows = new ArrayList<>( standing.size() );
+            for ( AnnotationSetDisposition d : standing.values() ) {
+                rows.add( toDispositionResponse( d ) );
+            }
+            r.dispositions = rows;
+        }
         return r;
     }
 

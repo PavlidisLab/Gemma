@@ -190,22 +190,35 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         Long id = draft.getId();
         assertNull( draft.getFinalizedAt() );
 
-        AnnotationSet finalized = annotationSetService.finalizeSet( id, "alice" );
+        AnnotationSet finalized = annotationSetService.finalizeSet( id, "alice", "  looks good  " );
         assertNotNull( finalized );
         assertNotNull( finalized.getFinalizedAt() );
         assertEquals( "alice", finalized.getFinalizedBy() );
+        assertEquals( "looks good", finalized.getFinalizedNotes(), "the note is trimmed on the way in" );
 
         // Idempotent: second finalize keeps the same finalizedAt instance.
         java.util.Date originalStamp = finalized.getFinalizedAt();
-        AnnotationSet again = annotationSetService.finalizeSet( id, "alice" );
+        AnnotationSet again = annotationSetService.finalizeSet( id, "alice", null );
         assertNotNull( again );
         assertSame( originalStamp, again.getFinalizedAt(),
                 "re-finalize on already-finalized row should be a no-op" );
+        assertEquals( "looks good", again.getFinalizedNotes(),
+                "a note-less re-finalize must not erase the note" );
+
+        // ... except for the note, which is recorded rather than dropped: answering 200 to a
+        // discarded sentence is indistinguishable from storing it.
+        AnnotationSet renoted = annotationSetService.finalizeSet( id, "alice", "on reflection, ok" );
+        assertNotNull( renoted );
+        assertSame( originalStamp, renoted.getFinalizedAt(),
+                "a note on an already-finalized row must not restamp when it was decided" );
+        assertEquals( "on reflection, ok", renoted.getFinalizedNotes() );
 
         AnnotationSet reopened = annotationSetService.reopenSet( id );
         assertNotNull( reopened );
         assertNull( reopened.getFinalizedAt() );
         assertNull( reopened.getFinalizedBy() );
+        assertNull( reopened.getFinalizedNotes(),
+                "the note explains one closure and must not survive into the next" );
     }
 
     @Test
