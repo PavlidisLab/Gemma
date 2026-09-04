@@ -26,6 +26,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
@@ -41,9 +42,9 @@ import java.util.stream.Collectors;
  * <p>A curator working an audit rules on each finding in turn —
  * {@link FindingDisposition#ACCEPTED} / {@link FindingDisposition#DISMISSED} /
  * {@link FindingDisposition#NEEDS_MORE_INFO}, with a reason. The finding is
- * named by {@link #targetId}, which is the producer's own {@code target_id}
- * from the payload; Gemma does not parse the payload and so cannot validate
- * it.</p>
+ * named by {@link #findingId} when the producer supplies one and by
+ * {@link #targetId} otherwise; both are the producer's own strings. Gemma does
+ * not parse the payload and so cannot validate either.</p>
  *
  * <p>🛑 <b>Set, finding and element are three scopes and this is the middle
  * one.</b> {@link AnnotationSetTriage} rules on the whole set;
@@ -57,8 +58,8 @@ import java.util.stream.Collectors;
  * set. Here the sequence is itself the record: a finding that was accepted,
  * then dismissed after a second look, is a different history from one
  * dismissed outright, and an audit's value depends on being able to see that a
- * ruling moved. {@link #latestPerTarget(Collection)} applies the latest-wins
- * fold on read.</p>
+ * ruling moved. {@link #standing(Collection)} applies the latest-wins fold on
+ * read.</p>
  *
  * <p>{@link #judgeKind} reuses {@link TriageJudgeKind} rather than declaring a
  * second enum with the same two values. Its name says triage and its meaning —
@@ -87,6 +88,23 @@ public class AnnotationSetDisposition extends AbstractIdentifiable {
      */
     @Column(name = "TARGET_ID", nullable = false, columnDefinition = "VARCHAR(255)")
     private String targetId;
+
+    /**
+     * Which FINDING, when the producer supplies one — opaque here, exactly as
+     * {@link #targetId} is.
+     * <p>
+     * A target does not name a finding. Measured on annotation set 2564: 37
+     * findings over 19 target ids, three of them carrying two ACTIONABLE
+     * findings from independent judges, where a curator routinely accepts one
+     * and rejects the other. Keyed on the target alone that ruling cannot be
+     * written down.
+     * <p>
+     * {@code null} is not a defect: rows written before this column, and any
+     * producer not emitting ids, stay target-keyed forever.
+     * {@link #standingKey()} keeps the two in SEPARATE buckets.
+     */
+    @Column(name = "FINDING_ID", columnDefinition = "VARCHAR(255)")
+    private String findingId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "DISPOSITION", nullable = false, columnDefinition = "VARCHAR(16)")
@@ -121,30 +139,29 @@ public class AnnotationSetDisposition extends AbstractIdentifiable {
     }
 
     /**
-     * The standing ruling for each finding — the most recent row per
-     * {@link #targetId}.
+     * The standing ruling under each {@link #standingKey()} — the most recent
+     * row per finding, or per target for rows carrying no finding id.
      * <p>
      * Ties on {@link #decidedAt} break on id, so two rulings written in the
      * same millisecond still resolve to one answer rather than to whichever
      * the collection happened to yield first.
      *
-     * @return target id -> its latest ruling, in most-recent-first order.
-     *         Findings nobody has ruled on are absent rather than mapped to
-     *         null, so {@code containsKey} answers "has this been ruled on".
+     * @return the standing rulings, most recent first. Findings nobody has
+     *         ruled on are simply absent.
      */
-    public static Map<String, AnnotationSetDisposition> latestPerTarget(
+    public static List<AnnotationSetDisposition> standing(
             @Nullable Collection<AnnotationSetDisposition> rulings ) {
-        Map<String, AnnotationSetDisposition> out = new LinkedHashMap<>();
         if ( rulings == null ) {
-            return out;
+            return new ArrayList<>();
         }
+        Map<String, AnnotationSetDisposition> byKey = new LinkedHashMap<>();
         List<AnnotationSetDisposition> newestFirst = rulings.stream()
                 .sorted( NEWEST_FIRST )
                 .collect( Collectors.toList() );
         for ( AnnotationSetDisposition d : newestFirst ) {
-            out.putIfAbsent( d.getTargetId(), d );
+            byKey.putIfAbsent( d.standingKey(), d );
         }
-        return out;
+        return new ArrayList<>( byKey.values() );
     }
 
     /**
@@ -172,6 +189,30 @@ public class AnnotationSetDisposition extends AbstractIdentifiable {
 
     public void setTargetId( String targetId ) {
         this.targetId = targetId;
+    }
+
+    @Nullable
+    public String getFindingId() {
+        return findingId;
+    }
+
+    public void setFindingId( @Nullable String findingId ) {
+        this.findingId = findingId;
+    }
+
+    /**
+     * The key this ruling supersedes others under: the finding when it has
+     * one, the target when it does not.
+     * <p>
+     * 🛑 The two are deliberately NOT coalesced into one namespace. A ruling on
+     * a finding and a ruling on a target are not rulings on the same thing, so
+     * a finding id that happened to equal some target id must not make one
+     * supersede the other — that would invent a supersession nobody performed.
+     * The discriminating prefix is what guarantees it, rather than an argument
+     * that the two id spaces never collide.
+     */
+    public String standingKey() {
+        return findingId != null ? "f\u0000" + findingId : "t\u0000" + targetId;
     }
 
     public FindingDisposition getDisposition() {

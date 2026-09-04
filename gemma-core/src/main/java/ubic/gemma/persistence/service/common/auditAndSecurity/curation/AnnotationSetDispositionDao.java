@@ -44,23 +44,23 @@ public interface AnnotationSetDispositionDao extends BaseDao<AnnotationSetDispos
     List<AnnotationSetDisposition> findBySetAndTarget( AnnotationSet annotationSet, String targetId );
 
     /**
-     * The standing ruling for each finding in one set.
+     * The standing ruling for each finding in one set — the most recent row
+     * per finding id, or per target id for rows carrying no finding id.
      *
-     * @return target id -> its latest ruling; findings nobody has ruled on are
-     *         absent rather than mapped to null.
+     * @return the standing rulings, most recent first
      */
-    Map<String, AnnotationSetDisposition> findLatestBySet( AnnotationSet annotationSet );
+    List<AnnotationSetDisposition> findStandingBySet( AnnotationSet annotationSet );
 
     /**
-     * Batched {@link #findLatestBySet}, for a list view that would otherwise
+     * Batched {@link #findStandingBySet}, for a list view that would otherwise
      * ask once per set.
      * <p>
      * One query for the whole page rather than N: the per-dataset annotation
      * set list routinely returns every set on a dataset, and folding
      * dispositions in one set at a time turns that list into an N+1.
      *
-     * @return annotation set id -> (target id -> latest ruling). Sets with no
-     *         rulings are absent from the outer map.
+     * @return annotation set id -> its standing rulings. Sets with no rulings
+     *         are absent from the map.
      */
-    Map<Long, Map<String, AnnotationSetDisposition>> findLatestBySetIds( Collection<Long> annotationSetIds );
+    Map<Long, List<AnnotationSetDisposition>> findStandingBySetIds( Collection<Long> annotationSetIds );
 }

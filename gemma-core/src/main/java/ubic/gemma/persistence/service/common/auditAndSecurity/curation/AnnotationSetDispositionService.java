@@ -42,7 +42,14 @@ public interface AnnotationSetDispositionService {
      * Record a ruling on one finding. Always a new row: a curator changing
      * their mind adds to the history rather than overwriting it.
      *
-     * @param targetId   the finding, in the producer's own numbering. Opaque —
+     * @param findingId  which finding, when the producer supplies one. Opaque,
+     *                   like {@code targetId}. A target does NOT name a
+     *                   finding — one target routinely carries several, and
+     *                   two of them can be actionable — so a ruling keyed on
+     *                   the target alone cannot say what it ruled on. Null
+     *                   keeps the row target-keyed, which is what pre-existing
+     *                   rows and producers not emitting ids get.
+     * @param targetId   the target, in the producer's own numbering. Opaque —
      *                   the payload is never parsed here, so an id naming no
      *                   finding is accepted and only the producer can tell.
      * @param decidedBy  the ruling identity — a username for a person, a run
@@ -71,8 +78,8 @@ public interface AnnotationSetDispositionService {
      *                               Reopen the set first.
      */
     AnnotationSetDisposition rule( AnnotationSet annotationSet, String targetId,
-            FindingDisposition disposition, String decidedBy, TriageJudgeKind judgeKind,
-            @Nullable String reason );
+            @Nullable String findingId, FindingDisposition disposition, String decidedBy,
+            TriageJudgeKind judgeKind, @Nullable String reason );
 
     /**
      * Every ruling on one set, most recent first — the full log, superseded
@@ -87,15 +94,16 @@ public interface AnnotationSetDispositionService {
     List<AnnotationSetDisposition> historyFor( AnnotationSet annotationSet, String targetId );
 
     /**
-     * The standing ruling for each finding in one set — target id -> latest
-     * ruling. Findings nobody has ruled on are absent rather than mapped to
-     * null, so {@code containsKey} answers "has this been ruled on".
+     * The standing ruling for each finding in one set — the most recent per
+     * finding id, or per target id for rows carrying no finding id. The two
+     * are separate buckets: a ruling on a finding never supersedes a ruling on
+     * a target, or the reverse.
      */
-    Map<String, AnnotationSetDisposition> standingFor( AnnotationSet annotationSet );
+    List<AnnotationSetDisposition> standingFor( AnnotationSet annotationSet );
 
     /**
      * Batched {@link #standingFor}, keyed by annotation set id. One round-trip
      * for a whole page rather than one query per set.
      */
-    Map<Long, Map<String, AnnotationSetDisposition>> standingForIds( Collection<Long> annotationSetIds );
+    Map<Long, List<AnnotationSetDisposition>> standingForIds( Collection<Long> annotationSetIds );
 }

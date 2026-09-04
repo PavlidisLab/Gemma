@@ -19,6 +19,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetDispositio
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -71,19 +72,15 @@ public class AnnotationSetDispositionDaoImpl extends AbstractDao<AnnotationSetDi
     }
 
     @Override
-    public Map<String, AnnotationSetDisposition> findLatestBySet( AnnotationSet annotationSet ) {
-        // findBySet is already newest-first, so the standing ruling per finding is the
-        // first row seen for each target id.
-        Map<String, AnnotationSetDisposition> out = new LinkedHashMap<>();
-        for ( AnnotationSetDisposition d : findBySet( annotationSet ) ) {
-            out.putIfAbsent( d.getTargetId(), d );
-        }
-        return out;
+    public List<AnnotationSetDisposition> findStandingBySet( AnnotationSet annotationSet ) {
+        // findBySet is already newest-first, so the fold keeps the first row seen under each
+        // standing key. Delegating to the entity keeps one definition of what supersedes what.
+        return AnnotationSetDisposition.standing( findBySet( annotationSet ) );
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Map<Long, Map<String, AnnotationSetDisposition>> findLatestBySetIds(
+    public Map<Long, List<AnnotationSetDisposition>> findStandingBySetIds(
             Collection<Long> annotationSetIds ) {
         if ( annotationSetIds == null || annotationSetIds.isEmpty() ) {
             return Collections.emptyMap();
@@ -97,10 +94,13 @@ public class AnnotationSetDispositionDaoImpl extends AbstractDao<AnnotationSetDi
                         + NEWEST_FIRST )
                 .setParameterList( "ids", annotationSetIds )
                 .list();
-        Map<Long, Map<String, AnnotationSetDisposition>> out = new HashMap<>();
+        Map<Long, List<AnnotationSetDisposition>> perSet = new HashMap<>();
         for ( AnnotationSetDisposition d : all ) {
-            out.computeIfAbsent( d.getAnnotationSet().getId(), k -> new LinkedHashMap<>() )
-                    .putIfAbsent( d.getTargetId(), d );
+            perSet.computeIfAbsent( d.getAnnotationSet().getId(), k -> new ArrayList<>() ).add( d );
+        }
+        Map<Long, List<AnnotationSetDisposition>> out = new HashMap<>();
+        for ( Map.Entry<Long, List<AnnotationSetDisposition>> e : perSet.entrySet() ) {
+            out.put( e.getKey(), AnnotationSetDisposition.standing( e.getValue() ) );
         }
         return out;
     }

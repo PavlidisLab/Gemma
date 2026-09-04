@@ -230,7 +230,7 @@ public class AnnotationSetsWebService {
         for ( AnnotationSet a : kept ) {
             keptIds.add( a.getId() );
         }
-        Map<Long, Map<String, AnnotationSetDisposition>> standing =
+        Map<Long, List<AnnotationSetDisposition>> standing =
                 annotationSetDispositionService.standingForIds( keptIds );
         List<AnnotationSetResponse> rows = new ArrayList<>( kept.size() );
         for ( AnnotationSet a : kept ) {
@@ -238,7 +238,7 @@ public class AnnotationSetsWebService {
             // dispositions WERE loaded, and "loaded, none found" is a different fact from
             // "not loaded" for a client deciding whether to make a second call.
             rows.add( toResponse( a,
-                    standing.getOrDefault( a.getId(), Collections.emptyMap() ) ) );
+                    standing.getOrDefault( a.getId(), Collections.emptyList() ) ) );
         }
         return Response.ok( rows ).build();
     }
@@ -635,13 +635,18 @@ public class AnnotationSetsWebService {
                     + "self-describing, but \"a human looked and stopped\" without the blocker "
                     + "cannot be told apart from nobody having looked. Free text; there is no "
                     + "vocabulary for it. The producing side enforces the same rule, so a ruling "
-                    + "without one is a row it would refuse to construct.\n\n
+                    + "without one is a row it would refuse to construct.\n\n"
                     + "🛑 Not `/triage`, which rules on the whole set. A curator routinely accepts "
                     + "one finding and rejects another on the same target, and one set-level verdict "
                     + "cannot carry that outcome.\n\n"
-                    + "`targetId` names the finding in the PRODUCER's own numbering and is opaque "
-                    + "here — the payload is stored as JSON text and never parsed, so an id naming "
-                    + "no finding is accepted and only the producer can tell.\n\n"
+                    + "`targetId` and `findingId` are both the PRODUCER's own strings and both "
+                    + "opaque here — the payload is stored as JSON text and never parsed, so an id "
+                    + "naming nothing is accepted and only the producer can tell.\n\n"
+                    + "🛑 SEND `findingId` WHENEVER YOU HAVE ONE. A target does not name a finding: "
+                    + "one target routinely carries several, and two of them can be actionable, so a "
+                    + "ruling keyed on the target alone cannot say which finding it ruled on. "
+                    + "Standing rulings key on `findingId` where present and `targetId` otherwise, "
+                    + "and the two never supersede each other.\n\n"
                     + "Rulings are append-only, so this always writes a new row; `GET` returns the "
                     + "standing ruling per finding and `?history=true` the full sequence. "
                     + "`?onBehalfOf=` records the ruling curator when the call is relayed by an "
@@ -682,8 +687,8 @@ public class AnnotationSetsWebService {
         TriageJudgeKind kind = resolveJudgeKind( body.judgeKind, onBehalfOf );
         AnnotationSetDisposition d;
         try {
-            d = annotationSetDispositionService.rule( set, body.targetId, disposition,
-                    decidedBy, kind, body.reason );
+            d = annotationSetDispositionService.rule( set, body.targetId, body.findingId,
+                    disposition, decidedBy, kind, body.reason );
         } catch ( IllegalArgumentException e ) {
             // A reason missing on needs_more_info: the caller sent a ruling that cannot be told
             // apart from no ruling, which is a bad request rather than a server fault.
@@ -708,7 +713,11 @@ public class AnnotationSetsWebService {
             description = "By default one row per finding: the STANDING ruling, which is the most "
                     + "recent. Pass `?history=true` for the full append-only sequence, most recent "
                     + "first, superseded rulings included — that is where a ruling that moved is "
-                    + "visible. An empty list means nobody has ruled on any finding.")
+                    + "visible. An empty list means nobody has ruled on any finding.\n\n"
+                    + "Standing is keyed on `findingId` for rows that carry one and on `targetId` "
+                    + "for rows that do not, and the two are SEPARATE — a ruling on a finding never "
+                    + "supersedes a ruling on a target. So a set holding both kinds can return two "
+                    + "rows for one target, which is correct rather than a duplicate.")
     public Response getDispositions(
             @PathParam("id") Long id,
             @Parameter(description = "Return every ruling rather than the standing one per finding.")
@@ -717,7 +726,7 @@ public class AnnotationSetsWebService {
         AnnotationSet set = requireLoad( id, "id" );
         List<AnnotationSetDisposition> rows = history
                 ? annotationSetDispositionService.findBySet( set )
-                : new ArrayList<>( annotationSetDispositionService.standingFor( set ).values() );
+                : annotationSetDispositionService.standingFor( set );
         List<DispositionResponse> out = new ArrayList<>( rows.size() );
         for ( AnnotationSetDisposition d : rows ) {
             out.add( toDispositionResponse( d ) );
@@ -730,6 +739,7 @@ public class AnnotationSetsWebService {
         r.id = d.getId();
         r.annotationSetId = d.getAnnotationSet() != null ? d.getAnnotationSet().getId() : null;
         r.targetId = d.getTargetId();
+        r.findingId = d.getFindingId();
         r.disposition = d.getDisposition() != null ? d.getDisposition().getDbValue() : null;
         r.decidedBy = d.getDecidedBy();
         r.judgeKind = d.getJudgeKind() != null ? d.getJudgeKind().getDbValue() : null;
@@ -740,10 +750,24 @@ public class AnnotationSetsWebService {
 
     /** Body for {@link #ruleOnFinding}. */
     public static class DispositionRequest {
-        /** Which finding, in the producer's own numbering. */
+        /** Which target, in the producer's own numbering. Required. */
         @JsonProperty("targetId")
         @JsonAlias("target_id")
         public String targetId;
+        /**
+         * Which FINDING, when you have a stable id for one. Optional, and
+         * opaque here.
+         * <p>
+         * Send it whenever you can: a target does NOT name a finding — one
+         * routinely carries several and two of them can be actionable — so a
+         * ruling keyed on the target alone cannot say which finding it ruled
+         * on. Omitting it leaves the row target-keyed, which is what rows
+         * written before this field have.
+         */
+        @JsonProperty("findingId")
+        @JsonAlias("finding_id")
+        @Nullable
+        public String findingId;
         @Schema(allowableValues = { "accepted", "dismissed", "needs_more_info" })
         @JsonProperty("disposition")
         public String disposition;
@@ -776,6 +800,10 @@ public class AnnotationSetsWebService {
         public Long annotationSetId;
         @JsonProperty("targetId")
         public String targetId;
+        /** Null on a target-keyed row; see the request shape. */
+        @JsonProperty("findingId")
+        @Nullable
+        public String findingId;
         @Schema(allowableValues = { "accepted", "dismissed", "needs_more_info" })
         public String disposition;
         @JsonProperty("decidedBy")
@@ -1302,7 +1330,7 @@ public class AnnotationSetsWebService {
      *                 distinguishable on the wire.
      */
     private static AnnotationSetResponse toResponse( AnnotationSet a,
-            @Nullable Map<String, AnnotationSetDisposition> standing ) {
+            @Nullable List<AnnotationSetDisposition> standing ) {
         AnnotationSetResponse r = new AnnotationSetResponse();
         r.id = a.getId();
         r.datasetId = a.getInvestigation() != null ? a.getInvestigation().getId() : null;
@@ -1326,7 +1354,7 @@ public class AnnotationSetsWebService {
         r.finalizedNotes = a.getFinalizedNotes();
         if ( standing != null ) {
             List<DispositionResponse> rows = new ArrayList<>( standing.size() );
-            for ( AnnotationSetDisposition d : standing.values() ) {
+            for ( AnnotationSetDisposition d : standing ) {
                 rows.add( toDispositionResponse( d ) );
             }
             r.dispositions = rows;

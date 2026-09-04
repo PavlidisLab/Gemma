@@ -90,25 +90,25 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
     @Test
     @DisplayName("two findings on ONE set are ruled independently -- what a set-level verdict cannot do")
     public void twoFindingsOnOneSet_ruledIndependently() {
-        dispositionService.rule( audit, "f1", FindingDisposition.ACCEPTED,
+        dispositionService.rule( audit, "f1", null, FindingDisposition.ACCEPTED,
                 "alice", TriageJudgeKind.CURATOR, "right about the strain" );
-        dispositionService.rule( audit, "f2", FindingDisposition.DISMISSED,
+        dispositionService.rule( audit, "f2", null, FindingDisposition.DISMISSED,
                 "alice", TriageJudgeKind.CURATOR, "that tag is correct as it stands" );
         sessionFactory.getCurrentSession().flush();
 
-        Map<String, AnnotationSetDisposition> standing = dispositionService.standingFor( audit );
+        List<AnnotationSetDisposition> standing = dispositionService.standingFor( audit );
         assertThat( standing ).hasSize( 2 );
-        assertThat( standing.get( "f1" ).getDisposition() ).isEqualTo( FindingDisposition.ACCEPTED );
-        assertThat( standing.get( "f2" ).getDisposition() ).isEqualTo( FindingDisposition.DISMISSED );
-        assertThat( standing.get( "f2" ).getReason() ).isEqualTo( "that tag is correct as it stands" );
+        assertThat( byTarget( standing, "f1" ).getDisposition() ).isEqualTo( FindingDisposition.ACCEPTED );
+        assertThat( byTarget( standing, "f2" ).getDisposition() ).isEqualTo( FindingDisposition.DISMISSED );
+        assertThat( byTarget( standing, "f2" ).getReason() ).isEqualTo( "that tag is correct as it stands" );
     }
 
     @Test
     @DisplayName("append-only: a changed mind keeps BOTH rows, and the newer one stands")
     public void changedMind_keepsBothRows() {
-        dispositionService.rule( audit, "f1", FindingDisposition.ACCEPTED,
+        dispositionService.rule( audit, "f1", null, FindingDisposition.ACCEPTED,
                 "alice", TriageJudgeKind.CURATOR, "first read" );
-        dispositionService.rule( audit, "f1", FindingDisposition.DISMISSED,
+        dispositionService.rule( audit, "f1", null, FindingDisposition.DISMISSED,
                 "alice", TriageJudgeKind.CURATOR, "second look -- the evidence quote is the wrong sample" );
         sessionFactory.getCurrentSession().flush();
 
@@ -119,17 +119,17 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
         assertThat( history.get( 0 ).getDisposition() ).isEqualTo( FindingDisposition.DISMISSED );
         assertThat( history.get( 1 ).getDisposition() ).isEqualTo( FindingDisposition.ACCEPTED );
 
-        Map<String, AnnotationSetDisposition> standing = dispositionService.standingFor( audit );
+        List<AnnotationSetDisposition> standing = dispositionService.standingFor( audit );
         assertThat( standing ).hasSize( 1 );
-        assertThat( standing.get( "f1" ).getDisposition() ).isEqualTo( FindingDisposition.DISMISSED );
+        assertThat( standing.get( 0 ).getDisposition() ).isEqualTo( FindingDisposition.DISMISSED );
     }
 
     @Test
     @DisplayName("a same-millisecond tie resolves on id, not on row order")
     public void sameMillisecondTie_breaksOnId() {
-        AnnotationSetDisposition first = dispositionService.rule( audit, "f1",
+        AnnotationSetDisposition first = dispositionService.rule( audit, "f1", null,
                 FindingDisposition.ACCEPTED, "alice", TriageJudgeKind.CURATOR, null );
-        AnnotationSetDisposition second = dispositionService.rule( audit, "f1",
+        AnnotationSetDisposition second = dispositionService.rule( audit, "f1", null,
                 FindingDisposition.NEEDS_MORE_INFO, "alice", TriageJudgeKind.CURATOR,
                 "which strain the congenic donor was" );
         // Force the collision the millisecond-precision column allows rather than waiting for
@@ -141,21 +141,22 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
         sessionFactory.getCurrentSession().clear();
 
         AnnotationSet reloaded = annotationSetService.load( audit.getId() );
-        Map<String, AnnotationSetDisposition> standing = dispositionService.standingFor( reloaded );
-        assertThat( standing.get( "f1" ).getId() ).isEqualTo( second.getId() );
-        assertThat( standing.get( "f1" ).getDisposition() ).isEqualTo( FindingDisposition.NEEDS_MORE_INFO );
+        List<AnnotationSetDisposition> standing = dispositionService.standingFor( reloaded );
+        assertThat( byTarget( standing, "f1" ).getId() ).isEqualTo( second.getId() );
+        assertThat( byTarget( standing, "f1" ).getDisposition() )
+                .isEqualTo( FindingDisposition.NEEDS_MORE_INFO );
     }
 
     @Test
     @DisplayName("NEEDS_MORE_INFO -- the longest value -- survives the VARCHAR(16) column")
     public void longestEnumValue_roundTrips() {
-        dispositionService.rule( audit, "f1", FindingDisposition.NEEDS_MORE_INFO,
+        dispositionService.rule( audit, "f1", null, FindingDisposition.NEEDS_MORE_INFO,
                 "alice", TriageJudgeKind.CURATOR, "the GEO record does not say" );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
 
         AnnotationSet reloaded = annotationSetService.load( audit.getId() );
-        assertThat( dispositionService.standingFor( reloaded ).get( "f1" ).getDisposition() )
+        assertThat( byTarget( dispositionService.standingFor( reloaded ), "f1" ).getDisposition() )
                 .isEqualTo( FindingDisposition.NEEDS_MORE_INFO );
         assertThat( FindingDisposition.NEEDS_MORE_INFO.getDbValue() ).isEqualTo( "needs_more_info" );
     }
@@ -166,7 +167,7 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
         annotationSetService.finalizeSet( audit.getId(), "alice", "closed out" );
         sessionFactory.getCurrentSession().flush();
 
-        assertThatThrownBy( () -> dispositionService.rule( audit, "f1",
+        assertThatThrownBy( () -> dispositionService.rule( audit, "f1", null,
                 FindingDisposition.ACCEPTED, "alice", TriageJudgeKind.CURATOR, null ) )
                 .isInstanceOf( IllegalStateException.class )
                 .hasMessageContaining( "reopen" );
@@ -174,7 +175,7 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
         // ... and taking rulings again is exactly what reopening restores.
         annotationSetService.reopenSet( audit.getId() );
         sessionFactory.getCurrentSession().flush();
-        assertThat( dispositionService.rule( audit, "f1", FindingDisposition.ACCEPTED,
+        assertThat( dispositionService.rule( audit, "f1", null, FindingDisposition.ACCEPTED,
                 "alice", TriageJudgeKind.CURATOR, null ) ).isNotNull();
     }
 
@@ -185,26 +186,27 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
                         AnnotationSetRole.PROPOSAL, AnnotationSetSource.AGENT, AgentCurationKind.AUDIT,
                         "run-" + UUID.randomUUID(), "agent-2", null, null, null, "{}", null )
                 .getAnnotationSet();
-        dispositionService.rule( audit, "f1", FindingDisposition.ACCEPTED,
+        dispositionService.rule( audit, "f1", null, FindingDisposition.ACCEPTED,
                 "alice", TriageJudgeKind.CURATOR, null );
         sessionFactory.getCurrentSession().flush();
 
-        Map<Long, Map<String, AnnotationSetDisposition>> batched =
+        Map<Long, List<AnnotationSetDisposition>> batched =
                 dispositionService.standingForIds( Arrays.asList( audit.getId(), second.getId() ) );
         assertThat( batched ).containsOnlyKeys( audit.getId() );
-        assertThat( batched.get( audit.getId() ) ).containsOnlyKeys( "f1" );
+        assertThat( batched.get( audit.getId() ) ).singleElement()
+                .extracting( AnnotationSetDisposition::getTargetId ).isEqualTo( "f1" );
     }
 
     @Test
     @DisplayName("needs_more_info without a reason is refused -- it would not differ from no ruling")
     public void needsMoreInfoWithoutReason_isRefused() {
-        assertThatThrownBy( () -> dispositionService.rule( audit, "f1",
+        assertThatThrownBy( () -> dispositionService.rule( audit, "f1", null,
                 FindingDisposition.NEEDS_MORE_INFO, "alice", TriageJudgeKind.CURATOR, null ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "needs_more_info" );
 
         // A blank one is the same thing wearing whitespace.
-        assertThatThrownBy( () -> dispositionService.rule( audit, "f1",
+        assertThatThrownBy( () -> dispositionService.rule( audit, "f1", null,
                 FindingDisposition.NEEDS_MORE_INFO, "alice", TriageJudgeKind.CURATOR, "   " ) )
                 .isInstanceOf( IllegalArgumentException.class );
 
@@ -219,18 +221,67 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
         // not. This field's stated purpose is that a DISMISSED says what was wrong with the
         // finding -- that is what lets the agent stop emitting it -- so refusing it here would
         // forbid the case the column exists for.
-        assertThat( dispositionService.rule( audit, "f1", FindingDisposition.ACCEPTED,
+        assertThat( dispositionService.rule( audit, "f1", null, FindingDisposition.ACCEPTED,
                 "alice", TriageJudgeKind.CURATOR, null ).getReason() ).isNull();
-        assertThat( dispositionService.rule( audit, "f2", FindingDisposition.DISMISSED,
+        assertThat( dispositionService.rule( audit, "f2", null, FindingDisposition.DISMISSED,
                 "alice", TriageJudgeKind.CURATOR, "the evidence quote is the wrong sample" )
                 .getReason() ).isEqualTo( "the evidence quote is the wrong sample" );
     }
 
     @Test
+    @DisplayName("two findings on ONE target are ruled independently -- what target-keying could not do")
+    public void twoFindingsOnOneTarget_ruledIndependently() {
+        // The case that made FINDING_ID necessary. Measured on set 2564: 37 findings over 19
+        // targets, three targets carrying two ACTIONABLE findings from independent judges. Keyed
+        // on the target alone the second ruling would supersede the first.
+        dispositionService.rule( audit, "tag:strain/cba/j", "sha-redundant",
+                FindingDisposition.ACCEPTED, "alice", TriageJudgeKind.CURATOR, null );
+        dispositionService.rule( audit, "tag:strain/cba/j", "sha-ungrounded",
+                FindingDisposition.DISMISSED, "alice", TriageJudgeKind.CURATOR, "the term is fine" );
+        sessionFactory.getCurrentSession().flush();
+
+        List<AnnotationSetDisposition> standing = dispositionService.standingFor( audit );
+        assertThat( standing ).hasSize( 2 );
+        assertThat( byFinding( standing, "sha-redundant" ).getDisposition() )
+                .isEqualTo( FindingDisposition.ACCEPTED );
+        assertThat( byFinding( standing, "sha-ungrounded" ).getDisposition() )
+                .isEqualTo( FindingDisposition.DISMISSED );
+    }
+
+    @Test
+    @DisplayName("a finding-keyed ruling never supersedes a target-keyed one on the same target")
+    public void findingKeyedAndTargetKeyed_areSeparateBuckets() {
+        // The legacy row (disposition id 1 on set 2564) is target-keyed and must stay that way.
+        // Coalescing the two key spaces would make a later finding-keyed ruling silently
+        // supersede it -- a supersession nobody performed.
+        dispositionService.rule( audit, "tag:strain/cba/j", null,
+                FindingDisposition.ACCEPTED, "alice", TriageJudgeKind.CURATOR, null );
+        dispositionService.rule( audit, "tag:strain/cba/j", "sha-redundant",
+                FindingDisposition.DISMISSED, "alice", TriageJudgeKind.CURATOR, "not this one" );
+        sessionFactory.getCurrentSession().flush();
+
+        List<AnnotationSetDisposition> standing = dispositionService.standingFor( audit );
+        assertThat( standing ).hasSize( 2 );
+        assertThat( byFinding( standing, "sha-redundant" ).getDisposition() )
+                .isEqualTo( FindingDisposition.DISMISSED );
+        assertThat( standing.stream().filter( d -> d.getFindingId() == null ).findFirst() )
+                .get().extracting( AnnotationSetDisposition::getDisposition )
+                .isEqualTo( FindingDisposition.ACCEPTED );
+    }
+
+    @Test
     @DisplayName("a blank reason is stored as null so \"did they say why\" has one answer")
     public void blankReason_normalizesToNull() {
-        AnnotationSetDisposition d = dispositionService.rule( audit, "f1",
+        AnnotationSetDisposition d = dispositionService.rule( audit, "f1", null,
                 FindingDisposition.ACCEPTED, "alice", TriageJudgeKind.CURATOR, "   " );
         assertThat( d.getReason() ).isNull();
+    }
+
+    private static AnnotationSetDisposition byTarget( List<AnnotationSetDisposition> rows, String targetId ) {
+        return rows.stream().filter( d -> targetId.equals( d.getTargetId() ) ).findFirst().orElseThrow();
+    }
+
+    private static AnnotationSetDisposition byFinding( List<AnnotationSetDisposition> rows, String findingId ) {
+        return rows.stream().filter( d -> findingId.equals( d.getFindingId() ) ).findFirst().orElseThrow();
     }
 }

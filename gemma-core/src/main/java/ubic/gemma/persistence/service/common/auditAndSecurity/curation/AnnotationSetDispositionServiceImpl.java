@@ -61,8 +61,8 @@ public class AnnotationSetDispositionServiceImpl implements AnnotationSetDisposi
     @Override
     @Transactional
     public AnnotationSetDisposition rule( AnnotationSet annotationSet, String targetId,
-            FindingDisposition disposition, String decidedBy, TriageJudgeKind judgeKind,
-            @Nullable String reason ) {
+            @Nullable String findingId, FindingDisposition disposition, String decidedBy,
+            TriageJudgeKind judgeKind, @Nullable String reason ) {
         Assert.notNull( annotationSet, "annotationSet must not be null." );
         Assert.notNull( annotationSet.getId(), "annotationSet must be persistent." );
         Assert.hasText( targetId, "targetId must be non-blank -- a ruling on no finding is not a ruling." );
@@ -73,6 +73,10 @@ public class AnnotationSetDispositionServiceImpl implements AnnotationSetDisposi
         // reason it is refused outright.
         Assert.isTrue( targetId.trim().length() <= MAX_TARGET_ID_LENGTH,
                 "targetId must be at most " + MAX_TARGET_ID_LENGTH + " characters." );
+        String trimmedFindingId = findingId != null && !findingId.trim().isEmpty()
+                ? findingId.trim() : null;
+        Assert.isTrue( trimmedFindingId == null || trimmedFindingId.length() <= MAX_TARGET_ID_LENGTH,
+                "findingId must be at most " + MAX_TARGET_ID_LENGTH + " characters." );
         if ( annotationSet.getFinalizedAt() != null ) {
             throw new IllegalStateException( "Annotation set " + annotationSet.getId()
                     + " was finalized at " + annotationSet.getFinalizedAt()
@@ -95,6 +99,7 @@ public class AnnotationSetDispositionServiceImpl implements AnnotationSetDisposi
         AnnotationSetDisposition d = new AnnotationSetDisposition();
         d.setAnnotationSet( annotationSet );
         d.setTargetId( targetId.trim() );
+        d.setFindingId( trimmedFindingId );
         d.setDisposition( disposition );
         d.setDecidedBy( decidedBy );
         d.setJudgeKind( judgeKind );
@@ -120,16 +125,16 @@ public class AnnotationSetDispositionServiceImpl implements AnnotationSetDisposi
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, AnnotationSetDisposition> standingFor( AnnotationSet annotationSet ) {
+    public List<AnnotationSetDisposition> standingFor( AnnotationSet annotationSet ) {
         Assert.notNull( annotationSet, "annotationSet must not be null." );
-        return annotationSetDispositionDao.findLatestBySet( annotationSet );
+        return annotationSetDispositionDao.findStandingBySet( annotationSet );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, Map<String, AnnotationSetDisposition>> standingForIds(
+    public Map<Long, List<AnnotationSetDisposition>> standingForIds(
             Collection<Long> annotationSetIds ) {
-        return annotationSetDispositionDao.findLatestBySetIds( annotationSetIds );
+        return annotationSetDispositionDao.findStandingBySetIds( annotationSetIds );
     }
 
     @Nullable
