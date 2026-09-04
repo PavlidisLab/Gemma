@@ -34,7 +34,6 @@ import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EnumConverter;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.*;
-import ubic.gemma.core.ontology.ValueStringToOntologyMapping;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.Characteristic;
@@ -327,26 +326,15 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
             category = null;
             value = s;
         }
-        Collection<Characteristic> results;
+        // 🛑 The valueString -> ontology preset mapping is OFF here too (Paul, 2026-09-04), matching
+        // the GEO loader. It used to replace the submitter's text and category with a preset term
+        // from valueStringToOntologyTermMappings.txt; what was written now survives the load, and
+        // grounding is a curation decision. An uncategorized value stays uncategorized rather than
+        // being guessed at across every category in the table.
         if ( category != null ) {
-            Characteristic c = ValueStringToOntologyMapping.lookup( value, category );
-            if ( c != null ) {
-                return new SimpleCharacteristic( c.getCategory(), c.getCategoryUri(), c.getValue(), c.getValueUri() );
-            } else {
-                return new SimpleCharacteristic( category, null, value, null );
-            }
-        } else {
-            results = ValueStringToOntologyMapping.lookup( value );
-            if ( results.isEmpty() ) {
-                return new SimpleCharacteristic( null, null, s, null );
-            } else if ( results.size() == 1 ) {
-                Characteristic c = results.iterator().next();
-                return new SimpleCharacteristic( c.getCategory(), c.getCategoryUri(), c.getValue(), c.getValueUri() );
-            } else {
-                log.warn( "More than one characteristic found for " + s + ": " + results + ", will treat it as uncategorized." );
-                return new SimpleCharacteristic( null, null, s, null );
-            }
+            return new SimpleCharacteristic( category, null, value, null );
         }
+        return new SimpleCharacteristic( null, null, s, null );
     }
 
     private SimpleCharacteristic parseCharacteristic( CSVRecord record ) {

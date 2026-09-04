@@ -7,6 +7,8 @@ import org.springframework.lang.Nullable;
 import ubic.gemma.model.expression.experiment.Statement;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -142,6 +144,39 @@ public class CharacteristicTest {
         Characteristic c = createTransientCharacteristic( valueUri, value );
         c.setId( ++i ); // to mimic different terms being aggregated by value/value URI
         return c;
+    }
+
+    @Test
+    public void testACharacteristicSurvivesBeingReTermedInsideASet() {
+        // 🛑 The regression this pins. Before the constant hashCode, hashing category/value meant a
+        // re-term moved the element to a bucket computed from its OLD value, and the set could no
+        // longer find an element that was demonstrably in it. Gemma holds tags in a HashSet and
+        // curation edits them in place, so this is the shape of a real corruption, not a contrived
+        // one. With the content hash, every assertion below except the first fails.
+        Characteristic tag = createTransientCharacteristic( null, "CBA/J", null, "strain" );
+        tag.setId( 4242L );
+        Set<Characteristic> tags = new HashSet<>();
+        tags.add( tag );
+        assertThat( tags ).contains( tag );
+
+        // the re-term a curator performs
+        tag.setValue( "C57BL/6J" );
+
+        assertThat( tags ).as( "the set still finds it after the value changed" ).contains( tag );
+        assertThat( tags.remove( tag ) ).as( "and can still remove it" ).isTrue();
+        assertThat( tags ).isEmpty();
+    }
+
+    @Test
+    public void testEqualsAndHashCodeAgreeForTwoInstancesOfOneRow() {
+        // The contract violation, independent of mutation: equals() matches by id when both sides
+        // have one, so two instances of the same row are equal even when their content has drifted.
+        // A content hash gave them different hashCodes, which is the contract broken outright.
+        Characteristic a = createTransientCharacteristic( null, "CBA/J", null, "strain" );
+        Characteristic b = createTransientCharacteristic( null, "C57BL/6J", null, "strain" );
+        a.setId( 77L );
+        b.setId( 77L );
+        assertThat( a ).isEqualTo( b ).hasSameHashCodeAs( b );
     }
 
 }

@@ -118,6 +118,9 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
     @Autowired
     private SessionFactory sessionFactory;
 
+    private static final com.fasterxml.jackson.databind.ObjectMapper PAYLOAD_TEST_MAPPER =
+            new com.fasterxml.jackson.databind.ObjectMapper();
+
     private Contact reporter;
 
     @BeforeEach
@@ -170,6 +173,51 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
                 "default target status should round-trip as NOT_DONE" );
         assertEquals( TicketTargetType.EXPRESSION_EXPERIMENT, t0.getTargetType() );
         assertEquals( 12345L, t0.getTargetId() );
+    }
+
+    @Test
+    @DisplayName("payload written through updateMetadata survives -- the reattach copy list used to drop it")
+    public void payload_survivesUpdateMetadata() throws Exception {
+        // 🛑 The regression. updateMetadata() reattaches the ticket and, when the reattached instance
+        // differs from the caller's (which is ALWAYS the case on the POST /tickets path, because the
+        // ticket was created in an earlier transaction), copies a hand-listed set of fields across.
+        // payload and payloadSchemaVersion were not on that list, so they were dropped -- while the
+        // 201 response, built from the caller's own mutated instance, echoed them back as if stored.
+        // Reported from the field: "POST returns 201 and echoes both fields back, a GET right after
+        // comes back null; every other field on the same request persists."
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.CURATION, "payload-roundtrip",
+                Collections.singleton( TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 4242L ) ) );
+        Long id = created.getId();
+        assertNotNull( id );
+        flushAndClear();
+
+        // Re-load to get a DETACHED instance, mutate it, and go through the same call the REST layer
+        // makes. Mutating `created` directly would leave it managed and hide the bug.
+        Ticket detached = ticketDao.load( id );
+        assertNotNull( detached );
+        flushAndClear();
+        detached.setPayload( "{\"question\":\"which strain?\"}" );
+        detached.setPayloadSchemaVersion( 3 );
+        detached.setTitle( "payload-roundtrip-edited" );
+        ticketService.updateMetadata( detached, "payload, payloadSchemaVersion, title" );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        assertNotNull( reloaded );
+        // 🛑 Compared as PARSED JSON, not as bytes. PAYLOAD is a MySQL `json` column, so the server
+        // parses and re-serializes what it is given: `{"question":"which strain?"}` comes back as
+        // `{"question": "which strain?"}`. The payload is preserved as a DOCUMENT and NOT byte for
+        // byte, so nothing downstream may hash or diff the raw string and expect stability.
+        assertNotNull( reloaded.getPayload(), "payload must survive updateMetadata, not just be echoed back" );
+        assertEquals(
+                PAYLOAD_TEST_MAPPER.readTree( "{\"question\":\"which strain?\"}" ),
+                PAYLOAD_TEST_MAPPER.readTree( reloaded.getPayload() ),
+                "payload must survive updateMetadata as an equivalent document" );
+        assertEquals( Integer.valueOf( 3 ), reloaded.getPayloadSchemaVersion(),
+                "payloadSchemaVersion must survive too" );
+        assertEquals( "payload-roundtrip-edited", reloaded.getTitle(),
+                "title was already on the copy list and is the control -- if this fails the test is wrong, not the fix" );
     }
 
     @Test

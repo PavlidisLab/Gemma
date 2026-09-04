@@ -66,7 +66,6 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
 import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING;
-import static ubic.gemma.core.ontology.ValueStringToOntologyMapping.lookup;
 
 /**
  * Convert GEO domain objects into Gemma objects.
@@ -869,17 +868,20 @@ public class GeoConverterImpl implements GeoConverter {
                 assert !vartype.equals( VariableType.other );
                 this.convertVariableType( gemmaChar, vartype );
 
-                Characteristic mappedValueTerm = lookup( value, gemmaChar.getCategory() );
-
+                // 🛑 The valueString -> ontology preset mapping is DISABLED on GEO import (Paul,
+                // 2026-09-04): we are not doing this any more. It used to consult
+                // valueStringToOntologyTermMappings.txt and, on a hit, OVERWRITE all four fields --
+                // value, valueUri, category and categoryUri -- with the preset. The submitter's own
+                // text now survives import unchanged, and grounding is a curation decision rather
+                // than something the loader guesses from a 1,386-row lookup table.
+                //
+                // The category still comes from convertVariableType() above; that is GEO's own
+                // variable type and not part of what is being switched off here.
+                //
+                // Deliberately NOT deleted: ValueStringToOntologyMapping and its resource file are
+                // still used by LoadSimpleExpressionDataCli, which is a different (non-GEO) loader.
                 try {
-                    if ( mappedValueTerm != null ) {
-                        gemmaChar.setValue( mappedValueTerm.getValue() );
-                        gemmaChar.setValueUri( StringUtils.stripToNull( mappedValueTerm.getValueUri() ) );
-                        gemmaChar.setCategory( mappedValueTerm.getCategory() );
-                        gemmaChar.setCategoryUri( StringUtils.stripToNull( mappedValueTerm.getCategoryUri() ) );
-                    } else {
-                        gemmaChar.setValue( value );
-                    }
+                    gemmaChar.setValue( value );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 } catch ( Exception e ) {
                     // conversion didn't work, fall back. (not sure why this would happen so adding logging)

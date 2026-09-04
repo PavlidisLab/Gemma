@@ -1104,7 +1104,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + ( !oe.isEmpty() || includeNoParents ? " and " + createOwningEntityConstraint( oe, includeNoParents ) : "" ) );
 
         List<Object[]> result = QueryUtils.listByBatch( query, "ids", charById.keySet(), MAX_PARAMETER_LIST_SIZE );
-        Map<Characteristic, Identifiable> charToParent = new HashMap<>();
+        // TreeMap, not HashMap: Characteristic.hashCode() is constant (it has to be -- curation edits
+        // the fields a content hash would use), so a HashMap keyed by Characteristic puts every entry
+        // in one bucket. This map is as large as the batch handed in. The comparator's id tiebreaker
+        // keeps distinct persisted characteristics distinct.
+        Map<Characteristic, Identifiable> charToParent = new TreeMap<>( Characteristic.getComparator() );
         for ( Object[] row : result ) {
             Number charId = ( Number ) row[0];
             Characteristic c = charById.get( charId.longValue() );

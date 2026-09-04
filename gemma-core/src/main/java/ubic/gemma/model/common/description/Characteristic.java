@@ -307,10 +307,34 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
         this.supportingEvidence = supportingEvidence;
     }
 
+    /**
+     * Constant, deliberately.
+     *
+     * <p>🛑 This used to hash {@code category}/{@code categoryUri} and
+     * {@code value}/{@code valueUri} — exactly the fields curation MUTATES. A
+     * Characteristic lives in {@link ubic.gemma.model.analysis.Investigation}'s
+     * {@code HashSet}, so re-terming one in place moved it to a bucket computed
+     * from its old value while {@link #equals} still matched it by id:
+     * {@code contains()} and {@code remove()} then answered false for an element
+     * that was demonstrably in the set. The same hash also broke the
+     * equals/hashCode contract outright, because two instances sharing an id but
+     * differing in content are equal by the id branch below and hashed
+     * differently.</p>
+     *
+     * <p>The cost is that a hash collection of Characteristics degrades to a
+     * linear scan of one bucket. That is invisible for the per-entity sets this
+     * class actually lives in (tens of elements), and it is NOT invisible for
+     * bulk keying: building a 5000-entry {@code HashMap} keyed by transient
+     * Characteristics measured 1141 ms this way versus 42 ms before.
+     * ⇒ <b>Do not key a large map by Characteristic.</b> Use a
+     * {@link java.util.TreeMap} with {@link #getComparator()}, which collapses
+     * exactly the pairs {@link #equals} considers equal, or key by id. The
+     * annotation usage-frequency aggregations in
+     * {@code ExpressionExperimentDaoImpl} are the precedent.</p>
+     */
     @Override
     public int hashCode() {
-        return Objects.hash( StringUtils.lowerCase( categoryUri != null ? categoryUri : category ),
-                StringUtils.lowerCase( valueUri != null ? valueUri : value ) );
+        return getClass().hashCode();
     }
 
     @Override

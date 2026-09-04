@@ -852,7 +852,14 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     @AuditedConditional(value = DesignChangeEvent.class,
             when = "#result.applied",
-            messageSpel = "'Design replaced via REST: factors +' + #result.preflightAtApply.summary.factorsToCreate + ' / -' + #result.preflightAtApply.summary.factorsToDelete + ', factor values +' + #result.preflightAtApply.summary.factorValuesToCreate + ' / -' + #result.preflightAtApply.summary.factorValuesToDelete + ', biomaterial assignments changed: ' + #result.preflightAtApply.summary.biomaterialsWithChangedAssignments + ', analyses removed: ' + #result.preflightAtApply.summary.differentialExpressionAnalysesToDelete + '.'")
+            // 🛑 The `~` counts are the point. This note used to report creates, deletes, assignment
+            // moves and analyses only, so a commit that re-termed a statement, attached evidence,
+            // flipped a baseline or renamed a factor wrote "+0 / -0 ... changed: 0" -- a description
+            // of a real write that reads as a no-op. uib was led to report the commit path as
+            // non-idempotent on the strength of it (2026-09-04); the write was real and the note
+            // denied it. factorsToUpdate / factorValuesToUpdate were already on the summary and
+            // simply were not being said.
+            messageSpel = "'Design replaced via REST: factors +' + #result.preflightAtApply.summary.factorsToCreate + ' / -' + #result.preflightAtApply.summary.factorsToDelete + ' / ~' + #result.preflightAtApply.summary.factorsToUpdate + ', factor values +' + #result.preflightAtApply.summary.factorValuesToCreate + ' / -' + #result.preflightAtApply.summary.factorValuesToDelete + ' / ~' + #result.preflightAtApply.summary.factorValuesToUpdate + ', biomaterial assignments changed: ' + #result.preflightAtApply.summary.biomaterialsWithChangedAssignments + ', analyses removed: ' + #result.preflightAtApply.summary.differentialExpressionAnalysesToDelete + '.'")
     public DesignApplyOutcome applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
         Assert.notNull( proposed, "A proposed design must be supplied." );
         ee = expressionExperimentDao.reload( ee );
