@@ -55,13 +55,18 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
     /**
      * Curator/agent hint about baseline relevance. Mirrors the curation-ui {@code Factor.baseline_relevance}
-     * field. Allowed values: {@code "required"}, {@code "not_applicable"}, {@code "uncertain"}.
+     * field. {@code "required"}, {@code "not_applicable"} and {@code "uncertain"} are the values in use;
      * {@code null} when the curation pipeline has not set it.
+     * <p>
+     * The list is documented and not enforced. It used to be a closed {@code allowableValues} set, which a
+     * generated client turns into an enum that fails to deserialize the first response carrying a word the
+     * vocabulary has since gained — and this one has moved once already. The write side
+     * ({@code DatasetsWebService.FactorCommit.baselineRelevance}) accepts an unfamiliar value rather than
+     * 400ing it, so advertising a closed set here would promise a constraint the server does not keep.
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "Curator/agent baseline-relevance hint: \"required\" | \"not_applicable\" | \"uncertain\"; null when unset.",
-            allowableValues = { "required", "not_applicable", "uncertain" })
+    @Schema(description = "Curator/agent baseline-relevance hint: \"required\" | \"not_applicable\" | \"uncertain\" are the values in use, not the values permitted; null when unset.")
     private String baselineRelevance;
 
     /**

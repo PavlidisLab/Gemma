@@ -215,6 +215,75 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     }
 
     /**
+     * The baseline-relevance hint round-trips, and a commit that carries ONLY the hint is applied.
+     * <p>
+     * The second half is the part that can fail quietly. Ticking "no baseline" with a reason moves no
+     * structural counter — no factor or value created, deleted or reassigned — so before
+     * {@code keptFactorMetadataEdits} learned about the two fields, {@code isNoOpDesignApply} would have
+     * called the commit a no-op and returned 200 having written nothing. Same blind spot the factor-value
+     * evidence clause exists to cover.
+     */
+    @Test
+    public void testBaselineRelevanceRoundTripsAndAnOverrideOnlyCommitIsNotANoOp() {
+        String seed = "{"
+                + "\"design\":{\"factors\":{\"items\":[{"
+                + "\"clientRef\":\"F1\",\"name\":\"individual\",\"category\":{\"label\":\"individual\"},"
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"freeTextLabel\":\"subject 1\"}]}"
+                + "}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( seed ) ) ) {
+            assertOk( r );
+        }
+
+        ExperimentalDesignValueObject.ExperimentalFactorEntry seeded = factorNamed( "individual" );
+        assertThat( seeded.getBaselineRelevance() ).as( "nothing set it yet" ).isNull();
+
+        // The override alone: no other field of the factor changes, no value is touched.
+        String override = "{\"design\":{\"factors\":{\"items\":[{"
+                + "\"gemmaId\":" + seeded.getId() + ","
+                + "\"baselineRelevance\":\"not_applicable\","
+                + "\"baselineRelevanceReason\":\"one individual per group; no reference level\""
+                + "}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( override ) ) ) {
+            assertOk( r );
+        }
+
+        ExperimentalDesignValueObject.ExperimentalFactorEntry after = factorNamed( "individual" );
+        assertThat( after.getBaselineRelevance() ).isEqualTo( "not_applicable" );
+        assertThat( after.getBaselineRelevanceReason() ).isEqualTo( "one individual per group; no reference level" );
+
+        // Omitting the fields leaves them alone — the same carry-forward rule the rest of the factor follows.
+        String unrelated = "{\"design\":{\"factors\":{\"items\":[{"
+                + "\"gemmaId\":" + seeded.getId() + ",\"description\":\"per-subject axis\"}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( unrelated ) ) ) {
+            assertOk( r );
+        }
+        assertThat( factorNamed( "individual" ).getBaselineRelevance() )
+                .as( "an unrelated edit did not wipe the hint" )
+                .isEqualTo( "not_applicable" );
+
+        // An empty string is the explicit clear — the one thing evidence cannot do, because this is a
+        // checkbox a curator unticks rather than an append-only justification.
+        String clear = "{\"design\":{\"factors\":{\"items\":[{"
+                + "\"gemmaId\":" + seeded.getId() + ",\"baselineRelevance\":\"\",\"baselineRelevanceReason\":\"\"}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( clear ) ) ) {
+            assertOk( r );
+        }
+        ExperimentalDesignValueObject.ExperimentalFactorEntry cleared = factorNamed( "individual" );
+        assertThat( cleared.getBaselineRelevance() ).isNull();
+        assertThat( cleared.getBaselineRelevanceReason() ).isNull();
+    }
+
+    /** The persisted factor with this name, re-read through the design VO. */
+    private ExperimentalDesignValueObject.ExperimentalFactorEntry factorNamed( String name ) {
+        return expressionExperimentService
+                .getExperimentalDesignValueObject( expressionExperimentService.load( ee.getId() ) )
+                .getExperimentalFactors().stream()
+                .filter( f -> name.equals( f.getName() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "factor '" + name + "' was not persisted" ) );
+    }
+
+    /**
      * A second commit that omits {@code supportingEvidence} leaves the recorded evidence alone.
      * <p>
      * The design section is a carry-forward mapper: a client that mentions an existing factor value to change

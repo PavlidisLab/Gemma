@@ -4343,6 +4343,35 @@ public class DatasetsWebService {
         @Nullable
         private String type;
         /**
+         * Curator/agent hint about whether this factor warrants picking a baseline factor value —
+         * the write side of {@code ExperimentalFactorValueObject.baselineRelevance}, which was
+         * readable and unsettable until now (cab, 2026-09-04: the curation UI offers "Tick to
+         * override: no baseline" with a reason box and had nowhere to put the answer).
+         * <p>
+         * The values in use are {@code "required"}, {@code "not_applicable"} and {@code "uncertain"},
+         * and they are documented rather than enforced: an unknown value round-trips instead of 400ing.
+         * It is a hint whose vocabulary has already moved once, and a closed list here would make the
+         * next word a schema change, a deploy and a compatibility question.
+         * <p>
+         * {@code null} / omitted = leave whatever is recorded untouched. An EMPTY string clears it —
+         * the one thing evidence deliberately cannot do, because this is a toggle a curator unticks
+         * and not an append-only justification.
+         */
+        @Nullable
+        @Schema(description = "Curator/agent baseline-relevance hint. \"required\" | \"not_applicable\" | "
+                + "\"uncertain\" are the values in use, not the values permitted — an unknown value is stored "
+                + "and served back rather than rejected. Null or omitted leaves the recorded hint untouched; "
+                + "an empty string clears it.")
+        private String baselineRelevance;
+        /**
+         * Free-text rationale paired with {@link #baselineRelevance} — what the curator typed in the
+         * reason box. Same conventions: null leaves it untouched, empty clears it, no vocabulary.
+         */
+        @Nullable
+        @Schema(description = "Free-text rationale for baselineRelevance. Null or omitted leaves it untouched; "
+                + "an empty string clears it.")
+        private String baselineRelevanceReason;
+        /**
          * Verbatim provenance for this FACTOR — a JSON array of {@code {quote, source, location, …}} items.
          * Stored and served opaquely; the agents repo owns the schema.
          * <p>
@@ -4635,6 +4664,8 @@ public class DatasetsWebService {
             out.setDescription( fc.getDescription() );
             out.setType( fc.getType() );
             out.setCategory( ontologyToCharacteristic( fc.getCategory() ) );
+            out.setBaselineRelevance( fc.getBaselineRelevance() );
+            out.setBaselineRelevanceReason( fc.getBaselineRelevanceReason() );
             out.setSupportingEvidence( fc.getSupportingEvidence() );
             out.setValues( mapFactorValues( fc, curFactor, parentKey, gsmToBmId, plan, bmToFvIds,
                     "design.factors[" + refOrIndex( fc.getClientRef(), factorIdx ) + "]" ) );
@@ -5183,6 +5214,11 @@ public class DatasetsWebService {
                 fc.setDescription( f.getDescription() );
                 fc.setType( f.getType() );
                 fc.setCategory( termRef( f.getCategory() ) );
+                // Same reasoning as the evidence below: a restore that was meant to change nothing must not
+                // drop the curator's baseline call. Null here means "leave alone" on the way back in, so a
+                // factor that never carried the hint is unaffected.
+                fc.setBaselineRelevance( f.getBaselineRelevance() );
+                fc.setBaselineRelevanceReason( f.getBaselineRelevanceReason() );
                 // Captured so a restore puts the factor back with the justification it had; without it a
                 // restore that was meant to change nothing would silently clear the curator's evidence.
                 fc.setSupportingEvidence( f.getSupportingEvidence() );

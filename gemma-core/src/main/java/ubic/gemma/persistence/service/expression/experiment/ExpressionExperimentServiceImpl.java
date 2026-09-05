@@ -1148,8 +1148,8 @@ public class ExpressionExperimentServiceImpl
 
     /**
      * Whether {@code proposed} carries an in-place edit to an existing (kept) <em>factor</em>: its name, its
-     * description, or its category. None of these move a structural counter, and none of them live on a factor
-     * value, so {@link #hasKeptFactorValueEdits} cannot see them either. Mirrors the fields
+     * description, its category, or its baseline-relevance hint. None of these move a structural counter, and
+     * none of them live on a factor value, so {@link #hasKeptFactorValueEdits} cannot see them either. Mirrors the fields
      * {@link #updateFactorMetadata} writes and its {@code null = "no change"} convention, including the rule that
      * a category is only applied when the factor already has one.
      */
@@ -1190,9 +1190,28 @@ public class ExpressionExperimentServiceImpl
                     || !Objects.equals( pf.getCategory().getValue(), cur.getCategory().getValue() )
                     || !Objects.equals( pf.getCategory().getValueUri(), cur.getCategory().getValueUri() ) ) ) {
                 edited.add( cur );
+                continue;
+            }
+            // Ticking "no baseline" with a reason and changing nothing else moves no counter, so without these
+            // two the commit would be reported unchanged and the write never reached — the same blind spot the
+            // factor-value evidence clause exists to cover.
+            if ( pf.getBaselineRelevance() != null
+                    && !Objects.equals( blankToNull( pf.getBaselineRelevance() ), cur.getBaselineRelevance() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getBaselineRelevanceReason() != null
+                    && !Objects.equals( blankToNull( pf.getBaselineRelevanceReason() ), cur.getBaselineRelevanceReason() ) ) {
+                edited.add( cur );
             }
         }
         return edited;
+    }
+
+    /** An empty baseline-relevance field is the explicit clear, so it compares equal to an unset one. */
+    @Nullable
+    private static String blankToNull( @Nullable String s ) {
+        return StringUtils.isBlank( s ) ? null : s;
     }
 
     /**
@@ -1452,6 +1471,15 @@ public class ExpressionExperimentServiceImpl
             ef.getCategory().setValue( pf.getCategory().getValue() );
             ef.getCategory().setValueUri( pf.getCategory().getValueUri() );
         }
+        // Baseline-relevance hint: null = "no change", like everything else here, but an EMPTY string is an
+        // explicit clear. Evidence below deliberately has no clear because it is an append-only justification;
+        // this is a checkbox with a reason box, and a curator who unticks it has to be able to say so.
+        if ( pf.getBaselineRelevance() != null ) {
+            ef.setBaselineRelevance( StringUtils.isBlank( pf.getBaselineRelevance() ) ? null : pf.getBaselineRelevance() );
+        }
+        if ( pf.getBaselineRelevanceReason() != null ) {
+            ef.setBaselineRelevanceReason( StringUtils.isBlank( pf.getBaselineRelevanceReason() ) ? null : pf.getBaselineRelevanceReason() );
+        }
         // Provenance: null = "no change", the same round-trip-safe convention `value` and `isBaseline` use on a
         // factor value. A client that does not carry evidence cannot wipe evidence somebody else recorded.
         if ( CharacteristicUtils.hasRecordedEvidence( pf.getSupportingEvidence() ) ) {
@@ -1519,6 +1547,8 @@ public class ExpressionExperimentServiceImpl
             cat.setValueUri( pf.getCategory().getValueUri() );
             ef.setCategory( cat );
         }
+        ef.setBaselineRelevance( StringUtils.isBlank( pf.getBaselineRelevance() ) ? null : pf.getBaselineRelevance() );
+        ef.setBaselineRelevanceReason( StringUtils.isBlank( pf.getBaselineRelevanceReason() ) ? null : pf.getBaselineRelevanceReason() );
         ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
         ef = experimentalFactorService.create( ef );
         if ( pf.getValues() != null ) {

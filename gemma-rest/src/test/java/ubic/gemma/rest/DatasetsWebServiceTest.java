@@ -686,6 +686,62 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
     }
 
+    /**
+     * The baseline-relevance hint is accepted on the write side and reaches the design mapper.
+     * <p>
+     * It was published on {@code ExperimentalFactor} and {@code ExperimentalFactorValueObject} and absent from
+     * {@code FactorCommit}, so the curation UI's "Tick to override: no baseline" checkbox and its reason box had
+     * nowhere to land: every preflight carrying them came back
+     * {@code 400 Unrecognized field "baselineRelevance" … not marked as ignorable} — a readable, renderable,
+     * unsettable field (cab, 2026-09-04, GSE32473 factor 13474).
+     */
+    @Test
+    public void testPreflightAcceptsTheBaselineRelevanceHint() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( designWithOneStatement( 10L, 20L, 30L ) );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
+                + "\"baselineRelevance\":\"not_applicable\","
+                + "\"baselineRelevanceReason\":\"one individual per group; no reference level\"}]}}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isNotEqualTo( 400 );
+        }
+
+        ArgumentCaptor<ExperimentalDesignValueObject> captor = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( any(), captor.capture() );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry f = captor.getValue().getExperimentalFactors().stream()
+                .filter( e -> Long.valueOf( 10L ).equals( e.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "factor 10 did not reach the mapper" ) );
+        assertThat( f.getBaselineRelevance() ).isEqualTo( "not_applicable" );
+        assertThat( f.getBaselineRelevanceReason() ).isEqualTo( "one individual per group; no reference level" );
+    }
+
+    /**
+     * A word outside the three in use round-trips instead of 400ing. The hint's vocabulary has moved once
+     * already, and a closed {@code allowableValues} would make the next word a schema change and a deploy
+     * (cab, 2026-09-04: "don't lock us into any kind of enums").
+     */
+    @Test
+    public void testPreflightAcceptsAnUnfamiliarBaselineRelevanceValue() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( designWithOneStatement( 10L, 20L, 30L ) );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
+                + "\"baselineRelevance\":\"deferred_to_curator\"}]}}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isNotEqualTo( 400 );
+        }
+        ArgumentCaptor<ExperimentalDesignValueObject> captor = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( any(), captor.capture() );
+        assertThat( captor.getValue().getExperimentalFactors().get( 0 ).getBaselineRelevance() )
+                .isEqualTo( "deferred_to_curator" );
+    }
+
     /** One factor, one factor value, one statement — the current state the mapper carries forward from. */
     private static ExperimentalDesignValueObject designWithOneStatement( Long factorId, Long fvId, Long stmtId ) {
         StatementValueObject stmt = new StatementValueObject();

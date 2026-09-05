@@ -132,6 +132,24 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
         private CharacteristicValueObject category;
 
         /**
+         * Curator/agent hint about whether this factor warrants picking a baseline factor value.
+         * {@code "required"} | {@code "not_applicable"} | {@code "uncertain"} are the values in use;
+         * the field is an open string and an unfamiliar value round-trips rather than being rejected.
+         * <p>
+         * On the way IN this follows the same {@code null = "no change"} convention the rest of the
+         * factor does, with an empty string as the explicit clear.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(description = "Curator/agent baseline-relevance hint: \"required\" | \"not_applicable\" | \"uncertain\" are the values in use, not the values permitted. Null when unset.")
+        private String baselineRelevance;
+
+        /** Free-text rationale paired with {@link #baselineRelevance}. Null when unset. */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private String baselineRelevanceReason;
+
+        /**
          * Verbatim provenance backing this FACTOR — a JSON array of {@code {quote, source, location, …}} items
          * the curation agents emitted, stored and served opaquely.
          * <p>
@@ -160,6 +178,8 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
             if ( ef.getCategory() != null ) {
                 this.category = new CharacteristicValueObject( ef.getCategory() );
             }
+            this.baselineRelevance = ef.getBaselineRelevance();
+            this.baselineRelevanceReason = ef.getBaselineRelevanceReason();
             this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( ef.getSupportingEvidence() );
             this.values = ef.getFactorValues().stream()
                     .sorted( java.util.Comparator.comparing( FactorValue::getId,
