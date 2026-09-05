@@ -3135,17 +3135,32 @@ public class ExpressionExperimentServiceImpl
                 continue;
             }
             Ticket current = ticket;
+            // 🛑 UNDERWAY, not DONE. A commit is evidence that someone STARTED the ask, never that they
+            // finished it: the edit may be unrelated to what the ticket asked, partial, or -- as on 657 on
+            // 2026-09-05 -- a test commit and its revert, which between them moved a target to DONE and left
+            // it there, because a revert deliberately never closes a ticket.
+            //
+            // Paul, 2026-09-05, ruling on exactly that: DONE means "whatever was asked was
+            // done/decided/finished", and "I would have a 'started' flag if there was something done -- to
+            // proposals, audits, direct editing". Activity marks a target started; only a person marks it
+            // finished.
+            //
+            // Already UNDERWAY or DONE is left alone, so a later commit never drags a target a curator
+            // genuinely finished back to in-progress.
             List<Long> toAdvance = new ArrayList<>();
             for ( TicketTarget t : current.getTargets() ) {
                 if ( t.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT
                         && ee.getId().equals( t.getTargetId() )
-                        && t.getStatus() != TicketTargetStatus.DONE ) {
+                        && t.getStatus() == TicketTargetStatus.NOT_DONE ) {
                     toAdvance.add( t.getId() );
                 }
             }
             for ( Long rowId : toAdvance ) {
-                current = ticketService.updateTargetStatus( current, rowId, TicketTargetStatus.DONE, actor );
+                current = ticketService.updateTargetStatus( current, rowId, TicketTargetStatus.UNDERWAY, actor );
             }
+            // Kept, and now nearly unreachable from here by design: this path no longer sets DONE, so every
+            // target must already have been marked finished by a person for it to fire. That is the one case
+            // where resolving on a commit is not the service asserting something it cannot know.
             boolean allDone = current.getTargets().stream()
                     .allMatch( t -> t.getStatus() == TicketTargetStatus.DONE );
             if ( allDone && current.getState() != TicketState.RESOLVED ) {

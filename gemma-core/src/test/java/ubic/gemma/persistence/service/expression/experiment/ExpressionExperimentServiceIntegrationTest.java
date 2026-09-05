@@ -749,12 +749,51 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
         ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject reloaded =
                 ticketService.loadValueObject( ticketId, false );
-        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.DONE,
+        // 🛑 UNDERWAY, not DONE. A commit is evidence somebody STARTED the ask, never that they finished
+        // it -- the edit may be unrelated to what was asked, partial, or a test edit. Paul, 2026-09-05:
+        // DONE means "whatever was asked was done/decided/finished", and activity gets a "started flag".
+        // This used to assert DONE, and that assertion is what made the auto-close look intended.
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.UNDERWAY,
                 reloaded.getTargets().get( 0 ).getStatus(),
-                "the dataset's target should be DONE after the commit" );
-        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.RESOLVED,
+                "a commit marks the target started, not finished" );
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.OPEN,
                 reloaded.getState(),
-                "the ticket should resolve once its last open target is done" );
+                "and the ticket stays open: nobody has decided the ask is finished" );
+    }
+
+    /**
+     * A second commit does not drag a target backwards. A curator who marked their target DONE has
+     * decided the ask is finished; a later edit to the dataset -- someone else's, or a revert -- must not
+     * reopen that decision, which is the mirror of why a commit cannot close it in the first place.
+     */
+    @Test
+    public void commitCuration_leavesATargetTheCuratorAlreadyFinished() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget target =
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget.Factory.newInstance(
+                        ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() );
+        ubic.gemma.model.common.auditAndSecurity.curation.Ticket ticket = ticketService.openTicket(
+                getTestPersistentContact(),
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketType.CURATION,
+                "curate me", java.util.Collections.singleton( target ) );
+        Long ticketId = ticket.getId();
+        Long rowId = ticketService.loadValueObject( ticketId, false ).getTargets().get( 0 ).getId();
+
+        // the curator decides it is finished
+        ticketService.updateTargetStatus( ticket, rowId,
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.DONE,
+                getTestPersistentContact() );
+
+        CurationCommitRequest req = new CurationCommitRequest();
+        req.setAdvanceLinkedTickets( true );
+        req.setCurationDetailsPresent( true );
+        req.setCurationDetailsNote( "a later edit" );
+        expressionExperimentService.commitCuration( ee, req, false );
+
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.DONE,
+                ticketService.loadValueObject( ticketId, false ).getTargets().get( 0 ).getStatus(),
+                "a commit must not pull a finished target back to UNDERWAY" );
     }
 
     @Test
