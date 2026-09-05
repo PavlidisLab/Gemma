@@ -770,6 +770,51 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
     }
 
+    /**
+     * A factor value can name its samples by BioMaterial id.
+     * <p>
+     * The old contract took names only, and the names it took were the GSM accession and the bioassay short
+     * name — never the {@code bioMaterialName} that {@code GET /datasets/{id}/design} hands back, so a client
+     * echoing what it read was refused (uib, GSE7866). Worse, a single-cell sub-bioassay has NO accession by
+     * construction — 15 of 15 null on GSE124952 subset 68405 — so on those datasets no string could name a
+     * sample at all. Paul: "Gemma must do it by its own ID for the sample … the id is the primary key."
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testFactorValueSamplesCanBeNamedByBioMaterialId() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( new ExperimentalDesignValueObject() );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        // an id that is not a sample of this dataset is refused rather than silently assigned
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"F1\",\"name\":\"cell type\","
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"biomaterialIds\":[99999]}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) )
+                    .as( "an unknown id names the id and says it is not this dataset's" )
+                    .contains( "99999" ).contains( "not a sample of this dataset" );
+        }
+    }
+
+    /** The field binds at all — a payload carrying it is not rejected as an unknown property. */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testBioMaterialIdBindsOnBothCommitSections() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( new ExperimentalDesignValueObject() );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        String body = "{\"sampleCharacteristics\":{\"items\":[{\"clientRef\":\"S1\",\"bioMaterialId\":99999,"
+                + "\"category\":{\"label\":\"organism part\"},\"value\":{\"label\":\"brain\"}}]}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) ) {
+            String e = r.readEntity( String.class );
+            assertThat( e ).as( "bioMaterialId is a known property" ).doesNotContain( "Unrecognized field" );
+            assertThat( e ).as( "and it is resolved against this dataset's samples" )
+                    .contains( "not a sample of this dataset" );
+        }
+    }
+
     /** One factor, one factor value, one statement — the current state the mapper carries forward from. */
     private static ExperimentalDesignValueObject designWithOneStatement( Long factorId, Long fvId, Long stmtId ) {
         StatementValueObject stmt = new StatementValueObject();

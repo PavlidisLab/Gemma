@@ -3881,9 +3881,9 @@ public class DatasetsWebService {
             // carries the clientRef ledgers + deferred new-FV assignments the service needs after apply. Resolving
             // the current design + GSM→biomaterial index here (before the tx) mirrors how publications resolve above.
             ExperimentalDesignValueObject current = datasetArgService.getExperimentalDesign( datasetArg );
-            Map<String, Long> gsmToBmId = buildGsmToBioMaterialIdIndex( ee );
+            SampleIndex samples = buildSampleIndex( ee );
             DesignCommitPlan plan = new DesignCommitPlan();
-            ExperimentalDesignValueObject proposed = mapDesignCommit( dc, current, gsmToBmId, plan );
+            ExperimentalDesignValueObject proposed = mapDesignCommit( dc, current, samples, plan );
             request.setDesignPresent( true );
             request.setProposedDesign( proposed );
             request.setDesignPlan( plan );
@@ -3948,7 +3948,7 @@ public class DatasetsWebService {
         if ( body.getSampleCharacteristics() != null ) {
             Section<SampleCharacteristicCommit> scs = body.getSampleCharacteristics();
             request.setSampleCharsPresent( true );
-            Map<String, Long> gsmToBmId = buildGsmToBioMaterialIdIndex( ee );
+            SampleIndex samples = buildSampleIndex( ee );
             List<CurationCommitRequest.SampleCharacteristicAdd> adds = new ArrayList<>();
             int unchanged = 0;
             int idx = 0;
@@ -3961,13 +3961,26 @@ public class DatasetsWebService {
                             sampleCharacteristicDecoration( sc ), decoratedKeepMarkers );
                     unchanged++;
                 } else {
-                    if ( StringUtils.isBlank( sc.getBioassayShortName() ) ) {
-                        throw new BadRequestException( "Each new sampleCharacteristics item needs a 'bioassayShortName'." );
-                    }
-                    Long bmId = gsmToBmId.get( sc.getBioassayShortName().trim() );
-                    if ( bmId == null ) {
-                        throw new BadRequestException( "sampleCharacteristics references unknown sample short name '"
-                                + sc.getBioassayShortName() + "' for this dataset." );
+                    // bioMaterialId wins when both are sent: an id cannot be ambiguous and a name can.
+                    Long bmId;
+                    if ( sc.getBioMaterialId() != null ) {
+                        if ( !samples.ids().contains( sc.getBioMaterialId() ) ) {
+                            throw new BadRequestException( "sampleCharacteristics references biomaterial id "
+                                    + sc.getBioMaterialId() + ", which is not a sample of this dataset." );
+                        }
+                        bmId = sc.getBioMaterialId();
+                    } else {
+                        if ( StringUtils.isBlank( sc.getBioassayShortName() ) ) {
+                            throw new BadRequestException( "Each new sampleCharacteristics item needs a"
+                                    + " 'bioMaterialId' or a 'bioassayShortName'." );
+                        }
+                        bmId = samples.resolveName( sc.getBioassayShortName().trim(), "sampleCharacteristics" );
+                        if ( bmId == null ) {
+                            throw new BadRequestException( "sampleCharacteristics references unknown sample short"
+                                    + " name '" + sc.getBioassayShortName() + "' for this dataset. Accepted names"
+                                    + " are the GSM accession, the bioassay short name, and the biomaterial name;"
+                                    + " send bioMaterialId instead if the sample has none." );
+                        }
                     }
                     Characteristic ch = sampleCharacteristicToCharacteristic( sc );
                     collectTermViolations( ch, "sampleCharacteristics[" + refOrIndex( sc.getClientRef(), idx ) + "]", sc.getClientRef(), termViolations, canonicalizations );
@@ -4484,11 +4497,58 @@ public class DatasetsWebService {
          * age characteristics on one sample) rather than a client error, and the message carries enough to act
          * on. Categorical factors are unaffected.
          */
+        /**
+         * @deprecated use {@link #biomaterialIds}. <b>Scheduled for removal</b> — Paul, 2026-09-05: "as a
+         * choice of way to parameterize, we should not allow it, by removing that as an option for the
+         * endpoints. Deprecation is the right step now." Kept working meanwhile so no existing caller breaks.
+         * <p>
+         * A name is not an addressing form. It is not guaranteed to EXIST — a single-cell sub-bioassay has no
+         * accession of its own — and not guaranteed to be UNIQUE: on GEO-sourced single-cell data every
+         * sub-bioassay descends from one GSM, so that accession names fifteen samples rather than one. Such a
+         * name is now a 400 rather than an arbitrary pick.
+         * <p>
+         * An id, by contrast, always exists here: these endpoints never add or remove a dataset's samples, so
+         * every sample a commit can refer to was already persisted and already has one. That is what makes
+         * removal safe rather than merely desirable — there is no new-entity case for samples, and
+         * {@code clientRef} covers the entities a commit genuinely does create.
+         */
+        @Deprecated
         @Nullable
-        @Schema(description = "Samples this value applies to, by GSM short name. Omit or send null to leave "
-                + "assignments untouched; a list (including []) replaces them. A sample can hold only one value "
-                + "of a CONTINUOUS factor — a second is a 409 naming both.")
+        @Schema(deprecated = true,
+                description = "DEPRECATED, scheduled for removal — use biomaterialIds. Samples this value "
+                + "applies to, by name: a GSM "
+                + "accession, a bioassay short name, or the biomaterial name GET /datasets/{id}/design reports. "
+                + "A name may not exist (single-cell sub-bioassays have none) and may not be unique (a duplicate "
+                + "is a 400). Omit or send null to leave assignments untouched; a list (including []) replaces "
+                + "them. A sample can hold only one value of a CONTINUOUS factor — a second is a 409 naming both.")
         private List<String> biomaterialShortNames;
+
+        /**
+         * Samples this value applies to, by {@code BioMaterial} id — the identifier
+         * {@code GET /datasets/{id}/design} already reports as
+         * {@code bioMaterialAssignments[].bioMaterialId}. Authoritative when present:
+         * {@link #biomaterialShortNames} is ignored on the same item.
+         * <p>
+         * 🛑 <b>The id is the only identifier every sample has.</b> Names do not survive two cases that are
+         * not edge cases:
+         * <ul>
+         * <li>a dataset that did not come from GEO has no accession to send, and</li>
+         * <li>a single-cell sub-bioassay has none <em>by construction</em> — many descend from one GSM, so no
+         * accession can name one of them. Measured on GSE124952 subset 68405 (uib, 2026-09-05): 15
+         * sub-bioassays, 15 distinct biomaterial ids, <b>0</b> accessions.</li>
+         * </ul>
+         * Paul, ruling on it: "Gemma must do it by its own ID for the sample. Not everything comes from GEO,
+         * not everything has an accession, period. The id is the primary key."
+         * <p>
+         * Same {@code null} = leave untouched, {@code []} = clear convention as the names field.
+         */
+        @Nullable
+        @Schema(description = "Samples this value applies to, by BioMaterial id — the bioMaterialId that "
+                + "GET /datasets/{id}/design reports. Authoritative over biomaterialShortNames when both are "
+                + "sent. Prefer this: a non-GEO dataset has no accession, and a single-cell sub-bioassay has "
+                + "none by construction. Omit or send null to leave assignments untouched; a list (including "
+                + "[]) replaces them.")
+        private List<Long> biomaterialIds;
         /**
          * Verbatim provenance for this factor VALUE — a JSON array of {@code {quote, source, location, …}} items.
          * Stored and served opaquely; the agents repo owns the schema.
@@ -4634,7 +4694,28 @@ public class DatasetsWebService {
     @EqualsAndHashCode(callSuper = true)
     public static class SampleCharacteristicCommit extends EntityRef {
         @Nullable
+        /**
+         * @deprecated use {@link #bioMaterialId}, for the reasons on
+         * {@link FactorValueCommit#getBiomaterialShortNames()}.
+         */
+        @Deprecated
+        @Schema(deprecated = true, description = "DEPRECATED, scheduled for removal — use bioMaterialId. "
+                + "A name may name no sample (single-cell sub-bioassays have no accession) or several (they "
+                + "share the parent's), and an ambiguous one is a 400.")
         private String bioassayShortName;
+        /**
+         * The sample this characteristic belongs to, by {@code BioMaterial} id. Authoritative when present:
+         * {@link #bioassayShortName} is ignored on the same item.
+         * <p>
+         * Same reason the design section takes ids — a non-GEO dataset has no accession, and a single-cell
+         * sub-bioassay has none by construction, so a name-only contract cannot address every sample. One of
+         * the two is required on a new item.
+         */
+        @Nullable
+        @Schema(description = "The sample this characteristic belongs to, by BioMaterial id. Authoritative "
+                + "over bioassayShortName when both are sent, and the only way to name a sample that has no "
+                + "accession — every sub-bioassay of a single-cell dataset. One of the two is required.")
+        private Long bioMaterialId;
         @Nullable
         private OntologyTermRef category;
         @Nullable
@@ -4667,7 +4748,7 @@ public class DatasetsWebService {
      * assignments into {@code plan} for the service's post-apply correlation and second pass.
      */
     private ExperimentalDesignValueObject mapDesignCommit( DesignCommit dc, ExperimentalDesignValueObject current,
-            Map<String, Long> gsmToBmId, DesignCommitPlan plan ) {
+            SampleIndex samples, DesignCommitPlan plan ) {
         Map<Long, ExperimentalDesignValueObject.ExperimentalFactorEntry> curFactors = new LinkedHashMap<>();
         Set<Long> preFvIds = new HashSet<>();
         for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : nullSafe( current.getExperimentalFactors() ) ) {
@@ -4723,7 +4804,7 @@ public class DatasetsWebService {
             out.setBaselineRelevance( fc.getBaselineRelevance() );
             out.setBaselineRelevanceReason( fc.getBaselineRelevanceReason() );
             out.setSupportingEvidence( fc.getSupportingEvidence() );
-            out.setValues( mapFactorValues( fc, curFactor, parentKey, gsmToBmId, plan, bmToFvIds,
+            out.setValues( mapFactorValues( fc, curFactor, parentKey, samples, plan, bmToFvIds,
                     "design.factors[" + refOrIndex( fc.getClientRef(), factorIdx ) + "]" ) );
             outFactors.add( out );
             factorIdx++;
@@ -4763,7 +4844,7 @@ public class DatasetsWebService {
      */
     private List<FactorValueBasicValueObject> mapFactorValues( FactorCommit fc,
             @Nullable ExperimentalDesignValueObject.ExperimentalFactorEntry curFactor, String parentKey,
-            Map<String, Long> gsmToBmId, DesignCommitPlan plan, Map<Long, Set<Long>> bmToFvIds, String location ) {
+            SampleIndex samples, DesignCommitPlan plan, Map<Long, Set<Long>> bmToFvIds, String location ) {
         Map<Long, FactorValueBasicValueObject> curFvs = new LinkedHashMap<>();
         if ( curFactor != null ) {
             for ( FactorValueBasicValueObject v : nullSafe( curFactor.getValues() ) ) {
@@ -4782,10 +4863,14 @@ public class DatasetsWebService {
 
         int fvIdx = 0;
         for ( FactorValueCommit fvc : nullSafe( fvs.getItems() ) ) {
-            // null biomaterialShortNames = leave this FV's sample assignments untouched; a (possibly empty) list =
+            // Either field null = leave this FV's sample assignments untouched; a (possibly empty) list =
             // authoritative set-replace ([] clears). Same null-means-unchanged convention as isBaseline.
-            boolean assignmentsGiven = fvc.getBiomaterialShortNames() != null;
-            Set<Long> bmIds = assignmentsGiven ? resolveBioMaterials( fvc.getBiomaterialShortNames(), gsmToBmId ) : Collections.emptySet();
+            // biomaterialIds wins when both are sent -- an id cannot be ambiguous and a name can.
+            boolean idsGiven = fvc.getBiomaterialIds() != null;
+            boolean assignmentsGiven = idsGiven || fvc.getBiomaterialShortNames() != null;
+            Set<Long> bmIds = !assignmentsGiven ? Collections.emptySet()
+                    : idsGiven ? resolveBioMaterialIds( fvc.getBiomaterialIds(), samples.ids(), location )
+                    : resolveBioMaterials( fvc.getBiomaterialShortNames(), samples );
             FactorValueBasicValueObject out = new FactorValueBasicValueObject();
             if ( isExisting( fvc, "factor value" ) ) {
                 if ( !curFvs.containsKey( fvc.getGemmaId() ) ) {
@@ -5029,17 +5114,43 @@ public class DatasetsWebService {
     }
 
     /** Resolve a list of GSM short names to biomaterial ids for this dataset; an unknown short name is a 400. */
-    private static Set<Long> resolveBioMaterials( @Nullable List<String> shortNames, Map<String, Long> gsmToBmId ) {
+    private static Set<Long> resolveBioMaterials( @Nullable List<String> shortNames, SampleIndex samples ) {
         Set<Long> ids = new LinkedHashSet<>();
         for ( String sn : nullSafe( shortNames ) ) {
             if ( StringUtils.isBlank( sn ) ) {
                 continue;
             }
-            Long bmId = gsmToBmId.get( sn.trim() );
+            Long bmId = samples.resolveName( sn.trim(), "design" );
             if ( bmId == null ) {
-                throw new BadRequestException( "design references unknown sample short name '" + sn + "' for this dataset." );
+                throw new BadRequestException( "design references unknown sample short name '" + sn + "' for this"
+                        + " dataset. Accepted names are the GSM accession, the bioassay short name, and the"
+                        + " biomaterial name; send biomaterialIds instead if the sample has none, which is the"
+                        + " case for every sub-bioassay of a single-cell dataset." );
             }
             ids.add( bmId );
+        }
+        return ids;
+    }
+
+    /**
+     * Resolve {@code biomaterialIds} against the ids this dataset actually has.
+     * <p>
+     * An id from another dataset is refused rather than silently assigned: the whole point of taking the id is
+     * that it is unambiguous, and quietly accepting one that belongs elsewhere would move a factor value onto a
+     * sample of a different experiment.
+     */
+    private static Set<Long> resolveBioMaterialIds( @Nullable List<Long> bioMaterialIds, Set<Long> knownBmIds,
+            String location ) {
+        Set<Long> ids = new LinkedHashSet<>();
+        for ( Long id : nullSafe( bioMaterialIds ) ) {
+            if ( id == null ) {
+                continue;
+            }
+            if ( !knownBmIds.contains( id ) ) {
+                throw new BadRequestException( location + " references biomaterial id " + id
+                        + ", which is not a sample of this dataset." );
+            }
+            ids.add( id );
         }
         return ids;
     }
@@ -5254,12 +5365,16 @@ public class DatasetsWebService {
 
         ExperimentalDesignValueObject design = expressionExperimentService.getExperimentalDesignValueObject( ee );
         if ( design != null ) {
-            Map<Long, List<String>> samplesByFvId = new HashMap<>();
+            // 🛑 By biomaterial ID, not by accession. This used to `continue` past any sample whose accession
+            // was null, which silently omitted its assignments from the snapshot -- and a restore then put back
+            // a design missing exactly those samples, reporting success. On a single-cell dataset that is EVERY
+            // sample: sub-bioassays have no accession by construction (uib measured 15 of 15 null on GSE124952
+            // subset 68405), so a snapshot of one recorded no sample assignments at all.
+            Map<Long, List<Long>> samplesByFvId = new HashMap<>();
             for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : nullSafe( design.getBioMaterialAssignments() ) ) {
-                String gsm = gsmByBmId.get( a.getBioMaterialId() );
-                if ( gsm == null ) continue;
+                if ( a.getBioMaterialId() == null ) continue;
                 for ( Long fvId : nullSafe( a.getFactorValueIds() ) ) {
-                    samplesByFvId.computeIfAbsent( fvId, k -> new ArrayList<>() ).add( gsm );
+                    samplesByFvId.computeIfAbsent( fvId, k -> new ArrayList<>() ).add( a.getBioMaterialId() );
                 }
             }
             DesignCommit dc = new DesignCommit();
@@ -5288,7 +5403,7 @@ public class DatasetsWebService {
                     fvc.setSupportingEvidence( v.getSupportingEvidence() );
                     // an explicit (possibly empty) list, so a restore re-asserts membership rather than
                     // leaving whatever the intervening run assigned
-                    fvc.setBiomaterialShortNames( samplesByFvId.getOrDefault( v.getId(), new ArrayList<>() ) );
+                    fvc.setBiomaterialIds( samplesByFvId.getOrDefault( v.getId(), new ArrayList<>() ) );
                     for ( StatementValueObject s : nullSafe( v.getStatements() ) ) {
                         StatementCommit sc = new StatementCommit();
                         sc.setGemmaId( s.getId() );
@@ -5330,11 +5445,15 @@ public class DatasetsWebService {
         for ( BioAssay ba : thawed.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
             if ( bm == null ) continue;
+            if ( bm.getId() == null ) continue;
+            // Same defect, same fix: `if (gsm == null) continue` dropped every sample characteristic of every
+            // sample with no accession out of the snapshot, so a restore could not put them back.
             String gsm = gsmByBmId.get( bm.getId() );
-            if ( gsm == null ) continue;
             for ( AnnotationValueObject a : sampleAnnotationVos( bm ) ) {
                 SampleCharacteristicCommit scc = new SampleCharacteristicCommit();
                 scc.setGemmaId( a.getId() );
+                scc.setBioMaterialId( bm.getId() );
+                // Kept when there is one, for a human reading the payload; the id is what a restore resolves on.
                 scc.setBioassayShortName( gsm );
                 scc.setCategory( termRef( a.getCategory(), a.getCategoryUri() ) );
                 scc.setValue( termRef( a.getValue(), a.getValueUri() ) );
@@ -5603,22 +5722,91 @@ public class DatasetsWebService {
         return out;
     }
 
-    private Map<String, Long> buildGsmToBioMaterialIdIndex( ExpressionExperiment ee ) {
+    private SampleIndex buildSampleIndex( ExpressionExperiment ee ) {
         ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
-        Map<String, Long> index = new HashMap<>();
+        Map<String, Long> byName = new HashMap<>();
+        Set<Long> ids = new HashSet<>();
+        Set<String> ambiguousNames = new HashSet<>();
         for ( BioAssay ba : thawed.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
             if ( bm == null || bm.getId() == null ) {
                 continue;
             }
+            // The id set is built from every sample, INDEPENDENT of whether anything names it. A single-cell
+            // sub-bioassay has no accession and often no short name, so it appears here and in no name index --
+            // which is exactly the sample a client could not previously address at all.
+            ids.add( bm.getId() );
+            // 🛑 EVERY name key gets the ambiguity check, not just the biomaterial's own name. A name that
+            // resolves to two different samples is recorded as AMBIGUOUS and refused at resolution, because
+            // first-wins would bind a factor value or a characteristic to an arbitrary one of them and report
+            // success -- which no caller can detect afterwards.
+            //
+            // The accession is the case that makes this necessary rather than theoretical: a single-cell
+            // dataset's sub-bioassays all descend from ONE GSM (Paul, 2026-09-05), so on GEO-sourced
+            // single-cell data one accession names many samples. Indexing it first-wins would silently pick
+            // one sub-bioassay out of fifteen.
+            //
+            // The biomaterial name is included because it is what GET /datasets/{id}/design reports as
+            // bioMaterialName, so a client echoing the identifier it was handed is not refused (uib, GSE7866).
+            // All of it is a courtesy: the contract is biomaterialIds.
             if ( ba.getAccession() != null && ba.getAccession().getAccession() != null ) {
-                index.putIfAbsent( ba.getAccession().getAccession(), bm.getId() );
+                indexName( byName, ambiguousNames, ba.getAccession().getAccession(), bm.getId() );
             }
-            if ( ba.getShortName() != null ) {
-                index.putIfAbsent( ba.getShortName(), bm.getId() );
-            }
+            indexName( byName, ambiguousNames, ba.getShortName(), bm.getId() );
+            indexName( byName, ambiguousNames, bm.getName(), bm.getId() );
         }
-        return index;
+        return new SampleIndex( byName, ids, ambiguousNames );
+    }
+
+    /**
+     * Record one name → sample mapping, marking the name ambiguous if it already points at a different sample.
+     * A name already known to be ambiguous stays ambiguous however many more samples carry it.
+     */
+    private static void indexName( Map<String, Long> byName, Set<String> ambiguousNames, @Nullable String name,
+            Long bmId ) {
+        if ( name == null ) {
+            return;
+        }
+        Long prior = byName.putIfAbsent( name, bmId );
+        if ( prior != null && !prior.equals( bmId ) ) {
+            ambiguousNames.add( name );
+        }
+    }
+
+    /**
+     * A dataset's samples, addressable both ways: by any name that identifies one, and by the id every one of
+     * them has. Built in a single thaw because both halves are needed on the same request.
+     */
+    private static final class SampleIndex {
+        private final Map<String, Long> byName;
+        private final Set<Long> ids;
+        private final Set<String> ambiguousNames;
+
+        SampleIndex( Map<String, Long> byName, Set<Long> ids, Set<String> ambiguousNames ) {
+            this.byName = byName;
+            this.ids = ids;
+            this.ambiguousNames = ambiguousNames;
+        }
+
+        Map<String, Long> byName() {
+            return byName;
+        }
+
+        Set<Long> ids() {
+            return ids;
+        }
+
+        /**
+         * Resolve a name to one sample, or refuse. Null when nothing matches; a 400 when the name matches more
+         * than one sample, which a first-wins lookup would have answered with an arbitrary one.
+         */
+        Long resolveName( String name, String section ) {
+            if ( ambiguousNames.contains( name ) ) {
+                throw new BadRequestException( section + " references sample name '" + name + "', which names"
+                        + " more than one sample of this dataset. Names are not unique; send the biomaterial id." );
+            }
+            return byName.get( name );
+        }
     }
 
     @Nullable
