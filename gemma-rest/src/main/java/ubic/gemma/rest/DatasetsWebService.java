@@ -4286,9 +4286,21 @@ public class DatasetsWebService {
         private String uri;
     }
 
-    /** A per-factor-value numeric measurement (continuous factors). */
+    /**
+     * A per-factor-value numeric measurement (continuous factors).
+     * <p>
+     * 🛑 Named {@code MeasurementRef}, not {@code Measurement}, for the same reason
+     * {@link OntologyTermRef} is not {@code OntologyTerm}: the core
+     * {@link ubic.gemma.model.common.measurement.Measurement} entity is also published, and two classes
+     * sharing one schema name in the OpenAPI document means one of them wins. The one that won was the
+     * entity, whose {@code unit} is a {@code Unit} object — so the spec told every client to send
+     * {@code "unit": {"unitNameCV": "day"}} while this route binds a {@code String} and answered
+     * {@code 400 Cannot deserialize value of type java.lang.String from Object value} to the documented
+     * shape (cab, 2026-09-04, against build 59678f84). The wire shape is unchanged by the rename; only the
+     * name the schema is published under.
+     */
     @Data
-    public static class Measurement {
+    public static class MeasurementRef {
         @Nullable
         private String value;
         @Nullable
@@ -4358,16 +4370,39 @@ public class DatasetsWebService {
     @Data
     @EqualsAndHashCode(callSuper = true)
     public static class FactorValueCommit extends EntityRef {
+        /**
+         * The value's human-readable label.
+         * <p>
+         * 🛑 On a CONTINUOUS factor this must equal {@link #getMeasurement() measurement.value}, or the commit
+         * is a 409 ("the value of the factor must match the measurement value"). The obvious client move is to
+         * keep the submitter's own string — {@code "20 days"} against a measurement of {@code "20"} — and that
+         * is the case this rejects (cab, 2026-09-04). Send the bare number as the label, or omit the label and
+         * let the measurement speak.
+         */
         @Nullable
+        @Schema(description = "The value's label. On a CONTINUOUS factor it must equal measurement.value or the "
+                + "commit is a 409 — sending the submitter's raw string (\"20 days\") against a measurement of "
+                + "\"20\" is the usual way to hit that.")
         private String freeTextLabel;
         /** {@code null} = leave the baseline flag unchanged. */
         @com.fasterxml.jackson.annotation.JsonProperty("isBaseline")
         @Nullable
         private Boolean baseline;
         @Nullable
-        private Measurement measurement;
-        /** {@code null} (or omitted) = leave sample assignments untouched; a list ({@code []} = clear) = set-replace. */
+        private MeasurementRef measurement;
+        /**
+         * {@code null} (or omitted) = leave sample assignments untouched; a list ({@code []} = clear) =
+         * set-replace.
+         * <p>
+         * 🛑 A sample can hold only ONE value of a CONTINUOUS factor. Assigning it a second is a 409 naming
+         * both values and their measurements — which is usually the source contradicting itself (two conflicting
+         * age characteristics on one sample) rather than a client error, and the message carries enough to act
+         * on. Categorical factors are unaffected.
+         */
         @Nullable
+        @Schema(description = "Samples this value applies to, by GSM short name. Omit or send null to leave "
+                + "assignments untouched; a list (including []) replaces them. A sample can hold only one value "
+                + "of a CONTINUOUS factor — a second is a 409 naming both.")
         private List<String> biomaterialShortNames;
         /**
          * Verbatim provenance for this factor VALUE — a JSON array of {@code {quote, source, location, …}} items.
@@ -5464,11 +5499,11 @@ public class DatasetsWebService {
     }
 
     @Nullable
-    private static Measurement snapshotMeasurement( @Nullable MeasurementValueObject m ) {
+    private static MeasurementRef snapshotMeasurement( @Nullable MeasurementValueObject m ) {
         if ( m == null || m.getValue() == null ) {
             return null;
         }
-        Measurement out = new Measurement();
+        MeasurementRef out = new MeasurementRef();
         out.setValue( m.getValue() );
         out.setUnit( m.getUnit() );
         out.setType( m.getType() );
@@ -5508,7 +5543,7 @@ public class DatasetsWebService {
     }
 
     @Nullable
-    private static MeasurementValueObject mapMeasurement( @Nullable Measurement m ) {
+    private static MeasurementValueObject mapMeasurement( @Nullable MeasurementRef m ) {
         if ( m == null || StringUtils.isBlank( m.getValue() ) ) {
             return null;
         }
