@@ -1071,7 +1071,7 @@ public class ExpressionExperimentDaoImpl
                     return aggregateByCategory( result ).entrySet().stream()
                             .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                             .limit( maxResults )
-                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> a, () -> new TreeMap<>( Characteristic.getByCategoryComparator() ) ) );
                 }
             } else {
                 //noinspection unchecked
@@ -1092,15 +1092,19 @@ public class ExpressionExperimentDaoImpl
      * Characteristics built from a GROUP BY projection, so they carry no id and
      * {@link Characteristic#equals} falls through to four string comparisons; with
      * {@link Characteristic#hashCode()} constant, a HashMap here puts every key in one bucket and
-     * building 5000 entries measured 1141 ms against 42 ms for the old content hash. The comparator
-     * collapses exactly the pairs equals considers equal -- {@code compareTerm} returns 0 on the
-     * same condition {@code CharacteristicUtils.equals} returns true -- so the grouping, and
-     * therefore every count this feeds, is unchanged.
+     * building 5000 entries measured 1141 ms against 42 ms for the old content hash.
+     * <p>
+     * The comparator must be {@link Characteristic#getByCategoryComparator()} and NOT
+     * {@link Characteristic#getComparator()}: the latter breaks the tie on id, so a caller probing
+     * this map with a PERSISTED characteristic misses the transient key that {@code equals}
+     * considers equal to it -- id-vs-null is never zero. {@code compareTerm} alone returns 0 on
+     * exactly the condition {@code CharacteristicUtils.equals} returns true, so the grouping, every
+     * count this feeds, and lookups by an equal characteristic are all unchanged.
      */
     private Map<Characteristic, Long> aggregateByCategory( List<Object[]> result ) {
         return result.stream().collect( Collectors.groupingBy(
                 row -> Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null ),
-                () -> new TreeMap<>( Characteristic.getComparator() ),
+                () -> new TreeMap<>( Characteristic.getByCategoryComparator() ),
                 Collectors.summingLong( row -> ( Long ) row[2] ) ) );
     }
 
@@ -1135,7 +1139,7 @@ public class ExpressionExperimentDaoImpl
                 result = result.entrySet().stream()
                         .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                         .limit( maxResults )
-                        .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+                        .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> a, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
             }
         }
         return result;
@@ -1291,7 +1295,7 @@ public class ExpressionExperimentDaoImpl
                             .filter( e -> e.getValue() >= minFrequency || ( retainedTermUris != null && retainedTermUris.contains( e.getKey().getValueUri() ) ) )
                             .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                             .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
-                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> a, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
                 }
             } else {
                 //noinspection unchecked
@@ -1306,11 +1310,13 @@ public class ExpressionExperimentDaoImpl
         return aggregateByCategoryAndValue( result );
     }
 
-    /** TreeMap for the reason {@link #aggregateByCategory(List)} gives. */
+    /**
+     * TreeMap, and an id-free comparator, for the reason {@link #aggregateByCategory(List)} gives.
+     */
     private Map<Characteristic, Long> aggregateByCategoryAndValue( List<Object[]> result ) {
         return result.stream().collect( Collectors.groupingBy(
                 this::convertRowToCharacteristic,
-                () -> new TreeMap<>( Characteristic.getComparator() ),
+                () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ),
                 Collectors.summingLong( row -> ( Long ) row[5] ) ) );
     }
 

@@ -21,6 +21,8 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.util.Date;
@@ -198,12 +200,31 @@ public class AnnotationSet extends AbstractIdentifiable {
     /**
      * The structured annotation payload as a JSON string. The shape is
      * owned by the producer (the curation-agents client for {@code AGENT}
-     * source; the curation-UI for {@code CURATOR}); Gemma persists it
-     * verbatim. MySQL stores this as a {@code JSON} column (queryable
-     * via {@code JSON_EXTRACT}); H2 stores it as {@code CLOB}.
+     * source; the curation-UI for {@code CURATOR}); Gemma does not interpret
+     * it. MySQL stores this as a native {@code JSON} column (V20), H2 as
+     * {@code CLOB} (H2 has no JSON type).
+     * <p>
+     * Not byte-preserved: MySQL normalises a {@code JSON} value on write,
+     * stripping insignificant whitespace and reordering object keys, so
+     * {@code {"v":2}} reads back as {@code {"v": 2}}. The document round-trips,
+     * the bytes do not. Compare payloads as parsed JSON, never as strings.
+     * <p>
+     * The JDBC type is pinned explicitly rather than left to {@code @Lob}.
+     * {@code @Lob} resolves to {@code Types#CLOB}, but Connector/J reports a
+     * MySQL {@code JSON} column as {@code Types#LONGVARCHAR}, so the two
+     * disagree and schema validation fails with "found [json
+     * (Types#LONGVARCHAR)], but expecting [longtext (Types#CLOB)]".
+     * {@code columnDefinition} does not help: it drives DDL generation, not
+     * the type validation compares.
+     * <p>
+     * Only gemma-staging sets {@code hbm2ddl.auto=validate} — production and
+     * developer instances leave it empty and take no schema action — so a
+     * divergence here is invisible everywhere else until it takes that one
+     * instance down at startup. It went unnoticed for three months that way.
+     * Keep the annotation, V20 and the H2 sibling (V21) in step.
      */
-    @Lob
-    @Column(name = "PAYLOAD_JSON", columnDefinition = "LONGTEXT")
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(name = "PAYLOAD_JSON", columnDefinition = "JSON")
     private String payloadJson;
 
     /**

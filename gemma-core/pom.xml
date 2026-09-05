@@ -95,17 +95,14 @@
     </build>
     <dependencies>
         <!-- Spring -->
-        <!-- this is the latest for Spring 3 (>= 1.1 requires Spring 4) -->
+        <!-- version comes from the parent BOM. Pinned to 1.0.3.RELEASE until 2026-09-02 with the
+             note "latest for Spring 3", which stopped being true several Spring majors ago; gemma-cli
+             and gemma-rest already resolved 2.0.12 through the BOM, so gemma-core was the odd one out
+             and javadoc:aggregate was the only thing that noticed. The spring-context exclusion went
+             with it: that dependency is declared optional in 2.0.12, so it is not pulled anyway. -->
         <dependency>
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
-            <version>1.0.3.RELEASE</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-context</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <!-- spring-expression: parent pom declares this at runtime scope (sufficient for
              @Cacheable/@PreAuthorize SpEL parsing which Spring does reflectively). The

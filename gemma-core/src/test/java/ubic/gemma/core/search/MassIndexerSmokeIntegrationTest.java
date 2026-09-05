@@ -58,7 +58,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   <li>Cleans up the persisted fixtures so subsequent test runs start clean.</li>
  * </ol>
  *
- * <p><b>Why {@link Ignore} by default.</b> This IT is destructive against the shared
+ * <p><b>Why {@code @Disabled} by default.</b> This IT is destructive against the shared
  * Lucene index directory ({@code gemma.search.dir}) and the gemdtest database (writes +
  * deletes EE/Gene rows). Parallel Gemma sub-agents serialize against gemdtest per the
  * project's parallel-agent gotchas, and the mass-indexer holds the index directory for

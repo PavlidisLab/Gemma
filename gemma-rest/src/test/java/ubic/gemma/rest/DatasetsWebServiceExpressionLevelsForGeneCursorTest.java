@@ -67,7 +67,7 @@ import static org.mockito.Mockito.when;
  * Pure Mockito - the WebService picks cursor vs offset mode and emits the right wrapper.
  * The cursor windowing is in-memory over the +id-sorted datasetIds list returned by
  * {@code ExpressionExperimentService.loadIdsWithCache}, so this test exercises the slice
- * predicate (id > lastSeenId for forward, id < lastSeenId for backward) and the
+ * predicate ({@code id > lastSeenId} for forward, {@code id < lastSeenId} for backward) and the
  * limit+1 over-read used to detect hasMore.
  *
  * @author phase3

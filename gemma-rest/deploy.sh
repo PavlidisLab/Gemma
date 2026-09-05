@@ -23,9 +23,28 @@
 #
 #   - Any Gemma.war left there by the last gemma-web deploy is NOT removed.
 #     Remove it by hand once you are satisfied the REST API is serving.
-#   - gemma-rest ships no log4j2.xml of its own (gemma-web had
-#     src/main/config/log4j2.xml and rsynced it into lib/), so whatever
-#     logging configuration is already on the server is left untouched.
+#   - This script rsyncs the WAR and nothing else. It does NOT write a logging
+#     configuration into lib/ the way gemma-web's deploy.sh did (that one
+#     shipped src/main/config/log4j2.xml), so the instance's lib/log4j2.xml is
+#     left exactly as it was found.
+#
+#     That is not the same as the instance's logging continuing to apply.
+#     gemma-rest carries its own src/main/resources/log4j2.xml, which lands at
+#     WEB-INF/classes/log4j2.xml. WEB-INF/classes is searched ahead of the
+#     common loader, so log4j-core picks the WAR's copy and the instance's
+#     lib/log4j2.xml is ignored. The WAR's config declares a single Console
+#     appender, so on a stock Tomcat instance every application log line goes
+#     to stdout -- the journal under systemd -- and the RollingFile appenders
+#     the server was configured with (gemma.log, gemma-errors.log, ...) stop
+#     being written.
+#
+#     To keep an instance's own logging, point log4j at it explicitly in that
+#     instance's bin/setenv.sh:
+#
+#         export CATALINA_OPTS="$CATALINA_OPTS \
+#             -Dlog4j2.configurationFile=$CATALINA_BASE/lib/log4j2.xml"
+#
+#     See docs/plans/TOMCAT10_STAGING_MIGRATION_PLAN.md.
 #
 # The WAR only exists under the `gemma-rest-war` Maven profile -- a plain
 # `mvn package` produces a JAR and this script will not find anything to

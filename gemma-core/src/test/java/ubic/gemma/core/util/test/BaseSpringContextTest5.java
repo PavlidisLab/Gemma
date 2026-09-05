@@ -60,9 +60,9 @@ import java.util.Set;
 import static java.util.Objects.requireNonNull;
 
 /**
- * JUnit 5 (Jupiter) counterpart of {@link BaseSpringContextTest}.
+ * JUnit 5 (Jupiter) counterpart of {@code BaseSpringContextTest}.
  * <p>
- * Identical helper API to {@link BaseSpringContextTest}; the differences are
+ * Identical helper API to {@code BaseSpringContextTest}; the differences are
  * structural:
  * <ul>
  *   <li>Extends {@link BaseIntegrationTest5} (Jupiter), not the JUnit 4 base.</li>

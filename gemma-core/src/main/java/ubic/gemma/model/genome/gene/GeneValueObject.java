@@ -61,13 +61,40 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     @JsonInclude(JsonInclude.Include.ALWAYS)
     private Integer associatedExperimentCount = 0;
-    @JsonIgnore
-    private Integer compositeSequenceCount = 0; // number of probes
+    /**
+     * Number of probes (composite sequences) across all platforms that map to this gene.
+     * <p>
+     * Only {@code GeneServiceImpl.loadFullyPopulatedValueObject} fills this in, so it is {@code null}
+     * on every gene value object that does not come from {@code GET /genes/{gene}/overview}. It must
+     * stay null-initialised: a {@code 0} default would serialize on every gene in every list response
+     * and read as "this gene has no probes".
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Number of probes across all platforms mapping to this gene; only populated by `GET /genes/{gene}/overview`.")
+    private Integer compositeSequenceCount;
     @JsonIgnore
     private String description;
-    @JsonIgnore
+    /**
+     * Gene sets this gene belongs to, in their light form (no members). Populated only by
+     * {@code GeneServiceImpl.loadFullyPopulatedValueObject}; {@code null} elsewhere.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Gene-set memberships in light form; only populated by `GET /genes/{gene}/overview`.")
     private Collection<GeneSetValueObject> geneSets = null;
-    @JsonIgnore
+    /**
+     * Homologues of this gene across taxa. Populated only by
+     * {@code GeneServiceImpl.loadFullyPopulatedValueObject}; {@code null} elsewhere.
+     * <p>
+     * This field is self-referential, and serialization only terminates because the homologue value
+     * objects are built through {@code loadValueObjects}, i.e. the plain {@link #GeneValueObject(Gene)}
+     * constructor, which leaves their own {@code homologues} null. Populating homologues recursively
+     * would turn this into an unbounded serialization loop.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Homologues across taxa, one level deep (the nested gene objects carry no homologues of their own); only populated by `GET /genes/{gene}/overview`.")
     private Collection<GeneValueObject> homologues = null;
     /**
      * Was this gene directly used in a query? Or is it inferred somehow. The default is true, use this when you need to
@@ -101,12 +128,25 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      */
     @JsonIgnore
     private int[] nodeDegreesPos;
-    @JsonIgnore
-    private Integer numGoTerms = 0;
+    /**
+     * Number of GO terms associated with this gene. Filled in by
+     * {@code GeneWebService.getGeneOverview}; {@code null} elsewhere. Null-initialised for the same
+     * reason as {@link #compositeSequenceCount}.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Number of associated GO terms; only populated by `GET /genes/{gene}/overview`.")
+    private Integer numGoTerms;
     private String officialName;
     private String officialSymbol;
 
-    @JsonIgnore
+    /**
+     * Number of platforms carrying at least one probe for this gene. Populated only by
+     * {@code GeneServiceImpl.loadFullyPopulatedValueObject}; {@code null} elsewhere.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Number of platforms with a probe for this gene; only populated by `GET /genes/{gene}/overview`.")
     private Integer platformCount;
     @JsonIgnore
     private Double score; // This is for genes in gene sets might have a rank or a score associated with them.

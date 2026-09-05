@@ -27,7 +27,7 @@ import ubic.gemma.core.context.EnvironmentProfiles;
 import jakarta.ws.rs.core.Application;
 
 /**
- * JUnit 5 (Jupiter) counterpart of {@link BaseJerseyTest}.
+ * JUnit 5 (Jupiter) counterpart of {@code BaseJerseyTest}.
  * <p>
  * Jersey 3.1's {@code jersey-test-framework-core} does not ship a Jupiter
  * extension (only the JUnit 4 base {@link JerseyTest} and a TestNG variant), so
@@ -40,9 +40,8 @@ import jakarta.ws.rs.core.Application;
  * <p>
  * Spring's {@link SpringExtension} replaces the JUnit 4
  * {@code SpringClassRule}/{@code SpringMethodRule} pair used in
- * {@link BaseJerseyTest}.
+ * {@code BaseJerseyTest}.
  *
- * @see BaseJerseyTest
  * @author poirigui
  */
 @ActiveProfiles({ "web", EnvironmentProfiles.TEST })

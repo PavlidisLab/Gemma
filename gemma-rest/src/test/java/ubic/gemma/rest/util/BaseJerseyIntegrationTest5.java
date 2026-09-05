@@ -12,7 +12,6 @@ import ubic.gemma.core.util.test.TestAuthenticationUtils;
  * JUnit 5 (Jupiter) base class for Jersey integration tests, tagged
  * {@code @Tag("integration")} for surefire/failsafe filtering.
  *
- * @see BaseJerseyIntegrationTest
  * @author poirigui
  */
 @Tag("integration")

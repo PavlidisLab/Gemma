@@ -26,7 +26,15 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Pins what {@link GeoConverterImpl#parseGEOSampleCharacteristicString} makes of a submitter's
+ * sample descriptor string.
  *
+ * <p>🛑 The value assertions here changed in 9271945de2. GEO import no longer maps submitter text
+ * onto preset ontology terms from {@code valueStringToOntologyTermMappings.txt}, so "Sex: M" keeps
+ * the value "M" instead of being rewritten to "male" / PATO_0000384, and every value URI on this
+ * path is now null. Grounding a value is a curation decision. The CATEGORY assertions are
+ * unaffected: those come from {@code convertVariableType()}, which reads GEO's own variable type
+ * and was never part of the preset mapping.</p>
  *
  * @author paul
  */
@@ -39,9 +47,9 @@ public class GeoCharacteristicParseTest {
         g.parseGEOSampleCharacteristicString( "Sex: M", t );
         Characteristic c = t.getCharacteristics().iterator().next();
         assertEquals( "biological sex", c.getCategory() );
-        assertEquals( "male", c.getValue() );
+        assertEquals( "M", c.getValue() ); // the submitter's own text, not "male"
         assertEquals( "http://purl.obolibrary.org/obo/PATO_0000047", c.getCategoryUri() );
-        assertEquals( "http://purl.obolibrary.org/obo/PATO_0000384", c.getValueUri() );
+        assertNull( c.getValueUri() );
 
         // I'm sorry but this case is just too crazy (mixing : and = ) and leaves other situations unaddressed like the lithium use (non-user=0, user = 1): 0 below.
 //        t = BioMaterial.Factory.newInstance();
@@ -56,17 +64,17 @@ public class GeoCharacteristicParseTest {
         g.parseGEOSampleCharacteristicString( "Sex=M", t );
         c = t.getCharacteristics().iterator().next();
         assertEquals( "biological sex", c.getCategory() );
-        assertEquals( "male", c.getValue() );
+        assertEquals( "M", c.getValue() );
         assertEquals( "http://purl.obolibrary.org/obo/PATO_0000047", c.getCategoryUri() );
-        assertEquals( "http://purl.obolibrary.org/obo/PATO_0000384", c.getValueUri() );
+        assertNull( c.getValueUri() );
 
         t = BioMaterial.Factory.newInstance();
         g.parseGEOSampleCharacteristicString( "Genotype: wild type", t );
         c = t.getCharacteristics().iterator().next();
         assertEquals( "genotype", c.getCategory() );
-        assertEquals( "wild type genotype", c.getValue() );
+        assertEquals( "wild type", c.getValue() );
         assertEquals( "http://www.ebi.ac.uk/efo/EFO_0000513", c.getCategoryUri() );
-        assertEquals( "http://www.ebi.ac.uk/efo/EFO_0005168", c.getValueUri() );
+        assertNull( c.getValueUri() );
 
         t = BioMaterial.Factory.newInstance();
         g.parseGEOSampleCharacteristicString( "Developmental stage: adult", t );
@@ -74,7 +82,7 @@ public class GeoCharacteristicParseTest {
         assertEquals( "developmental stage", c.getCategory() );
         assertEquals( "adult", c.getValue() );
         assertEquals( "http://www.ebi.ac.uk/efo/EFO_0000399", c.getCategoryUri() );
-        assertEquals( "http://www.ebi.ac.uk/efo/EFO_0001272", c.getValueUri() );
+        assertNull( c.getValueUri() );
 
         // case we can't parse reliably.
         t = BioMaterial.Factory.newInstance();
@@ -90,9 +98,9 @@ public class GeoCharacteristicParseTest {
         g.parseGEOSampleCharacteristicString( "cell type: human fibroblast", t );
         c = t.getCharacteristics().iterator().next();
         assertEquals( "cell type", c.getCategory() );
-        assertEquals( "fibroblast", c.getValue() );
+        assertEquals( "fibroblast", c.getValue() ); // the species prefix is stripped by the parser, not by a preset
         assertEquals( "http://www.ebi.ac.uk/efo/EFO_0000324", c.getCategoryUri() );
-        assertEquals( "http://purl.obolibrary.org/obo/CL_0000057", c.getValueUri() );
+        assertNull( c.getValueUri() );
 
 
         // test ugly packing of information in sample info line
@@ -121,14 +129,14 @@ public class GeoCharacteristicParseTest {
         boolean found2 = false;
         for ( Characteristic ch : t.getCharacteristics() ) {
             if ( ch.getCategory().equals( "biological sex" ) ) {
-                assertEquals( "male", ch.getValue() );
+                assertEquals( "M", ch.getValue() );
                 assertEquals( "http://purl.obolibrary.org/obo/PATO_0000047", ch.getCategoryUri() );
-                assertEquals( "http://purl.obolibrary.org/obo/PATO_0000384", ch.getValueUri() );
+                assertNull( ch.getValueUri() );
                 found1 = true;
             } else if ( ch.getCategory().equals( "organism part" ) ) {
                 assertEquals( "brain", ch.getValue() );
                 assertEquals( "http://www.ebi.ac.uk/efo/EFO_0000635", ch.getCategoryUri() );
-                assertEquals( "http://purl.obolibrary.org/obo/UBERON_0000955", ch.getValueUri() );
+                assertNull( ch.getValueUri() );
                 found2 = true;
             }
         }

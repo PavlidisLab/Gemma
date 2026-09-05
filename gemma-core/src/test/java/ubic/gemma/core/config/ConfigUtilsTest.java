@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Covers the {@code *_FILE} indirection in {@link ConfigUtils#resolveEnvVar(String, java.util.function.Function)}.
- * Uses the injectable env-source overload because {@link System#setenv} is not supported on the JVMs Gemma runs on.
+ * Uses the injectable env-source overload because {@code System.setenv} does not exist on the JVMs Gemma runs on.
  */
 public class ConfigUtilsTest {
 

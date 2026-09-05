@@ -21,22 +21,20 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
+import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 
 /**
  * @author pavlidis
@@ -45,21 +43,19 @@ public class ExpressionExperimentBibRefFinder {
 
     private static final Log log = LogFactory.getLog( ExpressionExperimentBibRefFinder.class.getName() );
 
-    private static final String GEO_SERIES_URL_BASE = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=";
-
-    /**
-     * SOFT "self" text view of a series. It exposes the machine-readable {@code !Series_pubmed_id}
-     * field, which tracks the live GEO record — unlike the {@code esummary db=gds} index, which lags
-     * behind re-pointed publication links. This is the same field {@code GeoFamilyParser} reads on
-     * import, so the refresh path stays consistent with (and as current as) first import.
-     */
-    private static final String GEO_SERIES_SOFT_SUFFIX = "&targ=self&form=text";
-
-    private static final String SERIES_PUBMED_ID_TAG = "!Series_pubmed_id";
+    private final GeoBrowser geoBrowser;
 
     private final String ncbiApiKey;
 
     public ExpressionExperimentBibRefFinder( String ncbiApiKey ) {
+        this( new GeoBrowserImpl( ncbiApiKey ), ncbiApiKey );
+    }
+
+    /**
+     * Inject the GEO client, so that resolution can be tested without reaching Entrez.
+     */
+    public ExpressionExperimentBibRefFinder( GeoBrowser geoBrowser, String ncbiApiKey ) {
+        this.geoBrowser = geoBrowser;
         this.ncbiApiKey = ncbiApiKey;
     }
 
@@ -107,119 +103,88 @@ public class ExpressionExperimentBibRefFinder {
     }
 
     /**
-     * Resolve the current primary PubMed id for a GEO series.
-     * <p>
-     * We intentionally scrape the per-accession {@code acc.cgi} SOFT record rather than call the
-     * "modern" Entrez E-utilities ({@code esummary}/{@code elink} with {@code db=gds}). The gds
-     * index <em>lags the live GEO record</em>: when a series is re-pointed to a newer paper, the new
-     * {@code Series_pubmed_id} shows up on the {@code acc.cgi} record immediately but can be absent
-     * from the {@code esummary db=gds} response for a long time (observed on GSE270880). A refresh
-     * whose whole job is to catch drifted links must read the authoritative, lag-free source, so
-     * eutils is the wrong tool here despite being the nicer API. The {@code &targ=self&form=text}
-     * view gives the same {@code !Series_pubmed_id} field the importer ({@code GeoFamilyParser})
-     * already trusts.
+     * Every PubMed id GEO lists for a series, in the order GEO lists them.
      *
-     * <p>Public because verification needs this and nothing else. {@code locatePrimaryReference} spends
-     * a second PubMed round trip building a {@link BibliographicReference}, which a caller that only
-     * wants to know whether GEO still says the same id has no use for.</p>
+     * <h4>Why Entrez and not {@code acc.cgi}</h4>
      *
-     * @return GEO's current {@code !Series_pubmed_id}, or -1 when the accession is not a series or GEO
-     * states no publication for it
-     */
-    /**
-     * As {@link #locatePubMedId(String)}, but every id the series lists rather than only the first.
+     * <p>This used to scrape the per-accession {@code acc.cgi} SOFT record
+     * ({@code &targ=self&form=text}) for {@code !Series_pubmed_id}, on the argument that the
+     * {@code esummary db=gds} index lags the live GEO record: a re-pointed publication link shows up
+     * on {@code acc.cgi} at once but can be missing from {@code esummary} for a while (observed on
+     * GSE270880). A refresh whose job is to catch drifted links wants the lag-free source, so
+     * {@code acc.cgi} was chosen despite eutils being the better-behaved API.</p>
      *
-     * @return GEO's {@code !Series_pubmed_id} values in order, first being the primary; empty when the
-     * accession is not a GEO series or GEO states no publication for it
+     * <p>That trade no longer exists, because the lag-free source stopped answering. NCBI serves
+     * {@code www.ncbi.nlm.nih.gov/geo/query/acc.cgi} behind a Google reCAPTCHA challenge, returned as
+     * <em>HTTP 200 with an HTML body</em> — no error status, no exception, just a page with no
+     * {@code !Series_pubmed_id} in it. Every series therefore parsed as "GEO states no publication".
+     * Measured 2026-09-02; the same challenge is served for {@code form=xml} and for GEO's own
+     * documentation pages, so it is the host and not one view.</p>
+     *
+     * <p>Entrez is the supported programmatic interface, on a separate host
+     * ({@code eutils.ncbi.nlm.nih.gov}) that is not challenged, takes the API key, and publishes rate
+     * limits. {@link GeoBrowser} already does the two documented steps — {@code esearch db=gds} to
+     * turn the accession into a UID, then {@code esummary} — so nothing here constructs a UID by
+     * hand. {@code GeoRetrieveConfig.DEFAULT} leaves every detail flag off, so this costs a search
+     * and a summary and never the MINiML family download.</p>
+     *
+     * <p>The freshness caveat is real and now unavoidable: a very recently re-pointed link may take
+     * time to reach {@code esummary}. A stale answer beats the alternative, which is a confident
+     * wrong answer for the entire corpus.</p>
+     *
+     * <h4>Use esummary, not elink</h4>
+     *
+     * <p>{@code elink dbfrom=gds&db=pubmed} looks like an equivalent way to ask the same question and
+     * is not: it returns the same ids in a different order. GSE934 lists 15802019 then 15867358 in
+     * {@code esummary}, matching what {@code acc.cgi} listed; {@code elink} answers 15867358 then
+     * 15802019 (checked 2026-09-02).</p>
+     *
+     * <p>Order is not cosmetic here. Callers take the first id as the primary publication and write
+     * it: {@code VerifyPublicationEvidenceCli} stores {@code get(0)} as primary with the rest
+     * other-relevant, and promotes held evidence to TAS only when Gemma's paper sits at position 0 --
+     * a paper anywhere later is reported for a curator instead. Swapping in {@code elink} would
+     * therefore flip which paper Gemma calls primary on every multi-paper series, and turn
+     * "a curator should look at this" into "verified", silently. Note also that first-is-primary is
+     * {@code GeoConverterImpl}'s convention rather than something GEO asserts, so the order carries
+     * more weight than GEO itself puts on it.</p>
+     *
+     * <h4>Empty is not the same as unknown</h4>
+     *
+     * <p>An empty list means GEO states no publication for the series. It never means "GEO could not
+     * be read" — that throws {@link IOException}. Keeping those apart is the whole point: the
+     * CAPTCHA above was harmful precisely because it collapsed into the empty case, and callers that
+     * write a finding on an empty list went on to record "GEO lists no publication" for datasets
+     * nobody had successfully asked about.</p>
+     *
+     * @return GEO's PubMed ids in order, first being the primary; empty when the accession is not a
+     * GEO series or GEO states no publication for it
+     * @throws IOException if GEO could not be reached, or has no record at all for this accession —
+     *                     i.e. whenever the answer is unknown rather than "none"
      */
     public List<Integer> locatePubMedIds( String geoSeries ) throws IOException {
         if ( !geoSeries.matches( "GSE\\d+" ) ) {
             ExpressionExperimentBibRefFinder.log.warn( geoSeries + " is not a GEO Series Accession" );
             return Collections.emptyList();
         }
-        URL url;
-        URLConnection conn;
-        try {
-            url = new URL( ExpressionExperimentBibRefFinder.GEO_SERIES_URL_BASE + geoSeries
-                    + ExpressionExperimentBibRefFinder.GEO_SERIES_SOFT_SUFFIX );
-            conn = url.openConnection();
-            conn.connect();
-        } catch ( IOException e1 ) {
-            ExpressionExperimentBibRefFinder.log.error( e1, e1 );
-            throw new RuntimeException( "Could not get data from remote server", e1 );
+        GeoRecord record = geoBrowser.getGeoRecord( GeoRecordType.SERIES, geoSeries );
+        if ( record == null ) {
+            // not "GEO says no publication" -- GEO has no series under this accession at all, so we
+            // have not learned anything about its publications. Callers must not record a finding.
+            throw new IOException( "GEO returned no series record for " + geoSeries + "." );
         }
-        try ( InputStream is = conn.getInputStream();
-                BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) ) ) {
-            return parseSeriesPubMedIds( br, geoSeries );
+        List<String> pubMedIds = record.getPubMedIds();
+        if ( pubMedIds == null ) {
+            return Collections.emptyList();
         }
-    }
-
-    public int locatePubMedId( String geoSeries ) throws IOException {
-        if ( !geoSeries.matches( "GSE\\d+" ) ) {
-            ExpressionExperimentBibRefFinder.log.warn( geoSeries + " is not a GEO Series Accession" );
-            return -1;
-        }
-        URL url;
-        URLConnection conn;
-        try {
-            url = new URL( ExpressionExperimentBibRefFinder.GEO_SERIES_URL_BASE + geoSeries
-                    + ExpressionExperimentBibRefFinder.GEO_SERIES_SOFT_SUFFIX );
-            conn = url.openConnection();
-            conn.connect();
-        } catch ( IOException e1 ) {
-            ExpressionExperimentBibRefFinder.log.error( e1, e1 );
-            throw new RuntimeException( "Could not get data from remote server", e1 );
-        }
-
-        try ( InputStream is = conn.getInputStream();
-                BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) ) ) {
-            return parseSeriesPubMedId( br, geoSeries );
-        }
-    }
-
-    /**
-     * Scan a GEO series SOFT record ({@code acc.cgi ...&targ=self&form=text}) for its primary PubMed
-     * id, reading the {@code !Series_pubmed_id} field the same way {@link ubic.gemma.core.loader.expression.geo.GeoFamilyParser}
-     * does on import. When a series lists several PubMed ids the first is returned (the primary,
-     * matching {@code GeoConverterImpl}'s first-id-is-primary convention) and the rest are logged for
-     * a curator. Returns {@code -1} when no numeric {@code !Series_pubmed_id} is present.
-     */
-    static int parseSeriesPubMedId( BufferedReader br, String geoSeries ) throws IOException {
-        List<Integer> ids = parseSeriesPubMedIds( br, geoSeries );
-        if ( ids.size() > 1 ) {
-            ExpressionExperimentBibRefFinder.log.warn( geoSeries + " lists " + ids.size()
-                    + " PubMed ids in GEO; using the first (" + ids.get( 0 )
-                    + ") as the primary reference. A curator should confirm which is primary." );
-        }
-        return ids.isEmpty() ? -1 : ids.get( 0 );
-    }
-
-    /**
-     * Every {@code !Series_pubmed_id} the record carries, in the order GEO lists them.
-     *
-     * <p>The single-id form above always READ all of them — it counted them and warned that "a curator
-     * should confirm which is primary" — and then discarded everything after the first. A series
-     * listing two papers is a series with a primary and a follow-up, which is what the other-relevant
-     * slot is for, so that warning described work the caller had no way to act on.</p>
-     *
-     * <p>First is primary, matching {@code GeoConverterImpl}'s convention; the rest are
-     * other-relevant. Empty when GEO states no publication for the series.</p>
-     */
-    static List<Integer> parseSeriesPubMedIds( BufferedReader br, String geoSeries ) throws IOException {
-        List<Integer> ids = new ArrayList<>();
-        String line;
-        while ( ( line = br.readLine() ) != null ) {
-            if ( !StringUtils.startsWithIgnoreCase( StringUtils.stripStart( line, null ), SERIES_PUBMED_ID_TAG ) ) {
+        List<Integer> ids = new ArrayList<>( pubMedIds.size() );
+        for ( String pubMedId : pubMedIds ) {
+            String value = StringUtils.strip( pubMedId );
+            if ( StringUtils.isBlank( value ) ) {
                 continue;
             }
-            int eqIndex = line.indexOf( '=' );
-            if ( eqIndex < 0 ) {
-                continue;
-            }
-            String value = StringUtils.strip( line.substring( eqIndex + 1 ) );
             if ( !value.matches( "\\d+" ) ) {
-                ExpressionExperimentBibRefFinder.log.warn( geoSeries + ": ignoring non-numeric "
-                        + SERIES_PUBMED_ID_TAG + " value '" + value + "'" );
+                ExpressionExperimentBibRefFinder.log.warn( geoSeries
+                        + ": ignoring non-numeric PubMed id '" + value + "'" );
                 continue;
             }
             Integer id = Integer.valueOf( value );
@@ -229,5 +194,27 @@ public class ExpressionExperimentBibRefFinder {
             }
         }
         return ids;
+    }
+
+    /**
+     * As {@link #locatePubMedIds(String)}, but only the first id — the primary, matching
+     * {@code GeoConverterImpl}'s first-id-is-primary convention.
+     *
+     * <p>Public because verification needs this and nothing else. {@link #locatePrimaryReference(ExpressionExperiment, boolean)} spends
+     * a second PubMed round trip building a {@link BibliographicReference}, which a caller that only
+     * wants to know whether GEO still says the same id has no use for.</p>
+     *
+     * @return GEO's primary PubMed id, or -1 when the accession is not a series or GEO states no
+     * publication for it
+     * @throws IOException as {@link #locatePubMedIds(String)} — an unknown answer is never -1
+     */
+    public int locatePubMedId( String geoSeries ) throws IOException {
+        List<Integer> ids = locatePubMedIds( geoSeries );
+        if ( ids.size() > 1 ) {
+            ExpressionExperimentBibRefFinder.log.warn( geoSeries + " lists " + ids.size()
+                    + " PubMed ids in GEO; using the first (" + ids.get( 0 )
+                    + ") as the primary reference. A curator should confirm which is primary." );
+        }
+        return ids.isEmpty() ? -1 : ids.get( 0 );
     }
 }

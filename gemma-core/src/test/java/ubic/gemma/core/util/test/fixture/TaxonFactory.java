@@ -62,8 +62,8 @@ import javax.annotation.Nullable;
  *       on a taxon distinct from the seeded set (e.g. yeast-second-NCBI
  *       cases, taxon admin tests). Generates a randomized NCBI id (50000+
  *       to stay clear of any real assignment) and a random scientific +
- *       common name. The factory persists through {@link
- *       TaxonService#findOrCreate(Taxon)} so the path mirrors the
+ *       common name. The factory persists through {@code TaxonService#findOrCreate(Taxon)}
+ *       so the path mirrors the
  *       production admin flow.</li>
  *   <li>Default {@code isGenesUsable=true} for ad-hoc taxa — this is what
  *       almost every test wants. Use {@link AdHocBuilder#withGenesUsable(boolean)}
@@ -213,8 +213,8 @@ public class TaxonFactory {
     }
 
     /**
-     * Builder for a newly-created ad-hoc taxon. Persists via {@link
-     * TaxonService#findOrCreate(Taxon)} so the production admin path
+     * Builder for a newly-created ad-hoc taxon. Persists via {@code TaxonService#findOrCreate(Taxon)}
+     * so the production admin path
      * fires. Single-use; call {@link #build()} once.
      */
     public static final class AdHocBuilder {

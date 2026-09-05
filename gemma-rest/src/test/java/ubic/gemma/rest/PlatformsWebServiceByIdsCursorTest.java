@@ -55,7 +55,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link PlatformsWebService#getPlatformsByIds(PlatformArrayArg, FilterArg, OffsetArg, LimitArg, SortArg, CursorArg)}
+ * {@code PlatformsWebService#getPlatformsByIds(PlatformArrayArg, FilterArg, OffsetArg, LimitArg, SortArg, CursorArg)}
  * — the {@code GET /platforms/{platform}} variant (step 1x). Pure Mockito — the goal is to verify
  * the WebService routes cursor vs offset modes to the right helper and emits the right response
  * wrapper, and that the path-derived id-set predicate is preserved in cursor mode (not silently

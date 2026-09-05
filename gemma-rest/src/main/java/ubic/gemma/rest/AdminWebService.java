@@ -311,8 +311,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<CacheListResponse> getCaches() {
         Collection<String> names = cacheManager.getCacheNames();
@@ -446,8 +445,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<HibernateStatsResponse> getHibernateStats() {
         Statistics s = sessionFactory.getStatistics();
@@ -510,8 +508,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<JobsListResponse> getJobs() {
         Collection<SubmittedTask> tasks = taskRunningService.getSubmittedTasks();
@@ -584,7 +581,7 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "202",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectImportGeoBatchResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Body missing, accession list empty, or batch over cap",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
@@ -650,7 +647,7 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "202",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectMultifunctionalityRecomputeResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Missing or malformed taxon identifier",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No taxon matches the supplied identifier",
@@ -700,8 +697,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No platform matches the supplied identifier",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
@@ -730,13 +726,15 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "202",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectSubmittedJobResponse.class)))
             })
     public Response submitPlatformReportsRegeneration() {
         String jobId = taskRunningService.submitTaskCommand( new ArrayDesignReportTaskCommand( true ) );
+        SubmittedJobResponse body = new SubmittedJobResponse();
+        body.submittedJobId = jobId;
         return Response.status( Response.Status.ACCEPTED )
                 .location( URI.create( "/tasks/" + jobId ) )
-                .entity( respond( Collections.singletonMap( "submittedJobId", jobId ) ) )
+                .entity( respond( body ) )
                 .build();
     }
 
@@ -760,8 +758,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<SearchIndicesResponse> getSearchIndices() {
         SearchMapping mapping = Search.mapping( sessionFactory );
@@ -865,7 +862,7 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "202",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectReindexAcceptedResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Unknown entity name.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "Another reindex is already running.",
@@ -941,8 +938,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<SystemSnapshotResponse> getSystem() {
         MemoryMXBean mem = ManagementFactory.getMemoryMXBean();
@@ -988,8 +984,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<SessionsResponse> getSessions() {
         List<Object> principals = sessionRegistry.getAllPrincipals();
@@ -1059,8 +1054,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<OntologiesResponse> getOntologies(
             @QueryParam("includeTermCount") @DefaultValue("false") boolean includeTermCount ) {
@@ -1113,7 +1107,7 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "202", description = "Refresh accepted; the initialization thread is now running.",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectOntologyRefreshResponse.class))),
                     @ApiResponse(responseCode = "404", description = "No ontology with that name.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "A refresh is already in progress for that ontology.",
@@ -1241,7 +1235,7 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "202", description = "Rebuild started.",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectOntologyRefreshResponse.class))),
                     @ApiResponse(responseCode = "404", description = "Ontology not found or doesn't support slim rebuild.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "Rebuild already in progress.",
@@ -1394,7 +1388,7 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "202", description = "Correction task submitted.",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))) })
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectObsoleteTermCorrectionSubmission.class))) })
     public Response applyObsoleteTermCorrections(
             @Parameter(description = "Set false to actually write. Defaults to a dry run.")
             @QueryParam("dryRun") @DefaultValue("true") Boolean dryRun,
@@ -1445,7 +1439,7 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectDbPoolResponse.class))),
                     @ApiResponse(responseCode = "503", description = "Configured DataSource is not HikariCP",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
@@ -1499,8 +1493,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<CurationAgentHealthResponse> getCurationAgentHealth() {
         CurationAgentHealthResponse body = new CurationAgentHealthResponse();
@@ -1556,8 +1549,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Empty or missing accessions list",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "502", description = "GEO E-utilities request failed",
@@ -1686,10 +1678,10 @@ public class AdminWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             description = "dryRun=true — candidates inline.",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                            content = @Content(schema = @Schema(implementation = GeoScrapeDryRunResponse.class))),
                     @ApiResponse(responseCode = "202",
                             description = "dryRun=false — async submission.",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectGeoScrapeSubmitResponse.class)))
             })
     public Response submitGeoScrape( @Nullable GeoScrapeRequest body ) {
         boolean dryRun = body != null && body.dryRun != null && body.dryRun;
@@ -1759,8 +1751,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No scrape has been run.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
@@ -1809,8 +1800,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<CurationStatusResponse> getCurationStatus() {
         Date now = new Date();
@@ -1877,8 +1867,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<UsersListResponse> getUsers(
             @QueryParam("includeDeleted") @DefaultValue("false") boolean includeDeleted ) {
@@ -1944,7 +1933,7 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "201",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectCreateUserResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Missing or malformed username/email",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "Username or email already taken",
@@ -1997,8 +1986,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Empty body",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No user with that username",
@@ -2060,8 +2048,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No user with that username",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "User is soft-deleted",
@@ -2153,7 +2140,7 @@ public class AdminWebService {
             },
             responses = {
                     @ApiResponse(responseCode = "201",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectBlacklistedValueObject.class))),
                     @ApiResponse(responseCode = "400", description = "Body missing, accession blank, reason blank, or unrecognised prefix",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "Accession is already blacklisted",
@@ -2248,8 +2235,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class)))
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<BlacklistListResponse> listBlacklistEntries(
             @QueryParam("limit") @DefaultValue("100") int limit,
@@ -2861,5 +2847,83 @@ public class AdminWebService {
         /** Number of entries actually returned in {@code entries}. */
         public int count;
         public List<BlacklistedValueObject> entries;
+    }
+
+    /** Payload of {@code POST /admin/tasks/platform-reports}: the id of the task that was queued. */
+    public static class SubmittedJobResponse {
+        /** Poll {@code GET /tasks/{id}} with this. */
+        public String submittedJobId;
+    }
+
+    /*
+     * Documentation-only bindings of ResponseDataObject<T>.
+     *
+     * The endpoints below return jakarta.ws.rs.core.Response so they can set 201/202 and a Location
+     * header, which leaves swagger-core nothing to introspect: useReturnTypeSchema resolves Response
+     * itself, and naming the raw ResponseDataObject erases T and documents `data` as an untyped
+     * object. Naming a concrete subclass is the only way an annotation can carry a type argument.
+     * Each one is a schema name, never instantiated; the endpoint still returns the generic type.
+     * Same pattern as DatasetsWebService.QueriedAndFilteredAndInferredAndPaginatedResponseDataObject-
+     * DifferentialExpressionAnalysisResultByGeneValueObject.
+     */
+
+    public static class ResponseDataObjectImportGeoBatchResponse extends ResponseDataObject<ImportGeoBatchResponse> {
+        public ResponseDataObjectImportGeoBatchResponse( ImportGeoBatchResponse payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectMultifunctionalityRecomputeResponse extends ResponseDataObject<MultifunctionalityRecomputeResponse> {
+        public ResponseDataObjectMultifunctionalityRecomputeResponse( MultifunctionalityRecomputeResponse payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectSubmittedJobResponse extends ResponseDataObject<SubmittedJobResponse> {
+        public ResponseDataObjectSubmittedJobResponse( SubmittedJobResponse payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectReindexAcceptedResponse extends ResponseDataObject<ReindexAcceptedResponse> {
+        public ResponseDataObjectReindexAcceptedResponse( ReindexAcceptedResponse payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectOntologyRefreshResponse extends ResponseDataObject<OntologyRefreshResponse> {
+        public ResponseDataObjectOntologyRefreshResponse( OntologyRefreshResponse payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectObsoleteTermCorrectionSubmission extends ResponseDataObject<ObsoleteTermCorrectionSubmission> {
+        public ResponseDataObjectObsoleteTermCorrectionSubmission( ObsoleteTermCorrectionSubmission payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectDbPoolResponse extends ResponseDataObject<DbPoolResponse> {
+        public ResponseDataObjectDbPoolResponse( DbPoolResponse payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectGeoScrapeSubmitResponse extends ResponseDataObject<GeoScrapeSubmitResponse> {
+        public ResponseDataObjectGeoScrapeSubmitResponse( GeoScrapeSubmitResponse payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectCreateUserResponse extends ResponseDataObject<CreateUserResponse> {
+        public ResponseDataObjectCreateUserResponse( CreateUserResponse payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectBlacklistedValueObject extends ResponseDataObject<BlacklistedValueObject> {
+        public ResponseDataObjectBlacklistedValueObject( BlacklistedValueObject payload ) {
+            super( payload );
+        }
     }
 }

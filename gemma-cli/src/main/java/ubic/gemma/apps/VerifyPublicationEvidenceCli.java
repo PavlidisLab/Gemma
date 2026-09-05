@@ -288,12 +288,19 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
      * this state are the whole exposure set for the next GEO refresh, which sets a primary precisely
      * when there is none.
      */
-    private void handleMissingPrimary( ExpressionExperiment ee, String accession, List<Integer> geoIds ) {
+    private void handleMissingPrimary( ExpressionExperiment ee, String accession, @Nullable List<Integer> geoIds ) {
         if ( !fill ) {
             // GEO is not consulted in a verify-only run: it cannot change anything here, and asking
             // would cost a request per dataset to write a note nobody can act on until --fill runs.
             record( ee, accession, "no_primary", null, null, null,
                     "Gemma has no primary; run with --" + FILL_OPTION + " to ask GEO for one" );
+            return;
+        }
+        if ( geoIds == null ) {
+            // unreadable, not empty: say nothing about what GEO lists, and fill nothing in
+            record( ee, accession, "geo_unreadable", null, null, null,
+                    "could not read " + accession + " from GEO; no conclusion drawn" );
+            addWarningObject( ee, "Could not read " + accession + " from GEO." );
             return;
         }
         if ( geoIds.isEmpty() ) {
@@ -347,8 +354,15 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
     /**
      * Gemma has a primary. Nothing here ever changes the link — only whether Gemma can say it checked.
      */
-    private void handleExistingPrimary( ExpressionExperiment ee, String accession, List<Integer> geoIds,
+    private void handleExistingPrimary( ExpressionExperiment ee, String accession, @Nullable List<Integer> geoIds,
             BibliographicReference primary, PublicationAssociation held, @Nullable String gemmaPmid ) {
+        if ( geoIds == null ) {
+            // unreadable, not empty: the held evidence code stands, because nothing was verified
+            record( ee, accession, "geo_unreadable", gemmaPmid, null, String.valueOf( held.getEvidenceCode() ),
+                    "could not read " + accession + " from GEO; existing evidence left as-is" );
+            addWarningObject( ee, "Could not read " + accession + " from GEO." );
+            return;
+        }
         if ( geoIds.isEmpty() ) {
             record( ee, accession, "geo_states_none", gemmaPmid, null, String.valueOf( held.getEvidenceCode() ),
                     "Gemma has a primary GEO no longer lists; not touched" );
@@ -398,6 +412,18 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
         addSuccessObject( ee, "Verified against GEO; IIA -> TAS." );
     }
 
+    /**
+     * @return the ids GEO lists, empty when GEO states there are none, or {@code null} when GEO could
+     * not be read at all
+     * <p>
+     * The null is the point. This used to answer an unreadable GEO with an empty list, which every
+     * caller below reads as "GEO states no publication" — so a GEO that was down, throttled, or (as
+     * on 2026-09-02) serving a reCAPTCHA challenge produced a run that recorded
+     * {@code geo_states_none} against the whole corpus, each with a dated {@link #geoEvidence} line
+     * asserting the comparison had been made. Findings are quotable; a finding built on a failed
+     * fetch is worse than no finding.
+     */
+    @Nullable
     private List<Integer> fetchFromGeo( String accession ) {
         try {
             if ( paceMillis > 0 ) {
@@ -409,7 +435,7 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
             throw new RuntimeException( "Interrupted while pacing GEO requests.", e );
         } catch ( IOException e ) {
             log.warn( "Could not read " + accession + " from GEO: " + e.getMessage() );
-            return Collections.emptyList();
+            return null;
         }
     }
 

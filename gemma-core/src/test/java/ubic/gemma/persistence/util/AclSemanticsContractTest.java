@@ -113,7 +113,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *   <li>ACL entries materialising the four ACL situations.</li>
  * </ul>
  *
- * <b>Callsite enumeration.</b> The {@link #CALLSITES} list captures every
+ * <b>Callsite enumeration.</b> The {@code CALLSITES} list captures every
  * place in {@code gemma-core/src/main/java} that calls one of the three
  * ACL clause-forming helpers. Each entry pairs a stable human-readable
  * description with a {@link Supplier} that either invokes the underlying

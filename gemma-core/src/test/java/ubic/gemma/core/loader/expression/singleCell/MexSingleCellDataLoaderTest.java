@@ -367,7 +367,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
     }
 
     /**
-     * Truth-source variant of {@link #testGSE141552()}. Downloads the full ~50-200 MB GSE141552 bundle from NCBI FTP
+     * Truth-source variant of {@link #testGSE141552(Path)}. Downloads the full ~50-200 MB GSE141552 bundle from NCBI FTP
      * at test time and asserts against the upstream cell / barcode / vector counts. Kept as a regression guard so
      * that the chopped fixture's faithfulness can be re-verified on demand.
      */
@@ -439,7 +439,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest5 {
     }
 
     /**
-     * Truth-source variant of {@link #testGSE125708()}. Downloads the full GSE125708 bundle from NCBI FTP at test
+     * Truth-source variant of {@link #testGSE125708(Path)}. Downloads the full GSE125708 bundle from NCBI FTP at test
      * time and asserts against the upstream cell count. Kept as a regression guard so that the chopped fixture's
      * faithfulness can be re-verified on demand.
      */
