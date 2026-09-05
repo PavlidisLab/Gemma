@@ -121,6 +121,22 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
     @Column(name = "NEEDS_ATTENTION", nullable = false, columnDefinition = "TINYINT")
     private boolean needsAttention;
 
+    /**
+     * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
+     * backing this factor value as a curated claim — the same verbatim provenance
+     * {@link ubic.gemma.model.common.description.Characteristic#getSupportingEvidence()} carries for a tag or a
+     * statement. Stored as-is; Gemma does not parse or query it, so the agents repo owns the evidence schema.
+     * <p>
+     * 🛑 Distinct from the evidence on this value's {@link #getCharacteristics() statements}, which is not a
+     * fallback for it. A statement's evidence backs the triple; this backs the VALUE — its label, its baseline
+     * flag, its measurement, the samples it covers — and a value carrying no statements at all (a continuous
+     * value, a plain free-text one) can still have a curator's justification behind it. Null when none was
+     * recorded.
+     */
+    @Nullable
+    @Column(name = "SUPPORTING_EVIDENCE", columnDefinition = "TEXT")
+    private String supportingEvidence;
+
     @Transient
     private ExpressionExperiment securityOwner = null;
 
@@ -218,6 +234,15 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
 
     public void setNeedsAttention( boolean troubled ) {
         this.needsAttention = troubled;
+    }
+
+    @Nullable
+    public String getSupportingEvidence() {
+        return supportingEvidence;
+    }
+
+    public void setSupportingEvidence( @Nullable String supportingEvidence ) {
+        this.supportingEvidence = supportingEvidence;
     }
 
     @Transient

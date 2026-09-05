@@ -127,6 +127,21 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     private String baselineRelevanceReason;
 
     /**
+     * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
+     * backing this factor as a curated claim — the same verbatim provenance
+     * {@link ubic.gemma.model.common.description.Characteristic#getSupportingEvidence()} carries for a tag or a
+     * statement. Stored as-is; Gemma does not parse or query it, so the agents repo owns the evidence schema.
+     * <p>
+     * A factor is not a {@link ubic.gemma.model.common.description.Characteristic}, so it has no evidence slot to
+     * inherit. Its {@link #getCategory() category} is one, but a category is nullable and gets replaced during
+     * curation, which would drop the factor's justification as a side effect of an unrelated edit. Hence a column
+     * of its own. Null on factors with no recorded evidence.
+     */
+    @Nullable
+    @Column(name = "SUPPORTING_EVIDENCE", columnDefinition = "TEXT")
+    private String supportingEvidence;
+
+    /**
      * No-arg constructor added to satisfy javabean contract
      */
     public ExperimentalFactor() {
@@ -235,6 +250,15 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
 
     public void setBaselineRelevanceReason( @Nullable String baselineRelevanceReason ) {
         this.baselineRelevanceReason = baselineRelevanceReason;
+    }
+
+    @Nullable
+    public String getSupportingEvidence() {
+        return supportingEvidence;
+    }
+
+    public void setSupportingEvidence( @Nullable String supportingEvidence ) {
+        this.supportingEvidence = supportingEvidence;
     }
 
     @Override

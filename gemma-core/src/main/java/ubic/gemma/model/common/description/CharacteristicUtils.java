@@ -371,6 +371,26 @@ public class CharacteristicUtils {
         return evidence.toString();
     }
 
+    /**
+     * Whether a supporting-evidence payload actually records something — i.e. whether it would survive
+     * {@link #serializeSupportingEvidence}.
+     * <p>
+     * 🛑 The point is that {@code []} is NOT a record of anything, and must not be read as one. Every write
+     * path on the curation route treats a null evidence field as "no change", so that a client which does not
+     * carry provenance cannot wipe provenance somebody else recorded. An empty array is that same statement —
+     * "I have none" — and a client building a payload from a reference file stamps it on every entity that has
+     * no evidence, which is most of them. Testing {@code != null} lets that payload through the guard, and
+     * because the serializer maps an empty tree to {@code null} the write then CLEARS the column: a wipe of
+     * every stored block it touches, reported as an ordinary success.
+     * <p>
+     * So the guard asks this instead of asking for non-null. The consequence is that evidence cannot be
+     * cleared through the commit route at all — which is the safe direction to be wrong in, and leaves an
+     * explicit erase to be designed if one is ever wanted.
+     */
+    public static boolean hasRecordedEvidence( @Nullable JsonNode evidence ) {
+        return serializeSupportingEvidence( evidence ) != null;
+    }
+
     private static final ObjectMapper SUPPORTING_EVIDENCE_MAPPER = new ObjectMapper();
 
     /**

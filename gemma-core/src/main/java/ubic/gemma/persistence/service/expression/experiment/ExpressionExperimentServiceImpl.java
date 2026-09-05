@@ -1334,14 +1334,14 @@ public class ExpressionExperimentServiceImpl
             byContent.putIfAbsent( statementContentKey( s ), s );
         }
         for ( StatementValueObject ps : proposed ) {
-            if ( ps.getSupportingEvidence() == null && ps.getEvidenceCode() == null ) {
+            if ( !CharacteristicUtils.hasRecordedEvidence( ps.getSupportingEvidence() ) && ps.getEvidenceCode() == null ) {
                 continue;
             }
             Statement match = ps.getId() != null ? byId.get( ps.getId() ) : byContent.get( statementContentKey( ps ) );
             if ( match == null ) {
                 continue; // a creation; statementsChanged covers it
             }
-            if ( ps.getSupportingEvidence() != null ) {
+            if ( CharacteristicUtils.hasRecordedEvidence( ps.getSupportingEvidence() ) ) {
                 String proposedEvidence = CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() );
                 if ( !Objects.equals( proposedEvidence, match.getSupportingEvidence() ) ) {
                     return true;
@@ -1452,6 +1452,11 @@ public class ExpressionExperimentServiceImpl
             ef.getCategory().setValue( pf.getCategory().getValue() );
             ef.getCategory().setValueUri( pf.getCategory().getValueUri() );
         }
+        // Provenance: null = "no change", the same round-trip-safe convention `value` and `isBaseline` use on a
+        // factor value. A client that does not carry evidence cannot wipe evidence somebody else recorded.
+        if ( CharacteristicUtils.hasRecordedEvidence( pf.getSupportingEvidence() ) ) {
+            ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
+        }
         experimentalFactorService.update( ef );
     }
 
@@ -1482,6 +1487,12 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getMeasurementObject() != null ) {
                     applyMeasurementFields( existing, pv.getMeasurementObject() );
                 }
+                // Provenance on the VALUE itself, distinct from the evidence on its statements: same
+                // null = "no change" convention again.
+                if ( CharacteristicUtils.hasRecordedEvidence( pv.getSupportingEvidence() ) ) {
+                    existing.setSupportingEvidence(
+                            CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
+                }
             }
         }
         // Siblings are deliberately left alone. Clearing them made a second baseline impossible to record at all:
@@ -1508,6 +1519,7 @@ public class ExpressionExperimentServiceImpl
             cat.setValueUri( pf.getCategory().getValueUri() );
             ef.setCategory( cat );
         }
+        ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
         ef = experimentalFactorService.create( ef );
         if ( pf.getValues() != null ) {
             for ( FactorValueBasicValueObject pv : pf.getValues() ) {
@@ -1539,6 +1551,7 @@ public class ExpressionExperimentServiceImpl
         if ( pv.getMeasurementObject() != null ) {
             applyMeasurementFields( fv, pv.getMeasurementObject() );
         }
+        fv.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
         return factorValueService.create( fv );
     }
 
@@ -1839,7 +1852,7 @@ public class ExpressionExperimentServiceImpl
         }
         // Supporting evidence follows the same null = "no change" convention as the rest of the payload, so a
         // client that doesn't carry provenance cannot wipe provenance somebody else recorded.
-        if ( ps.getSupportingEvidence() != null ) {
+        if ( CharacteristicUtils.hasRecordedEvidence( ps.getSupportingEvidence() ) ) {
             s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
         }
         // Same null = "no change" convention for the evidence code. A statement the payload says nothing about

@@ -4330,6 +4330,27 @@ public class DatasetsWebService {
         /** {@code "categorical"} | {@code "continuous"}. */
         @Nullable
         private String type;
+        /**
+         * Verbatim provenance for this FACTOR — a JSON array of {@code {quote, source, location, …}} items.
+         * Stored and served opaquely; the agents repo owns the schema.
+         * <p>
+         * Backs the factor as a curated claim: that this axis exists, is named this, and is categorised this way.
+         * Its values and their statements carry their own evidence at their own levels, and none of the three
+         * stands in for another.
+         * <p>
+         * Null / omitted leaves any evidence already recorded untouched, so a client that does not carry
+         * provenance cannot wipe provenance somebody else recorded.
+         * <p>
+         * 🛑 An EMPTY ARRAY is the same as omitting it, NOT an erase. A payload built from a reference
+         * file stamps {@code []} on every entity that has no evidence, and reading that as "clear it"
+         * would wipe stored provenance on every entity such a write touches while reporting an ordinary
+         * success. There is deliberately no way to clear evidence through this route.
+         */
+        @Nullable
+        @Schema(description = "Verbatim provenance backing this factor — a JSON array of {quote, source, location} "
+                + "items, stored opaquely. Omitting it, sending null, or sending [] all leave any evidence already "
+                + "recorded untouched; there is no way to clear evidence through this route.")
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
         private Section<FactorValueCommit> factorValues = new Section<>();
     }
 
@@ -4348,6 +4369,29 @@ public class DatasetsWebService {
         /** {@code null} (or omitted) = leave sample assignments untouched; a list ({@code []} = clear) = set-replace. */
         @Nullable
         private List<String> biomaterialShortNames;
+        /**
+         * Verbatim provenance for this factor VALUE — a JSON array of {@code {quote, source, location, …}} items.
+         * Stored and served opaquely; the agents repo owns the schema.
+         * <p>
+         * 🛑 Not a fallback for {@link StatementCommit#getSupportingEvidence()} and not superseded by it. A
+         * statement's evidence backs its triple; this backs the value — its label, its baseline flag, its
+         * measurement, the samples it covers — and a value carrying no statements at all (a continuous value, a
+         * plain free-text one) still has a curator behind those choices. Both may be sent on one commit and both
+         * are kept.
+         * <p>
+         * Null / omitted leaves any evidence already recorded untouched, same as everywhere else on this route.
+         * <p>
+         * 🛑 An EMPTY ARRAY is the same as omitting it, NOT an erase. A payload built from a reference
+         * file stamps {@code []} on every entity that has no evidence, and reading that as "clear it"
+         * would wipe stored provenance on every entity such a write touches while reporting an ordinary
+         * success. There is deliberately no way to clear evidence through this route.
+         */
+        @Nullable
+        @Schema(description = "Verbatim provenance backing this factor value — a JSON array of {quote, source, "
+                + "location} items, stored opaquely. Distinct from the evidence on its statements, which backs the "
+                + "triple rather than the value. Omitting it, sending null, or sending [] all leave any evidence "
+                + "already recorded untouched; there is no way to clear evidence through this route.")
+        private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
         private Section<StatementCommit> statements = new Section<>();
     }
 
@@ -4373,8 +4417,16 @@ public class DatasetsWebService {
          * <p>
          * Null / omitted leaves any evidence already recorded untouched, so a client that does not carry
          * provenance cannot wipe provenance somebody else recorded.
+         * <p>
+         * 🛑 An EMPTY ARRAY is the same as omitting it, NOT an erase. A payload built from a reference
+         * file stamps {@code []} on every entity that has no evidence, and reading that as "clear it"
+         * would wipe stored provenance on every entity such a write touches while reporting an ordinary
+         * success. There is deliberately no way to clear evidence through this route.
          */
         @Nullable
+        @Schema(description = "Verbatim provenance backing this statement — a JSON array of {quote, source, "
+                + "location} items, stored opaquely. Omitting it, sending null, or sending [] all leave any "
+                + "evidence already recorded untouched; there is no way to clear evidence through this route.")
         private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
         /**
          * How this statement was arrived at, as a {@link GOEvidenceCode} name. Accepted case-insensitively; an
@@ -4548,6 +4600,7 @@ public class DatasetsWebService {
             out.setDescription( fc.getDescription() );
             out.setType( fc.getType() );
             out.setCategory( ontologyToCharacteristic( fc.getCategory() ) );
+            out.setSupportingEvidence( fc.getSupportingEvidence() );
             out.setValues( mapFactorValues( fc, curFactor, parentKey, gsmToBmId, plan, bmToFvIds,
                     "design.factors[" + refOrIndex( fc.getClientRef(), factorIdx ) + "]" ) );
             outFactors.add( out );
@@ -4640,6 +4693,7 @@ public class DatasetsWebService {
             out.setValue( fvc.getFreeTextLabel() );
             out.setBaseline( fvc.getBaseline() );
             out.setMeasurementObject( mapMeasurement( fvc.getMeasurement() ) );
+            out.setSupportingEvidence( fvc.getSupportingEvidence() );
             out.setStatements( mapStatements( fvc, curFvs.get( fvc.getGemmaId() ),
                     location + ".factorValues[" + refOrIndex( fvc.getClientRef(), fvIdx ) + "]" ) );
             outValues.add( out );
@@ -5094,6 +5148,9 @@ public class DatasetsWebService {
                 fc.setDescription( f.getDescription() );
                 fc.setType( f.getType() );
                 fc.setCategory( termRef( f.getCategory() ) );
+                // Captured so a restore puts the factor back with the justification it had; without it a
+                // restore that was meant to change nothing would silently clear the curator's evidence.
+                fc.setSupportingEvidence( f.getSupportingEvidence() );
                 for ( FactorValueBasicValueObject v : nullSafe( f.getValues() ) ) {
                     FactorValueCommit fvc = new FactorValueCommit();
                     fvc.setGemmaId( v.getId() );
@@ -5101,6 +5158,7 @@ public class DatasetsWebService {
                     fvc.setFreeTextLabel( v.getValue() );
                     fvc.setBaseline( v.getBaseline() );
                     fvc.setMeasurement( snapshotMeasurement( v.getMeasurementObject() ) );
+                    fvc.setSupportingEvidence( v.getSupportingEvidence() );
                     // an explicit (possibly empty) list, so a restore re-asserts membership rather than
                     // leaving whatever the intervening run assigned
                     fvc.setBiomaterialShortNames( samplesByFvId.getOrDefault( v.getId(), new ArrayList<>() ) );

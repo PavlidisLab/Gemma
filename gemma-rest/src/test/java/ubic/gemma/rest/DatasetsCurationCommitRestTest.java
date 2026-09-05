@@ -150,6 +150,212 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         assertThat( note ).contains( "[split-advice]" ).contains( "do not split" );
     }
 
+    /**
+     * Provenance at the FACTOR and FACTOR VALUE levels survives the commit.
+     * <p>
+     * Neither level had anywhere to land before: {@code supportingEvidence} existed on {@code TagCommit},
+     * {@code StatementCommit} and {@code SampleCharacteristicCommit}, so a curator's justification for the
+     * factor itself, or for a value's label / baseline / measurement, was accepted by Jackson and silently
+     * dropped. Measured across the reference 500 that was 78 of 493 evidence blocks — 68 on factor values,
+     * 10 on factors.
+     * <p>
+     * The statement evidence is asserted alongside on purpose: the three levels are separate slots, and the
+     * failure this guards against is one of them being made to stand in for another.
+     */
+    @Test
+    public void testCommitPersistsFactorAndFactorValueSupportingEvidence() {
+        String body = "{"
+                + "\"design\":{"
+                + "\"factors\":{\"items\":[{"
+                + "\"clientRef\":\"F1\",\"name\":\"tissue\",\"category\":{\"label\":\"organism part\"},"
+                + "\"supportingEvidence\":[{\"quote\":\"villous stroma vs whole placenta\","
+                + "\"source\":\"overall_design\",\"location\":\"GSE-design\"}],"
+                + "\"factorValues\":{\"items\":[{"
+                + "\"clientRef\":\"FV1\",\"freeTextLabel\":\"stroma\","
+                + "\"supportingEvidence\":[{\"quote\":\"organism part: stroma\","
+                + "\"source\":\"characteristic\",\"location\":\"GSM-fv\"}],"
+                + "\"statements\":{\"items\":[{"
+                + "\"clientRef\":\"S1\",\"category\":{\"label\":\"organism part\"},"
+                + "\"subject\":{\"label\":\"placental villous stroma\","
+                + "\"uri\":\"http://purl.obolibrary.org/obo/UBERON_8600023\"},"
+                + "\"supportingEvidence\":[{\"quote\":\"stroma\",\"source\":\"characteristic\","
+                + "\"location\":\"GSM-stmt\"}]}]}"
+                + "}]}"
+                + "}]}"
+                + "}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( body ) ) ) {
+            assertOk( r );
+        }
+
+        ExperimentalDesignValueObject design = expressionExperimentService
+                .getExperimentalDesignValueObject( expressionExperimentService.load( ee.getId() ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry treatment = design.getExperimentalFactors().stream()
+                .filter( f -> "tissue".equals( f.getName() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "new 'tissue' factor was not persisted" ) );
+
+        assertThat( treatment.getSupportingEvidence() ).as( "factor-level evidence survived" ).isNotNull();
+        assertThat( treatment.getSupportingEvidence().get( 0 ).get( "location" ).asText() )
+                .isEqualTo( "GSE-design" );
+
+        FactorValueBasicValueObject drugX = treatment.getValues().stream()
+                .filter( v -> "stroma".equals( v.getValue() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "new 'stroma' factor value was not persisted" ) );
+
+        assertThat( drugX.getSupportingEvidence() ).as( "factor-value-level evidence survived" ).isNotNull();
+        assertThat( drugX.getSupportingEvidence().get( 0 ).get( "location" ).asText() ).isEqualTo( "GSM-fv" );
+
+        // The three slots are distinct: the value did not inherit the statement's evidence, nor the reverse.
+        assertThat( drugX.getStatements() ).hasSize( 1 );
+        assertThat( drugX.getStatements().get( 0 ).getSupportingEvidence() ).isNotNull();
+        assertThat( drugX.getStatements().get( 0 ).getSupportingEvidence().get( 0 ).get( "location" ).asText() )
+                .as( "statement kept its own evidence, not the value's" )
+                .isEqualTo( "GSM-stmt" );
+    }
+
+    /**
+     * A second commit that omits {@code supportingEvidence} leaves the recorded evidence alone.
+     * <p>
+     * The design section is a carry-forward mapper: a client that mentions an existing factor value to change
+     * one field re-sends the whole value, and the fields it does not carry arrive as null. Treating that null
+     * as "clear it" would let any client with no provenance of its own erase provenance somebody else
+     * recorded, just by editing a label. Same null = "no change" rule {@code value} and {@code isBaseline}
+     * already follow.
+     */
+    @Test
+    public void testOmittedEvidenceDoesNotWipeStoredFactorValueEvidence() {
+        String seed = "{"
+                + "\"design\":{\"factors\":{\"items\":[{"
+                + "\"clientRef\":\"F1\",\"name\":\"treatment\",\"category\":{\"label\":\"treatment\"},"
+                + "\"supportingEvidence\":[{\"quote\":\"drug X vs vehicle\",\"source\":\"overall_design\"}],"
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"freeTextLabel\":\"drugX\","
+                + "\"supportingEvidence\":[{\"quote\":\"treatment: drug X\",\"source\":\"characteristic\"}]"
+                + "}]}}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( seed ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+
+        ExperimentalDesignValueObject afterSeed = expressionExperimentService
+                .getExperimentalDesignValueObject( expressionExperimentService.load( ee.getId() ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry seeded = afterSeed.getExperimentalFactors().stream()
+                .filter( f -> "treatment".equals( f.getName() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "seed factor was not persisted" ) );
+        FactorValueBasicValueObject seededFv = seeded.getValues().stream()
+                .filter( v -> "drugX".equals( v.getValue() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "seed factor value was not persisted" ) );
+        assertThat( seededFv.getSupportingEvidence() ).as( "precondition: evidence was stored" ).isNotNull();
+
+        // Relabel the value, carrying no provenance at all.
+        String relabel = "{"
+                + "\"design\":{\"factors\":{\"items\":[{"
+                + "\"gemmaId\":" + seeded.getId() + ","
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":" + seededFv.getId() + ","
+                + "\"freeTextLabel\":\"drug X (10uM)\"}]}}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( relabel ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+        }
+
+        ExperimentalDesignValueObject after = expressionExperimentService
+                .getExperimentalDesignValueObject( expressionExperimentService.load( ee.getId() ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = after.getExperimentalFactors().stream()
+                .filter( f -> seeded.getId().equals( f.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "factor disappeared" ) );
+        FactorValueBasicValueObject fv = factor.getValues().stream()
+                .filter( v -> seededFv.getId().equals( v.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "factor value disappeared" ) );
+
+        assertThat( fv.getValue() ).as( "the relabel did land" ).isEqualTo( "drug X (10uM)" );
+        assertThat( fv.getSupportingEvidence() )
+                .as( "omitting evidence did not erase the evidence already recorded" )
+                .isNotNull();
+        assertThat( factor.getSupportingEvidence() )
+                .as( "the factor's evidence survived a commit that did not mention it" )
+                .isNotNull();
+    }
+
+    /**
+     * An EMPTY evidence array is "I have none", not "clear what is there".
+     * <p>
+     * The distinction is not academic: a payload built from a reference file stamps {@code []} on every entity
+     * that has no evidence, which is most of them. Guarding on {@code != null} lets that through — an empty
+     * array is not null — and the serializer maps an empty tree to {@code null}, so the write then clears the
+     * column on every entity the payload touches and reports an ordinary success. CAB coerces {@code []} away
+     * client-side for exactly this reason; the server must not depend on every client remembering to.
+     * <p>
+     * Asserted at all three levels because the guard is one predicate and a level left out of it is a level
+     * where the wipe still happens.
+     */
+    @Test
+    public void testAnEmptyEvidenceArrayDoesNotEraseStoredEvidence() {
+        String seed = "{"
+                + "\"design\":{\"factors\":{\"items\":[{"
+                + "\"clientRef\":\"F1\",\"name\":\"tissue\",\"category\":{\"label\":\"organism part\"},"
+                + "\"supportingEvidence\":[{\"quote\":\"villous stroma\",\"source\":\"overall_design\"}],"
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"freeTextLabel\":\"stroma\","
+                + "\"supportingEvidence\":[{\"quote\":\"organism part: stroma\",\"source\":\"characteristic\"}],"
+                + "\"statements\":{\"items\":[{\"clientRef\":\"S1\","
+                + "\"category\":{\"label\":\"organism part\"},"
+                + "\"subject\":{\"label\":\"placental villous stroma\","
+                + "\"uri\":\"http://purl.obolibrary.org/obo/UBERON_8600023\"},"
+                + "\"supportingEvidence\":[{\"quote\":\"stroma\",\"source\":\"characteristic\"}]}]}"
+                + "}]}}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( seed ) ) ) {
+            assertOk( r );
+        }
+
+        ExperimentalDesignValueObject afterSeed = expressionExperimentService
+                .getExperimentalDesignValueObject( expressionExperimentService.load( ee.getId() ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry seeded = afterSeed.getExperimentalFactors().stream()
+                .filter( f -> "tissue".equals( f.getName() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "seed factor was not persisted" ) );
+        FactorValueBasicValueObject seededFv = seeded.getValues().stream()
+                .filter( v -> "stroma".equals( v.getValue() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "seed factor value was not persisted" ) );
+        Long stmtId = seededFv.getStatements().get( 0 ).getId();
+        assertThat( seeded.getSupportingEvidence() ).as( "precondition: factor evidence stored" ).isNotNull();
+        assertThat( seededFv.getSupportingEvidence() ).as( "precondition: value evidence stored" ).isNotNull();
+        assertThat( seededFv.getStatements().get( 0 ).getSupportingEvidence() )
+                .as( "precondition: statement evidence stored" ).isNotNull();
+
+        // Now re-send every level with an explicitly EMPTY evidence array.
+        String wipe = "{"
+                + "\"design\":{\"factors\":{\"items\":[{"
+                + "\"gemmaId\":" + seeded.getId() + ",\"supportingEvidence\":[],"
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":" + seededFv.getId() + ","
+                + "\"supportingEvidence\":[],"
+                + "\"statements\":{\"items\":[{\"gemmaId\":" + stmtId + ",\"supportingEvidence\":[]}]}"
+                + "}]}}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( wipe ) ) ) {
+            assertOk( r );
+        }
+
+        ExperimentalDesignValueObject after = expressionExperimentService
+                .getExperimentalDesignValueObject( expressionExperimentService.load( ee.getId() ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = after.getExperimentalFactors().stream()
+                .filter( f -> seeded.getId().equals( f.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "factor disappeared" ) );
+        FactorValueBasicValueObject fv = factor.getValues().stream()
+                .filter( v -> seededFv.getId().equals( v.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "factor value disappeared" ) );
+
+        assertThat( factor.getSupportingEvidence() )
+                .as( "[] did not erase the factor's evidence" ).isNotNull();
+        assertThat( fv.getSupportingEvidence() )
+                .as( "[] did not erase the factor value's evidence" ).isNotNull();
+        assertThat( fv.getStatements() ).isNotEmpty();
+        assertThat( fv.getStatements().get( 0 ).getSupportingEvidence() )
+                .as( "[] did not erase the statement's evidence" ).isNotNull();
+    }
+
     @Test
     public void testPreflightDesignWritesNothing() {
         long factorCountBefore = expressionExperimentService.getExperimentalDesignValueObject( ee )

@@ -13,6 +13,7 @@ package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,6 +21,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
@@ -129,6 +131,22 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
         @Nullable
         private CharacteristicValueObject category;
 
+        /**
+         * Verbatim provenance backing this FACTOR — a JSON array of {@code {quote, source, location, …}} items
+         * the curation agents emitted, stored and served opaquely.
+         * <p>
+         * Backs the factor as a curated claim: that this axis exists, is named this, and is categorised this
+         * way. Its factor values and their statements carry their own, at their own levels.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        // Provenance rather than identity, excluded from equals/hashCode for the reason
+        // StatementValueObject#supportingEvidence spells out: the same factor with and without recorded
+        // evidence is the same factor.
+        @EqualsAndHashCode.Exclude
+        @Schema(description = "Verbatim provenance backing this factor — a JSON array of {quote, source, location} items the curation agents emitted. Null when none is recorded.")
+        private JsonNode supportingEvidence;
+
         private List<FactorValueBasicValueObject> values = new ArrayList<>();
 
         public ExperimentalFactorEntry() {
@@ -142,6 +160,7 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
             if ( ef.getCategory() != null ) {
                 this.category = new CharacteristicValueObject( ef.getCategory() );
             }
+            this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( ef.getSupportingEvidence() );
             this.values = ef.getFactorValues().stream()
                     .sorted( java.util.Comparator.comparing( FactorValue::getId,
                             java.util.Comparator.nullsLast( java.util.Comparator.naturalOrder() ) ) )
