@@ -734,6 +734,48 @@ public class AnnotationSetsWebService {
         return Response.ok( out ).build();
     }
 
+    /**
+     * Erase every per-finding ruling on an annotation set so it can be
+     * dispositioned again from scratch.
+     */
+    @DELETE
+    @Path("/annotation-sets/{id}/dispositions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "Erase every ruling on an annotation set's findings",
+            description = "🛑 A DO-OVER AFTER A FAULT, not a curator changing their mind. Rulings are "
+                    + "append-only everywhere else on this route: a curator who reconsiders POSTs again "
+                    + "and both rows survive, which is what makes the history readable. This deletes, so "
+                    + "it is admin-only and is for the case where the rulings record a MISTAKE rather "
+                    + "than a decision — a calibration package rebuilt underneath them, or a wire-schema "
+                    + "bug that made them meaningless. Superseding those one at a time would preserve "
+                    + "exactly the noise the caller is trying to be rid of.\n\n"
+                    + "🛑 It does NOT undo design edits a curator made in response to those rulings. "
+                    + "Those live in the draft; discarding the draft is a separate act, and skipping it "
+                    + "leaves a dataset carrying changes whose justification has just been erased.\n\n"
+                    + "Reports `deleted`, the number of rows that went. Deleting nothing is a 200 with "
+                    + "`deleted: 0`, not a 404 — a set nobody has ruled on is already in the state this "
+                    + "asks for.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The rulings were erased.",
+                            content = @Content(schema = @Schema(implementation = ClearDispositionsResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response clearDispositions( @PathParam("id") Long id ) {
+        AnnotationSet set = requireLoad( id, "id" );
+        ClearDispositionsResponse r = new ClearDispositionsResponse();
+        r.annotationSetId = set.getId();
+        r.deleted = annotationSetDispositionService.clearDispositions( set );
+        return Response.ok( r ).build();
+    }
+
+    /** Body of {@link #clearDispositions}. */
+    public static class ClearDispositionsResponse {
+        public Long annotationSetId;
+        /** How many rulings were deleted. Zero when there were none to delete. */
+        public int deleted;
+    }
+
     private static DispositionResponse toDispositionResponse( AnnotationSetDisposition d ) {
         DispositionResponse r = new DispositionResponse();
         r.id = d.getId();

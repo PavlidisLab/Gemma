@@ -50,6 +50,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -454,6 +457,103 @@ public class TicketsWebServiceTest {
         assertThat( body.getData().getId() ).isEqualTo( 1L );
         assertThat( body.getData().getEvents() ).hasSize( 1 );
         verify( ticketService ).openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Test ticket" ), any() );
+    }
+
+    /**
+     * A caller holding a GEO accession opens a ticket in one call, and the type defaults to the category the
+     * curation store's own {@code REVIEW} maps onto.
+     */
+    @Test
+    public void testCreateTicketFromAccession_resolvesAndOpens() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 99L );
+        when( expressionExperimentService.findByAccession( "GSE12345" ) )
+                .thenReturn( Collections.singletonList( ee ) );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.CURATION ), any(), any() ) )
+                .thenReturn( ticket );
+
+        TicketsWebService.CreateTicketFromAccessionRequest req =
+                new TicketsWebService.CreateTicketFromAccessionRequest();
+        req.setAccession( "GSE12345" );
+
+        Response resp = webService.createTicketFromAccession( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.CREATED.getStatusCode() );
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Set<TicketTarget>> targets = ArgumentCaptor.forClass( Set.class );
+        verify( ticketService ).openTicket( eq( reporter ), eq( TicketType.CURATION ), any(), targets.capture() );
+        assertThat( targets.getValue() ).singleElement()
+                .satisfies( t -> assertThat( t.getTargetId() ).isEqualTo( 99L ) );
+    }
+
+    /**
+     * 🛑 ONE ACCESSION CAN NAME SEVERAL DATASETS, and all of them become targets.
+     * <p>
+     * A GSE split during import backs one experiment per split. Taking the head of the collection would open a
+     * ticket over one arbitrary part and silently drop the rest — a review that looks complete and is not, which
+     * is worse than a 400. This is the whole reason the route resolves rather than the caller.
+     */
+    @Test
+    public void testCreateTicketFromAccession_aSplitAccessionTargetsEveryPart() {
+        ExpressionExperiment a = new ExpressionExperiment();
+        a.setId( 101L );
+        ExpressionExperiment b = new ExpressionExperiment();
+        b.setId( 102L );
+        when( expressionExperimentService.findByAccession( "GSE999" ) ).thenReturn( java.util.Arrays.asList( a, b ) );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( any(), any(), any(), any() ) ).thenReturn( ticket );
+
+        TicketsWebService.CreateTicketFromAccessionRequest req =
+                new TicketsWebService.CreateTicketFromAccessionRequest();
+        req.setAccession( "GSE999" );
+
+        webService.createTicketFromAccession( req );
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Set<TicketTarget>> targets = ArgumentCaptor.forClass( Set.class );
+        verify( ticketService ).openTicket( any(), any(), any(), targets.capture() );
+        assertThat( targets.getValue() ).hasSize( 2 )
+                .extracting( TicketTarget::getTargetId )
+                .containsExactlyInAnyOrder( 101L, 102L );
+    }
+
+    /** Nothing carries the accession as an accession, so the short name is tried before giving up. */
+    @Test
+    public void testCreateTicketFromAccession_fallsBackToShortName() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 77L );
+        when( expressionExperimentService.findByAccession( "GSE4242" ) ).thenReturn( Collections.emptyList() );
+        when( expressionExperimentService.findByShortName( "GSE4242" ) ).thenReturn( ee );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( any(), any(), any(), any() ) ).thenReturn( ticket );
+
+        TicketsWebService.CreateTicketFromAccessionRequest req =
+                new TicketsWebService.CreateTicketFromAccessionRequest();
+        req.setAccession( "GSE4242" );
+
+        assertThat( webService.createTicketFromAccession( req ).getStatus() )
+                .isEqualTo( Response.Status.CREATED.getStatusCode() );
+    }
+
+    /**
+     * An accession naming nothing is a 404 and opens NO ticket.
+     * <p>
+     * A ticket pointing at a dataset that could not be resolved is worse than no ticket: it reads as work
+     * waiting rather than as the error it is.
+     */
+    @Test
+    public void testCreateTicketFromAccession_unknownAccessionOpensNothing() {
+        when( expressionExperimentService.findByAccession( "GSE0" ) ).thenReturn( Collections.emptyList() );
+        when( expressionExperimentService.findByShortName( "GSE0" ) ).thenReturn( null );
+
+        TicketsWebService.CreateTicketFromAccessionRequest req =
+                new TicketsWebService.CreateTicketFromAccessionRequest();
+        req.setAccession( "GSE0" );
+
+        assertThatThrownBy( () -> webService.createTicketFromAccession( req ) )
+                .isInstanceOf( NotFoundException.class );
+        verify( ticketService, never() ).openTicket( any(), any(), any(), any() );
     }
 
     /**

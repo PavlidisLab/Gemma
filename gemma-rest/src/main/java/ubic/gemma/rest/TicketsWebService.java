@@ -35,6 +35,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.PreboardedExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetValueObject;
@@ -772,6 +773,86 @@ public class TicketsWebService {
     }
 
     /**
+     * Open a ticket over an experiment named by accession, resolving the
+     * accession to the dataset(s) in one call.
+     *
+     * <p>The seam the curation store has as {@code POST /tickets/from-accession},
+     * minus the half that does not apply here. In the store that route imports
+     * the experiment from Gemma and then opens the ticket; against Gemma the
+     * experiment is already the source, so what is left is the resolution
+     * step — which is exactly the part a caller holding an accession cannot do
+     * without a second round trip.</p>
+     *
+     * @return 201 Created with the new ticket, targets attached.
+     */
+    @POST
+    @Path("/from-accession")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Open a ticket over an experiment named by accession",
+            description = "Resolves `accession` to the dataset(s) it names and opens a ticket over them, "
+                    + "so a caller holding a GEO accession does not have to look the id up first.\n\n"
+                    + "Resolution tries the external accession (`GSE12345`) and then the Gemma short "
+                    + "name; for GEO-sourced datasets these are usually the same string, and trying both "
+                    + "means a caller need not know which they hold.\n\n"
+                    + "🛑 ONE ACCESSION CAN NAME SEVERAL DATASETS. A GSE that was split during import "
+                    + "backs one experiment per split, and all of them become targets of the one ticket "
+                    + "— a review of that accession is a review of every part. Picking one arbitrarily "
+                    + "would silently drop the rest, and a caller that wants a single dataset should "
+                    + "open the ticket by id through `POST /tickets` instead.\n\n"
+                    + "`type` defaults to `CURATION`, which is where the store's own `REVIEW` maps. "
+                    + "An accession naming nothing is a 404 and opens no ticket.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "The ticket was opened.",
+                            content = @Content(schema = @Schema(implementation = TicketValueObject.class))),
+                    @ApiResponse(responseCode = "400", description = "`accession` is missing or blank.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No dataset carries that accession or short name.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response createTicketFromAccession( CreateTicketFromAccessionRequest req ) {
+        if ( req == null || req.getAccession() == null || req.getAccession().trim().isEmpty() ) {
+            throw new BadRequestException( "accession is required." );
+        }
+        String accession = req.getAccession().trim();
+
+        // Accession first, short name second. For a GEO import the two are usually the same string, so
+        // this is one lookup in the common case and a fallback for a caller holding the other kind.
+        List<ExpressionExperiment> matches =
+                new ArrayList<>( expressionExperimentService.findByAccession( accession ) );
+        if ( matches.isEmpty() ) {
+            ExpressionExperiment byShortName = expressionExperimentService.findByShortName( accession );
+            if ( byShortName != null ) {
+                matches.add( byShortName );
+            }
+        }
+        if ( matches.isEmpty() ) {
+            throw new NotFoundException( "No dataset carries the accession or short name " + accession + "." );
+        }
+
+        CreateTicketRequest delegate = new CreateTicketRequest();
+        delegate.setType( req.getType() != null ? req.getType() : TicketType.CURATION );
+        delegate.setTitle( req.getTitle() != null && !req.getTitle().trim().isEmpty()
+                ? req.getTitle()
+                : accession + " — ad-hoc review" );
+        delegate.setBody( req.getBody() );
+        delegate.setPriority( req.getPriority() );
+        delegate.setMode( req.getMode() );
+        delegate.setAssigneeId( req.getAssigneeId() );
+        List<TicketTargetRequest> targets = new ArrayList<>( matches.size() );
+        for ( ExpressionExperiment ee : matches ) {
+            TicketTargetRequest t = new TicketTargetRequest();
+            t.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+            t.setTargetId( ee.getId() );
+            targets.add( t );
+        }
+        delegate.setTargets( targets );
+        // Through the same method the ordinary create goes through, so the seeded OPENED event, the
+        // scratchpad rule and the metadata follow-ups behave identically however the ticket was opened.
+        return createTicket( delegate );
+    }
+
+    /**
      * Update mutable fields of a ticket. Any combination of the following
      * may be supplied in the body:
      * <ul>
@@ -1258,6 +1339,56 @@ public class TicketsWebService {
         @Nullable
         public TicketMode getMode() { return mode; }
         public void setMode( @Nullable TicketMode mode ) { this.mode = mode; }
+    }
+
+    /**
+     * Body for {@link #createTicketFromAccession(CreateTicketFromAccessionRequest)}.
+     * Only {@code accession} is required.
+     */
+    public static class CreateTicketFromAccessionRequest {
+        /** A GEO accession (`GSE12345`) or a Gemma short name; both are tried. */
+        private String accession;
+        /** Optional; defaults to "&lt;accession&gt; — ad-hoc review". */
+        @Nullable
+        private String title;
+        @Nullable
+        private String body;
+        /** Optional; defaults to {@link TicketType#CURATION}. */
+        @Nullable
+        private TicketType type;
+        @Nullable
+        private TicketPriority priority;
+        @Nullable
+        private TicketMode mode;
+        @Nullable
+        private Long assigneeId;
+
+        public String getAccession() { return accession; }
+        public void setAccession( String accession ) { this.accession = accession; }
+
+        @Nullable
+        public String getTitle() { return title; }
+        public void setTitle( @Nullable String title ) { this.title = title; }
+
+        @Nullable
+        public String getBody() { return body; }
+        public void setBody( @Nullable String body ) { this.body = body; }
+
+        @Nullable
+        public TicketType getType() { return type; }
+        public void setType( @Nullable TicketType type ) { this.type = type; }
+
+        @Nullable
+        public TicketPriority getPriority() { return priority; }
+        public void setPriority( @Nullable TicketPriority priority ) { this.priority = priority; }
+
+        @Nullable
+        public TicketMode getMode() { return mode; }
+        public void setMode( @Nullable TicketMode mode ) { this.mode = mode; }
+
+        @Nullable
+        public Long getAssigneeId() { return assigneeId; }
+        public void setAssigneeId( @Nullable Long assigneeId ) { this.assigneeId = assigneeId; }
     }
 
     public static class TicketTargetRequest {

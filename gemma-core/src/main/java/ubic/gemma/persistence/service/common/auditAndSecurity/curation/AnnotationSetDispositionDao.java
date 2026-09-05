@@ -63,4 +63,19 @@ public interface AnnotationSetDispositionDao extends BaseDao<AnnotationSetDispos
      *         are absent from the map.
      */
     Map<Long, List<AnnotationSetDisposition>> findStandingBySetIds( Collection<Long> annotationSetIds );
+
+    /**
+     * Delete every ruling on one set and report how many rows went.
+     *
+     * <p>🛑 The one exception to the append-only rule above, and it is not a
+     * curator's tool. It exists for a do-over after a fault — a calibration
+     * package rebuilt, a wire-schema bug that made the rulings meaningless —
+     * where the rows record a mistake rather than a decision, and the
+     * superseding-row mechanism would preserve exactly the noise the caller is
+     * trying to be rid of. A curator who has changed their mind rules again;
+     * that is what {@code rule} is for.</p>
+     *
+     * @return how many rulings were deleted; 0 when there were none
+     */
+    int deleteBySet( AnnotationSet annotationSet );
 }

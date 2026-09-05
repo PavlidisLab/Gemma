@@ -277,6 +277,34 @@ public class AnnotationSetDispositionPersistenceIT extends BaseIntegrationTest5 
         assertThat( d.getReason() ).isNull();
     }
 
+    @Test
+    @DisplayName("clearing erases every ruling on the set and reports how many went")
+    public void clearDispositions_erasesEveryRulingAndCounts() {
+        dispositionService.rule( audit, "f1", null, FindingDisposition.ACCEPTED,
+                "alice", TriageJudgeKind.CURATOR, null );
+        dispositionService.rule( audit, "f2", null, FindingDisposition.DISMISSED,
+                "alice", TriageJudgeKind.CURATOR, "wrong" );
+        // A changed mind, so the count has to be of ROWS and not of findings: this set carries three
+        // rulings over two findings, and reporting "2" would describe neither.
+        dispositionService.rule( audit, "f2", null, FindingDisposition.ACCEPTED,
+                "alice", TriageJudgeKind.CURATOR, null );
+        sessionFactory.getCurrentSession().flush();
+        assertThat( dispositionService.findBySet( audit ) ).hasSize( 3 );
+
+        int deleted = dispositionService.clearDispositions( audit );
+        sessionFactory.getCurrentSession().flush();
+
+        assertThat( deleted ).as( "every row, superseded ones included" ).isEqualTo( 3 );
+        assertThat( dispositionService.findBySet( audit ) ).isEmpty();
+        assertThat( dispositionService.standingFor( audit ) ).isEmpty();
+    }
+
+    @Test
+    @DisplayName("clearing a set nobody ruled on is a no-op reporting zero, not a failure")
+    public void clearDispositions_onAnUnruledSet_isZero() {
+        assertThat( dispositionService.clearDispositions( audit ) ).isZero();
+    }
+
     private static AnnotationSetDisposition byTarget( List<AnnotationSetDisposition> rows, String targetId ) {
         return rows.stream().filter( d -> targetId.equals( d.getTargetId() ) ).findFirst().orElseThrow();
     }

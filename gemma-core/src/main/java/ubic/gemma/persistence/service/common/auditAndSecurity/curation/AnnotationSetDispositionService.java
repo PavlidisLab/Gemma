@@ -106,4 +106,23 @@ public interface AnnotationSetDispositionService {
      * for a whole page rather than one query per set.
      */
     Map<Long, List<AnnotationSetDisposition>> standingForIds( Collection<Long> annotationSetIds );
+
+    /**
+     * Erase every ruling on one set, so it can be dispositioned again from
+     * scratch. Returns how many rows went.
+     *
+     * <p>🛑 A do-over after a FAULT, not a curator changing their mind. The
+     * rulings on a rebuilt calibration package, or ones taken through a
+     * wire-schema bug, record a mistake rather than a decision; superseding
+     * them one by one would preserve exactly the noise the caller is trying to
+     * be rid of. A curator who has reconsidered calls
+     * {@link #rule} again and the append-only history keeps both.</p>
+     *
+     * <p>This does NOT undo design edits a curator made in response to those
+     * rulings. Those live in the draft, and discarding the draft is a separate
+     * act.</p>
+     *
+     * @return how many rulings were deleted; 0 when there were none
+     */
+    int clearDispositions( AnnotationSet annotationSet );
 }

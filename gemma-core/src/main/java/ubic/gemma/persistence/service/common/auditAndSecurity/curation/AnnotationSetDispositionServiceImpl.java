@@ -137,6 +137,13 @@ public class AnnotationSetDispositionServiceImpl implements AnnotationSetDisposi
         return annotationSetDispositionDao.findStandingBySetIds( annotationSetIds );
     }
 
+    @Override
+    @Transactional
+    public int clearDispositions( AnnotationSet annotationSet ) {
+        Assert.notNull( annotationSet, "annotationSet must not be null." );
+        return annotationSetDispositionDao.deleteBySet( annotationSet );
+    }
+
     @Nullable
     private static String truncate( @Nullable String reason ) {
         if ( reason == null ) {

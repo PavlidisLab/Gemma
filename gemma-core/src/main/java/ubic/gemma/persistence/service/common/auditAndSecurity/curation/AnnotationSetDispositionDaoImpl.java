@@ -104,4 +104,12 @@ public class AnnotationSetDispositionDaoImpl extends AbstractDao<AnnotationSetDi
         }
         return out;
     }
+
+    @Override
+    public int deleteBySet( AnnotationSet annotationSet ) {
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "delete from AnnotationSetDisposition d where d.annotationSet = :set" )
+                .setParameter( "set", annotationSet )
+                .executeUpdate();
+    }
 }
