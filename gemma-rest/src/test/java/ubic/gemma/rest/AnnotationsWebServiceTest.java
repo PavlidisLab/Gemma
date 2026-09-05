@@ -685,6 +685,103 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         verify( characteristicService, never() ).countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() );
     }
 
+    /**
+     * CHEBI's shape: {@code vancomycin} reaches {@code glycopeptide} by {@code rdfs:subClassOf} and
+     * {@code antibacterial drug} only by {@code has_role}, which Gemma follows as an additional
+     * property. Both land in one list, and {@code viaSubClassOf} is the only thing that tells them
+     * apart — a client that wants a compound's roles without its upper-ontology structure cannot
+     * recover the split from labels.
+     */
+    @Test
+    public void testParentsMarksWhetherTheTermWasReachedBySubClassOfAlone() throws TimeoutException {
+        OntologyTerm queried = mock( OntologyTerm.class );
+        OntologyTerm structural = mock( OntologyTerm.class );
+        OntologyTerm role = mock( OntologyTerm.class );
+        when( structural.getUri() ).thenReturn( "http://purl.obolibrary.org/obo/CHEBI_24396" );
+        when( structural.getLabel() ).thenReturn( "glycopeptide" );
+        when( role.getUri() ).thenReturn( "http://purl.obolibrary.org/obo/CHEBI_36047" );
+        when( role.getLabel() ).thenReturn( "antibacterial drug" );
+        when( ontologyService.getTerm( eq( "http://example.com/test" ), anyLong(), any() ) ).thenReturn( queried );
+        LinkedHashSet<OntologyTerm> all = new LinkedHashSet<>();
+        all.add( structural );
+        all.add( role );
+        when( ontologyService.getParents( eq( Collections.singleton( queried ) ), anyBoolean(), eq( true ), anyLong(), any() ) )
+                .thenReturn( all );
+        // the same walk with has_role/part_of switched off reaches only the structural parent
+        when( ontologyService.getParents( eq( Collections.singleton( queried ) ), anyBoolean(), eq( false ), anyLong(), any() ) )
+                .thenReturn( Collections.singleton( structural ) );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfiesExactlyInAnyOrder(
+                        a -> assertThat( a )
+                                .containsEntry( "value", "glycopeptide" )
+                                .containsEntry( "viaSubClassOf", true ),
+                        a -> assertThat( a )
+                                .containsEntry( "value", "antibacterial drug" )
+                                .containsEntry( "viaSubClassOf", false ) );
+    }
+
+    /** No URI, nothing to match against the subClassOf-only walk — unknown, not "reached by a role". */
+    @Test
+    public void testParentsLeavesViaSubClassOfNullOnAUrilessTerm() throws TimeoutException {
+        OntologyTerm queried = mock( OntologyTerm.class );
+        OntologyTerm uriless = mock( OntologyTerm.class );
+        when( uriless.getUri() ).thenReturn( null );
+        when( uriless.getLabel() ).thenReturn( "uri-less" );
+        when( ontologyService.getTerm( eq( "http://example.com/test" ), anyLong(), any() ) ).thenReturn( queried );
+        when( ontologyService.getParents( eq( Collections.singleton( queried ) ), anyBoolean(), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( Collections.singleton( uriless ) );
+
+        assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( a -> assertThat( a ).containsEntry( "viaSubClassOf", null ) );
+    }
+
+    /** The children walk carries the same marker, on the same two-walk mechanism. */
+    @Test
+    public void testChildrenMarksWhetherTheTermWasReachedBySubClassOfAlone() throws TimeoutException {
+        OntologyTerm queried = mock( OntologyTerm.class );
+        OntologyTerm subclass = mock( OntologyTerm.class );
+        OntologyTerm part = mock( OntologyTerm.class );
+        when( subclass.getUri() ).thenReturn( "http://example.com/subclass" );
+        when( subclass.getLabel() ).thenReturn( "a subclass" );
+        when( part.getUri() ).thenReturn( "http://example.com/part" );
+        when( part.getLabel() ).thenReturn( "a part" );
+        when( ontologyService.getTerm( eq( "http://example.com/test" ), anyLong(), any() ) ).thenReturn( queried );
+        LinkedHashSet<OntologyTerm> all = new LinkedHashSet<>();
+        all.add( subclass );
+        all.add( part );
+        when( ontologyService.getChildren( eq( Collections.singleton( queried ) ), anyBoolean(), eq( true ), anyLong(), any() ) )
+                .thenReturn( all );
+        when( ontologyService.getChildren( eq( Collections.singleton( queried ) ), anyBoolean(), eq( false ), anyLong(), any() ) )
+                .thenReturn( Collections.singleton( subclass ) );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/children" ).queryParam( "uri", "http://example.com/test" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .hasSize( 2 )
+                .satisfiesExactlyInAnyOrder(
+                        a -> assertThat( a )
+                                .containsEntry( "value", "a subclass" )
+                                .containsEntry( "viaSubClassOf", true ),
+                        a -> assertThat( a )
+                                .containsEntry( "value", "a part" )
+                                .containsEntry( "viaSubClassOf", false ) );
+    }
+
     @Test
     public void testSearchAnnotationsPopulatesUsageCount() throws SearchException, TimeoutException {
         CharacteristicValueObject hit = new CharacteristicValueObject( "diabetes", "http://example.com/diabetes", "disease", "http://example.com/disease" );

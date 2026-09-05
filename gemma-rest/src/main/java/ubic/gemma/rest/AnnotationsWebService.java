@@ -385,7 +385,8 @@ public class AnnotationsWebService {
     @Path("/parents")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the parents of the given annotations",
-            description = "Terms that are returned satisfies the [rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [part_of](http://purl.obolibrary.org/obo/BFO_0000050) relations. When `direct` is set to false, this rule is applied recursively.",
+            description = "Terms that are returned satisfies the [rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [part_of](http://purl.obolibrary.org/obo/BFO_0000050) relations. When `direct` is set to false, this rule is applied recursively. "
+                    + "Each returned term carries `viaSubClassOf`, saying which of the two reached it: `true` for a plain subClassOf ancestor, `false` for one reachable only across `part_of` (or, on CHEBI, `has_role`). On a CHEBI term that is the structure/role split — vancomycin's `glycopeptide` is `true`, its `antibacterial drug` is `false`.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -405,7 +406,8 @@ public class AnnotationsWebService {
     @Path("/children")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the children of the given annotations",
-            description = "Terms that are returned satisfies the [inverse of rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [has_part](http://purl.obolibrary.org/obo/BFO_0000051) relations. When `direct` is set to false, this rule is applied recursively.",
+            description = "Terms that are returned satisfies the [inverse of rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [has_part](http://purl.obolibrary.org/obo/BFO_0000051) relations. When `direct` is set to false, this rule is applied recursively. "
+                    + "Each returned term carries `viaSubClassOf`, saying which of the two reached it: `true` for a plain subclass descendant, `false` for one reachable only across the non-taxonomic relations.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -1270,6 +1272,18 @@ public class AnnotationsWebService {
             Collection<OntologyTerm> terms = parents ?
                     ontologyService.getParents( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) :
                     ontologyService.getChildren( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+            // The same walk with the non-taxonomic relations switched off, so each returned term can say
+            // which edge reached it. A term the second walk misses was reachable ONLY by crossing part_of
+            // or (on CHEBI) has_role — which is what separates a compound's roles from its structure, and
+            // the one thing the flattened list drops. Cached separately by includeAdditionalProperties
+            // (OntologyCache.ParentsOrChildrenCacheKey), so the second walk is a cache hit once warm.
+            Set<String> subClassOfUris = ( parents ?
+                    ontologyService.getParents( Collections.singleton( term ), direct, false, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) :
+                    ontologyService.getChildren( Collections.singleton( term ), direct, false, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) )
+                    .stream()
+                    .map( OntologyTerm::getUri )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
             Set<String> uris = terms.stream()
                     .map( OntologyTerm::getUri )
                     .filter( Objects::nonNull )
@@ -1279,7 +1293,8 @@ public class AnnotationsWebService {
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null,
                             t.getUri() != null ? countsByUri.getOrDefault( t.getUri(), 0 ) : null,
                             null, null, null, null, null, null, null, null, null, null, null,
-                            sourceMetadataOf( t ), taxonConstraintVo( t ) ) )
+                            sourceMetadataOf( t ), taxonConstraintVo( t ),
+                            t.getUri() != null ? subClassOfUris.contains( t.getUri() ) : null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
@@ -2648,7 +2663,7 @@ public class AnnotationsWebService {
                     vo.getCategoryUri(), count, definition, parents, matchedVia, matchedText, null, priorCategories,
                     null, null, null, null, priorCountFor( vo.getValueUri(), stringPriorByUri ),
                     sourceMetadataByUri.get( vo.getValueUri() ),
-                    uri != null ? taxonByUri.get( uri ) : null ) );
+                    uri != null ? taxonByUri.get( uri ) : null, null ) );
         }
         // Always merge gene hits in, regardless of category — the typeahead surface should
         // surface STAT5B whether the curator is in a Genotype factor, a Treatment factor, or a
@@ -2821,7 +2836,7 @@ public class AnnotationsWebService {
             String taxonScientificName = taxon != null ? taxon.getScientificName() : null;
             out.add( new AnnotationSearchResultValueObject( label, uri, "gene", null,
                     0, null, null, matchedViaToken, label, null, null,
-                    taxonId, taxonCommonName, taxonScientificName, null, null, null, null ) );
+                    taxonId, taxonCommonName, taxonScientificName, null, null, null, null, null ) );
         }
     }
 
@@ -2913,7 +2928,8 @@ public class AnnotationsWebService {
                         r.getUsageCount(), r.getDefinition(), r.getParents(),
                         r.getMatchedVia(), r.getMatchedText(), c, r.getPriorCategories(),
                         r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(), r.getExampleUsage(),
-                        r.getPriorCurationCount(), r.getSourceMetadata(), r.getTaxonConstraint() ) );
+                        r.getPriorCurationCount(), r.getSourceMetadata(), r.getTaxonConstraint(),
+                        r.getViaSubClassOf() ) );
             }
         }
         return out;
@@ -2959,7 +2975,7 @@ public class AnnotationsWebService {
                     r.getMatchedVia(), r.getMatchedText(), r.getGeneCount(), r.getPriorCategories(),
                     r.getTaxonId(), r.getTaxonCommonName(), r.getTaxonScientificName(),
                     toExampleUsageVo( ex ), r.getPriorCurationCount(), r.getSourceMetadata(),
-                    r.getTaxonConstraint() ) );
+                    r.getTaxonConstraint(), r.getViaSubClassOf() ) );
         }
     }
 
@@ -4587,6 +4603,38 @@ public class AnnotationsWebService {
          * MONDO's {@code crossSpeciesExactMatch} often supplies the counterpart to repair TO.</p>
          */
         @Nullable TaxonConstraintValueObject taxonConstraint;
+        /**
+         * How this term was reached from the one that was asked about, on {@code /annotations/parents}
+         * and {@code /annotations/children} only. {@code true} = by {@code rdfs:subClassOf} alone;
+         * {@code false} = only by crossing one of the non-taxonomic relations Gemma follows;
+         * {@code null} = not computed (every other route that emits this object).
+         *
+         * <p>Both kinds of edge are walked and the flattened list cannot be partitioned by the caller.
+         * On CHEBI the non-taxonomic set is the {@code part_of} family plus {@code has_role} (added in
+         * {@code ChebiOntologyService}), and CHEBI asserts a compound's roles with {@code has_role}, so
+         * on a CHEBI term this field is the structure/role split. Measured on gemma2, 2026-09-04,
+         * {@code vancomycin} with {@code direct=true} — 4 parents, one subClassOf and three role
+         * fillers:</p>
+         *
+         * <pre>
+         * glycopeptide         CHEBI_24396   viaSubClassOf: true
+         * antibacterial drug   CHEBI_36047   viaSubClassOf: false
+         * antimicrobial agent  CHEBI_33281   viaSubClassOf: false
+         * bacterial metabolite CHEBI_76969   viaSubClassOf: false
+         * </pre>
+         *
+         * <p>The alternative is to ask each parent for its own ancestors and test for a CHEBI role
+         * root, which costs one extra request per parent and has to pick the right root: testing
+         * {@code role} (CHEBI_50906) over-keeps, because {@code glycopeptide}, {@code peptide} and
+         * {@code organic amino compound} all carry it through {@code chemical role}; testing
+         * {@code biological role} (CHEBI_24432) alone drops {@code antiinfective agent}, which sits
+         * under {@code application} (CHEBI_33232). This field needs no root and no second request.</p>
+         *
+         * <p>It says which edge was crossed, never whether the term is worth keeping. {@code role},
+         * {@code biological role} and {@code application} are as uninformative as
+         * {@code chemical entity} and are all reached across {@code has_role}.</p>
+         */
+        @Nullable Boolean viaSubClassOf;
     }
 
     /**
