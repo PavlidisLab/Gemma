@@ -21,6 +21,7 @@ http://www.ebi.ac.uk/efo/EFO_0002755	diet
 # OK for EFC and EFV but not EEtag
 http://www.ebi.ac.uk/efo/EFO_0005067	block
 http://www.ebi.ac.uk/efo/EFO_0000246	age
+http://www.ebi.ac.uk/efo/EFO_0004918	age at diagnosis
 http://www.ebi.ac.uk/efo/EFO_0000507	generation
 http://www.ebi.ac.uk/efo/EFO_0000542	individual
 http://www.ebi.ac.uk/efo/EFO_0000428	dose
