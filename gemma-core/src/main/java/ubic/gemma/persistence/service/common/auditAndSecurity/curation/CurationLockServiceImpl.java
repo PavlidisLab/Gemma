@@ -66,13 +66,26 @@ public class CurationLockServiceImpl implements CurationLockService {
 
     private CurationLock doAcquire( Investigation ee, String lockedBy, boolean steal, int ttlMinutes ) {
         Assert.notNull( ee, "dataset must not be null." );
+        Assert.notNull( ee.getId(), "dataset must be persistent to be locked." );
         Assert.hasText( lockedBy, "lockedBy must be non-blank." );
         Date now = new Date();
         CurationLock existing = load( ee );
 
         if ( existing == null ) {
             CurationLock lock = new CurationLock();
-            lock.setInvestigation( ee );
+            // A reference resolved in THIS session, not the caller's instance. The REST layer resolves the
+            // dataset before this @Transactional method opens its session, so `ee` normally arrives detached;
+            // CurationLock derives its identifier from this association with @MapsId, so Hibernate cascades
+            // the persist through it to obtain the id, and a detached instance there is
+            // "detached entity passed to persist: ubic.gemma.model.analysis.Investigation" -- a 500 on the
+            // first acquire for any dataset. A reference carries the id without a fetch.
+            //
+            // The composite-id mapping this replaced (@Id on the association) read the id off whatever
+            // instance it was handed and never cascaded, which is why the switch to @MapsId in 186df1a85d
+            // broke a path its own test could not see: CurationLockPersistenceIT persists the investigation
+            // in the same session the service then uses, so the entity is managed there and never detached.
+            lock.setInvestigation( sessionFactory.getCurrentSession()
+                    .getReference( Investigation.class, ee.getId() ) );
             stamp( lock, lockedBy, now, ttlMinutes );
             sessionFactory.getCurrentSession().persist( lock );
             return lock;

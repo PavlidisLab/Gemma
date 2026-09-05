@@ -184,4 +184,31 @@ public class CurationLockPersistenceIT extends BaseIntegrationTest5 {
         assertThat( curationLockService.current( ee ) ).isEmpty();
         assertThat( curationLockService.forceRelease( ee ) ).isFalse();
     }
+
+    /**
+     * The dataset the caller hands in is normally NOT in the session this service runs in — the REST layer
+     * resolves it first, and {@code acquire} opens its own. Every other test here seeds the investigation
+     * through the same session it then locks, so the entity is managed and this case never arises; evicting
+     * first is what puts the service in the state a real request puts it in.
+     * <p>
+     * It regressed exactly there. {@code CurationLock} derives its identifier from the association with
+     * {@code @MapsId}, so Hibernate cascades the persist through it, and a detached investigation is
+     * {@code detached entity passed to persist} — a 500 on the first acquire for any dataset, with the whole
+     * lock surface (take, steal, refresh-extends-lease, sign, and every commit that has to hold a lock)
+     * failing behind it. This class passed throughout, because a managed entity is the one thing it always had.
+     */
+    @Test
+    @DisplayName("a detached investigation can still be locked")
+    public void acquireWithADetachedInvestigation() {
+        sessionFactory.getCurrentSession().evict( ee );
+
+        CurationLock lock = curationLockService.acquire( ee, "alice", false, 30 );
+
+        assertThat( lock.getInvestigationId() ).isEqualTo( ee.getId() );
+        assertThat( curationLockService.isHeldBy( ee, "alice" ) ).isTrue();
+        assertThat( curationLockService.current( ee ) )
+                .get()
+                .extracting( CurationLock::getLockedBy )
+                .isEqualTo( "alice" );
+    }
 }
