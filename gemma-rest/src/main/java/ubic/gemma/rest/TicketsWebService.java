@@ -307,8 +307,7 @@ public class TicketsWebService {
     @Operation(summary = "List tickets assigned to the calling admin",
             description = "Convenience view over `GET /tickets?assignee={me}`. Returns two lists: `open` (OPEN + IN_PROGRESS, capped at `limit`, default 50) sorted by `updatedAt desc`; and `recentlyResolved` (RESOLVED + CANCELLED with updatedAt within the last `resolvedWithinDays` days, default 7, capped at `limit`). Sorted by updatedAt desc. Both lists carry the lightweight TicketValueObject (no event log). Use `GET /tickets/{id}` for the full ticket including events.",
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<MyQueueResponse> getMyQueue(
@@ -365,8 +364,7 @@ public class TicketsWebService {
     @Operation(summary = "Workload summary for the calling admin",
             description = "Returns counts of open (OPEN+IN_PROGRESS) and total tickets assigned to the calling admin, plus the age of the oldest open ticket in days. No event logs, no list of tickets — see `/tickets/mine` for those.",
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<MyQueueSummaryResponse> getMyQueueSummary() {
@@ -440,8 +438,7 @@ public class TicketsWebService {
                     + "`scratchpadOpen` and the `byType` breakdown still carries its `SCRATCHPAD` entry, so "
                     + "`totalOpen + scratchpadOpen == sum(byType)`.",
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<OpenTicketSummaryResponse> getOpenTicketSummary() {
@@ -510,8 +507,7 @@ public class TicketsWebService {
                     + "`GET /tickets/summary` (reported separately as `scratchpadOpen`) because a ticket that is "
                     + "never resolved is not outstanding work.",
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<TicketValueObject> getScratchpad() {

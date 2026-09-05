@@ -707,8 +707,7 @@ public class PlatformsWebService {
     @Operation(summary = "Retrieve the gene-mapping summary for a probe",
             description = "Returns the probe value object with `geneMappingSummaries` populated: one entry per distinct BLAT alignment, carrying the alignment scores, the biological sequence metadata, and the genes supported by that alignment. Replaces the legacy `getGeneMappingSummary` DWR call.",
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "Probe not found on the given platform",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
