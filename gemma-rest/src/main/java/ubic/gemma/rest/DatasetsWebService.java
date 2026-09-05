@@ -2476,7 +2476,12 @@ public class DatasetsWebService {
             @Parameter(description = "Predict the changes without writing. This is the 'compare with the snapshot' mode.")
             @QueryParam("dryRun") @DefaultValue("false") Boolean dryRun,
             @Parameter(description = "Consent to the restore's consequences (analysis cascade, stranded subsets).")
-            @QueryParam("force") @DefaultValue("false") Boolean force
+            @QueryParam("force") @DefaultValue("false") Boolean force,
+            @Parameter(description = "Which curator this restore is FOR, when an agent is carrying it. Agents and "
+                    + "admins only. A restore is a write like any other and mints its own snapshot, so it names "
+                    + "the curator the same way a commit does; the document is Gemma's own bytes and has nowhere "
+                    + "to carry the answer, which makes the parameter the only place it can come from.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         CurationDocument snapshot = readSnapshotPayload( setId, ee );
@@ -2484,7 +2489,8 @@ public class DatasetsWebService {
         // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
         // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
         snapshot.setBaseline( null );
-        CurationCommitReport report = doCommitCuration( datasetArg, snapshot, dryRun, force, false, null, false );
+        CurationCommitReport report = doCommitCuration( datasetArg, snapshot, dryRun, force, false,
+                resolveActingIdentityIfNamed( onBehalfOf ), false );
         // Attached on BOTH the dry run and the apply. The dry run is the only step a human reads before
         // deciding, and its section tallies say "one tag created" for an entity that is really being
         // re-identified -- measured 2026-09-03: tag 9018 came back as 9019 and nothing in the preview said so.
