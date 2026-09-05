@@ -304,7 +304,7 @@ public class TicketsWebService {
     @GET
     @Path("/mine")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "List tickets assigned to the calling admin",
             description = "Convenience view over `GET /tickets?assignee={me}`. Returns two lists: `open` (OPEN + IN_PROGRESS, capped at `limit`, default 50) sorted by `updatedAt desc`; and `recentlyResolved` (RESOLVED + CANCELLED with updatedAt within the last `resolvedWithinDays` days, default 7, capped at `limit`). Sorted by updatedAt desc. Both lists carry the lightweight TicketValueObject (no event log). Use `GET /tickets/{id}` for the full ticket including events.",
             responses = {
@@ -361,7 +361,7 @@ public class TicketsWebService {
     @GET
     @Path("/summary/me")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Workload summary for the calling admin",
             description = "Returns counts of open (OPEN+IN_PROGRESS) and total tickets assigned to the calling admin, plus the age of the oldest open ticket in days. No event logs, no list of tickets — see `/tickets/mine` for those.",
             responses = {
@@ -430,7 +430,7 @@ public class TicketsWebService {
     @GET
     @Path("/summary")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Open-ticket roll-up across the corpus",
             description = "Returns the total open ticket count and a per-TicketType breakdown. Cheap (single grouped count query); intended for the admin Systems Monitoring dashboard panel.\n\n"
                     + "`totalOpen` EXCLUDES scratchpads. A SCRATCHPAD ticket is never resolved — a curator "

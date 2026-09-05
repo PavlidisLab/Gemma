@@ -533,7 +533,7 @@ public class GeneWebService {
      */
     @GET
     @Path("/probes/refresh")
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Refresh gene-to-probe associations.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),

@@ -41,7 +41,7 @@ public class TasksWebService {
     @GET
     @Path("/{taskId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Retrieve the status of a submitted pipeline task",
             description = "Returns a snapshot of the named task's current state (`queued`, `running`, `completed`, "
                     + "`failed`, `cancelling`, `unknown`), its submission/start/finish timestamps, the experiment "
@@ -75,7 +75,7 @@ public class TasksWebService {
     @DELETE
     @Path("/{taskId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Request cooperative cancellation of a submitted pipeline task",
             description = "Sends a cancellation request to the named task. The task is responsible for honouring "
                     + "the cancellation flag at its next preemption point; this endpoint does NOT force-kill the "

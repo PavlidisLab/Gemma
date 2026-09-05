@@ -174,6 +174,22 @@ public abstract class BaseAclAdvice {
      * </ul>
      */
     protected void setupBaseAces( MutableAcl acl, ObjectIdentity oi, Sid sid, boolean keepPrivateEvenWhenAdmin ) {
+        setupBaseAces( acl, oi, sid, keepPrivateEvenWhenAdmin, false );
+    }
+
+    /**
+     * @param objectIsUserOrGroup suppresses the GROUP_CURATOR grant. A curator's authority is over DATA,
+     *                            and {@code User} / {@code UserGroup} are securable objects like any other,
+     *                            so an unconditional grant would hand them
+     *                            {@code BaseUserService.removeUserFromGroup} — whose gate is
+     *                            {@code hasPermission(#group, 'administration')} — and with it the ability
+     *                            to put themselves in Administrators. That is the one thing the group is
+     *                            defined not to have (Paul, 2026-09-05: everything "other than user admin").
+     *                            GROUP_ADMIN and GROUP_AGENT are unaffected: an administrator is supposed to
+     *                            administer users, and the agent grant is READ.
+     */
+    protected void setupBaseAces( MutableAcl acl, ObjectIdentity oi, Sid sid, boolean keepPrivateEvenWhenAdmin,
+            boolean objectIsUserOrGroup ) {
 
         /*
          * All objects must have administration permissions on them.
@@ -181,6 +197,21 @@ public abstract class BaseAclAdvice {
         if ( log.isDebugEnabled() ) log.debug( "Making administratable by GROUP_ADMIN: " + oi );
         grant( acl, BasePermission.ADMINISTRATION, new GrantedAuthoritySid( new SimpleGrantedAuthority(
             AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) );
+
+        /*
+         * Curators administer data. The same permission GROUP_ADMIN gets, deliberately: ADMINISTRATION
+         * is what AclAuthorizationStrategyImpl falls back to when the caller lacks the configured
+         * authority, so it is the one grant that covers reading, editing AND changing a dataset's
+         * visibility. A WRITE ace would satisfy ACL_SECURABLE_EDIT and then fail on makePublic.
+         *
+         * What separates a curator from an administrator is not this ace -- it is the REST layer, where
+         * user-account and server-operation routes still require GROUP_ADMIN.
+         */
+        if ( !objectIsUserOrGroup ) {
+            if ( log.isDebugEnabled() ) log.debug( "Making administratable by GROUP_CURATOR: " + oi );
+            grant( acl, BasePermission.ADMINISTRATION, new GrantedAuthoritySid( new SimpleGrantedAuthority(
+                AuthorityConstants.CURATOR_GROUP_AUTHORITY ) ) );
+        }
 
         /*
          * Let agent read anything
@@ -355,7 +386,7 @@ public abstract class BaseAclAdvice {
          * own ACLs (SecurableChild)
          */
         if ( create && !inheritFromParent ) {
-            setupBaseAces( acl, oi, sid, keepPrivateEvenWhenAdmin );
+            setupBaseAces( acl, oi, sid, keepPrivateEvenWhenAdmin, objectIsAUser || objectIsAGroup );
 
             /*
              * Make sure user groups can be read by future members of the group

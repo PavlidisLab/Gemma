@@ -5,6 +5,7 @@
 insert into AUDIT_TRAIL (ID) VALUES (1);
 insert into AUDIT_TRAIL (ID) VALUES (2);
 insert into AUDIT_TRAIL (ID) VALUES (3);
+insert into AUDIT_TRAIL (ID) VALUES (4);
 
 set @n:=now();
 
@@ -26,9 +27,11 @@ insert into AUDIT_EVENT (ID, DATE, ACTION, NOTE, DETAIL, PERFORMER_FK, EVENT_TYP
 insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (1, 'Administrators', 'Users with administrative rights', 1);
 insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (2, 'Users', 'Default group for all authenticated users', 2);
 insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (3, 'Agents', 'For \'autonomous\' agents that run within the server context, such as scheduled tasks.', 3);
+insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (4, 'Curators', 'Curators: full authority over dataset content and visibility, none over user accounts or server operations.', 4);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (1, 'ADMIN', 1);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (2, 'USER', 2);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (3, 'AGENT', 3);
+insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (4, 'CURATOR', 4);
 
 -- make admin in the admin group
 insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (1, 1);

@@ -568,7 +568,7 @@ public class AdminWebService {
     @Path("/tasks/import-geo")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Submit a batch of GEO accessions for async import",
             description = "Iterates `accessions` and submits one async load task per accession (port of "
                     + "`LoadExpressionDataCli`'s bulk path). Optional flags are applied uniformly across the batch. "
@@ -638,7 +638,7 @@ public class AdminWebService {
     @POST
     @Path("/tasks/multifunctionality")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Submit an async recompute of per-gene multifunctionality for one taxon",
             description = "Port of `MultifunctionalityCli`. Resolves `taxon` (common name, scientific name, NCBI ID, or Gemma taxon ID) and submits a single async task that calls `GeneMultifunctionalityPopulationService.updateMultifunctionality(taxon)`. Returns 202 with the submitted task ID; poll `/tasks/{taskId}` for progress.",
             security = {
@@ -689,7 +689,7 @@ public class AdminWebService {
     @POST
     @Path("/platforms/{platform}/report")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Regenerate the cached report for one platform",
             description = "Recomputes and rewrites the on-disk report backing `numberOfGenes` / `numberOfMappedElements` for a single platform, and returns the refreshed value object. Synchronous; takes a couple of seconds on a large platform.",
             security = {
@@ -717,7 +717,7 @@ public class AdminWebService {
     @POST
     @Path("/tasks/platform-reports")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Submit an async regeneration of every platform's cached report",
             description = "Port of the `updatePlatformReports` CLI. Submits a single async task that rewrites the on-disk report for every platform plus the all-platforms summary. Returns 202 with the submitted task ID; poll `/tasks/{taskId}` for progress.",
             security = {
@@ -1369,7 +1369,7 @@ public class AdminWebService {
     @POST
     @Path("/ontologies/obsolete-terms/apply")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Correct annotations using obsolete ontology terms (dry run by default)",
             description = "Rewrites every slot the obsolete term occupies — category, value, predicate, object — to "
                     + "the successor asserted by `IAO:0100001` or by a merge record, and records the correction in "
@@ -1485,7 +1485,7 @@ public class AdminWebService {
     @GET
     @Path("/curation-agent/health")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Curation-agents service liveness probe",
             description = "Issues a GET against `gemma.curationAgent.healthUrl` with a `gemma.curationAgent.healthTimeoutMs`-millisecond timeout (default 3000). Returns `status` = UP / DOWN / NOT_CONFIGURED, latencyMillis, and either the upstream HTTP status code or the exception class name. Always returns HTTP 200 — even when DOWN — so the UI can poll without triggering error handlers.",
             security = {
@@ -1541,7 +1541,7 @@ public class AdminWebService {
     @Path("/tasks/geo-grab")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Scrape GEO record metadata by accession",
             description = "Fetches GEO series metadata for the given accessions and returns it without importing into Gemma. Useful for previewing a GEO record from the curation-UI before triggering a full import. Synchronous; expect sub-second latency per accession. Uses the DETAILED retrieve preset (sub-series status, MeSH headings, library strategy, sample details, errors ignored).",
             security = {
@@ -1661,7 +1661,7 @@ public class AdminWebService {
     @Path("/tasks/geo-scrape")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(deprecated = true, summary = "DEPRECATED -- superseded by the curation agent's own scraping (scrape_geo_and_open_triage.py). Submit a GEO scrape & preboard run (async, or sync dry-run)",
             description = "Iterates recent GEO records, filters to human/mouse/rat expression profiling, evaluates the registered matchers (subset selectable via `criteria`: {brain, scbrain, tfperturb}). With dryRun=false (default) creates PreboardedExperiment rows and returns 202 + async task ID. With dryRun=true evaluates only and returns 200 + the candidate list inline (no watermark, no preboarded rows, no ticket). "
                     + "DRY RUNS MUST BE KEPT SMALL: the sync branch is subject to the 60-second proxy timeout in front of this API, "
@@ -1792,7 +1792,7 @@ public class AdminWebService {
     @GET
     @Path("/curation-status")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Annotation-set + ticket lifecycle snapshot",
             description = "Per-role breakdown of AnnotationSet rows (last 24h / 7d / by role) plus open-ticket counts by TicketType and the oldest open-ticket age. Read-only.",
             security = {
@@ -2128,7 +2128,7 @@ public class AdminWebService {
     @Path("/blacklist")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Add a blacklist entry",
             description = "Creates a blacklist row for the given GEO accession (GPL* → BlacklistedPlatform; GSE* → BlacklistedExperiment). "
                     + "Synchronous: the row is persisted before the response returns. Returns 201 with the new entry's value object. "
@@ -2195,7 +2195,7 @@ public class AdminWebService {
     @DELETE
     @Path("/blacklist/{accession}")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Remove a blacklist entry",
             description = "Removes the blacklist row matching `{accession}`. Returns 204 on success, 404 when no entry exists.",
             security = {
@@ -2225,7 +2225,7 @@ public class AdminWebService {
     @GET
     @Path("/blacklist")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "List blacklist entries",
             description = "Returns the current blacklist sorted by accession with `limit`/`offset` pagination applied in-process. "
                     + "`limit` defaults to 100 and is capped at 1000; `offset` defaults to 0. The response includes the total count of "

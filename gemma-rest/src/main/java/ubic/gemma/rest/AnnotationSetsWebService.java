@@ -138,7 +138,7 @@ public class AnnotationSetsWebService {
      */
     @GET
     @Path("/candidates")
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Screening queue (alias of /datasets?filter=curationDetails.needsAttention=true)",
             description = "Redirects to /datasets with `curationDetails.needsAttention = true` applied.",
             responses = { @ApiResponse(responseCode = "302",
@@ -837,7 +837,7 @@ public class AnnotationSetsWebService {
     @DELETE
     @Path("/annotation-sets/{id}/dispositions")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Erase every ruling on an annotation set's findings",
             description = "🛑 A DO-OVER AFTER A FAULT, not a curator changing their mind. Rulings are "
                     + "append-only everywhere else on this route: a curator who reconsiders POSTs again "

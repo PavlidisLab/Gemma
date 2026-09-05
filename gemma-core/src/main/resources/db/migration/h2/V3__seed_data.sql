@@ -53,6 +53,7 @@ INSERT INTO acl_class (id, class) VALUES (5, 'ubic.gemma.model.common.descriptio
 INSERT INTO acl_sid (id, principal, sid) VALUES (1, 0, 'GROUP_ADMIN');
 INSERT INTO acl_sid (id, principal, sid) VALUES (2, 0, 'GROUP_USER');
 INSERT INTO acl_sid (id, principal, sid) VALUES (3, 0, 'GROUP_AGENT');
+INSERT INTO acl_sid (id, principal, sid) VALUES (7, 0, 'GROUP_CURATOR');
 INSERT INTO acl_sid (id, principal, sid) VALUES (4, 0, 'IS_AUTHENTICATED_ANONYMOUSLY');
 INSERT INTO acl_sid (id, principal, sid) VALUES (5, 1, 'administrator');
 INSERT INTO acl_sid (id, principal, sid) VALUES (6, 1, 'gemmaAgent');

@@ -66,6 +66,19 @@ public class AuthorityConstants {
      */
     public static final String RUN_AS_USER_AUTHORITY = "GROUP_RUN_AS_USER";
 
+    /**
+     * Curators do everything an administrator does to DATA — edit designs, change a dataset's
+     * visibility, run analyses — and nothing an administrator does to the SERVER or to USER
+     * ACCOUNTS. Those two exclusions are enforced at the REST layer, where the routes that
+     * manage caches, indices, ontologies, sessions, pipeline batches and user accounts keep
+     * {@code hasAuthority('GROUP_ADMIN')}; everything else was widened to
+     * {@code hasAuthority('GROUP_CURATOR')}, which an administrator satisfies through the role
+     * hierarchy (Paul, 2026-09-05: "really nothing other than user admin, and I guess server ops").
+     */
+    public static final String CURATOR_GROUP_AUTHORITY = "GROUP_CURATOR";
+
+    public static final String CURATOR_GROUP_NAME = "Curators";
+
     public static final String AGENT_GROUP_AUTHORITY = "GROUP_AGENT";
 
     public static final String AGENT_GROUP_NAME = "Agents";

@@ -312,6 +312,9 @@ public class SecurityServiceTest extends BaseSpringContextTest5 {
         // sid via gsec.acl.domain.Sids rather than on toString() of the implementation class.
         java.util.List<String> expectedNames = new ArrayList<>();
         expectedNames.add( "G:GROUP_ADMIN" );
+        // Curators administer data, so setupBaseAces grants them an ADMINISTRATION ace on every
+        // object that is not a User or a UserGroup -- an ExpressionExperiment is one.
+        expectedNames.add( "G:GROUP_CURATOR" );
         expectedNames.add( "G:GROUP_AGENT" );
         expectedNames.add( "P:salmonid" );
         expectedNames.add( "P:salmonid" );
