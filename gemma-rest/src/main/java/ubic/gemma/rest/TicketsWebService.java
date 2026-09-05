@@ -801,7 +801,7 @@ public class TicketsWebService {
                     + "An accession naming nothing is a 404 and opens no ticket.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "The ticket was opened.",
-                            content = @Content(schema = @Schema(implementation = TicketValueObject.class))),
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectTicketValueObject.class))),
                     @ApiResponse(responseCode = "400", description = "`accession` is missing or blank.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No dataset carries that accession or short name.",
@@ -1341,6 +1341,20 @@ public class TicketsWebService {
      * Body for {@link #createTicketFromAccession(CreateTicketFromAccessionRequest)}.
      * Only {@code accession} is required.
      */
+    /**
+     * The 201 body of {@link #createTicketFromAccession(CreateTicketFromAccessionRequest)}.
+     * <p>
+     * A named subclass rather than {@code ResponseDataObject.class}, because the erased form publishes
+     * a {@code data} of no particular type — the defect 36 operations were corrected for on
+     * 2026-09-04. The route returns a raw {@link Response} to set 201, so {@code useReturnTypeSchema}
+     * has no typed return to read and the envelope has to be named here.
+     */
+    public static class ResponseDataObjectTicketValueObject extends ResponseDataObject<TicketValueObject> {
+        public ResponseDataObjectTicketValueObject( TicketValueObject payload ) {
+            super( payload );
+        }
+    }
+
     public static class CreateTicketFromAccessionRequest {
         /** A GEO accession (`GSE12345`) or a Gemma short name; both are tried. */
         private String accession;
