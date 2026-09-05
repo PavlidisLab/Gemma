@@ -742,6 +742,34 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .isEqualTo( "deferred_to_curator" );
     }
 
+    /**
+     * The commit and the preflight accept {@code onBehalfOf}. Both refused it with
+     * {@code 400 Unknown query parameter} while {@code sign} required it, so a relay sending the
+     * parameter uniformly across the chain — which is the sane client — was broken on two of its three
+     * calls (uib, 2026-09-05, on GSE7866).
+     * <p>
+     * It is not decoration on the commit: {@code actingAs} is what attributes the restore point to the
+     * curator instead of the courier, and what keeps {@code requireNoForeignCurationLock} from refusing a
+     * commit relayed for the very curator who holds the lock.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testCommitAndPreflightAcceptOnBehalfOf() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( new ExperimentalDesignValueObject() );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[]}}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" )
+                .queryParam( "onBehalfOf", "someCurator" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).as( "preflight accepts onBehalfOf" ).isNotEqualTo( 400 );
+        }
+        try ( Response r = target( "/datasets/1/curation" )
+                .queryParam( "onBehalfOf", "someCurator" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).as( "commit accepts onBehalfOf" ).isNotEqualTo( 400 );
+        }
+    }
+
     /** One factor, one factor value, one statement — the current state the mapper carries forward from. */
     private static ExperimentalDesignValueObject designWithOneStatement( Long factorId, Long fvId, Long stmtId ) {
         StatementValueObject stmt = new StatementValueObject();

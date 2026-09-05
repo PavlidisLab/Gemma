@@ -157,11 +157,15 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
 
     private AuditEvent createAuditEvent( @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, @Nullable String payloadJson, Date performedDate ) {
         Assert.isTrue( !performedDate.after( new Date() ), "Cannot create an audit event for something that has not yet occurred." );
+        // The performer is the CREDENTIAL that wrote the row and stays that way; onBehalfOf names the
+        // curator it was written for, when a relay named one. Recording only the credential answers "which
+        // key was used" and not "who decided this", and recording only the curator loses the first — so
+        // both are kept, in two columns. Null for the ordinary case, where they are the same person.
         return AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE,
                 abbreviateInBytes( note, "…", AuditEvent.MAX_NOTE_LENGTH, true, StandardCharsets.UTF_8 ),
                 abbreviateInBytes( detail, "…", AuditEvent.MAX_DETAIL_LENGTH, true, StandardCharsets.UTF_8 ),
                 userManager.getCurrentUser(), auditEventType != null ? getAuditEventType( auditEventType ) : null,
-                payloadJson );
+                payloadJson, ubic.gemma.core.security.util.ActingIdentity.get() );
     }
 
     private AuditEventType getAuditEventType( Class<? extends AuditEventType> type ) {

@@ -706,7 +706,7 @@ public class DatasetsWebService {
 
     @GET
     @Path("/platforms/refresh")
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Retrieve refreshed experiment-to-platform associations.",
@@ -1039,7 +1039,7 @@ public class DatasetsWebService {
 
     @GET
     @Path("/annotations/refresh")
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve refreshed dataset annotations.",
             responses = {
@@ -1175,7 +1175,7 @@ public class DatasetsWebService {
     @GET
     @Path("/blacklisted")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Retrieve all blacklisted datasets", hidden = true,
             description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
                     + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
@@ -1411,7 +1411,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/samples/{bioAssayId}/outlier")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Mark or unmark a BioAssay as a sample outlier",
             description = "Body: `{\"outlier\": true|false}`. `true` flags the assay as an outlier (its processed-data "
                     + "values are set to missing); `false` reverts that. Returns the updated `BioAssayValueObject` "
@@ -1481,7 +1481,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/samples/outliers")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Batch mark or unmark sample outliers",
             description = "Body: `{\"mark\": [bioAssayId,...], \"unmark\": [bioAssayId,...]}`. The listed assays must all belong to the path-derived dataset; otherwise a 400 is returned and NOTHING is mutated (validation runs before any service call). Returns the updated full outlier set (across the dataset).",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
@@ -3391,7 +3391,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/curationDetails")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Deprecated
     @Operation(summary = "Update the curation details of a dataset (deprecated; use /tickets)",
             description = "DEPRECATED — the troubled/needsAttention flips are now backed by the Ticket layer "
@@ -3495,7 +3495,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/short-name")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Rename the shortName of a dataset",
             description = "Updates the curator-facing shortName identifier on an ExpressionExperiment. "
                     + "Returns 400 on blank/too-long/illegal-character names, 404 on unknown dataset, "
@@ -3717,9 +3717,15 @@ public class DatasetsWebService {
     public ResponseDataObject<CurationCommitReport> commitCuration(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Consent (admin only) to deleting differential-expression analyses that a design-section change would invalidate. Ignored unless the design section triggers such a cascade.") @QueryParam("force") @DefaultValue("false") Boolean force,
+            @Parameter(description = "Which curator this commit is FOR, when an agent is carrying it. Agents and "
+                    + "admins only; refused, not ignored, for anyone else. It is what attributes the restore "
+                    + "point this commit mints to the curator rather than to the courier, and what stops the "
+                    + "commit being refused as a foreign lock holder when the curator holds the lock.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable CurationDocument body
     ) {
-        return respond( doCommitCuration( datasetArg, body, false, force, false, null, true ) );
+        return respond( doCommitCuration( datasetArg, body, false, force, false,
+                resolveActingIdentityIfNamed( onBehalfOf ), true ) );
     }
 
     @POST
@@ -3744,10 +3750,37 @@ public class DatasetsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<CurationCommitReport> preflightCuration(
             @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Which curator this preflight is for, when an agent is carrying it. Changes "
+                    + "nothing about the dry run's answer — accepted so a relay can send the same parameter to "
+                    + "every call in the commit chain instead of special-casing this one.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable CurationDocument body
     ) {
         // A dry run never writes, so the differential-expression cascade never fires — force is irrelevant here.
-        return respond( doCommitCuration( datasetArg, body, true, false, false, null, false ) );
+        // resolveActingIdentity is still called on a dry run: it REFUSES a caller who may not act for someone
+        // else, and a preflight that quietly accepted what the commit will reject is a dry run that does not
+        // predict the commit -- which is the one thing it is for.
+        return respond( doCommitCuration( datasetArg, body, true, false, false,
+                resolveActingIdentityIfNamed( onBehalfOf ), false ) );
+    }
+
+    /**
+     * The resolved curator when the caller named one, and {@code null} when they did not.
+     * <p>
+     * 🛑 Not simply {@code SecurityUtil.resolveActingIdentity(onBehalfOf)}. That method resolves a null
+     * {@code onBehalfOf} to the authenticated principal and THROWS when there is none, so calling it
+     * unconditionally turns every unauthenticated commit into a 500 where the route used to answer on its own
+     * terms. It also matters that the answer stays null rather than becoming the principal's own name:
+     * {@code actingAs} is documented as "the resolved curator on that path and null everywhere else", and the
+     * two places that read it ({@code requireNoForeignCurationLock}, {@code snapshotCreatedBy}) each fall back
+     * to the current user themselves. Passing a name where the convention says null would work today and
+     * quietly diverge the moment either of them stops falling back.
+     * <p>
+     * A non-blank value is still resolved, and so still REFUSED for a caller who may not act for someone else.
+     */
+    @Nullable
+    private String resolveActingIdentityIfNamed( @Nullable String onBehalfOf ) {
+        return StringUtils.isBlank( onBehalfOf ) ? null : SecurityUtil.resolveActingIdentity( onBehalfOf );
     }
 
     /**
@@ -4004,6 +4037,13 @@ public class DatasetsWebService {
         }
 
         CurationCommitResult result;
+        // Bind the curator for the duration of the commit so every audit row it writes names them beside the
+        // credential. Those rows are minted by @Audited aspects deep inside the transaction, which never see
+        // this method's arguments; the scope is read at exactly one place,
+        // AuditTrailServiceImpl.createAuditEvent. Closing it is what keeps the name off the next request to
+        // land on this pooled thread.
+        try ( ubic.gemma.core.security.util.ActingIdentity.Scope actingScope =
+                      ubic.gemma.core.security.util.ActingIdentity.scope( actingAs ) ) {
         try {
             result = expressionExperimentService.commitCuration( ee, request, dryRun );
         } catch ( org.springframework.dao.OptimisticLockingFailureException e ) {
@@ -4020,6 +4060,7 @@ public class DatasetsWebService {
         } catch ( IllegalArgumentException e ) {
             // e.g. shortName already in use
             throw new CurationCommitConflictException( CurationCommitConflictException.Reason.UNSPECIFIED, e.getMessage() );
+        }
         }
         return CurationCommitReport.from( result, request, !dryRun, canonicalizations );
     }
@@ -6109,7 +6150,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/permissions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Update the sharing permissions of a dataset",
             description = "Toggle whether a dataset is publicly readable. The `isPublic` field is optional; if omitted, "
                     + "no change is made and the current state is returned.",
@@ -6155,7 +6196,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/permissions")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Retrieve the sharing permissions of a dataset",
             description = "Returns whether the dataset is publicly readable and whether it has been shared with any user groups.",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
@@ -6179,7 +6220,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/makePublic")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Make a dataset publicly readable",
             description = "Performs the raw ACL flip to grant `IS_AUTHENTICATED_ANONYMOUSLY` read on the dataset. "
                     + "Idempotent. See `POST /datasets/{id}/publish` for the curator-workflow transition that also "
@@ -6207,7 +6248,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/makePrivate")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Make a dataset private",
             description = "Removes the `IS_AUTHENTICATED_ANONYMOUSLY` read ACE from the dataset. Idempotent.",
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
@@ -6238,7 +6279,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/publish")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Publish a dataset (curator-workflow transition; records reviewer)",
             description = "Curator-workflow endpoint distinct from `/makePublic`. Records the reviewer as an audit "
                     + "event and (if the dataset is not already public) performs the ACL flip. The `reviewer` query "
@@ -6279,7 +6320,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/visibility")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Retrieve the sharing permissions of a dataset (alias of /permissions)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
@@ -7134,7 +7175,7 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/geeq")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Retrieve the GEEQ scores of a dataset",
             description = "Returns the administrative GEEQ view exposing the underlying quality "
                     + "score factors, plus a `lastComputed` timestamp from the most recent `GeeqEvent`. Returns "
@@ -7209,7 +7250,7 @@ public class DatasetsWebService {
     @PUT
     @Path("/{dataset}/geeq")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Recompute GEEQ scores for a dataset",
             description = "Synchronously recomputes the GEEQ quality scores for the dataset and "
                     + "writes a `GeeqEvent` to the audit log. The optional `mode` query parameter selects which "
@@ -7261,7 +7302,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/geeq/recompute")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Recompute GEEQ scores for a dataset (alias of PUT /geeq)",
             description = "Curation-UI compatibility alias for `PUT /datasets/{id}/geeq`. Body: optional "
                     + "`{\"mode\": \"all\"|\"batch\"|\"reps\"|\"pub\"}` (defaults to `all`). Behaviour is identical "
@@ -7289,7 +7330,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/geeq/recalculate")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Recompute GEEQ scores for a dataset (alias of /geeq/recompute)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
@@ -7436,7 +7477,7 @@ public class DatasetsWebService {
     @Path("/import")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Import a dataset from GEO (or ArrayExpress) by accession",
             description = "Submits an async load task and returns 202 with a `Location` header pointing at "
                     + "`/tasks/{taskId}`. Body must include `accession`. Optional flags map to the corresponding "
@@ -7491,7 +7532,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/preprocess")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Run preprocessing run for a dataset",
             description = "Recomputes processed data vectors and refreshes downstream diagnostics. Returns 202 with "
                     + "a `Location` header pointing at the polling endpoint `/tasks/{taskId}`. Tasks are kept "
@@ -7514,7 +7555,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/diagnostics")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Submit a diagnostics-only preprocessing run for a dataset",
             description = "Refreshes mean-variance, PCA and sample-correlation diagnostics without recomputing "
                     + "processed vectors. Returns 202 with a `Location` header pointing at `/tasks/{taskId}`.",
@@ -7537,7 +7578,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/svd")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Recompute the singular value decomposition for a dataset",
             description = "Submits an async task that recomputes the SVD of the dataset's expression matrix and "
                     + "persists the result. The companion `GET /{dataset}/svd` reads the stored result. Returns 202 "
@@ -7560,7 +7601,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/batchInfo")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Run a batch-information fetch for a dataset",
             description = "Re-fetches batch information from the source data. Returns 202 with a `Location` "
                     + "header pointing at `/tasks/{taskId}`.",
@@ -7582,7 +7623,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/geeq")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Recompute GEEQ quality scores for a dataset (async)",
             description = "Submits an async task that recomputes the GEEQ quality scores for the "
                     + "dataset and writes a `GeeqEvent` to the audit log. The optional `mode` query parameter "
@@ -7627,7 +7668,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/tasks/switch-platform")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Switch a dataset to use a different (typically merged) array design (async)",
             description = "Submits an async task that switches every BioAssay on the experiment to use the supplied "
                     + "target ArrayDesign (looked up by short name, e.g. `GPL570`), remaps composite-sequence-keyed "
@@ -7669,7 +7710,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/preprocess")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Run preprocessing run for a dataset (alias of /tasks/preprocess)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
@@ -7686,7 +7727,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/preprocess/diagnostics")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Submit a diagnostics-only preprocessing run for a dataset (alias of /tasks/diagnostics)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
@@ -7703,7 +7744,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/batchInformation/fetch")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Run a batch-information fetch for a dataset (alias of /tasks/batchInfo)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
@@ -7757,7 +7798,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/tasks/differential")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Run differential expression analysis for a dataset",
             description = "If the request body is omitted (or all fields are null), every non-batch experimental "
                     + "factor is included with `includeInteractions=true`. Returns 202 with a `Location` header "
@@ -7791,7 +7832,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/analyses/differential")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Run differential expression analysis for a dataset (alias of /tasks/differential)",
             description = "Curation-UI compatibility alias for `POST /datasets/{id}/tasks/differential`. Behaviour "
                     + "is identical to the canonical endpoint.",
@@ -7883,7 +7924,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/tasks/redo/{analysisId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Redo an existing differential expression analysis",
             description = "Re-runs the named differential analysis using its original configuration. Returns 202 "
                     + "with a `Location` header pointing at `/tasks/{taskId}`.",
@@ -7912,7 +7953,7 @@ public class DatasetsWebService {
     @DELETE
     @Path("/{dataset}/tasks/differential/{analysisId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Remove of a differential expression analysis",
             description = "Asynchronously deletes the named differential analysis from the dataset. Returns 202 "
                     + "with a `Location` header pointing at `/tasks/{taskId}`; the actual delete completes "
@@ -7948,7 +7989,7 @@ public class DatasetsWebService {
     @POST
     @Path("/{dataset}/analyses/differential/{analysisId}/redo")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Redo an existing differential expression analysis (alias of /tasks/redo/{analysisId})", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
@@ -7966,7 +8007,7 @@ public class DatasetsWebService {
     @DELETE
     @Path("/{dataset}/analyses/differential/{analysisId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Remove a differential expression analysis (alias of /tasks/differential/{analysisId})", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
@@ -7988,7 +8029,7 @@ public class DatasetsWebService {
     @DELETE
     @Path("/{dataset}/data/raw")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Delete raw expression data vectors for a dataset",
             description = "Synchronous deletion of the raw expression data vectors for the dataset. "
                     + "The `confirm=true` query parameter MUST be supplied; without it the call returns `400` "
@@ -8035,7 +8076,7 @@ public class DatasetsWebService {
     @DELETE
     @Path("/{dataset}/data/processed")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Delete processed expression data vectors for a dataset",
             description = "Synchronous deletion of the processed expression data vectors for the dataset. "
                     + "The `confirm=true` query parameter MUST be supplied; without it the call returns `400` "
@@ -8952,7 +8993,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/quantitationTypes/{qtId}/preferred")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Set (or clear) a quantitation type's preferred flag",
             description = "Body: optional `{\"preferred\": true|false}` (defaults to `true`). Marks the named "
                     + "QT as preferred for its vector-type bucket on the given dataset; any other QT that was "
@@ -9125,7 +9166,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/quantitationTypes/{qtId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Correct a quantitation type's record",
             description = "Changes what the stored numbers are SAID to be. It does not touch the numbers, so this "
                     + "is how a wrongly-recorded quantitation type is fixed without replacing data — the case it "
@@ -9886,7 +9927,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/design")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Replace the experimental design of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))),
             @ApiResponse(responseCode = "400", description = "The proposed design has validation blockers; see the report in the response body.",
@@ -10166,7 +10207,7 @@ public class DatasetsWebService {
      * does not reflect the presence or absence of a batch effect.
      */
     @GET
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Indicate of a dataset has batch information", hidden = true)
@@ -10178,7 +10219,7 @@ public class DatasetsWebService {
     }
 
     @GET
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{dataset}/batchInformation")
     @Operation(summary = "Retrieve the batch information of a dataset", hidden = true)
@@ -11131,7 +11172,7 @@ public class DatasetsWebService {
      * This has the main side effect of refreshing the second-level cache with the contents of the database.
      */
     @GET
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Path("/{dataset}/refresh")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve a refreshed dataset",
