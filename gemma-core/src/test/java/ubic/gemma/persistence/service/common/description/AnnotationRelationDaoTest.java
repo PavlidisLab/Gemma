@@ -33,6 +33,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import javax.annotation.Nullable;
 
 /**
  * Reads over {@code ANNOTATION_RELATION}.
@@ -65,6 +66,7 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     private static final String DISEASE_MODEL = "http://gemma.msl.ubc.ca/ont/TGEMO_00101";
     private static final String CELL_TYPE = "http://www.ebi.ac.uk/efo/EFO_0000324";
     private static final String MOTOR_NEURON = "http://purl.obolibrary.org/obo/CL_0011001";
+    private static final String BRAIN = "http://purl.obolibrary.org/obo/UBERON_0000955";
     private static final String IPSC_LINE = "http://purl.obolibrary.org/obo/CLO_0037279";
     private static final String OXIDOPAMINE = "http://purl.obolibrary.org/obo/CHEBI_78741";
     private static final String HAS_ROLE = "http://purl.obolibrary.org/obo/RO_0000087";
@@ -571,6 +573,78 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
 
     private static int readMask() {
         return BasePermission.READ.getMask();
+    }
+
+    /**
+     * The complement of {@code subjectCategoryUris}: everything except one kind of implying term.
+     * <p>
+     * Naming the categories to KEEP cannot express this — it would mean enumerating every category the
+     * store holds and revisiting that list whenever one is added — which is why the exclusion exists
+     * rather than the caller inverting the include.
+     * <p>
+     * 🛑 The uncategorised row is the one that matters. {@code NOT IN} against a NULL column evaluates to
+     * NULL, never true, so the obvious clause drops every subject with no category alongside the excluded
+     * one. An unknown category is not the excluded category.
+     * <p>
+     * {@code termLevelOnly(false)} because topicality is decided downstream of this clause and would
+     * remove the uncategorised row for a different reason, which is the one thing that would make a green
+     * result here meaningless.
+     */
+    @Test
+    public void testExcludedSubjectCategoryDropsOnlyThatCategory() {
+        seedThreeSubjectsOfOneObject();
+
+        List<AnnotationRelationDao.RelationSummary> found = annotationRelationDao.findRelations(
+                new AnnotationRelationDao.RelationQuery()
+                        .objectValueUris( Collections.singleton( BRAIN ) )
+                        .termLevelOnly( false )
+                        .excludedSubjectCategoryUris( Collections.singleton( CELL_TYPE ) ) );
+
+        assertThat( found ).extracting( AnnotationRelationDao.RelationSummary::getSubjectValueUri )
+                .as( "the cell-type subject is gone, and the uncategorised one is NOT" )
+                .containsExactlyInAnyOrder( IPSC_LINE, OXIDOPAMINE );
+    }
+
+    /** With no exclusion the same three rows all come back, so the filter is what removed the row above. */
+    @Test
+    public void testNoExclusionKeepsEveryCategory() {
+        seedThreeSubjectsOfOneObject();
+
+        List<AnnotationRelationDao.RelationSummary> found = annotationRelationDao.findRelations(
+                new AnnotationRelationDao.RelationQuery()
+                        .objectValueUris( Collections.singleton( BRAIN ) )
+                        .termLevelOnly( false ) );
+
+        assertThat( found ).extracting( AnnotationRelationDao.RelationSummary::getSubjectValueUri )
+                .containsExactlyInAnyOrder( MOTOR_NEURON, IPSC_LINE, OXIDOPAMINE );
+    }
+
+    /** Three subjects of one object, differing only in subject category: cell type, cell line, none. */
+    private void seedThreeSubjectsOfOneObject() {
+        annotationRelationDao.create( categorisedOntologyRow( MOTOR_NEURON, "motor neuron",
+                BRAIN, "brain", "cell type", CELL_TYPE ) );
+        annotationRelationDao.create( categorisedOntologyRow( IPSC_LINE, "an iPSC line",
+                BRAIN, "brain", "cell line", "http://purl.obolibrary.org/obo/CLO_0000031" ) );
+        annotationRelationDao.create( categorisedOntologyRow( OXIDOPAMINE, "oxidopamine",
+                BRAIN, "brain", null, null ) );
+    }
+
+    /** An ONTOLOGY row with the subject category spelled explicitly, including "no category at all". */
+    private AnnotationRelation categorisedOntologyRow( String subjectUri, String subjectValue, String objectUri,
+            String objectValue, @Nullable String category, @Nullable String categoryUri ) {
+        AnnotationRelation r = new AnnotationRelation();
+        r.setSubjectValue( subjectValue );
+        r.setSubjectValueUri( subjectUri );
+        r.setSubjectCategory( category );
+        r.setSubjectCategoryUri( categoryUri );
+        r.setPredicate( "part of" );
+        r.setPredicateUri( "http://purl.obolibrary.org/obo/BFO_0000050" );
+        r.setObjectValue( objectValue );
+        r.setObjectValueUri( objectUri );
+        r.setBasis( AnnotationRelationBasis.ONTOLOGY );
+        r.setSource( "CL" );
+        r.setGeneratedAt( new Date() );
+        return r;
     }
 
     private AnnotationRelation relation( String subjectUri, String objectUri, AnnotationRelationBasis basis ) {

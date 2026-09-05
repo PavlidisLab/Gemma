@@ -2834,6 +2834,101 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     }
 
     /**
+     * On a single-cell dataset the cell types belong to the CELLS, so what they imply is not a fact about
+     * the experiment. Measured on GSE295459 (eid 58319): the forward walk returned 14 rows, and all 8
+     * organism parts among them were a soma location or part-of of a cell-type subject — an antibiotic
+     * study described by brain anatomy. Paul ruled the cut belongs here rather than at render time, where
+     * the terms would still reach audit and export.
+     */
+    @Test
+    @WithMockUser
+    public void testASingleCellDatasetDropsCellTypeSubjects() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+        ExpressionExperiment sc = new ExpressionExperiment();
+        when( expressionExperimentService.load( 58319L ) ).thenReturn( sc );
+        when( expressionExperimentService.isSingleCell( sc ) ).thenReturn( true );
+
+        target( "/annotations/relations" )
+                .queryParam( "dataset", "58319" )
+                .queryParam( "seedDirection", "SUBJECT_TO_OBJECT" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() ).anySatisfy( q -> assertThat( q.getExcludedSubjectCategoryUris() )
+                .containsExactly( "http://www.ebi.ac.uk/efo/EFO_0000324" ) );
+    }
+
+    /**
+     * 🛑 The control that keeps the cut honest. A constant cell type on a BULK experiment IS an
+     * experiment-level property, and what it implies is worth having — so the filter keys on isSingleCell
+     * and never on the category alone.
+     */
+    @Test
+    @WithMockUser
+    public void testABulkDatasetKeepsCellTypeSubjects() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+        ExpressionExperiment bulk = new ExpressionExperiment();
+        when( expressionExperimentService.load( 91237L ) ).thenReturn( bulk );
+        when( expressionExperimentService.isSingleCell( bulk ) ).thenReturn( false );
+
+        target( "/annotations/relations" )
+                .queryParam( "dataset", "91237" )
+                .queryParam( "seedDirection", "SUBJECT_TO_OBJECT" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() )
+                .allSatisfy( q -> assertThat( q.getExcludedSubjectCategoryUris() ).isEmpty() );
+    }
+
+    /**
+     * ...and a caller who asks for them gets them back. Without this the cut could not be turned off, and a
+     * suppression with no way to see what it removed is indistinguishable from an experiment that never
+     * carried the term — the next person asking why the cell type is missing would have nothing to read.
+     */
+    @Test
+    @WithMockUser
+    public void testIncludeCellTypeSubjectsTurnsTheSingleCellCutOff() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+        ExpressionExperiment sc = new ExpressionExperiment();
+        when( expressionExperimentService.load( 58319L ) ).thenReturn( sc );
+        when( expressionExperimentService.isSingleCell( sc ) ).thenReturn( true );
+
+        target( "/annotations/relations" )
+                .queryParam( "dataset", "58319" )
+                .queryParam( "seedDirection", "SUBJECT_TO_OBJECT" )
+                .queryParam( "includeCellTypeSubjects", "true" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() )
+                .allSatisfy( q -> assertThat( q.getExcludedSubjectCategoryUris() ).isEmpty() );
+    }
+
+    /** A term-seeded read carries no dataset, so there is nothing to call single-cell and no cut. */
+    @Test
+    @WithMockUser
+    public void testATermSeededReadIsNeverCellTypeFiltered() {
+        when( annotationRelationService.findRelations( any() ) ).thenReturn( Collections.emptyList() );
+
+        target( "/annotations/relations" )
+                .queryParam( "subject", "http://purl.obolibrary.org/obo/CL_0000128" )
+                .request().get();
+
+        ArgumentCaptor<ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery> captor =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.RelationQuery.class );
+        verify( annotationRelationService, atLeastOnce() ).findRelations( captor.capture() );
+        assertThat( captor.getAllValues() )
+                .allSatisfy( q -> assertThat( q.getExcludedSubjectCategoryUris() ).isEmpty() );
+    }
+
+    /**
      * Positive control for the two above: a term-seeded read is NOT barred. A term card asking what is
      * known about DMSO wants its role list; that is the answer there, not the noise.
      */

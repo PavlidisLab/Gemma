@@ -100,6 +100,12 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         if ( !q.getSubjectCategoryUris().isEmpty() ) {
             where.append( " and R.SUBJECT_CATEGORY_URI in (:subjectCategoryUris)" );
         }
+        if ( !q.getExcludedSubjectCategoryUris().isEmpty() ) {
+            // Null-safe by the same rule as the excluded-experiment clause below: a NOT IN against a NULL
+            // column is NULL, never true, so without the guard every subject with no category would be
+            // dropped alongside the excluded ones.
+            where.append( " and (R.SUBJECT_CATEGORY_URI is null or R.SUBJECT_CATEGORY_URI not in (:excludedSubjectCategoryUris))" );
+        }
         if ( !q.getObjectCategoryUris().isEmpty() ) {
             where.append( " and R.OBJECT_CATEGORY_URI in (:objectCategoryUris)" );
         }
@@ -199,6 +205,9 @@ public class AnnotationRelationDaoImpl extends AbstractDao<AnnotationRelation> i
         }
         if ( !q.getSubjectCategoryUris().isEmpty() ) {
             query.setParameterList( "subjectCategoryUris", q.getSubjectCategoryUris() );
+        }
+        if ( !q.getExcludedSubjectCategoryUris().isEmpty() ) {
+            query.setParameterList( "excludedSubjectCategoryUris", q.getExcludedSubjectCategoryUris() );
         }
         if ( !q.getObjectCategoryUris().isEmpty() ) {
             query.setParameterList( "objectCategoryUris", q.getObjectCategoryUris() );

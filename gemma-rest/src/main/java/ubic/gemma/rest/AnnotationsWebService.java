@@ -48,6 +48,7 @@ import ubic.gemma.core.ontology.lexical.LexicalTermMetadata;
 import ubic.gemma.model.common.description.AnnotationRelationBasis;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchResult;
@@ -828,7 +829,13 @@ public class AnnotationsWebService {
                     + "loaded ontology asserts it), EXTERNAL (a third-party resource), or CORPUS (attested "
                     + "only by co-occurrence in our own curation). An assertion outranks an attestation, and "
                     + "a CORPUS-only row is reported as uncorroborated. Nothing here is an annotation: these "
-                    + "are derived facts, and none of them has been written onto any experiment.",
+                    + "are derived facts, and none of them has been written onto any experiment.\n\n"
+                    + "🛑 On a SINGLE-CELL dataset, a `dataset` read drops relations whose SUBJECT is a "
+                    + "cell type. There the cell types describe the cells rather than the experiment — Gemma "
+                    + "keeps them per subset and in `/datasets/{id}/cellTypeAssignment` — so what they imply "
+                    + "is true of a fraction of the cells and not of the study. Bulk is unaffected: a constant "
+                    + "cell type there is a real experiment-level property. `includeCellTypeSubjects=true` "
+                    + "returns them, for seeing what the cut removed.",
             responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
     public ResponseDataObject<List<AnnotationRelationValueObject>> getAnnotationRelations(
             @Parameter(description = "Term on the subject side, as a URI or a plain value.") @QueryParam("subject") @Nullable String subject,
@@ -886,6 +893,12 @@ public class AnnotationsWebService {
                     + "by `status` -- REFUTED rather than ASSERTED -- because the predicate is stored "
                     + "assertively and carries no negation of its own. Today only MGI writes them, from its "
                     + "not-disease report.") @QueryParam("includeRefuted") @DefaultValue("false") boolean includeRefuted,
+            @Parameter(description = "Keep relations whose SUBJECT is a cell type on a single-cell "
+                    + "dataset, which a `dataset` read drops by default. For seeing what the cut removed: a "
+                    + "suppression that leaves no trace is indistinguishable from a term the experiment never "
+                    + "carried, so the terms have to be reachable by someone asking why one is missing. No "
+                    + "effect on a bulk dataset or a term-seeded read, neither of which is cut.")
+            @QueryParam("includeCellTypeSubjects") @DefaultValue("false") boolean includeCellTypeSubjects,
             @QueryParam("limit") @DefaultValue("50") int limit
     ) {
         if ( StringUtils.isBlank( subject ) && StringUtils.isBlank( object ) && datasetId == null ) {
@@ -942,10 +955,37 @@ public class AnnotationsWebService {
                 // excludeDatasets is left alone: the caller has said what it wants excluded.
                 q.excludedExperimentIds( Collections.singleton( datasetId ) );
             }
+            // On a single-cell dataset the cell types describe the CELLS, not the experiment: Gemma keeps
+            // them per subset and in /datasets/{id}/cellTypeAssignment, and on GSE295459 (eid 58319) 40 of
+            // 59 annotations hang off an ExpressionExperimentSubSet. Seeding from them answers "what is this
+            // experiment about" with what is true of a fraction of its cells -- that dataset's forward walk
+            // returned 8 organism parts, every one of them a soma location or part-of of a cell type, so an
+            // antibiotic study reads as an anatomy study. A cell's soma location is a property of the cell.
+            // Paul, 2026-09-04: "this is a confusion about single-cell data. This is a 'factor' that cells
+            // are assigned to."
+            //
+            // 🛑 Keyed on isSingleCell, never on the category alone. A constant cell type on a BULK
+            // experiment is a real experiment-level property and what it implies is worth having.
+            if ( !includeCellTypeSubjects && isSingleCellDataset( datasetId ) ) {
+                q.excludedSubjectCategoryUris( Collections.singleton( Categories.CELL_TYPE.getCategoryUri() ) );
+            }
         }
         return respond( annotationRelationService.findRelations( q ).stream()
                 .map( AnnotationRelationValueObject::new )
                 .collect( Collectors.toList() ) );
+    }
+
+    /**
+     * Whether the seeded dataset is single-cell, for the cell-type cut on a {@code dataset} read.
+     * <p>
+     * A dataset that does not resolve — an id that is not an {@link ExpressionExperiment}, or one the
+     * caller cannot see — is treated as not single-cell, so the cut never becomes a second, silent ACL.
+     * The relation query does its own ACL filtering, and answering "no cut" for a dataset nobody can read
+     * changes nothing about what comes back.
+     */
+    private boolean isSingleCellDataset( Long datasetId ) {
+        ExpressionExperiment ee = expressionExperimentService.load( datasetId );
+        return ee != null && expressionExperimentService.isSingleCell( ee );
     }
 
     /**

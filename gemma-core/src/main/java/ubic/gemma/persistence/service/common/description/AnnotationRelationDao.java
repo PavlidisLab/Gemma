@@ -591,6 +591,7 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
         private Collection<String> objectValues = Collections.emptySet();
         private Collection<String> predicateUris = Collections.emptySet();
         private Collection<String> subjectCategoryUris = Collections.emptySet();
+        private Collection<String> excludedSubjectCategoryUris = Collections.emptySet();
         private Collection<String> objectCategoryUris = Collections.emptySet();
         private Set<AnnotationRelationBasis> bases = EnumSet.allOf( AnnotationRelationBasis.class );
         private Collection<Long> excludedExperimentIds = Collections.emptySet();
@@ -658,6 +659,24 @@ public interface AnnotationRelationDao extends BaseDao<AnnotationRelation> {
 
         public RelationQuery subjectCategoryUris( Collection<String> v ) {
             this.subjectCategoryUris = v;
+            return this;
+        }
+
+        public Collection<String> getExcludedSubjectCategoryUris() {
+            return excludedSubjectCategoryUris;
+        }
+
+        /**
+         * Subject categories to leave out, for a caller that wants everything except one kind of
+         * implying term. The complement of {@link #subjectCategoryUris(Collection)}, which cannot
+         * express this: naming the categories to keep means enumerating every category the store
+         * holds and revisiting that list whenever one is added.
+         * <p>
+         * A relation whose subject has no category is kept — an unknown category is not the excluded
+         * one, and the alternative silently drops every uncategorised subject alongside the target.
+         */
+        public RelationQuery excludedSubjectCategoryUris( Collection<String> v ) {
+            this.excludedSubjectCategoryUris = v;
             return this;
         }
 
