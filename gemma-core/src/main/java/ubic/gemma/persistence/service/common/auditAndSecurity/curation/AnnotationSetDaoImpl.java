@@ -19,6 +19,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
@@ -39,7 +40,20 @@ public class AnnotationSetDaoImpl extends AbstractDao<AnnotationSet>
                     + " a.createdAt, a.updatedAt, a.finalizedAt, a.finalizedBy,"
                     + " a.agentVersion, a.model, a.runSha, a.agentName, a.ranAt,"
                     + " a.investigation.id, a.parent.id,"
-                    + " cast(length(a.payloadJson) as long) )";
+                    + " cast(length(a.payloadJson) as long),"
+                    + " a.status, a.factorCount, a.tagCount, ee.shortName )";
+
+    /**
+     * The join that supplies {@code ee.shortName}, so a list row can name its experiment.
+     * <p>
+     * 🛑 LEFT, and it has to be. {@code shortName} lives on ExpressionExperiment rather than on
+     * Investigation, so reaching it needs a downcast; an inner join would then silently drop every
+     * annotation set whose investigation is some other Investigation subtype -- the implicit-join
+     * trap, where {@code a.b.c} quietly filters rather than projecting. There are no such rows today,
+     * which is exactly why an inner join here would look correct until the day there are.
+     */
+    private static final String SUMMARY_JOIN =
+            " left join treat(a.investigation as ExpressionExperiment) ee";
 
     @Autowired
     public AnnotationSetDaoImpl( SessionFactory sessionFactory ) {
@@ -79,6 +93,7 @@ public class AnnotationSetDaoImpl extends AbstractDao<AnnotationSet>
         return getSessionFactory().getCurrentSession()
                 .createQuery( SUMMARY_PROJECTION
                         + " from AnnotationSet a"
+                        + SUMMARY_JOIN
                         + " where a.investigation = :inv"
                         + " and ( :role is null or a.role = :role )"
                         + " order by a.createdAt desc, a.id desc" )
@@ -129,14 +144,22 @@ public class AnnotationSetDaoImpl extends AbstractDao<AnnotationSet>
     public List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
             @Nullable List<Long> investigationIds, int offset, int limit,
             @Nullable SummarySort sort, boolean descending ) {
         boolean restrictByInv = investigationIds != null && !investigationIds.isEmpty();
         StringBuilder hql = new StringBuilder( SUMMARY_PROJECTION )
                 .append( " from AnnotationSet a" )
+                .append( SUMMARY_JOIN )
                 .append( " where ( :role is null or a.role = :role )" )
                 .append( " and ( :source is null or a.source = :source )" )
-                .append( " and ( :createdBy is null or a.createdBy = :createdBy )" );
+                .append( " and ( :createdBy is null or a.createdBy = :createdBy )" )
+                // kind and role are INDEPENDENT: role=proposal is 75% audit output on gemma2 today
+                // (cab, 2026-09-04 -- 6 of 8 rows), so an inbox that filters role alone lists another
+                // programme's findings as proposals. This is the filter that separates them.
+                .append( " and ( :kind is null or a.kind = :kind )" )
+                .append( " and ( :status is null or a.status = :status )" );
         if ( restrictByInv ) {
             hql.append( " and a.investigation.id in (:invIds)" );
         }
@@ -160,6 +183,8 @@ public class AnnotationSetDaoImpl extends AbstractDao<AnnotationSet>
                 .setParameter( "role", roleFilter )
                 .setParameter( "source", sourceFilter )
                 .setParameter( "createdBy", createdByFilter )
+                .setParameter( "kind", kindFilter )
+                .setParameter( "status", statusFilter )
                 .setFirstResult( Math.max( 0, offset ) )
                 .setMaxResults( Math.max( 1, limit ) );
         if ( restrictByInv ) {
@@ -172,12 +197,18 @@ public class AnnotationSetDaoImpl extends AbstractDao<AnnotationSet>
     public long countSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
             @Nullable List<Long> investigationIds ) {
         boolean restrictByInv = investigationIds != null && !investigationIds.isEmpty();
         StringBuilder hql = new StringBuilder( "select count(a) from AnnotationSet a" )
                 .append( " where ( :role is null or a.role = :role )" )
                 .append( " and ( :source is null or a.source = :source )" )
-                .append( " and ( :createdBy is null or a.createdBy = :createdBy )" );
+                .append( " and ( :createdBy is null or a.createdBy = :createdBy )" )
+                // Same two predicates as listSummaries, and they have to be here too: a count that
+                // ignores a filter the page applies reports a total the caller cannot page to.
+                .append( " and ( :kind is null or a.kind = :kind )" )
+                .append( " and ( :status is null or a.status = :status )" );
         if ( restrictByInv ) {
             hql.append( " and a.investigation.id in (:invIds)" );
         }
@@ -185,7 +216,9 @@ public class AnnotationSetDaoImpl extends AbstractDao<AnnotationSet>
                 .createQuery( hql.toString() )
                 .setParameter( "role", roleFilter )
                 .setParameter( "source", sourceFilter )
-                .setParameter( "createdBy", createdByFilter );
+                .setParameter( "createdBy", createdByFilter )
+                .setParameter( "kind", kindFilter )
+                .setParameter( "status", statusFilter );
         if ( restrictByInv ) {
             q.setParameterList( "invIds", investigationIds );
         }

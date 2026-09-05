@@ -69,6 +69,32 @@ public class AnnotationSetSummaryValueObject extends IdentifiableValueObject<Ann
     @Nullable
     private Long payloadSize;
 
+    /**
+     * Where a proposal stands with its reviewer. A free string, not an enum -- see
+     * {@link AnnotationSet#getStatus()}. Null on roles that are not reviewed.
+     */
+    @Nullable
+    private String status;
+
+    /** Derived hint; null means unknown, never zero. See {@link AnnotationSetPayloadCounts}. */
+    @Nullable
+    private Integer factorCount;
+
+    /** Derived hint; null means unknown, never zero. See {@link AnnotationSetPayloadCounts}. */
+    @Nullable
+    private Integer tagCount;
+
+    /**
+     * The dataset's short name ({@code GSE6966}), so a list row can name its experiment.
+     * <p>
+     * The inbox groups rows by experiment and labels each group; carrying only {@code investigationId}
+     * cost a fetch per row to print the label (uib, 2026-09-04). Null when the investigation is not an
+     * ExpressionExperiment -- the join that supplies it is a LEFT join for exactly that reason, so a
+     * set on some other Investigation subtype still appears in the list rather than vanishing from it.
+     */
+    @Nullable
+    private String datasetShortName;
+
     public AnnotationSetSummaryValueObject() {
         super();
     }
@@ -83,7 +109,9 @@ public class AnnotationSetSummaryValueObject extends IdentifiableValueObject<Ann
             @Nullable Date finalizedAt, @Nullable String finalizedBy,
             @Nullable String agentVersion, @Nullable String model,
             @Nullable String runSha, @Nullable String agentName, @Nullable Date ranAt,
-            Long investigationId, @Nullable Long parentId, @Nullable Long payloadSize ) {
+            Long investigationId, @Nullable Long parentId, @Nullable Long payloadSize,
+            @Nullable String status, @Nullable Integer factorCount, @Nullable Integer tagCount,
+            @Nullable String datasetShortName ) {
         super( id );
         this.role = role;
         this.source = source;
@@ -102,5 +130,9 @@ public class AnnotationSetSummaryValueObject extends IdentifiableValueObject<Ann
         this.investigationId = investigationId;
         this.parentId = parentId;
         this.payloadSize = payloadSize;
+        this.status = status;
+        this.factorCount = factorCount;
+        this.tagCount = tagCount;
+        this.datasetShortName = datasetShortName;
     }
 }

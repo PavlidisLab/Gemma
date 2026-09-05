@@ -394,6 +394,113 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
      * MySQL's null-ordering rule; H2 is emulation and is not evidence for it.
      */
     @Test
+    @DisplayName("a proposal starts pending; a role that is not reviewed has no status at all")
+    public void status_defaultsToPendingOnProposalsOnly() {
+        AnnotationSet proposal = annotationSetService.attach( preboarded, AnnotationSetRole.PROPOSAL,
+                AnnotationSetSource.AGENT, AgentCurationKind.PROPOSAL, "run-st-" + UUID.randomUUID(),
+                "agent-status", null, null, null, "{}", null ).getAnnotationSet();
+        AnnotationSet commit = annotationSetService.attach( preboarded, AnnotationSetRole.COMMIT,
+                AnnotationSetSource.AGENT, AgentCurationKind.PROPOSAL, "run-st2-" + UUID.randomUUID(),
+                "agent-status", null, null, null, "{}", null ).getAnnotationSet();
+        flushAndClear();
+
+        assertEquals( "pending", annotationSetService.load( proposal.getId() ).getStatus(),
+                "lowercase, the spelling the column and the wire share" );
+        // 🛑 Not "pending": null here means the set is not a kind that gets reviewed. Collapsing the
+        // two would make a commit look like outstanding review work in any status-filtered queue.
+        assertNull( annotationSetService.load( commit.getId() ).getStatus(),
+                "a commit is not a thing anybody rules on" );
+    }
+
+    @Test
+    @DisplayName("any status value is stored -- the vocabulary is open on purpose")
+    public void status_isNotAClosedSet() {
+        AnnotationSet a = annotationSetService.attach( preboarded, AnnotationSetRole.PROPOSAL,
+                AnnotationSetSource.AGENT, AgentCurationKind.PROPOSAL, "run-open-" + UUID.randomUUID(),
+                "agent-status", null, null, null, "{}", null ).getAnnotationSet();
+        // A fifth value nobody has agreed on. Paul, 2026-09-04: "don't lock us into any kind of enums."
+        // If this ever throws, someone has re-closed the vocabulary.
+        annotationSetService.updateStatus( a, "escalated_to_paul" );
+        flushAndClear();
+        assertEquals( "escalated_to_paul", annotationSetService.load( a.getId() ).getStatus() );
+    }
+
+    @Test
+    @DisplayName("counts come off the payload, and are refreshed when the payload is rewritten")
+    public void counts_areDerivedAndStayInStepWithThePayload() {
+        String two = "{\"design\":{\"factors\":{\"items\":[{},{}]}},\"tags\":{\"items\":[{}]}}";
+        AnnotationSet draft = annotationSetService.upsertDraft( preboarded, "curator-counts", two, null, null );
+        flushAndClear();
+        AnnotationSet reloaded = annotationSetService.load( draft.getId() );
+        assertEquals( Integer.valueOf( 2 ), reloaded.getFactorCount() );
+        assertEquals( Integer.valueOf( 1 ), reloaded.getTagCount() );
+
+        // The draft upsert rewrites the payload of a row that already carries counts. If the two ever
+        // drift, a card describes the previous revision while claiming to describe this one.
+        String none = "{\"design\":{\"factors\":{\"items\":[]}},\"tags\":{\"items\":[]}}";
+        annotationSetService.upsertDraft( preboarded, "curator-counts", none, null, null );
+        flushAndClear();
+        AnnotationSet after = annotationSetService.load( draft.getId() );
+        assertEquals( Integer.valueOf( 0 ), after.getFactorCount(), "emptied, not stale" );
+        assertEquals( Integer.valueOf( 0 ), after.getTagCount() );
+
+        // A shape Gemma cannot read reports unknown rather than zero.
+        annotationSetService.upsertDraft( preboarded, "curator-counts", "{\"audit_proposal\":{}}", null, null );
+        flushAndClear();
+        assertNull( annotationSetService.load( draft.getId() ).getFactorCount() );
+    }
+
+    @Test
+    @DisplayName("kind separates audit output from proposals, which role alone does not")
+    public void listSummaries_filtersByKindAndStatus() {
+        String createdBy = "agent-kind-" + UUID.randomUUID();
+        annotationSetService.attach( preboarded, AnnotationSetRole.PROPOSAL,
+                AnnotationSetSource.AGENT, AgentCurationKind.PROPOSAL, "run-k1-" + UUID.randomUUID(),
+                createdBy, null, null, null, "{}", null );
+        // 🛑 role=PROPOSAL, kind=AUDIT. Not a contrivance: 6 of the 8 role=proposal rows on gemma2 are
+        // exactly this (cab, 2026-09-04), so a queue filtering role alone lists audit findings as
+        // proposals. This is the row that makes the kind filter earn its place.
+        annotationSetService.attach( preboarded, AnnotationSetRole.PROPOSAL,
+                AnnotationSetSource.AGENT, AgentCurationKind.AUDIT, "run-k2-" + UUID.randomUUID(),
+                createdBy, null, null, null, "{}", null );
+        flushAndClear();
+        List<Long> invIds = Collections.singletonList( preboarded.getId() );
+
+        assertEquals( 2, annotationSetService.countSummaries( AnnotationSetRole.PROPOSAL, null,
+                createdBy, null, null, invIds ), "role alone does not separate them" );
+        assertEquals( 1, annotationSetService.countSummaries( AnnotationSetRole.PROPOSAL, null,
+                createdBy, AgentCurationKind.PROPOSAL, null, invIds ), "kind does" );
+        assertEquals( 1, annotationSetService.listSummaries( AnnotationSetRole.PROPOSAL, null,
+                createdBy, AgentCurationKind.AUDIT, null, invIds, 0, 10, null, true ).size() );
+
+        // status filter, and the count must agree with the page or a caller cannot page to the total
+        assertEquals( 2, annotationSetService.countSummaries( AnnotationSetRole.PROPOSAL, null,
+                createdBy, null, "pending", invIds ) );
+        assertEquals( 0, annotationSetService.countSummaries( AnnotationSetRole.PROPOSAL, null,
+                createdBy, null, "accepted", invIds ) );
+    }
+
+    @Test
+    @DisplayName("a set on a non-experiment investigation still lists, with no short name")
+    public void listSummaries_leftJoinKeepsNonExperimentRows() {
+        String createdBy = "agent-join-" + UUID.randomUUID();
+        annotationSetService.attach( preboarded, AnnotationSetRole.PROPOSAL,
+                AnnotationSetSource.AGENT, AgentCurationKind.PROPOSAL, "run-j-" + UUID.randomUUID(),
+                createdBy, null, null, null, "{}", null );
+        flushAndClear();
+
+        // 🛑 The guard on the datasetShortName join. shortName lives on ExpressionExperiment, so
+        // reaching it needs a downcast; an INNER join would drop every row whose investigation is some
+        // other Investigation subtype -- this preboarded one -- and the list would simply be short, with
+        // nothing to indicate it. The assertion that matters is the size, not the null.
+        List<AnnotationSetSummaryValueObject> rows = annotationSetService.listSummaries(
+                AnnotationSetRole.PROPOSAL, null, createdBy, null, null,
+                Collections.singletonList( preboarded.getId() ), 0, 10, null, true );
+        assertEquals( 1, rows.size(), "the downcast must not filter" );
+        assertNull( rows.get( 0 ).getDatasetShortName(), "and it has no short name to report" );
+    }
+
+    @Test
     @DisplayName("Cross-experiment list sorts by ranAt, nulls last, independent of createdAt")
     public void listSummaries_sortsByRanAt() {
         Calendar cal = Calendar.getInstance();
@@ -421,21 +528,21 @@ public class AnnotationSetPersistenceIT extends BaseIntegrationTest5 {
         List<Long> invIds = Collections.singletonList( preboarded.getId() );
 
         List<Long> byRanAt = annotationSetService
-                .listSummaries( AnnotationSetRole.PROPOSAL, null, "agent-sort", invIds, 0, 10,
+                .listSummaries( AnnotationSetRole.PROPOSAL, null, "agent-sort", null, null, invIds, 0, 10,
                         AnnotationSetDao.SummarySort.RAN_AT, true )
                 .stream().map( AnnotationSetSummaryValueObject::getId ).collect( Collectors.toList() );
         assertEquals( Arrays.asList( augustId, juneId, noRunId ), byRanAt,
                 "newest run first, and the set no run produced sorts last" );
 
         List<Long> byCreatedAt = annotationSetService
-                .listSummaries( AnnotationSetRole.PROPOSAL, null, "agent-sort", invIds, 0, 10,
+                .listSummaries( AnnotationSetRole.PROPOSAL, null, "agent-sort", null, null, invIds, 0, 10,
                         AnnotationSetDao.SummarySort.CREATED_AT, true )
                 .stream().map( AnnotationSetSummaryValueObject::getId ).collect( Collectors.toList() );
         assertEquals( noRunId, byCreatedAt.get( 0 ),
                 "createdAt order is the storage order, which is not the run order" );
 
         List<Long> ascending = annotationSetService
-                .listSummaries( AnnotationSetRole.PROPOSAL, null, "agent-sort", invIds, 0, 10,
+                .listSummaries( AnnotationSetRole.PROPOSAL, null, "agent-sort", null, null, invIds, 0, 10,
                         AnnotationSetDao.SummarySort.RAN_AT, false )
                 .stream().map( AnnotationSetSummaryValueObject::getId ).collect( Collectors.toList() );
         assertEquals( Arrays.asList( noRunId, juneId, augustId ), ascending,

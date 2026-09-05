@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.springframework.lang.Nullable;
+import ubic.gemma.model.expression.experiment.AgentCurationKind;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
@@ -121,16 +122,20 @@ public interface AnnotationSetDao extends BaseDao<AnnotationSet> {
     List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
             @Nullable List<Long> investigationIds, int offset, int limit,
             @Nullable SummarySort sort, boolean descending );
 
     /**
      * Cross-experiment count. Counterpart of
-     * {@link #listSummaries(AnnotationSetRole, AnnotationSetSource, String, List, int, int, SummarySort, boolean)}.
+     * {@link #listSummaries(AnnotationSetRole, AnnotationSetSource, String, AgentCurationKind, String, List, int, int, SummarySort, boolean)}.
      */
     long countSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
             @Nullable List<Long> investigationIds );
 
     /**

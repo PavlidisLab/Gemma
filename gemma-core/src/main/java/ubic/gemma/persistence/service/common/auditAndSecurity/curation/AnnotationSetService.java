@@ -201,12 +201,16 @@ public interface AnnotationSetService {
     List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
             @Nullable List<Long> investigationIds, int offset, int limit,
             @Nullable AnnotationSetDao.SummarySort sort, boolean descending );
 
     long countSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
             @Nullable List<Long> investigationIds );
 
     /**
@@ -299,4 +303,19 @@ public interface AnnotationSetService {
             return created;
         }
     }
+
+    /**
+     * Record where a proposal stands with its reviewer, and return the updated set.
+     * <p>
+     * 🛑 The value is stored as given. There is deliberately no vocabulary check here — Paul,
+     * 2026-09-04: <i>"don't lock us into any kind of enums. if we settle down on this we might
+     * formalize it."</i> {@code pending | needs_changes | accepted | rejected} are the values in use,
+     * not the values permitted, and a caller sending a fifth gets it stored rather than rejected. The
+     * only gate is structural: non-blank, and short enough for the column.
+     *
+     * @param annotationSet the set to rule on
+     * @param status        the status, already trimmed and lowercased by the caller
+     * @return the updated set
+     */
+    AnnotationSet updateStatus( AnnotationSet annotationSet, String status );
 }

@@ -25,6 +25,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.util.Date;
 import java.util.Objects;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
@@ -217,7 +218,91 @@ public class AnnotationSet extends AbstractIdentifiable {
     @Column(name = "PARKED_ELEMENTS", columnDefinition = "LONGTEXT")
     private String parkedElements;
 
+    /**
+     * Where a proposal stands with its reviewer: {@code pending}, {@code needs_changes},
+     * {@code accepted}, {@code rejected} — the curation store's own four, adopted rather than
+     * re-spelled so rows from the two systems compare during the store's retirement.
+     * <p>
+     * 🛑 <b>A free string, and deliberately not an enum</b> — not a Java enum, not a DB enum, not a
+     * closed {@code allowableValues} list. Paul, 2026-09-04: <i>"one of the things that bugs me the
+     * most is the dispositions are hard to change — we have problems with a mismatch between the
+     * reason the curator would give, and the options. don't lock us into any kind of enums. if we
+     * settle down on this we might formalize it."</i> The four above are the values IN USE, not the
+     * values permitted: a fifth must round-trip rather than be rejected. cab reached the same place
+     * from experience — their {@code DismissReason} / {@code AcceptReason} / {@code NotSureReason}
+     * were closed enums until three separate handoffs amended the set three times, each revision
+     * costing a schema change and a deploy to add a word.
+     * <p>
+     * Stored in the lowercase wire spelling every other curation vocabulary uses, so no caller has
+     * to case-fold to compare a stored status with one it just sent.
+     * <p>
+     * 🛑 Not {@link #getFinalizedAt()}, which records that a review was CLOSED rather than which way
+     * it went; not the set's {@code AnnotationSetTriage} verdict, which is one judge's view of how
+     * much the set matters; and not a roll-up of its {@code AnnotationSetDisposition} rows, which
+     * are per FINDING and whose fold to a set-level answer needs an all/any/majority rule nobody
+     * has chosen.
+     * <p>
+     * {@code null} means the set is not a kind that gets reviewed — a draft, a snapshot, a commit.
+     * It does NOT mean "nobody has ruled yet"; that is {@code pending}, which is stored. This is the
+     * opposite of {@code TriageVerdict} and {@code FindingDisposition}, which have no pending value
+     * because absence of a ROW carries it there — a column on an always-present row cannot use
+     * absence for that and still have null mean anything else.
+     */
+    @Column(name = "STATUS", columnDefinition = "VARCHAR(32)")
+    @Nullable
+    private String status;
+
+    /**
+     * How many factors the payload proposes, or {@code null} when it is not known.
+     * <p>
+     * ⚠️ A derived HINT, not a contract. {@link #getPayloadJson()}'s shape belongs to its producer
+     * and Gemma persists it verbatim; this is read off it best-effort when the row is written and
+     * left null when the shape is not recognized. <b>Null means unknown, never zero.</b>
+     * <p>
+     * It exists because the cross-corpus list serves a thin projection with no payload, so an inbox
+     * card showing these numbers cost one full fetch per row — 94 KB on the set uib sampled, scaling
+     * with the corpus rather than with the screen.
+     */
+    @Column(name = "FACTOR_COUNT")
+    @Nullable
+    private Integer factorCount;
+
+    /**
+     * How many experiment-level tags the payload proposes, or {@code null} when it is not known.
+     * Same derived-hint status and same null-means-unknown reading as {@link #getFactorCount()}.
+     */
+    @Column(name = "TAG_COUNT")
+    @Nullable
+    private Integer tagCount;
+
     public AnnotationSet() {
+    }
+
+    @Nullable
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus( @Nullable String status ) {
+        this.status = status;
+    }
+
+    @Nullable
+    public Integer getFactorCount() {
+        return factorCount;
+    }
+
+    public void setFactorCount( @Nullable Integer factorCount ) {
+        this.factorCount = factorCount;
+    }
+
+    @Nullable
+    public Integer getTagCount() {
+        return tagCount;
+    }
+
+    public void setTagCount( @Nullable Integer tagCount ) {
+        this.tagCount = tagCount;
     }
 
     public Investigation getInvestigation() {

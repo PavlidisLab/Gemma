@@ -20,6 +20,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetPayloadCounts;
 import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
@@ -161,7 +162,12 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
             a.setAgentName( runProvenance.getAgentName() );
         }
         a.setRanAt( ranAt != null ? ranAt : ( source == AnnotationSetSource.AGENT ? now : null ) );
-        a.setPayloadJson( payloadJson );
+        applyPayload( a, payloadJson );
+        // A proposal starts un-ruled. Every other role is not a thing that gets reviewed, and its
+        // status stays null -- see AnnotationSet#getStatus for why those two readings are distinct.
+        if ( role == AnnotationSetRole.PROPOSAL ) {
+            a.setStatus( INITIAL_PROPOSAL_STATUS );
+        }
         a.setParent( parent );
         AnnotationSet saved = annotationSetDao.create( a );
         return new AttachedAnnotationSet( saved, true );
@@ -182,7 +188,7 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
                 investigation, AnnotationSetRole.DRAFT, runId );
         Date now = new Date();
         if ( existing != null ) {
-            existing.setPayloadJson( payloadJson );
+            applyPayload( existing, payloadJson );
             existing.setParkedElements( parkedElements );
             existing.setUpdatedAt( now );
             if ( parent != null && existing.getParent() == null ) {
@@ -199,7 +205,7 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         a.setCreatedBy( createdBy );
         a.setCreatedAt( now );
         a.setUpdatedAt( now );
-        a.setPayloadJson( payloadJson );
+        applyPayload( a, payloadJson );
         a.setParkedElements( parkedElements );
         a.setParent( parent );
         return annotationSetDao.create( a );
@@ -270,10 +276,12 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     public List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
             @Nullable List<Long> investigationIds, int offset, int limit,
             @Nullable AnnotationSetDao.SummarySort sort, boolean descending ) {
         return annotationSetDao.listSummaries( roleFilter, sourceFilter, createdByFilter,
-                investigationIds, offset, limit, sort, descending );
+                kindFilter, statusFilter, investigationIds, offset, limit, sort, descending );
     }
 
     @Override
@@ -281,9 +289,11 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     public long countSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
             @Nullable List<Long> investigationIds ) {
         return annotationSetDao.countSummaries( roleFilter, sourceFilter, createdByFilter,
-                investigationIds );
+                kindFilter, statusFilter, investigationIds );
     }
 
     @Nullable
@@ -446,5 +456,37 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
                 throw new IllegalArgumentException(
                         "runId must be supplied for role=" + role );
         }
+    }
+
+    /**
+     * The status a proposal is created with. Lowercase because that is the spelling the column and
+     * the wire share; a free string rather than a constant of some enum, deliberately -- see
+     * {@link AnnotationSet#getStatus()}.
+     */
+    private static final String INITIAL_PROPOSAL_STATUS = "pending";
+
+    /**
+     * Store a payload and the two counts derived from it, together.
+     * <p>
+     * One method because they must not drift: a payload written without refreshing the counts leaves
+     * an inbox card describing the previous revision, and the draft upsert rewrites the payload of a
+     * row that already has counts on it. Both write paths and the draft update go through here.
+     */
+    private static void applyPayload( AnnotationSet a, @Nullable String payloadJson ) {
+        a.setPayloadJson( payloadJson );
+        AnnotationSetPayloadCounts counts = AnnotationSetPayloadCounts.of( payloadJson );
+        a.setFactorCount( counts.getFactorCount() );
+        a.setTagCount( counts.getTagCount() );
+    }
+
+    @Override
+    @Transactional
+    public AnnotationSet updateStatus( AnnotationSet annotationSet, String status ) {
+        Assert.notNull( annotationSet, "annotationSet must not be null." );
+        Assert.hasText( status, "status must be non-blank." );
+        annotationSet.setStatus( status );
+        annotationSet.setUpdatedAt( new Date() );
+        annotationSetDao.update( annotationSet );
+        return annotationSet;
     }
 }

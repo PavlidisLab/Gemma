@@ -334,8 +334,15 @@ public class AnnotationSetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Cross-experiment list of annotation sets (thin projection)",
             description = "Always the thin projection — there is no `shape` parameter here and no way to "
-                    + "ask for `payloadJson`; rows carry `payloadSize` instead. Fetch one whole set with "
+                    + "ask for `payloadJson`. Rows carry `payloadSize`, plus `factorCount` / `tagCount` so a "
+                    + "list card can show what a proposal contains without fetching it, and "
+                    + "`datasetShortName` so a row can name its experiment. Fetch one whole set with "
                     + "`GET /annotation-sets/{id}`.\n\n"
+                    + "🛑 `role` AND `kind` ARE INDEPENDENT AXES, and `role=proposal` does not mean \"a "
+                    + "proposal\". Audit runs also file their output with `role=proposal`, and on the corpus "
+                    + "as it stands 6 of the 8 such rows are `kind=audit` (cab, 2026-09-04). A queue that "
+                    + "filters `role` alone therefore lists another programme's findings as proposals — pass "
+                    + "`kind=proposal` as well.\n\n"
                     + "`?sort=` takes `createdAt` (default), `ranAt` or `id`, prefixed `-` for descending "
                     + "(the default) or `+` for ascending. 🛑 `ranAt` is when the agent RUN happened and "
                     + "`createdAt` is when the row was stored; a queue wants the former, and sets no run "
@@ -347,6 +354,12 @@ public class AnnotationSetsWebService {
             @QueryParam("source") @Nullable String source,
             @Parameter(description = "Filter by createdBy (username or agent run identifier).")
             @QueryParam("createdBy") @Nullable String createdBy,
+            @Parameter(description = "Filter by kind: `proposal`, `audit`, or `all` (default). 🛑 NOT the same "
+                    + "axis as `role` — see the endpoint description.")
+            @QueryParam("kind") @Nullable String kind,
+            @Parameter(description = "Filter by review status, e.g. `pending`, `needs_changes`, `accepted`, "
+                    + "`rejected`. Matched literally; any value the field can hold can be filtered on.")
+            @QueryParam("status") @Nullable String status,
             @Parameter(description = "Restrict to a comma-separated list of dataset (investigation) ids.")
             @QueryParam("datasetIds") @Nullable String datasetIds,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
@@ -363,9 +376,14 @@ public class AnnotationSetsWebService {
         int limit = limitArg.getValue();
         boolean descending = !sort.startsWith( "+" );
         AnnotationSetDao.SummarySort sortField = parseSummarySortOrThrow( sort );
+        AgentCurationKind kindFilter = parseKindFilter( kind );
+        String statusFilter = status == null || status.isBlank() || "all".equalsIgnoreCase( status )
+                ? null : status.trim();
         List<AnnotationSetSummaryValueObject> vos = annotationSetService.listSummaries(
-                roleFilter, sourceFilter, createdBy, invIds, offset, limit, sortField, descending );
-        long total = annotationSetService.countSummaries( roleFilter, sourceFilter, createdBy, invIds );
+                roleFilter, sourceFilter, createdBy, kindFilter, statusFilter,
+                invIds, offset, limit, sortField, descending );
+        long total = annotationSetService.countSummaries( roleFilter, sourceFilter, createdBy,
+                kindFilter, statusFilter, invIds );
         List<AnnotationSetSummaryResponse> rows = new ArrayList<>( vos.size() );
         for ( AnnotationSetSummaryValueObject vo : vos ) {
             rows.add( toSummaryResponse( vo ) );
@@ -384,6 +402,23 @@ public class AnnotationSetsWebService {
      * than fall through to a default, or a caller paging a queue by `ranAt` would silently be served
      * `createdAt` order and could not tell.
      */
+    /**
+     * Parse {@code ?kind=}. {@code null} / blank / {@code all} mean no filter; anything else must name
+     * a kind, because silently ignoring an unrecognized value would serve an unfiltered list to a
+     * caller that believes it filtered — the exact failure this parameter exists to fix.
+     */
+    @Nullable
+    private AgentCurationKind parseKindFilter( @Nullable String kind ) {
+        if ( kind == null || kind.isBlank() || "all".equalsIgnoreCase( kind ) ) {
+            return null;
+        }
+        try {
+            return AgentCurationKind.fromDbValue( kind );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( e.getMessage() );
+        }
+    }
+
     private AnnotationSetDao.SummarySort parseSummarySortOrThrow( String sort ) {
         String field = sort.startsWith( "+" ) || sort.startsWith( "-" ) ? sort.substring( 1 ) : sort;
         switch ( field ) {
@@ -479,6 +514,67 @@ public class AnnotationSetsWebService {
         @JsonProperty("note")
         @Nullable
         public String note;
+    }
+
+    /* ============== review status ============== */
+
+    /**
+     * Set where a proposal stands with its reviewer.
+     */
+    @PATCH
+    @Path("/annotation-sets/{id}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
+    @Operation(summary = "Set a proposal's review status",
+            description = "The values in use are `pending`, `needs_changes`, `accepted` and `rejected` — the "
+                    + "curation store's own four, adopted rather than re-spelled.\n\n"
+                    + "🛑 THOSE ARE THE VALUES IN USE, NOT THE VALUES PERMITTED. The field is a free string on "
+                    + "purpose (Paul, 2026-09-04: \"don't lock us into any kind of enums. if we settle down on "
+                    + "this we might formalize it\"), so a value outside that list is STORED AND RETURNED rather "
+                    + "than rejected. The gate here is structural only — a status must be non-blank and must fit "
+                    + "the column — and never a vocabulary check. A client must not switch exhaustively on the "
+                    + "value it reads back.\n\n"
+                    + "Stored lowercase, which is the spelling every curation vocabulary uses on the wire, so a "
+                    + "caller never has to case-fold to compare.\n\n"
+                    + "🛑 Not `/triage`, which records one judge's `fine|wont_fix|might_fix|must_fix` on how much "
+                    + "a set matters, and not the per-finding `/dispositions`. This answers what happened to the "
+                    + "proposal as a whole.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The status was recorded.",
+                            content = @Content(schema = @Schema(implementation = AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "`status` is missing, blank, or too long.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response setAnnotationSetStatus( @PathParam("id") Long id, @Nullable StatusRequest body ) {
+        if ( body == null || body.status == null || body.status.isBlank() ) {
+            throw new BadRequestException( "Request body must include a non-blank `status`."
+                    + " The values in use are pending, needs_changes, accepted and rejected, but any"
+                    + " non-blank value is accepted -- this field is deliberately not a closed set." );
+        }
+        String normalized = body.status.trim().toLowerCase();
+        // The column is VARCHAR(32). Truncating would silently store a different status than the one
+        // sent, which on an open vocabulary nothing downstream could detect.
+        if ( normalized.length() > MAX_STATUS_LENGTH ) {
+            throw new BadRequestException( "`status` is longer than " + MAX_STATUS_LENGTH
+                    + " characters." );
+        }
+        AnnotationSet set = requireLoad( id, "id" );
+        return Response.ok( toResponse( annotationSetService.updateStatus( set, normalized ) ) ).build();
+    }
+
+    /** Matches the {@code STATUS VARCHAR(32)} column. */
+    private static final int MAX_STATUS_LENGTH = 32;
+
+    /** Body for {@link #setAnnotationSetStatus}. */
+    public static class StatusRequest {
+        /**
+         * Where the proposal stands. Free text by design; see the endpoint description.
+         */
+        @JsonProperty("status")
+        @Nullable
+        public String status;
     }
 
     /* ============== triage ============== */
@@ -1143,6 +1239,18 @@ public class AnnotationSetsWebService {
         @JsonProperty("payloadJson")
         @Nullable
         public String payloadJson;
+        @JsonProperty("status")
+        @Nullable
+        @Schema(description = "Where a proposal stands with its reviewer. The values in use are `pending`, `needs_changes`, `accepted` and `rejected` -- the curation store's own four. \uD83D\uDED1 These are the values IN USE, not the values permitted: the field is a free string on purpose (Paul: \"don't lock us into any kind of enums\"), so a value outside this list round-trips rather than being rejected, and a client must not switch exhaustively on it. Null means the set is not a kind that gets reviewed -- a draft, a snapshot, a commit -- and never \"nobody has ruled yet\", which is `pending`.")
+        public String status;
+        @JsonProperty("factorCount")
+        @Nullable
+        @Schema(description = "How many factors the payload proposes. A derived hint read off the payload when the row was written, NOT a contract: the payload's shape belongs to its producer and Gemma serves it unread. Null means UNKNOWN, never zero -- a payload with no factors reports 0.")
+        public Integer factorCount;
+        @JsonProperty("tagCount")
+        @Nullable
+        @Schema(description = "How many experiment-level tags the payload proposes. A derived hint read off the payload when the row was written, NOT a contract: the payload's shape belongs to its producer and Gemma serves it unread. Null means UNKNOWN, never zero -- a payload with no tags reports 0.")
+        public Integer tagCount;
         @JsonProperty("parkedElements")
         @Nullable
         public String parkedElements;
@@ -1215,6 +1323,23 @@ public class AnnotationSetsWebService {
         @JsonProperty("payloadSize")
         @Nullable
         public Long payloadSize;
+        @JsonProperty("status")
+        @Nullable
+        @Schema(description = "Where a proposal stands with its reviewer. The values in use are `pending`, `needs_changes`, `accepted` and `rejected` -- the curation store's own four. \uD83D\uDED1 These are the values IN USE, not the values permitted: the field is a free string on purpose (Paul: \"don't lock us into any kind of enums\"), so a value outside this list round-trips rather than being rejected, and a client must not switch exhaustively on it. Null means the set is not a kind that gets reviewed -- a draft, a snapshot, a commit -- and never \"nobody has ruled yet\", which is `pending`.")
+        public String status;
+        @JsonProperty("factorCount")
+        @Nullable
+        @Schema(description = "How many factors the payload proposes. A derived hint read off the payload when the row was written, NOT a contract: the payload's shape belongs to its producer and Gemma serves it unread. Null means UNKNOWN, never zero -- a payload with no factors reports 0.")
+        public Integer factorCount;
+        @JsonProperty("tagCount")
+        @Nullable
+        @Schema(description = "How many experiment-level tags the payload proposes. A derived hint read off the payload when the row was written, NOT a contract: the payload's shape belongs to its producer and Gemma serves it unread. Null means UNKNOWN, never zero -- a payload with no tags reports 0.")
+        public Integer tagCount;
+        @JsonProperty("datasetShortName")
+        @Nullable
+        @Schema(description = "The dataset's short name (e.g. `GSE6966`), so a list row can label "
+                + "its experiment without a fetch per row. Null when the investigation is not an experiment.")
+        public String datasetShortName;
     }
 
     /* ============== helpers ============== */
@@ -1392,6 +1517,9 @@ public class AnnotationSetsWebService {
         r.agentName = a.getAgentName();
         r.ranAt = a.getRanAt();
         r.payloadJson = a.getPayloadJson();
+        r.status = a.getStatus();
+        r.factorCount = a.getFactorCount();
+        r.tagCount = a.getTagCount();
         r.parkedElements = a.getParkedElements();
         r.finalizedNotes = a.getFinalizedNotes();
         if ( standing != null ) {
@@ -1424,6 +1552,10 @@ public class AnnotationSetsWebService {
         r.agentName = s.getAgentName();
         r.ranAt = s.getRanAt();
         r.payloadSize = s.getPayloadSize();
+        r.status = s.getStatus();
+        r.factorCount = s.getFactorCount();
+        r.tagCount = s.getTagCount();
+        r.datasetShortName = s.getDatasetShortName();
         return r;
     }
 }
