@@ -5209,6 +5209,41 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     }
 
     /**
+     * Omitting {@code evidenceCode} on a statement that has one is refused.
+     * <p>
+     * Same hazard as {@code supportingEvidence} beside it and initially shipped without the guard: an omission
+     * cleared a stored {@code IC} and reported {@code updated: 1}, indistinguishable from the edit the caller
+     * meant. The clear is spelled {@code ""} here rather than an absent key, because the field is a String and
+     * Jackson cannot tell a missing key from an explicit null.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesOmittedEvidenceCodeOnAStatementThatHasOne() {
+        StatementValueObject stmt = new StatementValueObject();
+        stmt.setId( 7L );
+        stmt.setSubject( "astrocyte" );
+        stmt.setEvidenceCode( "IC" );
+        ubic.gemma.model.expression.experiment.FactorValueBasicValueObject fv =
+                new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject();
+        fv.setId( 6L );
+        fv.setStatements( Collections.singletonList( stmt ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        factor.setId( 5L );
+        factor.setName( "cell type" );
+        factor.setValues( Collections.singletonList( fv ) );
+        ExperimentalDesignValueObject design = new ExperimentalDesignValueObject();
+        design.setExperimentalFactors( Collections.singletonList( factor ) );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( design );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"astrocyte\"}}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+        }
+    }
+
+    /**
      * Omitting evidence on a row that HAS evidence is refused; sending {@code []} clears it deliberately.
      * <p>
      * The design section is full-record replacement, so an absent key clears — harmless on a row holding none,

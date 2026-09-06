@@ -1920,7 +1920,10 @@ public class ExpressionExperimentServiceImpl
      */
     @Nullable
     private static GOEvidenceCode parseEvidenceCode( @Nullable String name ) {
-        if ( name == null ) {
+        if ( name == null || StringUtils.isBlank( name ) ) {
+            // Blank is the DELIBERATE clear. The field is a String, so an absent key and an explicit null are the
+            // same value to Jackson and cannot carry intent; "" can, and the REST layer refuses a bare omission
+            // on a row that has a code so the two are never confused.
             return null;
         }
         try {

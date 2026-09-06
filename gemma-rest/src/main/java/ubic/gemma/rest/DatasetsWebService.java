@@ -4981,6 +4981,22 @@ public class DatasetsWebService {
                 StatementValueObject curStmt = curStatementsById.get( sc.getGemmaId() );
                 requireEvidenceEchoed( location + ".statements[" + refOrIndex( sc.getClientRef(), idx ) + "]",
                         sc.getSupportingEvidence(), curStmt != null ? curStmt.getSupportingEvidence() : null );
+                // 🛑 evidenceCode carries the SAME hazard as supportingEvidence beside it, and is far more widely
+                // populated -- IC on curated statements, IIA on 23,066 backfilled GEO links. Omitting it on a row
+                // that has one cleared it silently and reported `updated: 1`, which is what the report says for a
+                // successful edit (uib lost one within a minute of the guard above shipping, 2026-09-06).
+                //
+                // The clear is spelled "" rather than an absent key, because this field is a String: Jackson
+                // gives null for both a missing key and an explicit null, so absence cannot carry intent the way
+                // it can for supportingEvidence, which is a JsonNode. An empty string is distinguishable and is
+                // the same null-vs-empty convention baselineRelevanceReason already uses in this payload.
+                if ( sc.getEvidenceCode() == null && curStmt != null && curStmt.getEvidenceCode() != null ) {
+                    throw new BadRequestException( location + ".statements["
+                            + refOrIndex( sc.getClientRef(), idx ) + "] omits evidenceCode, but that statement HAS"
+                            + " one recorded (" + curStmt.getEvidenceCode() + "). This section is full-record"
+                            + " replacement, so an omitted key would clear it. Send the code back to keep it, or"
+                            + " send an empty string to clear it deliberately." );
+                }
                 if ( sc.getSubject() == null || StringUtils.isBlank( sc.getSubject().getLabel() ) ) {
                     throw new BadRequestException( location + ".statements["
                             + refOrIndex( sc.getClientRef(), idx ) + "] carries gemmaId " + sc.getGemmaId()
