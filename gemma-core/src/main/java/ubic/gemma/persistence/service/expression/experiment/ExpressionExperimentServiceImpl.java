@@ -1251,7 +1251,7 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getId() == null ) continue; // a creation; already structural
                 FactorValue cur = currentFvsById.get( pv.getId() );
                 if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
-                if ( pv.getBaseline() != null && !Objects.equals( pv.getBaseline(), cur.getIsBaseline() ) ) {
+                if ( baselineChanged( pv, cur ) ) {
                     return true;
                 }
                 if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
@@ -1298,7 +1298,7 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getId() == null ) continue; // creations are already counted in the summary
                 FactorValue cur = currentFvsById.get( pv.getId() );
                 if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
-                if ( pv.getBaseline() != null && !Objects.equals( pv.getBaseline(), cur.getIsBaseline() ) ) {
+                if ( baselineChanged( pv, cur ) ) {
                     edited.add( cur );
                     continue;
                 }
@@ -1450,6 +1450,25 @@ public class ExpressionExperimentServiceImpl
         return !currentKeys.equals( proposedKeys );
     }
 
+    /**
+     * Whether a proposed factor value actually moves the baseline flag.
+     * <p>
+     * 🛑 {@code null} and {@code FALSE} both mean "not the baseline", and the stored flag is null on most
+     * values that have never been one. Comparing them with {@code Objects.equals} makes them differ, so a
+     * client that sends {@code isBaseline: false} — which is what any checkbox-backed UI sends for every value
+     * it renders — marked EVERY value of the factor as edited and wrote false over null on each.
+     * <p>
+     * Measured on GSE7866 (Paul, 2026-09-05): renaming one factor, touching no values, reported
+     * "factor values +0 / -0 / ~2" in the audit note and updated both rows. The factor has exactly two values
+     * and both were stored null.
+     * <p>
+     * {@code null} on the proposal still means "no change" and returns false, unchanged.
+     */
+    private static boolean baselineChanged( FactorValueBasicValueObject pv, FactorValue cur ) {
+        return pv.getBaseline() != null
+                && pv.getBaseline() != Boolean.TRUE.equals( cur.getIsBaseline() );
+    }
+
     private void updateFactorMetadata( ExperimentalFactor ef, ExperimentalDesignValueObject.ExperimentalFactorEntry pf ) {
         if ( pf.getName() != null ) {
             ef.setName( pf.getName() );
@@ -1507,8 +1526,9 @@ public class ExpressionExperimentServiceImpl
                     //noinspection deprecation
                     existing.setValue( pv.getValue() );
                 }
-                // Baseline flag: null = "no change" (same round-trip-safe convention as `value`).
-                if ( pv.getBaseline() != null ) {
+                // Baseline flag: null = "no change" (same round-trip-safe convention as `value`). Written only
+                // when it actually differs, so echoing the current state touches no row -- see baselineChanged.
+                if ( baselineChanged( pv, existing ) ) {
                     existing.setIsBaseline( pv.getBaseline() );
                 }
                 // Measurement on a continuous factor value: same null = "no change" convention.

@@ -69,6 +69,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 /**
  * @author kkeshav
@@ -725,6 +726,33 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .extracting( AnnotationValueObject::getValue )
                 .contains( "dimethyl sulfoxide" )
                 .doesNotContain( "HDP-101" );
+    }
+
+    /**
+     * Echoing {@code isBaseline: false} on a value whose stored flag is null is NOT an edit.
+     * <p>
+     * null and FALSE both mean "not the baseline", and the stored flag is null on every value that has never
+     * been one — so comparing them with equals made a client that renders a checkbox per value mark all of
+     * them edited, and write false over null on each. Paul renamed one factor on GSE7866 and the audit note
+     * read "factor values +0 / -0 / ~2" for the two values he never touched.
+     */
+    @Test
+    public void commitCuration_echoingIsBaselineFalseOnANullFlagIsNotAnEdit() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        ExperimentalDesignValueObject design = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = design.getExperimentalFactors().get( 0 );
+        FactorValueBasicValueObject value = factor.getValues().get( 0 );
+        assumeThat( value.getBaseline() ).as( "fixture value starts with no baseline flag" ).isNull();
+
+        // exactly what a checkbox-backed client sends: the flag it is rendering, unchanged
+        value.setBaseline( false );
+        factor.setValues( java.util.Collections.singletonList( value ) );
+        design.setExperimentalFactors( java.util.Collections.singletonList( factor ) );
+
+        DesignPreflightReport report = expressionExperimentService.previewDesignChange( ee, design );
+        assertEquals( 0, report.getSummary().getFactorValuesToUpdate(),
+                "echoing the current baseline state is not a change" );
     }
 
     @Test
