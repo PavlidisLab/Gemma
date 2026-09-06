@@ -4950,6 +4950,27 @@ public class DatasetsWebService {
             if ( isExisting( sc, "statement" ) ) {
                 svo.setId( sc.getGemmaId() );
                 mentioned.add( sc.getGemmaId() );
+                // 🛑 A gemmaId statement is UPDATED IN PLACE from the fields it carries, so a field the item omits
+                // is written null. That makes a partial item -- the PATCH-shaped instinct, send only what changed --
+                // silently erase the rest of the row, and the commit reports `updated: 1` either way, which is
+                // indistinguishable from "your one field was applied". It cost a live statement on 2026-09-05:
+                // an item carrying only supportingEvidence blanked subject, subjectUri and category, dropped the
+                // annotation out of /annotations and left the factor value summarised as "?".
+                //
+                // Refused rather than merged because the two are not interchangeable: for `predicate` and `object`
+                // a null IS a legitimate edit -- it is how a clause is dropped -- so "omitted means unchanged"
+                // cannot be applied across the board without removing the only way to clear them. A subject is
+                // different: a statement cannot exist without one, so a missing subject is never an edit anyone
+                // meant. Same reasoning the `tags` and `sampleCharacteristics` sections already use to refuse
+                // their own ambiguous shape, with the polarity flipped.
+                if ( sc.getSubject() == null || StringUtils.isBlank( sc.getSubject().getLabel() ) ) {
+                    throw new BadRequestException( location + ".statements["
+                            + refOrIndex( sc.getClientRef(), idx ) + "] carries gemmaId " + sc.getGemmaId()
+                            + " but no subject. A gemmaId statement is updated in place from the fields it"
+                            + " carries, so an omitted subject would CLEAR it along with everything else the item"
+                            + " does not send. Send the statement's full content, or name its id in the section's"
+                            + " deletedIds to remove it." );
+                }
             }
             if ( sc.getCategory() != null ) {
                 svo.setCategory( sc.getCategory().getLabel() );

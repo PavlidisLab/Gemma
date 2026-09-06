@@ -5206,6 +5206,32 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         return d;
     }
 
+    /**
+     * A partial statement item is refused rather than applied.
+     * <p>
+     * A {@code gemmaId} statement is updated in place from the fields it carries, so an item sending only one
+     * field writes null over the rest. On 2026-09-05 an item carrying only {@code supportingEvidence} blanked a
+     * live statement's subject, subjectUri and category, dropped the annotation out of {@code /annotations}, and
+     * still reported {@code updated: 1} — indistinguishable from success.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRefusesAGemmaIdStatementWithNoSubject() {
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( designWithOneStatement( 5L, 6L, 7L ) );
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"supportingEvidence\":[{\"assertedBy\":\"curator\"}]}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+        }
+        // and the preflight refuses it on the same terms, so a client finds out before it writes
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), eq( false ) );
+    }
+
     @Test
     @WithMockUser
     public void testCommitCurationDesignCreatesFactor() {
