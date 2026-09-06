@@ -4795,6 +4795,8 @@ public class DatasetsWebService {
                     throw new BadRequestException( "design.factors references unknown factor id " + fc.getGemmaId() + "." );
                 }
                 mentionedFactorIds.add( fc.getGemmaId() );
+                requireEvidenceEchoed( "design.factors[gemmaId=" + fc.getGemmaId() + "]",
+                        fc.getSupportingEvidence(), curFactor.getSupportingEvidence() );
                 out.setId( fc.getGemmaId() );
                 parentKey = DesignCommitPlan.existingFactorKey( fc.getGemmaId() );
             } else {
@@ -4882,6 +4884,8 @@ public class DatasetsWebService {
                     throw new BadRequestException( "design.factors references unknown factor value id " + fvc.getGemmaId() + "." );
                 }
                 mentionedFvIds.add( fvc.getGemmaId() );
+                requireEvidenceEchoed( location + "[gemmaId=" + fvc.getGemmaId() + "]",
+                        fvc.getSupportingEvidence(), curFvs.get( fvc.getGemmaId() ).getSupportingEvidence() );
                 out.setId( fvc.getGemmaId() );
                 if ( assignmentsGiven ) {
                     // Drop this factor value everywhere, then add it to exactly the listed samples (empty = clear).
@@ -4933,10 +4937,12 @@ public class DatasetsWebService {
         Set<Long> stmtDeleted = new HashSet<>( nullSafe( ss.getDeletedIds() ) );
         // A statement id repeats once per predicate/object pair it carries, so the present-id set is deduped.
         Set<Long> curStatementIds = new HashSet<>();
+        Map<Long, StatementValueObject> curStatementsById = new HashMap<>();
         if ( curFv != null ) {
             for ( StatementValueObject s : nullSafe( curFv.getStatements() ) ) {
                 if ( s.getId() != null ) {
                     curStatementIds.add( s.getId() );
+                    curStatementsById.putIfAbsent( s.getId(), s );
                 }
             }
         }
@@ -4963,6 +4969,18 @@ public class DatasetsWebService {
                 // different: a statement cannot exist without one, so a missing subject is never an edit anyone
                 // meant. Same reasoning the `tags` and `sampleCharacteristics` sections already use to refuse
                 // their own ambiguous shape, with the polarity flipped.
+                // 🛑 Evidence is replacement like everything else here, so an absent key CLEARS. That is fine when
+                // the row holds none, and silent destruction when it holds some — a client echoing a statement it
+                // did not author would drop provenance somebody else recorded and get an ordinary 200.
+                //
+                // Absent and `[]` are distinguishable here in a way they are not for the scalar fields, because
+                // supportingEvidence is a JsonNode: a missing key is null, an empty array is an empty ArrayNode.
+                // So `[]` can mean "I intend none" and be honoured, while absent means "you did not tell me" and
+                // is refused. Nothing is treated as "leave unchanged" — that would be the hybrid contract this
+                // section just moved away from.
+                StatementValueObject curStmt = curStatementsById.get( sc.getGemmaId() );
+                requireEvidenceEchoed( location + ".statements[" + refOrIndex( sc.getClientRef(), idx ) + "]",
+                        sc.getSupportingEvidence(), curStmt != null ? curStmt.getSupportingEvidence() : null );
                 if ( sc.getSubject() == null || StringUtils.isBlank( sc.getSubject().getLabel() ) ) {
                     throw new BadRequestException( location + ".statements["
                             + refOrIndex( sc.getClientRef(), idx ) + "] carries gemmaId " + sc.getGemmaId()
@@ -5118,6 +5136,28 @@ public class DatasetsWebService {
      * same {@code key=value} form {@link #refOrIndex} produces for a new item ({@code clientRef=t7}), with the
      * key a keep-marker actually has; the index would identify the item less well than the id it sent.
      */
+    /**
+     * Refuse a {@code gemmaId} item that omits {@code supportingEvidence} when the stored row HAS evidence.
+     * <p>
+     * The design section is full-record replacement, so an absent key clears. That is harmless on a row holding
+     * no evidence and silent destruction on one that does — a client echoing an entity it did not author would
+     * drop provenance somebody else recorded and receive an ordinary 200.
+     * <p>
+     * 🛑 Absent and {@code []} are distinguishable here in a way they are not for the scalar fields, because
+     * {@code supportingEvidence} is a {@link com.fasterxml.jackson.databind.JsonNode}: a missing key arrives
+     * null, an empty array arrives as an empty node. So {@code []} means "I intend none" and is honoured, while
+     * absent means "you did not tell me" and is refused. Neither is treated as "leave unchanged"; that hybrid is
+     * what this section moved away from on 2026-09-06.
+     */
+    private static void requireEvidenceEchoed( String location, @Nullable com.fasterxml.jackson.databind.JsonNode submitted,
+            @Nullable com.fasterxml.jackson.databind.JsonNode stored ) {
+        if ( submitted == null && CharacteristicUtils.hasRecordedEvidence( stored ) ) {
+            throw new BadRequestException( location + " omits supportingEvidence, but that entity HAS evidence"
+                    + " recorded. This section is full-record replacement, so an omitted key would clear it."
+                    + " Send the evidence back to keep it, or send an empty array to clear it deliberately." );
+        }
+    }
+
     private static void collectKeepMarkerDecoration( String section, @Nullable Long gemmaId, List<String> fields,
             List<String> sink ) {
         if ( !fields.isEmpty() ) {

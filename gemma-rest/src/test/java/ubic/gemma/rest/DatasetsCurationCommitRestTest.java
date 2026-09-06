@@ -284,16 +284,23 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     }
 
     /**
-     * A second commit that omits {@code supportingEvidence} leaves the recorded evidence alone.
+     * A commit that omits {@code supportingEvidence} CLEARS it — the design section is full-record replacement.
      * <p>
-     * The design section is a carry-forward mapper: a client that mentions an existing factor value to change
-     * one field re-sends the whole value, and the fields it does not carry arrive as null. Treating that null
-     * as "clear it" would let any client with no provenance of its own erase provenance somebody else
-     * recorded, just by editing a label. Same null = "no change" rule {@code value} and {@code isBaseline}
-     * already follow.
+     * 🛑 This test asserted the opposite until 2026-09-06, and its old rationale was the real objection: treating
+     * omission as "clear it" lets a client with no provenance of its own erase provenance somebody else
+     * recorded, just by editing a label. That is now the contract, ruled by Paul after the alternative proved
+     * worse — evidence was the ONLY delta field on an otherwise replacement object, so one item carried two
+     * contracts, and the split made both of 2026-09-05's incidents possible: a delta-shaped item silently
+     * blanked a live statement, and evidence could be set and changed but never removed because there was no
+     * spelling of "I intend none".
+     * <p>
+     * ⚠️ And the dangerous consequence is REFUSED rather than performed: a client that relabels a value without
+     * carrying the evidence back would destroy it, so it gets a 400 naming the entity. `[]` still clears
+     * deliberately — absent and empty are distinguishable because the field is a JsonNode, which the scalar
+     * fields cannot do. Nothing here means "leave unchanged"; that hybrid is what the section moved away from.
      */
     @Test
-    public void testOmittedEvidenceDoesNotWipeStoredFactorValueEvidence() {
+    public void testOmittingEvidenceOnARowThatHasSomeIsRefused() {
         String seed = "{"
                 + "\"design\":{\"factors\":{\"items\":[{"
                 + "\"clientRef\":\"F1\",\"name\":\"treatment\",\"category\":{\"label\":\"treatment\"},"
@@ -324,7 +331,8 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 + "\"factorValues\":{\"items\":[{\"gemmaId\":" + seededFv.getId() + ","
                 + "\"freeTextLabel\":\"drug X (10uM)\"}]}}]}}}";
         try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( relabel ) ) ) {
-            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+            assertThat( r.getStatus() ).as( "omitting evidence a row HAS is refused, not performed" )
+                    .isEqualTo( Response.Status.BAD_REQUEST.getStatusCode() );
         }
 
         ExperimentalDesignValueObject after = expressionExperimentService
@@ -338,29 +346,33 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 .findFirst()
                 .orElseThrow( () -> new AssertionError( "factor value disappeared" ) );
 
-        assertThat( fv.getValue() ).as( "the relabel did land" ).isEqualTo( "drug X (10uM)" );
+        assertThat( fv.getValue() ).as( "the refusal was total: not even the relabel landed" ).isEqualTo( "drugX" );
         assertThat( fv.getSupportingEvidence() )
-                .as( "omitting evidence did not erase the evidence already recorded" )
+                .as( "and the evidence the caller did not mention is still there" )
                 .isNotNull();
         assertThat( factor.getSupportingEvidence() )
-                .as( "the factor's evidence survived a commit that did not mention it" )
+                .as( "the factor's evidence likewise" )
                 .isNotNull();
     }
 
     /**
-     * An EMPTY evidence array is "I have none", not "clear what is there".
+     * An EMPTY evidence array means "the row should have none", so it CLEARS.
      * <p>
-     * The distinction is not academic: a payload built from a reference file stamps {@code []} on every entity
-     * that has no evidence, which is most of them. Guarding on {@code != null} lets that through — an empty
-     * array is not null — and the serializer maps an empty tree to {@code null}, so the write then clears the
-     * column on every entity the payload touches and reports an ordinary success. CAB coerces {@code []} away
-     * client-side for exactly this reason; the server must not depend on every client remembering to.
+     * 🛑 Inverted 2026-09-06 with the rest of the section's move to full-record replacement. Under that contract
+     * {@code []} and an omitted key say the same unambiguous thing — not present in my intent — which is what
+     * makes evidence clearable at all; it had no spelling for "remove this" before.
      * <p>
-     * Asserted at all three levels because the guard is one predicate and a level left out of it is a level
-     * where the wipe still happens.
+     * ⚠️ The old rationale named a hazard that this change makes REAL, and it is worth keeping in view rather
+     * than deleting: a payload built from a reference file stamps {@code []} on every entity that has no
+     * evidence, which is most of them, so ONE bulk commit now clears evidence everywhere it touches and reports
+     * an ordinary success. The protection is no longer server-side; it is that every client sends the record it
+     * intends. CAB already coerces {@code []} away client-side, which under the new contract is no longer
+     * enough — omitting it clears too.
+     * <p>
+     * Asserted at all three levels because a level left out is a level where the behaviour silently differs.
      */
     @Test
-    public void testAnEmptyEvidenceArrayDoesNotEraseStoredEvidence() {
+    public void testAnEmptyEvidenceArrayClearsStoredEvidence() {
         String seed = "{"
                 + "\"design\":{\"factors\":{\"items\":[{"
                 + "\"clientRef\":\"F1\",\"name\":\"tissue\",\"category\":{\"label\":\"organism part\"},"
@@ -399,7 +411,13 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 + "\"gemmaId\":" + seeded.getId() + ",\"supportingEvidence\":[],"
                 + "\"factorValues\":{\"items\":[{\"gemmaId\":" + seededFv.getId() + ","
                 + "\"supportingEvidence\":[],"
-                + "\"statements\":{\"items\":[{\"gemmaId\":" + stmtId + ",\"supportingEvidence\":[]}]}"
+                // Full record: the statement's own content is echoed back unchanged, because under replacement
+                // semantics an omitted subject would CLEAR it — and is refused for that reason.
+                + "\"statements\":{\"items\":[{\"gemmaId\":" + stmtId + ","
+                + "\"category\":{\"label\":\"organism part\"},"
+                + "\"subject\":{\"label\":\"placental villous stroma\","
+                + "\"uri\":\"http://purl.obolibrary.org/obo/UBERON_8600023\"},"
+                + "\"supportingEvidence\":[]}]}"
                 + "}]}}]}}}";
         try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( wipe ) ) ) {
             assertOk( r );
@@ -417,12 +435,12 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 .orElseThrow( () -> new AssertionError( "factor value disappeared" ) );
 
         assertThat( factor.getSupportingEvidence() )
-                .as( "[] did not erase the factor's evidence" ).isNotNull();
+                .as( "[] cleared the factor's evidence" ).isNull();
         assertThat( fv.getSupportingEvidence() )
-                .as( "[] did not erase the factor value's evidence" ).isNotNull();
+                .as( "[] cleared the factor value's evidence" ).isNull();
         assertThat( fv.getStatements() ).isNotEmpty();
         assertThat( fv.getStatements().get( 0 ).getSupportingEvidence() )
-                .as( "[] did not erase the statement's evidence" ).isNotNull();
+                .as( "[] cleared the statement's evidence" ).isNull();
     }
 
     @Test

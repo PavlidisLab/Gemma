@@ -1,5 +1,7 @@
 package ubic.gemma.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ubic.gemma.core.security.SecurityService;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -5204,6 +5206,44 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
         d.setExperimentalFactors( factors );
         return d;
+    }
+
+    /**
+     * Omitting evidence on a row that HAS evidence is refused; sending {@code []} clears it deliberately.
+     * <p>
+     * The design section is full-record replacement, so an absent key clears — harmless on a row holding none,
+     * silent destruction on one that does. Absent and {@code []} are distinguishable because the field is a
+     * JsonNode, so the deliberate clear stays available while the accidental one is refused.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesOmittedEvidenceOnAStatementThatHasSome() {
+        StatementValueObject stmt = new StatementValueObject();
+        stmt.setId( 7L );
+        stmt.setSubject( "astrocyte" );
+        stmt.setSupportingEvidence( new ObjectMapper().createArrayNode()
+                .add( new ObjectMapper().createObjectNode().put( "assertedBy", "curator" ) ) );
+        ubic.gemma.model.expression.experiment.FactorValueBasicValueObject fv =
+                new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject();
+        fv.setId( 6L );
+        fv.setStatements( Collections.singletonList( stmt ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        factor.setId( 5L );
+        factor.setName( "cell type" );
+        factor.setValues( Collections.singletonList( fv ) );
+        ExperimentalDesignValueObject design = new ExperimentalDesignValueObject();
+        design.setExperimentalFactors( Collections.singletonList( factor ) );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( design );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"astrocyte\"}}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+        }
+        // The other half of the rule -- an explicit [] clears rather than being refused -- is pinned end to end
+        // by DatasetsCurationCommitRestTest#testAnEmptyEvidenceArrayClearsStoredEvidence, against a real
+        // database. Asserting it here would only prove the mock was stubbed.
     }
 
     /**

@@ -1353,21 +1353,17 @@ public class ExpressionExperimentServiceImpl
             byContent.putIfAbsent( statementContentKey( s ), s );
         }
         for ( StatementValueObject ps : proposed ) {
-            if ( !CharacteristicUtils.hasRecordedEvidence( ps.getSupportingEvidence() ) && ps.getEvidenceCode() == null ) {
-                continue;
-            }
             Statement match = ps.getId() != null ? byId.get( ps.getId() ) : byContent.get( statementContentKey( ps ) );
             if ( match == null ) {
                 continue; // a creation; statementsChanged covers it
             }
-            if ( CharacteristicUtils.hasRecordedEvidence( ps.getSupportingEvidence() ) ) {
-                String proposedEvidence = CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() );
-                if ( !Objects.equals( proposedEvidence, match.getSupportingEvidence() ) ) {
-                    return true;
-                }
+            // Compared in BOTH directions since evidence became replacement: dropping evidence a row has is as
+            // much a change as adding it, and skipping payloads that carry none would report a clear as a no-op.
+            String proposedEvidence = CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() );
+            if ( !Objects.equals( proposedEvidence, match.getSupportingEvidence() ) ) {
+                return true;
             }
-            if ( ps.getEvidenceCode() != null
-                    && !Objects.equals( parseEvidenceCode( ps.getEvidenceCode() ), match.getEvidenceCode() ) ) {
+            if ( !Objects.equals( parseEvidenceCode( ps.getEvidenceCode() ), match.getEvidenceCode() ) ) {
                 return true;
             }
         }
@@ -1499,11 +1495,9 @@ public class ExpressionExperimentServiceImpl
         if ( pf.getBaselineRelevanceReason() != null ) {
             ef.setBaselineRelevanceReason( StringUtils.isBlank( pf.getBaselineRelevanceReason() ) ? null : pf.getBaselineRelevanceReason() );
         }
-        // Provenance: null = "no change", the same round-trip-safe convention `value` and `isBaseline` use on a
-        // factor value. A client that does not carry evidence cannot wipe evidence somebody else recorded.
-        if ( CharacteristicUtils.hasRecordedEvidence( pf.getSupportingEvidence() ) ) {
-            ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
-        }
+        // Provenance: replacement, like the rest of a gemmaId item. See applyStatementFields for why this stopped
+        // being a delta field on 2026-09-06.
+        ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
         experimentalFactorService.update( ef );
     }
 
@@ -1535,12 +1529,10 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getMeasurementObject() != null ) {
                     applyMeasurementFields( existing, pv.getMeasurementObject() );
                 }
-                // Provenance on the VALUE itself, distinct from the evidence on its statements: same
-                // null = "no change" convention again.
-                if ( CharacteristicUtils.hasRecordedEvidence( pv.getSupportingEvidence() ) ) {
-                    existing.setSupportingEvidence(
-                            CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
-                }
+                // Provenance on the VALUE itself, distinct from the evidence on its statements: replacement, as
+                // everywhere else on a gemmaId item.
+                existing.setSupportingEvidence(
+                        CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
             }
         }
         // Siblings are deliberately left alone. Clearing them made a second baseline impossible to record at all:
@@ -1900,17 +1892,18 @@ public class ExpressionExperimentServiceImpl
             s.setSecondObject( ps.getSecondObject() );
             s.setSecondObjectUri( ps.getSecondObjectUri() );
         }
-        // Supporting evidence follows the same null = "no change" convention as the rest of the payload, so a
-        // client that doesn't carry provenance cannot wipe provenance somebody else recorded.
-        if ( CharacteristicUtils.hasRecordedEvidence( ps.getSupportingEvidence() ) ) {
-            s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
-        }
-        // Same null = "no change" convention for the evidence code. A statement the payload says nothing about
-        // keeps whatever code it has, which for a new statement is none — the design path has never assigned one
-        // and that stays true for a caller that does not ask.
-        if ( ps.getEvidenceCode() != null ) {
-            s.setEvidenceCode( parseEvidenceCode( ps.getEvidenceCode() ) );
-        }
+        // Evidence follows the section's REPLACEMENT semantics, like every other field here: a gemmaId item is
+        // the row as the client intends it, so evidence the payload does not carry is evidence the client is
+        // saying the row should not have.
+        //
+        // 🛑 This was a delta field until 2026-09-06 and the split is what made both of that night's incidents
+        // possible. The core fields cleared on omission while these two ignored it, so one object carried two
+        // contracts with nothing marking which was which: a delta-shaped item silently blanked a live statement,
+        // and evidence could be set and changed but never removed, because there was no spelling of "I intend
+        // none". Paul ruled full-record replacement, which gives `[]` and an omitted key the same unambiguous
+        // meaning and makes clearing fall out rather than need a new semantic.
+        s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
+        s.setEvidenceCode( parseEvidenceCode( ps.getEvidenceCode() ) );
     }
 
     /**
@@ -1918,7 +1911,18 @@ public class ExpressionExperimentServiceImpl
      * 400; this is the guard for a direct service caller, and it names the offending value rather than letting
      * {@code valueOf}'s bare message surface.
      */
-    private static GOEvidenceCode parseEvidenceCode( String name ) {
+    /**
+     * Parse an evidence code, or {@code null} for absent.
+     * <p>
+     * Null-tolerant because evidence became a REPLACEMENT field on 2026-09-06: the callers no longer guard on
+     * non-null, since an absent code has to reach the setter to clear a stored one. Returning null keeps
+     * "clear it" and "unknown code" distinct — the latter still throws.
+     */
+    @Nullable
+    private static GOEvidenceCode parseEvidenceCode( @Nullable String name ) {
+        if ( name == null ) {
+            return null;
+        }
         try {
             return GOEvidenceCode.valueOf( name.trim().toUpperCase( Locale.ROOT ) );
         } catch ( IllegalArgumentException e ) {
