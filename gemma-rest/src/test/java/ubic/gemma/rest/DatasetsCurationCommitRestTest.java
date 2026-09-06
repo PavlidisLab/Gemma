@@ -1182,23 +1182,20 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
      * <p>
      * Scope, so nobody inherits a hunt with no prize at the end of it: <b>in production every curator is an
      * admin</b> (Paul, 2026-08-16), and only admins delete factors. The non-admin this test constructs is
-     * therefore not a user class that exists, and the branch it exercises is not one real users reach. That is
-     * also why the other tests here pass: an admin gets no ACL restriction clause at all, so the voter never
-     * consults an ACE.
+     * therefore not a user class that exists, and the branch it exercises is not one real users reach.
      * <p>
      * Still worth keeping as defence in depth — it pins that {@code force=true} cannot be used to push a
-     * destructive change through as a non-admin. It asserts the outcome (not 200, nothing written) rather than
-     * a status code, because the layer that refuses is not the contract: today it is a <b>403</b> from the ACL,
-     * so the request never reaches the admin-only force gate ({@code force && isUserAdmin()}) at all.
+     * destructive change through as a non-admin.
      * <p>
-     * Findings left here because each killed a plausible wrong answer, and one of them was mine. The ACL grant
-     * <b>works</b> — {@code makeOwnedByUser} writes explicit WRITE/READ ACEs and the assertion below confirms
-     * it — so this is not "ownership doesn't imply edit". Sid mismatch, ACL caching, transaction visibility and
-     * context propagation are all eliminated. What remains: the voter is asked about the <b>factor</b>, not the
-     * experiment, because {@code ObjectIdentityRetrievalStrategyImpl} builds the identity from the domain
-     * object and does not resolve a {@code SecuredChild} to its parent — leaving inheritance to the factor's
-     * own ACL row ({@code parent_object} + {@code entries_inheriting}). Unverified, and closed as
-     * not-worth-chasing: it has no operational consequence while all curators are admins.
+     * 🛑 The change has to be one that <b>needs</b> force, or the gate is never reached and the request is an
+     * ordinary edit that a {@code GROUP_USER} holding ACL edit is entitled to make — {@code commitCuration} is
+     * {@code @Secured({"GROUP_USER", "ACL_SECURABLE_EDIT", "RUN_AS_AGENT"})}, and this test grants the curator
+     * exactly that by making them the owner. So the subset is anchored first, the same way
+     * {@link #testCommitStrandingASubsetRequiresForce} does it: the seeded experiment carries no
+     * differential-expression analyses, so stranding a subset is the only half of {@code requiresForce()} a
+     * fixture can make true. Without it the delete is not destructive in the sense the gate means, the
+     * predicate is false, and the commit lands with a 200 — which is what this test used to assert against,
+     * so it was refusing a request the security model permits rather than exercising the force gate.
      * <p>
      * Worth having because every other test in this class runs as admin — {@code BaseJerseyIntegrationTest5}
      * authenticates in a {@code @BeforeEach} — so without switching identity inside the test body the admin
@@ -1208,12 +1205,10 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
     @Test
     public void testForceIsNotABypassForANonAdmin() {
         ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
-        ExperimentalDesignValueObject.ExperimentalFactorEntry doomed = before.getExperimentalFactors().stream()
-                .filter( f -> !f.getValues().isEmpty() )
-                .findFirst()
-                .orElseThrow( () -> new AssertionError( "seeded design has no factor with values" ) );
-        Set<Long> doomedFvIds = doomed.getValues().stream().map( FactorValueBasicValueObject::getId )
-                .collect( Collectors.toSet() );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = factorWithAnAssignedValue( before );
+        FactorValueBasicValueObject anchor = firstAssignedValue( before, factor );
+        ExpressionExperimentSubSet subset = anchorSubsetOn( before, anchor );
+        assertThat( subset ).isNotNull();
 
         String curator = "curationforcetest";
         testAuthenticationUtils.runAsUser( curator, true );
@@ -1226,26 +1221,31 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 .as( "the ACL grant took effect — so a refusal below is not a missing grant" )
                 .isTrue();
 
-        String delete = "{\"design\":{\"factors\":{\"items\":[],\"deletedIds\":[" + doomed.getId() + "]}}}";
+        String delete = deleteFactorValue( factor.getId(), anchor.getId() );
         try {
             testAuthenticationUtils.runAsUser( curator, false );
             try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).queryParam( "force", true )
                     .request().put( Entity.json( delete ) ) ) {
                 assertThat( r.getStatus() ).as( "force is not a bypass for a non-admin" )
-                        .isNotEqualTo( Response.Status.OK.getStatusCode() );
+                        .isEqualTo( Response.Status.CONFLICT.getStatusCode() );
+                assertThat( r.readEntity( String.class ) )
+                        .as( "and it is the force gate that refused, not some other conflict" )
+                        .contains( "\"reason\":\"REQUIRES_FORCE\"" );
             }
         } finally {
             // the teardown deletes the experiment, which needs admin back
             testAuthenticationUtils.runAsAdmin();
         }
-        assertThat( allFvIds( reloadDesign() ) ).as( "and nothing was written" ).containsAll( doomedFvIds );
+        assertThat( allFvIds( reloadDesign() ) ).as( "and nothing was written" ).contains( anchor.getId() );
 
         // the same request as admin goes through, so the refusal above was about the caller and not the payload
         try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).queryParam( "force", true )
                 .request().put( Entity.json( delete ) ) ) {
             assertOk( r );
         }
-        assertThat( reloadDesign().getExperimentalFactors() ).noneMatch( f -> doomed.getId().equals( f.getId() ) );
+        assertThat( allFvIds( reloadDesign() ) ).doesNotContain( anchor.getId() );
+
+        expressionExperimentSubSetService.remove( subset );
     }
 
     /** The first factor carrying a value that samples are actually assigned to. */
@@ -1558,6 +1558,11 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
      * <p>
      * Verified by reading the code once ({@code previewDesignChange} is {@code @Transactional(readOnly = true)}
      * with no audit call in 300 lines); pinned here so it stays true.
+     * <p>
+     * The tag carries URIs because a preflight runs the same grounding gate as the commit: a new tag whose
+     * {@code value} has no URI and no {@code freeTextIntended} is refused as
+     * {@code UNGROUNDED_NOT_DECLARED}. A 400 there never reaches the audit-event count this test is about,
+     * so it read as a passing preflight-emits-nothing assertion when it was really a rejected request.
      */
     @Test
     public void testPreflightEmitsNoAuditEvent() {
@@ -1570,8 +1575,9 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         // a preflight over every section a commit can touch, including a design change and a tag
         String body = "{"
                 + "\"basics\":{\"name\":\"preflighted\"},"
-                + "\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"organism part\"},"
-                + "\"value\":{\"label\":\"liver\"}}]},"
+                + "\"tags\":{\"items\":[{\"clientRef\":\"t1\","
+                + "\"category\":{\"label\":\"disease\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_4\"},"
+                + "\"value\":{\"label\":\"brain glioma\",\"uri\":\"http://purl.obolibrary.org/obo/DOID_0060108\"}}]},"
                 + "\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"f1\",\"name\":\"preflight factor\","
                 + "\"type\":\"CATEGORICAL\",\"category\":{\"label\":\"treatment\"},"
                 + "\"factorValues\":{\"items\":[{\"clientRef\":\"fv1\",\"freeTextLabel\":\"treated\","
@@ -1581,7 +1587,7 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
                 + "}";
         try ( Response r = target( "/datasets/" + ee.getId() + "/curation/preflight" )
                 .request().post( Entity.json( body ) ) ) {
-            assertThat( r.getStatus() ).isEqualTo( Response.Status.OK.getStatusCode() );
+            assertOk( r );
         }
 
         int after = auditEventService.getEvents( expressionExperimentService.load( ee.getId() ) ).size();
