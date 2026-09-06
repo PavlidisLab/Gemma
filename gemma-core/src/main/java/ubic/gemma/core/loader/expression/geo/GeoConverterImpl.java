@@ -44,6 +44,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.ExtractedMolecule;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -783,17 +784,53 @@ public class GeoConverterImpl implements GeoConverter {
             bioMaterial.getCharacteristics().add( c );
         }
 
-        if ( StringUtils.isNotBlank( channel.getLabel() ) ) {
-            String characteristic = this.trimString( channel.getLabel() );
-            // This is typically something like "biotin-labeled nucleotides", which we can convert later.
-            Characteristic labelChar = Characteristic.Factory.newInstance();
-            labelChar.setDescription( "GEO Sample label" );
-            labelChar.setCategory( "labelling" ); /* used to be LabelCompound */
-            labelChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000562" );
-            labelChar.setValue( characteristic );
-            labelChar.setOriginalValue( characteristic );
-            labelChar.setEvidenceCode( GOEvidenceCode.IIA );
-            bioMaterial.getCharacteristics().add( labelChar );
+        // 🛑 The GEO channel label is NOT imported as a sample characteristic. It is the fluorophore or hapten
+        // the sample was tagged with for detection -- a property of the ASSAY, not of the material -- and every
+        // consumer discards it:
+        //
+        //   * the curation agent's snapshot has to look at every characteristic on a biomaterial and decide
+        //     against it, so a constant non-biological column is pure noise in that decision;
+        //   * the curation UI has filtered `labelling` out of its tag bar for some time, added independently
+        //     because the chips were noise in the panel (uib, 2026-09-05).
+        //
+        // Measured on production the same day, after Paul deleted the 313,088 `biotin` rows: 102,443 rows on
+        // 79,452 biomaterials, 433 distinct values -- Cy3 61,687, Cy5 24,790, then a tail that is overwhelmingly
+        // spellings of those two (`Cy-3`, `Cyanine-3`, `Cy3-CTP`, `Cy3, Cy5`), which is itself the sign that
+        // nothing reads them. Paul: "we gotta get rid of labelling."
+        //
+        // A DELETE would not hold: these arrive from GEO on every import and the category refills. This is the
+        // import path, so it stays empty.
+        //
+        // ⚠️ Only the automatic import. A curator attaching `labelling` deliberately is an explicit choice and
+        // nothing here touches it; the same distinction the UI's carve-out keeps.
+    }
+
+    /**
+     * GEO's channel molecule as the persisted enum. Null when GEO did not say.
+     * <p>
+     * A one-to-one mapping onto GEO's own vocabulary rather than an interpretation, so an unmapped value stays
+     * {@link ExtractedMolecule#other} instead of becoming a guess.
+     */
+    @Nullable
+    static ExtractedMolecule convertMolecule( @Nullable GeoChannel.ChannelMolecule molecule ) {
+        if ( molecule == null ) {
+            return null;
+        }
+        switch ( molecule ) {
+            case totalRNA:
+                return ExtractedMolecule.totalRNA;
+            case polyARNA:
+                return ExtractedMolecule.polyARNA;
+            case cytoplasmicRNA:
+                return ExtractedMolecule.cytoplasmicRNA;
+            case nuclearRNA:
+                return ExtractedMolecule.nuclearRNA;
+            case genomicDNA:
+                return ExtractedMolecule.genomicDNA;
+            case protein:
+                return ExtractedMolecule.protein;
+            default:
+                return ExtractedMolecule.other;
         }
     }
 
@@ -1693,6 +1730,38 @@ public class GeoConverterImpl implements GeoConverter {
             this.convertChannel( sample, channel, bioMaterial );
             bioAssay.setSampleUsed( bioMaterial );
         }
+
+        // What was extracted, and how the library was made. GEO gives all three per sample and none of them
+        // used to be persisted anywhere: the molecule became a `molecular entity` characteristic on the
+        // BIOMATERIAL and the two library fields were dropped after feeding the verbatim source-metadata blob.
+        //
+        // On the assay because that is what they describe -- Paul, 2026-09-05: "the biomaterial is the
+        // cells/tissue we got the RNA from, not the RNA", and "the assay is 'we took that sample and did
+        // something to it to get expression measurements'".
+        //
+        // 🛑 The molecule is per CHANNEL and a two-colour sample has two. Channel 1 is taken, and a second
+        // channel that disagrees is left OUT rather than silently overwriting -- `other` would claim GEO said
+        // something it did not, and picking channel 2 would be arbitrary. Two-colour samples nearly always
+        // label one molecule type twice, so the discarded case is rare and a warning names it when it happens.
+        ExtractedMolecule molecule = null;
+        for ( GeoChannel channel : sample.getChannels() ) {
+            ExtractedMolecule m = GeoConverterImpl.convertMolecule( channel.getMolecule() );
+            if ( m == null ) {
+                continue;
+            }
+            if ( molecule == null ) {
+                molecule = m;
+            } else if ( molecule != m ) {
+                GeoConverterImpl.log.warn( "Sample " + sample.getGeoAccession() + " reports different molecules per"
+                        + " channel (" + molecule + " and " + m + "); leaving extractedMolecule unset rather than"
+                        + " picking one." );
+                molecule = null;
+                break;
+            }
+        }
+        bioAssay.setExtractedMolecule( molecule );
+        bioAssay.setLibrarySelection( StringUtils.trimToNull( sample.getLibrarySelection() ) );
+        bioAssay.setLibraryStrategy( sample.getLibStrategy() != null ? sample.getLibStrategy().toString() : null );
 
         // Taxon lastTaxon = null;
 
