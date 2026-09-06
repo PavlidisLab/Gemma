@@ -229,6 +229,23 @@ public class FactorValueValueObjectSerializerTest extends BaseTest5 {
     }
 
     /**
+     * A factor value's OWN evidence reaches the wire, distinct from its statements'.
+     * <p>
+     * Declared on {@code AbstractFactorValueValueObject} and inherited by both concrete VOs, so it appears in
+     * the OpenAPI schema for {@code FactorValueValueObject} — while the hand-written serializer dropped it, so
+     * a curator's evidence on the factor value itself was write-only.
+     */
+    @Test
+    public void aFactorValueCarriesItsOwnEvidenceOnTheWire() throws JsonProcessingException {
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
+        fv.setSupportingEvidence( "[{\"assertedBy\":\"curator\"}]" );
+        JsonAssert.with( objectMapper.writeValueAsString( new FactorValueValueObject( fv ) ) )
+                .assertEquals( "$.supportingEvidence[0].assertedBy", "curator" );
+    }
+
+    /**
      * Absent, not null, when there is no evidence — null reads as "this was cleared" on a payload whose write
      * path treats an empty send as an erasure.
      */

@@ -53,6 +53,12 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         if ( factorValueValueObject.getMeasurementObject() != null ) {
             jsonGenerator.writeObjectField( "measurement", factorValueValueObject.getMeasurementObject() );
         }
+        // A factor value carries evidence of its own, declared on AbstractFactorValueValueObject and inherited by
+        // both concrete VOs -- distinct from the evidence on its statements. Absent rather than null when unset,
+        // for the same reason as the statement-level field: an empty send ERASES on the write path.
+        if ( factorValueValueObject.getSupportingEvidence() != null ) {
+            jsonGenerator.writeObjectField( "supportingEvidence", factorValueValueObject.getSupportingEvidence() );
+        }
         writeCharacteristics( factorValueValueObject.getId(), factorValueValueObject.getStatements(), jsonGenerator );
         writeStatements( factorValueValueObject.getId(), factorValueValueObject.getStatements(), jsonGenerator );
         jsonGenerator.writeStringField( "summary", factorValueValueObject.getSummary() );
