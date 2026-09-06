@@ -58,10 +58,14 @@ public class FilterQueryUtils {
                 case DEFAULT:
                     break;
                 case FIRST:
-                    ret.append( " nulls first" );
+                    if ( !isOwnIdentifier( sort ) ) {
+                        ret.append( " nulls first" );
+                    }
                     break;
                 case LAST:
-                    ret.append( " nulls last" );
+                    if ( !isOwnIdentifier( sort ) ) {
+                        ret.append( " nulls last" );
+                    }
                     break;
                 default:
                     throw new UnsupportedOperationException( "Unsupported null mode " + sort.getNullMode() + "." );
@@ -73,6 +77,21 @@ public class FilterQueryUtils {
         }
 
         return ret.toString();
+    }
+
+    /**
+     * Whether this sort targets the sorted entity's OWN identifier, which is never null.
+     * <p>
+     * A null-ordering clause compiles to {@code case when (x.ID) is null then 1 else 0 end} on MySQL, which no index
+     * can satisfy. On a column that cannot be null that buys nothing and costs the index: a {@code limit 1} stops
+     * being a walk of the primary key and becomes a full scan plus a filesort of every matching row. Measured on
+     * production, one such {@code limit 1} over the ACL-filtered dataset set took ~5 minutes.
+     * <p>
+     * Only a bare {@code id} qualifies. A dotted path such as {@code bioAssays.arrayDesignUsed.id} reaches the
+     * identifier of a JOINED entity, which IS null when that join is an outer one, so those keep their clause.
+     */
+    private static boolean isOwnIdentifier( Sort sort ) {
+        return "id".equals( sort.getPropertyName() );
     }
 
     /**

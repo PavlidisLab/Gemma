@@ -145,6 +145,28 @@ public class FilterQueryUtilsTest {
     }
 
     @Test
+    public void testSortByOwnIdOmitsNullOrdering() {
+        // an entity's own id is never null, and the clause compiles to a CASE that no index can satisfy
+        assertThat( formOrderByClause( Sort.by( "ee", "id", Sort.Direction.ASC, Sort.NullMode.LAST ) ) )
+                .isEqualTo( " order by ee.id asc" );
+        assertThat( formOrderByClause( Sort.by( "ee", "id", Sort.Direction.ASC, Sort.NullMode.FIRST ) ) )
+                .isEqualTo( " order by ee.id asc" );
+    }
+
+    @Test
+    public void testSortByJoinedIdKeepsNullOrdering() {
+        // a joined entity's id IS null under an outer join, so the clause is meaningful there
+        assertThat( formOrderByClause( Sort.by( "ee", "bioAssays.arrayDesignUsed.id", Sort.Direction.ASC, Sort.NullMode.LAST ) ) )
+                .isEqualTo( " order by ee.bioAssays.arrayDesignUsed.id asc nulls last" );
+    }
+
+    @Test
+    public void testSortByNullablePropertyKeepsNullOrdering() {
+        assertThat( formOrderByClause( Sort.by( "ee", "curationDetails.lastUpdated", Sort.Direction.DESC, Sort.NullMode.LAST ) ) )
+                .isEqualTo( " order by ee.curationDetails.lastUpdated desc nulls last" );
+    }
+
+    @Test
     public void testSubquery() {
         assertThat( formRestrictionClause( Filters.by( "ee", "id", Integer.class, Filter.Operator.inSubquery,
                 new Subquery( "ExpressionExperiment", "id", Collections.emptyList(),
