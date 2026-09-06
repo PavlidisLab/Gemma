@@ -20,7 +20,9 @@ package ubic.gemma.model.expression.bioAssay;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -142,6 +144,42 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * For sequence-read based data, the total number of reads in the assay, computed from the data as the total of the
      * values for the elements assayed.
      */
+    /**
+     * What was extracted from the sample and assayed, from GEO's {@code !Sample_molecule_chN}.
+     * {@code null} when the source did not say, or for data that did not come from GEO.
+     *
+     * @see ExtractedMolecule for why this is on the assay rather than the biomaterial
+     */
+    @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "EXTRACTED_MOLECULE", columnDefinition = "VARCHAR(32)")
+    private ExtractedMolecule extractedMolecule;
+
+    /**
+     * How the library was selected — GEO's {@code library_selection}: {@code polyA}, {@code cDNA},
+     * {@code RANDOM}, {@code size fractionation} and so on.
+     * <p>
+     * The submitter's raw string, not an enum, matching how the GEO parser already keeps it: the
+     * vocabulary is open and a value nobody anticipated is worth more verbatim than coerced to
+     * {@code other}.
+     * <p>
+     * 🛑 Read it beside {@link #extractedMolecule} rather than instead of it. They routinely disagree,
+     * and the disagreement is the point — Paul, 2026-08-31: "total RNA … is potentially misleading
+     * because there's often still a poly-A selection step". The molecule says what went in, this says
+     * what was kept.
+     */
+    @Nullable
+    @Column(name = "LIBRARY_SELECTION", columnDefinition = "VARCHAR(255)")
+    private String librarySelection;
+
+    /**
+     * What kind of library it was — GEO's {@code library_strategy}: {@code RNA-Seq}, {@code scRNA-seq},
+     * {@code ATAC-seq} and so on. The enum name as GEO gave it; null when unstated or non-GEO.
+     */
+    @Nullable
+    @Column(name = "LIBRARY_STRATEGY", columnDefinition = "VARCHAR(255)")
+    private String libraryStrategy;
+
     @Nullable
     @Column(name = "SEQUENCE_READ_COUNT", columnDefinition = "BIGINT")
     private Long sequenceReadCount;
@@ -323,6 +361,32 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Nullable
+    public ExtractedMolecule getExtractedMolecule() {
+        return this.extractedMolecule;
+    }
+
+    public void setExtractedMolecule( @Nullable ExtractedMolecule extractedMolecule ) {
+        this.extractedMolecule = extractedMolecule;
+    }
+
+    @Nullable
+    public String getLibrarySelection() {
+        return this.librarySelection;
+    }
+
+    public void setLibrarySelection( @Nullable String librarySelection ) {
+        this.librarySelection = librarySelection;
+    }
+
+    @Nullable
+    public String getLibraryStrategy() {
+        return this.libraryStrategy;
+    }
+
+    public void setLibraryStrategy( @Nullable String libraryStrategy ) {
+        this.libraryStrategy = libraryStrategy;
+    }
+
     public Long getSequenceReadCount() {
         return this.sequenceReadCount;
     }

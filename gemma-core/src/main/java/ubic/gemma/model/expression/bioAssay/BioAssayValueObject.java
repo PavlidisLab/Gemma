@@ -79,6 +79,46 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     private Date processingDate;
     private BioMaterialValueObject sample;
 
+    /**
+     * What was extracted from the sample and assayed — GEO's {@code molecule}. Null when the source did not
+     * say, and on everything imported before this field existed.
+     * <p>
+     * 🛑 The only thing that separates single-NUCLEUS from single-CELL RNA-seq: {@code isSingleCell} is true
+     * for both, and before this the distinction lived solely as one {@code molecular entity} characteristic
+     * among a sample's several, with no typed way to ask.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "What was extracted and assayed (GEO's molecule): totalRNA, polyARNA, "
+            + "cytoplasmicRNA, nuclearRNA, genomicDNA, protein, other. Null when unstated or non-GEO. This is "
+            + "what distinguishes single-nucleus from single-cell RNA-seq — isSingleCell is true for both.")
+    private ExtractedMolecule extractedMolecule;
+
+    /**
+     * How the library was selected — GEO's {@code library_selection} ({@code polyA}, {@code cDNA},
+     * {@code RANDOM}, …), verbatim.
+     * <p>
+     * ⚠️ Read beside {@link #extractedMolecule}, not instead of it: {@code totalRNA} with a {@code polyA}
+     * selection is common and the two together are the real answer.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "GEO's library_selection, verbatim (polyA, cDNA, RANDOM, …). Read beside "
+            + "extractedMolecule: total RNA with a polyA selection step is common, and the molecule alone is "
+            + "misleading there.")
+    private String librarySelection;
+
+    /**
+     * What kind of library — GEO's {@code library_strategy} ({@code RNA-Seq}, {@code scRNA-seq},
+     * {@code Ribo-Seq}, {@code ATAC-seq}, …). A string rather than an enum so a strategy nobody anticipated
+     * arrives intact instead of needing a schema change.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "GEO's library_strategy (RNA-Seq, scRNA-seq, Ribo-Seq, ATAC-seq, …). Free text, so "
+            + "a new strategy needs no schema change.")
+    private String libraryStrategy;
+
     // only for RNA-Seq data
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean sequencePairedReads;
@@ -188,6 +228,9 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         this.sequencePairedReads = bioAssay.getSequencePairedReads();
         this.sequenceReadLength = bioAssay.getSequenceReadLength();
         this.sequenceReadCount = bioAssay.getSequenceReadCount();
+        this.extractedMolecule = bioAssay.getExtractedMolecule();
+        this.librarySelection = bioAssay.getLibrarySelection();
+        this.libraryStrategy = bioAssay.getLibraryStrategy();
         this.metadata = bioAssay.getMetadata();
 
         this.numberOfCells = bioAssay.getNumberOfCells();
