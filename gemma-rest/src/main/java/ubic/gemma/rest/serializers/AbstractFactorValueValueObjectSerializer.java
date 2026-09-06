@@ -88,13 +88,13 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeArrayFieldStart( "statements" );
         visitAllStatements( factorValueId, svos, ( svo, assignedIds ) -> {
             if ( assignedIds.getObjectId() != null ) {
-                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getPredicate(), svo.getPredicateUri(), assignedIds.getObjectId(), svo.getObject(), svo.getObjectUri(), jsonGenerator );
+                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getPredicate(), svo.getPredicateUri(), assignedIds.getObjectId(), svo.getObject(), svo.getObjectUri(), svo, jsonGenerator );
             }
             if ( assignedIds.getSecondObjectId() != null ) {
-                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getSecondPredicate(), svo.getSecondPredicateUri(), assignedIds.getSecondObjectId(), svo.getSecondObject(), svo.getSecondObjectUri(), jsonGenerator );
+                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getSecondPredicate(), svo.getSecondPredicateUri(), assignedIds.getSecondObjectId(), svo.getSecondObject(), svo.getSecondObjectUri(), svo, jsonGenerator );
             }
             if ( assignedIds.getObjectId() == null && assignedIds.getSecondObjectId() == null ) {
-                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), null, null, null, null, null, jsonGenerator );
+                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), null, null, null, null, null, svo, jsonGenerator );
             }
         } );
         jsonGenerator.writeEndArray();
@@ -111,7 +111,7 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeEndObject();
     }
 
-    private void writeStatement( Long id, String category, String categoryUri, String subjectId, String subject, String subjectUri, @Nullable String predicate, @Nullable String predicateUri, @Nullable String objectId, @Nullable String object, @Nullable String objectUri, JsonGenerator jsonGenerator ) throws IOException {
+    private void writeStatement( Long id, String category, String categoryUri, String subjectId, String subject, String subjectUri, @Nullable String predicate, @Nullable String predicateUri, @Nullable String objectId, @Nullable String object, @Nullable String objectUri, StatementValueObject source, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField( "id", id );
         jsonGenerator.writeStringField( "category", category );
@@ -130,6 +130,19 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
             jsonGenerator.writeStringField( "objectId", objectId );
             jsonGenerator.writeStringField( "object", object );
             jsonGenerator.writeStringField( "objectUri", objectUri );
+        }
+        // Evidence describes the ROW, so a compound statement carries the same values on both of the entries
+        // it is flattened into; `unflattenStatements` re-joins them by id on the way back in.
+        //
+        // 🛑 Absent rather than null when unset, and for a sharper reason than tidiness: on the write path
+        // `supportingEvidence: []` is a SEND that ERASES. A client that could not read the current value had
+        // no safe way to merge into it -- it either omitted the key and lost nothing, or guessed. Writing an
+        // explicit null here would hand that same ambiguity back on the read side.
+        if ( source.getSupportingEvidence() != null ) {
+            jsonGenerator.writeObjectField( "supportingEvidence", source.getSupportingEvidence() );
+        }
+        if ( source.getEvidenceCode() != null ) {
+            jsonGenerator.writeStringField( "evidenceCode", source.getEvidenceCode() );
         }
         jsonGenerator.writeEndObject();
     }

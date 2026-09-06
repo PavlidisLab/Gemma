@@ -2239,7 +2239,7 @@ public class DatasetsWebService {
                     + "audit events are append-only so id-asc tracks date-asc in practice); the path-derived "
                     + "dataset (AuditTrail) scope is preserved; `totalElements` is `null` by default "
                     + "(no count query per request). "
-                    + "Pass `compact=true` to collapse consecutive same-(eventType, performer) events into a "
+                    + "Pass `compact=true` to collapse consecutive same-(eventType, performer, onBehalfOf) events into a "
                     + "single entry carrying `collapsedCount` (run length) and `lastOccurrence` (last event's "
                     + "date); the first event's message is kept verbatim. Compression happens within the "
                     + "response page only — runs are never merged across cursor boundaries. "
@@ -2266,7 +2266,7 @@ public class DatasetsWebService {
                     + "returns the MOST RECENT `limit` entries, still oldest-first within that window. Applied last, "
                     + "after `excludeEmpty` and `compact`.")
             @QueryParam("limit") @Nullable LimitArg limitArg,
-            @Parameter(description = "Collapse runs of consecutive same-(eventType, performer) events into one entry with `collapsedCount` + `lastOccurrence`. Default `false`.")
+            @Parameter(description = "Collapse runs of consecutive same-(eventType, performer, onBehalfOf) events into one entry with `collapsedCount` + `lastOccurrence`. Default `false`.")
             @QueryParam("compact") @DefaultValue("false") boolean compact,
             @Parameter(description = "Drop entries with no eventType AND blank note/detail (boring update ticks). Default `false`. Combine with `compact=true` for a tight curator-story view.")
             @QueryParam("excludeEmpty") @DefaultValue("false") boolean excludeEmpty
@@ -2348,7 +2348,7 @@ public class DatasetsWebService {
     }
 
     /**
-     * Fold a chronological audit-event list into runs sharing the same (eventType, performer) pair.
+     * Fold a chronological audit-event list into runs sharing the same (eventType, performer, onBehalfOf) triple.
      * Each maximal run emits ONE {@link CompactAuditEventValueObject} carrying the first event's full
      * content, a {@code collapsedCount} = run length, and a {@code lastOccurrence} = date of the LAST
      * event in the run (= the first event's date for a solo entry).
@@ -2364,7 +2364,12 @@ public class DatasetsWebService {
         for ( AuditEventValueObject ev : events ) {
             if ( runHead != null
                     && Objects.equals( ev.getEventType(), runHead.getEventType() )
-                    && Objects.equals( ev.getPerformer(), runHead.getPerformer() ) ) {
+                    && Objects.equals( ev.getPerformer(), runHead.getPerformer() )
+                    // onBehalfOf is part of the identity of a run, not a detail of it: an agent writes every
+                    // commit under its own credential, so two commits made for DIFFERENT curators share an
+                    // eventType and a performer and would otherwise collapse into one entry naming whichever
+                    // curator happened to be first.
+                    && Objects.equals( ev.getOnBehalfOf(), runHead.getOnBehalfOf() ) ) {
                 runCount++;
                 if ( ev.getDate() != null ) {
                     runLast = ev.getDate();

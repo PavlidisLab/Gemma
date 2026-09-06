@@ -2,6 +2,10 @@ package ubic.gemma.rest.serializers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import ubic.gemma.model.association.GOEvidenceCode;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonassert.JsonAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,6 +202,46 @@ public class FactorValueValueObjectSerializerTest extends BaseTest5 {
         statement.setSecondObject( secondObject );
         statement.setSecondObjectUri( secondObjectUri );
         return statement;
+    }
+
+    /**
+     * Evidence reaches the wire on the design payload.
+     * <p>
+     * {@code StatementValueObject} declares {@code supportingEvidence} and {@code evidenceCode} and populates
+     * both from the entity, but this serializer replaces the bean path and hand-writes each field — so neither
+     * key was emitted under {@code statements[]} while {@code /annotations} returned them for the same row.
+     * The consequence was not cosmetic: on the write path {@code supportingEvidence: []} ERASES, so a client
+     * that could not read the current value had no safe way to merge into it.
+     */
+    @Test
+    public void aStatementCarriesItsEvidenceOnTheWire() throws JsonProcessingException {
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
+        Statement s = createStatement( 2L, "genotype", null, "bar", null, "has role", null, "control", null );
+        s.setEvidenceCode( GOEvidenceCode.IC );
+        s.setSupportingEvidence( "[{\"assertedBy\":\"curator\"}]" );
+        fv.getCharacteristics().add( s );
+        String json = objectMapper.writeValueAsString( new FactorValueValueObject( fv ) );
+        JsonAssert.with( json )
+                .assertEquals( "$.statements[0].evidenceCode", "IC" )
+                .assertEquals( "$.statements[0].supportingEvidence[0].assertedBy", "curator" );
+    }
+
+    /**
+     * Absent, not null, when there is no evidence — null reads as "this was cleared" on a payload whose write
+     * path treats an empty send as an erasure.
+     */
+    @Test
+    public void aStatementWithoutEvidenceOmitsTheKeys() throws JsonProcessingException {
+        FactorValue fv = new FactorValue();
+        fv.setId( 1L );
+        fv.setExperimentalFactor( new ExperimentalFactor() );
+        fv.getCharacteristics().add( createStatement( 2L, "genotype", null, "bar", null, "has role", null, "control", null ) );
+        JsonNode stmt = objectMapper.readTree( objectMapper.writeValueAsString( new FactorValueValueObject( fv ) ) )
+                .get( "statements" ).get( 0 );
+        assertThat( stmt.has( "evidenceCode" ) ).isFalse();
+        assertThat( stmt.has( "supportingEvidence" ) ).isFalse();
     }
 
     private Statement createStatement( Long id, String category, String categoryUri, String subject, String subjectUri, String predicate, String predicateUri, String object, String objectUri ) {
