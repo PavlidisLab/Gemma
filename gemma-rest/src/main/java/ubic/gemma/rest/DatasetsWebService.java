@@ -10212,7 +10212,15 @@ public class DatasetsWebService {
     @Path("/{dataset}/design")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
+    // No role gate: editing a dataset's design is an ACL question, not a curator-only capability. The owner of a
+    // dataset may rewrite its design whether or not they are a curator (Paul, 2026-09-06), and the floor is the
+    // one the service already enforces -- applyDesignChange is @Secured({"GROUP_USER", "ACL_SECURABLE_EDIT"}),
+    // so an authenticated principal still needs write on THIS dataset.
+    //
+    // 🛑 It carried hasAuthority('GROUP_CURATOR') until 2026-09-06, which made this route stricter than
+    // PUT /{dataset}/curation -- the composite route performs the same design replacement under the same service
+    // method and has never had a role gate. A dataset owner could therefore rewrite their design through one
+    // route and not the other, which is a difference no caller could have predicted from the docs.
     @Operation(summary = "Replace the experimental design of a dataset", responses = {
             @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))),
             @ApiResponse(responseCode = "400", description = "The proposed design has validation blockers; see the report in the response body.",
