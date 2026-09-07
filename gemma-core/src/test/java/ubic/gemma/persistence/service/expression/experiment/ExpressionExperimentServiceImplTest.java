@@ -1517,12 +1517,17 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     /**
-     * Evidence follows the {@code null = "no change"} convention the rest of the payload uses, so a client that
-     * does not carry provenance cannot wipe provenance somebody else recorded. Re-sending such a statement stays
-     * a no-op rather than becoming a silent erasure.
+     * 🛑 This service applies FULL-RECORD REPLACEMENT, so an omitted {@code supportingEvidence} CLEARS a stored
+     * one and counts as a change. It does not follow the {@code null = "no change"} convention, and this test
+     * asserted that it did until {@code ce61a2f9cb} (2026-09-06) retired the hybrid contract.
+     * <p>
+     * The protection against a client silently dropping provenance somebody else recorded is
+     * {@code DatasetsWebService.requireEvidenceEchoed}, which refuses the omission with a 400 before it ever
+     * reaches this method — REST is the only caller. Pinned here so nobody restores "omission is a no-op" in the
+     * service and quietly gives the payload two contracts again.
      */
     @Test
-    public void testApplyDoesNotWipeExistingEvidenceWhenThePayloadOmitsIt() {
+    public void testApplyClearsEvidenceWhenThePayloadOmitsIt() {
         buildFixture();
         controlFv.getCharacteristics().iterator().next().setSupportingEvidence( "[{\"quote\":\"recorded earlier\"}]" );
 
@@ -1531,9 +1536,9 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
         DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
 
-        assertThat( outcome.isApplied() ).isFalse();
+        assertThat( outcome.isApplied() ).isTrue();
         assertThat( controlFv.getCharacteristics() ).singleElement()
-                .satisfies( s -> assertThat( s.getSupportingEvidence() ).contains( "recorded earlier" ) );
+                .satisfies( s -> assertThat( s.getSupportingEvidence() ).isNull() );
     }
 
     /** An evidence code stated on a factor-value statement reaches the entity, so a design write can say how it was decided. */
@@ -1570,11 +1575,16 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     /**
-     * The evidence code follows the same {@code null = "no change"} convention as supporting evidence: a client
-     * that does not carry one cannot blank the code somebody else recorded, and omitting it changes nothing.
+     * The evidence code replaces on the same terms as supporting evidence: an omitted one CLEARS a stored code
+     * and counts as a change. {@code 9923b7c62d} put the refusal one layer up, in
+     * {@code DatasetsWebService}, after a client echoing a statement without carrying the code back destroyed a
+     * stored IC and got an ordinary {@code updated: 1}.
+     * <p>
+     * The clear is spelled {@code ""} rather than an absent key, because {@code evidenceCode} is a String and
+     * absent-vs-explicit-null are not distinguishable on one.
      */
     @Test
-    public void testApplyDoesNotWipeTheEvidenceCodeWhenThePayloadOmitsIt() {
+    public void testApplyClearsTheEvidenceCodeWhenThePayloadOmitsIt() {
         buildFixture();
         controlFv.getCharacteristics().iterator().next().setEvidenceCode( GOEvidenceCode.IEA );
 
@@ -1583,9 +1593,9 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
 
         DesignApplyOutcome outcome = svc.applyDesignChange( fixture, proposal );
 
-        assertThat( outcome.isApplied() ).isFalse();
+        assertThat( outcome.isApplied() ).isTrue();
         assertThat( controlFv.getCharacteristics() ).singleElement()
-                .satisfies( s -> assertThat( s.getEvidenceCode() ).isEqualTo( GOEvidenceCode.IEA ) );
+                .satisfies( s -> assertThat( s.getEvidenceCode() ).isNull() );
     }
 
     /**
