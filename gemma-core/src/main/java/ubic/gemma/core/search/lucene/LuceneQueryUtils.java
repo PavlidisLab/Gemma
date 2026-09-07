@@ -95,19 +95,27 @@ public class LuceneQueryUtils {
     }
 
     /**
-     * Parse a query, normalizing Lucene's {@link TokenMgrError} into a {@link ParseException}.
+     * Parse a query, normalizing the parser's two non-{@link ParseException} failure modes into
+     * a {@link ParseException}.
      * <p>
      * The lexer throws {@link TokenMgrError} — an {@link Error}, not an exception — for some
      * malformed inputs (an unterminated regex from a stray '/', an open range from '['). It is
      * usually wrapped into a {@link ParseException} by {@link QueryParser#parse}, but can escape
      * unwrapped during grammar lookahead, in which case it would slip past a plain
-     * {@code catch (ParseException)} and bubble up to the retry interceptor. Normalize it here so
-     * the escape-and-retry fallback always runs.
+     * {@code catch (ParseException)} and bubble up to the retry interceptor.
+     * <p>
+     * A CLOSED regex whose body is not a valid regex fails differently again: the lexer is
+     * satisfied, and {@code RegExp} rejects the body with an {@link IllegalArgumentException}.
+     * That is the {@code a/b (c/d)} shape — the '(' falls between the two slashes, so the body is
+     * {@code b (c} — and it answered 500 on every endpoint reachable through
+     * {@link #prepareDatabaseQuery(SearchSettings, Consumer)} until it was normalized here.
+     * <p>
+     * Normalize both so the escape-and-retry fallback always runs.
      */
     private static Query parse( QueryParser queryParser, String query ) throws ParseException {
         try {
             return queryParser.parse( query );
-        } catch ( TokenMgrError e ) {
+        } catch ( TokenMgrError | IllegalArgumentException e ) {
             ParseException pe = new ParseException( "Cannot parse '" + query + "': " + e.getMessage() );
             pe.initCause( e );
             throw pe;

@@ -107,13 +107,9 @@ class LuceneOntologySearchIndex implements SearchIndex {
             QueryParser parser = new QueryParser( TEXT_FIELD, analyzer );
             // Allow * and ? as prefix wildcards too (older baseCode behavior).
             parser.setAllowLeadingWildcard( true );
-            Query query;
-            try {
-                query = parser.parse( queryString );
-            } catch ( ParseException e ) {
-                // Fall back to escaped term search if the user's query won't parse.
-                query = parser.parse( QueryParser.escape( queryString ) );
-            }
+            // Fall back to an escaped term search if the user's query won't parse. The raw
+            // parser has three failure modes, not one -- see OntologyQueries.parseSafely.
+            Query query = OntologyQueries.parseSafely( parser, queryString );
             // The parser's default operator is OR, which on an ontology index means a document
             // matches on ONE shared token — `Gorlin Goltz Syndrome` retrieved `down syndrome`.
             query = OntologyQueries.withMinimumShouldMatch( query, OntologyQueries.DEFAULT_MIN_SHOULD_MATCH );

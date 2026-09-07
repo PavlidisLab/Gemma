@@ -87,14 +87,11 @@ public class LexicalOntologyIndex implements AutoCloseable {
         parser.setAllowLeadingWildcard( true );
         Query textQuery;
         try {
-            textQuery = parser.parse( queryString );
+            // Falls back to an escaped term query if the raw query won't parse. The raw parser
+            // has three failure modes, not one -- see OntologyQueries.parseSafely.
+            textQuery = OntologyQueries.parseSafely( parser, queryString );
         } catch ( ParseException e ) {
-            try {
-                // Fall back to an escaped term query if the raw query won't parse.
-                textQuery = parser.parse( QueryParser.escape( queryString ) );
-            } catch ( ParseException e2 ) {
-                throw new IOException( "Failed to parse lexical ontology query: " + queryString, e2 );
-            }
+            throw new IOException( "Failed to parse lexical ontology query: " + queryString, e );
         }
         // Same OR-default problem as the Jena index: without this a catalogue of 118k strain names
         // answers any multi-word query on a single shared token.

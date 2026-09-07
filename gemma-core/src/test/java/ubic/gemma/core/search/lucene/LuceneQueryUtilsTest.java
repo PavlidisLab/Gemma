@@ -51,4 +51,34 @@ class LuceneQueryUtilsTest {
     void prepareDatabaseQuery_withPlainSymbol_returnsSymbol() throws Exception {
         assertThat( LuceneQueryUtils.prepareDatabaseQuery( "TP53", false ) ).isEqualTo( "TP53" );
     }
+
+    /**
+     * A paren falling BETWEEN two unescaped slashes is a different failure from the unterminated
+     * regex above, and the one the escape-retry never saw. {@code a/b (c/d)} closes its regex
+     * term, so the lexer is happy and no {@code TokenMgrError} is thrown; Lucene then hands the
+     * body {@code b (c} to {@link org.apache.lucene.util.automaton.RegExp}, which rejects it with
+     * an {@link IllegalArgumentException} ("expected ')' at position 4"). That is neither a
+     * {@code ParseException} nor an {@code Error}, so it walked past both arms of the fallback and
+     * out of the endpoint as a 500.
+     */
+    @Test
+    void prepareDatabaseQuery_withParenBetweenSlashes_recovers() throws Exception {
+        assertThatNoException().isThrownBy( () -> LuceneQueryUtils.prepareDatabaseQuery( "a/b (c/d)", false ) );
+        assertThat( LuceneQueryUtils.prepareDatabaseQuery( "a/b (c/d)", false ) ).isNotNull();
+    }
+
+    /**
+     * The same shape in real curation text: strain, genotype and dose strings routinely put a
+     * paren between two slashes.
+     */
+    @Test
+    void prepareDatabaseQuery_withCurationTextSlashesAndParens_recovers() {
+        for ( String q : new String[] {
+                "C57BL/6 (H-2b/d)",
+                "ischemia/reperfusion (I/R) injury",
+                "0.33% w/w (~325 mg/kg bw/day)",
+                "CD4+/CD8+ (T/B)" } ) {
+            assertThatNoException().isThrownBy( () -> LuceneQueryUtils.prepareDatabaseQuery( q, false ) );
+        }
+    }
 }

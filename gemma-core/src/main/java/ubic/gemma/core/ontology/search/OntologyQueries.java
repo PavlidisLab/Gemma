@@ -11,6 +11,9 @@
  */
 package ubic.gemma.core.ontology.search;
 
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.TokenMgrError;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -99,5 +102,54 @@ public final class OntologyQueries {
         double r = Math.min( Math.max( ratio, 0.0 ), 1.0 );
         int required = ( int ) Math.floor( r * n );
         return Math.max( 2, Math.min( n, required ) );
+    }
+
+    /**
+     * Parse a free-text query, falling back on the Lucene-escaped form when the raw one will not
+     * parse.
+     *
+     * <h4>Why the fallback needs three exception types, not one</h4>
+     *
+     * <p>An unescaped {@code /} opens a regex term, and ontology queries carry them constantly
+     * (strains, doses, genotypes). The failure that reaches the caller depends on the shape:</p>
+     * <ul>
+     *     <li>{@code 100 ng/ml} — the regex is never closed, so the LEXER fails and throws
+     *         {@link TokenMgrError}, an {@link Error}.</li>
+     *     <li>{@code a/b (c/d)} — the regex IS closed, so the lexer is satisfied and the parser
+     *         hands the body {@code b (c} to {@code RegExp}, which rejects it with an
+     *         {@link IllegalArgumentException}.</li>
+     *     <li>everything else — {@link ParseException}.</li>
+     * </ul>
+     *
+     * <p>Catching only {@code ParseException} covers the third; the other two walk out of the
+     * search and reach the REST layer as a 500. Normalizing all three into
+     * {@code ParseException} here means one fallback arm serves every case, and a query that
+     * still will not parse after escaping leaves as a {@code ParseException} the callers already
+     * translate into a 400.</p>
+     *
+     * @param parser      the parser to use; its analyzer and settings are the caller's
+     * @param queryString the raw user query
+     * @return the parsed query, from the raw string when it parses and the escaped string otherwise
+     * @throws ParseException if the escaped string does not parse either
+     */
+    public static Query parseSafely( QueryParser parser, String queryString ) throws ParseException {
+        try {
+            return parse( parser, queryString );
+        } catch ( ParseException e ) {
+            return parse( parser, QueryParser.escape( queryString ) );
+        }
+    }
+
+    /**
+     * Parse, normalizing the parser's two non-{@link ParseException} failure modes into one.
+     */
+    private static Query parse( QueryParser parser, String queryString ) throws ParseException {
+        try {
+            return parser.parse( queryString );
+        } catch ( TokenMgrError | IllegalArgumentException e ) {
+            ParseException pe = new ParseException( "Cannot parse '" + queryString + "': " + e.getMessage() );
+            pe.initCause( e );
+            throw pe;
+        }
     }
 }

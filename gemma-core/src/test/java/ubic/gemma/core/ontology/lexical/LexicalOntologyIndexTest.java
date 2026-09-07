@@ -66,4 +66,20 @@ class LexicalOntologyIndexTest {
             assertThrows( IllegalArgumentException.class, () -> idx.search( "  ", 10 ) );
         }
     }
+
+    /**
+     * A strain name carrying a paren between two slashes must search as text, not as a regex.
+     * Lucene's classic parser reads {@code /6 (H-2b/} as a regex term and rejects the body with an
+     * {@link IllegalArgumentException}, which is neither the {@code ParseException} the
+     * escape-retry catches nor an {@code Error} — so it escaped the index entirely.
+     */
+    @Test
+    void nameWithParenBetweenSlashesSearchesAsText() throws Exception {
+        List<LexicalTerm> terms = List.of(
+                new LexicalTerm( "u:b6", "C57BL/6 (H-2b/d)", List.of() )
+        );
+        try ( LexicalOntologyIndex idx = LexicalOntologyIndex.build( terms, Collections.emptySet() ) ) {
+            assertEquals( "u:b6", idx.search( "C57BL/6 (H-2b/d)", 10 ).get( 0 ).uri() );
+        }
+    }
 }
