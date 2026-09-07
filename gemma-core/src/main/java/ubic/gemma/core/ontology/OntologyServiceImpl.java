@@ -634,7 +634,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 return null;
             }
             return term;
-        }, uri, timeUnit.toMillis( timeout ) );
+        }, uriAddressableOntologyServices(), uri, timeUnit.toMillis( timeout ) );
     }
 
     @Override
@@ -648,14 +648,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 return null;
             }
             return ontology.getVersion();
-        }, uri, timeUnit.toMillis( timeout ) );
+        }, uriAddressableOntologyServices(), uri, timeUnit.toMillis( timeout ) );
     }
 
     @Override
     public Set<OntologyTerm> getTerms( Collection<String> uris, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         Set<String> distinctUris = uris instanceof Set ? ( Set<String> ) uris : new HashSet<>( uris );
         List<OntologyTerm> results = combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ),
-                String.format( "terms for %d URIs", uris.size() ), timeUnit.toMillis( timeout ) );
+                uriAddressableOntologyServices(), String.format( "terms for %d URIs", uris.size() ), timeUnit.toMillis( timeout ) );
         results.removeIf( t -> t.getLabel() == null );
         return new HashSet<>( results );
     }
@@ -1442,12 +1442,44 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * Find the first non-null result among loaded ontology services.
      */
     @Nullable
+    /**
+     * The ontologies a URI-addressed lookup may consult: the fan-out list plus Gene Ontology.
+     * <p>
+     * GO is removed from {@code ontologyServices} in {@link #afterPropertiesSet()}, which took it out of
+     * <em>every</em> fan-out at once — search, the parent/child walk, and plain URI resolution alike. The
+     * documented reason to hold GO back is the cost of SEARCHING it: it is the largest and slowest index, and
+     * sweeping it on every query holds the request's read-only DB connection long enough to starve the pool
+     * (see {@code findTermsInOntologies}, where it stays a zero-hits fallback). Resolving a URI carries none
+     * of that — it is a lookup against a model already in memory.
+     * <p>
+     * The effect of not separating the two was that {@code /annotations/term} answered "no such term" for a
+     * GO URI while {@code /admin/ontologies} reported GO {@code loaded: true} — reported for
+     * {@code GO_0007610}, reached as the parent of {@code EFO_0002756 fasting}. A cross-vocabulary parent
+     * that resolves to no label is also dropped by {@link #getTerms}, so the walk returned a bare URI.
+     * <p>
+     * 🛑 Deliberately NOT extended to the parent/child walk: a transitive ancestor walk into GO's DAG is a
+     * real cost, and cross-vocabulary edges can now reach GO from ordinary terms.
+     */
+    private List<ubic.gemma.core.ontology.providers.OntologyService> uriAddressableOntologyServices() {
+        if ( geneOntologyService == null || !geneOntologyService.isOntologyLoaded() ) {
+            return ontologyServices;
+        }
+        List<ubic.gemma.core.ontology.providers.OntologyService> services = new ArrayList<>( ontologyServices.size() + 1 );
+        services.addAll( ontologyServices );
+        services.add( geneOntologyService );
+        return services;
+    }
+
     private <T> T findFirst( Function<ubic.gemma.core.ontology.providers.OntologyService, T> function, String query, long timeoutMs ) throws TimeoutException {
+        return findFirst( function, ontologyServices, query, timeoutMs );
+    }
+
+    private <T> T findFirst( Function<ubic.gemma.core.ontology.providers.OntologyService, T> function, List<ubic.gemma.core.ontology.providers.OntologyService> services, String query, long timeoutMs ) throws TimeoutException {
         StopWatch timer = StopWatch.createStarted();
-        List<Future<T>> futures = new ArrayList<>( ontologyServices.size() );
-        List<Object> objects = new ArrayList<>( ontologyServices.size() );
+        List<Future<T>> futures = new ArrayList<>( services.size() );
+        List<Object> objects = new ArrayList<>( services.size() );
         ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor );
-        for ( ubic.gemma.core.ontology.providers.OntologyService service : ontologyServices ) {
+        for ( ubic.gemma.core.ontology.providers.OntologyService service : services ) {
             if ( service.isOntologyLoaded() ) {
                 futures.add( completionService.submit( () -> function.apply( service ) ) );
                 objects.add( service );

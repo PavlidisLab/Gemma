@@ -863,4 +863,53 @@ public class OntologyServiceTest extends BaseTest5 {
                 () -> ontologyService.findExperimentsCharacteristicTags( "cell", 100, false, false, 5000, TimeUnit.MILLISECONDS ) );
         assertFalse( e instanceof ParseSearchException );
     }
+
+    /**
+     * A GO URI resolves through {@code getTerm}, even though GO stays out of the search fan-out.
+     * <p>
+     * GO is removed from {@code ontologyServices} at startup, which took it out of URI resolution as well as
+     * search. {@code /annotations/term?uri=…/GO_0007610} therefore answered "no such term" while
+     * {@code /admin/ontologies} reported GO {@code loaded: true} — reported by cab (eval) 2026-09-07, reached
+     * as the parent of {@code EFO_0002756 fasting}.
+     */
+    @Test
+    public void testGetTermResolvesAGeneOntologyUri() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/GO_0007610";
+        when( geneOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( geneOntologyService.getTerm( uri ) ).thenReturn( new OntologyTermSimple( uri, "behavior" ) );
+
+        OntologyTerm term = ontologyService.getTerm( uri, 5000, TimeUnit.MILLISECONDS );
+
+        assertNotNull( term );
+        assertEquals( "behavior", term.getLabel() );
+    }
+
+    /** The same URI through the batch path, which is what fills in a cross-vocabulary parent's label. */
+    @Test
+    public void testGetTermsResolvesAGeneOntologyUri() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/GO_0007610";
+        when( geneOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( geneOntologyService.getTerm( uri ) ).thenReturn( new OntologyTermSimple( uri, "behavior" ) );
+
+        assertEquals( Collections.singleton( uri ),
+                ontologyService.getTerms( Collections.singleton( uri ), 5000, TimeUnit.MILLISECONDS )
+                        .stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) );
+    }
+
+    /**
+     * 🛑 The parent/child walk is deliberately NOT extended to GO. A transitive ancestor walk into GO's DAG is
+     * a real cost, and since cross-vocabulary parents started being reported an ordinary term can reach a GO
+     * URI — so the walk must not follow it into GO's hierarchy just because the URI now resolves.
+     */
+    @Test
+    public void testTheParentWalkStillDoesNotEnterGeneOntology() throws Exception {
+        when( geneOntologyService.isOntologyLoaded() ).thenReturn( true );
+
+        ontologyService.getParents(
+                Collections.singleton( new OntologyTermSimple( "http://purl.obolibrary.org/obo/GO_0007610", "behavior" ) ),
+                true, false, 5000, TimeUnit.MILLISECONDS );
+
+        verify( geneOntologyService, never() ).getParents( any(), anyBoolean(), anyBoolean() );
+        verify( geneOntologyService, never() ).getParents( any(), anyBoolean(), anyBoolean(), anyBoolean() );
+    }
 }
