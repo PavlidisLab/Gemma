@@ -716,10 +716,17 @@ public abstract class AbstractOntologyService implements OntologyService {
     @Override
     public Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct,
             boolean includeAdditionalProperties, boolean keepObsoletes ) {
+        // 🛑 No isUriAllowed filter on these results. The prefix set says which terms this ontology SERVES
+        // -- the right question for getTerm and for search hits, the wrong one for the object of an axiom it
+        // asserts. Filtering here made a subClassOf leaving the namespace unreportable BY THE ONLY ONTOLOGY
+        // THAT HAS IT: EFO_0001643 subClassOf CL_0000010 is asserted in EFO, EFO's prefix is
+        // http://www.ebi.ac.uk/efo/EFO_, and no other ontology holds the child -- so /annotations/parents
+        // answered zero ancestors for 14 of 38 EFO terms in a reference corpus, every one of them a term whose
+        // parent is outside EFO. OntologyServiceImpl.getParentsOrChildren re-queries a foreign result against
+        // the ontology that does own it, and re-fetches its label; both were unreachable behind this filter.
         return getState().map( state ->
                         JenaUtils.getParents( state.model, getOntClassesFromTerms( state.model, terms ), direct, includeAdditionalProperties ? state.additionalRestrictions : null )
                                 .stream()
-                            .filter( o -> state.isUriAllowed( o.getURI() ) )
                                 .map( o -> ( OntologyTerm ) new OntologyTermImpl( o, state.additionalRestrictions ) )
                                 .filter( o -> keepObsoletes || !o.isObsolete() )
                                 .collect( Collectors.toSet() ) )
@@ -729,10 +736,10 @@ public abstract class AbstractOntologyService implements OntologyService {
     @Override
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> terms, boolean direct,
             boolean includeAdditionalProperties, boolean keepObsoletes ) {
+        // No isUriAllowed filter on these results, for the same reason as getParents above.
         return getState().map( state ->
                 JenaUtils.getChildren( state.model, getOntClassesFromTerms( state.model, terms ), direct, includeAdditionalProperties ? state.additionalRestrictions : null )
                         .stream()
-                    .filter( o -> state.isUriAllowed( o.getURI() ) )
                         .map( o -> ( OntologyTerm ) new OntologyTermImpl( o, state.additionalRestrictions ) )
                         .filter( o -> keepObsoletes || !o.isObsolete() )
                         .collect( Collectors.toSet() )
