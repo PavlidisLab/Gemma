@@ -490,16 +490,24 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                     if ( body.length == 0 && requireContent ) {
                     throw new RuntimeException( "GEO returned an empty document for " + url );
                 }
+                // 🛑 Validate BEFORE caching. An HTML body used to be written to the cache and only
+                // then rejected, so a transient refusal became a permanent one: every later run read
+                // the stored page, threw again, and never re-fetched. That is survivable for a
+                // withdrawn accession, which is not coming back, and wrong for a CAPTCHA challenge,
+                // which is a moment in time -- one challenged fetch pinned that accession until
+                // somebody deleted the file by hand.
+                if ( looksLikeHtml( body ) ) {
+                    throw new RuntimeException( describeHtmlBody( body, url ) );
+                }
                 this.writeMetadataCacheFile( cached, body );
             }
             // acc.cgi answers a withdrawn, private or unknown accession with an HTML page and a 200,
             // not an error. Without this the SOFT parser reads the page, finds no series, and the run
             // reports "No series was parsed" -- which reads as a parser bug rather than as GEO
-            // declining to serve the record. Measured on GSE6959, 2026-08-29. Checked after the cache
-            // read as well as the fetch, because a page stored once would otherwise be parsed forever.
+            // declining to serve the record. Measured on GSE6959, 2026-08-29. Still checked after the
+            // cache read, for entries stored before the fetch-side check above existed.
             if ( looksLikeHtml( body ) ) {
-                throw new RuntimeException( "GEO served an HTML page rather than a SOFT record for "
-                        + url + "; the accession is withdrawn, private or unknown to GEO." );
+                throw new RuntimeException( describeHtmlBody( body, url ) );
             }
             if ( body.length > 0 ) {
                 parser.parse( new ByteArrayInputStream( body ) );
@@ -529,6 +537,26 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * Checked on the first bytes only, and tolerant of a leading byte-order mark or blank line: the
      * point is to tell a served record from a served error page, not to parse HTML.
      */
+    /**
+     * Say which kind of HTML page GEO served, because the two need opposite responses.
+     * <p>
+     * A withdrawn or private accession is a fact about the record and will not change on a retry; a
+     * CAPTCHA challenge is a fact about this client at this moment and says nothing about the
+     * accession at all. Reporting the first when it is the second sends a reader to check whether a
+     * dataset was pulled from GEO, which is a confident wrong answer.
+     */
+    private static String describeHtmlBody( byte[] body, URL url ) {
+        String s = new String( body, StandardCharsets.UTF_8 ).toLowerCase( Locale.ROOT );
+        if ( s.contains( "recaptcha" ) || s.contains( "challengepage" ) || s.contains( "challenge-page" ) ) {
+            return "GEO served a CAPTCHA challenge page rather than a SOFT record for " + url
+                    + "; NCBI is challenging this client, which is intermittent and host-specific and"
+                    + " says nothing about the accession. Retry later, or read the stored"
+                    + " sourceMetadata snapshot instead of re-fetching from GEO.";
+        }
+        return "GEO served an HTML page rather than a SOFT record for " + url
+                + "; the accession is withdrawn, private or unknown to GEO.";
+    }
+
     private static boolean looksLikeHtml( byte[] body ) {
         String head = new String( body, 0, Math.min( body.length, 64 ), StandardCharsets.UTF_8 )
                 .replace( "\uFEFF", "" ).trim().toLowerCase( Locale.ROOT );

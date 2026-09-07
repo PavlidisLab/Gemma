@@ -118,8 +118,21 @@ public class ExpressionExperimentBibRefFinder {
      * {@code www.ncbi.nlm.nih.gov/geo/query/acc.cgi} behind a Google reCAPTCHA challenge, returned as
      * <em>HTTP 200 with an HTML body</em> — no error status, no exception, just a page with no
      * {@code !Series_pubmed_id} in it. Every series therefore parsed as "GEO states no publication".
-     * Measured 2026-09-02; the same challenge is served for {@code form=xml} and for GEO's own
-     * documentation pages, so it is the host and not one view.</p>
+     * Measured 2026-09-02.</p>
+     *
+     * <p>🛑 That measurement carried a wrong explanation until 2026-09-06: it said the challenge was
+     * served for every view, "so it is the host and not one view". It is not the host. Re-measured
+     * with repeated trials from two hosts, 24 of 24 requests agreeing, the rule is
+     * <strong>{@code acc.cgi} serves a record only when BOTH {@code targ} and {@code form} are
+     * present</strong>; a request missing either is treated as the human page view and challenged.
+     * {@code targ=self&form=text}, {@code targ=gse&form=xml} and {@code targ=all&form=xml} all
+     * answer normally; {@code form=xml&view=brief}, {@code form=text&view=quick} and a bare
+     * {@code targ=self} are all challenged. {@link ubic.gemma.core.loader.expression.geo.service.GeoUtils}
+     * emits both for every SOFT and MINiML fetch, so the importer never asks in the challenged shape.</p>
+     *
+     * <p>The move to Entrez stands on its own grounds — a supported programmatic interface that takes
+     * the API key and publishes its rate limits — and does not depend on the scraped shape being
+     * unavailable.</p>
      *
      * <p>Entrez is the supported programmatic interface, on a separate host
      * ({@code eutils.ncbi.nlm.nih.gov}) that is not challenged, takes the API key, and publishes rate
