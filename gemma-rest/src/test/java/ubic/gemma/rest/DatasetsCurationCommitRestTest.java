@@ -1563,6 +1563,10 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
      * {@code value} has no URI and no {@code freeTextIntended} is refused as
      * {@code UNGROUNDED_NOT_DECLARED}. A 400 there never reaches the audit-event count this test is about,
      * so it read as a passing preflight-emits-nothing assertion when it was really a rejected request.
+     * <p>
+     * Since 2026-09-06 the declaration alone would not rescue it either: an ungrounded tag also needs a
+     * statement pairing a predicate with a grounded object ({@code FREE_TEXT_NOT_HOOKED}). Grounding the
+     * value, as this test does, sidesteps both.
      */
     @Test
     public void testPreflightEmitsNoAuditEvent() {

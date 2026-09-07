@@ -5078,7 +5078,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 + "\"category\":{\"label\":\"cell type\"},"
                 + "\"subject\":{\"label\":\"Schwann cell\"},"
                 + "\"predicate\":{\"label\":\"derives from part of\"},"
-                + "\"object\":{\"label\":\"sciatic nerve\"}}]},"
+                + "\"object\":{\"label\":\"sciatic nerve\",\"uri\":\"http://x/sciatic\"}}]},"
                 + "\"evidenceCode\":\"IEA\"}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
@@ -5111,7 +5111,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"tag-0\","
                 + "\"category\":{\"label\":\"cell type\"},\"value\":{\"label\":\"retinal cell\"},"
                 + "\"statements\":{\"items\":["
-                + "{\"subject\":{\"label\":\"retinal cell\"},\"predicate\":{\"label\":\"derives from cell line\"},\"object\":{\"label\":\"H9 cell\"}},"
+                + "{\"subject\":{\"label\":\"retinal cell\"},\"predicate\":{\"label\":\"derives from cell line\"},\"object\":{\"label\":\"H9 cell\",\"uri\":\"http://x/h9\"}},"
                 + "{\"subject\":{\"label\":\"retinal cell\"},\"predicate\":{\"label\":\"has modifier\"},\"object\":{\"label\":\"organoid\"}}"
                 + "]}}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
@@ -5165,7 +5165,72 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     /** Declaring it accepts the same tag — the gate is the declaration, not the absence of a URI. */
     @Test
     @WithMockUser
-    public void testCommitCurationAcceptsADeclaredFreeTextTag() {
+    public void testCommitCurationAcceptsADeclaredFreeTextTagThatIsHooked() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        // The §9b shape: the identifier itself has no term, and the tag reaches the ontology through its
+        // statement instead. Paul, 2026-09-06: "MF1 can be an ee tag, if it's like MF1 derives from bla".
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\","
+                + "\"category\":{\"label\":\"cell line\",\"uri\":\"http://www.ebi.ac.uk/efo/EFO_0000322\"},"
+                + "\"value\":{\"label\":\"HT22\"},\"statements\":{\"items\":[{"
+                + "\"subject\":{\"label\":\"HT22\"},\"predicate\":{\"label\":\"derives from cell\"},"
+                + "\"object\":{\"label\":\"neuron\",\"uri\":\"http://x/neuron\"}}]}}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), any(), eq( false ) );
+    }
+
+    /**
+     * A declared free-text tag that hangs off nothing is refused. Paul's ruling, 2026-09-06: a free-text
+     * experiment tag must give the reader grounded context for the text, so the declaration alone stopped
+     * being enough — {@code freeTextIntended} says the missing URI was deliberate, and says nothing about
+     * whether the annotation reaches the ontology anywhere.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRejectsADeclaredFreeTextTagWithNoHook() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\","
+                + "\"category\":{\"label\":\"cell line\",\"uri\":\"http://www.ebi.ac.uk/efo/EFO_0000322\"},"
+                + "\"value\":{\"label\":\"HT22\"}}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /**
+     * 🛑 The hook has to reach a TERM. A predicate paired with an object that is itself free text leaves the
+     * tag exactly as unreachable as it was, so it is refused — this is the case that separates "has a
+     * statement" from "is grounded", and the check is worthless if it passes.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRejectsAFreeTextTagWhoseHookObjectIsUngrounded() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\","
+                + "\"category\":{\"label\":\"cell line\",\"uri\":\"http://www.ebi.ac.uk/efo/EFO_0000322\"},"
+                + "\"value\":{\"label\":\"HT22\"},\"statements\":{\"items\":[{"
+                + "\"subject\":{\"label\":\"HT22\"},\"predicate\":{\"label\":\"derives from cell\"},"
+                + "\"object\":{\"label\":\"some unnamed neuron\"}}]}}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /**
+     * The hook may sit in the row's SECOND predicate/object pair — a tag whose first claim is ungrounded and
+     * whose second reaches a term is still hooked.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationAcceptsAFreeTextTagHookedOnItsSecondPair() {
         ee.setId( 1L );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
@@ -5173,7 +5238,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\","
                 + "\"category\":{\"label\":\"cell line\",\"uri\":\"http://www.ebi.ac.uk/efo/EFO_0000322\"},"
-                + "\"value\":{\"label\":\"HT22\"},\"freeTextIntended\":true}]}}";
+                + "\"value\":{\"label\":\"HT22\"},\"statements\":{\"items\":["
+                + "{\"subject\":{\"label\":\"HT22\"},\"predicate\":{\"label\":\"has modifier\"},"
+                + "\"object\":{\"label\":\"immortalized\"}},"
+                + "{\"subject\":{\"label\":\"HT22\"},\"predicate\":{\"label\":\"derives from cell\"},"
+                + "\"object\":{\"label\":\"neuron\",\"uri\":\"http://x/neuron\"}}]}}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
         verify( expressionExperimentService ).commitCuration( eq( ee ), any(), eq( false ) );
@@ -5489,8 +5558,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
 
-        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
-                + "\"value\":{\"label\":\"glioma\"}},{\"gemmaId\":42}],\"deletedIds\":[7]}}";
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\",\"uri\":\"http://x/glioma\"}},{\"gemmaId\":42}],\"deletedIds\":[7]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
 
@@ -5629,8 +5698,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @WithMockUser
     public void testCommitCurationTagCarriesSupportingEvidence() {
         stubCommitOk();
-        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
-                + "\"value\":{\"label\":\"glioma\"},\"supportingEvidence\":[{\"quote\":\"glioblastoma multiforme\","
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\",\"uri\":\"http://x/glioma\"},\"supportingEvidence\":[{\"quote\":\"glioblastoma multiforme\","
                 + "\"source\":\"characteristic\",\"location\":\"GSM1\"}]}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
@@ -5645,8 +5714,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @WithMockUser
     public void testCommitCurationTagCarriesEvidenceCode() {
         stubCommitOk();
-        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
-                + "\"value\":{\"label\":\"glioma\"},\"evidenceCode\":\"IEA\"}]}}";
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\",\"uri\":\"http://x/glioma\"},\"evidenceCode\":\"IEA\"}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
         ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap = curationCaptor();
@@ -5665,8 +5734,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @WithMockUser
     public void testCommitCurationTagWithoutEvidenceCodeLeavesItUnset() {
         stubCommitOk();
-        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
-                + "\"value\":{\"label\":\"glioma\"}}]}}";
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\",\"category\":{\"label\":\"disease\"},"
+                + "\"value\":{\"label\":\"glioma\",\"uri\":\"http://x/glioma\"}}]}}";
         assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK );
         ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap = curationCaptor();

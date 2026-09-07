@@ -3707,6 +3707,15 @@ public class DatasetsWebService {
                     + "recorded as `IC` (curator inference) and a design statement keeps the code it has. The "
                     + "server never picks a code from the caller's identity, so an automated client that should "
                     + "not be claiming a curator's inference has to say so.\n\n"
+                    + "🛑 **A free-text experiment tag needs both a declaration and a grounded hook.** A new "
+                    + "`tags` item whose `value` carries no URI must set `freeTextIntended: true` (the absence "
+                    + "was a decision, not an oversight) AND carry a statement pairing a predicate with a "
+                    + "grounded object — e.g. `cell line: WTC-11` + `derives from cell line cell` -> "
+                    + "`induced pluripotent stem cell line cell [CLO_0037307]`. Either one missing is a 400 "
+                    + "(`UNGROUNDED_NOT_DECLARED`, `FREE_TEXT_NOT_HOOKED`); they ask different questions and "
+                    + "neither substitutes for the other. `sampleCharacteristics` and `design` are deliberately "
+                    + "NOT gated this way — a GEO characteristic is a string the submitter wrote, and requiring "
+                    + "a term there would refuse the corpus.\n\n"
                     + "🛑 **A commit is never only a design write.** On success it also advances the review "
                     + "state of any open CURATION/SCREENING ticket targeting this dataset (each matching target "
                     + "row to DONE, and the ticket to RESOLVED once all its targets are), mints an auto-snapshot "
@@ -3935,10 +3944,24 @@ public class DatasetsWebService {
                     // An experiment tag must be grounded unless the caller declares the free text deliberate.
                     // 🛑 Sample characteristics are NOT gated this way: a GEO characteristic is a string the
                     // submitter wrote, and requiring a URI there would refuse the corpus.
-                    if ( StringUtils.isBlank( ch.getValueUri() ) && !Boolean.TRUE.equals( tc.getFreeTextIntended() ) ) {
-                        termViolations.add( new OntologyTermValidationException.Located( location + ".value",
-                                new TermViolation( "value", ch.getValue(), null, null,
-                                        TermViolation.Reason.UNGROUNDED_NOT_DECLARED ) ) );
+                    if ( StringUtils.isBlank( ch.getValueUri() ) ) {
+                        if ( !Boolean.TRUE.equals( tc.getFreeTextIntended() ) ) {
+                            termViolations.add( new OntologyTermValidationException.Located( location + ".value",
+                                    new TermViolation( "value", ch.getValue(), null, null,
+                                            TermViolation.Reason.UNGROUNDED_NOT_DECLARED ) ) );
+                        }
+                        // Paul's ruling, 2026-09-06: free text is allowed only where it is hooked to a
+                        // grounded object, so the reader gets some context the ontology can reach. The
+                        // declaration above and this are different questions -- "did you mean to leave the
+                        // URI off" and "is this annotation attached to anything" -- so BOTH are required and
+                        // neither substitutes for the other. Enforced here rather than in the proposer
+                        // because a client-side rule binds one client; the UI and any script post the same
+                        // route.
+                        if ( !hasGroundedHook( ch ) ) {
+                            termViolations.add( new OntologyTermValidationException.Located( location,
+                                    new TermViolation( "value", ch.getValue(), null, null,
+                                            TermViolation.Reason.FREE_TEXT_NOT_HOOKED ) ) );
+                        }
                     }
                     collectTermViolations( ch, location, tc.getClientRef(), termViolations, canonicalizations );
                     adds.add( new CurationCommitRequest.TagAdd( tc.getClientRef(), ch ) );
@@ -4650,7 +4673,14 @@ public class DatasetsWebService {
          * <p>
          * An experiment tag with no URI is refused by default: it is usually an oversight, and after the
          * fact it is indistinguishable from a grounding the client intended and forgot. Setting this says
-         * the absence is a decision, and the tag is accepted.
+         * the absence is a decision.
+         * <p>
+         * 🛑 **Necessary but no longer sufficient.** Since Paul's ruling of 2026-09-06 a free-text
+         * experiment tag must ALSO carry a statement pairing a predicate with a grounded object
+         * ({@link TermViolation.Reason#FREE_TEXT_NOT_HOOKED}). The two are different questions — this one
+         * says the missing URI was deliberate, the hook says the annotation reaches the ontology
+         * somewhere — and a tag that satisfies one and not the other is refused. Setting this flag alone
+         * no longer gets a bare free-text tag accepted.
          * <p>
          * 🛑 Per item and deliberate. A client that sets it on every tag has not made the check stricter,
          * it has turned the check off — and the ungrounded tags already on production are what that looks
@@ -5924,6 +5954,22 @@ public class DatasetsWebService {
      * @param location the item's request-body location (e.g. {@code tags[clientRef=t7]}), used to name the
      *                 offending field when a stated evidence code is not a {@link GOEvidenceCode}.
      */
+    /**
+     * Whether a tag carries at least one predicate paired with a grounded object — the hook a free-text
+     * experiment tag needs under {@link TermViolation.Reason#FREE_TEXT_NOT_HOOKED}.
+     * <p>
+     * Either of the row's two predicate/object pairs will do; a predicate with an ungrounded object is not
+     * a hook, because the point is to reach a term. A plain (non-statement) tag has no pairs at all.
+     */
+    private static boolean hasGroundedHook( Characteristic ch ) {
+        if ( !( ch instanceof Statement ) ) {
+            return false;
+        }
+        Statement s = ( Statement ) ch;
+        return ( StringUtils.isNotBlank( s.getPredicate() ) && StringUtils.isNotBlank( s.getObjectUri() ) )
+                || ( StringUtils.isNotBlank( s.getSecondPredicate() ) && StringUtils.isNotBlank( s.getSecondObjectUri() ) );
+    }
+
     private static Characteristic tagCommitToCharacteristic( TagCommit tc, String location ) {
         List<StatementCommit> statements = tc.getStatements() != null ? nullSafe( tc.getStatements().getItems() ) : Collections.emptyList();
         if ( !statements.isEmpty() ) {

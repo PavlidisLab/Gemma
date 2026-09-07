@@ -53,7 +53,24 @@ public class TermViolation {
          * the client meant to do and forgot. A caller that means it says so per item, and the tag is then
          * accepted.
          */
-        UNGROUNDED_NOT_DECLARED
+        UNGROUNDED_NOT_DECLARED,
+        /**
+         * A free-text experiment tag that hangs off nothing: no statement on it carries both a predicate
+         * and a grounded object, so the annotation is attached to the ontology at no point.
+         * <p>
+         * Paul's ruling, 2026-09-06: a free-text tag must give the reader some grounded context for the
+         * text — {@code cell line: WTC-11} means nothing to a query, while the same value plus
+         * {@code derives from cell line cell -> induced pluripotent stem cell line cell} is reachable
+         * from the ontology even though the identifier itself has no term.
+         * <p>
+         * Separate from {@link #UNGROUNDED_NOT_DECLARED} on purpose: that one asks whether the missing
+         * URI was a decision, this one asks whether the annotation is connected to anything. A caller can
+         * get either right and the other wrong, so both are checked and neither substitutes for the other.
+         * <p>
+         * 🛑 Experiment tags only. A factor value or a sample characteristic may be bare free text — a GEO
+         * characteristic is a string the submitter wrote, and requiring a hook there would refuse the corpus.
+         */
+        FREE_TEXT_NOT_HOOKED
     }
 
     private final String slot;
@@ -114,6 +131,14 @@ public class TermViolation {
                         + "\") resolves in neither Gemma nor OLS; the term is not grounded";
             case UNVERIFIED_OLS_UNAVAILABLE:
                 return slot + " URI " + submittedUri + " is unknown to Gemma and OLS could not be reached to verify it";
+            case UNGROUNDED_NOT_DECLARED:
+                // These two carry no URI by definition, so the default's "<slot> URI null" said nothing.
+                return slot + " \"" + submittedLabel + "\" carries no URI, and the item does not set"
+                        + " freeTextIntended to say the free text was meant";
+            case FREE_TEXT_NOT_HOOKED:
+                return "free-text tag \"" + submittedLabel + "\" has no statement carrying both a predicate"
+                        + " and a grounded object, so it is attached to the ontology at no point; give it a"
+                        + " hook (e.g. derives from cell line cell -> <parent line URI>) or ground the value";
             default:
                 return slot + " URI " + submittedUri;
         }
