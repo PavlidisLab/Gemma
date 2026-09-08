@@ -4616,6 +4616,37 @@ public class DatasetsWebService {
         @Nullable
         private OntologyTermRef object;
         /**
+         * The second predicate-object pair, for a statement that makes two claims about one subject.
+         *
+         * <h4>Why these are on the REQUEST type and hidden on the response</h4>
+         *
+         * <p>{@code StatementValueObject}'s {@code second*} slots carry {@code @WithheldFromApi} because a
+         * compound statement is SERIALIZED flattened — two {@code statements[]} entries sharing one id, the
+         * second putting its clause under the generic keys (#814, {@code dff752727c}). That contract governs
+         * reads. This is the request type, so it is free to say the thing plainly, and a writer no longer has
+         * to reproduce the flattening to be understood.</p>
+         *
+         * <p>🛑 A {@link ubic.gemma.model.expression.experiment.Statement} row holds exactly TWO pairs, so
+         * there is no third. Both halves or neither: a predicate with no object is not a pair and is refused
+         * rather than half-stored.</p>
+         *
+         * <p>The flattened form still works for a statement that already has an id —
+         * {@code ExpressionExperimentServiceImpl.unflattenStatements} re-joins it — but it could never express
+         * a pair on a NEW statement, because the re-join keys on a non-null id and id-less rows pass through
+         * as two separate single-clause statements. 9,031 production rows carry a pair that no client could
+         * create until these fields existed (cab, 2026-09-08). Sending both forms for one statement is a 400,
+         * not a merge.</p>
+         */
+        @Nullable
+        @Schema(description = "Second predicate of a statement making two claims about one subject, e.g. "
+                + "subject 'dexamethasone' with predicate 'has dose' / object '10 nM' and secondPredicate "
+                + "'for' / secondObject '12 hours'. Send both secondPredicate and secondObject or neither. A "
+                + "statement holds at most two pairs.")
+        private OntologyTermRef secondPredicate;
+        @Nullable
+        @Schema(description = "Second object, paired with secondPredicate. See secondPredicate.")
+        private OntologyTermRef secondObject;
+        /**
          * Verbatim provenance for this statement — a JSON array of {@code {quote, source, location, …}} items.
          * Stored and served opaquely; the agents repo owns the schema.
          * <p>
@@ -4979,6 +5010,17 @@ public class DatasetsWebService {
         requireDeletableIds( stmtDeleted, curStatementIds, location + ".statements",
                 "on that factor value" );
         Set<Long> mentioned = new HashSet<>();
+        // A statement that also arrives in the FLATTENED form -- two items sharing one gemmaId, the second
+        // carrying the clause under the generic keys -- must not ALSO carry secondPredicate/secondObject. The
+        // two spellings would both claim the row and unflattenStatements would silently keep whichever it saw
+        // first, so the ambiguity is refused below rather than resolved.
+        Set<Long> repeatedIds = new HashSet<>();
+        Set<Long> seenIds = new HashSet<>();
+        for ( StatementCommit sc : nullSafe( ss.getItems() ) ) {
+            if ( sc.getGemmaId() != null && !seenIds.add( sc.getGemmaId() ) ) {
+                repeatedIds.add( sc.getGemmaId() );
+            }
+        }
         List<StatementValueObject> out = new ArrayList<>();
         int idx = 0;
         for ( StatementCommit sc : nullSafe( ss.getItems() ) ) {
@@ -5052,6 +5094,24 @@ public class DatasetsWebService {
                 svo.setObject( sc.getObject().getLabel() );
                 svo.setObjectUri( sc.getObject().getUri() );
             }
+            String stmtLocation = location + ".statements[" + refOrIndex( sc.getClientRef(), idx ) + "]";
+            requireWholeSecondPair( sc, stmtLocation );
+            if ( sc.getSecondPredicate() != null || sc.getSecondObject() != null ) {
+                if ( sc.getGemmaId() != null && repeatedIds.contains( sc.getGemmaId() ) ) {
+                    throw new BadRequestException( stmtLocation + " carries secondPredicate/secondObject AND"
+                            + " appears twice under gemmaId " + sc.getGemmaId() + ", which is the flattened"
+                            + " spelling of the same second pair. Send the pair one way: either the explicit"
+                            + " fields on one item, or two items sharing the id." );
+                }
+                if ( sc.getSecondPredicate() != null ) {
+                    svo.setSecondPredicate( sc.getSecondPredicate().getLabel() );
+                    svo.setSecondPredicateUri( sc.getSecondPredicate().getUri() );
+                }
+                if ( sc.getSecondObject() != null ) {
+                    svo.setSecondObject( sc.getSecondObject().getLabel() );
+                    svo.setSecondObjectUri( sc.getSecondObject().getUri() );
+                }
+            }
             svo.setSupportingEvidence( sc.getSupportingEvidence() );
             // Validated here rather than left to the service so an unknown code is a 400 on the preflight too,
             // and normalized to the enum name so a lowercase "iea" does not reach the apply as a mismatch
@@ -5096,6 +5156,25 @@ public class DatasetsWebService {
         if ( !unmatched.isEmpty() ) {
             throw new BadRequestException( location + ".deletedIds references ids that are not "
                     + what + ": " + unmatched + "." );
+        }
+    }
+
+    /**
+     * Refuse half a second pair.
+     * <p>
+     * A {@link ubic.gemma.model.expression.experiment.Statement}'s second clause is a predicate AND an object;
+     * one without the other is not a claim, and storing the half that arrived would put a dangling predicate on
+     * a production row where nothing renders it. Both or neither.
+     */
+    private static void requireWholeSecondPair( StatementCommit sc, String location ) {
+        boolean hasPredicate = sc.getSecondPredicate() != null
+                && StringUtils.isNotBlank( sc.getSecondPredicate().getLabel() );
+        boolean hasObject = sc.getSecondObject() != null
+                && StringUtils.isNotBlank( sc.getSecondObject().getLabel() );
+        if ( hasPredicate != hasObject ) {
+            throw new BadRequestException( location + " carries "
+                    + ( hasPredicate ? "secondPredicate without secondObject" : "secondObject without secondPredicate" )
+                    + ". A statement's second clause is a predicate and an object together; send both or neither." );
         }
     }
 
@@ -5523,6 +5602,13 @@ public class DatasetsWebService {
                         sc.setSubject( termRef( s.getSubject(), s.getSubjectUri() ) );
                         sc.setPredicate( termRef( s.getPredicate(), s.getPredicateUri() ) );
                         sc.setObject( termRef( s.getObject(), s.getObjectUri() ) );
+                        // 🛑 A snapshot statement is echoed by gemmaId, and a gemmaId statement is updated IN
+                        // PLACE from the fields the item carries -- so a pair the snapshot does not capture is
+                        // written NULL by the restore that replays it. Until StatementCommit could say it, this
+                        // loop had no way to carry the second clause and every restore silently flattened a
+                        // compound statement to its first pair.
+                        sc.setSecondPredicate( termRef( s.getSecondPredicate(), s.getSecondPredicateUri() ) );
+                        sc.setSecondObject( termRef( s.getSecondObject(), s.getSecondObjectUri() ) );
                         sc.setSupportingEvidence( s.getSupportingEvidence() );
                         sc.setEvidenceCode( s.getEvidenceCode() );
                         fvc.getStatements().getItems().add( sc );
@@ -6003,10 +6089,34 @@ public class DatasetsWebService {
                 s.setObject( sc.getObject().getLabel() );
                 s.setObjectUri( sc.getObject().getUri() );
             }
+            // The explicit spelling, which a NEW statement has no other way to express. Checked before the
+            // two-item form so the two cannot both fill the slot.
+            requireWholeSecondPair( sc, location + ".statements[0]" );
+            if ( sc.getSecondPredicate() != null || sc.getSecondObject() != null ) {
+                if ( statements.size() == 2 ) {
+                    throw new BadRequestException( location + ": the first statement carries"
+                            + " secondPredicate/secondObject and a second statement item was supplied as well."
+                            + " Both spell the row's second pair. Send one or the other." );
+                }
+                if ( sc.getSecondPredicate() != null ) {
+                    s.setSecondPredicate( sc.getSecondPredicate().getLabel() );
+                    s.setSecondPredicateUri( sc.getSecondPredicate().getUri() );
+                }
+                if ( sc.getSecondObject() != null ) {
+                    s.setSecondObject( sc.getSecondObject().getLabel() );
+                    s.setSecondObjectUri( sc.getSecondObject().getUri() );
+                }
+            }
             // A second item about the same subject becomes the row's second pair. It was previously read
             // and discarded, which is what made a two-statement tag store one.
             if ( statements.size() == 2 ) {
                 StatementCommit sc2 = statements.get( 1 );
+                requireWholeSecondPair( sc2, location + ".statements[1]" );
+                if ( sc2.getSecondPredicate() != null || sc2.getSecondObject() != null ) {
+                    throw new BadRequestException( location + ".statements[1] carries"
+                            + " secondPredicate/secondObject. A tag row holds two pairs in total, and this item"
+                            + " already IS the second one; a third claim needs its own tag." );
+                }
                 if ( sc2.getSubject() != null && StringUtils.isNotBlank( sc2.getSubject().getLabel() )
                         && !sc2.getSubject().getLabel().equals( s.getSubject() ) ) {
                     throw new BadRequestException( location + ": both statements on a tag must share the"

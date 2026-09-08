@@ -6183,4 +6183,119 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
         assertThat( vo.getFactorValues() ).isEmpty();
     }
+
+    /**
+     * A NEW statement can carry a second predicate-object pair.
+     *
+     * <p>Until {@code StatementCommit} gained the fields there was no spelling for this. The flattened form —
+     * two {@code statements[]} entries sharing one id — is re-joined by {@code unflattenStatements}, but that
+     * keys on a non-null id, so an id-less row passed through as two separate single-clause statements. cab
+     * measured 9,031 production rows carrying a pair no client could create (2026-09-08).</p>
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationWritesASecondPairOnANewStatement() {
+        ee.setId( 1L );
+        ee.setExperimentalDesign( ExperimentalDesign.Factory.newInstance() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( new ExperimentalDesignValueObject() );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+                .thenReturn( new DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"F1\",\"name\":\"treatment\","
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"statements\":{\"items\":[{"
+                + "\"clientRef\":\"S1\",\"subject\":{\"label\":\"dexamethasone\"},"
+                + "\"predicate\":{\"label\":\"has dose\"},\"object\":{\"label\":\"10 nM\"},"
+                + "\"secondPredicate\":{\"label\":\"for\"},\"secondObject\":{\"label\":\"12 hours\"}"
+                + "}]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture() );
+        StatementValueObject svo = cap.getValue().getExperimentalFactors().iterator().next()
+                .getValues().iterator().next().getStatements().iterator().next();
+        assertThat( svo.getPredicate() ).isEqualTo( "has dose" );
+        assertThat( svo.getObject() ).isEqualTo( "10 nM" );
+        assertThat( svo.getSecondPredicate() ).isEqualTo( "for" );
+        assertThat( svo.getSecondObject() ).isEqualTo( "12 hours" );
+    }
+
+    /** Half a pair is not a claim: a dangling predicate would sit on a production row with nothing to render it. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRefusesHalfASecondPair() {
+        ee.setId( 1L );
+        ee.setExperimentalDesign( ExperimentalDesign.Factory.newInstance() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( new ExperimentalDesignValueObject() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"F1\",\"name\":\"treatment\","
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"statements\":{\"items\":[{"
+                + "\"clientRef\":\"S1\",\"subject\":{\"label\":\"dexamethasone\"},"
+                + "\"secondPredicate\":{\"label\":\"for\"}"
+                + "}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            // Named, because this payload is malformed in more than one way and any 400 would pass otherwise:
+            // before the fields existed the keys were simply unknown and the row 400'd for having no predicate.
+            assertThat( r.readEntity( String.class ) )
+                    .contains( "secondPredicate without secondObject" );
+        }
+    }
+
+    /**
+     * A tag's second pair can be spelled explicitly too, which is the only way to state one on a tag whose
+     * statement is new. The two-item form keeps working; using both at once is refused rather than merged.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationTagAcceptsAnExplicitSecondPair() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"tag-0\","
+                + "\"category\":{\"label\":\"cell type\"},\"value\":{\"label\":\"retinal cell\"},"
+                + "\"statements\":{\"items\":[{"
+                + "\"subject\":{\"label\":\"retinal cell\"},"
+                + "\"predicate\":{\"label\":\"derives from cell line\"},\"object\":{\"label\":\"H9 cell\",\"uri\":\"http://x/h9\"},"
+                + "\"secondPredicate\":{\"label\":\"has modifier\"},\"secondObject\":{\"label\":\"organoid\"}"
+                + "}]}}]}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        Statement st = ( Statement ) cap.getValue().getTagsToAdd().get( 0 ).getCharacteristic();
+        assertThat( st.getSecondPredicate() ).isEqualTo( "has modifier" );
+        assertThat( st.getSecondObject() ).isEqualTo( "organoid" );
+    }
+
+    /** Both spellings of the same pair on one tag is ambiguous, so it is a 400 rather than a silent winner. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRefusesBothSpellingsOfATagsSecondPair() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+
+        String body = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"tag-0\","
+                + "\"category\":{\"label\":\"cell type\"},\"value\":{\"label\":\"retinal cell\"},"
+                + "\"statements\":{\"items\":["
+                + "{\"subject\":{\"label\":\"retinal cell\"},\"predicate\":{\"label\":\"p\"},\"object\":{\"label\":\"o\",\"uri\":\"http://x/o\"},"
+                + "\"secondPredicate\":{\"label\":\"has modifier\"},\"secondObject\":{\"label\":\"organoid\"}},"
+                + "{\"subject\":{\"label\":\"retinal cell\"},\"predicate\":{\"label\":\"p2\"},\"object\":{\"label\":\"o2\"}}"
+                + "]}}]}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) )
+                    .contains( "Both spell the row's second pair" );
+        }
+    }
 }
