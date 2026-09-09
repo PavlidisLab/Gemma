@@ -1460,48 +1460,14 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
      */
     private void sampleSetLibStrategy( String accession, String string ) {
         GeoSample sample = results.getSampleMap().get( accession );
-        if ( string.equalsIgnoreCase( "RNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.RNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "scRNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.SCRNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "snRNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.SNRNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "Bisulfite-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.BISULFITE_SEQ );
-        } else if ( string.equalsIgnoreCase( "DNase-Hypersensitivity" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.DNASE_HYPERSENSITIVITY );
-        } else if ( string.equalsIgnoreCase( "ATAC-seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.ATAC_SEQ );
-        } else if ( string.equalsIgnoreCase( "ChIP-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.CHIP_SEQ );
-        } else if ( string.equalsIgnoreCase( "OTHER" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.OTHER );
-        } else if ( string.equalsIgnoreCase( "MRE-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MRE_SEQ );
-        } else if ( string.equalsIgnoreCase( "miRNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MIRNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "RIP-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.RIP_SEQ );
-        } else if ( string.equalsIgnoreCase( "Hi-C" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.HI_C );
-        } else if ( string.equalsIgnoreCase( "ssRNA-seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.SSRNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "MBD-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MDB_SEQ );
-        } else if ( string.equalsIgnoreCase( "FAIRE-seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.FAIRE_SEQ );
-        } else if ( string.equalsIgnoreCase( "MeDIP-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MEDIP_SEQ );
-        } else if ( string.equalsIgnoreCase( "MNase-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MNASE_SEQ );
-        } else if ( string.equalsIgnoreCase( "ChIA-PET" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.CHIA_PET );
-        } else if ( string.equalsIgnoreCase( "ncRNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.NCRNA_SEQ );
-        } else {
+        GeoLibraryStrategy strategy = GeoLibraryStrategy.fromGeoString( string );
+        if ( strategy == null ) {
+            // 🛑 Fatal on purpose, and NOT to be softened into OTHER: `OTHER` is one of the three strategies
+            // GeoConverterImpl admits as expression data, so folding an unrecognized assay into it would
+            // import chromatin or genomic samples as if they were RNA. Add the value to GeoLibraryStrategy.
             throw new IllegalArgumentException( "Unknown library strategy: " + string );
         }
-
+        sample.setLibStrategy( strategy );
     }
 
     /**

@@ -605,9 +605,11 @@ public class GeoConverterImpl implements GeoConverter {
             // bulk RNA-Seq
             if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC ) ) {
                 // have to drill down.
-                if ( Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ )
-                        || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SSRNA_SEQ )
-                        || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.OTHER ) ) {
+                GeoLibraryStrategy effective = GeoConverterImpl.effectiveLibStrategy( sample );
+                if ( Objects.equals( effective, GeoLibraryStrategy.RNA_SEQ )
+                        || Objects.equals( effective, GeoLibraryStrategy.SSRNA_SEQ )
+                        || Objects.equals( effective, GeoLibraryStrategy.RIBO_SEQ )
+                        || Objects.equals( effective, GeoLibraryStrategy.OTHER ) ) {
                     // check if there is data in SRA or MPSS
                     // FIXME: are we really seeing MPSS out there?
                     // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
@@ -811,6 +813,50 @@ public class GeoConverterImpl implements GeoConverter {
      * A one-to-one mapping onto GEO's own vocabulary rather than an interpretation, so an unmapped value stays
      * {@link ExtractedMolecule#other} instead of becoming a guess.
      */
+    /**
+     * Ribosome profiling submitted as {@code OTHER}, recognized from how the submitter named the sample.
+     * <p>
+     * 🛑 GEO is not consistent here and the declared strategy cannot be trusted on its own. GSE288755's
+     * samples are titled {@code siControl HEK293T Ribo-seq replicate #1} while their
+     * {@code !Sample_library_strategy} reads {@code OTHER}; SRA has a {@code Ribo-Seq} value and submitters
+     * often do not reach for it. Reading only the declared field files every such series under {@code OTHER},
+     * which is the same bucket as spatial and APEX-seq and says nothing about what was measured.
+     * <p>
+     * Deliberately narrow. Only unambiguous ribosome-profiling naming counts, and only when the sample is
+     * already transcriptomic-and-{@code OTHER} — a series that DECLARES its strategy is believed. Related
+     * assays that are not ribosome profiling are left alone even when they appear alongside it: TCP-seq,
+     * polysome and disome profiling are their own methods, and calling them {@code RIBO_SEQ} would trade one
+     * wrong label for another. Screening the remainder is a job for the curation agents, not for a regex here.
+     * <p>
+     * ⚠️ This CHANGES THE LABEL, NOT WHAT IS IMPORTED. {@code RIBO_SEQ} is admitted by the eligibility gate
+     * alongside {@code RNA_SEQ} / {@code SSRNA_SEQ} / {@code OTHER}, so the samples that used to come in as
+     * {@code OTHER} still come in. Dropping it from that list would silently stop importing ribosome
+     * profiling, which is a different decision and not this one.
+     */
+    private static final Pattern RIBO_SEQ_NAMING = Pattern.compile(
+            "ribo[\\s._-]?seq|ribosome[\\s._-]?profil|ribosome[\\s._-]?footprint|ribosome[\\s._-]?protected[\\s._-]?fragment|\\bRPF\\b",
+            Pattern.CASE_INSENSITIVE );
+
+    /**
+     * The strategy to treat a sample as, which is the declared one unless GEO under-declared it.
+     *
+     * @return the effective strategy, or {@code null} when GEO stated none
+     * @see #RIBO_SEQ_NAMING
+     */
+    @Nullable
+    static GeoLibraryStrategy effectiveLibStrategy( GeoSample sample ) {
+        GeoLibraryStrategy declared = sample.getLibStrategy();
+        if ( !Objects.equals( declared, GeoLibraryStrategy.OTHER )
+                || !Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC ) ) {
+            return declared;
+        }
+        String haystack = StringUtils.joinWith( " ", sample.getTitle(), sample.getDescription() );
+        if ( StringUtils.isNotBlank( haystack ) && RIBO_SEQ_NAMING.matcher( haystack ).find() ) {
+            return GeoLibraryStrategy.RIBO_SEQ;
+        }
+        return declared;
+    }
+
     @Nullable
     static ExtractedMolecule convertMolecule( @Nullable GeoChannel.ChannelMolecule molecule ) {
         if ( molecule == null ) {
@@ -1803,7 +1849,8 @@ public class GeoConverterImpl implements GeoConverter {
         }
         bioAssay.setExtractedMolecule( molecule );
         bioAssay.setLibrarySelection( StringUtils.trimToNull( sample.getLibrarySelection() ) );
-        bioAssay.setLibraryStrategy( sample.getLibStrategy() != null ? sample.getLibStrategy().toString() : null );
+        GeoLibraryStrategy effectiveStrategy = GeoConverterImpl.effectiveLibStrategy( sample );
+        bioAssay.setLibraryStrategy( effectiveStrategy != null ? effectiveStrategy.toString() : null );
 
         // Taxon lastTaxon = null;
 
