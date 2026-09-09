@@ -88,7 +88,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     /**
-     * Restrict results to non-troubled curatable entities for non-administrators.
+     * Restrict results to non-troubled curatable entities for callers who do not curate.
      * <p>
      * 🛑 Unless the caller asked about trouble themselves. This filter is editorial, not access
      * control — a troubled dataset is not secret, it is one we are telling ordinary users not to
@@ -115,9 +115,19 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * The decision itself, separated so it can be tested without a session factory: a filtered query
      * for a non-administrator also carries the ACL EXISTS clause, and test-created entities have no
      * ACL rows, so a DAO-level test of this rule would pass on an empty result either way.
+     * <p>
+     * 🛑 Curators see troubled entities by default, not only when they think to ask. Paul,
+     * 2026-09-09: "troubled experiments have to be reachable by curators, how else can they fix the
+     * trouble." The flag marks work to do, so hiding it from the people whose job is that work
+     * inverts its purpose. This was admin-only until then, which was invisible to human curators —
+     * they hold {@code GROUP_ADMIN} as well — and bit service accounts that hold only
+     * {@code GROUP_CURATOR}: {@code gemmaAgent} could not see GSE16035 to act on it.
+     * <p>
+     * The escape hatch below still matters and is not redundant with this. It serves the ordinary
+     * user who deliberately asks {@code troubled = true}, who is still not a curator.
      */
     static boolean shouldHideTroubled( Filters filters, String objectAlias, @Nullable String curationDetailsAlias ) {
-        return !SecurityUtil.isUserAdmin() && !mentionsTroubled( filters, objectAlias, curationDetailsAlias );
+        return !SecurityUtil.isUserCuratorOrAdmin() && !mentionsTroubled( filters, objectAlias, curationDetailsAlias );
     }
 
     /**

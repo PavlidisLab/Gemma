@@ -180,6 +180,38 @@ public class SecurityUtil {
     }
 
     /**
+     * Returns true if the current caller holds the curator authority.
+     * <p>
+     * 🛑 Read the granted authorities directly rather than relying on the role hierarchy that makes
+     * an administrator satisfy {@code hasAuthority('GROUP_CURATOR')} in a {@code @PreAuthorize}
+     * expression. That expansion is performed by the access-decision voter, not baked into
+     * {@link org.springframework.security.core.Authentication#getAuthorities()}, so a programmatic
+     * check sees only what was actually granted. Callers wanting "curator or better" must ask for
+     * {@link #isUserAdmin()} too, which is why {@link #isUserCuratorOrAdmin()} exists.
+     */
+    public static boolean isUserCurator() {
+        if ( !isUserLoggedIn() ) {
+            return false;
+        }
+        for ( GrantedAuthority authority : getAuthentication().getAuthorities() ) {
+            if ( authority.getAuthority().equals( AuthorityConstants.CURATOR_GROUP_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the current caller curates: a curator, or an administrator.
+     *
+     * @see #isUserCurator()
+     * @see #isUserAdmin()
+     */
+    public static boolean isUserCuratorOrAdmin() {
+        return isUserAdmin() || isUserCurator();
+    }
+
+    /**
      * Returns true if the current caller holds the agent authority.
      */
     public static boolean isUserAgent() {

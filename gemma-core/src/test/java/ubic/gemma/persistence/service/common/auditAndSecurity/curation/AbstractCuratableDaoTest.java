@@ -106,4 +106,49 @@ public class AbstractCuratableDaoTest {
                 .as( "the dataset's own trouble is not a statement about the platform's" )
                 .isTrue();
     }
+
+    /**
+     * 🛑 A curator sees troubled entities without asking. Paul, 2026-09-09: "troubled experiments
+     * have to be reachable by curators, how else can they fix the trouble."
+     * <p>
+     * The authority is spelled out rather than inherited: an administrator satisfies
+     * {@code hasAuthority('GROUP_CURATOR')} through the role hierarchy only inside a
+     * {@code @PreAuthorize} expression, and this rule is a plain method call that sees just the
+     * granted authorities. A caller holding {@code GROUP_CURATOR} alone — {@code gemmaAgent} is
+     * one — was hidden from every troubled dataset before this.
+     */
+    @Test
+    public void testACuratorSeesTroubledWithoutAskingForThem() {
+        authenticateAs( "GROUP_CURATOR" );
+
+        assertThat( AbstractCuratableDao.shouldHideTroubled( Filters.empty(), "ee", "s" ) )
+                .as( "a curator does not have to know to ask for the work they are meant to do" )
+                .isFalse();
+    }
+
+    /** An administrator is unchanged by the widening. */
+    @Test
+    public void testAnAdministratorStillSeesTroubled() {
+        authenticateAs( "GROUP_ADMIN" );
+
+        assertThat( AbstractCuratableDao.shouldHideTroubled( Filters.empty(), "ee", "s" ) ).isFalse();
+    }
+
+    /**
+     * And the widening does not reach anyone else: {@code GROUP_AGENT} on its own is not a curating
+     * role, so an agent that holds only it is still shown the ordinary view.
+     */
+    @Test
+    public void testAnAgentAuthorityAloneDoesNotSeeTroubled() {
+        authenticateAs( "GROUP_AGENT" );
+
+        assertThat( AbstractCuratableDao.shouldHideTroubled( Filters.empty(), "ee", "s" ) )
+                .as( "only the curating roles are widened" )
+                .isTrue();
+    }
+
+    private void authenticateAs( String authority ) {
+        SecurityContextHolder.getContext().setAuthentication( new UsernamePasswordAuthenticationToken(
+                "someone", "x", Collections.singletonList( new SimpleGrantedAuthority( authority ) ) ) );
+    }
 }
