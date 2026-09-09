@@ -835,6 +835,39 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
+     * Pick the molecule that describes the SAMPLE, given what each of a GEO sample's channels reported.
+     * <p>
+     * Separated from the conversion so the rule can be tested without building a {@code GeoSample}: the
+     * surrounding method needs a whole series to run, so a test of this decision through it would be
+     * asserting on everything else at the same time.
+     *
+     * @param molecules distinct, non-null molecules across the sample's channels, in channel order
+     * @return the sample's molecule, or {@code null} when the channels disagree and nothing distinguishes them
+     */
+    @Nullable
+    static ExtractedMolecule resolveMolecule( Set<ExtractedMolecule> molecules ) {
+        if ( molecules.isEmpty() ) {
+            return null;
+        }
+        if ( molecules.size() == 1 ) {
+            return molecules.iterator().next();
+        }
+        // The classic two-colour design co-hybridizes the sample against a genomic-DNA REFERENCE, so the
+        // channels disagree by construction and only one of them is the sample. Taking channel 1 by position
+        // labelled every such sample `genomicDNA` -- GSE9164's 14 assays say so on prod while their own
+        // descriptions read "Total RNA ... RNeasy Mini Kit", and GEO's GSM230264 spells it out: ch1
+        // `genomic DNA` (Cy3, the reference), ch2 `total RNA` (Cy5, the sample).
+        if ( molecules.size() == 2 && molecules.contains( ExtractedMolecule.genomicDNA ) ) {
+            return molecules.stream()
+                    .filter( m -> m != ExtractedMolecule.genomicDNA )
+                    .findFirst()
+                    .orElseThrow( IllegalStateException::new );
+        }
+        // Two disagreeing RNA flavours name no reference, so there is nothing to prefer between them.
+        return null;
+    }
+
+    /**
      * GEO gives sample descriptors (provided by submitters) that we try to parse into Characteristics associated with
      * the BioMaterial.
      * <p>
@@ -1739,25 +1772,34 @@ public class GeoConverterImpl implements GeoConverter {
         // cells/tissue we got the RNA from, not the RNA", and "the assay is 'we took that sample and did
         // something to it to get expression measurements'".
         //
-        // 🛑 The molecule is per CHANNEL and a two-colour sample has two. Channel 1 is taken, and a second
-        // channel that disagrees is left OUT rather than silently overwriting -- `other` would claim GEO said
-        // something it did not, and picking channel 2 would be arbitrary. Two-colour samples nearly always
-        // label one molecule type twice, so the discarded case is rare and a warning names it when it happens.
-        ExtractedMolecule molecule = null;
+        // 🛑 The molecule is per CHANNEL and a two-colour sample has two. Agreeing channels give their shared
+        // answer; disagreeing ones are left OUT rather than silently overwriting -- `other` would claim GEO said
+        // something it did not, and picking a channel by position would be arbitrary.
+        //
+        // 🛑 With ONE exception, because position is exactly what the old rule got wrong. In the classic
+        // two-colour design the sample is co-hybridized against a genomic-DNA REFERENCE, so the channels
+        // disagree by construction and only one of them is the sample. Taking channel 1 labelled every such
+        // sample `genomicDNA`: GSE9164's 14 assays say so on prod while their own descriptions read "Total RNA
+        // ... RNeasy Mini Kit", and GEO's GSM230264 spells it out -- ch1 `genomic DNA` (Cy3, the reference),
+        // ch2 `total RNA` (Cy5, the sample). Leaving it unset would merely stop asserting the wrong thing; the
+        // sample's molecule is knowable, and it is the channel that is not the DNA reference.
+        //
+        // Only genomicDNA is treated this way. Two disagreeing RNA flavours name no reference, so there is
+        // nothing to prefer between them and they still go unset.
+        Set<ExtractedMolecule> molecules = new LinkedHashSet<>();
         for ( GeoChannel channel : sample.getChannels() ) {
             ExtractedMolecule m = GeoConverterImpl.convertMolecule( channel.getMolecule() );
-            if ( m == null ) {
-                continue;
+            if ( m != null ) {
+                molecules.add( m );
             }
-            if ( molecule == null ) {
-                molecule = m;
-            } else if ( molecule != m ) {
-                GeoConverterImpl.log.warn( "Sample " + sample.getGeoAccession() + " reports different molecules per"
-                        + " channel (" + molecule + " and " + m + "); leaving extractedMolecule unset rather than"
-                        + " picking one." );
-                molecule = null;
-                break;
-            }
+        }
+        ExtractedMolecule molecule = GeoConverterImpl.resolveMolecule( molecules );
+        if ( molecule == null && molecules.size() > 1 ) {
+            GeoConverterImpl.log.warn( "Sample " + sample.getGeoAccession() + " reports different molecules per"
+                    + " channel (" + molecules + "); leaving extractedMolecule unset rather than picking one." );
+        } else if ( molecules.size() > 1 ) {
+            GeoConverterImpl.log.info( "Sample " + sample.getGeoAccession() + " co-hybridizes against a genomic-DNA"
+                    + " reference channel; taking " + molecule + " as the sample's molecule." );
         }
         bioAssay.setExtractedMolecule( molecule );
         bioAssay.setLibrarySelection( StringUtils.trimToNull( sample.getLibrarySelection() ) );
