@@ -172,7 +172,16 @@ class AnnotationsCategoryExclusionTest {
     private static final Set<String> RESOLVABLE = Set.of(
             "GO_", "MONDO_", "CHEBI_", "CL_", "CLO_", "HP_", "MP_", "OBI_", "EMAPA_", "SO_",
             "EFO_", "UBERON_", "PATO_", "TGEMO_", "NBO_", "GENO_", "UO_",
-            "ncbi_gene/", "CVCL_", "MGI:" );
+            "ncbi_gene/", "CVCL_", "MGI:",
+            // 🛑 HANCESTRO_ is a fourth kind, and the reason it belongs here is not that Gemma
+            // loads it -- it does not, there is no url.*Ontology entry. TGEMO declares the eleven
+            // HANCESTRO classes the corpus uses under their own IRIs (PavlidisLab/TGEMO 54ab6ca),
+            // the same MIREOT shape it already uses for MONDO, ECTO, EFO, RO, NCBITaxon and IAO,
+            // so /annotations/term answers for them. A namespace reaches this set by being
+            // ANSWERABLE, not by being loaded -- which is also why the three non-ontology sources
+            // above qualify. Declaring the term is what earns the row: adding a HANCESTRO term to
+            // the corpus without declaring it in TGEMO leaves it unresolvable and unrankable.
+            "HANCESTRO_" );
 
     /**
      * Every namespace named in a preference row must be one Gemma can resolve. A preference for an
