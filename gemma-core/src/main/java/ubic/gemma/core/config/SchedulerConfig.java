@@ -56,10 +56,12 @@ import java.util.Map;
  * {@code applicationContext-dataSource.xml} and are injected by qualifier here.
  * <p>
  * Note: {@code SecureMethodInvokingJobDetailFactoryBean} requires its {@code targetObject}
- * to be a real bean — services like {@code indexerService} that don't currently exist in this
- * codebase will fail context startup under the {@code scheduler} profile. That is identical
- * to the legacy XML behavior; this migration is intentionally a like-for-like port and does
- * not attempt to repair dead wiring.
+ * to be a real bean, so every {@code @Qualifier} below names a bean that must exist for this
+ * context to start. Those names come from {@code ubic.gemma.core.context.BeanNameGenerator},
+ * which the root {@code @ComponentScan} installs as its {@code nameGenerator} and which strips
+ * a trailing {@code Impl} — {@code IndexerServiceImpl} registers as {@code indexerService},
+ * not {@code indexerServiceImpl}. Dropping that generator would break these qualifiers at
+ * runtime rather than at compile time.
  * <p>
  * Annotation-driven scheduling ({@code @Scheduled}) is NOT enabled here — it moved to
  * {@link AnnotationDrivenSchedulingConfig}, which also covers the {@code production} profile.
@@ -235,10 +237,10 @@ public class SchedulerConfig {
     }
 
     /**
-     * Every working day at 23:00. NOTE: depends on an {@code indexerService} bean that is not
-     * currently defined anywhere in the codebase — context startup under the {@code scheduler}
-     * profile will fail at this bean unless that service is restored. Preserved verbatim from
-     * the legacy XML to avoid masking the broken wiring during migration.
+     * Every working day at 23:00. The {@code indexerService} bean is
+     * {@link ubic.gemma.core.search.indexer.IndexerServiceImpl}, named by the scan's
+     * {@code BeanNameGenerator} (see the class comment). The legacy XML referenced it by the
+     * same id, so this is a verbatim port.
      */
     @Bean(name = "indexExperimentsTrigger")
     public CronTriggerFactoryBean indexExperimentsTrigger(
