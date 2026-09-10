@@ -4469,6 +4469,38 @@ public class DatasetsWebService {
                 + "an empty string clears it.")
         private String baselineRelevanceReason;
         /**
+         * Curator/agent hint about whether a differential expression analysis should SUBSET by this
+         * factor — the write side of {@code ExperimentalFactorValueObject.subsetRelevance}.
+         * <p>
+         * 🛑 Advice, not a record of what happened. What an analysis actually subsetted by is its own
+         * {@code subsetFactorValue} and is not settable here; the two are allowed to disagree, and a
+         * recommendation not yet acted on is the normal state of a factor between curation and the
+         * next analysis run.
+         * <p>
+         * The values in use are {@code "recommended"}, {@code "not_applicable"} and {@code "uncertain"},
+         * documented rather than enforced on the same reasoning as {@link #baselineRelevance} — and more
+         * so here, since the curation agents are the intended writer and {@code "covariate"} (do not
+         * subset, model it) is a plausible fourth value that should not need a Gemma release.
+         * <p>
+         * {@code null} / omitted = leave whatever is recorded untouched. An EMPTY string clears it.
+         */
+        @Nullable
+        @Schema(description = "Curator/agent hint about whether a differential expression analysis should "
+                + "subset by this factor. \"recommended\" | \"not_applicable\" | \"uncertain\" are the values "
+                + "in use, not the values permitted — an unknown value is stored and served back rather than "
+                + "rejected. Advice only: what an analysis actually subsetted by is its own subsetFactorValue "
+                + "and is not settable here. Null or omitted leaves the recorded hint untouched; an empty "
+                + "string clears it.")
+        private String subsetRelevance;
+        /**
+         * Free-text rationale paired with {@link #subsetRelevance}. Same conventions: null leaves it
+         * untouched, empty clears it, no vocabulary.
+         */
+        @Nullable
+        @Schema(description = "Free-text rationale for subsetRelevance. Null or omitted leaves it untouched; "
+                + "an empty string clears it.")
+        private String subsetRelevanceReason;
+        /**
          * Verbatim provenance for this FACTOR — a JSON array of {@code {quote, source, location, …}} items.
          * Stored and served opaquely; the agents repo owns the schema.
          * <p>
@@ -4871,6 +4903,8 @@ public class DatasetsWebService {
             out.setCategory( ontologyToCharacteristic( fc.getCategory() ) );
             out.setBaselineRelevance( fc.getBaselineRelevance() );
             out.setBaselineRelevanceReason( fc.getBaselineRelevanceReason() );
+            out.setSubsetRelevance( fc.getSubsetRelevance() );
+            out.setSubsetRelevanceReason( fc.getSubsetRelevanceReason() );
             out.setSupportingEvidence( fc.getSupportingEvidence() );
             out.setValues( mapFactorValues( fc, curFactor, parentKey, samples, plan, bmToFvIds,
                     "design.factors[" + refOrIndex( fc.getClientRef(), factorIdx ) + "]" ) );
@@ -5581,6 +5615,9 @@ public class DatasetsWebService {
                 // factor that never carried the hint is unaffected.
                 fc.setBaselineRelevance( f.getBaselineRelevance() );
                 fc.setBaselineRelevanceReason( f.getBaselineRelevanceReason() );
+                // Same reasoning again for the subset call.
+                fc.setSubsetRelevance( f.getSubsetRelevance() );
+                fc.setSubsetRelevanceReason( f.getSubsetRelevanceReason() );
                 // Captured so a restore puts the factor back with the justification it had; without it a
                 // restore that was meant to change nothing would silently clear the curator's evidence.
                 fc.setSupportingEvidence( f.getSupportingEvidence() );

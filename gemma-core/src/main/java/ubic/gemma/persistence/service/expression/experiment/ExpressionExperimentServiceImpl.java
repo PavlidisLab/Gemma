@@ -1203,6 +1203,18 @@ public class ExpressionExperimentServiceImpl
             if ( pf.getBaselineRelevanceReason() != null
                     && !Objects.equals( blankToNull( pf.getBaselineRelevanceReason() ), cur.getBaselineRelevanceReason() ) ) {
                 edited.add( cur );
+                continue;
+            }
+            // Same blind spot, same fix, for the subset-relevance hint: recommending a subset factor and
+            // changing nothing else moves no counter.
+            if ( pf.getSubsetRelevance() != null
+                    && !Objects.equals( blankToNull( pf.getSubsetRelevance() ), cur.getSubsetRelevance() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getSubsetRelevanceReason() != null
+                    && !Objects.equals( blankToNull( pf.getSubsetRelevanceReason() ), cur.getSubsetRelevanceReason() ) ) {
+                edited.add( cur );
             }
         }
         return edited;
@@ -1495,6 +1507,13 @@ public class ExpressionExperimentServiceImpl
         if ( pf.getBaselineRelevanceReason() != null ) {
             ef.setBaselineRelevanceReason( StringUtils.isBlank( pf.getBaselineRelevanceReason() ) ? null : pf.getBaselineRelevanceReason() );
         }
+        // Subset-relevance hint: same null = "no change" / empty = clear convention.
+        if ( pf.getSubsetRelevance() != null ) {
+            ef.setSubsetRelevance( StringUtils.isBlank( pf.getSubsetRelevance() ) ? null : pf.getSubsetRelevance() );
+        }
+        if ( pf.getSubsetRelevanceReason() != null ) {
+            ef.setSubsetRelevanceReason( StringUtils.isBlank( pf.getSubsetRelevanceReason() ) ? null : pf.getSubsetRelevanceReason() );
+        }
         // Provenance: replacement, like the rest of a gemmaId item. See applyStatementFields for why this stopped
         // being a delta field on 2026-09-06.
         ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
@@ -1561,6 +1580,8 @@ public class ExpressionExperimentServiceImpl
         }
         ef.setBaselineRelevance( StringUtils.isBlank( pf.getBaselineRelevance() ) ? null : pf.getBaselineRelevance() );
         ef.setBaselineRelevanceReason( StringUtils.isBlank( pf.getBaselineRelevanceReason() ) ? null : pf.getBaselineRelevanceReason() );
+        ef.setSubsetRelevance( StringUtils.isBlank( pf.getSubsetRelevance() ) ? null : pf.getSubsetRelevance() );
+        ef.setSubsetRelevanceReason( StringUtils.isBlank( pf.getSubsetRelevanceReason() ) ? null : pf.getSubsetRelevanceReason() );
         ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
         ef = experimentalFactorService.create( ef );
         if ( pf.getValues() != null ) {

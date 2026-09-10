@@ -150,6 +150,29 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
         private String baselineRelevanceReason;
 
         /**
+         * Curator/agent hint about whether a differential expression analysis should SUBSET by this
+         * factor. {@code "recommended"} | {@code "not_applicable"} | {@code "uncertain"} are the values
+         * in use; the field is an open string and an unfamiliar value round-trips rather than being
+         * rejected.
+         * <p>
+         * 🛑 Advice, not history. What an analysis actually subsetted by is the analysis's own
+         * {@code subsetFactorValue}; the two are allowed to disagree, and a recommendation that has not
+         * been acted on yet is the normal state.
+         * <p>
+         * On the way IN this follows the same {@code null = "no change"} convention the rest of the
+         * factor does, with an empty string as the explicit clear.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(description = "Curator/agent hint about whether a differential expression analysis should subset by this factor: \"recommended\" | \"not_applicable\" | \"uncertain\" are the values in use, not the values permitted. Advice only — what an analysis actually subsetted by is its own subsetFactorValue. Null when unset.")
+        private String subsetRelevance;
+
+        /** Free-text rationale paired with {@link #subsetRelevance}. Null when unset. */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private String subsetRelevanceReason;
+
+        /**
          * Verbatim provenance backing this FACTOR — a JSON array of {@code {quote, source, location, …}} items
          * the curation agents emitted, stored and served opaquely.
          * <p>
@@ -180,6 +203,8 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
             }
             this.baselineRelevance = ef.getBaselineRelevance();
             this.baselineRelevanceReason = ef.getBaselineRelevanceReason();
+            this.subsetRelevance = ef.getSubsetRelevance();
+            this.subsetRelevanceReason = ef.getSubsetRelevanceReason();
             this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( ef.getSupportingEvidence() );
             this.values = ef.getFactorValues().stream()
                     .sorted( java.util.Comparator.comparing( FactorValue::getId,

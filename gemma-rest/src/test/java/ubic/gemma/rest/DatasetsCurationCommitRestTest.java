@@ -273,6 +273,77 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         assertThat( cleared.getBaselineRelevanceReason() ).isNull();
     }
 
+    /**
+     * The subset-relevance hint round-trips, and a commit that carries ONLY the hint is applied.
+     * <p>
+     * Mirrors {@link #testBaselineRelevanceRoundTripsAndAnOverrideOnlyCommitIsNotANoOp} because the field
+     * mirrors {@code baselineRelevance} deliberately — same open vocabulary, same null-leaves /
+     * empty-clears convention, same {@code keptFactorMetadataEdits} blind spot if the two clauses are
+     * missing: recommending a subset factor moves no structural counter, so {@code isNoOpDesignApply}
+     * would call the commit a no-op and return 200 having written nothing.
+     * <p>
+     * 🛑 The hint is ADVICE and is not the record of what an analysis did. That lives on the analysis as
+     * {@code subsetFactorValue} and is not settable here, which is why nothing in this test asserts a
+     * relationship between the two.
+     */
+    @Test
+    public void testSubsetRelevanceRoundTripsAndAnOverrideOnlyCommitIsNotANoOp() {
+        String seed = "{"
+                + "\"design\":{\"factors\":{\"items\":[{"
+                + "\"clientRef\":\"F1\",\"name\":\"organism part\",\"category\":{\"label\":\"organism part\"},"
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"freeTextLabel\":\"cortex\"}]}"
+                + "}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( seed ) ) ) {
+            assertOk( r );
+        }
+
+        ExperimentalDesignValueObject.ExperimentalFactorEntry seeded = factorNamed( "organism part" );
+        assertThat( seeded.getSubsetRelevance() ).as( "nothing set it yet" ).isNull();
+
+        // The hint alone: no other field of the factor changes, no value is touched.
+        String override = "{\"design\":{\"factors\":{\"items\":[{"
+                + "\"gemmaId\":" + seeded.getId() + ","
+                + "\"subsetRelevance\":\"recommended\","
+                + "\"subsetRelevanceReason\":\"tissues are not comparable on one model\""
+                + "}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( override ) ) ) {
+            assertOk( r );
+        }
+
+        ExperimentalDesignValueObject.ExperimentalFactorEntry after = factorNamed( "organism part" );
+        assertThat( after.getSubsetRelevance() ).isEqualTo( "recommended" );
+        assertThat( after.getSubsetRelevanceReason() ).isEqualTo( "tissues are not comparable on one model" );
+
+        // Omitting the fields leaves them alone.
+        String unrelated = "{\"design\":{\"factors\":{\"items\":[{"
+                + "\"gemmaId\":" + seeded.getId() + ",\"description\":\"sampled region\"}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( unrelated ) ) ) {
+            assertOk( r );
+        }
+        assertThat( factorNamed( "organism part" ).getSubsetRelevance() )
+                .as( "an unrelated edit did not wipe the hint" )
+                .isEqualTo( "recommended" );
+
+        // The vocabulary is documented, not enforced: a value Gemma has never heard of round-trips rather
+        // than 400ing, which is what lets the agents repo add one without a Gemma release.
+        String unknown = "{\"design\":{\"factors\":{\"items\":[{"
+                + "\"gemmaId\":" + seeded.getId() + ",\"subsetRelevance\":\"covariate\"}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( unknown ) ) ) {
+            assertOk( r );
+        }
+        assertThat( factorNamed( "organism part" ).getSubsetRelevance() ).isEqualTo( "covariate" );
+
+        // An empty string is the explicit clear.
+        String clear = "{\"design\":{\"factors\":{\"items\":[{"
+                + "\"gemmaId\":" + seeded.getId() + ",\"subsetRelevance\":\"\",\"subsetRelevanceReason\":\"\"}]}}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation" ).request().put( Entity.json( clear ) ) ) {
+            assertOk( r );
+        }
+        ExperimentalDesignValueObject.ExperimentalFactorEntry cleared = factorNamed( "organism part" );
+        assertThat( cleared.getSubsetRelevance() ).isNull();
+        assertThat( cleared.getSubsetRelevanceReason() ).isNull();
+    }
+
     /** The persisted factor with this name, re-read through the design VO. */
     private ExperimentalDesignValueObject.ExperimentalFactorEntry factorNamed( String name ) {
         return expressionExperimentService
