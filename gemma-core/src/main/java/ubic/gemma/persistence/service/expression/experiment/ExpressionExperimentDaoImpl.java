@@ -2107,16 +2107,41 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension bad ) {
+        // 🛑 Match on the dimension's ASSAYS, not on the dimension entity.
+        //
+        // This used to bind `bad` itself (`... and bad = :bad ...`). A BioAssayDimension reaching here is
+        // routinely TRANSIENT: DiffExAnalyzerUtils.dropSamplesNotAnalyzed re-slices the data matrix whenever a
+        // sample is DE_Exclude or an outlier, and the replacement dimension comes from
+        // DiffExAnalyzerUtils.createBADMap -> BioAssayDimension.Factory.newInstance, which is never persisted.
+        // Binding an unsaved entity as a query parameter throws
+        // `TransientObjectException: object references an unsaved transient instance ... BioAssayDimension`,
+        // which is what frinkbro hit on GSE62625 (eid 9439) on 2026-09-10 running a subset DEA. It fails on the
+        // REUSE LOOKUP, before any write, which is why the transaction rolled back with nothing lost.
+        //
+        // It only bit some experiments because dropSamplesNotAnalyzed returns the ORIGINAL matrix -- and so the
+        // persisted dimension -- when nothing is dropped. The exposed population is large: 345 experiments carry
+        // a DE_Include/DE_Exclude marker, 326 of them under `collection of material` (frinkbro, 2026-09-10).
+        //
+        // The assays are persisted even when the dimension is not, and the query's meaning is unchanged --
+        // "subsets all of whose assays appear in this dimension" -- so reuse keeps working for experiments with
+        // dropped samples instead of silently building duplicate subsets beside the ones they already have.
+        // Bound by ID rather than by entity, so nothing unsaved can reach the parameter in the first place.
+        Set<Long> bioAssayIds = bad.getBioAssays().stream()
+                .map( BioAssay::getId )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        if ( bioAssayIds.isEmpty() ) {
+            return Collections.emptyList();
+        }
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select eess from ExpressionExperimentSubSet eess join eess.bioAssays ba, "
-                        + "BioAssayDimension bad join bad.bioAssays ba2 "
-                        + "where eess.sourceExperiment = :ee and bad = :bad and ba = ba2 "
-                        + "group by eess, bad "
+                .createQuery( "select eess from ExpressionExperimentSubSet eess join eess.bioAssays ba "
+                        + "where eess.sourceExperiment = :ee and ba.id in :bioAssayIds "
+                        + "group by eess "
                         // require all the subset's assays to be matched
                         + "having size(eess.bioAssays) = count(ba)" )
                 .setParameter( "ee", expressionExperiment )
-                .setParameter( "bad", bad )
+                .setParameterList( "bioAssayIds", optimizeParameterList( bioAssayIds ) )
                 .list();
     }
 

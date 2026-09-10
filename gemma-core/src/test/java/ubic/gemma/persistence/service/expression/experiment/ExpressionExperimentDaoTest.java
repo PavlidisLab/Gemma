@@ -1664,4 +1664,97 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         ExpressionExperiment reloaded = sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
         assertThat( reloaded.getMeanVarianceRelation().getId() ).isEqualTo( second.getId() );
     }
+
+    /**
+     * 🛑 A TRANSIENT {@link BioAssayDimension} is a normal input here, and it must not throw.
+     * <p>
+     * {@code DiffExAnalyzerUtils.dropSamplesNotAnalyzed} re-slices the data matrix whenever a sample is
+     * DE_Exclude or an outlier, and the replacement dimension comes from {@code createBADMap} ->
+     * {@code BioAssayDimension.Factory.newInstance}, which is never persisted. The old query bound the
+     * dimension entity ({@code ... and bad = :bad ...}), so an unsaved one raised
+     * {@code TransientObjectException: object references an unsaved transient instance ... BioAssayDimension}
+     * on the subset REUSE LOOKUP — before any write, which is why the transaction rolled back intact.
+     * <p>
+     * frinkbro hit it on GSE62625 (eid 9439) on 2026-09-10 and held 18 further subset re-runs. It bit only
+     * some experiments because {@code dropSamplesNotAnalyzed} returns the original matrix, and so the
+     * persisted dimension, when nothing is dropped.
+     */
+    @Test
+    public void testGetSubSetsToleratesATransientBioAssayDimension() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        List<BioAssay> assays = createAssays( 3 );
+
+        // a subset over the first two assays
+        ExpressionExperimentSubSet subset = ExpressionExperimentSubSet.Factory.newInstance( "sub-first-two", ee );
+        subset.getBioAssays().add( assays.get( 0 ) );
+        subset.getBioAssays().add( assays.get( 1 ) );
+        sessionFactory.getCurrentSession().persist( subset );
+        sessionFactory.getCurrentSession().flush();
+
+        // the shape createBADMap produces: never persisted, id null
+        BioAssayDimension transientBad = BioAssayDimension.Factory.newInstance( assays );
+        assertNull( transientBad.getId(), "the fixture must be transient or it tests nothing" );
+
+        Collection<ExpressionExperimentSubSet> found = expressionExperimentDao.getSubSets( ee, transientBad );
+
+        assertThat( found ).extracting( "id" ).containsExactly( subset.getId() );
+    }
+
+    /**
+     * Reuse still works when a sample has been DROPPED — the case that decides between the two possible fixes.
+     * <p>
+     * Skipping the lookup for a transient dimension would also stop the crash, and would silently build a
+     * duplicate subset beside the one the experiment already has, on every experiment carrying a DE_Exclude
+     * marker — 345 of them, 326 under {@code collection of material} (frinkbro, 2026-09-10). Matching on the
+     * dimension's ASSAYS keeps reuse working: a subset whose assays all survive the drop is still found, and one
+     * that contained the dropped assay is correctly NOT found, because it can no longer be fully covered.
+     */
+    @Test
+    public void testGetSubSetsStillReusesWhenASampleWasDropped() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        List<BioAssay> assays = createAssays( 3 );
+
+        ExpressionExperimentSubSet survives = ExpressionExperimentSubSet.Factory.newInstance( "survives", ee );
+        survives.getBioAssays().add( assays.get( 0 ) );
+        ExpressionExperimentSubSet loses = ExpressionExperimentSubSet.Factory.newInstance( "loses-an-assay", ee );
+        loses.getBioAssays().add( assays.get( 0 ) );
+        loses.getBioAssays().add( assays.get( 2 ) );
+        sessionFactory.getCurrentSession().persist( survives );
+        sessionFactory.getCurrentSession().persist( loses );
+        sessionFactory.getCurrentSession().flush();
+
+        // assay 2 was dropped, so the re-sliced dimension carries only 0 and 1
+        BioAssayDimension dropped = BioAssayDimension.Factory.newInstance(
+                Arrays.asList( assays.get( 0 ), assays.get( 1 ) ) );
+
+        Collection<ExpressionExperimentSubSet> found = expressionExperimentDao.getSubSets( ee, dropped );
+
+        assertThat( found )
+                .extracting( "id" )
+                .containsExactly( survives.getId() );
+    }
+
+    /** N persisted BioAssays, each on its own BioMaterial. Mirrors the subset-only shape used elsewhere here. */
+    private List<BioAssay> createAssays( int n ) {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+        List<BioAssay> assays = new ArrayList<>();
+        for ( int i = 0; i < n; i++ ) {
+            BioMaterial bm = new BioMaterial();
+            bm.setSourceTaxon( taxon );
+            sessionFactory.getCurrentSession().persist( bm );
+            BioAssay ba = new BioAssay();
+            ba.setArrayDesignUsed( ad );
+            ba.setSampleUsed( bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            sessionFactory.getCurrentSession().persist( ba );
+            assays.add( ba );
+        }
+        return assays;
+    }
 }
