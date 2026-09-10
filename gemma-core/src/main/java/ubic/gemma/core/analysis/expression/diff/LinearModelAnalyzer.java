@@ -437,13 +437,23 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             DifferentialExpressionAnalysisConfig subsetConfig = this
                     .fixConfigForSubset( subsetFactors, subsetFactorValue, config );
 
-            // The baseline map is built once over the whole experiment, so it still carries entries for factors
-            // this subset cannot model. makeDesignMatrix calls setBaseline for every entry it holds, and the
-            // design matrix beside it was built from subsetFactors -- which is DesignMatrix reporting "No factor
-            // known by name fact.2, choices are: fact.1" and failing the subset. Restricting the keys leaves the
-            // chosen baseline of every surviving factor untouched.
-            Map<ExperimentalFactor, FactorValue> subsetBaselines = new HashMap<>( baselineConditions );
-            subsetBaselines.keySet().retainAll( subsetFactors );
+            // 🛑 Re-derive the baselines over THIS SUBSET's samples. Restricting the keys of the
+            // whole-experiment map is not enough: it fixes which factors are named, and leaves each surviving
+            // factor holding the baseline chosen across the whole experiment. That value need not occur among
+            // the subset's samples, and makeDesignMatrix then fails the subset with
+            // "<fv> is not a level of the factor <fact>".
+            //
+            // frinkbro hit it on GSE33860 (eid 5905) subsetting by cell_type, and it held 16 subset jobs.
+            // Paul, 2026-09-10: "if you subset on organism part, that's a constant and isn't a factor within
+            // each subset. why is a baseline being sought?" -- sought for a MODEL factor whose baseline arm is
+            // absent from some subsets -- and "the baselines may have to be 'reassigned' within each subset."
+            //
+            // analyzeSubset, the single-subset path, has always done exactly this. Deriving from
+            // (bioMaterials, subsetFactors) makes the two agree instead of leaving one guarded and its twin
+            // bare, and it subsumes the key problem: a map derived from subsetFactors cannot name a factor the
+            // model dropped.
+            Map<ExperimentalFactor, FactorValue> subsetBaselines =
+                    BaselineSelection.getBaselineConditions( bioMaterials, subsetFactors );
 
             /*
              * Run analysis on the subset.

@@ -84,6 +84,7 @@ public class IncompleteFactorBaselineTest extends BaseTest5 {
     private ExpressionExperiment ee;
     private BioAssayDimension dimension;
     private ExperimentalFactor treatment, sex;
+    private ExperimentalFactor cellType;
 
     /**
      * Sixteen samples on {@code treatment}(case, control), with {@code sex} assigned to all but the last two.
@@ -181,5 +182,101 @@ public class IncompleteFactorBaselineTest extends BaseTest5 {
         assertThat( analyses ).hasSize( 1 );
         assertThat( modelledFactorNames( analyses.iterator().next() ) )
                 .containsExactlyInAnyOrder( "treatment", "sex" );
+    }
+
+    /**
+     * 🛑 A subset's baseline must be REASSIGNED within that subset, not inherited from the whole experiment.
+     * <p>
+     * {@code doSubSetAnalysis} took the experiment-wide baseline map and restricted its KEYS to the factors the
+     * subset can model. The VALUES stayed experiment-wide, so a factor that survives into a subset kept a
+     * baseline FactorValue that may not occur among that subset's samples, and
+     * {@code DesignMatrix.setBaseline} failed the subset with
+     * {@code <fv> is not a level of the factor <fact>}.
+     * <p>
+     * The sibling path {@code analyzeSubset} has always done this correctly —
+     * {@code getBaselineConditions( samplesInSubset, subsetFactors )}, over the subset's own samples and after
+     * the factor drops, with a comment explaining why. This is the third "one path guarded, its twin bare" bug
+     * in a session, so the fix is to make the two agree rather than to special-case the symptom.
+     * <p>
+     * frinkbro hit it on GSE33860 (eid 5905) subsetting by cell_type; it held 16 subset jobs. Paul's framing:
+     * <em>"if you subset on organism part, that's a constant and isn't a factor within each subset. why is a
+     * baseline being sought?"</em> — sought for a MODEL factor whose baseline arm is absent from some subsets —
+     * and <em>"the baselines may have to be 'reassigned' within each subset."</em>
+     * <p>
+     * The fixture makes the baseline arm subset-specific on purpose: {@code treatment} has three levels and the
+     * FIRST sample carries {@code untreated}, which is what
+     * {@code BaselineSelection.getBaselineConditions} falls back to for the whole experiment. Subset {@code B}
+     * contains no {@code untreated} sample at all, so the experiment-wide baseline is not one of its levels.
+     */
+    @Test
+    public void testASubsetsBaselineIsReassignedWithinTheSubset() {
+        buildSubsetFixture();
+        ExpressionDataDoubleMatrix dmatrix = RandomExpressionDataMatrixUtils.randomLog2Matrix( ee, dimension );
+
+        DifferentialExpressionAnalysisConfig cfg = new DifferentialExpressionAnalysisConfig();
+        cfg.addFactorsToInclude( Collections.singletonList( treatment ) );
+        cfg.setSubsetFactor( cellType );
+
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, dmatrix, cfg );
+
+        assertThat( analyses )
+                .withFailMessage( "both subsets must analyse; the one lacking the experiment-wide baseline arm"
+                        + " must reassign its own rather than fail" )
+                .hasSize( 2 );
+        for ( DifferentialExpressionAnalysis a : analyses ) {
+            assertThat( modelledFactorNames( a ) ).containsExactly( "treatment" );
+        }
+    }
+
+    /**
+     * Two cell types; {@code treatment} has three levels and its experiment-wide baseline arm ({@code untreated},
+     * carried by the first sample) appears ONLY in subset A.
+     */
+    private void buildSubsetFixture() {
+        ArrayDesign ad = new ArrayDesign();
+        for ( int i = 0; i < NUM_PROBES; i++ ) {
+            CompositeSequence cs = CompositeSequence.Factory.newInstance( "cs" + i, ad );
+            cs.setId( ( long ) i );
+            ad.getCompositeSequences().add( cs );
+        }
+        ee = new ExpressionExperiment();
+
+        treatment = ExperimentalFactor.Factory.newInstance( "treatment", FactorType.CATEGORICAL );
+        treatment.setId( 1L );
+        FactorValue untreated = FactorValue.Factory.newInstance( treatment, Characteristic.Factory.newInstance( Categories.TREATMENT, "untreated", null ) );
+        untreated.setId( 1L );
+        FactorValue drugX = FactorValue.Factory.newInstance( treatment, Characteristic.Factory.newInstance( Categories.TREATMENT, "drugX", null ) );
+        drugX.setId( 2L );
+        FactorValue drugY = FactorValue.Factory.newInstance( treatment, Characteristic.Factory.newInstance( Categories.TREATMENT, "drugY", null ) );
+        drugY.setId( 3L );
+        treatment.getFactorValues().addAll( Arrays.asList( untreated, drugX, drugY ) );
+
+        cellType = ExperimentalFactor.Factory.newInstance( "cell_type", FactorType.CATEGORICAL );
+        cellType.setId( 2L );
+        FactorValue typeA = FactorValue.Factory.newInstance( cellType, Characteristic.Factory.newInstance( Categories.CELL_TYPE, "A", null ) );
+        typeA.setId( 4L );
+        FactorValue typeB = FactorValue.Factory.newInstance( cellType, Characteristic.Factory.newInstance( Categories.CELL_TYPE, "B", null ) );
+        typeB.setId( 5L );
+        cellType.getFactorValues().addAll( Arrays.asList( typeA, typeB ) );
+
+        dimension = new BioAssayDimension();
+        for ( int i = 0; i < 24; i++ ) {
+            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
+            bm.setId( ( long ) i );
+            boolean inA = i < 12;
+            bm.getFactorValues().add( inA ? typeA : typeB );
+            if ( inA ) {
+                // A: untreated vs drugX -- carries the experiment-wide baseline arm
+                bm.getFactorValues().add( ( i % 2 == 0 ) ? untreated : drugX );
+            } else {
+                // B: drugX vs drugY -- NO untreated sample at all
+                bm.getFactorValues().add( ( i % 2 == 0 ) ? drugX : drugY );
+            }
+            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, ad, bm );
+            ba.setId( ( long ) i );
+            bm.getBioAssaysUsedIn().add( ba );
+            dimension.getBioAssays().add( ba );
+            ee.getBioAssays().add( ba );
+        }
     }
 }
