@@ -85,6 +85,9 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
     @Autowired
+    private ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService experimentalFactorService;
+
+    @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     @Autowired
@@ -470,4 +473,44 @@ public class AclAdviceTest extends BaseSpringContextTest5 {
         }
     }
 
+
+    /**
+     * 🛑 Persisting an analysis must NOT re-parent the EXPERIMENT's factors onto the ANALYSIS, and deleting that
+     * analysis must not take their ACLs with it.
+     * <p>
+     * {@link ExpressionAnalysisResultSet}'s security owner is its analysis, so a result set's insert seeds the
+     * parent-stash walk with the analysis's OID. The walk descends {@code resultSet.experimentalFactors} and,
+     * before the {@code isIntermediateAncestor} guard, force-flattened each of the experiment's factors onto the
+     * analysis. {@code AclDaoImpl.delete} then recurses {@code findChildren} with {@code deleteChildren=true}, so
+     * deleting the analysis DELETED THE FACTORS' ACL ROWS. Every later ACL check on such a factor is a
+     * NotFoundException surfacing as "Access is denied" — to an administrator, because the row is gone rather
+     * than a permission refused.
+     * <p>
+     * Measured on production 2026-09-10 before the fix: 436 ExperimentalFactor ACL rows parented to a
+     * DifferentialExpressionAnalysis over 281 designs, 8 factors already with no ACL row. GSE19804's factor 74321
+     * was parented to DEA 432031, the analysis its retype deletes — which is why three fixes aimed at the
+     * factor-removal path never reached the cause.
+     * <p>
+     * Both halves are asserted deliberately. The parentage is the DEFECT; the surviving removal is the SYMPTOM
+     * that was chased three times. A test on the symptom alone would pass again the next time something re-homes
+     * a factor for a different reason.
+     */
+    @Test
+    public void testPersistingAnAnalysisDoesNotStealTheExperimentsFactors() {
+        ExpressionExperiment ee = newCompleteExperiment();
+        DifferentialExpressionAnalysis analysis = persistOneAnalysis( ee );
+        assertNotNull( analysis.getId() );
+
+        ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
+        assertNotNull( ef.getId() );
+
+        // the defect: the factor's ACL must still belong to the experiment, not to the analysis
+        aclTestUtils.checkHasAcl( ef );
+        aclTestUtils.checkHasAclParent( ef, ee );
+
+        // and the symptom: deleting the analysis must leave the factor removable
+        differentialExpressionAnalyzerService.deleteAnalysis( ee, analysis );
+        aclTestUtils.checkHasAcl( ef );
+        experimentalFactorService.remove( ef );
+    }
 }

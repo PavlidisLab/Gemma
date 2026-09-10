@@ -469,7 +469,8 @@ public class AclEventListener implements PostInsertEventListener, PostDeleteEven
                 Acl parentAcl = aclAdvice.getAclService().readAclById( childParentOid );
                 aclAdvice.addOrUpdateAcl( null, cs, parentAcl );
             } else if ( !childParentOid.equals( currentParent.getObjectIdentity() )
-                    && existing instanceof MutableAcl ) {
+                    && existing instanceof MutableAcl
+                    && isIntermediateAncestor( currentParent.getObjectIdentity() ) ) {
                 MutableAcl macl = ( MutableAcl ) existing;
                 Acl newParent = aclAdvice.getAclService().readAclById( childParentOid );
                 macl.setParent( newParent );
@@ -484,6 +485,45 @@ public class AclEventListener implements PostInsertEventListener, PostDeleteEven
         // Recurse with the SAME top OID so the whole subtree adopts the top-level security
         // owner as parent — matching the advice's flat chain semantics.
         stashChildren( cs, childParentOid, visited );
+    }
+
+    /**
+     * Whether an existing ACL parent is an INTERMEDIATE ancestor that force-flattening may replace, rather than a
+     * legitimate top-level owner it must leave alone.
+     *
+     * <h4>🛑 Why the force-flatten branch needs this guard at all</h4>
+     *
+     * <p>That branch exists for one case, named in its own comment: a child whose earlier back-ref discovery
+     * picked up an intermediate {@link SecuredChild} ancestor (EF → ED) before the root was inserted. Flattening
+     * ED to EE is correct. Without a guard it also fires on a child that already has the RIGHT root, and
+     * re-homes it onto whatever OID happens to seed the current walk.</p>
+     *
+     * <p>That is not hypothetical. {@link ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet}'s
+     * security owner is its analysis, so a result set's insert seeds the walk with the analysis's OID; the walk
+     * descends {@code resultSet.experimentalFactors} and re-parented each of the EXPERIMENT's factors onto the
+     * ANALYSIS. Deleting that analysis then deletes those factors' ACL rows outright, because
+     * {@code AclDaoImpl.delete} recurses {@code findChildren} with {@code deleteChildren=true}. Every later ACL
+     * check on the factor is a {@code NotFoundException}, which surfaces as "Access is denied" — to an
+     * administrator, because the row is absent rather than a permission refused.</p>
+     *
+     * <p>Measured on production 2026-09-10, before the guard: <b>436</b> ExperimentalFactor ACL rows parented to a
+     * DifferentialExpressionAnalysis across 281 designs, and <b>8</b> factors already left with no ACL row at all.
+     * GSE19804's factor 74321 was parented to DEA 432031 — precisely the analysis its retype deletes, which is why
+     * three attempts at the factor-removal path never touched the cause.</p>
+     *
+     * <p>The rule: a parent that is itself a {@link SecuredChild} is an intermediate and may be flattened past. A
+     * parent that is not — an ExpressionExperiment, an ArrayDesign — is a root that something else established
+     * deliberately, and claiming it for the current walk is theft rather than flattening. A type that cannot be
+     * resolved is treated as a root, so the guard fails closed.</p>
+     */
+    private static boolean isIntermediateAncestor( ObjectIdentity currentParentOid ) {
+        try {
+            return SecuredChild.class.isAssignableFrom( Class.forName( currentParentOid.getType() ) );
+        } catch ( ClassNotFoundException | LinkageError e ) {
+            log.warn( "Could not resolve " + currentParentOid.getType() + " while deciding whether to re-parent;"
+                    + " treating it as a top-level owner and leaving the ACL alone." );
+            return false;
+        }
     }
 
     private static boolean cascadesPersist( CascadeStyle cs ) {
