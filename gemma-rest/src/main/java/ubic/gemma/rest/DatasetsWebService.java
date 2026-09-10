@@ -2734,13 +2734,35 @@ public class DatasetsWebService {
 
     /* ============== curation lock ============== */
 
+    /**
+     * 🛑 This route deliberately serves the BARE object, not the {@code {"data": …}} envelope the rest of the
+     * service uses. Do not "fix" the inconsistency.
+     *
+     * <p>The curation UI's {@code api/client.ts} unwraps only when a {@code data} key is present and nothing but
+     * envelope keys sits beside it, so the bare body passes through intact and {@code getCurationLock} types it as
+     * {@code CurationLock}. Wrapping it would make the client read {@code locked} off the envelope, get
+     * {@code undefined} — falsy — and conclude that nobody holds the lock. It would not error. It would invite a
+     * second curator into an experiment someone else is editing, which is the failure this lock exists to
+     * prevent, and no test here would catch it because the response is still valid JSON.</p>
+     *
+     * <p>The inconsistency was raised by cab on 2026-09-09 after their cleanup read {@code data.locked}, got
+     * {@code {}} and skipped a release, leaving a dataset locked for its lease. That was a client assuming an
+     * envelope it had not checked, not a shape problem; cab now accepts both. uib established the direction of
+     * the danger and asked that it not change without their client landing first.</p>
+     *
+     * <p>⇒ If this ever does gain the envelope: uib's client goes first, this second, and the two are separate
+     * deploys. Not a change to make quietly alongside something else.</p>
+     */
     @GET
     @Path("/{dataset}/curation/lock")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Who is curating this dataset right now",
             description = "`{\"locked\": false}` when free. A lapsed claim reads as free — expiry is never "
-                    + "swept, so an abandoned tab frees itself.")
+                    + "swept, so an abandoned tab frees itself.\n\n"
+                    + "Note this route answers with the bare object rather than the `{\"data\": …}` envelope the "
+                    + "rest of the service uses. Read `locked` off the top level; reading `data.locked` yields "
+                    + "nothing, which is indistinguishable from \"not locked\".")
     public Response getCurationLock( @PathParam("dataset") DatasetArg<?> datasetArg ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         return Response.ok( toLockResponse( curationLockService.current( ee ).orElse( null ) ) ).build();
