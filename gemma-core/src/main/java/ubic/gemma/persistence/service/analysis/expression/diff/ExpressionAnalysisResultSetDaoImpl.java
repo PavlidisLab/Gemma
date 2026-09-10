@@ -50,6 +50,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
+import org.springframework.security.acls.domain.BasePermission;
 import ubic.gemma.persistence.util.*;
 
 import org.springframework.lang.Nullable;
@@ -352,6 +353,21 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // "bc") reach us as Filter(objectAlias="bc", propertyName="value"), and without the map the
         // prefix is dropped and the path resolves as root.get("value").
         preds.add( FilterJpaUtils.formRestrictionClause( cb, query, root, filters, getFilterablePropertyObjectAliases() ) );
+        // 🔒 ACL. Without this /resultSets served the analysis, subset factor, factor values and
+        // ontology terms of PRIVATE experiments to anonymous callers: the id-taking loaders on
+        // ExpressionAnalysisResultSetService were guarded on 2026-08-24, the two listing methods that
+        // share this method were not, and `?filter=id = <id>` reaches a single result set through the
+        // listing just as directly.
+        //
+        // 🛑 Restricted on the EXPERIMENT, not the result set. A result set is a SecuredChild: its ACL
+        // row inherits and carries no entries of its own, and the EXISTS body does not walk parentAcl,
+        // so restricting on the result set's own identity would match nothing and hide everything.
+        // Applied inside buildPredicates so the data query, the count query and the cursor query cannot
+        // drift apart — a count computed without the filter would leak the private total even when the
+        // page itself is clean.
+        Path<BioAssaySet> aclExperiment = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
+        preds.add( AclQueryUtils.formAclRestrictionPredicate( getSessionFactory().getCurrentSession(), cb, query,
+                aclExperiment.get( "id" ), ExpressionExperiment.class, BasePermission.READ ) );
         if ( bioAssaySets != null ) {
             // analysis.experimentAnalyzed in (:bioAssaySets)
             Path<BioAssaySet> experimentAnalyzed = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );

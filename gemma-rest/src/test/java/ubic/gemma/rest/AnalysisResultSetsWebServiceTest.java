@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
+import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -64,6 +65,9 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest5
 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
+
+    @Autowired
+    private TestAuthenticationUtils testAuthenticationUtils;
 
     @BeforeEach
     public void setupMocks() {
@@ -139,6 +143,52 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest5
         // individual analysis results are not exposed from this endpoint
         assertThat( results ).extracting( "results" )
                 .containsOnlyNulls();
+    }
+
+    /**
+     * 🔒 The LISTING is ACL-filtered, not just the id-taking loaders.
+     * <p>
+     * {@code GET /resultSets/{id}} was guarded on 2026-08-24; the two listing methods were not, and
+     * {@code ?filter=id = <id>} reaches one result set through the listing just as directly. Anonymously
+     * that served the analysis, subset factor, factor values and ontology terms of a private
+     * experiment's result set.
+     * <p>
+     * 🛑 The admin half is not decoration — it is the known-positive that proves this query can return
+     * the fixture at all. Without it an anonymous empty result would be indistinguishable from a
+     * listing that returns nothing for an unrelated reason, which is the shape of a screen that cannot
+     * fail.
+     */
+    @Test
+    public void testFindAllDoesNotServePrivateResultSetsToAnonymousCallers() {
+        // known-positive: as admin the fixture is listed, and by id
+        assertThat( listedIds( "id = " + this.dears.getId() ) )
+                .as( "admin sees the fixture result set" )
+                .contains( this.dears.getId() );
+
+        try {
+            testAuthenticationUtils.runAsAnonymous();
+            assertThat( listedIds( "id = " + this.dears.getId() ) )
+                    .as( "anonymous must not see a result set of a private experiment" )
+                    .doesNotContain( this.dears.getId() );
+            assertThat( listedIds( "" ) )
+                    .as( "and not through an unfiltered listing either" )
+                    .doesNotContain( this.dears.getId() );
+        } finally {
+            // @AfterEach removeFixtures() deletes as the caller, so admin has to be back before it runs;
+            // the base class only clears the context afterwards.
+            testAuthenticationUtils.runAsAdmin();
+        }
+    }
+
+    /** Ids returned by the result-set listing under the current principal. */
+    private List<Long> listedIds( String filter ) {
+        ResponseDataObject<?> result = ( ResponseDataObject<?> ) service.getResultSets( null, null,
+                FilterArg.valueOf( filter ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "100" ),
+                SortArg.valueOf( "+id" ), null );
+        //noinspection unchecked
+        return ( ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData() ).stream()
+                .map( DifferentialExpressionAnalysisResultSetValueObject::getId )
+                .collect( java.util.stream.Collectors.toList() );
     }
 
     @Test
