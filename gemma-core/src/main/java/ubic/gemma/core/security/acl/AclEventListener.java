@@ -449,8 +449,21 @@ public class AclEventListener implements PostInsertEventListener, PostDeleteEven
         // </ul>
         // Recursion always proceeds so deep subtrees get reconciled; the visited set in
         // stashChildren is what actually stops cycles.
+        ObjectIdentity childOid = aclAdvice.makeObjectIdentity( cs );
+        // An entity is never its own ACL parent. A child holding a back-reference to the entity
+        // whose OID seeded this walk arrives here with childOid == childParentOid: an
+        // ExpressionAnalysisResultSet's getSecurityOwner() is its DifferentialExpressionAnalysis, so
+        // the walk over the result set reaches analysis, the DEA's ACL is already parented to the
+        // experiment, and the force-flatten branch below calls MutableAcl.setParent with the ACL
+        // itself -- which Spring rejects with "Cannot be the parent of yourself". The visited set
+        // does not cover this: it guards stashChildren, and the reconcile happens before we recurse.
+        // Returning also skips a walk of the parent's whole subtree once per child, which for N
+        // result sets was N reconciles of the same siblings to the parent they already have.
+        if ( childOid.equals( childParentOid ) ) {
+            return;
+        }
         try {
-            Acl existing = aclAdvice.getAclService().readAclById( aclAdvice.makeObjectIdentity( cs ) );
+            Acl existing = aclAdvice.getAclService().readAclById( childOid );
             Acl currentParent = existing.getParentAcl();
             if ( currentParent == null ) {
                 Acl parentAcl = aclAdvice.getAclService().readAclById( childParentOid );
