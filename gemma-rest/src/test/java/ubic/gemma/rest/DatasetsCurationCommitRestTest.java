@@ -1319,6 +1319,74 @@ public class DatasetsCurationCommitRestTest extends BaseJerseyIntegrationTest5 {
         expressionExperimentSubSetService.remove( subset );
     }
 
+    /**
+     * A preflight REPORTS the force gate it deliberately does not trip.
+     * <p>
+     * 🛑 A dry run never 409s — that is the contract — so if the report says nothing about the consequences,
+     * a caller has no way at all to learn the real PUT will be refused. It was computed on every curation
+     * preflight and discarded until now: cab preflighted GSE19804 clean on 2026-09-09 and had the PUT
+     * refused {@code 409 REQUIRES_FORCE} immediately after, because the change would delete DEA 432031 —
+     * which the discarded report had already named.
+     * <p>
+     * The PUT half is the point of the test rather than a second case: it establishes that the preflight
+     * predicted the actual outcome, not merely that some boolean is set.
+     */
+    @Test
+    public void testPreflightReportsTheForceGateItDoesNotTrip() {
+        ExperimentalDesignValueObject before = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = factorWithAnAssignedValue( before );
+        FactorValueBasicValueObject anchor = firstAssignedValue( before, factor );
+        ExpressionExperimentSubSet subset = anchorSubsetOn( before, anchor );
+        assertThat( subset ).isNotNull();
+
+        String delete = deleteFactorValue( factor.getId(), anchor.getId() );
+        try {
+            String preflight;
+            try ( Response r = target( "/datasets/" + ee.getId() + "/curation/preflight" )
+                    .request().post( Entity.json( delete ) ) ) {
+                assertOk( r );
+                preflight = r.readEntity( String.class );
+            }
+            assertThat( preflight )
+                    .as( "the dry run says the real commit needs consent" )
+                    .contains( "\"requiresForce\":true" )
+                    .as( "and names what would be consented to" )
+                    .contains( "\"subsetsWithStaleAnchor\"" )
+                    .contains( String.valueOf( subset.getId() ) );
+
+            // and nothing was written, because it is still a dry run
+            assertThat( allFvIds( reloadDesign() ) ).contains( anchor.getId() );
+
+            // the prediction was right: the same body as a real PUT is refused by exactly that gate
+            try ( Response r = target( "/datasets/" + ee.getId() + "/curation" )
+                    .request().put( Entity.json( delete ) ) ) {
+                assertThat( r.getStatus() ).isEqualTo( Response.Status.CONFLICT.getStatusCode() );
+                assertThat( r.readEntity( String.class ) ).contains( "\"reason\":\"REQUIRES_FORCE\"" );
+            }
+        } finally {
+            expressionExperimentSubSetService.remove( subset );
+        }
+    }
+
+    /**
+     * 🛑 A commit with no design section reports {@code designReport} ABSENT, not empty.
+     * <p>
+     * Nothing computes the report for a tags-only commit, so nothing may claim it came back clean. An empty
+     * report would assert the question was asked and answered; absent says it was never asked.
+     */
+    @Test
+    public void testPreflightOmitsTheDesignReportWhenThereIsNoDesignSection() {
+        String tagsOnly = "{\"tags\":{\"items\":[{\"clientRef\":\"T1\",\"category\":{\"label\":\"organism part\"},"
+                + "\"value\":{\"label\":\"brain\",\"uri\":\"http://purl.obolibrary.org/obo/UBERON_0000955\"}}]}}";
+        try ( Response r = target( "/datasets/" + ee.getId() + "/curation/preflight" )
+                .request().post( Entity.json( tagsOnly ) ) ) {
+            assertOk( r );
+            assertThat( r.readEntity( String.class ) )
+                    .as( "absent, so a caller cannot read it as 'asked, no consequences'" )
+                    .doesNotContain( "designReport" );
+        }
+    }
+
     /** The first factor carrying a value that samples are actually assigned to. */
     private static ExperimentalDesignValueObject.ExperimentalFactorEntry factorWithAnAssignedValue(
             ExperimentalDesignValueObject design ) {

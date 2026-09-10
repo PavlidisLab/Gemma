@@ -3767,7 +3767,12 @@ public class DatasetsWebService {
                     + "can preview the diff before committing. `newBaseline` comes back as the dataset's current "
                     + "`lastUpdated`, so a preflight is also how a client picks up the token to commit with. "
                     + "A dry run never 409s on the force gate — it predicts that consequence rather than "
-                    + "hitting it — so check `changes` and the design report, not the status code.",
+                    + "hitting it — so check `changes` and `designReport`, not the status code. "
+                    + "`designReport.requiresForce` is the verdict: true means the real PUT is refused "
+                    + "`409 REQUIRES_FORCE` unless it is signed off (or forced by an admin), and "
+                    + "`designReport.differentialExpressionAnalysesToDelete` and `.subsetsWithStaleAnchor` name "
+                    + "what you would be consenting to. `designReport` is null when the body carried no design "
+                    + "section — that is not the same as no consequences.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
@@ -3888,6 +3893,10 @@ public class DatasetsWebService {
             request.setOtherRelevantPublications( other );
         }
 
+        // Carried out of the design block so it can reach the reply. Stays null when the commit has no design
+        // section — absent means "not asked", where an empty report would mean "asked, no consequences".
+        DesignPreflightReport designReport = null;
+
         if ( body.getDesign() != null ) {
             DesignCommit dc = body.getDesign();
             // Map CAB's declared-delete DesignCommit onto a COMPLETE ExperimentalDesignValueObject (carry-forward
@@ -3914,6 +3923,7 @@ public class DatasetsWebService {
             // consequences the curator has to agree to → 409 unless force (admin). A dry run predicts, so it
             // never 409s.
             DesignPreflightReport report = datasetArgService.previewDesignChange( datasetArg, proposed );
+            designReport = report;
             if ( !report.getBlockers().isEmpty() ) {
                 throw new BadRequestException( "The proposed design has validation blockers: " + summarizeDesignBlockers( report ) );
             }
@@ -4118,7 +4128,11 @@ public class DatasetsWebService {
             throw new CurationCommitConflictException( CurationCommitConflictException.Reason.UNSPECIFIED, e.getMessage() );
         }
         }
-        return CurationCommitReport.from( result, request, !dryRun, canonicalizations );
+        CurationCommitReport reply = CurationCommitReport.from( result, request, !dryRun, canonicalizations );
+        // On an APPLIED commit this describes what was just done rather than what would be; on a preflight it is
+        // the only place the force gate's verdict is visible, because a dry run does not 409.
+        reply.setDesignReport( designReport );
+        return reply;
     }
 
     /**
@@ -6404,6 +6418,34 @@ public class DatasetsWebService {
          * {@link #getReidentified()} to enumerate every id that will stop resolving, BEFORE applying.
          */
         private List<Long> deletedIdentities = Collections.emptyList();
+        /**
+         * The design section's preflight — what a real PUT of this design WOULD do, including the
+         * differential-expression cascade and any subset left anchored on deleted factor values.
+         * <p>
+         * 🛑 This is the field the force gate is decided on. A dry run deliberately does not 409, so
+         * {@code requiresForce} here is the only way a preflight can tell a caller that the commit will be
+         * refused without a sign-off. Before it was carried, the report was computed on every curation
+         * preflight and discarded: cab preflighted GSE19804 clean and had the PUT refused
+         * {@code 409 REQUIRES_FORCE} immediately after, because the change would delete DEA 432031 — which
+         * this report had already named and could not say.
+         * <p>
+         * 🛑 <b>Null means the commit carried no design section</b>, not "no consequences". An empty report
+         * would assert that the question was asked and came back clean. Nothing computes it for a
+         * tags-only commit, so nothing may claim it.
+         * <p>
+         * It is the same object {@code POST /datasets/{id}/designPreflight} serves — but computed against the
+         * delta MERGED onto the current design ({@code mapDesignCommit}), which is what that endpoint cannot
+         * do: it diffs its body as the complete new design, so handing it a curation delta reports every
+         * untouched factor as a deletion. For a delta caller this is the only accurate answer available.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(description = "What a real PUT of this commit's design section would do — factors and factor values "
+                + "created/updated/deleted, the differential-expression analyses it would cascade-delete, subsets it "
+                + "would leave anchored on deleted factor values, and `requiresForce`. Null when the commit carried "
+                + "no design section, which is not the same as no consequences. On a preflight this is how you learn "
+                + "the commit needs a sign-off, since a dry run never 409s.")
+        private DesignPreflightReport designReport;
         private final String error;
 
         private CurationCommitReport( boolean applied, Map<String, CurationSectionChange> changes,
@@ -6474,6 +6516,9 @@ public class DatasetsWebService {
             this.reidentified = reidentified != null ? reidentified : Collections.emptyMap();
             this.deletedIdentities = deleted != null ? deleted : Collections.emptyList();
         }
+        @Nullable
+        public DesignPreflightReport getDesignReport() { return designReport; }
+        void setDesignReport( @Nullable DesignPreflightReport designReport ) { this.designReport = designReport; }
         public Map<String, CurationSectionChange> getChanges() { return changes; }
         public List<Long> getAuditEventIds() { return auditEventIds; }
         public List<Canonicalization> getCanonicalizations() { return canonicalizations; }
