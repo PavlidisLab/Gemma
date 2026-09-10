@@ -115,6 +115,11 @@ public class ExpressionAnalysisResultSetDaoTest extends BaseDatabaseTest5 {
     }
 
     @Test
+    // The listing is ACL-filtered as of the /resultSets leak fix, so it needs a principal at all (without
+    // one SecurityUtil throws "Null authentication object") and an admin one to see the fixture: these are
+    // filter/sort tests and the fixture creates no ACL rows, so any lesser principal correctly sees nothing.
+    // ACL behaviour itself is covered by AnalysisResultSetsWebServiceTest.
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testFindByFilterOnAliasedBaselineGroupCharacteristic() {
         ExpressionAnalysisResultSet sick = createResultSetWithBaselineCharacteristic( "sick" );
         createResultSetWithBaselineCharacteristic( "healthy" );
@@ -130,6 +135,11 @@ public class ExpressionAnalysisResultSetDaoTest extends BaseDatabaseTest5 {
     }
 
     @Test
+    // The listing is ACL-filtered as of the /resultSets leak fix, so it needs a principal at all (without
+    // one SecurityUtil throws "Null authentication object") and an admin one to see the fixture: these are
+    // filter/sort tests and the fixture creates no ACL rows, so any lesser principal correctly sees nothing.
+    // ACL behaviour itself is covered by AnalysisResultSetsWebServiceTest.
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testFindBySortOnAliasedBaselineGroupCharacteristic() {
         ExpressionAnalysisResultSet sick = createResultSetWithBaselineCharacteristic( "sick" );
         ExpressionAnalysisResultSet healthy = createResultSetWithBaselineCharacteristic( "healthy" );
@@ -145,6 +155,11 @@ public class ExpressionAnalysisResultSetDaoTest extends BaseDatabaseTest5 {
     }
 
     @Test
+    // The listing is ACL-filtered as of the /resultSets leak fix, so it needs a principal at all (without
+    // one SecurityUtil throws "Null authentication object") and an admin one to see the fixture: these are
+    // filter/sort tests and the fixture creates no ACL rows, so any lesser principal correctly sees nothing.
+    // ACL behaviour itself is covered by AnalysisResultSetsWebServiceTest.
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testFindByCursorWithFilterOnAliasedBaselineGroupCharacteristic() {
         ExpressionAnalysisResultSet sick = createResultSetWithBaselineCharacteristic( "sick" );
         createResultSetWithBaselineCharacteristic( "healthy" );
@@ -159,6 +174,11 @@ public class ExpressionAnalysisResultSetDaoTest extends BaseDatabaseTest5 {
     }
 
     @Test
+    // The listing is ACL-filtered as of the /resultSets leak fix, so it needs a principal at all (without
+    // one SecurityUtil throws "Null authentication object") and an admin one to see the fixture: these are
+    // filter/sort tests and the fixture creates no ACL rows, so any lesser principal correctly sees nothing.
+    // ACL behaviour itself is covered by AnalysisResultSetsWebServiceTest.
+    @WithMockUser(authorities = "GROUP_ADMIN")
     public void testFindByFilterOnAliasedSubsetFactorValueCharacteristic() {
         createResultSetWithBaselineCharacteristic( "sick" );
 
