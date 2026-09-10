@@ -70,6 +70,31 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
      */
     private static final SqlStatementLogger statementLogger = new SqlStatementLogger();
 
+    /**
+     * Rows per {@code executeBatch()} when writing an analysis's results and contrasts.
+     *
+     * <h4>🛑 Why there has to be a bound at all</h4>
+     *
+     * <p>{@code gemma.db.hikari.rewriteBatchedStatements=true} (default.properties:93) makes the driver rewrite
+     * an accumulated batch into ONE multi-row {@code INSERT ... VALUES (…),(…),…}. Batching the whole analysis
+     * and calling {@code executeBatch()} once therefore built a single packet whose size grew with the total
+     * number of contrasts, with nothing bounding it.</p>
+     *
+     * <p>It landed on production 2026-09-10, GSE31534 (eid 5341):
+     * {@code PacketTooBigException: Packet for query is too large (293,298,585 > 268,435,456)}. 47 genotype
+     * levels over GPL570 is 46 contrasts x 54,681 probes = 2,515,326 rows in one statement, ~117 bytes each —
+     * frinkbro's arithmetic lands on the observed packet, so the mechanism was confirmed rather than inferred.
+     * The ceiling was roughly 2.3M contrast rows, i.e. ~42 contrasts on GPL570 or ~115 on a 20k-probe platform.</p>
+     *
+     * <p>🛑 Paul, 2026-09-10, ruling out the server's own suggestion in that message: <em>"we should just do the
+     * commits in smaller batches."</em> Raising {@code max_allowed_packet} is global, applies to every
+     * connection, and only moves the cliff — the packet is linear in the size of the analysis.</p>
+     *
+     * <p>50,000 rows is ~6 MB against the 256 MB default, two orders of margin. It is unrelated to
+     * {@code gemma.hibernate.jdbc_batch_size} (32), which this hand-built JDBC path never consults.</p>
+     */
+    private static final int INSERT_BATCH_SIZE = 50_000;
+
     private static final String
             INSERT_RESULT_SQL = "insert into DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT (ID, PVALUE, CORRECTED_PVALUE, `RANK`, CORRECTED_P_VALUE_BIN, PROBE_FK, RESULT_SET_FK) values (?, ?, ?, ?, ?, ?, ?)",
             INSERT_CONTRAST_SQL = "insert into CONTRAST_RESULT (ID, PVALUE, TSTAT, FACTOR_VALUE_FK, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, COEFFICIENT, LOG_FOLD_CHANGE, SECOND_FACTOR_VALUE_FK) values (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -175,6 +200,13 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
                     insertResultStmt.setLong( 7, rs.getId() );
                     insertResultStmt.addBatch();
                     results.add( result );
+                    // Flush every INSERT_BATCH_SIZE rows so the rewritten multi-row INSERT stays well inside
+                    // max_allowed_packet. insertRowsAndAssignGeneratedKeys reads the generated keys for exactly
+                    // the objects it was handed, so per-chunk calls stay aligned by construction.
+                    if ( results.size() >= INSERT_BATCH_SIZE ) {
+                        insertRowsAndAssignGeneratedKeys( INSERT_RESULT_SQL, insertResultStmt, results, resultPersister, ( SessionImplementor ) session );
+                        results.clear();
+                    }
                 }
             }
 
@@ -201,6 +233,13 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
                         }
                         insertContrastStmt.addBatch();
                         contrasts.add( cr );
+                        // 🛑 The contrasts are the ones that overflow: this loop is per contrast per result,
+                        // where the one above is per result. Chunking here is safe for the same reason, and the
+                        // result ids these rows reference were all assigned before this loop began.
+                        if ( contrasts.size() >= INSERT_BATCH_SIZE ) {
+                            insertRowsAndAssignGeneratedKeys( INSERT_CONTRAST_SQL, insertContrastStmt, contrasts, contrastPersister, ( SessionImplementor ) session );
+                            contrasts.clear();
+                        }
                     }
                 }
             }
@@ -214,6 +253,12 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     }
 
     private void insertRowsAndAssignGeneratedKeys( String insertSql, PreparedStatement insertStmt, List<?> objects, EntityPersister persister, SessionImplementor session ) throws SQLException {
+        // Nothing pending. Guarded here rather than at each call site so a caller that flushes in chunks cannot
+        // forget it: the trailing flush after a loop sees an empty list whenever the total is an exact multiple
+        // of the chunk size, and an analysis can legitimately have no contrasts at all.
+        if ( objects.isEmpty() ) {
+            return;
+        }
         statementLogger.logStatement( insertSql + String.format( " [repeated %d times]", objects.size() ) );
         ensureExpectedRowsAreInserted( insertSql, insertStmt, insertStmt.executeBatch() );
         // Direct JDBC read of getGeneratedKeys() instead of the deprecated
