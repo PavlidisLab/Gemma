@@ -1008,7 +1008,22 @@ public class ExpressionExperimentServiceImpl
             }
         }
         for ( ExperimentalFactor ef : factorsToRemove ) {
-            ed.getExperimentalFactors().remove( ef );
+            // 🛑 Do NOT detach the factor from ed.experimentalFactors here. experimentalFactorService.remove is a
+            // SECURED call (GROUP_USER + ACL_SECURABLE_EDIT), and an ExperimentalFactor is a SecuredChild whose
+            // ACL parent is resolved by ParentIdentityRetrievalStrategyImpl through
+            // ExpressionExperimentDao.findIdByFactor -- an HQL query that joins ed.experimentalFactors. Removing
+            // the factor from that collection first makes the query auto-flush the pending change and match no
+            // row, so the parent identity comes back null, the factor's ACL cannot inherit from the experiment,
+            // and the vote denies with "Access is denied" -- for an administrator, because the failure is a
+            // lookup that returned nothing rather than a permission that was refused.
+            //
+            // ExperimentalFactorServiceImpl.remove performs exactly this detach itself, after the interceptor
+            // has passed, with the comment "otherwise it will be re-saved in cascade". The line here was a
+            // duplicate of that one, and being on the wrong side of the security proxy is what made it fatal.
+            //
+            // cab hit it on GSE19804 (2026-09-09) re-typing an age factor: the sign 403'd after
+            // deleteAnalysis had already removed DEA 432031's archive, so the transaction rolled back and left
+            // a surviving analysis without its cached files.
             experimentalFactorService.remove( ef );
         }
 

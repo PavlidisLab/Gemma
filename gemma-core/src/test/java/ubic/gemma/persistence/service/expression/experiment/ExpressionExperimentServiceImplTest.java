@@ -1933,4 +1933,50 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
                 .extracting( DesignPreflightReport.AnalysisRef::getId )
                 .containsExactly( 9002L );
     }
+
+    /**
+     * 🛑 A dropped factor is STILL IN its design's factor collection when {@code experimentalFactorService.remove}
+     * is called. Authorization depends on it, so detaching first denies the call.
+     * <p>
+     * {@code ExperimentalFactorService#remove} is {@code @Secured({"GROUP_USER","ACL_SECURABLE_EDIT"})}, and an
+     * ExperimentalFactor is a SecuredChild whose ACL parent {@link ubic.gemma.core.security.authorization.acl.ParentIdentityRetrievalStrategyImpl}
+     * resolves via {@code ExpressionExperimentDao.findIdByFactor} — HQL that joins {@code ed.experimentalFactors}.
+     * Removing the factor from that collection before the call makes the query auto-flush the pending change and
+     * match no row: parent identity null, the factor's ACL cannot inherit from the experiment, and the vote denies
+     * with "Access is denied" even for an administrator, because it is a lookup that found nothing rather than a
+     * permission that was refused.
+     * <p>
+     * 🛑 This class mocks the services, so there is no security proxy here and no 403 to assert. What it can pin is
+     * the ordering the proxy depends on — the same reason a missing {@code @Transactional} passes a mocked test and
+     * 500s live. The detach itself is not skipped: {@code ExperimentalFactorServiceImpl.remove} performs it at its
+     * own line 67, after the interceptor has passed.
+     * <p>
+     * cab hit this on GSE19804 (2026-09-09), signing off a categorical → continuous age re-type. The 403 landed
+     * after {@code deleteAnalysis} had already removed DEA 432031's archive, so the rollback left a surviving
+     * analysis without its cached files.
+     */
+    @Test
+    public void testDroppedFactorIsStillInItsDesignWhenTheSecuredRemoveIsCalled() {
+        buildFixture();
+        ExperimentalDesign ed = fixture.getExperimentalDesign();
+        List<Boolean> stillAttachedAtCallTime = new ArrayList<>();
+        doAnswer( inv -> {
+            stillAttachedAtCallTime.add( ed.getExperimentalFactors()
+                    .contains( ( ExperimentalFactor ) inv.getArgument( 0 ) ) );
+            return null;
+        } ).when( experimentalFactorService ).remove( any( ExperimentalFactor.class ) );
+
+        // propose a design with the factor dropped
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposal.getExperimentalFactors().clear();
+        proposal.getBioMaterialAssignments().forEach( a -> a.setFactorValueIds( new ArrayList<>() ) );
+
+        svc.applyDesignChange( fixture, proposal );
+
+        verify( experimentalFactorService ).remove( treatmentFactor );
+        assertThat( stillAttachedAtCallTime )
+                .withFailMessage( "the factor was detached from its design before the secured remove, so the ACL "
+                        + "parent lookup that authorizes it would find no row" )
+                .containsExactly( true );
+    }
 }
