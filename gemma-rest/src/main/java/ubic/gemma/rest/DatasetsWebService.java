@@ -3944,7 +3944,9 @@ public class DatasetsWebService {
             // Gate on the same preflight the standalone PUT /design uses: blockers → 400; a change with
             // consequences the curator has to agree to → 409 unless force (admin). A dry run predicts, so it
             // never 409s.
-            DesignPreflightReport report = datasetArgService.previewDesignChange( datasetArg, proposed );
+            // The plan goes with the payload: it holds the bindings to factor values this commit creates, which
+            // the design VO cannot name yet, and without it the report counts none of them.
+            DesignPreflightReport report = datasetArgService.previewDesignChange( datasetArg, proposed, plan );
             designReport = report;
             if ( !report.getBlockers().isEmpty() ) {
                 throw new BadRequestException( "The proposed design has validation blockers: " + summarizeDesignBlockers( report ) );

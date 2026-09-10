@@ -554,6 +554,13 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        return previewDesignChange( ee, proposed, null );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed,
+            @Nullable DesignCommitPlan plan ) {
         ee = expressionExperimentDao.reload( ee );
         DesignPreflightReport report = new DesignPreflightReport();
         DesignPreflightReport.Summary summary = report.getSummary();
@@ -760,15 +767,38 @@ public class ExpressionExperimentServiceImpl
 
         // Counted once, here, because the invalidation rule below needs it and the summary needs it too.
         // It used to be recomputed in a second pass over the same two maps further down.
-        int changedBmCount = 0;
+        //
+        // Identifiers rather than a running total, because the deferred bindings below can name a biomaterial
+        // this loop has already counted. A biomaterial's assignments changed or they did not.
+        Set<Long> changedBmIds = new HashSet<>();
         for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
             Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
                     .map( FactorValue::getId ).collect( Collectors.toSet() );
             Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
             if ( !currentFvIds.equals( proposedFvIdsForBm ) ) {
-                changedBmCount++;
+                changedBmIds.add( e.getKey() );
             }
         }
+
+        // A biomaterial bound to a factor value this commit CREATES cannot appear in the loop above.
+        // BioMaterialFactorValueAssignment carries factor value ids, and a new factor value has none until the
+        // first apply pass makes it, so the binding is deferred to DesignCommitPlan.pendingAssignments and
+        // attached by a second pass -- see buildAssignmentPass. Preflighting without the plan therefore reports
+        // 0 for a pure create whose bindings do land: measured on GSE35977, preflight 0 against 168 of 168
+        // biomaterials bound (cab, 2026-09-10). A caller reading the field as authoritative refuses a good write.
+        //
+        // Biomaterials the experiment does not carry are skipped for the same reason buildAssignmentPass skips
+        // them -- it binds nothing for a biomaterial absent from the design -- so the prediction matches the apply.
+        if ( plan != null ) {
+            for ( DesignCommitPlan.PendingAssignment pa : plan.getPendingAssignments() ) {
+                for ( Long bmId : pa.getBioMaterialIds() ) {
+                    if ( currentBmsById.containsKey( bmId ) ) {
+                        changedBmIds.add( bmId );
+                    }
+                }
+            }
+        }
+        int changedBmCount = changedBmIds.size();
 
         // ---- impact: differential expression analyses ----
         // ONE EXCLUSION, not a list of inclusions: a design commit invalidates this dataset's analyses
@@ -2896,7 +2926,7 @@ public class ExpressionExperimentServiceImpl
         if ( request.isDesignPresent() && request.getProposedDesign() != null ) {
             ExperimentalDesignValueObject edvo1 = request.getProposedDesign();
             if ( dryRun ) {
-                DesignPreflightReport.Summary s = previewDesignChange( ee, edvo1 ).getSummary();
+                DesignPreflightReport.Summary s = previewDesignChange( ee, edvo1, request.getDesignPlan() ).getSummary();
                 result.setDesignCreated( s.getFactorsToCreate() + s.getFactorValuesToCreate() );
                 result.setDesignDeleted( s.getFactorsToDelete() + s.getFactorValuesToDelete() );
                 // `updated` is every kind of in-place change: samples moved between factor values, and the
@@ -2911,13 +2941,20 @@ public class ExpressionExperimentServiceImpl
                 anyChange = anyChange || result.getDesignCreated() > 0 || result.getDesignDeleted() > 0
                         || result.getDesignUpdated() > 0;
             } else {
+                // Assignments are counted ONCE, up front, from the same plan-aware preflight the dry run above
+                // reports -- so a dry run predicts what the commit reports instead of approximating it.
+                //
+                // Summing the two passes instead double-counts a replace, because both touch the SAME
+                // biomaterials: pass 1 strips the old factor values, pass 2 attaches the new ones. GSE19804 was
+                // reported as 240 changed biomaterials against 120 samples (cab, 2026-09-10).
+                int assignmentsChanged = previewDesignChange( ee, edvo1, request.getDesignPlan() )
+                        .getSummary().getBiomaterialsWithChangedAssignments();
                 // Pass 1 — through the proxy so the DesignChangeEvent audit aspect fires.
                 DesignApplyOutcome outcome1 = self.applyDesignChange( ee, edvo1 );
                 DesignPreflightReport.Summary s1 = outcome1.getPreflightAtApply().getSummary();
                 int created = s1.getFactorsToCreate() + s1.getFactorValuesToCreate();
                 int deleted = s1.getFactorsToDelete() + s1.getFactorValuesToDelete();
-                int updated = s1.getBiomaterialsWithChangedAssignments()
-                        + s1.getFactorsToUpdate() + s1.getFactorValuesToUpdate();
+                int updated = assignmentsChanged + s1.getFactorsToUpdate() + s1.getFactorValuesToUpdate();
 
                 List<Long> auditIds = new ArrayList<>();
                 collectDesignChangeEventId( ee, outcome1, auditIds );
@@ -2930,9 +2967,9 @@ public class ExpressionExperimentServiceImpl
                         ExperimentalDesignValueObject edvo2 = buildAssignmentPass( outcome1.getDesign(), plan, idMap );
                         if ( edvo2 != null ) {
                             DesignApplyOutcome outcome2 = self.applyDesignChange( ee, edvo2 );
-                            // Pass 2 exists only to attach samples to factor values pass 1 created, so only the
-                            // assignment count can move; the in-place counters would restate pass 1's edits.
-                            updated += outcome2.getPreflightAtApply().getSummary().getBiomaterialsWithChangedAssignments();
+                            // Pass 2 exists only to attach samples to factor values pass 1 created. Its counters
+                            // are not added: assignmentsChanged above already covers these bindings, and the
+                            // in-place counters would restate pass 1's edits. Only its audit event is new.
                             collectDesignChangeEventId( ee, outcome2, auditIds );
                         }
                     }

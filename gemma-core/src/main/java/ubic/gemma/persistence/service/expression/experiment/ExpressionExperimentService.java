@@ -599,6 +599,27 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed );
 
     /**
+     * Predict what would happen if {@code proposed} were applied, including the bindings a
+     * {@link DesignCommitPlan} defers to a second apply pass.
+     *
+     * <h4>Why the plan is needed to get the count right</h4>
+     *
+     * <p>A {@link ExperimentalDesignValueObject.BioMaterialFactorValueAssignment} carries factor value IDs, so a
+     * biomaterial being bound to a factor value the commit CREATES cannot be expressed in {@code proposed} at all
+     * — the factor value has no ID until the first apply pass makes it. Those bindings live in
+     * {@link DesignCommitPlan#getPendingAssignments()}. Preflighting without them reports
+     * {@code biomaterialsWithChangedAssignments = 0} for a pure create whose bindings do land.</p>
+     *
+     * @param plan the commit plan whose deferred assignments should be counted, or {@code null} when the caller
+     *             has none — a plain {@code PUT /datasets/{id}/design} payload, which can only name factor values
+     *             that already exist
+     * @see #previewDesignChange(ExpressionExperiment, ExperimentalDesignValueObject)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed,
+            @Nullable DesignCommitPlan plan );
+
+    /**
      * Apply {@code proposed} as the experiment's new {@link ExperimentalDesign}.
      * <p>
      * Performs the same validation as {@link #previewDesignChange(ExpressionExperiment, ExperimentalDesignValueObject)}

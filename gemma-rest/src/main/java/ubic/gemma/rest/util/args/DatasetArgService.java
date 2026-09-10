@@ -32,6 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.expression.experiment.DesignCommitPlan;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -342,6 +343,22 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
         ExpressionExperiment ee = this.getEntity( arg );
         return service.previewDesignChange( ee, proposed );
+    }
+
+    /**
+     * Run a dry-run preflight for a design commit, counting the bindings {@code plan} defers to a second apply
+     * pass. For the curation commit, which is the one caller that has a plan; a payload that can only name factor
+     * values that already exist goes through {@link #previewDesignChange(DatasetArg, ExperimentalDesignValueObject)}.
+     *
+     * @see ExpressionExperimentService#previewDesignChange(ExpressionExperiment, ExperimentalDesignValueObject, DesignCommitPlan)
+     */
+    public DesignPreflightReport previewDesignChange( DatasetArg<?> arg, ExperimentalDesignValueObject proposed,
+            DesignCommitPlan plan ) {
+        if ( proposed == null ) {
+            throw new BadRequestException( "A proposed design must be supplied in the request body." );
+        }
+        ExpressionExperiment ee = this.getEntity( arg );
+        return service.previewDesignChange( ee, proposed, plan );
     }
 
     /**

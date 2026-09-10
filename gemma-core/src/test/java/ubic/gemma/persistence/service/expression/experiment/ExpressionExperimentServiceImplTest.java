@@ -624,6 +624,89 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         assertThat( report.getDifferentialExpressionAnalysesToDelete() ).hasSize( 1 );
     }
 
+    /**
+     * 🛑 A biomaterial bound to a factor value the commit CREATES cannot be seen in the design payload at all: an
+     * assignment carries factor value ids, and a new factor value has none until the first apply pass makes it.
+     * Those bindings ride in the {@link DesignCommitPlan} and are attached by a second pass, so a preflight that
+     * ignores the plan reports zero changed biomaterials for a create whose bindings do land — measured on
+     * GSE35977, where the preflight said 0 and the write bound 168 of 168 (cab, 2026-09-10).
+     */
+    @Test
+    public void testPreviewCountsBiomaterialsBoundToAFactorValueTheCommitCreates() {
+        buildFixture();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        FactorValueBasicValueObject newFv = new FactorValueBasicValueObject();
+        newFv.setId( null );
+        newFv.setCharacteristics( Collections.emptyList() );
+        newFv.setStatements( Collections.emptyList() );
+        proposal.getExperimentalFactors().get( 0 ).getValues().add( newFv );
+
+        DesignCommitPlan plan = new DesignCommitPlan();
+        plan.getPendingAssignments().add( new DesignCommitPlan.PendingAssignment( "fv-new",
+                new HashSet<>( Arrays.asList( 1000L, 1001L ) ) ) );
+
+        // The payload on its own cannot express the binding, so the two-argument form must report none.
+        assertThat( svc.previewDesignChange( fixture, proposal ).getSummary()
+                .getBiomaterialsWithChangedAssignments() ).isZero();
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal, plan );
+        assertThat( report.getBlockers() ).isEmpty();
+        assertThat( report.getSummary().getBiomaterialsWithChangedAssignments() ).isEqualTo( 2 );
+    }
+
+    /**
+     * A biomaterial that both loses a factor value in the payload and gains a deferred one from the plan is ONE
+     * changed biomaterial. Counting the two apply passes separately instead reported 240 changed biomaterials for
+     * GSE19804, an experiment with 120 samples (cab, 2026-09-10).
+     */
+    @Test
+    public void testPreviewCountsABiomaterialOnceWhenItBothLosesAndGainsAFactorValue() {
+        buildFixture();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        FactorValueBasicValueObject newFv = new FactorValueBasicValueObject();
+        newFv.setId( null );
+        newFv.setCharacteristics( Collections.emptyList() );
+        newFv.setStatements( Collections.emptyList() );
+        proposal.getExperimentalFactors().get( 0 ).getValues().add( newFv );
+        // bm1000 gives up factor value 100 here, and the plan re-binds that same biomaterial below.
+        proposal.getBioMaterialAssignments().stream()
+                .filter( a -> a.getBioMaterialId().equals( 1000L ) )
+                .forEach( a -> a.setFactorValueIds( new ArrayList<>() ) );
+
+        DesignCommitPlan plan = new DesignCommitPlan();
+        plan.getPendingAssignments().add( new DesignCommitPlan.PendingAssignment( "fv-new",
+                new HashSet<>( Collections.singletonList( 1000L ) ) ) );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal, plan );
+        assertThat( report.getBlockers() ).isEmpty();
+        assertThat( report.getSummary().getBiomaterialsWithChangedAssignments() ).isEqualTo( 1 );
+    }
+
+    /**
+     * The plan may name a biomaterial that is not part of this experiment. {@code buildAssignmentPass} binds
+     * nothing for such a biomaterial, so the prediction must not count it either.
+     */
+    @Test
+    public void testPreviewIgnoresADeferredBindingForAForeignBiomaterial() {
+        buildFixture();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        FactorValueBasicValueObject newFv = new FactorValueBasicValueObject();
+        newFv.setId( null );
+        newFv.setCharacteristics( Collections.emptyList() );
+        newFv.setStatements( Collections.emptyList() );
+        proposal.getExperimentalFactors().get( 0 ).getValues().add( newFv );
+
+        DesignCommitPlan plan = new DesignCommitPlan();
+        plan.getPendingAssignments().add( new DesignCommitPlan.PendingAssignment( "fv-new",
+                new HashSet<>( Arrays.asList( 1000L, 999999L ) ) ) );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal, plan );
+        assertThat( report.getSummary().getBiomaterialsWithChangedAssignments() ).isEqualTo( 1 );
+    }
+
     @Test
     public void testPreviewEditingStatementOnKeptFvDoesNotFlagAnalyses() {
         buildFixture();

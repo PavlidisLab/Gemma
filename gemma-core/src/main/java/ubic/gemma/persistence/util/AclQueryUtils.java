@@ -273,7 +273,7 @@ public class AclQueryUtils {
      * JPA Criteria counterpart of {@link #formAclRestrictionClause(String, Permission)}, for DAOs that
      * build their queries with {@link CriteriaBuilder} rather than HQL strings.
      *
-     * <h2>Why a third emitter</h2>
+     * <h4>Why a third emitter</h4>
      *
      * <p>This class already carries two renderings of one set of semantics — HQL
      * ({@link #formAclRestrictionClause(String, Permission)}) and native SQL
@@ -290,7 +290,7 @@ public class AclQueryUtils {
      * to how a user's SIDs are derived reaches this emitter for free, and the thing that could silently
      * diverge is limited to a four-line boolean.</p>
      *
-     * <h2>🛑 Pass the id of the object that OWNS the ACEs, not of a SecuredChild</h2>
+     * <h4>🛑 Pass the id of the object that OWNS the ACEs, not of a SecuredChild</h4>
      *
      * <p>The EXISTS body tests the object identity's <em>own</em> entries and does not walk
      * {@code parentAcl}. A {@link SecuredChild} inherits rather than carrying entries, so restricting on

@@ -607,7 +607,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     public void testCommitRejectsUngroundedDesignStatementTerm() {
         when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( new ExperimentalDesignValueObject() );
-        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+        when( expressionExperimentService.previewDesignChange( any(), any(), any() ) ).thenReturn( new DesignPreflightReport() );
         // only the statement (a Statement entity) fails; the factor category passes
         when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenAnswer( inv -> {
             Characteristic c = inv.getArgument( 0 );
@@ -702,7 +702,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
                 .thenReturn( designWithOneStatement( 10L, 20L, 30L ) );
-        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+        when( expressionExperimentService.previewDesignChange( any(), any(), any() ) ).thenReturn( new DesignPreflightReport() );
 
         String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
                 + "\"baselineRelevance\":\"not_applicable\","
@@ -712,7 +712,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
 
         ArgumentCaptor<ExperimentalDesignValueObject> captor = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
-        verify( expressionExperimentService ).previewDesignChange( any(), captor.capture() );
+        verify( expressionExperimentService ).previewDesignChange( any(), captor.capture(), any() );
         ExperimentalDesignValueObject.ExperimentalFactorEntry f = captor.getValue().getExperimentalFactors().stream()
                 .filter( e -> Long.valueOf( 10L ).equals( e.getId() ) )
                 .findFirst()
@@ -731,7 +731,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
                 .thenReturn( designWithOneStatement( 10L, 20L, 30L ) );
-        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+        when( expressionExperimentService.previewDesignChange( any(), any(), any() ) ).thenReturn( new DesignPreflightReport() );
 
         String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
                 + "\"baselineRelevance\":\"deferred_to_curator\"}]}}}";
@@ -739,7 +739,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
             assertThat( r.getStatus() ).isNotEqualTo( 400 );
         }
         ArgumentCaptor<ExperimentalDesignValueObject> captor = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
-        verify( expressionExperimentService ).previewDesignChange( any(), captor.capture() );
+        verify( expressionExperimentService ).previewDesignChange( any(), captor.capture(), any() );
         assertThat( captor.getValue().getExperimentalFactors().get( 0 ).getBaselineRelevance() )
                 .isEqualTo( "deferred_to_curator" );
     }
@@ -5376,6 +5376,47 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService, never() ).commitCuration( any(), any(), eq( false ) );
     }
 
+    /**
+     * The preflight has to be handed the PLAN, not only the design payload. A sample bound to a factor value the
+     * commit creates lives nowhere else: the design VO names factor values by id and the new one has none until
+     * the first apply pass makes it, so the binding waits in {@code DesignCommitPlan.pendingAssignments}. A report
+     * built without it counts no changed biomaterials for a create whose bindings do land.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitCurationDesignPreflightIsGivenTheDeferredBindings() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign( 5L ) );
+        ubic.gemma.model.expression.biomaterial.BioMaterial bm =
+                ubic.gemma.model.expression.biomaterial.BioMaterial.Factory.newInstance();
+        bm.setId( 100L );
+        BioAssay ba = BioAssay.Factory.newInstance();
+        ba.setShortName( "GSM1" );
+        ba.setSampleUsed( bm );
+        ee.getBioAssays().add( ba );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"f1\",\"name\":\"genotype\","
+                + "\"category\":{\"label\":\"genotype\"},\"factorValues\":{\"items\":[{\"clientRef\":\"fv1\","
+                + "\"freeTextLabel\":\"WT\",\"biomaterialIds\":[100]}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.DesignCommitPlan> planCap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.DesignCommitPlan.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), any(), planCap.capture() );
+        assertThat( planCap.getValue().getPendingAssignments() ).hasSize( 1 );
+        ubic.gemma.persistence.service.expression.experiment.DesignCommitPlan.PendingAssignment pa =
+                planCap.getValue().getPendingAssignments().get( 0 );
+        assertThat( pa.getFactorValueClientRef() ).isEqualTo( "fv1" );
+        assertThat( pa.getBioMaterialIds() ).containsExactly( 100L );
+    }
+
     @Test
     @WithMockUser
     public void testCommitCurationDesignCreatesFactor() {
@@ -5383,7 +5424,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign( 5L ) );
         when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
-        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) )
                 .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
         ubic.gemma.persistence.service.expression.experiment.CurationCommitResult res =
                 new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult();
@@ -5418,7 +5459,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign( 5L, 6L ) );
         when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
-        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) )
                 .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
@@ -5461,7 +5502,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesignWithAssignment() );
         when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
-        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) )
                 .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
@@ -5489,7 +5530,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesignWithAssignment() );
         when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
-        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) )
                 .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
@@ -5521,7 +5562,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 new ubic.gemma.model.expression.experiment.DesignPreflightReport();
         report.getDifferentialExpressionAnalysesToDelete()
                 .add( new ubic.gemma.model.expression.experiment.DesignPreflightReport.AnalysisRef( 1L, "dea", null ) );
-        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) ).thenReturn( report );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) ).thenReturn( report );
 
         String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"name\":\"f\",\"category\":{\"label\":\"g\"}}]}}}";
         // No ?force and non-admin → 409, and nothing is committed.
@@ -5537,7 +5578,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign( 5L ) );
         when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
-        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) )
                 .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( true ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
@@ -5784,7 +5825,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( currentDesign() );
         when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
-        when( expressionExperimentService.previewDesignChange( eq( ee ), any() ) )
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) )
                 .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
@@ -6200,7 +6241,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
                 .thenReturn( new ExperimentalDesignValueObject() );
-        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ) ) )
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ), any() ) )
                 .thenReturn( new DesignPreflightReport() );
         when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
@@ -6215,7 +6256,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK );
 
         ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
-        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture() );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
         StatementValueObject svo = cap.getValue().getExperimentalFactors().iterator().next()
                 .getValues().iterator().next().getStatements().iterator().next();
         assertThat( svo.getPredicate() ).isEqualTo( "has dose" );
