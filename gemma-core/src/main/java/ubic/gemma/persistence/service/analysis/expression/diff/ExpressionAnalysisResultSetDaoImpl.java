@@ -365,9 +365,22 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         // Applied inside buildPredicates so the data query, the count query and the cursor query cannot
         // drift apart — a count computed without the filter would leak the private total even when the
         // page itself is clean.
-        Path<BioAssaySet> aclExperiment = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
+        // 🛑 A SUBSET analysis's experimentAnalyzed is an ExpressionExperimentSubSet, not an ExpressionExperiment,
+        // so its id is a SUBSET id and matches no ExpressionExperiment ACL row. Restricting on it directly hid
+        // every subset analysis's result sets from everyone but admins -- who bypass this predicate entirely and
+        // therefore could not see it. GSE191016 (eid 39118) is public with 24 subset result sets: admin saw 24,
+        // anonymous saw 0, and the ACL chain was correct the whole time (RS -> DEA -> EE, all inheriting, the
+        // experiment granting IS_AUTHENTICATED_ANONYMOUSLY).
+        //
+        // Roll up through sourceExperiment, the same way any count over subset analyses has to -- treat() yields
+        // null for a non-subset, so coalesce falls back to the plain experiment id and both shapes are covered by
+        // one expression.
+        Path<BioAssaySet> experimentAnalyzedForAcl = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
+        Expression<Long> aclExperimentId = cb.coalesce(
+                cb.treat( experimentAnalyzedForAcl, ExpressionExperimentSubSet.class ).get( "sourceExperiment" ).get( "id" ),
+                experimentAnalyzedForAcl.get( "id" ) );
         preds.add( AclQueryUtils.formAclRestrictionPredicate( getSessionFactory().getCurrentSession(), cb, query,
-                aclExperiment.get( "id" ), ExpressionExperiment.class, BasePermission.READ ) );
+                aclExperimentId, ExpressionExperiment.class, BasePermission.READ ) );
         if ( bioAssaySets != null ) {
             // analysis.experimentAnalyzed in (:bioAssaySets)
             Path<BioAssaySet> experimentAnalyzed = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );

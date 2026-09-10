@@ -16,6 +16,7 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
@@ -68,6 +69,12 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest5
 
     @Autowired
     private TestAuthenticationUtils testAuthenticationUtils;
+
+    @Autowired
+    private ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService expressionExperimentSubSetService;
+
+    @Autowired
+    private ubic.gemma.core.security.SecurityService securityService;
 
     @BeforeEach
     public void setupMocks() {
@@ -347,5 +354,63 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest5
                     // rank is null, it should appear as an empty string
                     assertEquals( "", record.get( "rank" ) );
                 } );
+    }
+
+    /**
+     * 🛑 A SUBSET analysis's result sets must be visible to a caller who can read the SOURCE experiment.
+     * <p>
+     * The ACL restriction added with the /resultSets leak fix bound {@code analysis.experimentAnalyzed.id} as an
+     * ExpressionExperiment id. For a subset analysis that is an {@link ExpressionExperimentSubSet} id, which
+     * matches no ExpressionExperiment ACL row — so every subset analysis's result sets vanished for everyone but
+     * admins, who bypass the predicate entirely and therefore could not see the damage.
+     * <p>
+     * Measured on production: GSE191016 (eid 39118) is PUBLIC with 24 subset result sets. Admin saw 24,
+     * anonymous saw 0, and the ACL chain was correct throughout — result set → analysis → experiment, all
+     * inheriting, the experiment granting IS_AUTHENTICATED_ANONYMOUSLY. Nothing was wrong with the data.
+     * <p>
+     * 🛑 The original leak test could not catch this: its fixture analyses a whole experiment, which is the one
+     * shape the broken predicate handled. Hence a subset fixture here rather than another assertion there.
+     */
+    @Test
+    public void testSubsetAnalysisResultSetsAreVisibleViaTheSourceExperiment() {
+        ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+        subset.setName( "subset-of-" + ee.getShortName() );
+        subset.setSourceExperiment( ee );
+        subset.getBioAssays().addAll( ee.getBioAssays() );
+        subset = expressionExperimentSubSetService.create( subset );
+
+        DifferentialExpressionAnalysis subsetDea = new DifferentialExpressionAnalysis();
+        subsetDea.setExperimentAnalyzed( subset );
+        ExpressionAnalysisResultSet subsetRs = new ExpressionAnalysisResultSet();
+        subsetRs.setAnalysis( subsetDea );
+        PvalueDistribution pv = new PvalueDistribution();
+        pv.setBinCounts( new double[0] );
+        pv.setNumBins( 0 );
+        subsetRs.setPvalueDistribution( pv );
+        subsetDea.getResultSets().add( subsetRs );
+        subsetDea = differentialExpressionAnalysisService.create( subsetDea );
+        Long subsetRsId = subsetDea.getResultSets().iterator().next().getId();
+        assertNotNull( subsetRsId );
+
+        // 🛑 Must run as a NON-ADMIN against a PUBLIC experiment, or it tests nothing: admins bypass the ACL
+        // predicate entirely (formAclRestrictionPredicate returns an always-true conjunction), which is exactly
+        // why nobody saw this on production -- every check was made by an admin.
+        securityService.makePublic( ee );
+
+        try {
+            assertThat( listedIds( "id = " + subsetRsId ) )
+                    .as( "known-positive: admin sees the subset result set" )
+                    .contains( subsetRsId );
+
+            testAuthenticationUtils.runAsAnonymous();
+            assertThat( listedIds( "id = " + subsetRsId ) )
+                    .as( "a subset analysis's result set must be reachable through its SOURCE experiment's ACL;"
+                            + " binding the subset id as an experiment id matches no ACL row and hides it" )
+                    .contains( subsetRsId );
+        } finally {
+            testAuthenticationUtils.runAsAdmin();
+            differentialExpressionAnalysisService.remove( subsetDea );
+            expressionExperimentSubSetService.remove( subset );
+        }
     }
 }
