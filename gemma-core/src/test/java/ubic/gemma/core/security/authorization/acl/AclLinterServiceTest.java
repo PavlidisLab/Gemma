@@ -24,6 +24,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -447,5 +449,49 @@ public class AclLinterServiceTest extends BaseDatabaseTest5 {
         // repair must not hand anonymous read to a dataset that never had it.
         assertFalse( anonymousMayRead,
                 "Repairing an Investigation made it publicly readable: " + acl.getEntries() );
+    }
+
+    /**
+     * 🛑 A SecuredChild whose parent is present AND CORRECT but which does not inherit reaches no other
+     * predicate, and grants nothing.
+     * <p>
+     * {@code lintSecuredChildWithIncorrectParent} compares parent type and identifier and passes such a row;
+     * this check used to require a null parent and passed it too. The row carries no ACEs of its own, so an ACL
+     * lookup finds no permissions and denies — "Access is denied" even for an administrator.
+     * <p>
+     * Two live populations on production 2026-09-10: 292 ExpressionAnalysisResultSet rows in exactly this state,
+     * 285 of them under PUBLIC experiments, and 8 ExperimentalFactor rows this linter had itself created.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintChildWithoutParentAlsoSeesAPresentParentThatIsNotInherited() {
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        Long classId = aclClassIdFor( jt, ExperimentalFactor.class.getName() );
+        Long parentClassId = aclClassIdFor( jt, ExpressionExperiment.class.getName() );
+
+        // a parent identity, and a child that points at it but does NOT inherit
+        jt.update( "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, 1, 0)",
+                parentClassId, 88801L );
+        Long parentAoiId = jt.queryForObject(
+                "select id from acl_object_identity where object_id_class = ? and object_id_identity = ?",
+                Long.class, parentClassId, 88801L );
+        jt.update( "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, ?, 1, 0)",
+                classId, 88802L, parentAoiId );
+
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExperimentalFactor.class,
+                AclLinterConfig.builder().lintChildWithoutParent( true ).applyFixes( false ).build() );
+
+        assertTrue( results.stream().anyMatch( r -> Long.valueOf( 88802L ).equals( r.getIdentifier() ) ),
+                "a child with a present-but-not-inherited parent must be reported; it grants nothing. Got: " + results );
+    }
+
+    /** Resolve or create the acl_class row for a class name. */
+    private Long aclClassIdFor( JdbcTemplate jt, String className ) {
+        List<Long> existing = jt.queryForList( "select id from acl_class where class = ?", Long.class, className );
+        if ( !existing.isEmpty() ) {
+            return existing.get( 0 );
+        }
+        jt.update( "insert into acl_class (class) values (?)", className );
+        return jt.queryForObject( "select id from acl_class where class = ?", Long.class, className );
     }
 }

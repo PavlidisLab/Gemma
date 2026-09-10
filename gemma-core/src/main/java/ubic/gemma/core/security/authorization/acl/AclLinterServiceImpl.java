@@ -285,8 +285,37 @@ public class AclLinterServiceImpl implements AclLinterService {
     private void createMissingAcl( Class<? extends Securable> clazz, Long identifier, Collection<LintResult> results ) {
         if ( SecuredChild.class.isAssignableFrom( clazz ) ) {
             aclService.createAcl( new AclObjectIdentity( clazz, identifier ) );
-            log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier ) + "." );
-            results.add( new LintResult( clazz, identifier, "ACL identity was created.", true ) );
+            // 🛑 A SecuredChild's new identity carries no ACEs of its own, so without a parent it inherits from
+            // nothing and grants nothing -- the same condition an ACL lookup reports as "Access is denied", to an
+            // administrator, because it finds no permissions rather than refusing one. Creating the row and
+            // stopping there manufactures the defect lintSecuredChildWithoutParent exists to repair.
+            //
+            // It is not theoretical: this created 8 such rows for ExperimentalFactor on production 2026-09-10,
+            // and cab found them. Running --lint-missing-identities over ExpressionAnalysisResultSet, where 1,212
+            // lack identities, would have made 1,212 more.
+            //
+            // Resolve and attach the parent in the same breath, the way lintSecuredChildWithIncorrectParent does.
+            // A child whose parent cannot be resolved is reported unfixed rather than left silently inert.
+            //noinspection unchecked
+            SecuredChild<?> sc = getSecuredChild( ( Class<? extends SecuredChild<?>> ) clazz, identifier );
+            AclObjectIdentity parentAoi = sc != null
+                    ? ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc )
+                    : null;
+            if ( parentAoi != null ) {
+                setParentAcl( clazz, identifier, parentAoi );
+                log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier )
+                        + " and set its parent to " + parentAoi + "." );
+                results.add( new LintResult( clazz, identifier,
+                        "ACL identity was created and its parent ACL identity was set to " + parentAoi + ".", true ) );
+            } else {
+                log.warn( "Created missing ACL identity for " + formatEntity( clazz, identifier )
+                        + ", but could not resolve a parent; it inherits from nothing and grants nothing." );
+                results.add( new LintResult( clazz, identifier,
+                        "ACL identity was created, but no parent ACL identity could be resolved for it.", false ) );
+            }
+            if ( sc != null ) {
+                sessionFactory.getCurrentSession().evict( sc );
+            }
             return;
         }
         Securable s = getSecurable( clazz, identifier );
@@ -324,10 +353,24 @@ public class AclLinterServiceImpl implements AclLinterService {
                 "select aoi.object_id_identity "
                         + "from acl_object_identity aoi "
                         + "join acl_class cls on aoi.object_id_class = cls.id "
-                        + "where cls.class = ? and aoi.parent_object is null",
+                        // 🛑 entries_inheriting = 0 is caught here too, and by nothing else. A SecuredChild whose
+                        // parent is present AND correct but which does not inherit reaches no other predicate:
+                        // lintSecuredChildWithIncorrectParent compares parent type and identifier and passes it,
+                        // and this check used to require a null parent. Such a row carries no ACEs of its own, so
+                        // it grants nothing -- an ACL lookup finds no permissions and denies, which reads as
+                        // "Access is denied" even for an administrator.
+                        //
+                        // Two live populations on production, 2026-09-10: 292 ExpressionAnalysisResultSet rows in
+                        // exactly this state (285 of them under PUBLIC experiments, so their result sets are
+                        // refused on /resultSets while /analyses/differential serves them to the same anonymous
+                        // caller), and 8 ExperimentalFactor rows this linter had itself just created -- see
+                        // createMissingAcl, which no longer leaves them that way.
+                        //
+                        // setParentAcl repairs both shapes: it sets the parent AND turns inheriting on.
+                        + "where cls.class = ? and (aoi.parent_object is null or aoi.entries_inheriting = 0)",
                 Long.class, clazz.getName() );
         if ( identifiers.isEmpty() ) {
-            log.info( "All " + clazz.getSimpleName() + " have parent ACL identities." );
+            log.info( "All " + clazz.getSimpleName() + " have parent ACL identities and inherit from them." );
             return;
         }
         log.warn( "There are " + identifiers.size() + " " + clazz.getSimpleName() + " lacking parent ACL identities." );
