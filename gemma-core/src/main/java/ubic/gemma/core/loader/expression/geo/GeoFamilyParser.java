@@ -470,16 +470,23 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         String key = tokens[0];
         String value = tokens[1];
         key = StringUtils.strip( key );
-        value = StringUtils.strip( value );
+        value = repairSymbolFont( StringUtils.strip( value ) );
         result.put( key, value );
         return result;
     }
 
     /**
      * Extract a value from a line in the format xxxx=value.
+     * <p>
+     * Every {@code key=value} metadata line in a SOFT file comes through here, which is why the
+     * Symbol-font repair is applied at this point and nowhere else: descriptions, titles,
+     * characteristics and protocols are all the same kind of submitter prose and all reach us the
+     * same way. Repairing at the individual {@code setDescription} callsites instead would be one
+     * band-aid per field, and the field someone forgets is the one that keeps storing tofu.
      *
      * @param line line
      * @return String following the first occurrence of '=', or null if there is no '=' in the String.
+     * @see SymbolFontPua
      */
     private String extractValue( String line ) {
         int eqIndex = line.indexOf( '=' );
@@ -487,7 +494,26 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             return null; // that's okay, there are lines that just indicate the end of sections.
         }
 
-        return StringUtils.strip( line.substring( eqIndex + 1 ) );
+        return repairSymbolFont( StringUtils.strip( line.substring( eqIndex + 1 ) ) );
+    }
+
+    /**
+     * Repair Symbol-font private-use codepoints, and report the ones that cannot be repaired.
+     * <p>
+     * The warning names the codepoints rather than guessing at them: a private-use character that
+     * Adobe Symbol has no standard equivalent for can only be settled by reading it in context.
+     */
+    private String repairSymbolFont( String value ) {
+        java.util.Set<Integer> unmappable = SymbolFontPua.unmappable( value );
+        if ( !unmappable.isEmpty() ) {
+            StringBuilder codes = new StringBuilder();
+            for ( Integer c : unmappable ) {
+                codes.append( codes.length() > 0 ? ", " : "" ).append( String.format( "U+%04X", c ) );
+            }
+            GeoFamilyParser.log.warn( "Private-use codepoints with no known replacement (" + codes
+                    + ") in: " + StringUtils.abbreviate( value, 120 ) );
+        }
+        return SymbolFontPua.repair( value );
     }
 
     /**
