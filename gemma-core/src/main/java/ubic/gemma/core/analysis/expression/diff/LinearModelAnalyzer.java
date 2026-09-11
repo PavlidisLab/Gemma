@@ -417,12 +417,23 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 continue;
             }
 
+            // makeSubSetMatrices produces no matrix for a factor value no analyzed sample carries. The subsets
+            // handed to this method can come from the database instead (the run(ee, subsets, ...) overload reuses
+            // stored subsets), and those still list an arm whose samples were all filtered out, so the two maps
+            // need not agree. Without this, such an arm reaches orderByExperimentalDesign as a null matrix.
+            ExpressionDataDoubleMatrix subsetMatrix = dmatrix.get( subsetFactorValue );
+            if ( subsetMatrix == null ) {
+                LinearModelAnalyzer.log.warn( "No analyzed samples left in " + subSet + " (" + subsetFactorValue
+                        + "); skipping it." );
+                continue;
+            }
+
             LinearModelAnalyzer.log.info( "Analyzing subset: " + subsetFactorValue );
 
-            List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrix.get( subsetFactorValue ), factors, null );
+            List<BioMaterial> bioMaterials = orderByExperimentalDesign( subsetMatrix, factors, null );
 
             List<ExperimentalFactor> subsetFactors = this
-                    .fixFactorsForSubset( bioMaterials, dmatrix.get( subsetFactorValue ), factors );
+                    .fixFactorsForSubset( bioMaterials, subsetMatrix, factors );
 
             if ( subsetFactors.isEmpty() ) {
                 LinearModelAnalyzer.log
@@ -459,7 +470,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
              * Run analysis on the subset.
              */
             try {
-                results.add( doAnalysis( subSet, dmatrix.get( subsetFactorValue ), bioMaterials,
+                results.add( doAnalysis( subSet, subsetMatrix, bioMaterials,
                         subsetFactors, subsetBaselines, subsetFactorValue, subsetConfig ) );
             } catch ( AnalysisException e ) {
                 if ( config.isIgnoreFailingSubsets() ) {
@@ -1414,9 +1425,23 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             FactorValue fv = ssEntry.getKey();
             List<BioMaterial> samplesInSubset = ssEntry.getValue();
             if ( samplesInSubset.isEmpty() ) {
-                throw new IllegalArgumentException( "The subset was empty for fv: " + fv );
+                // No matrix for this arm, and therefore no entry in the returned map: doSubSetAnalysis skips a
+                // factor value it finds no matrix for. Dropping it HERE rather than raising an exception the
+                // per-subset catch could match is what makes -ignoreFailingSubsets able to help at all -- this
+                // method runs during matrix construction, before the guarded loop exists, so a throw from here
+                // aborts the whole experiment whatever the flag says (GSE74998/eid 34217, "The subset was empty
+                // for fv: ... cell type embryonic stem cell").
+                //
+                // Emptiness is also not a failure to begin with. samplesUsed has already been through filtering
+                // and QC, so a factor value several samples carry can still partition to nothing here; and a
+                // subset factor may simply hold a value no analyzed sample uses. Either way there is nothing to
+                // analyze for this arm, not a broken analysis.
+                LinearModelAnalyzer.log.warn( "No analyzed samples carry " + fv
+                        + "; there is no subset to analyze for it, skipping it." );
+                continue;
             }
-            assert samplesInSubset.size() < samplesUsed.size();
+            // <=, not <: once an empty arm is dropped a single surviving arm can hold every sample.
+            assert samplesInSubset.size() <= samplesUsed.size();
             samplesInSubset = orderByExperimentalDesign( samplesInSubset, factors, null );
             ExpressionDataDoubleMatrix subMatrix = dmatrix.sliceColumns( samplesInSubset, createBADMap( samplesInSubset ) );
             subMatrices.put( fv, subMatrix );
