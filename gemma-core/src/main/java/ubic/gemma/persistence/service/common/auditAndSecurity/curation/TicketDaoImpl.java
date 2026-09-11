@@ -21,6 +21,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.AbstractDao;
@@ -71,7 +73,7 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
     }
 
     @Override
-    public Map<Long, List<TicketSearchHitValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+    public Map<Long, List<TicketSummaryForTargetValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
             Collection<Long> targetIds ) {
         if ( targetIds.isEmpty() ) {
             // An empty `in` list is not valid HQL, and the answer is knowable without asking.
@@ -80,10 +82,12 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
         // Scope deliberately identical to findOpenForTarget — same (targetType, targetId) predicate over
         // t.targets, same OPEN/IN_PROGRESS restriction, scratchpads included. A dataset's glyph on a list
         // and its drawer come from the two routes, so a difference here would read as a bug in one of them.
-        // targetId trails the shared select list so rows 0..5 stay exactly what fromRow consumes.
+        // targetId and the target's status trail the shared select list, so the leading columns stay
+        // exactly what fromRow consumes. The status is per-TARGET and so is not on the shared VO --
+        // see TicketSummaryForTargetValueObject for why it is a subtype rather than a nullable field.
         //noinspection unchecked
         List<Object[]> rows = ( List<Object[]> ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select " + SEARCH_HIT_SELECT_LIST + ", tgt.targetId "
+                        "select " + SEARCH_HIT_SELECT_LIST + ", tgt.targetId, tgt.status "
                                 + "from Ticket t "
                                 + "join t.targets tgt "
                                 + "where tgt.targetType = :targetType "
@@ -94,11 +98,14 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
                 .setParameterList( "targetIds", optimizeParameterList( targetIds ) )
                 .setParameterList( "openStates", Arrays.asList( TicketState.OPEN, TicketState.IN_PROGRESS ) )
                 .list();
-        Map<Long, List<TicketSearchHitValueObject>> out = new LinkedHashMap<>();
+        Map<Long, List<TicketSummaryForTargetValueObject>> out = new LinkedHashMap<>();
         for ( Object[] row : rows ) {
             Long targetId = ( Long ) row[SEARCH_HIT_SELECT_LIST_WIDTH];
+            TicketTargetStatus status = ( TicketTargetStatus ) row[SEARCH_HIT_SELECT_LIST_WIDTH + 1];
+            TicketSearchHitValueObject hit = TicketSearchHitValueObject.fromRow( row );
             out.computeIfAbsent( targetId, k -> new ArrayList<>() )
-                    .add( TicketSearchHitValueObject.fromRow( row ) );
+                    .add( new TicketSummaryForTargetValueObject( hit.getId(), hit.getTitle(), hit.getState(),
+                            hit.getType(), hit.getTargetCount(), hit.getUpdatedAt(), hit.getPriority(), status ) );
         }
         return out;
     }
@@ -605,10 +612,10 @@ public class TicketDaoImpl extends AbstractDao<Ticket> implements TicketDao {
      */
     static final String SEARCH_HIT_SELECT_LIST = "t.id, t.name, t.state, t.type, "
             + "(select count(tt.id) from TicketTarget tt where tt.ticket = t), "
-            + "t.updatedAt";
+            + "t.updatedAt, t.priority";
 
     /** How many columns {@link #SEARCH_HIT_SELECT_LIST} projects; the index of the first appended one. */
-    private static final int SEARCH_HIT_SELECT_LIST_WIDTH = 6;
+    private static final int SEARCH_HIT_SELECT_LIST_WIDTH = 7;
 
     static String buildSearchHitHql( boolean byId, boolean openOnly, boolean ownScratchpadsVisible ) {
         StringBuilder hql = new StringBuilder( "select " + SEARCH_HIT_SELECT_LIST + " from Ticket t where " );

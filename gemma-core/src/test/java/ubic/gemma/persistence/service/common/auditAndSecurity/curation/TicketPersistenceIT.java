@@ -36,6 +36,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -831,7 +832,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         openTargeting( TicketType.CURATION, "bulk-presence-" + UUID.randomUUID(), onATicket );
         flushAndClear();
 
-        Map<Long, List<TicketSearchHitValueObject>> byDataset =
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
                 ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
                         Arrays.asList( onATicket, quiet ) );
 
@@ -852,12 +853,12 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         ticketService.transition( resolved, TicketState.RESOLVED, reporter, "done" );
         flushAndClear();
 
-        Map<Long, List<TicketSearchHitValueObject>> byDataset =
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
                 ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
                         Arrays.asList( a, b ) );
 
         Set<Long> forA = new HashSet<>();
-        for ( TicketSearchHitValueObject h : byDataset.get( a ) ) {
+        for ( TicketSummaryForTargetValueObject h : byDataset.get( a ) ) {
             forA.add( h.getId() );
         }
         assertEquals( new HashSet<>( Arrays.asList( both.getId(), onlyA.getId() ) ), forA,
@@ -880,7 +881,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
 
         // The glyph on the experiment list and the drawer behind it come from these two routes.
         // A dataset that reads "on a ticket" in one and not the other is the bug this pins.
-        Map<Long, List<TicketSearchHitValueObject>> bulk =
+        Map<Long, List<TicketSummaryForTargetValueObject>> bulk =
                 ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
                         Arrays.asList( a, b, quiet ) );
         for ( Long id : Arrays.asList( a, b, quiet ) ) {
@@ -889,7 +890,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
                 single.add( t.getId() );
             }
             Set<Long> batched = new HashSet<>();
-            for ( TicketSearchHitValueObject h : bulk.getOrDefault( id, Collections.emptyList() ) ) {
+            for ( TicketSummaryForTargetValueObject h : bulk.getOrDefault( id, Collections.emptyList() ) ) {
                 batched.add( h.getId() );
             }
             assertEquals( single, batched, "the two routes disagree about dataset " + id );
@@ -905,7 +906,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         flushAndClear();
 
         // Asked about ONE of the three members: the count still reports three.
-        Map<Long, List<TicketSearchHitValueObject>> byDataset =
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
                 ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
                         Collections.singletonList( a ) );
 

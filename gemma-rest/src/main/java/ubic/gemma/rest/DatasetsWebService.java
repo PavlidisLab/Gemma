@@ -117,6 +117,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
@@ -2144,10 +2145,14 @@ public class DatasetsWebService {
                     + "so a page of fifty quiet rows is not fifty empty arrays. This makes the absence "
                     + "meaningful: a caller that got a 200 can render \"not on a ticket\" rather than \"not "
                     + "known\".\n\n"
-                    + "Each entry is a ticket SUMMARY — id, title, type, state, updatedAt, and a `targetCount` "
-                    + "the database counts. Not the targets: a scratchpad holding five hundred datasets would "
-                    + "otherwise ship five hundred rows per experiment on the page. Fetch "
+                    + "Each entry is a ticket SUMMARY — id, title, type, state, priority, updatedAt, and a "
+                    + "`targetCount` the database counts. Not the targets: a scratchpad holding five hundred "
+                    + "datasets would otherwise ship five hundred rows per experiment on the page. Fetch "
                     + "`GET /tickets/{id}` when the members are actually wanted.\n\n"
+                    + "Each entry also carries `targetStatus`: THIS dataset's status on that ticket "
+                    + "(`NOT_DONE`, `UNDERWAY`, `DONE`), never an aggregate over the ticket's other "
+                    + "targets. A queue deciding whether a dataset still has outstanding work reads this; "
+                    + "without it every summary row looks outstanding, including one already done.\n\n"
                     + "Same scope as the single-dataset route: OPEN and IN_PROGRESS only, scratchpads included "
                     + "(a dataset sitting in a curator's scratchpad is on a ticket). Tickets are ordered most "
                     + "recently updated first.\n\n"
@@ -2159,7 +2164,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing or empty `datasetIds`, or over the cap.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public ResponseDataObject<Map<Long, List<TicketSearchHitValueObject>>> getDatasetTicketsBulk(
+    public ResponseDataObject<Map<Long, List<TicketSummaryForTargetValueObject>>> getDatasetTicketsBulk(
             @Nullable DatasetTicketsBulkRequest body
     ) {
         if ( body == null || body.getDatasetIds() == null || body.getDatasetIds().isEmpty() ) {

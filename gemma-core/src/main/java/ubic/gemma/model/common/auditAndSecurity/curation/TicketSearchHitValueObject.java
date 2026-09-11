@@ -46,26 +46,33 @@ public class TicketSearchHitValueObject implements Serializable {
 
     private Date updatedAt;
 
+    /**
+     * The ticket's priority. Never null: {@link Ticket} defaults it to
+     * {@link TicketPriority#NORMAL}.
+     */
+    private TicketPriority priority;
+
     public TicketSearchHitValueObject() {
     }
 
     public TicketSearchHitValueObject( Long id, String title, TicketState state, TicketType type,
-            long targetCount, Date updatedAt ) {
+            long targetCount, Date updatedAt, TicketPriority priority ) {
         this.id = id;
         this.title = title;
         this.state = state;
         this.type = type;
         this.targetCount = targetCount;
         this.updatedAt = updatedAt;
+        this.priority = priority;
     }
 
     /**
      * Project one row of the {@code /tickets/search} HQL projection.
      * <p>
      * The columns are positional, so this and the query's select list have to agree. The order is
-     * {@code id, title (the NAME column), state, type, targetCount, updatedAt}; the query builder
-     * that emits it is {@code TicketDaoImpl.buildSearchHitHql}, and its select list is asserted
-     * against this order in {@code TicketSearchQueryTest}.
+     * {@code id, title (the NAME column), state, type, targetCount, updatedAt, priority}; the query
+     * builder that emits it is {@code TicketDaoImpl.buildSearchHitHql}, and its select list is
+     * asserted against this order in {@code TicketSearchQueryTest}.
      */
     public static TicketSearchHitValueObject fromRow( Object[] row ) {
         return new TicketSearchHitValueObject(
@@ -74,6 +81,7 @@ public class TicketSearchHitValueObject implements Serializable {
                 ( TicketState ) row[2],
                 ( TicketType ) row[3],
                 row[4] == null ? 0L : ( ( Number ) row[4] ).longValue(),
-                ( Date ) row[5] );
+                ( Date ) row[5],
+                ( TicketPriority ) row[6] );
     }
 }

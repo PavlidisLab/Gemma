@@ -17,6 +17,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -250,7 +251,7 @@ public interface TicketService extends BaseService<Ticket> {
     List<Ticket> findOpenForTarget( TicketTargetType targetType, Long targetId );
 
     /** @see TicketDao#findOpenSummariesForTargets */
-    Map<Long, List<TicketSearchHitValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+    Map<Long, List<TicketSummaryForTargetValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
             Collection<Long> targetIds );
 
     /** @see TicketDao#findAssignedTo */

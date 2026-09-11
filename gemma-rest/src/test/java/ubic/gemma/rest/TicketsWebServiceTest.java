@@ -1004,7 +1004,7 @@ public class TicketsWebServiceTest {
 
     private static TicketSearchHitValueObject searchHit( long id, String title, long targetCount ) {
         return new TicketSearchHitValueObject( id, title, TicketState.OPEN, TicketType.CURATION,
-                targetCount, new Date( 1756675380000L ) );
+                targetCount, new Date( 1756675380000L ), TicketPriority.NORMAL );
     }
 
     @Test

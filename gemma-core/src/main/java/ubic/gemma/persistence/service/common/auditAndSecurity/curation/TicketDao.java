@@ -17,6 +17,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
@@ -63,7 +64,7 @@ public interface TicketDao extends BaseDao<Ticket> {
      * @param targetIds  the ids to ask about; an empty collection yields an empty map without a query
      * @return target id → its open tickets, most recently updated first; ids with none are absent
      */
-    Map<Long, List<TicketSearchHitValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+    Map<Long, List<TicketSummaryForTargetValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
             Collection<Long> targetIds );
 
     /**

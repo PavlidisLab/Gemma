@@ -28,6 +28,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -511,7 +512,7 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, List<TicketSearchHitValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+    public Map<Long, List<TicketSummaryForTargetValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
             Collection<Long> targetIds ) {
         Assert.notNull( targetType, "TargetType cannot be null." );
         Assert.notNull( targetIds, "TargetIds cannot be null." );
