@@ -77,6 +77,35 @@ public class SymbolFontPuaTest {
     }
 
     @Test
+    @DisplayName("no replacement is itself a private-use codepoint — that would swap one box for another")
+    public void neverReplacesOnePrivateUseCharacterWithAnother() {
+        // Adobe's own table assigns 29 positions into the Corporate Use Subarea, so a table built
+        // from it alone would "repair" U+F0BE to U+F8E7 and change nothing a reader can see. This
+        // pins the rule the table is generated under.
+        for ( char c = 0xF020; c <= 0xF0FE; c++ ) {
+            String one = String.valueOf( c );
+            String repaired = SymbolFontPua.repair( one );
+            if ( repaired.equals( one ) ) {
+                continue; // left alone on purpose; the five unmappable positions land here
+            }
+            char out = repaired.charAt( 0 );
+            assertThat( out >= 0xE000 && out <= 0xF8FF )
+                    .withFailMessage( "U+%04X was replaced by U+%04X, which is still private-use",
+                            ( int ) c, ( int ) out )
+                    .isFalse();
+        }
+    }
+
+    @Test
+    @DisplayName("the four positions the Adobe table corrected in the font-derived one")
+    public void prefersTheAuthoritativeAdobeMapping() {
+        assertThat( SymbolFontPua.repair( "\uF0A2" ) ).isEqualTo( "\u2032" ); // PRIME, not modifier prime
+        assertThat( SymbolFontPua.repair( "\uF0B2" ) ).isEqualTo( "\u2033" ); // DOUBLE PRIME
+        assertThat( SymbolFontPua.repair( "\uF027" ) ).isEqualTo( "\u220B" ); // CONTAINS AS MEMBER
+        assertThat( SymbolFontPua.repair( "\uF06D" ) ).isEqualTo( "\u03BC" ); // Greek mu, not the micro sign
+    }
+
+    @Test
     @DisplayName("U+F0BE, which uib declined to resolve, maps to the line-extension the font names")
     public void resolvesTheExtenderTheFontKnowsAbout() {
         assertThat( SymbolFontPua.repair( "" ) ).isEqualTo( "⎯" );
