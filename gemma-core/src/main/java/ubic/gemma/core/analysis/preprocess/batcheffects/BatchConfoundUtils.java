@@ -42,6 +42,14 @@ public class BatchConfoundUtils {
     private static final Log log = LogFactory.getLog( BatchConfoundUtils.class.getName() );
 
     /**
+     * Smallest number of usable biomaterials the Kruskal-Wallis leg will accept.
+     * <p>
+     * {@link KruskalWallis#test(DoubleArrayList, IntArrayList)} asserts {@code scores.size() > 2} and its statistic
+     * scales by {@code 12 / (n * (n + 1))}, so a smaller sample is either an assertion error or a meaningless number.
+     */
+    private static final int MIN_BIOMATERIALS_FOR_KRUSKAL_WALLIS = 3;
+
+    /**
      *
      * @param ee experiment or experiment subset
      * @return collection of confounds (one for each confounded factor)
@@ -138,7 +146,8 @@ public class BatchConfoundUtils {
                 continue;
 
             // ignore factors that we add with the aim of resolving confounds.
-            if ( ef.getCategory() != null && ef.getCategory().getValue().equalsIgnoreCase( "collection of material" ) )
+            // Characteristic.getValue() is nullable, so compare from the literal side
+            if ( ef.getCategory() != null && "collection of material".equalsIgnoreCase( ef.getCategory().getValue() ) )
                 continue;
 
             Map<BioMaterial, Number> bmToFv = bmfmEntry.getValue();
@@ -153,19 +162,42 @@ public class BatchConfoundUtils {
             int numBatches = batchFactor.getFactorValues().size();
             if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
+                // getBioMaterialFactorMap() pads every factor's map with a null for each biomaterial that has no
+                // factor value, so bmToFv may hold fewer usable entries than numBioMaterials. Append rather than
+                // index into a pre-sized list: setSize() pre-fills with 0.0 / 0, so skipping an entry in a pre-sized
+                // list would leave the two index-aligned lists carrying a fabricated observation in batch 0.
                 DoubleArrayList factorValues = new DoubleArrayList( numBioMaterials );
-                factorValues.setSize( numBioMaterials );
-
                 IntArrayList batches = new IntArrayList( numBioMaterials );
-                batches.setSize( numBioMaterials );
+                Set<Integer> usedBatchesForFactor = new HashSet<>();
 
-                int j = 0;
                 for ( Map.Entry<BioMaterial, Number> bmEntry : bmToFv.entrySet() ) {
                     BioMaterial bm = bmEntry.getKey();
-                    assert !factorValues.isEmpty() : "Biomaterial to factorValue is empty for " + ef;
-                    factorValues.set( j, bmEntry.getValue().doubleValue() ); // ensures we only look at actually used factorvalues.
-                    batches.set( j, batchIndexes.get( batchMembership.get( bm ) ) );
-                    j++;
+                    Number value = bmEntry.getValue();
+                    if ( value == null ) {
+                        // no value for this factor, so this biomaterial cannot be ranked
+                        log.debug( "No factor value for " + bm + " and " + ef + "." );
+                        continue;
+                    }
+                    Integer batchIndex = batchIndexes.get( batchMembership.get( bm ) );
+                    if ( batchIndex == null ) {
+                        // no batch to rank it against
+                        log.warn( "No batch membership for : " + bm );
+                        continue;
+                    }
+                    factorValues.add( value.doubleValue() ); // ensures we only look at actually used factorvalues.
+                    batches.add( batchIndex );
+                    usedBatchesForFactor.add( batchIndex );
+                }
+
+                if ( factorValues.size() < numBioMaterials ) {
+                    log.warn( ( numBioMaterials - factorValues.size() ) + "/" + numBioMaterials + " biomaterials lack a value for "
+                            + ef + " or a batch assignment in " + ee + "; they are excluded from its batch confound test." );
+                }
+
+                if ( factorValues.size() < MIN_BIOMATERIALS_FOR_KRUSKAL_WALLIS || usedBatchesForFactor.size() < 2 ) {
+                    log.warn( "Only " + factorValues.size() + " biomaterial(s) in " + usedBatchesForFactor.size()
+                            + " batch(es) can be tested for confound with " + ef + " in " + ee + ", skipping it." );
+                    continue; // to the next factor
                 }
 
                 p = KruskalWallis.test( factorValues, batches );
