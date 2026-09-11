@@ -174,7 +174,8 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
 
     /**
      * What kind of library it was — GEO's {@code library_strategy}: {@code RNA-Seq}, {@code scRNA-seq},
-     * {@code ATAC-seq} and so on. The enum name as GEO gave it; null when unstated or non-GEO.
+     * {@code ATAC-seq} and so on. GEO's own spelling, not the Java constant name; null when unstated
+     * or non-GEO.
      */
     @Nullable
     @Column(name = "LIBRARY_STRATEGY", columnDefinition = "VARCHAR(255)")

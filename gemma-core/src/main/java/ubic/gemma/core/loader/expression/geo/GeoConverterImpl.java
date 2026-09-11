@@ -1862,7 +1862,10 @@ public class GeoConverterImpl implements GeoConverter {
         bioAssay.setExtractedMolecule( molecule );
         bioAssay.setLibrarySelection( StringUtils.trimToNull( sample.getLibrarySelection() ) );
         GeoLibraryStrategy effectiveStrategy = GeoConverterImpl.effectiveLibStrategy( sample );
-        bioAssay.setLibraryStrategy( effectiveStrategy != null ? effectiveStrategy.toString() : null );
+        // getGeoString(), not toString(): the column stores GEO's spelling. toString() yields the Java
+        // constant name -- RNA_SEQ, and MDB_SEQ for a value GEO writes MBD-Seq -- which is not what
+        // BioAssay.libraryStrategy's javadoc or BioAssayValueObject's @Schema tell a client to expect.
+        bioAssay.setLibraryStrategy( effectiveStrategy != null ? effectiveStrategy.getGeoString() : null );
 
         // Taxon lastTaxon = null;
 
