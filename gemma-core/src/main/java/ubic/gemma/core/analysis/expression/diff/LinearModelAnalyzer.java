@@ -306,7 +306,6 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         // beforehand made that the normal case rather than an edge one: getBaselineConditions falls back to the
         // FIRST sample's factor values, so a factor missing on any later sample still gets an entry.
         dropIncompleteFactors( samplesUsed, factors );
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
 
         // A factor with two curator-marked baselines has no single reference level, so it cannot be run as one
         // contrast. That design is legitimate -- a dataset holding two experiments has a baseline per experiment --
@@ -330,11 +329,15 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * Do the analysis, by subsets if requested
          */
         if ( config.getSubsetFactor() != null ) {
-            return doSubSetAnalysis( expressionExperiment, samplesUsed, factors, baselineConditions, config.getSubsetFactor(), dmatrix, config );
+            return doSubSetAnalysis( expressionExperiment, samplesUsed, factors, config.getSubsetFactor(), dmatrix, config );
         } else {
             /*
              * Analyze the whole thing as one
              */
+            // Derived here rather than above the branch: only this leg models the whole experiment. The subset
+            // leg re-derives per arm, so computing it beforehand was a pass over every sample and factor whose
+            // result that leg discards.
+            Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
             return Collections.singleton( doAnalysis( expressionExperiment, dmatrix, samplesUsed, factors, baselineConditions, null, config ) );
         }
     }
@@ -352,14 +355,13 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         Map<FactorValue, ExpressionDataDoubleMatrix> dmatrixBySubSet = makeSubSetMatrices( dmatrix, samplesUsed, factors, config.getSubsetFactor() );
         // Same ordering as the entry point above: prune first, then describe what is left.
         dropIncompleteFactors( samplesUsed, factors );
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
-        return doSubSetAnalysis( subsets, dmatrixBySubSet, factors, baselineConditions, config );
+        return doSubSetAnalysis( subsets, dmatrixBySubSet, factors, config );
     }
 
     /**
      * Perform an analysis by subset.
      */
-    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( ExpressionExperiment expressionExperiment, List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, Map<ExperimentalFactor, FactorValue> baselineConditions, ExperimentalFactor subsetFactor, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
+    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( ExpressionExperiment expressionExperiment, List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, ExperimentalFactor subsetFactor, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         Assert.isTrue( !factors.contains( subsetFactor ),
                 "Subset factor cannot also be included in the analysis [ Factor was: " + subsetFactor + "]" );
 
@@ -400,10 +402,14 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
         LinearModelAnalyzer.log.info( "Total number of subsets: " + subsets.size() );
 
-        return doSubSetAnalysis( subsets, dmatrixBySubset, factors, baselineConditions, config );
+        return doSubSetAnalysis( subsets, dmatrixBySubset, factors, config );
     }
 
-    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( Map<FactorValue, ExpressionExperimentSubSet> subsets, Map<FactorValue, ExpressionDataDoubleMatrix> dmatrix, List<ExperimentalFactor> factors, Map<ExperimentalFactor, FactorValue> baselineConditions, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
+    /**
+     * Takes no whole-experiment baselines: each arm re-derives its own below, over that subset's samples and
+     * its own surviving factors. A whole-experiment map would name a baseline arm the subset need not contain.
+     */
+    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( Map<FactorValue, ExpressionExperimentSubSet> subsets, Map<FactorValue, ExpressionDataDoubleMatrix> dmatrix, List<ExperimentalFactor> factors, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         /*
          * Now analyze each subset
          */
