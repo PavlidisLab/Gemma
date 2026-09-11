@@ -972,7 +972,11 @@ public class GeoConverterImpl implements GeoConverter {
                 // NULL on 2026-09-10 (cab), lopsided enough that `WHERE VALUE IS NULL` had been missing 99.7%
                 // of them. Emit the same spelling here so the import stops reintroducing the other one.
                 // ORIGINAL_VALUE still carries the submitter's unsplit line, so nothing is lost.
-                String valueOrNull = value.isEmpty() ? null : value;
+                // stripToNull, not isEmpty(): the underscore substitution two lines up turns a
+                // "Strain: _" into a single space, which is non-empty and would store the blank
+                // this is here to stop -- one that WHERE VALUE IS NULL misses, and that a
+                // VALUE <> TRIM(VALUE) sweep misses too when the value is all whitespace.
+                String valueOrNull = StringUtils.stripToNull( value );
 
                 Characteristic gemmaChar = Characteristic.Factory.newInstance();
                 gemmaChar.setOriginalValue( field ); // always retain the original thing, unsplit.
