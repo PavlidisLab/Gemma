@@ -465,6 +465,105 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(value = DataAddedEvent.class,
+            messageSpel = "'Added ' + #result + ' vectors for ' + #quantitationType + ' with dimension ' + #scd + '.'")
+    public int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
+            SingleCellDimension scd, Stream<SingleCellExpressionDataVector> vectors,
+            @Nullable String details, boolean recrateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
+        Assert.notNull( ee.getId(), "The dataset must be persistent." );
+        Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
+        Assert.notNull( quantitationType.getName(), "The quantitation type must have a name." );
+        Assert.isTrue( !existingNames.contains( quantitationType.getName() ),
+                "There is already a quantitation type named " + quantitationType.getName() + " in " + ee + "." );
+        if ( quantitationType.getId() == null ) {
+            log.info( "Creating " + quantitationType + "..." );
+            quantitationType = quantitationTypeService.create( quantitationType, SingleCellExpressionDataVector.class );
+        }
+        boolean scdCreated = false;
+        if ( scd.getId() == null ) {
+            log.info( "Creating a new single-cell dimension for " + ee + ": " + scd );
+            expressionExperimentDao.createSingleCellDimension( ee, scd );
+            scdCreated = true;
+        }
+        int numberOfSamples = scd.getBioAssays().size();
+        boolean[] isExpressed = new boolean[scd.getNumberOfCellIds()];
+        int[] numberOfDesignElements = new int[numberOfSamples];
+        int[] numberOfCellByDesignElements = new int[numberOfSamples];
+        boolean[] isSupportedHolder = { false };
+        boolean[] supportCheckedHolder = { false };
+        // these are arrays because plain integers are not mutable within lambdas
+        int[] vectorCount = { 0 };
+        final QuantitationType finalQt = quantitationType;
+        // streaming variant of validateSingleCellDataVectors; the DAO evicts every 500 vectors so
+        // the whole set is never resident at once
+        Stream<SingleCellExpressionDataVector> validated = validateSingleCellDataVectors( ee, finalQt, scd, vectors, scdCreated );
+        Iterable<SingleCellExpressionDataVector> enriched = () -> validated.peek( v -> {
+            vectorCount[0]++;
+            if ( !supportCheckedHolder[0] ) {
+                isSupportedHolder[0] = SingleCellSparsityMetrics.isSupported( v );
+                supportCheckedHolder[0] = true;
+            }
+            if ( isSupportedHolder[0] && finalQt.getIsSingleCellPreferred() ) {
+                for ( int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++ ) {
+                    SingleCellSparsityMetrics.addExpressedCells( v, sampleIndex, null, -1, null, isExpressed );
+                    numberOfDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfDesignElements( v, sampleIndex, null, -1, null );
+                    numberOfCellByDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfCellsByDesignElements( v, sampleIndex, null, -1, null );
+                }
+            }
+        } ).iterator();
+        log.info( String.format( "Streaming single-cell vectors to %s for %s", ee, finalQt ) );
+        expressionExperimentDao.createSingleCellDataVectors( ee, enriched );
+        int numVectorsAdded = vectorCount[0];
+        Assert.isTrue( numVectorsAdded > 0, "At least one single-cell vector has to be supplied; use removeSingleCellDataVectors() to remove vectors instead." );
+        log.info( String.format( "Added %d single-cell vectors to %s for %s", numVectorsAdded, ee, finalQt ) );
+        ee.getQuantitationTypes().add( finalQt );
+        applyPreferredSingleCellVectors( ee, finalQt );
+        if ( finalQt.getIsSingleCellPreferred() ) {
+            log.info( "Applying single-cell sparsity metrics for " + finalQt + "..." );
+            if ( isSupportedHolder[0] ) {
+                int totalCells = 0;
+                List<BioAssay> bioAssays = scd.getBioAssays();
+                for ( int si = 0; si < bioAssays.size(); si++ ) {
+                    int start = scd.getBioAssaysOffset()[si];
+                    int end = start + scd.getNumberOfCellIdsBySample( si );
+                    int numCells = 0;
+                    for ( int ci = start; ci < end; ci++ ) {
+                        if ( isExpressed[ci] ) numCells++;
+                    }
+                    totalCells += numCells;
+                    bioAssays.get( si ).setNumberOfCells( numCells );
+                    bioAssays.get( si ).setNumberOfDesignElements( numberOfDesignElements[si] );
+                    bioAssays.get( si ).setNumberOfCellsByDesignElements( numberOfCellByDesignElements[si] );
+                }
+                ee.setNumberOfCells( totalCells );
+            } else {
+                log.warn( "Sparsity metrics cannot be computed for " + ee + ", they will be set to null." );
+                for ( BioAssay ba : ee.getBioAssays() ) {
+                    ba.setNumberOfCells( null );
+                    ba.setNumberOfDesignElements( null );
+                    ba.setNumberOfCellsByDesignElements( null );
+                }
+                ee.setNumberOfCells( null );
+            }
+        }
+        expressionExperimentDao.update( ee );
+        if ( finalQt.getIsSingleCellPreferred() && scdCreated ) {
+            CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
+            if ( preferredLabelling != null ) {
+                log.info( "New single-cell preferred vectors were added, recreating the cell type factor." );
+                createCellTypeFactor( ee, preferredLabelling, recrateCellTypeFactorIfNecessary, ignoreCompatibleFactor );
+            } else if ( recrateCellTypeFactorIfNecessary ) {
+                log.info( "New single-cell preferred vectors do not have cell type labelling, removing any existing cell type factor..." );
+                removeCellTypeFactorIfExists( ee );
+            } else {
+                log.warn( "New single-cell preferred vectors do not have cell type labelling, but the configuration indicates not to recreate the cell type factor." );
+            }
+        }
+        return numVectorsAdded;
+    }
+
+    @Override
+    @Transactional
     @Audited(value = DataReplacedEvent.class,
             messageSpel = "'Replaced ' + #result + ' vectors with ' + #vectors.size() + ' vectors for ' + #quantitationType + ' with dimension ' + #vectors.iterator().next().singleCellDimension + '.'")
     public int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean removeOrRecreateCellTypeFactor, boolean ignoreCompatibleFactor ) {
@@ -692,6 +791,63 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             ba.setNumberOfCellsByDesignElements( null );
         }
         ee.setNumberOfCells( null );
+    }
+
+    /**
+     * Streaming counterpart of {@link #validateSingleCellDataVectors(ExpressionExperiment, QuantitationType, Collection)}.
+     * <p>
+     * Checks that can be made without consuming the stream are done upfront; the rest are attached
+     * as a {@code peek} so each vector is validated as it passes through, and the enrichment that
+     * sets the experiment happens in the same pass.
+     */
+    private Stream<SingleCellExpressionDataVector> validateSingleCellDataVectors( ExpressionExperiment ee,
+            QuantitationType quantitationType, SingleCellDimension scd,
+            Stream<SingleCellExpressionDataVector> vectors, boolean scdJustCreated ) {
+        // scdJustCreated: skip the "belongs to existing vectors" check when the SCD was just persisted
+        // in this same call -- it cannot appear in ee's vectors yet since none have been written.
+        Assert.isTrue( scd.getId() == null || scdJustCreated
+                        || ee.getSingleCellExpressionDataVectors().stream()
+                        .map( SingleCellExpressionDataVector::getSingleCellDimension ).anyMatch( scd::equals ),
+                scd + " is persistent, but does not belong to any single-cell vector of this dataset: " + ee );
+        int numCells = scd.getNumberOfCellIds();
+        int sizeInBytes = quantitationType.getRepresentation().getSizeInBytes();
+        // Platform is derived from the first vector; subsequent vectors are checked against it.
+        ArrayDesign[] platformHolder = { null };
+        return vectors.peek( v -> {
+            Assert.isTrue( v.getExpressionExperiment() == null || v.getExpressionExperiment().equals( ee ),
+                    "Some of the vectors belong to other expression experiments." );
+            Assert.isTrue( v.getQuantitationType() == quantitationType,
+                    "All vectors must have the same quantitation type: " + quantitationType );
+            Assert.isTrue( v.getDesignElement() != null && v.getDesignElement().getId() != null,
+                    "All vectors must have a persistent design element." );
+            Assert.isTrue( v.getSingleCellDimension() == scd,
+                    "All vectors must share the same dimension: " + scd );
+            // TODO: allow vectors from multiple platforms
+            ArrayDesign platform = v.getDesignElement().getArrayDesign();
+            if ( platformHolder[0] == null ) {
+                platformHolder[0] = platform;
+                Assert.isTrue( scd.getBioAssays().stream().allMatch( ba -> ba.getArrayDesignUsed().equals( platform ) ),
+                        "All the BioAssays must use a platform that match that of the vectors: " + platform );
+            } else {
+                Assert.isTrue( platform.equals( platformHolder[0] ),
+                        "All vectors must have a persistent design element from the same platform." );
+            }
+            if ( sizeInBytes != -1 ) {
+                Assert.isTrue( v.getData().length == sizeInBytes * v.getDataIndices().length,
+                        "The data length must equal the number of indices times the size of the representation." );
+            } else {
+                Assert.isTrue( v.getData().length >= v.getDataIndices().length,
+                        "The data length must be at least the number of indices." );
+            }
+            // 1. monotonous, 2. distinct, 3. within the range of the cell IDs
+            int lastI = -1;
+            for ( int i : v.getDataIndices() ) {
+                Assert.isTrue( i > lastI, "Data indices must be strictly increasing." );
+                Assert.isTrue( i < numCells, "Data indices must fall within the range of cell IDs." );
+                lastI = i;
+            }
+            v.setExpressionExperiment( ee );
+        } );
     }
 
     private void validateSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
