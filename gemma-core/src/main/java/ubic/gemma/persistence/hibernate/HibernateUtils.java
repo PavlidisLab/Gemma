@@ -11,6 +11,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Pre-phase-2 this class did deep Hibernate-internal introspection
@@ -88,6 +90,32 @@ public class HibernateUtils {
      * before the session is closed — after that the connection is back in the pool and would carry
      * the lifted value to its next borrower.
      */
+    /**
+     * Lift the statement timeout for a streamed read, run {@code streamCreator}, and register the
+     * restore on the resulting stream.
+     * <p>
+     * Use this rather than calling {@link #liftStatementTimeout(Session)} directly. The lift takes
+     * effect the moment it is issued, while the restore only runs once it is attached via
+     * {@link Stream#onClose}; anything that throws in between — a malformed query, a closed session,
+     * an error materializing the {@code ScrollableResults} — leaves the session with no cap. For a
+     * stream over a session this DAO opened, the caller then closes that session and Connector/J
+     * hands the connection back to Hikari, which resets autoCommit, read-only and isolation but not
+     * arbitrary session variables, so the next borrower of that connection runs uncapped until the
+     * pool retires it.
+     *
+     * @param session the session to lift the timeout on, and the one {@code streamCreator} must query
+     */
+    public static <T> Stream<T> streamWithoutStatementTimeout( Session session, Supplier<Stream<T>> streamCreator ) {
+        Runnable restoreStatementTimeout = liftStatementTimeout( session );
+        try {
+            return streamCreator.get()
+                    .onClose( restoreStatementTimeout );
+        } catch ( Throwable t ) {
+            restoreStatementTimeout.run();
+            throw t;
+        }
+    }
+
     public static Runnable liftStatementTimeout( Session session ) {
         long[] previous = { 0L };
         try {
