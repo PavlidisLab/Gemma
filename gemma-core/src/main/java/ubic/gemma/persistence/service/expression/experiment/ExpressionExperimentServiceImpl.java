@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.core.util.SymbolFontPua;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -2767,6 +2768,10 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public boolean updateNameAndDescription( ExpressionExperiment ee, @Nullable String name, @Nullable String description ) {
+        // Word pastes Symbol-font Greek as private-use codepoints that no font can render. This is the
+        // route a curator's paste takes, so repair here rather than trusting the caller. See SymbolFontPua.
+        name = SymbolFontPua.repair( name );
+        description = SymbolFontPua.repair( description );
         Assert.isTrue( name != null || description != null, "Provide a name and/or a description to update." );
         Assert.isTrue( name == null || StringUtils.isNotBlank( name ), "The name must not be blank when provided." );
 
@@ -2839,15 +2844,18 @@ public class ExpressionExperimentServiceImpl
                     basicsChanged = true;
                 }
             }
-            if ( request.getName() != null && !request.getName().equals( ee.getName() ) ) {
+            // Same repair as updateNameAndDescription: a commit carries curator-typed prose too.
+            String requestedName = SymbolFontPua.repair( request.getName() );
+            String requestedDescription = SymbolFontPua.repair( request.getDescription() );
+            if ( requestedName != null && !requestedName.equals( ee.getName() ) ) {
                 if ( !dryRun ) {
-                    ee.setName( request.getName() );
+                    ee.setName( requestedName );
                 }
                 basicsChanged = true;
             }
-            if ( request.getDescription() != null && !request.getDescription().equals( ee.getDescription() ) ) {
+            if ( requestedDescription != null && !requestedDescription.equals( ee.getDescription() ) ) {
                 if ( !dryRun ) {
-                    ee.setDescription( request.getDescription() );
+                    ee.setDescription( requestedDescription );
                 }
                 basicsChanged = true;
             }

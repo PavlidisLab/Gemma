@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
+import ubic.gemma.core.util.SymbolFontPua;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
@@ -57,7 +58,8 @@ public class CellXGeneConverter {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( datasetShortName );
         ee.setName( datasetMetadata.getName() );
-        ee.setDescription( collectionMetadata.getDescription() );
+        // external metadata we do not control; same repair as the GEO path
+        ee.setDescription( SymbolFontPua.repair( collectionMetadata.getDescription() ) );
         ee.setAccession( convertAccession( datasetMetadata ) );
         ee.setSource( "Imported from CELLxGENE." );
         List<BibliographicReference> bibrefs = convertPublications( collectionMetadata );

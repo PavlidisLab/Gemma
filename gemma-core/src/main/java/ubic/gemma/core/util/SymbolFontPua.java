@@ -9,7 +9,7 @@
  *
  *       http://www.apache.org/licenses/LICENSE-2.0
  */
-package ubic.gemma.core.loader.expression.geo;
+package ubic.gemma.core.util;
 
 import lombok.extern.slf4j.Slf4j;
 

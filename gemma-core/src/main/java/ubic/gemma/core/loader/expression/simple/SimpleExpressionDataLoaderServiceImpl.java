@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
+import ubic.gemma.core.util.SymbolFontPua;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -115,7 +116,8 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         experiment.setName( requireNonNull( metaData.getName(), "No name set." ) );
         experiment.setShortName( requireNonNull( metaData.getShortName(), "No short name set." ) );
-        experiment.setDescription( metaData.getDescription() );
+        // user-supplied metadata, so the same Word-paste risk as a curator's edit
+        experiment.setDescription( SymbolFontPua.repair( metaData.getDescription() ) );
         experiment.setTaxon( taxon );
 
         experiment.setSource( "Import via matrix flat file." + ( StringUtils.isBlank( metaData.getSource() ) ?

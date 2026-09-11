@@ -1,4 +1,4 @@
-package ubic.gemma.core.loader.expression.geo;
+package ubic.gemma.core.util;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
