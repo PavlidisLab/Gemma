@@ -118,7 +118,13 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
                 throw new ParseException( "The -type,--type option is required when -identifier,--identifier is set." );
             }
             for ( String raw : rawIds ) {
-                this.identifiers.add( Long.parseLong( raw.trim() ) );
+                try {
+                    this.identifiers.add( Long.parseLong( raw.trim() ) );
+                } catch ( NumberFormatException e ) {
+                    // processOptions turns a ParseException into a usage error naming the option;
+                    // an unchecked NumberFormatException escapes as a stack trace that does not.
+                    throw new ParseException( "The -identifier,--identifier option takes numeric ids, got '" + raw.trim() + "'." );
+                }
             }
         }
         this.lintPermissions = commandLine.hasOption( "lintPermissions" );
