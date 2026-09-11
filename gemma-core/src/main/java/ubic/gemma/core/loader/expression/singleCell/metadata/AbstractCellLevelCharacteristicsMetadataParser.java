@@ -17,6 +17,7 @@ import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
 import org.springframework.lang.Nullable;
+import ubic.gemma.core.ontology.OntologyUtils;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -123,7 +124,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
                 Category category = getCategory( record );
                 String categoryId = getCategoryId( record );
                 String value = getValue( record );
-                String valueUri = getValueUri( record );
+                String valueUri = normalizeValueUri( getValueUri( record ), record );
                 if ( value == null && valueUri != null ) {
                     throw new IllegalArgumentException( "A value with a non-blank URI must have a label." );
                 }
@@ -274,6 +275,16 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
                     }
                     continue;
                 }
+                if ( defaultValueUri != null ) {
+                    // Same boundary as the file's own value_uri column, different source: this one comes from an
+                    // operator argument, so an unrecognizable value is a command to fix rather than a cell to skip.
+                    String normalizedDefault = OntologyUtils.termIdOrUriToUri( defaultValueUri );
+                    if ( normalizedDefault == null ) {
+                        throw new IllegalArgumentException( "The default value URI '" + defaultValueUri
+                                + "' is neither a URI nor a recognized term identifier." );
+                    }
+                    defaultValueUri = normalizedDefault;
+                }
                 Characteristic defaultC = Characteristic.Factory.newInstance( sampleC.getCategory(), sampleC.getCategoryUri(), defaultValue, defaultValueUri );
                 cellTypesToIdByCategoryId.get( cid ).get( defaultC );
                 int defaultCode;
@@ -356,6 +367,34 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
 
     @Nullable
     protected abstract String getValueUri( CSVRecord record );
+
+    /**
+     * Normalize a term identifier read verbatim from the metadata file into the URI form Gemma stores.
+     *
+     * <p>🛑 The category side of this parser resolves through {@link #getCategory(CSVRecord)} while the value
+     * side was passed through untouched, and that asymmetry is the defect: a file written in CELLxGENE's
+     * native CURIE form ({@code CL:0000129}) put the CURIE in {@code VALUE_URI} while {@code CATEGORY_URI} on
+     * the same row held a resolved PURL. 64,728 such rows on production, measured 2026-09-10.</p>
+     *
+     * <p>Something that is not an identifier at all — a label like {@code MacroEC}, or {@code NA} — is dropped
+     * to null with a warning rather than stored. The label already lives in the value column; the same text in
+     * the URI column resolves nowhere and would satisfy every {@code valueUri != null} test in the codebase.
+     * Dropping it is not lossy, and failing the whole load over one malformed cell would be worse.</p>
+     */
+    @Nullable
+    private String normalizeValueUri( @Nullable String valueUri, CSVRecord record ) {
+        if ( valueUri == null ) {
+            return null;
+        }
+        String normalized = OntologyUtils.termIdOrUriToUri( valueUri );
+        if ( normalized == null ) {
+            log.warn( "Ignoring '" + valueUri + "' on line " + record.getRecordNumber()
+                    + ": it is neither a URI nor a recognized term identifier, so it cannot be stored as one." );
+        } else if ( !normalized.equals( valueUri ) ) {
+            log.debug( "Normalized term identifier '" + valueUri + "' to '" + normalized + "'." );
+        }
+        return normalized;
+    }
 
     /**
      * Create a cell-level characteristics object from the parsed data.

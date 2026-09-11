@@ -53,7 +53,8 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
     /**
      * Ontology terms in CELLxGENE are split in two separate column: one for the label and one for the URI.
      */
-    private Set<Characteristic> mergeOntologyTerms( Set<Characteristic> cs ) {
+    // package-private for direct unit testing
+    Set<Characteristic> mergeOntologyTerms( Set<Characteristic> cs ) {
         cs = new HashSet<>( cs );
         Map<String, Set<Characteristic>> characteristicsByCategory = cs.stream()
                 .filter( c -> c.getCategory() != null )
@@ -83,7 +84,12 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
                         // treat it as a free-text term
                         ontologyLabel.setValueUri( null );
                         cs.remove( ontologyTerm );
-                    } else if ( "||".contains( ontologyTerm.getValue() ) ) {
+                        // 🛑 The operands were the other way round: `"||".contains( value )` asks whether the
+                        // two-character string contains the VALUE, which is true only for "", "|" and "||". So a
+                        // genuine multi-term cell fell through to the single-term branch below and was stored whole,
+                        // producing one VALUE_URI holding two identifiers -- 723 such rows on production, measured
+                        // 2026-09-10 ("http://...MONDO_0001627 || MONDO:0004977").
+                    } else if ( ontologyTerm.getValue().contains( "||" ) ) {
                         // multi-value, we drop the original label & term, but we create a new characteristic for each
                         // term
                         cs.remove( ontologyLabel );
@@ -92,8 +98,13 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
                             if ( termId.equals( "na" ) || termId.equals( "unknown" ) ) {
                                 continue;
                             }
-                            cs.add( Characteristic.Factory.newInstance( category, null,
-                                    ontologyLabel.getValue(), CellXGeneUtils.getTermUri( termId ) ) );
+                            // labelColumn, not category: the category here is the "*_ontology_term_id"
+                            // COLUMN, and filing the result under it would categorize a cell type as
+                            // "cell_type_ontology_term_id". The single-term branch below keeps the label
+                            // characteristic, whose category is already labelColumn; this matches it. Dormant
+                            // until the guard above was fixed, so it had never run.
+                            cs.add( Characteristic.Factory.newInstance( labelColumn, null,
+                                    ontologyLabel.getValue(), CellXGeneUtils.getTermUri( termId.trim() ) ) );
                         }
                     } else {
                         // move the URI to the label characteristic and drop the term one
