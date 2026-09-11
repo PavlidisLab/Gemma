@@ -159,8 +159,11 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // stored. The regressed leg runs with requireSequences=false and its rows are residuals, so its counts
         // would answer a different question.
         ExpressionExperimentFilterResult filterResult = new ExpressionExperimentFilterResult();
-        SampleCoexpressionMatrix matrix = this.getMatrix( ee, false, vectors, filterResult );
-        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( ee, true, vectors, null );
+        // Both legs rebuild the same unmasked matrix off the raw vectors and differ only in how they
+        // filter it, so the expensive half is computed once and shared.
+        UnmaskedMatrix unmasked = new UnmaskedMatrix();
+        SampleCoexpressionMatrix matrix = this.getMatrix( ee, false, vectors, filterResult, unmasked );
+        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( ee, true, vectors, null, unmasked );
         return new PreparedCoexMatrices( matrix, regressedMatrix,
                 matrix != null ? toAttritionPayload( cormatFilterConfig( true ), filterResult ) : null );
     }
@@ -277,13 +280,21 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     @Nullable
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
-            Collection<ProcessedExpressionDataVector> vectors, @Nullable ExpressionExperimentFilterResult filterResult ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, @Nullable ExpressionExperimentFilterResult filterResult,
+            UnmaskedMatrix unmaskedMatrix ) throws FilteringException {
         SampleCoexpressionAnalysisServiceImpl.log.info( String
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_COMPUTING_SCM, ee.getId(), regress ) );
 
-        ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, vectors, filterResult );
+        ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, vectors, filterResult, unmaskedMatrix );
         if ( mat == null ) {
-            log.warn( "Could not get data matrix for " + ee );
+            // The regressed leg returns null on a NORMAL outcome -- no factor passed the SVD importance
+            // threshold -- and regressMajorFactors has already said so. Reporting that as a failure to obtain
+            // data put a WARN beside the genuine ones for every experiment without an important factor.
+            if ( regress ) {
+                log.debug( "No regressed data matrix for " + ee + "; see the reason logged above." );
+            } else {
+                log.warn( "Could not get data matrix for " + ee );
+            }
             return null;
         }
 
@@ -314,7 +325,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     @Nullable
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
-            Collection<ProcessedExpressionDataVector> vectors, @Nullable ExpressionExperimentFilterResult filterResult ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, @Nullable ExpressionExperimentFilterResult filterResult,
+            UnmaskedMatrix unmaskedMatrix ) throws FilteringException {
         if ( vectors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
             return null;
@@ -327,14 +339,18 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                         .warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_DESIGN );
                 return null;
             }
-            ExpressionDataDoubleMatrix unmasked = this.loadUnmaskedDataMatrix( ee, false, new ExpressionExperimentFilterResult() );
+            ExpressionDataDoubleMatrix unmasked = this.loadUnmaskedDataMatrix( ee, false, new ExpressionExperimentFilterResult(), unmaskedMatrix );
             mat = unmasked != null
                     ? this.regressMajorFactors( ee, maskOutlierColumns( unmasked ), unmasked )
                     : this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false, filterResult ), null );
 
         } else {
-            ExpressionDataDoubleMatrix unmasked = filterResult != null
-                    ? this.loadUnmaskedDataMatrix( ee, true, filterResult ) : null;
+            // Not gated on filterResult: whether this run records attrition and whether the correlation
+            // matrix is built on unmasked data are unrelated questions, and tying them meant a caller that
+            // passed no payload silently got the masked matrix back -- the defect loadUnmaskedDataMatrix
+            // exists to fix. The rebuild is gated inside, on the experiment actually having a flagged outlier.
+            ExpressionDataDoubleMatrix unmasked = this.loadUnmaskedDataMatrix( ee, true,
+                    filterResult != null ? filterResult : new ExpressionExperimentFilterResult(), unmaskedMatrix );
             mat = unmasked != null ? unmasked : this.loadFilteredDataMatrix( ee, vectors, true, filterResult );
         }
 
@@ -367,31 +383,62 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Nullable
     private ExpressionDataDoubleMatrix loadUnmaskedDataMatrix( ExpressionExperiment ee,
-            boolean requireSequences, ExpressionExperimentFilterResult filterResult ) throws FilteringException {
-        if ( !hasFlaggedOutlier( ee ) ) {
+            boolean requireSequences, ExpressionExperimentFilterResult filterResult,
+            UnmaskedMatrix unmaskedMatrix ) throws FilteringException {
+        ExpressionDataDoubleMatrix unmasked = unmaskedMatrix.get( ee );
+        if ( unmasked == null ) {
             return null;
         }
-        ExpressionDataDoubleMatrix unmasked;
-        try {
-            unmasked = processedExpressionDataVectorService.computeUnmaskedProcessedDataMatrix( ee, true );
-        } catch ( QuantitationTypeDetectionException | QuantitationTypeConversionException e ) {
-            // A dataset whose raw data cannot be reprocessed still gets a correlation matrix -- the masked one,
-            // which is what it had before. Failing the whole run to preserve outlier evidence would be a poor
-            // trade.
-            log.warn( "Could not rebuild unmasked data for " + ee + "; the correlation matrix will keep the "
-                    + "flagged samples masked.", e );
-            return null;
-        }
-        // the filter derives the platforms from the matrix itself
+        // the filter derives the platforms from the matrix itself. It reassigns rather than mutating, so the
+        // two legs can filter the same source matrix under different settings.
         return new ExpressionExperimentFilter( cormatFilterConfig( requireSequences ) ).filter( unmasked, filterResult );
     }
 
     /**
-     * 🛑 Thaws before reading the assays. Callers reach {@link #prepare} with an experiment thawed to different
-     * depths -- the CLI hands over a {@code thawLiter} one, which does NOT initialize {@code bioAssays}
-     * ({@code thawLite} is {@code thawLiter} plus that collection). Walking it directly threw
-     * {@code LazyInitializationException} and failed the whole run.
+     * The unmasked processed-data matrix for one {@link #prepare} run, computed at most once.
+     * <p>
+     * {@code computeUnmaskedProcessedDataMatrix} is the whole processing pipeline off the raw vectors --
+     * missing-value masking, log transform, a whole-matrix quantile normalization. Both legs of a prepare()
+     * need it and they differ only in how they FILTER the result, so computing it per leg made every
+     * preprocessing run of an outlier-flagged dataset pay that pipeline twice.
+     * <p>
+     * A null result is cached too: it means either that the experiment has no flagged outlier, or that its
+     * raw data could not be reprocessed. Both are settled facts for the run, and re-asking would repeat the
+     * failure and its warning.
      */
+    private class UnmaskedMatrix {
+
+        private boolean computed;
+        @Nullable
+        private ExpressionDataDoubleMatrix value;
+
+        @Nullable
+        ExpressionDataDoubleMatrix get( ExpressionExperiment ee ) {
+            if ( !computed ) {
+                computed = true;
+                value = compute( ee );
+            }
+            return value;
+        }
+
+        @Nullable
+        private ExpressionDataDoubleMatrix compute( ExpressionExperiment ee ) {
+            if ( !hasFlaggedOutlier( ee ) ) {
+                return null;
+            }
+            try {
+                return processedExpressionDataVectorService.computeUnmaskedProcessedDataMatrix( ee, true );
+            } catch ( QuantitationTypeDetectionException | QuantitationTypeConversionException e ) {
+                // A dataset whose raw data cannot be reprocessed still gets a correlation matrix -- the masked
+                // one, which is what it had before. Failing the whole run to preserve outlier evidence would be
+                // a poor trade.
+                log.warn( "Could not rebuild unmasked data for " + ee + "; the correlation matrix will keep the "
+                        + "flagged samples masked.", e );
+                return null;
+            }
+        }
+    }
+
     /**
      * A copy of {@code matrix} with the flagged assays' values blanked -- i.e. what the stored processed data
      * looks like. Fitting on this keeps the model identical to what it has always been.
@@ -412,6 +459,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         return matrix.withMatrix( copy );
     }
 
+    /**
+     * 🛑 Thaws before reading the assays. Callers reach {@link #prepare} with an experiment thawed to different
+     * depths -- the CLI hands over a {@code thawLiter} one, which does NOT initialize {@code bioAssays}
+     * ({@code thawLite} is {@code thawLiter} plus that collection). Walking it directly threw
+     * {@code LazyInitializationException} and failed the whole run.
+     */
     private boolean hasFlaggedOutlier( ExpressionExperiment ee ) {
         for ( BioAssay ba : expressionExperimentReadService.thawLite( ee ).getBioAssays() ) {
             if ( ba.getIsOutlier() ) {
@@ -483,6 +536,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      * @param mat the double matrix of processed vectors to regress
      * @return regressed double matrix
      */
+    @Nullable
     private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat,
             @Nullable ExpressionDataDoubleMatrix unmasked ) {
         Set<ExperimentalFactor> importantFactors = this.getImportantFactors( ee );
