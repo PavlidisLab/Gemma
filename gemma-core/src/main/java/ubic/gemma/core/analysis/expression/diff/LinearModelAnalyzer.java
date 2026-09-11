@@ -409,11 +409,13 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          */
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         Collection<AnalysisException> subsetExceptions = new HashSet<>();
+        int skippedSubsets = 0;
         for ( Map.Entry<FactorValue, ExpressionExperimentSubSet> sEntry : subsets.entrySet() ) {
             FactorValue subsetFactorValue = sEntry.getKey();
             ExpressionExperimentSubSet subSet = sEntry.getValue();
             if ( FactorValueUtils.isDeExcluded( subsetFactorValue ) ) {
                 LinearModelAnalyzer.log.warn( LinearModelAnalyzer.EXCLUDE_WARNING );
+                skippedSubsets++;
                 continue;
             }
 
@@ -425,6 +427,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             if ( subsetMatrix == null ) {
                 LinearModelAnalyzer.log.warn( "No analyzed samples left in " + subSet + " (" + subsetFactorValue
                         + "); skipping it." );
+                skippedSubsets++;
                 continue;
             }
 
@@ -438,6 +441,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             if ( subsetFactors.isEmpty() ) {
                 LinearModelAnalyzer.log
                         .warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
+                skippedSubsets++;
                 continue;
             }
 
@@ -482,9 +486,21 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             }
         }
 
-        if ( results.isEmpty() && !subsetExceptions.isEmpty() ) {
-            // all non-skipped analyses failed
-            throw new AllSubSetAnalysesFailedException( "All subset analyses failed for " + config.getSubsetFactor(), subsetExceptions, config );
+        if ( results.isEmpty() ) {
+            // Producing no analysis at all is a failure of the experiment, whether the subsets threw or were
+            // skipped. A subset leaves this loop without an exception when it is DE_Exclude, when nothing is left
+            // to analyze in it, or when fixFactorsForSubset finds nothing it can model -- and the old condition
+            // (empty AND at least one exception) let every-subset-skipped return an empty collection. GSE74400
+            // (eid 12822) did: both its subsets were skipped as "design is not valid", the CLI printed
+            // "Performed 0 differential expression analyses." through addSuccessObject and exited 0, and a batch
+            // runner testing the exit status treated it as done.
+            //
+            // This is a different question from -ignoreFailingSubsets, which is about carrying on when SOME
+            // subsets succeeded. redoAnalyses already raises AllAnalysesFailedException on an empty result with
+            // no exceptions collected; the subset level now agrees with it.
+            throw new AllSubSetAnalysesFailedException( String.format(
+                    "No differential expression analysis was produced for any subset of %s: %d failed, %d skipped.",
+                    config.getSubsetFactor(), subsetExceptions.size(), skippedSubsets ), subsetExceptions, config );
         }
 
         return results;

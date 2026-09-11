@@ -532,13 +532,26 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         }
 
         Collection<DifferentialExpressionAnalysis> results;
+        String performed;
         if ( factorSelectionMode == FactorSelectionMode.REDO ) {
             results = redoDifferentialExpressionAnalyses( ee, config );
-            addSuccessObject( ee, "Performed " + results.size() + " differential expression analyses based on a previous analyses." );
+            performed = " differential expression analyses based on a previous analyses.";
         } else {
             results = runDifferentialExpressionAnalyses( ee, config );
-            addSuccessObject( ee, "Performed " + results.size() + " differential expression analyses." );
+            performed = " differential expression analyses.";
         }
+
+        // An experiment that produced nothing is not a success to report. The analyzer raises
+        // AllSubSetAnalysesFailedException when no subset yields an analysis, so nothing should reach here empty;
+        // this is the guard at the reporting site, which is where the damage was done. GSE74400 (eid 12822) had
+        // both its subsets skipped, and "Performed 0 differential expression analyses." went out through
+        // addSuccessObject with exit status 0, so a batch runner testing the exit status believed it for hours.
+        if ( results.isEmpty() ) {
+            throw new RuntimeException( "No differential expression analysis was performed for " + ee.getShortName()
+                    + "; see the preceding log for the subsets that were skipped or failed." );
+        }
+
+        addSuccessObject( ee, "Performed " + results.size() + performed );
 
         if ( config.isPersist() ) {
             refreshDeaFromGemmaWeb( ee );
