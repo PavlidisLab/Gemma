@@ -350,7 +350,13 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
      */
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        // Characteristic.class, not getClass(): equals() matches on `instanceof Characteristic`, so a
+        // Statement can be equal to a Characteristic and the two MUST hash alike. getClass() gave them
+        // different constants, and a Set<Characteristic> holding both -- which is what an
+        // ExpressionExperiment's characteristics are once GEO import adds statement-shaped tags --
+        // then answered contains()/remove() from the wrong bucket. It also split a Hibernate proxy
+        // from the instance it stands for, since a proxy's getClass() is the generated subclass.
+        return Characteristic.class.hashCode();
     }
 
     @Override

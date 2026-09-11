@@ -343,8 +343,11 @@ public class Statement extends Characteristic {
     }
 
     /**
-     * Constant, inherited in spirit from {@link Characteristic#hashCode()} and
-     * restated here only to say why the predicate fields are NOT hashed.
+     * Constant, and the SAME constant {@link Characteristic#hashCode()} returns.
+     * Restated here to say why the predicate fields are NOT hashed, and why this
+     * cannot be {@code getClass().hashCode()}: {@link Characteristic#equals} calls
+     * a Statement equal to a Characteristic with the same category and value, so
+     * a per-class constant would break the equals/hashCode contract between them.
      *
      * <p>This hashed the predicate and object terms on top of the superclass's
      * mutable category/value hash. Every one of those fields is edited in place
@@ -355,7 +358,7 @@ public class Statement extends Characteristic {
      */
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Characteristic.class.hashCode();
     }
 
     @Override
