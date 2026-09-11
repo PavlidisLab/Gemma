@@ -11,7 +11,7 @@ import ubic.gemma.core.loader.expression.cellxgene.CellXGeneDataLoaderService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import org.springframework.lang.Nullable;
+import javax.annotation.Nullable;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addGenericPlatformOption;
 
@@ -36,6 +36,7 @@ public class CellXGeneDataAdderCli extends AbstractAuthenticatedCLI {
     private boolean skipData;
     private boolean keepPooledSample;
     private boolean keepUnknownSample;
+    private boolean dryRun;
 
     @Override
     public String getCommandName() {
@@ -62,6 +63,7 @@ public class CellXGeneDataAdderCli extends AbstractAuthenticatedCLI {
         options.addOption( "skipData", "skip-data", false, "Only load experiment metadata." );
         options.addOption( "keepPooledSample", "keep-pooled-sample", false, "Keep the pooled sample." );
         options.addOption( "keepUnknownSample", "keep-unknown-sample", false, "Keep the unknown sample." );
+        options.addOption( "dryRun", "dry-run", false, "Don't upload anything to gemma" );
     }
 
     @Override
@@ -74,6 +76,7 @@ public class CellXGeneDataAdderCli extends AbstractAuthenticatedCLI {
         skipData = commandLine.hasOption( "skipData" );
         keepPooledSample = commandLine.hasOption( "keepPooledSample" );
         keepUnknownSample = commandLine.hasOption( "keepUnknownSample" );
+        dryRun = commandLine.hasOption( "dryRun" );
     }
 
     @Override
@@ -83,7 +86,7 @@ public class CellXGeneDataAdderCli extends AbstractAuthenticatedCLI {
         }
         ArrayDesign platform = entityLocator.locateArrayDesign( platformIdentifier );
         ExpressionExperiment ee = cellXGeneDataLoaderService.fetchAndLoad( collectionId, datasetId, assetId, platform,
-                datasetShortName, !skipData, keepPooledSample, keepUnknownSample );
+                datasetShortName, !skipData, keepPooledSample, keepUnknownSample, dryRun );
         addSuccessObject( ee.getShortName(), "Added" );
     }
 }

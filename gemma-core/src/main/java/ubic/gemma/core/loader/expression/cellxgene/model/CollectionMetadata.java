@@ -2,7 +2,7 @@ package ubic.gemma.core.loader.expression.cellxgene.model;
 
 import lombok.Data;
 
-import org.springframework.lang.Nullable;
+import javax.annotation.Nullable;
 import java.util.List;
 
 @Data

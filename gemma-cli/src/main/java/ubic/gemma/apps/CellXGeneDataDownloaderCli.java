@@ -13,7 +13,7 @@ import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 
-import org.springframework.lang.Nullable;
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -60,9 +60,6 @@ public class CellXGeneDataDownloaderCli extends AbstractCLI {
 
     @Override
     protected void doWork() throws Exception {
-        // Multi-gigabyte downloads: name the destination before starting, so a run against the
-        // wrong tree is obvious from the first log line rather than after the transfer.
-        log.info( String.format( "Output will be written to: %s", cellByGeneDownloadDir ) );
         CellXGeneFetcher fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellByGeneDownloadDir );
         if ( getCliContext().getConsole() != null ) {
             fetcher.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );

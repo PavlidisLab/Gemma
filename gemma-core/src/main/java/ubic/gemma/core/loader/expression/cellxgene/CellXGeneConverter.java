@@ -9,6 +9,7 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -20,10 +21,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -39,6 +37,15 @@ public class CellXGeneConverter {
     private final TaxonReadService taxonReadService;
     private final PubMedSearch pubMedSearch;
 
+    private static final Map<String, Category> CATEGORY_MAP = new HashMap<>();
+    static {
+        CATEGORY_MAP.put( "developmental_stage", Categories.DEVELOPMENT_STAGE );
+        CATEGORY_MAP.put( "sex", Categories.BIOLOGICAL_SEX );
+        CATEGORY_MAP.put( "cell_type", Categories.CELL_TYPE );
+        CATEGORY_MAP.put( "tissue", Categories.ORGANISM_PART );
+        CATEGORY_MAP.put( "disease", Categories.DISEASE );
+    }
+
     public CellXGeneConverter( ExternalDatabaseService externalDatabaseService, TaxonReadService taxonReadService, PubMedSearch pubMedSearch ) {
         this.externalDatabaseService = externalDatabaseService;
         this.taxonReadService = taxonReadService;
@@ -53,7 +60,7 @@ public class CellXGeneConverter {
      * @param loadSingleCellData whether to load the single-cell data vectors, this can be done later if needed
      * @return a transient {@link ExpressionExperiment} pre-populated with CELLxGENE metadata
      */
-    public ExpressionExperiment convert( CollectionMetadata collectionMetadata, DatasetMetadata datasetMetadata, ArrayDesign platform, String datasetShortName, SingleCellDataLoader dataLoader, boolean loadSingleCellData ) throws IOException {
+    public ExpressionExperiment convert( CollectionMetadata collectionMetadata, DatasetMetadata datasetMetadata, ArrayDesign platform, Collection<CompositeSequence> compositeSequences, String datasetShortName, SingleCellDataLoader dataLoader, boolean loadSingleCellData ) throws IOException {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( datasetShortName );
         ee.setName( datasetMetadata.getName() );
@@ -78,25 +85,31 @@ public class CellXGeneConverter {
             BioMaterial sample = BioMaterial.Factory.newInstance( sampleName, taxon );
             BioAssay assay = BioAssay.Factory.newInstance( sampleName, platform, sample );
             sample.getBioAssaysUsedIn().add( assay );
-            if (ee.getBioAssays().contains( assay )) {
-                ///  complain
-            }
             ee.getBioAssays().add( assay );
         }
         ee.setNumberOfSamples( ee.getBioAssays().size() );
 
         // TODO: filter which sample characteristics we want in Gemma
         dataLoader.getSamplesCharacteristics( ee.getBioAssays() )
-                .forEach( ( ba, cs ) -> ba.getCharacteristics().addAll( cs ) );
+                .forEach( ( bm, cs ) -> bm.getCharacteristics().addAll( cs ) );
+
+        ee.getBioAssays().forEach( ( ba ) -> {
+            ba.getSampleUsed().getCharacteristics().forEach( ( c ) -> {
+                processCharacteristics( c );
+            } );
+        } );
+
+        ee.getBioAssays().forEach( ( ba ) -> ba.getSampleUsed().getCharacteristics() );
 
         // TODO: prefill the experimental design
         ee.setExperimentalDesign( ExperimentalDesign.Factory.newInstance() );
 
         if ( loadSingleCellData ) {
             SingleCellDimension dimension = dataLoader.getSingleCellDimension( ee.getBioAssays() );
+            dimension.getCellTypeAssignments().addAll( dataLoader.getCellTypeAssignments( dimension ) );
             // load the data?
             for ( QuantitationType qt : dataLoader.getQuantitationTypes() ) {
-                List<SingleCellExpressionDataVector> vectors = dataLoader.loadVectors( platform.getCompositeSequences(), dimension, qt )
+                List<SingleCellExpressionDataVector> vectors = dataLoader.loadVectors( compositeSequences, dimension, qt )
                         .collect( Collectors.toList() );
                 ee.getQuantitationTypes().add( qt );
                 ee.getSingleCellExpressionDataVectors().addAll( vectors );
@@ -104,6 +117,17 @@ public class CellXGeneConverter {
         }
 
         return ee;
+    }
+
+
+
+    private void processCharacteristics( Characteristic c ) {
+        Category matchingCategory = CATEGORY_MAP.get( c.getCategory() );
+
+        if ( matchingCategory != null ) {
+            c.setCategory( matchingCategory.getCategory() );
+            c.setCategoryUri( matchingCategory.getCategoryUri() );
+        }
     }
 
     private DatabaseEntry convertAccession( DatasetMetadata datasetMetadata ) {
