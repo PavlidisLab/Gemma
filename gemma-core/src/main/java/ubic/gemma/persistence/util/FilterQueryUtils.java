@@ -89,9 +89,24 @@ public class FilterQueryUtils {
      * <p>
      * Only a bare {@code id} qualifies. A dotted path such as {@code bioAssays.arrayDesignUsed.id} reaches the
      * identifier of a JOINED entity, which IS null when that join is an outer one, so those keep their clause.
+     * <p>
+     * The property name alone cannot tell the two apart: {@code resolveFilterablePropertyMeta} splits every
+     * registered property into an alias plus a leaf, so the joined path above arrives here as
+     * {@code objectAlias=ad, propertyName=id} — identical in shape to a root sort. The alias cannot decide it
+     * either, because the root sort is aliased too ({@code getSort("id")} takes the DAO's own object alias).
+     * What separates them is the property the caller asked for, which the {@link Sort} carries verbatim.
+     * <p>
+     * A {@link Sort} built directly rather than through {@code getSort} has no such record, but it also never
+     * splits: its {@code propertyName} holds the whole path, so a joined one does not reach the test at all.
      */
     private static boolean isOwnIdentifier( Sort sort ) {
-        return "id".equals( sort.getPropertyName() );
+        if ( !"id".equals( sort.getPropertyName() ) ) {
+            return false;
+        }
+        // A Sort built by hand keeps the whole path in propertyName, so the check above has already
+        // ruled out a joined one and there is nothing left to disambiguate.
+        String originalProperty = sort.getOriginalProperty();
+        return originalProperty == null || originalProperty.indexOf( '.' ) < 0;
     }
 
     /**
