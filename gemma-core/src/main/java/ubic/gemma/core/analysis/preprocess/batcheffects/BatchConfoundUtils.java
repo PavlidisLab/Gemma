@@ -210,8 +210,14 @@ public class BatchConfoundUtils {
             } else {
                 Map<Long, FactorValue> factorValueById = IdentifiableUtils.getIdMap( ef.getFactorValues() );
 
+                // getBioMaterialFactorMap() pads every factor's map with a null for each biomaterial that
+                // has no factor value (see the CONTINUOUS branch above). Skip those: a null counted as a
+                // used factor value widens the contingency table below by one permanently-empty column.
                 Set<FactorValue> usedFactorValues = new HashSet<>( bmToFv.size() );
                 for ( Number val : bmToFv.values() ) {
+                    if ( val == null ) {
+                        continue;
+                    }
                     usedFactorValues.add( factorValueById.get( ( Long ) val ) );
                 }
 
@@ -236,14 +242,11 @@ public class BatchConfoundUtils {
                     factorValueMembership.put( bmEntry.getKey(), factorValueById.get( ( Long ) bmEntry.getValue() ) );
                 }
 
-                // numbatches could still be incorrect, so we have to clean this up later.
-                long[][] counts = new long[numBatches][usedFactorValues.size()];
-
-                for ( int i = 0; i < batchIndexes.size(); i++ ) {
-                    for ( int j = 0; j < factorValueToIndex.size(); j++ ) {
-                        counts[i][j] = 0;
-                    }
-                }
+                // numbatches could still be incorrect, so we have to clean this up later. Width comes from
+                // factorValueToIndex, the only map the counting loop below indexes through; sizing it from
+                // usedFactorValues instead leaves a trailing all-zero column whenever the two disagree,
+                // which defeats the finalCounts[0].length == 2 odds-ratio case and makes chi-square NaN.
+                long[][] counts = new long[numBatches][factorValueToIndex.size()];
 
                 for ( BioMaterial bm : bmToFv.keySet() ) {
                     FactorValue batch = batchMembership.get( bm );
