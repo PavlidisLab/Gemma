@@ -825,6 +825,49 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
     }
 
     @Test
+    @DisplayName("bulk: each row reports ITS OWN target's status, which is what the queue gates on")
+    public void bulkSummaries_carryThePerTargetStatus() {
+        long base = freshTargetBase();
+        Long done = base, notDone = base + 1;
+        Ticket t = openTargeting( TicketType.CURATION, "bulk-status-" + UUID.randomUUID(), done, notDone );
+        Long doneRowId = t.getTargets().stream()
+                .filter( tt -> tt.getTargetId().equals( done ) )
+                .findFirst().orElseThrow().getId();
+        flushAndClear();
+
+        ticketService.updateTargetStatus( ticketDao.load( t.getId() ), doneRowId, TicketTargetStatus.DONE, reporter );
+        flushAndClear();
+
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Arrays.asList( done, notDone ) );
+
+        // One ticket, two targets, two different answers -- the whole point of the column. Reading the
+        // ticket cannot give this: both rows are the same ticket, so anything per-TICKET is identical
+        // here and only the per-target status separates them.
+        assertEquals( TicketTargetStatus.DONE, byDataset.get( done ).get( 0 ).getTargetStatus(),
+                "the summary row for the finished dataset must say DONE" );
+        assertEquals( TicketTargetStatus.NOT_DONE, byDataset.get( notDone ).get( 0 ).getTargetStatus(),
+                "its sibling on the SAME ticket must still say NOT_DONE" );
+    }
+
+    @Test
+    @DisplayName("bulk: a row carries the ticket's priority, so the caller need not refetch the ticket")
+    public void bulkSummaries_carryTheTicketPriority() {
+        long base = freshTargetBase();
+        Long ee = base;
+        Ticket t = openTargeting( TicketType.CURATION, "bulk-priority-" + UUID.randomUUID(), ee );
+        t.setPriority( TicketPriority.URGENT );
+        flushAndClear();
+
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Collections.singletonList( ee ) );
+
+        assertEquals( TicketPriority.URGENT, byDataset.get( ee ).get( 0 ).getPriority() );
+    }
+
+    @Test
     @DisplayName("bulk: a dataset on no open ticket gets NO key, so an absence means something")
     public void bulkSummaries_quietDatasetIsAbsentNotEmpty() {
         long base = freshTargetBase();
