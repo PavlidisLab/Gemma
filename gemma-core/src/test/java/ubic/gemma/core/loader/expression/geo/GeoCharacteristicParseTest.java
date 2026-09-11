@@ -39,6 +39,31 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author paul
  */
 public class GeoCharacteristicParseTest {
+    /**
+     * 🛑 A submitter who writes {@code "Strain:"} with nothing after the colon has given a category and no
+     * value. That is ABSENCE, and the column spells absence NULL — an empty string is a value that happens
+     * to be empty, and the corpus said it both ways: 8,141 rows as {@code ''} against 24 as NULL, so
+     * {@code WHERE VALUE IS NULL} was missing 99.7% of them until they were normalized on 2026-09-10 (cab).
+     * The import used to write the losing spelling. {@code ORIGINAL_VALUE} still carries the unsplit line.
+     */
+    @Test
+    public final void testBlankValueParsesToNullNotAnEmptyString() {
+        GeoConverterImpl g = new GeoConverterImpl();
+
+        // an unrecognized category, which takes the other setValue branch -- the recognized one is
+        // pinned in testParseGEOSampleCharacteristic's GSM270278 case
+        BioMaterial t = BioMaterial.Factory.newInstance();
+        g.parseGEOSampleCharacteristicString( "Some odd heading:   ", t );
+        Characteristic c = t.getCharacteristics().iterator().next();
+        assertNull( c.getValue(), "whitespace-only is blank too" );
+        assertEquals( "Some odd heading:   ", c.getOriginalValue() );
+
+        // a value that is actually present is untouched
+        t = BioMaterial.Factory.newInstance();
+        g.parseGEOSampleCharacteristicString( "Strain: C57BL/6", t );
+        assertEquals( "C57BL/6", t.getCharacteristics().iterator().next().getValue() );
+    }
+
     @Test
     public final void testParseGEOSampleCharacteristic() throws Exception {
         GeoConverterImpl g = new GeoConverterImpl();
@@ -117,7 +142,8 @@ public class GeoCharacteristicParseTest {
         g.parseGEOSampleCharacteristicString( "Strain:", t );
         c = t.getCharacteristics().iterator().next();
         assertEquals( "strain", c.getCategory() );
-        assertEquals( "", c.getValue() );
+        // was "" until 2026-09-10; see testBlankValueParsesToNullNotAnEmptyString for why it moved
+        assertNull( c.getValue() );
         assertEquals( "Strain:", c.getOriginalValue() );
     }
 

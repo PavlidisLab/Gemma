@@ -966,6 +966,14 @@ public class GeoConverterImpl implements GeoConverter {
                 String value = fields[1].trim().replaceAll( "\t", " " ).replaceAll( "_", " " );
                 value = value.replaceFirst( "^(human|mouse|rat|murine|mus musculus|homo sapiens)\\s", "" );
 
+                // A submitter writing "Strain:" with nothing after the colon parses to a category with no
+                // value. That is ABSENCE, and the column spells absence NULL -- an empty string is a value
+                // that happens to be empty. The corpus said it both ways until 8,141 rows were normalized to
+                // NULL on 2026-09-10 (cab), lopsided enough that `WHERE VALUE IS NULL` had been missing 99.7%
+                // of them. Emit the same spelling here so the import stops reintroducing the other one.
+                // ORIGINAL_VALUE still carries the submitter's unsplit line, so nothing is lost.
+                String valueOrNull = value.isEmpty() ? null : value;
+
                 Characteristic gemmaChar = Characteristic.Factory.newInstance();
                 gemmaChar.setOriginalValue( field ); // always retain the original thing, unsplit.
                 gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
@@ -975,7 +983,7 @@ public class GeoConverterImpl implements GeoConverter {
                 if ( vartype == null || vartype.equals( VariableType.other ) ) {
                     log.debug( "Could not parse into VariableType: " + category + " (in: " + rawGEOString + ")" );
                     gemmaChar.setCategory( category ); // This is not one of our "standard" categories, but it's okay
-                    gemmaChar.setValue( value );
+                    gemmaChar.setValue( valueOrNull );
                     gemmaChar.setDescription( defaultDescription );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                     continue;
@@ -997,12 +1005,12 @@ public class GeoConverterImpl implements GeoConverter {
                 // Deliberately NOT deleted: ValueStringToOntologyMapping and its resource file are
                 // still used by LoadSimpleExpressionDataCli, which is a different (non-GEO) loader.
                 try {
-                    gemmaChar.setValue( value );
+                    gemmaChar.setValue( valueOrNull );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 } catch ( Exception e ) {
                     // conversion didn't work, fall back. (not sure why this would happen so adding logging)
                     log.warn( "Could not convert " + field + " to rawGEOString ", e );
-                    this.doFallback( bioMaterial, value, defaultDescription );
+                    this.doFallback( bioMaterial, valueOrNull, defaultDescription );
                 }
 
             } else {
@@ -2862,7 +2870,7 @@ public class GeoConverterImpl implements GeoConverter {
         return null;
     }
 
-    private void doFallback( BioMaterial bioMaterial, String value, String defaultDescription ) {
+    private void doFallback( BioMaterial bioMaterial, @Nullable String value, String defaultDescription ) {
         Characteristic gemmaChar = Characteristic.Factory.newInstance();
         gemmaChar.setValue( value );
         gemmaChar.setOriginalValue( value );
@@ -2882,7 +2890,10 @@ public class GeoConverterImpl implements GeoConverter {
         for ( ExperimentalFactor factor : experimentalFactors ) {
             for ( FactorValue fv : factor.getFactorValues() ) {
                 for ( Characteristic m : fv.getCharacteristics() ) {
-                    if ( Objects.equals( m.getCategory(), c.getCategory() ) && m.getValue().equals( c.getValue() ) ) {
+                    // Objects.equals on the value too: a characteristic parsed from a "key:" line with an empty
+                    // right-hand side now carries a NULL value rather than an empty string, and this was the one
+                    // bare dereference on the import path that a null would reach.
+                    if ( Objects.equals( m.getCategory(), c.getCategory() ) && Objects.equals( m.getValue(), c.getValue() ) ) {
                         matchingFactorValue = fv;
                         break factors;
                     }

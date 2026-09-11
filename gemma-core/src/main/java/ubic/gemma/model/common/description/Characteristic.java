@@ -132,6 +132,13 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     @Nullable
     @Column(name = "ORIGINAL_VALUE", columnDefinition = "VARCHAR(255)")
     private String originalValue = null;
+    /**
+     * 🛑 Nullable, and it is genuinely null on production: a NULL here means the characteristic has a category
+     * but no value — a submitter who wrote {@code "Strain:"} with nothing after the colon. The corpus recorded
+     * that state as an empty string on 8,141 rows and as NULL on 24 until they were normalized to NULL on
+     * 2026-09-10, so {@code WHERE VALUE IS NULL} had been missing almost all of them.
+     */
+    @Nullable
     @Column(name = "`VALUE`", columnDefinition = "VARCHAR(255)")
     private String value;
     @Nullable
@@ -262,12 +269,13 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     /**
      * @return The human-readable term (e.g., "OrganismPart"; "kinase")
      */
+    @Nullable
     @FullTextField
     public String getValue() {
         return this.value;
     }
 
-    public void setValue( String value ) {
+    public void setValue( @Nullable String value ) {
         this.value = normalizeTermText( value );
     }
 
