@@ -134,6 +134,14 @@ public class DataSourceConfig {
     }
 
     /**
+     * The variable has to start the list or follow a comma. Matching it anywhere would read
+     * {@code foo_max_execution_time=42} as a 42 ms cap -- a wrong number, which is worse than no
+     * answer, since this is what an operator checks to decide whether the cap is on.
+     */
+    private static final Pattern MAX_EXECUTION_TIME =
+            Pattern.compile( "(?:^|,)\\s*max_execution_time\\s*=\\s*(\\d+)" );
+
+    /**
      * Append {@code max_execution_time} to a Connector/J {@code sessionVariables} list.
      * <p>
      * Connector/J splits that list on commas <em>outside</em> quotes, so appending to the sql_mode
@@ -147,14 +155,6 @@ public class DataSourceConfig {
      *                               otherwise reach MySQL as an unparseable SET and fail every
      *                               connection attempt with a message about sql_mode.
      */
-    /**
-     * The variable has to start the list or follow a comma. Matching it anywhere would read
-     * {@code foo_max_execution_time=42} as a 42 ms cap -- a wrong number, which is worse than no
-     * answer, since this is what an operator checks to decide whether the cap is on.
-     */
-    private static final Pattern MAX_EXECUTION_TIME =
-            Pattern.compile( "(?:^|,)\\s*max_execution_time\\s*=\\s*(\\d+)" );
-
     static String withMaxExecutionTime( String sessionVariables, @Nullable String maxExecutionTimeMs ) {
         if ( StringUtils.isBlank( maxExecutionTimeMs ) ) {
             return sessionVariables;
@@ -169,7 +169,13 @@ public class DataSourceConfig {
         if ( ms < 0 ) {
             throw new IllegalStateException( "gemma.db.hikari.maxExecutionTime must not be negative, got " + ms + "." );
         }
-        return sessionVariables + ",max_execution_time=" + ms;
+        // Only separate from a list that has something in it. Connector/J splits on commas and
+        // would read the empty leading field of ",max_execution_time=3000" as a variable with no
+        // name, failing every connection attempt at pool start — with a message about sql_mode,
+        // which is the misdirection this method's javadoc warns about.
+        return StringUtils.isBlank( sessionVariables )
+                ? "max_execution_time=" + ms
+                : sessionVariables + ",max_execution_time=" + ms;
     }
 
     /**
