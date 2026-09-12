@@ -1933,6 +1933,48 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     /**
+     * 🛑 Flagging the value the analysis was already fitted against moves no reference. GSE391: result set 559530
+     * names FV 783 as baseline while its flag is stored null, and a draft setting {@code isBaseline: true} on it
+     * was refused as deleting DEA 316735 (Paul, 2026-09-12).
+     */
+    @Test
+    public void testPreviewFlaggingTheBaselineTheAnalysisWasFittedWithDoesNotInvalidateIt() {
+        buildFixture();
+        stubAnalysisFittedAgainst( controlFv );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 100L ).setBaseline( true );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).isEmpty();
+        assertThat( report.requiresForce() ).isFalse();
+    }
+
+    /** The other side of that exemption: flagging a value other than the fitted reference still invalidates. */
+    @Test
+    public void testPreviewFlaggingADifferentBaselineThanTheFittedOneStillInvalidates() {
+        buildFixture();
+        stubAnalysisFittedAgainst( controlFv );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 101L ).setBaseline( true );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).hasSize( 1 );
+        assertThat( report.requiresForce() ).isTrue();
+    }
+
+    private void stubAnalysisFittedAgainst( FactorValue baseline ) {
+        DifferentialExpressionAnalysis dea = stubDatasetWideAnalysis();
+        ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet rs =
+                ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.Factory.newInstance();
+        rs.setId( 9101L );
+        rs.setExperimentalFactors( new java.util.HashSet<>( Collections.singleton( treatmentFactor ) ) );
+        rs.setBaselineGroup( baseline );
+        dea.getResultSets().add( rs );
+    }
+
+    /**
      * The exclusion, and the only one: relabelling a kept factor value does not move a sample, a level or a
      * reference, so the analysis still describes what it described.
      */

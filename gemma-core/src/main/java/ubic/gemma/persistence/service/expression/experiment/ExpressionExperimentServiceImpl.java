@@ -1309,7 +1309,7 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getId() == null ) continue; // a creation; already structural
                 FactorValue cur = currentFvsById.get( pv.getId() );
                 if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
-                if ( baselineChanged( pv, cur ) ) {
+                if ( baselineChanged( pv, cur ) && !agreesWithFittedBaselines( ee, pv, cur ) ) {
                     return true;
                 }
                 if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
@@ -1502,6 +1502,51 @@ public class ExpressionExperimentServiceImpl
             }
         }
         return !currentKeys.equals( proposedKeys );
+    }
+
+    /**
+     * Whether a baseline-flag change agrees with the reference every existing analysis on that factor was fitted
+     * against, so that it moves no contrast.
+     * <p>
+     * The flag and the fitted reference are separate facts. {@code ExpressionAnalysisResultSet.baselineGroup} is
+     * what the analysis used; the flag on the factor value is often never set. GSE391: result set 559530 of DEA
+     * 316735 names FV 783 (30 minute) as its baseline while FV 783's flag is stored null, so a draft setting
+     * {@code isBaseline: true} on it read as a flip and was refused as deleting that analysis — for an edit that
+     * changes no contrast (Paul, 2026-09-12).
+     * <p>
+     * 🛑 Exempts only what is proven harmless, and fails closed otherwise. At least one result set must involve
+     * the factor, every such result set must name its baseline on that factor, and the proposal must agree with
+     * all of them: {@code true} on the value they all use, {@code false} on a value none of them uses. A result
+     * set with no baseline group, or one whose reference sits on another factor (an interaction's second
+     * reference is not mapped on the entity), leaves the reference unknown, and the change still invalidates.
+     */
+    private boolean agreesWithFittedBaselines( ExpressionExperiment ee, FactorValueBasicValueObject pv, FactorValue cur ) {
+        ExperimentalFactor factor = cur.getExperimentalFactor();
+        Long factorId = factor != null ? factor.getId() : null;
+        if ( factorId == null || cur.getId() == null ) {
+            return false;
+        }
+        boolean proposedBaseline = Boolean.TRUE.equals( pv.getBaseline() );
+        int resultSetsOnFactor = 0;
+        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+            for ( ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet rs : a.getResultSets() ) {
+                if ( rs.getExperimentalFactors() == null || rs.getExperimentalFactors().stream()
+                        .noneMatch( f -> factorId.equals( f.getId() ) ) ) {
+                    continue;
+                }
+                resultSetsOnFactor++;
+                FactorValue fitted = rs.getBaselineGroup();
+                if ( fitted == null || fitted.getExperimentalFactor() == null
+                        || !factorId.equals( fitted.getExperimentalFactor().getId() ) ) {
+                    return false;
+                }
+                boolean fittedHere = cur.getId().equals( fitted.getId() );
+                if ( proposedBaseline != fittedHere ) {
+                    return false;
+                }
+            }
+        }
+        return resultSetsOnFactor > 0;
     }
 
     /**
