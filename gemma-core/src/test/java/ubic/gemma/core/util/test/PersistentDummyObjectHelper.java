@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.TDistribution;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,6 +67,9 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDa
 import ubic.gemma.persistence.service.expression.experiment.*;
 
 import org.springframework.lang.Nullable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -136,6 +140,10 @@ public class PersistentDummyObjectHelper {
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+
+    /** Used only to run the raw-JDBC fixture-row checks; see {@link #fixtureRowExists(String, Long)}. */
+    @Autowired
+    private SessionFactory sessionFactory;
 
     // setting seed globally does not guarantee reproducibliity always as methods could access
     // different parts of the sequence if called in different orders, so callers should reset it using resetSeed()
@@ -735,7 +743,12 @@ public class PersistentDummyObjectHelper {
     private Chromosome getTestPersistentChromosome( Taxon taxon ) {
         Long taxonId = taxon.getId();
         if ( taxonId != null && testChromosomes.containsKey( taxonId ) ) {
-            return testChromosomes.get( taxonId );
+            Chromosome cached = testChromosomes.get( taxonId );
+            if ( fixtureRowExists( "CHROMOSOME", cached.getId() ) ) {
+                return cached;
+            }
+            reportVanishedFixtureRow( "CHROMOSOME", cached.getId() );
+            testChromosomes.remove( taxonId );
         }
         Chromosome chromosome = Chromosome.Factory.newInstance( "XXX", null,
                 this.getTestPersistentBioSequence( taxon ), taxon );
@@ -938,7 +951,24 @@ public class PersistentDummyObjectHelper {
         return quantitationTypeService.create( qt );
     }
 
+    /**
+     * Provide the shared "elephant" taxon that fills non-nullable taxon associations throughout the
+     * fixture, caching it for the life of this (context-scoped singleton) bean.
+     * <h4>Why the cached entity is re-validated</h4>
+     * The cached instance is detached and Hibernate never re-checks its id, so if the row goes away
+     * mid-run then every later fixture insert referencing it fails on a foreign key. On Jenkins
+     * 2026-09-11 a single lost row produced 87-90 identical {@code ARRAY_DESIGN.PRIMARY_TAXON_FK} /
+     * {@code BIO_SEQUENCE.TAXON_FK} errors, each stack trace naming the victim rather than the
+     * cause, and the same suite was green locally on the same commit. We therefore confirm the row
+     * is still present before handing the entity out, say so loudly when it is not, and rebuild it.
+     */
     public Taxon getTestPersistentTaxon() {
+        if ( testTaxon != null && !fixtureRowExists( "TAXON", testTaxon.getId() ) ) {
+            reportVanishedFixtureRow( "TAXON", testTaxon.getId() );
+            testTaxon = null;
+            // chromosomes are keyed by taxon id and reference it, so they are dangling too
+            testChromosomes.clear();
+        }
         if ( testTaxon == null ) {
             testTaxon = Taxon.Factory.newInstance();
             testTaxon.setCommonName( "elephant" );
@@ -950,6 +980,94 @@ public class PersistentDummyObjectHelper {
                     && testTaxon.getId() != null;
         }
         return testTaxon;
+    }
+
+    /**
+     * Check straight against the database whether a fixture row is still there.
+     * <p>
+     * Deliberately raw JDBC on the current session's connection: a Hibernate {@code load} can be
+     * answered out of the session or the second-level cache and would cheerfully hand back the very
+     * entity whose row has gone.
+     *
+     * @param table one of this class's own hard-coded table names, never caller input
+     * @param id    row id; a {@code null} id counts as absent
+     * @return whether the row is present -- and {@code true} as well if the check could not be run,
+     * since a diagnostic must never be the thing that fails a test
+     */
+    private boolean fixtureRowExists( String table, @Nullable Long id ) {
+        if ( id == null ) {
+            return false;
+        }
+        boolean[] present = { true };
+        try {
+            sessionFactory.getCurrentSession().doWork( connection -> {
+                try ( PreparedStatement ps = connection
+                        .prepareStatement( "select count(*) from " + table + " where ID = ?" ) ) {
+                    ps.setLong( 1, id );
+                    try ( ResultSet rs = ps.executeQuery() ) {
+                        present[0] = rs.next() && rs.getLong( 1 ) > 0;
+                    }
+                }
+            } );
+        } catch ( Exception e ) {
+            log.warn( "Could not verify that " + table + " row " + id + " still exists; assuming it does.", e );
+            return true;
+        }
+        return present[0];
+    }
+
+    /**
+     * Report a fixture row that this JVM committed earlier and that has since disappeared.
+     * <p>
+     * Nothing in the integration suite deletes taxa -- audited 2026-09-11: the only
+     * {@code taxonService.remove} call sites are scoped to taxa the caller created itself, and none
+     * of {@code ArrayDesign.primaryTaxon}, {@code ExpressionExperiment.taxon} or
+     * {@code BioSequence.taxon} cascades a delete -- so this indicates another connection wrote to
+     * the test database while the suite was running. The process list is what identifies it.
+     * <p>
+     * {@code information_schema.PROCESSLIST} shows every thread belonging to our own account
+     * without any extra privilege, so a second build connecting as the same test user -- the most
+     * likely writer -- appears here unaided. Threads owned by *other* accounts are only listed to
+     * a connection holding the PROCESS privilege; grant it on the CI database
+     * ({@code GRANT PROCESS ON *.* TO 'gemmatest'@'%'}) if the dump ever looks implausibly quiet.
+     */
+    private void reportVanishedFixtureRow( String table, @Nullable Long id ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "Fixture row " ).append( table ).append( '#' ).append( id )
+                .append( " was committed earlier in this JVM and is now gone, noticed at " )
+                .append( Instant.now() )
+                .append( ". Re-creating it. Something outside this test JVM wrote to the test database." );
+        try {
+            sessionFactory.getCurrentSession().doWork( connection -> {
+                // fully qualified: ubic.gemma.model.expression.experiment.Statement is in scope here
+                try ( java.sql.Statement st = connection.createStatement() ) {
+                    try ( ResultSet rs = st.executeQuery( "select database(), connection_id(), (select count(*) from TAXON)" ) ) {
+                        if ( rs.next() ) {
+                            sb.append( "\n  database      = " ).append( rs.getString( 1 ) );
+                            sb.append( "\n  connection_id = " ).append( rs.getLong( 2 ) );
+                            sb.append( "\n  TAXON rows    = " ).append( rs.getLong( 3 ) );
+                        }
+                    }
+                    sb.append( "\n  process list (needs the PROCESS privilege to show other sessions):" );
+                    try ( ResultSet rs = st.executeQuery( "select ID, USER, HOST, DB, COMMAND, TIME, STATE,"
+                            + " left(INFO, 200) as INFO from information_schema.PROCESSLIST order by TIME desc" ) ) {
+                        while ( rs.next() ) {
+                            sb.append( "\n    id=" ).append( rs.getLong( 1 ) )
+                                    .append( " user=" ).append( rs.getString( 2 ) )
+                                    .append( " host=" ).append( rs.getString( 3 ) )
+                                    .append( " db=" ).append( rs.getString( 4 ) )
+                                    .append( " command=" ).append( rs.getString( 5 ) )
+                                    .append( " time=" ).append( rs.getLong( 6 ) )
+                                    .append( " state=" ).append( rs.getString( 7 ) )
+                                    .append( " info=" ).append( rs.getString( 8 ) );
+                        }
+                    }
+                }
+            } );
+        } catch ( Exception e ) {
+            sb.append( "\n  (could not collect the database snapshot: " ).append( e.getMessage() ).append( ")" );
+        }
+        log.error( sb.toString() );
     }
 
     public void resetTestElementCollectionSize() {

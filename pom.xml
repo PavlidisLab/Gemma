@@ -1111,6 +1111,19 @@
 					OR on the JUnit Platform.
 					-->
 					<excludedGroups>integration,${excludedGroups}</excludedGroups>
+					<!--
+					Pinned so Jenkins and a dev box execute test classes in the same
+					sequence. Surefire/failsafe otherwise default to `filesystem`,
+					which is directory-entry order and therefore differs per machine;
+					that is why the TAXON foreign-key cascade seen on Jenkins
+					2026-09-11 could not be reproduced locally at the same commit,
+					and why reasoning about "what ran before the failure" needed a
+					console log that no longer existed. Override with
+					-DtestRunOrder=filesystem to replay the old behaviour, or with
+					any other surefire runOrder (random, reversealphabetical, ...)
+					to hunt order-dependent failures on purpose.
+					-->
+					<runOrder>${testRunOrder}</runOrder>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipUnitTests}</skip>
 				</configuration>
@@ -1168,6 +1181,8 @@
 					run everything).
 					-->
 					<excludedGroups>${excludedGroups}</excludedGroups>
+					<!-- Pinned for reproducibility; see the surefire <runOrder> note above. -->
+					<runOrder>${testRunOrder}</runOrder>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
 				</configuration>
@@ -1783,6 +1798,8 @@
 		      @Tag("integration"), so they're filtered transitively.
 		-->
 		<excludedGroups>network,slow</excludedGroups>
+		<!-- Test-class execution order for surefire and failsafe; see their <runOrder> notes. -->
+		<testRunOrder>alphabetical</testRunOrder>
 		<skipJavadoc>false</skipJavadoc>
 		<skipWebpack>false</skipWebpack>
 		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>
