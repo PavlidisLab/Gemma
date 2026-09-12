@@ -4722,6 +4722,19 @@ public class DatasetsWebService {
         @Schema(description = "Second object, paired with secondPredicate. See secondPredicate.")
         private OntologyTermRef secondObject;
         /**
+         * Drop the statement's second predicate/object pair, on a {@code gemmaId} item.
+         * <p>
+         * The explicit spelling of a clear, and the only one available: both second-pair fields are objects, so
+         * Jackson cannot tell an omitted key from an explicit null, and omission now means "you did not tell me"
+         * rather than "remove it" — see {@link DatasetsWebService#requireSecondPairEchoed}. Sending this together
+         * with a pair, in either spelling, is a 400 rather than a precedence rule.
+         */
+        @Nullable
+        @Schema(description = "Set true on a gemmaId item to drop the statement's second predicate/object pair. "
+                + "Omitting the pair is refused when the stored statement has one, so this is how a deliberate "
+                + "removal is expressed. Sending it alongside a secondPredicate/secondObject is a 400.")
+        private Boolean clearSecondPair;
+        /**
          * Verbatim provenance for this statement — a JSON array of {@code {quote, source, location, …}} items.
          * Stored and served opaquely; the agents repo owns the schema.
          * <p>
@@ -5154,6 +5167,8 @@ public class DatasetsWebService {
                             + " does not send. Send the statement's full content, or name its id in the section's"
                             + " deletedIds to remove it." );
                 }
+                requireSecondPairEchoed( location + ".statements[" + refOrIndex( sc.getClientRef(), idx ) + "]",
+                        sc, curStmt, repeatedIds.contains( sc.getGemmaId() ) );
             }
             if ( sc.getCategory() != null ) {
                 svo.setCategory( sc.getCategory().getLabel() );
@@ -5351,6 +5366,55 @@ public class DatasetsWebService {
      * absent means "you did not tell me" and is refused. Neither is treated as "leave unchanged"; that hybrid is
      * what this section moved away from on 2026-09-06.
      */
+    /**
+     * Refuse a {@code gemmaId} statement item that omits the row's SECOND predicate/object pair while the stored
+     * row has one — the same rule {@link #requireEvidenceEchoed} applies to {@code supportingEvidence} and the
+     * {@code evidenceCode} check beside it applies to the code (Paul, 2026-09-11: "Guard it like evidence. It's
+     * too dangerous.").
+     * <p>
+     * {@code applyStatementFields} sets {@code secondPredicate} / {@code secondObject} unconditionally from the
+     * payload, so before this an omitted pair was written null and the commit reported {@code updated: 1} — the
+     * same report a successful edit gets. 9,338 production {@code CHARACTERISTIC} rows across 8,470 factor values
+     * carry a pair (measured 2026-09-11), and a client composing from a model with no second-pair support drops
+     * one without being told; {@code design_apply.second_pairs_at_risk} on the agents' side existed only to
+     * compensate for this gap (cab, 2026-09-11).
+     * <p>
+     * Either spelling counts as echoing it: the explicit {@code secondPredicate} / {@code secondObject} fields,
+     * or the flattened form — a second {@code statements[]} item under the same {@code gemmaId}, which is how a
+     * compound statement is SERIALIZED and therefore how a client that echoes what it read sends it back.
+     * <p>
+     * Dropping a pair deliberately is spelled {@code "clearSecondPair": true}, because neither field can carry
+     * the intent itself: both are objects, and Jackson gives null for a missing key and for an explicit null
+     * alike. Before the guard, omission WAS the clear, so taking that reading away needs a replacement spelling
+     * or the pair becomes unremovable.
+     */
+    private static void requireSecondPairEchoed( String location, StatementCommit sc,
+            @Nullable StatementValueObject stored, boolean idRepeated ) {
+        if ( stored == null ) {
+            return;
+        }
+        boolean storedHasPair = StringUtils.isNotBlank( stored.getSecondPredicate() )
+                || StringUtils.isNotBlank( stored.getSecondPredicateUri() )
+                || StringUtils.isNotBlank( stored.getSecondObject() )
+                || StringUtils.isNotBlank( stored.getSecondObjectUri() );
+        boolean submittedPair = sc.getSecondPredicate() != null || sc.getSecondObject() != null;
+        if ( Boolean.TRUE.equals( sc.getClearSecondPair() ) ) {
+            if ( submittedPair || idRepeated ) {
+                throw new BadRequestException( location + " carries clearSecondPair AND a second"
+                        + " predicate/object pair. One says drop it and the other says store it; send one." );
+            }
+            return;
+        }
+        if ( !storedHasPair || submittedPair || idRepeated ) {
+            return;
+        }
+        throw new BadRequestException( location + " omits the statement's second predicate/object pair, but that"
+                + " statement HAS one (" + stored.getSecondPredicate() + " -> " + stored.getSecondObject() + ")."
+                + " This section is full-record replacement, so an omitted pair would clear it. Send the pair"
+                + " back to keep it — as secondPredicate/secondObject, or as a second statements[] item with the"
+                + " same gemmaId — or send \"clearSecondPair\": true to drop it deliberately." );
+    }
+
     private static void requireEvidenceEchoed( String location, @Nullable com.fasterxml.jackson.databind.JsonNode submitted,
             @Nullable com.fasterxml.jackson.databind.JsonNode stored ) {
         if ( submitted == null && CharacteristicUtils.hasRecordedEvidence( stored ) ) {

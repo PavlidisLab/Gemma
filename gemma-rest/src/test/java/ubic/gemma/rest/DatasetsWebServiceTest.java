@@ -5312,6 +5312,163 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
     }
 
+    /** A stored statement on factor 5 / factor value 6 / statement 7, carrying a second predicate-object pair. */
+    private static ExperimentalDesignValueObject designWithASecondPair() {
+        StatementValueObject stmt = new StatementValueObject();
+        stmt.setId( 7L );
+        stmt.setSubject( "dexamethasone" );
+        stmt.setPredicate( "has dose" );
+        stmt.setObject( "10 nM" );
+        stmt.setSecondPredicate( "for" );
+        stmt.setSecondObject( "12 hours" );
+        ubic.gemma.model.expression.experiment.FactorValueBasicValueObject fv =
+                new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject();
+        fv.setId( 6L );
+        fv.setStatements( Collections.singletonList( stmt ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        factor.setId( 5L );
+        factor.setName( "treatment" );
+        factor.setValues( Collections.singletonList( fv ) );
+        ExperimentalDesignValueObject design = new ExperimentalDesignValueObject();
+        design.setExperimentalFactors( Collections.singletonList( factor ) );
+        return design;
+    }
+
+    /** Stubs for a commit that is expected to reach the service. */
+    private void stubDesignCommitAccepts( ExperimentalDesignValueObject design ) {
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( design );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ), any() ) )
+                .thenReturn( new DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+    }
+
+    private static StatementValueObject committedStatement( ArgumentCaptor<ExperimentalDesignValueObject> cap ) {
+        return cap.getValue().getExperimentalFactors().iterator().next()
+                .getValues().iterator().next().getStatements().iterator().next();
+    }
+
+    /**
+     * 🛑 Omitting the second predicate-object pair on a {@code gemmaId} statement that HAS one is refused
+     * (Paul, 2026-09-11: "Guard it like evidence. It's too dangerous."). applyStatementFields writes the pair
+     * from the payload unconditionally, so before this the omission cleared it and the commit reported
+     * {@code updated: 1} -- the same report a successful edit gets. 9,338 production rows carry a pair.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesOmittedSecondPairOnAStatementThatHasOne() {
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( designWithASecondPair() );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"}}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            // Named: this payload is otherwise well-formed, so a bare 400 would not prove which gate fired.
+            assertThat( r.readEntity( String.class ) )
+                    .contains( "omits the statement's second predicate/object pair" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** Echoing the pair explicitly keeps it, which is what a client that read the row sends back. */
+    @Test
+    @WithMockUser
+    public void testCommitAcceptsASecondPairEchoedExplicitly() {
+        stubDesignCommitAccepts( designWithASecondPair() );
+
+        String echoes = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"},\"secondPredicate\":{\"label\":\"for\"},"
+                + "\"secondObject\":{\"label\":\"12 hours\"}}]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( echoes ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        StatementValueObject svo = committedStatement( cap );
+        assertThat( svo.getSecondPredicate() ).isEqualTo( "for" );
+        assertThat( svo.getSecondObject() ).isEqualTo( "12 hours" );
+    }
+
+    /**
+     * The FLATTENED spelling counts as echoing it too — a second {@code statements[]} item under the same
+     * {@code gemmaId}, which is how Gemma SERIALIZES a compound statement and therefore how uib sends it back.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitAcceptsASecondPairEchoedAsTheFlattenedSecondItem() {
+        stubDesignCommitAccepts( designWithASecondPair() );
+
+        String flattened = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":["
+                + "{\"gemmaId\":7,\"subject\":{\"label\":\"dexamethasone\"},"
+                + "\"predicate\":{\"label\":\"has dose\"},\"object\":{\"label\":\"10 nM\"}},"
+                + "{\"gemmaId\":7,\"subject\":{\"label\":\"dexamethasone\"},"
+                + "\"predicate\":{\"label\":\"for\"},\"object\":{\"label\":\"12 hours\"}}"
+                + "]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( flattened ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        // Two VOs share id 7 on the way in; the service's unflattenStatements re-joins them into one row.
+        assertThat( cap.getValue().getExperimentalFactors().iterator().next()
+                .getValues().iterator().next().getStatements() ).hasSize( 2 );
+    }
+
+    /** Dropping a pair stays possible, but only when asked for in so many words. */
+    @Test
+    @WithMockUser
+    public void testCommitClearsASecondPairWhenClearSecondPairIsSent() {
+        stubDesignCommitAccepts( designWithASecondPair() );
+
+        String clears = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"},\"clearSecondPair\":true}]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( clears ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        StatementValueObject svo = committedStatement( cap );
+        assertThat( svo.getSecondPredicate() ).isNull();
+        assertThat( svo.getSecondObject() ).isNull();
+    }
+
+    /** Asking to drop it and sending it are contradictory, so neither wins silently. */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesClearSecondPairTogetherWithAPair() {
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( designWithASecondPair() );
+
+        String both = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"},\"secondPredicate\":{\"label\":\"for\"},"
+                + "\"secondObject\":{\"label\":\"12 hours\"},\"clearSecondPair\":true}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( both ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "clearSecondPair AND a second" );
+        }
+    }
+
+    /** No false positive: a statement with no stored pair may omit it, which is every ordinary statement. */
+    @Test
+    @WithMockUser
+    public void testCommitAllowsOmittingTheSecondPairWhenTheStoredRowHasNone() {
+        stubDesignCommitAccepts( designWithOneStatement( 5L, 6L, 7L ) );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"astrocyte\"}}]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) )
+                .hasStatus( Response.Status.OK );
+    }
+
     /**
      * Omitting evidence on a row that HAS evidence is refused; sending {@code []} clears it deliberately.
      * <p>
