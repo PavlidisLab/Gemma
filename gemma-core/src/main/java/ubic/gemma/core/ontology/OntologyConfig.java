@@ -34,6 +34,7 @@ import java.nio.file.Path;
 
 @Configuration
 @Profile({ "!" + EnvironmentProfiles.TEST }) // we use a different set of ontologies in tests
+@lombok.extern.slf4j.Slf4j
 public class OntologyConfig {
 
     @Value("${load.ontologies}")
@@ -158,6 +159,15 @@ public class OntologyConfig {
             // one place.
             File cacheDir = OntologyLoader.getDiskCachePath( "chebiOntology" ).getParentFile();
             service.setSlimCacheDir( cacheDir );
+        } else {
+            // An unset cache dir disables the slim, and loadModel's fall-through then looks
+            // identical to a context that never had a slim at all. Say which half is missing:
+            // diagnosing this from the outside took a boot log, a term count and a bean-wiring
+            // argument, and the answer was one field either way.
+            log.info( "CHEBI slim is disabled: slimExtractor={}, seedResolver={}; the full source"
+                            + " will be parsed on every load.",
+                    slimExtractor != null ? "present" : "ABSENT",
+                    seedResolver != null ? "present" : "ABSENT" );
         }
 
         OntologyServiceFactory<ChebiOntologyService> factory = new OntologyServiceFactory<>( service );
@@ -267,6 +277,12 @@ public class OntologyConfig {
         if ( mondoSlimEnabled && slimExtractor != null && seedResolver != null ) {
             File cacheDir = OntologyLoader.getDiskCachePath( "mondoOntology" ).getParentFile();
             service.setSlimCacheDir( cacheDir );
+        } else {
+            log.info( "MONDO slim is disabled: enabled={}, slimExtractor={}, seedResolver={};"
+                            + " the full source will be parsed on every load.",
+                    mondoSlimEnabled,
+                    slimExtractor != null ? "present" : "ABSENT",
+                    seedResolver != null ? "present" : "ABSENT" );
         }
         OntologyServiceFactory<MondoOntologyService> factory = new OntologyServiceFactory<>( service );
         factory.setAutoLoad( loadOntologies );

@@ -66,6 +66,16 @@
         <Logger name="org.apache.jena.riot.RDFLanguages" level="ERROR"/>
         <Logger name="ubic.gemma.core.ontology.jena.PropertyFactory" level="ERROR"/>
         <Logger name="ubic.gemma.core.ontology.providers" level="WARN"/>
+        <!--
+            The line above is MORE SPECIFIC than the ubic.gemma INFO logger below, so it wins, and
+            from 2026-05-26 to 2026-09-12 it silenced the two INFO lines that say which CHEBI got
+            loaded: "Loading CHEBI from slim cache …" and "Slim CHEBI cache missing or stale …;
+            loading full source". frink served the full 865 MB ontology instead of the 143 MB slim
+            for 16 days and the log said nothing either way. These two are back at INFO for that
+            reason; keep the package mute for the Jena chatter it was added for.
+        -->
+        <Logger name="ubic.gemma.core.ontology.providers.ChebiOntologyService" level="INFO"/>
+        <Logger name="ubic.gemma.core.ontology.providers.MondoOntologyService" level="INFO"/>
 
         <!-- App-level loggers at INFO so warm-up + slim-cache messages survive -->
         <Logger name="ubic.gemma" level="INFO"/>
