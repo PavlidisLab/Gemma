@@ -34,10 +34,17 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.util.CursorPage;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -47,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -361,6 +369,102 @@ public class TicketServiceImplTest {
                         || saved.getUpdatedAt().getTime() >= before.getTime(),
                 "updatedAt should advance" );
         verify( ticketDao ).save( t );
+    }
+
+    /**
+     * 🛑 The reattach copy list in {@link TicketServiceImpl#updateMetadata} is hand-maintained, and a
+     * field left off it is dropped in silence: the REST layer mutates a DETACHED ticket, the copy skips
+     * the field, and the caller is answered 200. payload / payloadSchemaVersion shipped that way until
+     * 2026-09-04 and acceptsTargets until 2026-09-11.
+     *
+     * <p>This walks {@link Ticket}'s own fields and fails on any one that does not survive the call, so
+     * a field added to the entity has to be classified deliberately — copied in {@code updateMetadata},
+     * or named in {@code ownedElsewhere} below because another service method writes it. A field whose
+     * type this test cannot mint a distinct value for also fails, rather than being skipped.</p>
+     *
+     * <p>{@code title} and {@code body} live on the superclass and so are not walked; they are covered
+     * by {@code TicketPersistenceIT}, which asserts {@code title} as the control of its copy-list
+     * regression tests.</p>
+     *
+     * <p>The sibling test above passes a TRANSIENT ticket, where {@code reattach} short-circuits and the
+     * copy list never runs — which is why it cannot see any of this.</p>
+     */
+    @Test
+    public void updateMetadata_copiesEveryMutableMetadataField_offADetachedTicket() throws Exception {
+        // Owned by a dedicated path rather than by updateMetadata: set at create (type, reporter,
+        // createdAt), written by transition (state), by assign (assignee), by bumpUpdated (updatedAt),
+        // and by addTarget / appendEvent (the two collections).
+        Set<String> ownedElsewhere = new HashSet<>( Arrays.asList(
+                "type", "state", "reporter", "assignee", "createdAt", "updatedAt", "targets", "events" ) );
+
+        // Two instances with the same id: what the REST layer holds (detached, mutated by the handler)
+        // and what reattach() loads inside the service transaction.
+        Ticket detached = Ticket.Factory.newInstance( TicketType.CURATION, "copy-list-guard", reporter );
+        detached.setId( 7L );
+        Ticket attached = Ticket.Factory.newInstance( TicketType.CURATION, "copy-list-guard", reporter );
+        attached.setId( 7L );
+        when( ticketDao.load( 7L ) ).thenReturn( attached );
+        stubDaoSaveEchoes();
+
+        List<Field> walked = new ArrayList<>();
+        for ( Field f : Ticket.class.getDeclaredFields() ) {
+            if ( f.isSynthetic() || Modifier.isStatic( f.getModifiers() ) || Modifier.isFinal( f.getModifiers() ) ) {
+                continue;
+            }
+            if ( ownedElsewhere.contains( f.getName() ) ) {
+                continue;
+            }
+            f.setAccessible( true );
+            Object value = distinctValueFor( f.getType(), f.get( detached ) );
+            if ( value == null ) {
+                fail( "No distinct test value can be minted for Ticket." + f.getName() + " (" + f.getType()
+                        + "). Extend distinctValueFor, or name the field in ownedElsewhere if a dedicated"
+                        + " service method writes it." );
+            }
+            f.set( detached, value );
+            walked.add( f );
+        }
+        assertFalse( walked.isEmpty(), "no metadata fields were walked -- the guard would pass vacuously" );
+
+        service.updateMetadata( detached, "copy-list guard" );
+
+        for ( Field f : walked ) {
+            assertEquals( f.get( detached ), f.get( attached ),
+                    "updateMetadata does not copy `" + f.getName() + "` onto the reattached ticket, so a caller"
+                            + " that sets it is answered 200 and the value is lost. Copy it in"
+                            + " TicketServiceImpl.updateMetadata, or name it in ownedElsewhere if another"
+                            + " service method owns it." );
+        }
+    }
+
+    /**
+     * A value of {@code type} that differs from {@code current}, or null when this test does not know how
+     * to mint one — which the caller turns into a failure rather than a skip.
+     */
+    private static Object distinctValueFor( Class<?> type, Object current ) {
+        if ( type == String.class ) {
+            return "copy-list-guard";
+        }
+        if ( type == boolean.class || type == Boolean.class ) {
+            return Boolean.TRUE.equals( current ) ? Boolean.FALSE : Boolean.TRUE;
+        }
+        if ( type == int.class || type == Integer.class ) {
+            return 4242;
+        }
+        if ( type == long.class || type == Long.class ) {
+            return 4242L;
+        }
+        if ( type == Date.class ) {
+            return new Date( 1234567890L );
+        }
+        if ( type.isEnum() ) {
+            for ( Object constant : type.getEnumConstants() ) {
+                if ( !constant.equals( current ) ) {
+                    return constant;
+                }
+            }
+        }
+        return null;
     }
 
     /* ---- scratchpad provisioning ---------------------------------------- */

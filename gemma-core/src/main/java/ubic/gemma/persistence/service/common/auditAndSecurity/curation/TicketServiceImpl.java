@@ -270,6 +270,14 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
             // `created` comes from an earlier transaction and reattach() loads a fresh instance.
             attached.setPayload( ticket.getPayload() );
             attached.setPayloadSchemaVersion( ticket.getPayloadSchemaVersion() );
+            // acceptsTargets was the second field to be forgotten (frinkbro, 2026-09-11): a PATCH
+            // setting it answered 200, and the POST /tickets/{id}/targets that followed still refused
+            // with "Its targets were fixed when it was opened". openTicket() always opens a ticket
+            // with the flag false, so until this line the flag could not be set through the API at
+            // all -- neither at create nor after.
+            attached.setAcceptsTargets( ticket.isAcceptsTargets() );
+            attached.setExternalIssueUrl( ticket.getExternalIssueUrl() );
+            attached.setExternalIssueSyncState( ticket.getExternalIssueSyncState() );
         }
         bumpUpdated( attached );
         return ticketDao.save( attached );

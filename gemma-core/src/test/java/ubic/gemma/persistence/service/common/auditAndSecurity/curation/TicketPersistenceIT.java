@@ -222,6 +222,48 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
     }
 
     @Test
+    @DisplayName("acceptsTargets written through updateMetadata survives, and the ticket then takes an added target")
+    public void acceptsTargets_survivesUpdateMetadata() {
+        // 🛑 The same copy-list regression as payload above, one field later. Reported from the field
+        // (frinkbro, 2026-09-11): "PATCH with {\"acceptsTargets\":true} returns 200 and has no effect,
+        // and the subsequent add still 409s with 'Its targets were fixed when it was opened'".
+        // openTicket() opens every ticket with the flag false, so until the copy list carried it the
+        // flag could not be set through the API at all -- not at create, not after.
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.CURATION, "accepts-targets-roundtrip",
+                Collections.singleton( TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 5151L ) ) );
+        Long id = created.getId();
+        assertNotNull( id );
+        assertFalse( created.isAcceptsTargets(), "openTicket opens with the flag false -- the starting state" );
+        flushAndClear();
+
+        // Detached, as on the REST path: the handler mutates an instance loaded in an earlier transaction.
+        Ticket detached = ticketDao.load( id );
+        assertNotNull( detached );
+        flushAndClear();
+        detached.setAcceptsTargets( true );
+        detached.setTitle( "accepts-targets-roundtrip-edited" );
+        ticketService.updateMetadata( detached, "acceptsTargets, title" );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        assertNotNull( reloaded );
+        assertTrue( reloaded.isAcceptsTargets(), "acceptsTargets must survive updateMetadata, not just be echoed back" );
+        assertEquals( "accepts-targets-roundtrip-edited", reloaded.getTitle(),
+                "title was already on the copy list and is the control -- if this fails the test is wrong, not the fix" );
+
+        // The refusal the flag governs: the addition that answered 409 now goes through.
+        TicketService.TargetAddition addition = ticketService.addTarget( reloaded,
+                TicketTargetType.EXPRESSION_EXPERIMENT, 5252L, reporter );
+        assertTrue( addition.isAdded(), "a ticket that accepts targets must take one" );
+        flushAndClear();
+
+        Ticket afterAdd = ticketDao.load( id );
+        assertNotNull( afterAdd );
+        assertEquals( 2, afterAdd.getTargets().size() );
+    }
+
+    @Test
     @DisplayName("explicit mode=AUTO, body, target status=UNDERWAY round-trip")
     public void explicitFields_roundTrip() {
         TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 6789L );
