@@ -39,6 +39,7 @@ import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.*;
+import ubic.gemma.core.security.util.ActingIdentity;
 import ubic.gemma.core.security.util.SecurityUtil;
 import ubic.gemma.core.security.concurrent.DelegatingSecurityContextExecutorService;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -6106,9 +6107,14 @@ public class AnnotationsWebService {
             @Nullable AnnotationDto body,
             @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
                     + "linkage is parked until the source-set → emitted-event audit link lands.")
-            @QueryParam("annotationSetId") @Nullable Long annotationSetId
+            @QueryParam("annotationSetId") @Nullable Long annotationSetId,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
-        return doAddDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg, body, annotationSetId );
+        return doAddDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg, body,
+                annotationSetId, onBehalfOf );
     }
 
     /**
@@ -6124,16 +6130,33 @@ public class AnnotationsWebService {
      * rather than injecting one resource into the other keeps both classes' Spring wiring — and the
      * mocked test contexts built over it — unchanged.</p>
      */
+    /**
+     * The curator a write is being carried FOR, or null when the credential is acting for itself.
+     * <p>
+     * 🛑 The direction, because it reads both ways and only one is implemented (Paul, 2026-09-11): the AGENT
+     * authenticates as itself and names the person in charge here. So {@code PERFORMER} on the audit row is
+     * {@code gemmaAgent} and {@code ON_BEHALF_OF} is the curator — never the reverse.
+     * {@code SecurityUtil.resolveActingIdentity} enforces that only an agent or an admin may name anyone but
+     * themselves.
+     */
+    @Nullable
+    static String actingIdentityIfNamed( @Nullable String onBehalfOf ) {
+        return StringUtils.isBlank( onBehalfOf ) ? null : SecurityUtil.resolveActingIdentity( onBehalfOf );
+    }
+
     static Response doAddDatasetAnnotation( DatasetArgService datasetArgService,
             ExpressionExperimentService expressionExperimentService,
-            DatasetArg<?> datasetArg, @Nullable AnnotationDto body, @Nullable Long annotationSetId ) {
+            DatasetArg<?> datasetArg, @Nullable AnnotationDto body, @Nullable Long annotationSetId,
+            @Nullable String onBehalfOf ) {
         if ( body == null ) {
             throw new BadRequestException( "A request body is required." );
         }
         Characteristic vc = annotationDtoToCharacteristic( body );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         Characteristic persisted;
-        try {
+        // The audit row is written inside the service's transaction by an aspect with no argument for this,
+        // so the name is scoped to the call instead. See ActingIdentity.
+        try ( ActingIdentity.Scope ignored = ActingIdentity.scope( actingIdentityIfNamed( onBehalfOf ) ) ) {
             persisted = expressionExperimentService.addAnnotation( ee, vc );
         } catch ( IllegalArgumentException e ) {
             // 409 Conflict for duplicate (category, value) — service throws IAE on dup.
@@ -6170,9 +6193,14 @@ public class AnnotationsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response removeDatasetAnnotation(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("annotationId") Long annotationId
+            @PathParam("annotationId") Long annotationId,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
-        return doRemoveDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg, annotationId );
+        return doRemoveDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg,
+                annotationId, onBehalfOf );
     }
 
     /**
@@ -6184,12 +6212,15 @@ public class AnnotationsWebService {
      */
     static Response doRemoveDatasetAnnotation( DatasetArgService datasetArgService,
             ExpressionExperimentService expressionExperimentService,
-            DatasetArg<?> datasetArg, @Nullable Long annotationId ) {
+            DatasetArg<?> datasetArg, @Nullable Long annotationId, @Nullable String onBehalfOf ) {
         if ( annotationId == null ) {
             throw new BadRequestException( "An annotation id is required." );
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        Characteristic removed = expressionExperimentService.removeAnnotation( ee, annotationId );
+        Characteristic removed;
+        try ( ActingIdentity.Scope ignored = ActingIdentity.scope( actingIdentityIfNamed( onBehalfOf ) ) ) {
+            removed = expressionExperimentService.removeAnnotation( ee, annotationId );
+        }
         if ( removed == null ) {
             throw new NotFoundException( "No annotation with id " + annotationId + " on dataset " + ee.getShortName() + "." );
         }
@@ -6222,8 +6253,21 @@ public class AnnotationsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<AnnotationReplaceReport> replaceDatasetAnnotations(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable AnnotationsReplaceRequest body
+            @Nullable AnnotationsReplaceRequest body,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
+        // Bound for the whole handler: this one writes row by row, so every TagAddedEvent /
+        // TagRemovedEvent it emits has to carry the same name.
+        try ( ActingIdentity.Scope ignored = ActingIdentity.scope( actingIdentityIfNamed( onBehalfOf ) ) ) {
+            return doReplaceDatasetAnnotations( datasetArg, body );
+        }
+    }
+
+    private ResponseDataObject<AnnotationReplaceReport> doReplaceDatasetAnnotations(
+            DatasetArg<?> datasetArg, @Nullable AnnotationsReplaceRequest body ) {
         if ( body == null || body.getAnnotations() == null ) {
             throw new BadRequestException( "A request body with an 'annotations' field is required (use an empty list to clear)." );
         }

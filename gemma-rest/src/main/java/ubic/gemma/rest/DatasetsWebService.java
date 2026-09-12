@@ -9255,8 +9255,23 @@ public class DatasetsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> updateDatasetAnnotations(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable AnnotationsUpdateRequest body
+            @Nullable AnnotationsUpdateRequest body,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
+        // Bound for the whole handler: updateAnnotations emits one TagAddedEvent / TagRemovedEvent per row,
+        // and they all belong to the same write.
+        try ( ubic.gemma.core.security.util.ActingIdentity.Scope ignored =
+                      ubic.gemma.core.security.util.ActingIdentity.scope(
+                              AnnotationsWebService.actingIdentityIfNamed( onBehalfOf ) ) ) {
+            return doUpdateDatasetAnnotations( datasetArg, body );
+        }
+    }
+
+    private ResponseDataObject<Set<AnnotationValueObject>> doUpdateDatasetAnnotations(
+            DatasetArg<?> datasetArg, @Nullable AnnotationsUpdateRequest body ) {
         if ( body == null || body.getAnnotations() == null ) {
             throw new BadRequestException( "A request body with an 'annotations' field is required (use an empty list to clear)." );
         }
@@ -9317,10 +9332,14 @@ public class DatasetsWebService {
             @Nullable AnnotationsWebService.AnnotationDto body,
             @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
                     + "linkage is parked until the source-set → emitted-event audit link lands.")
-            @QueryParam("annotationSetId") @Nullable Long annotationSetId
+            @QueryParam("annotationSetId") @Nullable Long annotationSetId,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
         return AnnotationsWebService.doAddDatasetAnnotation( datasetArgService, expressionExperimentService,
-                datasetArg, body, annotationSetId );
+                datasetArg, body, annotationSetId, onBehalfOf );
     }
 
     @DELETE
@@ -9340,10 +9359,14 @@ public class DatasetsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response removeDatasetAnnotationTag(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("annotationId") Long annotationId
+            @PathParam("annotationId") Long annotationId,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
         return AnnotationsWebService.doRemoveDatasetAnnotation( datasetArgService, expressionExperimentService,
-                datasetArg, annotationId );
+                datasetArg, annotationId, onBehalfOf );
     }
 
     /**

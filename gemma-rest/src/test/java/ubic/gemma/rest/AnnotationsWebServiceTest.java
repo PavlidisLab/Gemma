@@ -355,6 +355,85 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService ).addAnnotation( eq( ee ), any( Characteristic.class ) );
     }
 
+    /**
+     * 🛑 The direction, which reads both ways and only one is implemented (Paul, 2026-09-11): the AGENT
+     * authenticates as itself and names the person in charge. So the audit row's PERFORMER stays the
+     * credential and ON_BEHALF_OF carries the curator — never the reverse. Asserted where the name is
+     * readable: bound for the duration of the service call, which is where the @Audited aspect reads it.
+     * <p>
+     * 0 of 16,511 TagAddedEvent rows carried a name before this, because the tag routes took no such
+     * parameter at all (frinkbro, 2026-09-11).
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_AGENT" })
+    public void testAddDatasetAnnotationBindsOnBehalfOfForTheAuditRow() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        java.util.concurrent.atomic.AtomicReference<String> boundDuringTheCall = new java.util.concurrent.atomic.AtomicReference<>();
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> {
+                    boundDuringTheCall.set( ubic.gemma.core.security.util.ActingIdentity.get() );
+                    Characteristic vc = a.getArgument( 1, Characteristic.class );
+                    vc.setId( 42L );
+                    return vc;
+                } );
+        String body = "{\"category\":\"organism part\",\"categoryUri\":\"http://purl.obolibrary.org/obo/UBERON_0000479\","
+                + "\"value\":\"liver\",\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).queryParam( "onBehalfOf", "paul" )
+                .request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+
+        assertThat( boundDuringTheCall.get() ).isEqualTo( "paul" );
+        // 🛑 And it must not outlive the request: threads are pooled, so a name left bound is attributed to
+        // whoever lands on this thread next.
+        assertThat( ubic.gemma.core.security.util.ActingIdentity.get() ).isNull();
+    }
+
+    /** Without the parameter nothing is bound, which is the ordinary case and must stay null rather than "". */
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationBindsNothingWhenNoOneIsNamed() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        java.util.concurrent.atomic.AtomicReference<String> boundDuringTheCall = new java.util.concurrent.atomic.AtomicReference<>();
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> {
+                    boundDuringTheCall.set( ubic.gemma.core.security.util.ActingIdentity.get() );
+                    Characteristic vc = a.getArgument( 1, Characteristic.class );
+                    vc.setId( 42L );
+                    return vc;
+                } );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        assertThat( boundDuringTheCall.get() ).isNull();
+    }
+
+    /** A plain curator may not write as somebody else; only an agent or an admin carries a name. */
+    @Test
+    @WithMockUser(username = "alice", authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationRefusesANameFromAPlainCurator() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        try ( Response r = target( "/annotations/datasets/1/annotations" ).queryParam( "onBehalfOf", "paul" )
+                .request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 403 );
+        }
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
     @Test
     @WithMockUser(authorities = { "GROUP_CURATOR" })
     public void testAddDatasetAnnotationDuplicateReturns409() {
