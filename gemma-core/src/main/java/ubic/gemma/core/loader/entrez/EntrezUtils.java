@@ -155,6 +155,19 @@ public class EntrezUtils {
     }
 
     /**
+     * Retrieve a document summary from an Entrez database by ID, without a prior search.
+     * <p>
+     * {@link #summary(String, EntrezQuery, EntrezRetmode, int, int, String)} needs the WebEnv of an earlier
+     * {@code esearch}; an id in hand needs neither, and a gene URI already carries the id.
+     */
+    public static URL summaryById( String db, String id, EntrezRetmode retmode, @Nullable String apiKey ) {
+        return createUrl( ESUMMARY
+                + "?db=" + urlEncode( db )
+                + "&id=" + urlEncode( id )
+                + "&retmode=" + urlEncode( retmode.getValue() ), apiKey );
+    }
+
+    /**
      * Retrieve a record from an Entrez database by ID.
      */
     public static URL fetchById( String db, String id, EntrezRetmode retmode, String rettype, @Nullable String apiKey ) {

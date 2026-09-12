@@ -43,13 +43,17 @@ public class OntologyTermValidatorImplTest {
 
     private OntologyService ontologyService;
     private OlsTermResolver olsTermResolver;
+    private ubic.gemma.persistence.service.genome.gene.GeneService geneService;
+    private ubic.gemma.core.ontology.ncbi.NcbiGeneResolver ncbiGeneResolver;
     private OntologyTermValidatorImpl validator;
 
     @BeforeEach
     public void setUp() {
         ontologyService = mock( OntologyService.class );
         olsTermResolver = mock( OlsTermResolver.class );
-        validator = new OntologyTermValidatorImpl( ontologyService, olsTermResolver );
+        geneService = mock( ubic.gemma.persistence.service.genome.gene.GeneService.class );
+        ncbiGeneResolver = mock( ubic.gemma.core.ontology.ncbi.NcbiGeneResolver.class );
+        validator = new OntologyTermValidatorImpl( ontologyService, olsTermResolver, geneService, ncbiGeneResolver );
         ReflectionTestUtils.setField( validator, "timeoutMs", 5000L );
     }
 
@@ -224,12 +228,137 @@ public class OntologyTermValidatorImplTest {
         assertEquals( TermViolation.Reason.UNVERIFIED_OLS_UNAVAILABLE, v.get( 0 ).getReason() );
     }
 
+    /**
+     * A gene URI is grounded against Gemma's gene table, never against an ontology or OLS: the gene table is
+     * the authority for a gene record.
+     */
     @Test
-    public void testNcbiGeneUriSkipped() throws Exception {
+    public void testNcbiGeneUriIsCheckedAgainstTheGeneTable() throws Exception {
+        when( geneService.findByNCBIId( 22059 ) ).thenReturn( Gene.Factory.newInstance() );
         Characteristic c = characteristic( null, null, "Trp53", Gene.NCBI_URI_PREFIX + "22059" );
         assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+        verify( geneService ).findByNCBIId( 22059 );
         verify( ontologyService, never() ).getTerm( anyString(), anyLong(), any() );
         verify( olsTermResolver, never() ).resolve( anyString() );
+    }
+
+    /**
+     * 🛑 The label is not compared. Gemma stores a composed display form in the value slot, so 21,942 of the
+     * 23,812 gene-URI characteristics on production carry a value that is not the official symbol (measured
+     * 2026-09-12). Comparing them would reject essentially all gene curation.
+     */
+    @Test
+    public void testAGeneLabelThatIsNotTheOfficialSymbolIsNotAViolation() throws Exception {
+        Gene g = Gene.Factory.newInstance();
+        g.setOfficialSymbol( "Trp53" );
+        when( geneService.findByNCBIId( 22059 ) ).thenReturn( g );
+        Characteristic c = characteristic( null, null, "Trp53 [mouse] transformation related protein 53",
+                Gene.NCBI_URI_PREFIX + "22059" );
+        assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+        assertEquals( "Trp53 [mouse] transformation related protein 53", c.getValue(),
+                "the display form must survive: rewriting it to the symbol flattens what the UI renders" );
+    }
+
+    /**
+     * 🛑 An id Gemma does not carry is NOT a fabrication: Gemma imports no QTLs, complexes, pseudogenes or
+     * genes of unsupported species, and a mouse study annotating a yeast construct is ordinary curation.
+     * All 41 such rows on production are of those kinds. NCBI is asked, and a record it has is accepted.
+     */
+    @Test
+    public void testAGeneIdOnlyNcbiCarriesIsAccepted() throws Exception {
+        when( geneService.findByNCBIId( 853271 ) ).thenReturn( null );
+        when( ncbiGeneResolver.resolve( 853271 ) ).thenReturn( new ubic.gemma.core.ontology.ncbi.NcbiGeneRecord(
+                853271, "SET2", "histone methyltransferase SET2", "Saccharomyces cerevisiae", true, true ) );
+        Characteristic c = characteristic( null, null, "SET2 [yeast] histone methyltransferase SET2",
+                Gene.NCBI_URI_PREFIX + "853271" );
+        assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+        assertEquals( "SET2 [yeast] histone methyltransferase SET2", c.getValue(),
+                "the label is left alone off the Gemma path: NCBI serves a scientific name, not the common one" );
+        verify( olsTermResolver, never() ).resolve( anyString() );
+    }
+
+    /** A record NCBI has retired is its own finding — the id was real, so the fix is the successor. */
+    @Test
+    public void testAWithdrawnNcbiRecordIsReported() throws Exception {
+        when( geneService.findByNCBIId( 918 ) ).thenReturn( null );
+        when( ncbiGeneResolver.resolve( 918 ) ).thenReturn( new ubic.gemma.core.ontology.ncbi.NcbiGeneRecord(
+                918, "CD3W", "CD3-TCR complex, omega polypeptide", "Homo sapiens", true, false ) );
+        Characteristic c = characteristic( null, null, "CD3W [human] CD3-TCR complex, omega polypeptide",
+                Gene.NCBI_URI_PREFIX + "918" );
+        List<TermViolation> v = validator.validateAndCanonicalize( c );
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.GENE_WITHDRAWN, v.get( 0 ).getReason() );
+    }
+
+    /** An id neither Gemma nor NCBI has is a fabrication. */
+    @Test
+    public void testAGeneIdNobodyHasIsUnresolved() throws Exception {
+        when( geneService.findByNCBIId( 999999999 ) ).thenReturn( null );
+        when( ncbiGeneResolver.resolve( 999999999 ) )
+                .thenReturn( ubic.gemma.core.ontology.ncbi.NcbiGeneRecord.notFound( 999999999 ) );
+        Characteristic c = characteristic( null, null, "Nosuchgene", Gene.NCBI_URI_PREFIX + "999999999" );
+        List<TermViolation> v = validator.validateAndCanonicalize( c );
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.URI_UNRESOLVED, v.get( 0 ).getReason() );
+    }
+
+    /** NCBI down is unverified, not a finding: fail-open is the default, so the write proceeds. */
+    @Test
+    public void testNcbiUnavailableIsAllowedThroughByDefault() throws Exception {
+        when( geneService.findByNCBIId( anyInt() ) ).thenReturn( null );
+        when( ncbiGeneResolver.resolve( anyInt() ) )
+                .thenThrow( new ubic.gemma.core.ontology.ncbi.NcbiUnavailableException( "boom" ) );
+        Characteristic c = characteristic( null, null, "Tabw [mouse] TallyHo associated body weight",
+                Gene.NCBI_URI_PREFIX + "117011" );
+        assertTrue( validator.validateAndCanonicalize( c ).isEmpty() );
+    }
+
+    /** …and fail-closed reports it with the retryable reason rather than the fabricated one. */
+    @Test
+    public void testNcbiUnavailableIsReportedWhenFailClosed() throws Exception {
+        ReflectionTestUtils.setField( validator, "ncbiFailClosed", true );
+        when( geneService.findByNCBIId( anyInt() ) ).thenReturn( null );
+        when( ncbiGeneResolver.resolve( anyInt() ) )
+                .thenThrow( new ubic.gemma.core.ontology.ncbi.NcbiUnavailableException( "boom" ) );
+        Characteristic c = characteristic( null, null, "Tabw [mouse] TallyHo associated body weight",
+                Gene.NCBI_URI_PREFIX + "117011" );
+        List<TermViolation> v = validator.validateAndCanonicalize( c );
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.UNVERIFIED_NCBI_UNAVAILABLE, v.get( 0 ).getReason() );
+    }
+
+    /**
+     * 🛑 A stale symbol IS harmonized rather than accepted: 193 rows over 61 ids carry a symbol the gene no
+     * longer has (Arntl for Bmal1, MLL for KMT2A, H3F3A for H3-3A), so the label is rewritten to the current
+     * display form and echoed, and NCBI is never consulted because Gemma has the gene.
+     */
+    @Test
+    public void testAStaleGeneSymbolIsHarmonizedToTheCurrentDisplayForm() throws Exception {
+        ubic.gemma.model.genome.Taxon taxon = ubic.gemma.model.genome.Taxon.Factory.newInstance();
+        taxon.setCommonName( "mouse" );
+        Gene g = Gene.Factory.newInstance();
+        g.setOfficialSymbol( "Bmal1" );
+        g.setOfficialName( "basic helix-loop-helix ARNT like 1" );
+        g.setTaxon( taxon );
+        when( geneService.findByNCBIId( 11865 ) ).thenReturn( g );
+        Characteristic c = characteristic( null, null,
+                "Arntl [mouse] aryl hydrocarbon receptor nuclear translocator-like", Gene.NCBI_URI_PREFIX + "11865" );
+        List<TermCanonicalization> canons = new ArrayList<>();
+        assertTrue( validator.validateAndCanonicalize( c, canons ).isEmpty() );
+        assertEquals( "Bmal1 [mouse] basic helix-loop-helix ARNT like 1", c.getValue() );
+        assertEquals( 1, canons.size() );
+        assertEquals( "value", canons.get( 0 ).getSlot() );
+        verifyNoInteractions( ncbiGeneResolver );
+    }
+
+    /** A gene URI whose tail is not a number never reaches the gene table. */
+    @Test
+    public void testAGeneUriWithANonNumericIdIsUnresolved() throws Exception {
+        Characteristic c = characteristic( null, null, "Trp53", Gene.NCBI_URI_PREFIX + "Trp53" );
+        List<TermViolation> v = validator.validateAndCanonicalize( c );
+        assertEquals( 1, v.size() );
+        assertEquals( TermViolation.Reason.URI_UNRESOLVED, v.get( 0 ).getReason() );
+        verify( geneService, never() ).findByNCBIId( any() );
     }
 
     @Test

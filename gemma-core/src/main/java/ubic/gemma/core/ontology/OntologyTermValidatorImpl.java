@@ -30,7 +30,11 @@ import ubic.gemma.core.ontology.ols.OlsTermResolver;
 import ubic.gemma.core.ontology.ols.OlsUnavailableException;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.core.ontology.ncbi.NcbiGeneRecord;
+import ubic.gemma.core.ontology.ncbi.NcbiGeneResolver;
+import ubic.gemma.core.ontology.ncbi.NcbiUnavailableException;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,9 +56,12 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
 
     /**
      * URI prefixes that are legitimately not ontology terms and so are never sent for grounding — the same
-     * carve-out {@code OntologyServiceImpl}'s label-fixer already applies to NCBI gene URIs.
+     * carve-out {@code OntologyServiceImpl}'s label-fixer already applies.
+     * <p>
+     * 🛑 NCBI gene URIs are NOT in here any more: they are checked against Gemma's own gene table instead of
+     * skipped. See {@link #validateGeneUri}.
      */
-    private static final String[] NON_ONTOLOGY_URI_PREFIXES = { Gene.NCBI_URI_PREFIX };
+    private static final String[] NON_ONTOLOGY_URI_PREFIXES = {};
 
     /**
      * A Gemma-owned ontology id (currently just TGEMO) captured from anywhere in a URI, so a term written on a
@@ -65,14 +72,22 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
 
     private final OntologyService ontologyService;
     private final OlsTermResolver olsTermResolver;
+    private final GeneService geneService;
+    private final NcbiGeneResolver ncbiGeneResolver;
 
     @Value("${gemma.ontology.validation.timeout.ms}")
     private long timeoutMs;
 
+    @Value("${gemma.ncbi.gene.validation.failClosed}")
+    private boolean ncbiFailClosed;
+
     @Autowired
-    public OntologyTermValidatorImpl( OntologyService ontologyService, OlsTermResolver olsTermResolver ) {
+    public OntologyTermValidatorImpl( OntologyService ontologyService, OlsTermResolver olsTermResolver,
+            GeneService geneService, NcbiGeneResolver ncbiGeneResolver ) {
         this.ontologyService = ontologyService;
         this.olsTermResolver = olsTermResolver;
+        this.geneService = geneService;
+        this.ncbiGeneResolver = ncbiGeneResolver;
     }
 
     @Override
@@ -98,6 +113,10 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
             if ( uri.startsWith( prefix ) ) {
                 return; // legitimately not an ontology term
             }
+        }
+        if ( uri.startsWith( Gene.NCBI_URI_PREFIX ) ) {
+            validateGeneUri( slot, label, uri, canonicalLabelSetter, violations, canonicalizations );
+            return;
         }
 
         // Normalize a known Gemma-ontology term (TGEMO) that arrived on a foreign base back to the Gemma base
@@ -242,6 +261,93 @@ public class OntologyTermValidatorImpl implements OntologyTermValidator {
      * stored on GSE11630. RO is not among the loadable ontologies, so the generic path found nothing and the
      * commit refused Gemma's own sanctioned relation.
      */
+    /**
+     * Ground an NCBI gene URI: Gemma's own gene table first, then NCBI itself for the ids Gemma does not
+     * carry. No ontology and no OLS is involved — the authority for a gene record is the gene record.
+     *
+     * <h4>Gemma has the gene: harmonize the label</h4>
+     * The value slot holds a composed display form, {@code symbol [taxon] official name} (built by
+     * {@code OntologyServiceImpl}), so a whole-string comparison is useless: of the 23,812 gene-URI
+     * characteristics on production, 21,942 differ from the official symbol (measured 2026-09-12). What IS
+     * comparable is the leading symbol, and there the corpus is almost clean — 21,920 exact, 1 differing
+     * only in case, and <b>193 rows over 61 ids carrying a symbol the gene no longer has</b>: {@code Arntl}
+     * for {@code Bmal1}, {@code MLL} for {@code KMT2A}, {@code H3F3A} for {@code H3-3A}, and one outright
+     * error, {@code glatiramer acetate} on {@code IFNB1}. Those are renames, so the label is rewritten to
+     * the current display form and echoed as a canonicalization rather than rejected — the id is the
+     * assertion and the text beside it is presentation.
+     *
+     * <h4>Gemma does not have the gene: ask NCBI</h4>
+     * Gemma imports neither QTLs, gene complexes and clusters, pseudogenes, withdrawn records, nor genes of
+     * species it holds none for — and a mouse study annotating a yeast or fly construct is ordinary
+     * curation (GSE180988, GSE149616, GSE72335, GSE115237.1 each do). All 41 unresolvable rows on
+     * production are of those kinds, so refusing them would refuse real work. NCBI separates them from a
+     * fabricated id: a record it has is accepted, a withdrawn one is {@code GENE_WITHDRAWN}, an id it has
+     * nothing for is {@code URI_UNRESOLVED}, and an outage is unverified rather than a finding — fail-open
+     * by default, see {@code gemma.ncbi.gene.validation.failClosed}.
+     * <p>
+     * The label is left alone on this path: NCBI serves a scientific name where the display form carries a
+     * common name, so composing one here would invent a third spelling.
+     */
+    private void validateGeneUri( String slot, @Nullable String label, String uri,
+            Consumer<String> canonicalLabelSetter, List<TermViolation> violations,
+            List<TermCanonicalization> canonicalizations ) {
+        String id = uri.substring( Gene.NCBI_URI_PREFIX.length() );
+        int ncbiId;
+        try {
+            ncbiId = Integer.parseInt( id );
+        } catch ( NumberFormatException e ) {
+            violations.add( new TermViolation( slot, label, uri, null, TermViolation.Reason.URI_UNRESOLVED ) );
+            return;
+        }
+        Gene gene = geneService.findByNCBIId( ncbiId );
+        if ( gene != null ) {
+            harmonizeGeneLabel( slot, label, uri, gene, canonicalLabelSetter, canonicalizations );
+            return;
+        }
+        NcbiGeneRecord record;
+        try {
+            record = ncbiGeneResolver.resolve( ncbiId );
+        } catch ( NcbiUnavailableException e ) {
+            if ( ncbiFailClosed ) {
+                violations.add( new TermViolation( slot, label, uri, null,
+                        TermViolation.Reason.UNVERIFIED_NCBI_UNAVAILABLE ) );
+            } else {
+                log.warn( "Allowing unverified gene " + ncbiId + " at " + slot + " (NCBI unavailable, fail-open): "
+                        + e.getMessage() );
+            }
+            return;
+        }
+        if ( !record.isFound() ) {
+            violations.add( new TermViolation( slot, label, uri, null, TermViolation.Reason.URI_UNRESOLVED ) );
+        } else if ( !record.isLive() ) {
+            violations.add( new TermViolation( slot, label, uri, record.getSymbol(),
+                    TermViolation.Reason.GENE_WITHDRAWN ) );
+        }
+    }
+
+    /**
+     * Rewrite a gene label whose leading symbol is not the gene's current official symbol, in the display
+     * form Gemma composes elsewhere: {@code symbol [taxon] official name}. A label already carrying the
+     * right symbol is untouched, whatever follows it.
+     */
+    private void harmonizeGeneLabel( String slot, @Nullable String label, String uri, Gene gene,
+            Consumer<String> canonicalLabelSetter, List<TermCanonicalization> canonicalizations ) {
+        String official = gene.getOfficialSymbol();
+        if ( StringUtils.isBlank( official ) ) {
+            return; // nothing to harmonize against
+        }
+        String leading = label != null ? StringUtils.substringBefore( label, " [" ).trim() : "";
+        if ( leading.equalsIgnoreCase( official ) ) {
+            return;
+        }
+        String taxon = gene.getTaxon() != null ? gene.getTaxon().getCommonName() : null;
+        String canonical = official
+                + ( StringUtils.isNotBlank( taxon ) ? " [" + taxon + "]" : "" )
+                + ( StringUtils.isNotBlank( gene.getOfficialName() ) ? " " + gene.getOfficialName() : "" );
+        canonicalLabelSetter.accept( canonical );
+        canonicalizations.add( new TermCanonicalization( slot, label, canonical, uri, uri ) );
+    }
+
     @Nullable
     private String resolveFromGemmaVocabulary( String slot, String uri ) {
         if ( "predicate".equals( slot ) || "secondPredicate".equals( slot ) ) {
