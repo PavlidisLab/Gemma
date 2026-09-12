@@ -243,7 +243,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     }
 
     public void setCategoryUri( @Nullable String categoryUri ) {
-        this.categoryUri = categoryUri;
+        this.categoryUri = stripToNull( categoryUri );
     }
 
     public GOEvidenceCode getEvidenceCode() {
@@ -292,8 +292,26 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
         return this.valueUri;
     }
 
+    /**
+     * 🛑 Blank is stored as null, the way {@link #setValue(String)} normalises its free text.
+     * <p>
+     * An empty string is a SECOND DIALECT for ungrounded, and every layer reads the two differently:
+     * {@link ubic.gemma.model.common.description.CharacteristicUtils#equals} treats a non-null URI as
+     * grounded, so {@code ''} beside a NULL reads as "ontology term vs free text" and the duplicate
+     * guard in {@code doAddAnnotation} lets the pair through; a census grouping on the raw column puts
+     * them in two groups. Production carried 80 such rows, all on curation surfaces (52 factor-value
+     * statements, 31 experiment tags, 0 biomaterial characteristics); normalising them to NULL on
+     * 2026-09-10 collapsed two pairs onto one coordinate and manufactured duplicate tags
+     * (frinkbro, 2026-09-11). Ten statement-URI rows were still {@code ''} when this landed.
+     * <p>
+     * Only some {@code Factory.newInstance} overloads stripped; 72 callsites set a URI directly. The
+     * normalisation belongs at the one chokepoint rather than at each of them.
+     * <p>
+     * Entities use {@code @Access(AccessType.FIELD)}, so Hibernate does not call this on load: an
+     * existing {@code ''} row reads back unchanged and is not silently rewritten.
+     */
     public void setValueUri( @Nullable String uri ) {
-        this.valueUri = uri;
+        this.valueUri = stripToNull( uri );
     }
 
     @Deprecated
