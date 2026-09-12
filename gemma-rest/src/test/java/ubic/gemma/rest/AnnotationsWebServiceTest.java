@@ -1359,6 +1359,40 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         verify( ontologyService ).getRelationTerms();
     }
 
+    /**
+     * A sanctioned predicate from an ontology Gemma does not load is served from the relation vocabulary, instead
+     * of the 404 that sent every client to OLS for a term Gemma ships.
+     */
+    @Test
+    public void testGetAnnotationTermServesAPredicateFromTheRelationVocabulary() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/RO_0000087";
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( null );
+        OntologyProperty hasRole = mock( OntologyProperty.class );
+        when( hasRole.getUri() ).thenReturn( uri );
+        when( hasRole.getLabel() ).thenReturn( "has role" );
+        when( ontologyService.getRelationTerms() ).thenReturn( Collections.singleton( hasRole ) );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.uri", uri )
+                .hasFieldOrPropertyWithValue( "data.label", "has role" )
+                .hasFieldOrPropertyWithValue( "data.obsolete", false );
+        // No ontology owns it, so nothing ontology-shaped is asked for.
+        verify( ontologyService, never() ).getDefinition( anyString(), anyLong(), any() );
+    }
+
+    /** A URI neither a loaded ontology nor the relation vocabulary has is still a 404. */
+    @Test
+    public void testGetAnnotationTermStill404sForAUriNobodyHas() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/RO_9999999";
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( null );
+        when( ontologyService.getRelationTerms() ).thenReturn( Collections.emptySet() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
     @Test
     public void testGetAnnotationPredicatesEmpty() {
         when( ontologyService.getRelationTerms() ).thenReturn( Collections.emptySet() );
@@ -1690,6 +1724,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
 
         verify( ontologyService ).getTerm( eq( "http://example.com/missing" ), anyLong(), any() );
+        // A miss consults Gemma's own relation vocabulary before answering 404, and nothing else.
+        verify( ontologyService ).getRelationTerms();
         verifyNoMoreInteractions( ontologyService );
         verify( characteristicService, never() ).countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() );
     }

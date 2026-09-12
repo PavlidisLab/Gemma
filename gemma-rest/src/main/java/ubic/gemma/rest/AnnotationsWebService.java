@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.ontology.model.AnnotationProperty;
+import ubic.gemma.core.ontology.model.OntologyProperty;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyUtils;
@@ -557,6 +558,10 @@ public class AnnotationsWebService {
             // get term returns the first match
             OntologyTerm term = ontologyService.getTerm( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
             if ( term == null ) {
+                OntologyTermValueObject relation = relationTermValueObject( termUri );
+                if ( relation != null ) {
+                    return respond( relation );
+                }
                 throw new NotFoundException( "No ontology term with URI " + termUri );
             }
             String definition = ontologyService.getDefinition( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
@@ -617,6 +622,32 @@ public class AnnotationsWebService {
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
+    }
+
+    /**
+     * A predicate from Gemma's own relation vocabulary ({@code Relation.terms.txt}), for a URI no loaded ontology
+     * carries.
+     * <p>
+     * RO and ENVO relations are sanctioned predicates but not loaded ontologies, so this route answered 404 for
+     * {@code RO_0000087 has role}, {@code RO_0002573 has modifier} and {@code ENVO_01003004 derives from part of}
+     * (measured on production 2026-09-12) — while the curation gate resolved the very same URIs offline, from the
+     * very same file. Any client asking Gemma for a predicate's label was sent to OLS for a term Gemma ships.
+     * <p>
+     * Only uri and label are known here: a definition, parents, synonyms and a version live in an ontology Gemma
+     * does not load, and loading one to fill them is not worth it for a vocabulary we use a few dozen terms of.
+     * {@code usageCount} is null rather than 0, because the count reads value URIs and a predicate is never one.
+     */
+    @Nullable
+    private OntologyTermValueObject relationTermValueObject( String uri ) {
+        for ( OntologyProperty p : ontologyService.getRelationTerms() ) {
+            if ( uri.equals( p.getUri() ) ) {
+                return new OntologyTermValueObject( p.getUri(), p.getLabel(), null, false, null,
+                        Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+                        Collections.emptyList(), 0, null, sourceMetadataOf( null ), null, null,
+                        Collections.emptyList(), null );
+            }
+        }
+        return null;
     }
 
     /**
