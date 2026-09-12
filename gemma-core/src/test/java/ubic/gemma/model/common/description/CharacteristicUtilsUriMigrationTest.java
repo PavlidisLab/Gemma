@@ -60,6 +60,56 @@ public class CharacteristicUtilsUriMigrationTest {
     }
 
     /**
+     * 🛑 A stored tag and the canonical form the read served it as are the SAME tag.
+     * <p>
+     * A set-replace carries the whole desired set, so a client editing one tag echoes every other one back as
+     * it was served — and the read serves {@code canonicalUri}. Compared literally, the echoed canonical URI is
+     * a different tag from the stored raw one, so the diff would drop the stored row and insert a canonical
+     * replacement: the parked migration, applied by accident, one row at a time, under a new id. 634 stored tags
+     * carry a URI this shim rewrites (36 experiment tags, 598 biomaterial characteristics, measured against
+     * {@code gemd} 2026-09-11).
+     */
+    @Test
+    public void testATagEchoedBackInCanonicalFormIsTheSameTag() {
+        Characteristic stored = Characteristic.Factory.newInstance( null, null, "endothelial cell",
+                OBO + "CL:0000115", "cell type", "http://www.ebi.ac.uk/efo/EFO_0000324", null );
+        Characteristic echoed = Characteristic.Factory.newInstance( null, null, "endothelial cell",
+                OBO + "CL_0000115", "cell type", "http://www.ebi.ac.uk/efo/EFO_0000324", null );
+        assertThat( CharacteristicUtils.sameTag( stored, echoed ) )
+                .as( "the client is echoing back what the read served, not proposing an edit" ).isTrue();
+        assertThat( CharacteristicUtils.sameTag( echoed, stored ) ).isTrue();
+    }
+
+    /** The same rule on a statement's object slot, which the read canonicalizes too. */
+    @Test
+    public void testAStatementObjectEchoedBackInCanonicalFormIsTheSameTag() {
+        ubic.gemma.model.expression.experiment.Statement stored = ubic.gemma.model.expression.experiment.Statement.Factory
+                .newInstance( "genotype", null, "KDM6A", null );
+        stored.setPredicate( "has_genotype" );
+        stored.setObject( "oligodendrocyte" );
+        stored.setObjectUri( OBO + "CL:0000128" );
+        ubic.gemma.model.expression.experiment.Statement echoed = ubic.gemma.model.expression.experiment.Statement.Factory
+                .newInstance( "genotype", null, "KDM6A", null );
+        echoed.setPredicate( "has_genotype" );
+        echoed.setObject( "oligodendrocyte" );
+        echoed.setObjectUri( OBO + "CL_0000128" );
+        assertThat( CharacteristicUtils.sameTag( stored, echoed ) ).isTrue();
+    }
+
+    /**
+     * And the canonicalization does not make the comparison mushy: two terms the shim does not join are still
+     * two tags. KMH-2 / KM-H2 is the pair that made that worth pinning.
+     */
+    @Test
+    public void testTwoTermsTheShimDoesNotJoinAreStillDifferentTags() {
+        Characteristic kmh2 = Characteristic.Factory.newInstance( null, null, "KMH-2 cell",
+                OBO + "CLO_0037155", "cell line", null, null );
+        Characteristic kmH2 = Characteristic.Factory.newInstance( null, null, "KM-H2 cell",
+                OBO + "CLO_0007112", "cell line", null, null );
+        assertThat( CharacteristicUtils.sameTag( kmh2, kmH2 ) ).isFalse();
+    }
+
+    /**
      * The overwhelmingly common case: a term nobody remapped comes back untouched. A
      * canonicaliser that rewrote anything it did not recognise would corrupt the whole corpus
      * to fix 350 rows.

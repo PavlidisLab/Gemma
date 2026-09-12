@@ -274,19 +274,39 @@ public class CharacteristicUtils {
      * Comparisons delegate to {@link #equals(String, String, String, String)} (case-insensitive,
      * URI-aware). Used by both {@code ExpressionExperimentService.updateAnnotations} and
      * {@code BioMaterialService.updateAnnotations} so the two diff implementations cannot drift.
+     * <p>
+     * The value, object and second-object slots compare their CANONICAL form — see
+     * {@code equalsCanonically} below.
      */
     public static boolean sameTag( Characteristic a, Characteristic b ) {
         if ( !equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
-                || !equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() ) ) {
+                || !equalsCanonically( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() ) ) {
             return false;
         }
         // A non-Statement reads as all-null on the statement slots, so a plain Characteristic and a
         // Statement carrying no predicate/object compare equal, while either one differs from a
         // composed Statement.
         return equals( predicateOf( a ), predicateUriOf( a ), predicateOf( b ), predicateUriOf( b ) )
-                && equals( objectOf( a ), objectUriOf( a ), objectOf( b ), objectUriOf( b ) )
+                && equalsCanonically( objectOf( a ), objectUriOf( a ), objectOf( b ), objectUriOf( b ) )
                 && equals( secondPredicateOf( a ), secondPredicateUriOf( a ), secondPredicateOf( b ), secondPredicateUriOf( b ) )
-                && equals( secondObjectOf( a ), secondObjectUriOf( a ), secondObjectOf( b ), secondObjectUriOf( b ) );
+                && equalsCanonically( secondObjectOf( a ), secondObjectUriOf( a ), secondObjectOf( b ), secondObjectUriOf( b ) );
+    }
+
+    /**
+     * {@link #equals(String, String, String, String)} on the canonical form of both sides.
+     * <p>
+     * The read serves {@link #canonicalUri} for the value, object and second-object slots, so a client that
+     * echoes back what it was served arrives holding the canonical URI while the stored row still holds the raw
+     * one. Compared literally those are two different tags, and a set-replace would then drop the stored row and
+     * insert a canonical one — performing the parked migration ({@code scripts/sql/term_uri_migration.sql}) on
+     * whichever rows rode along with an unrelated edit, one row at a time, under a new id. 634 stored tags carry
+     * a URI the shim rewrites (36 experiment tags and 598 biomaterial characteristics, measured against
+     * {@code gemd} 2026-09-11).
+     * <p>
+     * Category and predicate are compared raw, here as on the read, because the shim leaves them alone.
+     */
+    private static boolean equalsCanonically( @Nullable String a, @Nullable String aUri, @Nullable String b, @Nullable String bUri ) {
+        return equals( canonicalLabel( aUri, a ), canonicalUri( aUri ), canonicalLabel( bUri, b ), canonicalUri( bUri ) );
     }
 
     @Nullable
