@@ -5339,7 +5339,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( design );
         when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ), any() ) )
                 .thenReturn( new DesignPreflightReport() );
-        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+        // Both forms: the preflight is this same call with dryRun=true.
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), anyBoolean() ) )
                 .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
     }
 
@@ -5437,6 +5438,38 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         StatementValueObject svo = committedStatement( cap );
         assertThat( svo.getSecondPredicate() ).isNull();
         assertThat( svo.getSecondObject() ).isNull();
+    }
+
+    /**
+     * The preflight is the call a client makes FIRST, so it has to accept every document the commit would —
+     * {@code clearSecondPair} included — and refuse the ones it would refuse. Both routes go through
+     * {@code doCommitCuration}, so this pins the sharing rather than trusting it (uib asked, 2026-09-11).
+     */
+    @Test
+    @WithMockUser
+    public void testPreflightAppliesTheSameSecondPairRule() {
+        stubDesignCommitAccepts( designWithASecondPair() );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"}}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( omits ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) )
+                    .contains( "omits the statement's second predicate/object pair" );
+        }
+
+        String clears = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"},\"clearSecondPair\":true}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( clears ) ) ) {
+            assertThat( r.getStatus() ).isNotEqualTo( 400 );
+        }
+        // A preflight is the same service call with dryRun=true -- that flag is what makes it write nothing,
+        // so the thing to pin is that the apply form was never reached.
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), eq( false ) );
     }
 
     /** Asking to drop it and sending it are contradictory, so neither wins silently. */
