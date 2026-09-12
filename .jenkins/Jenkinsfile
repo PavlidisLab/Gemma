@@ -212,7 +212,18 @@ pipeline {
                         }
                     }
                     steps {
-                        lock('gemma-slow-tests') {
+                        // Shares the integration stage's lock rather than a stage-specific
+                        // one. These two stages are parallel siblings on one node and gemdtest is
+                        // single-tenant; the first Spring context in each test JVM runs
+                        // CreateDatabasePopulator, whose `drop database if exists gemdtest` guard
+                        // (TestBootstrapState.claimDatabaseCreation) is JVM-scoped, so surefire
+                        // here and failsafe there would each get to drop it. Today this stage
+                        // reaches no MySQL -- surefire hardcodes `integration` into excludedGroups
+                        // (pom.xml ~1113) and every MySQL-backed test inherits @Tag("integration")
+                        // from BaseIntegrationTest5, while BaseDatabaseTest5 is H2 in-memory -- so
+                        // this is defence in depth, not a live bug fix. It stops being theoretical
+                        // the moment a slow test is written against the real database.
+                        lock('database/gemdtest') {
                             setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                             // -Dgroups=slow selects the Jupiter tag that tests actually
                             // carry; the old -Dgroups=SlowTest named a JUnit 4 category
