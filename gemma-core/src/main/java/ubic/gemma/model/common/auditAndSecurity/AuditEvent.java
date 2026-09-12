@@ -32,6 +32,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
@@ -110,7 +112,11 @@ public class AuditEvent extends AbstractIdentifiable {
      * {@code objectMapper.readValue(payload, AuditEventPayload.class)}.
      * Phase A of {@code AUDIT_SYSTEM_AUDIT.md}.
      */
-    @Lob
+    // 🛑 The JDBC type is pinned rather than left to @Lob, which resolves to Types#CLOB while
+    // Connector/J reports a MySQL JSON column as Types#LONGVARCHAR. gemma-staging is the one
+    // deployment running hbm2ddl.auto=validate, and that disagreement took it down at startup on
+    // ANNOTATION_SET.PAYLOAD_JSON (00eb15abc9). This column is JSON too.
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Nullable
     @Column(name = "PAYLOAD", columnDefinition = "json")
     private String payload = null;

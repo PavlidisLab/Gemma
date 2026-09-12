@@ -31,6 +31,8 @@ import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -143,7 +145,11 @@ public class Ticket extends AbstractAuditable {
      * Set at creation. A screen's definition describes the question that was asked, so rewriting it later
      * would rewrite what curators were shown; edits are deliberately not offered.
      */
-    @Lob
+    // 🛑 The JDBC type is pinned rather than left to @Lob, which resolves to Types#CLOB while
+    // Connector/J reports a MySQL JSON column as Types#LONGVARCHAR. gemma-staging is the one
+    // deployment running hbm2ddl.auto=validate, and that disagreement took it down at startup on
+    // ANNOTATION_SET.PAYLOAD_JSON (00eb15abc9). This column is JSON too.
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Nullable
     @Column(name = "PAYLOAD", columnDefinition = "json")
     private String payload;
