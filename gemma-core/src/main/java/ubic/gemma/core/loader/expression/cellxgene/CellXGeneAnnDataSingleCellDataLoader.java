@@ -32,7 +32,8 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
         setSampleFactorName( "donor_id" );
         setCellTypeFactorName( "cell_type" );
         setCellTypeUriFactorName( "cell_type_ontology_term_id" );
-        setUnknownCellTypeIndicator( "unknown" );
+        // a CELLxGENE convention, not a property of any one dataset: many have no unknown cells at all
+        setDefaultUnknownCellTypeIndicator( "unknown" );
         setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
     }
 

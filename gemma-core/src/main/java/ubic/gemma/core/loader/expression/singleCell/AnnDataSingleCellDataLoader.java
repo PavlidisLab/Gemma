@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -102,7 +103,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      * An indicator for unknown cell type if the dataset uses something else than the {@code -1} code.
      */
     @Nullable
+    @Setter(AccessLevel.NONE)
     private String unknownCellTypeIndicator;
+
+    /**
+     * Whether {@link #unknownCellTypeIndicator} is a convention applied to every dataset a loader reads rather than a
+     * choice made for this particular dataset. See {@link #setDefaultUnknownCellTypeIndicator(String)}.
+     */
+    @Setter(AccessLevel.NONE)
+    private boolean unknownCellTypeIndicatorIsDefault;
 
     /**
      * Use or not the {@code raw.X} layer.
@@ -125,6 +134,30 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     public AnnDataSingleCellDataLoader( Path file ) {
         this.file = file;
+    }
+
+    /**
+     * Declare the category that marks cells whose type is unknown.
+     * <p>
+     * The indicator must occur in the data: if it does not, the wrong column or the wrong spelling was configured and
+     * every cell would silently keep a type it should not have, so {@link #getCellTypeAssignments(SingleCellDimension)}
+     * rejects the dataset. Use {@link #setDefaultUnknownCellTypeIndicator(String)} for a convention applied sight-unseen
+     * to a whole source, where absence carries no such implication.
+     */
+    public void setUnknownCellTypeIndicator( @Nullable String unknownCellTypeIndicator ) {
+        this.unknownCellTypeIndicator = unknownCellTypeIndicator;
+        this.unknownCellTypeIndicatorIsDefault = false;
+    }
+
+    /**
+     * Declare an indicator that a subclass applies by convention to every dataset it reads.
+     * <p>
+     * Unlike {@link #setUnknownCellTypeIndicator(String)}, absence is tolerated: the convention is chosen for a source
+     * without having seen the dataset, so a dataset in which no cell type is missing simply has no such category.
+     */
+    protected void setDefaultUnknownCellTypeIndicator( @Nullable String unknownCellTypeIndicator ) {
+        this.unknownCellTypeIndicator = unknownCellTypeIndicator;
+        this.unknownCellTypeIndicatorIsDefault = true;
     }
 
     @Override
@@ -389,8 +422,13 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
             assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
             if ( unknownCellTypeIndicator != null && unknownCellTypeCode == CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
-                throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
-                        unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
+                if ( unknownCellTypeIndicatorIsDefault ) {
+                    log.debug( String.format( "%s has no %s category, so no cell type is marked unknown. Possible values are: %s.",
+                            h5File, unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
+                } else {
+                    throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
+                            unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
+                }
             }
             // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
             // this column is indexed, so it's very fast to use indexOf
