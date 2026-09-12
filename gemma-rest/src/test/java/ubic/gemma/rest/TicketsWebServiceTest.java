@@ -21,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.security.authentication.UserReadService;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
@@ -457,6 +458,55 @@ public class TicketsWebServiceTest {
         assertThat( body.getData().getId() ).isEqualTo( 1L );
         assertThat( body.getData().getEvents() ).hasSize( 1 );
         verify( ticketService ).openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Test ticket" ), any() );
+    }
+
+    /**
+     * 🛑 The 201 is projected by the service, inside its transaction — never from the instance the handler
+     * is holding. {@code assign()} hands back a REATTACHED ticket whose reporter is an uninitialized proxy,
+     * so building the VO here answered 500 "Could not initialize proxy [Contact#6886] - the owning session
+     * was closed" AFTER the ticket had been committed, and a client retrying on 5xx minted duplicates
+     * (frinkbro, 2026-09-11).
+     *
+     * <p>The stand-in for the proxy is a Ticket whose {@code getReporter()} throws what Hibernate throws.
+     * Touching it at all fails the test.</p>
+     */
+    @Test
+    public void testCreateTicket_withAssignee_neverReadsTheHandlersOwnTicketInstance() {
+        Ticket reattachedWithLazyReporter = new Ticket() {
+            @Override
+            public Contact getReporter() {
+                throw new org.hibernate.LazyInitializationException(
+                        "could not initialize proxy [ubic.gemma.model.common.auditAndSecurity.Contact#6886]"
+                                + " - the owning session was closed" );
+            }
+        };
+        reattachedWithLazyReporter.setId( 1L );
+
+        User assignee = new User();
+        assignee.setId( 77L );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( userReadService.load( 77L ) ).thenReturn( assignee );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.CURATION ), eq( "Assigned on create" ), any() ) )
+                .thenReturn( ticket );
+        when( ticketService.assign( eq( ticket ), eq( reporter ), eq( assignee ) ) )
+                .thenReturn( reattachedWithLazyReporter );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.CURATION );
+        req.setTitle( "Assigned on create" );
+        req.setAssigneeId( 77L );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        req.setTargets( Collections.singletonList( tr ) );
+
+        Response resp = webService.createTicket( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.CREATED.getStatusCode() );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<TicketValueObject> body = ( ResponseDataObject<TicketValueObject> ) resp.getEntity();
+        assertThat( body.getData().getId() ).isEqualTo( 1L );
+        verify( ticketService ).loadValueObject( 1L, true );
     }
 
     /**

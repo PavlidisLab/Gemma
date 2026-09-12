@@ -764,8 +764,18 @@ public class TicketsWebService {
             }
             created = ticketService.assign( created, reporter, assignee );
         }
+        // 🛑 Projected by the service, inside its transaction -- same rule as the GET and PUT paths.
+        // Building the VO from `created` read the reporter through whatever instance the last
+        // service call returned; assign() hands back a REATTACHED ticket whose reporter is an
+        // uninitialized proxy, so every create that named an assignee answered 500 "Could not
+        // initialize proxy [Contact#6886] - the owning session was closed" AFTER the ticket had been
+        // committed. A client retrying on 5xx minted duplicates (frinkbro, 2026-09-11).
+        TicketValueObject vo = ticketService.loadValueObject( created.getId(), true );
+        if ( vo == null ) {
+            throw new IllegalStateException( "Ticket " + created.getId() + " disappeared immediately after creation." );
+        }
         return Response.status( Response.Status.CREATED )
-                .entity( new ResponseDataObject<>( withTargetLabels( TicketValueObject.from( created, true ) ) ) )
+                .entity( new ResponseDataObject<>( withTargetLabels( vo ) ) )
                 .build();
     }
 
