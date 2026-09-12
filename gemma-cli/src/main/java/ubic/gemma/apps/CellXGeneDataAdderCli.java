@@ -11,7 +11,7 @@ import ubic.gemma.core.loader.expression.cellxgene.CellXGeneDataLoaderService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addGenericPlatformOption;
 
