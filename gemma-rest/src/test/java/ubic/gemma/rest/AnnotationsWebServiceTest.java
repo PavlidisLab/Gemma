@@ -97,12 +97,22 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             // verification only.
             return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080",
                     "annotation.category.prefixes=treatment:CHEBI_,EFO_;genotype:TGEMO_,GENO_,EFO_",
-                    "annotation.category.excludedPrefixes=genotype:MONDO_" );
+                    "annotation.category.excludedPrefixes=genotype:MONDO_",
+                    "gemma.ontology.validation.olsFailClosed=true" );
         }
 
         @Bean
         public OntologyService ontologyService() {
             return mock( OntologyService.class );
+        }
+
+        /**
+         * Required since the tag write paths here ground-check the terms they are about to add. A mock: the
+         * checking itself is covered by {@code DatasetsWebServiceTest} and {@code OntologyTermValidatorImplTest}.
+         */
+        @Bean
+        public ubic.gemma.core.ontology.OntologyTermValidator ontologyTermValidator() {
+            return mock( ubic.gemma.core.ontology.OntologyTermValidator.class );
         }
 
         /**

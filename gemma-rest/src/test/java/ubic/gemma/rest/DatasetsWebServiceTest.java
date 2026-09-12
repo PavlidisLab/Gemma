@@ -542,6 +542,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     private OntologyTermValidator ontologyTermValidator;
 
     @Autowired
+    private ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService bioMaterialService;
+
+    @Autowired
     private ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService annotationSetTriageService;
 
     @Autowired
@@ -577,7 +580,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService, bioAssayService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService, bioAssayService, bioMaterialService );
     }
 
     private static final String HALLUCINATED_TAG_BODY = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t7\","
@@ -1331,8 +1334,114 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( c.getValue() ).isEqualTo( "liver" );
         assertThat( c.getValueUri() ).isEqualTo( "http://purl.obolibrary.org/obo/UBERON_0002107" );
         // The write echoes unmapped tags too — it accepts them, so it must not answer with a list
-        // that silently omits what was just written.
-        verify( expressionExperimentService ).getAnnotations( ee, true );
+        // that silently omits what was just written. atLeastOnce because the term gate reads the stored
+        // set as well, to tell a new tag from one being echoed back.
+        verify( expressionExperimentService, atLeastOnce() ).getAnnotations( ee, true );
+    }
+
+    /**
+     * A tag write reaches the four statement URI columns, so its new terms are ground-checked the way the
+     * curation commit's are: an object URI that resolves nowhere is a 400 and nothing is written. Before this,
+     * the identical payload was a 400 on {@code PUT /datasets/{id}/curation} and a 200 here — which is how
+     * {@code OBJECT_URI = 'Prethalamus'} reached three factor values in production.
+     */
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsRejectsUngroundedStatementTerm() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "object", "prethalamus", "Prethalamus", null, TermViolation.Reason.URI_UNRESOLVED ) ) );
+        String body = "{\"annotations\":[{\"category\":\"cell type\",\"value\":\"neuron\","
+                + "\"predicate\":\"derives from part of\",\"object\":\"prethalamus\",\"objectUri\":\"Prethalamus\"}]}";
+        try ( Response r = target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].reason", "URI_UNRESOLVED" )
+                    .hasPathWithValue( "$.error.errors[0].location", "annotations[0].object" );
+        }
+        verify( expressionExperimentService, never() ).updateAnnotations( any(), any() );
+    }
+
+    /**
+     * 🛑 A tag that is already stored is NOT re-checked, even when the stored URI is malformed. A set-replace
+     * carries the whole desired set, so a client editing one tag echoes back every other one as served —
+     * including the 105 colon-form URIs the read serves verbatim (they are not in the migration shim). Checking
+     * the whole desired set would answer 400 to the unrelated edit. Same rule as the commit's carry-forward
+     * items; identity is {@code CharacteristicUtils.sameTag}, the predicate the service diffs on.
+     */
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsDoesNotRecheckAnAlreadyStoredTag() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        ubic.gemma.model.common.description.AnnotationValueObject stored =
+                new ubic.gemma.model.common.description.AnnotationValueObject();
+        stored.setCategory( "molecular entity" );
+        stored.setValue( "polysome-associated RNA" );
+        stored.setValueUri( "http://gemma.msl.ubc.ca/ont/TGEMO:00203" );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.singleton( stored ) );
+        // Would reject anything it is handed; the point is that it is never handed this tag.
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "value", "polysome-associated RNA", "http://gemma.msl.ubc.ca/ont/TGEMO:00203",
+                        null, TermViolation.Reason.URI_UNRESOLVED ) ) );
+        String body = "{\"annotations\":[{\"category\":\"molecular entity\",\"value\":\"polysome-associated RNA\","
+                + "\"valueUri\":\"http://gemma.msl.ubc.ca/ont/TGEMO:00203\"}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( expressionExperimentService ).updateAnnotations( eq( ee ), any() );
+        verify( ontologyTermValidator, never() ).validateAndCanonicalize( any(), any() );
+    }
+
+    /** The single-tag add is ground-checked too: it is always an add, so every term it carries is new. */
+    @Test
+    @WithMockUser
+    public void testAddDatasetAnnotationRejectsUngroundedTerm() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "value", "endothelial cell", "http://purl.obolibrary.org/obo/CL:0000115",
+                        null, TermViolation.Reason.URI_UNRESOLVED ) ) );
+        String body = "{\"category\":\"cell type\",\"value\":\"endothelial cell\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/CL:0000115\"}";
+        try ( Response r = target( "/datasets/1/annotations" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].location", "annotation[0].value" );
+        }
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
+    /** The sample-level add goes through the same gate — sample characteristics carry statements as well. */
+    @Test
+    @WithMockUser
+    public void testAddSampleCharacteristicRejectsUngroundedTerm() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        BioAssay ba = BioAssay.Factory.newInstance( "BA1" );
+        ba.setId( 7L );
+        ubic.gemma.model.expression.biomaterial.BioMaterial bm =
+                ubic.gemma.model.expression.biomaterial.BioMaterial.Factory.newInstance( "BM1" );
+        bm.setId( 70L );
+        ba.setSampleUsed( bm );
+        ee.getBioAssays().clear();
+        ee.getBioAssays().add( ba );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( bioMaterialService.thaw( bm ) ).thenReturn( bm );
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "secondObject", "oligodendrocyte", "http://purl.obolibrary.org/obo/CL:0000128",
+                        null, TermViolation.Reason.URI_UNRESOLVED ) ) );
+        String body = "{\"category\":\"genotype\",\"value\":\"KDM6A\",\"predicate\":\"has_genotype\","
+                + "\"object\":\"Homozygous negative\",\"secondPredicate\":\"in\",\"secondObject\":\"oligodendrocyte\","
+                + "\"secondObjectUri\":\"http://purl.obolibrary.org/obo/CL:0000128\"}";
+        try ( Response r = target( "/datasets/1/samples/7/characteristics" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].location", "annotation[0].secondObject" );
+        }
+        verify( bioMaterialService, never() ).addAnnotation( any(), any(), any() );
     }
 
     @Test

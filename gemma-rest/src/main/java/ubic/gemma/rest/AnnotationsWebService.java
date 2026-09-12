@@ -171,6 +171,13 @@ public class AnnotationsWebService {
      * constructor from growing a tenth argument; the same reason the resolvers below are.
      */
     @Autowired
+    private ubic.gemma.core.ontology.OntologyTermValidator ontologyTermValidator;
+    /**
+     * @see DatasetsWebService#ontologyValidationOlsFailClosed
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.ontology.validation.olsFailClosed}")
+    private boolean ontologyValidationOlsFailClosed;
+    @Autowired
     private ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService;
     @Autowired(required = false)
     private ubic.gemma.core.ontology.chembl.ChemblCodeResolver chemblCodeResolver;
@@ -6113,8 +6120,8 @@ public class AnnotationsWebService {
                     + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
-        return doAddDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg, body,
-                annotationSetId, onBehalfOf );
+        return doAddDatasetAnnotation( datasetArgService, expressionExperimentService, ontologyTermValidator,
+                ontologyValidationOlsFailClosed, datasetArg, body, annotationSetId, onBehalfOf );
     }
 
     /**
@@ -6146,6 +6153,7 @@ public class AnnotationsWebService {
 
     static Response doAddDatasetAnnotation( DatasetArgService datasetArgService,
             ExpressionExperimentService expressionExperimentService,
+            ubic.gemma.core.ontology.OntologyTermValidator ontologyTermValidator, boolean ontologyValidationOlsFailClosed,
             DatasetArg<?> datasetArg, @Nullable AnnotationDto body, @Nullable Long annotationSetId,
             @Nullable String onBehalfOf ) {
         if ( body == null ) {
@@ -6153,6 +6161,8 @@ public class AnnotationsWebService {
         }
         Characteristic vc = annotationDtoToCharacteristic( body );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        DatasetsWebService.validateNewTags( ontologyTermValidator, ontologyValidationOlsFailClosed,
+                Collections.singletonList( vc ), expressionExperimentService.getAnnotations( ee, true ), "annotation" );
         Characteristic persisted;
         // The audit row is written inside the service's transaction by an aspect with no argument for this,
         // so the name is scoped to the call instead. See ActingIdentity.
@@ -6284,6 +6294,8 @@ public class AnnotationsWebService {
                     body.getAnnotationSetId() );
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        DatasetsWebService.validateNewTags( ontologyTermValidator, ontologyValidationOlsFailClosed, desired,
+                expressionExperimentService.getAnnotations( ee, true ), "annotations" );
 
         // The mutations are applied per-row through expressionExperimentService so each call fires
         // its own @Audited aspect (one TagAddedEvent / TagRemovedEvent per row).

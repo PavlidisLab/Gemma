@@ -6308,6 +6308,17 @@ public class DatasetsWebService {
      */
     private void collectTermViolations( Characteristic c, String location, @Nullable String clientRef,
             List<OntologyTermValidationException.Located> sink, @Nullable List<Canonicalization> canonSink ) {
+        collectTermViolations( ontologyTermValidator, ontologyValidationOlsFailClosed, c, location, clientRef, sink, canonSink );
+    }
+
+    /**
+     * As {@link #collectTermViolations(Characteristic, String, String, List, List)}, with the validator and the
+     * OLS fail-closed setting passed in, so the tag write paths that live on {@code AnnotationsWebService} check
+     * terms through this method rather than a second copy of it.
+     */
+    static void collectTermViolations( OntologyTermValidator ontologyTermValidator, boolean ontologyValidationOlsFailClosed,
+            Characteristic c, String location, @Nullable String clientRef,
+            List<OntologyTermValidationException.Located> sink, @Nullable List<Canonicalization> canonSink ) {
         List<TermCanonicalization> canons = new ArrayList<>();
         for ( TermViolation v : ontologyTermValidator.validateAndCanonicalize( c, canons ) ) {
             if ( v.getReason() == TermViolation.Reason.UNVERIFIED_OLS_UNAVAILABLE && !ontologyValidationOlsFailClosed ) {
@@ -9289,6 +9300,7 @@ public class DatasetsWebService {
             }
             desired.add( tagToCharacteristic( tag ) );
         }
+        validateNewTags( desired, expressionExperimentService.getAnnotations( ee, true ), "annotations" );
         expressionExperimentService.updateAnnotations( ee, desired );
         // Echo unmapped tags too. This endpoint accepts a tag with nothing but a category and a
         // value — no URIs required — so filtering them out of its own response meant it could
@@ -9339,7 +9351,7 @@ public class DatasetsWebService {
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
         return AnnotationsWebService.doAddDatasetAnnotation( datasetArgService, expressionExperimentService,
-                datasetArg, body, annotationSetId, onBehalfOf );
+                ontologyTermValidator, ontologyValidationOlsFailClosed, datasetArg, body, annotationSetId, onBehalfOf );
     }
 
     @DELETE
@@ -9405,6 +9417,78 @@ public class DatasetsWebService {
             c.setSupportingEvidence( serializeEvidence( tag.getSupportingEvidence() ) );
             return c;
         }
+    }
+
+    /**
+     * Ground-check the terms a tag write is about to ADD, and reject the whole call if any of them fails.
+     * <p>
+     * Only the items the write would add are walked, which is the rule the curation commit already follows.
+     * {@code updateAnnotations} keeps a tag whose content matches one already stored, and the corpus holds
+     * tags whose stored URI is malformed — 105 colon-form ones and 29 in the statement slots, measured
+     * 2026-09-11 — so ground-checking the whole desired set would refuse a client the unrelated edit it came
+     * to make. What counts as new is decided by {@link CharacteristicUtils#sameTag}, the predicate the
+     * service diffs on.
+     * <p>
+     * These routes reach the four statement URI columns (predicate, object, and the second pair) and carried
+     * no term check at all, while the identical payload on {@code PUT /datasets/{id}/curation} answers 400.
+     *
+     * @param arrayName the request-body array {@code desired} was read from, for the violation's location
+     */
+    private void validateNewTags( List<Characteristic> desired, Collection<AnnotationValueObject> stored, String arrayName ) {
+        validateNewTags( ontologyTermValidator, ontologyValidationOlsFailClosed, desired, stored, arrayName );
+    }
+
+    /**
+     * As {@link #validateNewTags(List, Collection, String)}, with the validator and the OLS fail-closed setting
+     * passed in, for the tag write paths declared on {@code AnnotationsWebService}.
+     */
+    static void validateNewTags( OntologyTermValidator ontologyTermValidator, boolean ontologyValidationOlsFailClosed,
+            List<Characteristic> desired, Collection<AnnotationValueObject> stored, String arrayName ) {
+        List<Characteristic> storedTags = stored.stream()
+                .map( DatasetsWebService::storedTagAsCharacteristic )
+                .collect( Collectors.toList() );
+        List<OntologyTermValidationException.Located> sink = new ArrayList<>();
+        for ( int i = 0; i < desired.size(); i++ ) {
+            Characteristic d = desired.get( i );
+            if ( storedTags.stream().anyMatch( s -> CharacteristicUtils.sameTag( s, d ) ) ) {
+                continue;
+            }
+            collectTermViolations( ontologyTermValidator, ontologyValidationOlsFailClosed, d,
+                    arrayName + "[" + i + "]", null, sink, null );
+        }
+        if ( !sink.isEmpty() ) {
+            throw new OntologyTermValidationException( sink );
+        }
+    }
+
+    /**
+     * A stored tag as a content-only {@link Statement}, for the {@link CharacteristicUtils#sameTag} comparison
+     * in {@link #validateNewTags}.
+     * <p>
+     * The stored side is only reachable as a value object here: there is no OSIV in this tree, so the entity a
+     * resource holds is detached and its characteristic set cannot be walked. Only the slots {@code sameTag}
+     * reads are copied — ids and evidence are not part of tag identity. A stored plain tag reads as all-null on
+     * the statement slots, which is how {@code sameTag} already treats a non-Statement, so one shape covers
+     * both.
+     * <p>
+     * 🛑 The value object carries the read-time canonicalized URIs ({@link CharacteristicUtils#canonicalUri}),
+     * so the comparison happens in the form the client was served and is echoing back.
+     */
+    private static Characteristic storedTagAsCharacteristic( AnnotationValueObject vo ) {
+        Statement s = Statement.Factory.newInstance();
+        s.setCategory( vo.getCategory() );
+        s.setCategoryUri( vo.getCategoryUri() );
+        s.setSubject( vo.getValue() );
+        s.setSubjectUri( vo.getValueUri() );
+        s.setPredicate( vo.getPredicate() );
+        s.setPredicateUri( vo.getPredicateUri() );
+        s.setObject( vo.getObject() );
+        s.setObjectUri( vo.getObjectUri() );
+        s.setSecondPredicate( vo.getSecondPredicate() );
+        s.setSecondPredicateUri( vo.getSecondPredicateUri() );
+        s.setSecondObject( vo.getSecondObject() );
+        s.setSecondObjectUri( vo.getSecondObjectUri() );
+        return s;
     }
 
     /**
@@ -9512,6 +9596,7 @@ public class DatasetsWebService {
             }
             desired.add( tagToCharacteristic( tag ) );
         }
+        validateNewTags( desired, sampleAnnotationVos( bm ), "annotations" );
         bioMaterialService.updateAnnotations( ee, bm, desired );
         return respond( sampleAnnotationVos( resolveSampleBioMaterial( ee, bioAssayId ) ) );
     }
@@ -9552,9 +9637,11 @@ public class DatasetsWebService {
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         BioMaterial bm = resolveSampleBioMaterial( ee, bioAssayId );
+        Characteristic desired = tagToCharacteristic( body );
+        validateNewTags( Collections.singletonList( desired ), sampleAnnotationVos( bm ), "annotation" );
         Characteristic created;
         try {
-            created = bioMaterialService.addAnnotation( ee, bm, tagToCharacteristic( body ) );
+            created = bioMaterialService.addAnnotation( ee, bm, desired );
         } catch ( IllegalArgumentException e ) {
             // 409 Conflict for duplicate (category, value) — service throws IAE on dup.
             throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
