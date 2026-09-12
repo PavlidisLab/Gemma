@@ -680,7 +680,11 @@ public class TicketsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Open a new curation ticket",
             description = "Creates a new ticket; the authenticated user is recorded as the reporter. "
-                    + "The response includes the seeded OPENED event.")
+                    + "The response includes the seeded OPENED event.\n\n"
+                    + "Each entry in `targets` may carry its own `payload` — opaque JSON text, with an "
+                    + "optional `payloadSchemaVersion` — holding the task for that one target, written in "
+                    + "this call rather than by a follow-up per target. The ticket's own `body` and "
+                    + "`payload` are one per ticket, so a finding that differs per target belongs here.")
     public Response createTicket( CreateTicketRequest req ) {
         if ( req == null ) {
             throw new BadRequestException( "Request body is required." );
@@ -709,6 +713,9 @@ public class TicketsWebService {
             if ( tr.getStatus() != null ) {
                 tt.setStatus( tr.getStatus() );
             }
+            // Set on the target itself, so the whole batch is written by openTicket's single insert.
+            tt.setPayload( tr.getPayload() );
+            tt.setPayloadSchemaVersion( tr.getPayloadSchemaVersion() );
             targets.add( tt );
         }
         Ticket created;
@@ -1023,7 +1030,10 @@ public class TicketsWebService {
                     + "which is what makes a scratchpad. Idempotent on (targetType, targetId): re-adding is not an "
                     + "error, and the response splits the ids into `added` and `alreadyPresent` so a bulk call can be "
                     + "reported honestly. A RESOLVED or CANCELLED ticket is a 409, as is a ticket whose flag is off; "
-                    + "an empty `targets` array is a 400, since an add that adds nothing is the bug.")
+                    + "an empty `targets` array is a 400, since an add that adds nothing is the bug. Each entry "
+                    + "may carry its own `payload` / `payloadSchemaVersion`, the task for that target; a target "
+                    + "already on the ticket is left exactly as it is, payload included, so a re-add cannot "
+                    + "overwrite the task a curator is working from.")
     public ResponseDataObject<AddTargetsResult> addTicketTarget(
             @PathParam("id") Long id,
             AddTargetRequest req
@@ -1049,7 +1059,8 @@ public class TicketsWebService {
             TicketTargetType type = ref.getTargetType() != null ? ref.getTargetType() : TicketTargetType.EXPRESSION_EXPERIMENT;
             TicketService.TargetAddition outcome;
             try {
-                outcome = ticketService.addTarget( ticket, type, ref.getTargetId(), actor );
+                outcome = ticketService.addTarget( ticket, type, ref.getTargetId(), actor,
+                        ref.getPayload(), ref.getPayloadSchemaVersion() );
             } catch ( IllegalStateException e ) {
                 // flag off, or the ticket is finished — a conflict with the ticket's state, not a
                 // malformed request. Adding is idempotent, so a duplicate never reaches here.
@@ -1419,6 +1430,18 @@ public class TicketsWebService {
         @Nullable
         private TicketTargetStatus status;
 
+        /**
+         * This target's own task — opaque JSON text, stored and served verbatim, never parsed here.
+         * Written with the target, so one call opens a thousand targets each carrying its own finding
+         * rather than a thousand follow-up calls (frinkbro, 2026-09-11).
+         */
+        @Nullable
+        private String payload;
+
+        /** Which schema {@link #payload} follows. Null means the writer declared none. */
+        @Nullable
+        private Integer payloadSchemaVersion;
+
         public TicketTargetType getTargetType() { return targetType; }
         public void setTargetType( TicketTargetType targetType ) { this.targetType = targetType; }
 
@@ -1428,6 +1451,14 @@ public class TicketsWebService {
         @Nullable
         public TicketTargetStatus getStatus() { return status; }
         public void setStatus( @Nullable TicketTargetStatus status ) { this.status = status; }
+
+        @Nullable
+        public String getPayload() { return payload; }
+        public void setPayload( @Nullable String payload ) { this.payload = payload; }
+
+        @Nullable
+        public Integer getPayloadSchemaVersion() { return payloadSchemaVersion; }
+        public void setPayloadSchemaVersion( @Nullable Integer payloadSchemaVersion ) { this.payloadSchemaVersion = payloadSchemaVersion; }
     }
 
     /** Body of {@code POST /tickets/{id}/targets}. */
@@ -1451,6 +1482,14 @@ public class TicketsWebService {
             @Nullable
             private Long targetId;
 
+            /** This target's own task; same field and same opacity as on {@link TicketTargetRequest}. */
+            @Nullable
+            private String payload;
+
+            /** Which schema {@link #payload} follows. Null means the writer declared none. */
+            @Nullable
+            private Integer payloadSchemaVersion;
+
             @Nullable
             public TicketTargetType getTargetType() { return targetType; }
             public void setTargetType( @Nullable TicketTargetType targetType ) { this.targetType = targetType; }
@@ -1458,6 +1497,14 @@ public class TicketsWebService {
             @Nullable
             public Long getTargetId() { return targetId; }
             public void setTargetId( @Nullable Long targetId ) { this.targetId = targetId; }
+
+            @Nullable
+            public String getPayload() { return payload; }
+            public void setPayload( @Nullable String payload ) { this.payload = payload; }
+
+            @Nullable
+            public Integer getPayloadSchemaVersion() { return payloadSchemaVersion; }
+            public void setPayloadSchemaVersion( @Nullable Integer payloadSchemaVersion ) { this.payloadSchemaVersion = payloadSchemaVersion; }
         }
     }
 

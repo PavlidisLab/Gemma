@@ -461,6 +461,73 @@ public class TicketsWebServiceTest {
     }
 
     /**
+     * One call opens every target WITH its own task. A ticket carrying a thousand experiments cannot say
+     * in its body what is true of only the 734th, so the per-target payload has to be written alongside
+     * the target rather than by a follow-up call per target (frinkbro, 2026-09-11).
+     */
+    @Test
+    public void testCreateTicket_perTargetPayload_travelsWithEachTarget() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        java.util.concurrent.atomic.AtomicReference<java.util.Set<TicketTarget>> captured =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.CURATION ), eq( "Clause label vs URI" ),
+                any() ) ).thenAnswer( inv -> {
+            captured.set( inv.getArgument( 3 ) );
+            return ticket;
+        } );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.CURATION );
+        req.setTitle( "Clause label vs URI" );
+        TicketsWebService.TicketTargetRequest hypoxia = new TicketsWebService.TicketTargetRequest();
+        hypoxia.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        hypoxia.setTargetId( 273007L );
+        hypoxia.setPayload( "{\"fv\":307136,\"task\":\"EFO_0009444 means hypoxia; drop the URI\"}" );
+        hypoxia.setPayloadSchemaVersion( 1 );
+        TicketsWebService.TicketTargetRequest susceptibility = new TicketsWebService.TicketTargetRequest();
+        susceptibility.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        susceptibility.setTargetId( 237804L );
+        susceptibility.setPayload( "{\"fv\":266260,\"task\":\"MONDO_0042489 means disease susceptibility\"}" );
+        req.setTargets( Arrays.asList( hypoxia, susceptibility ) );
+
+        webService.createTicket( req );
+
+        assertThat( captured.get() ).hasSize( 2 );
+        TicketTarget first = captured.get().stream().filter( t -> t.getTargetId() == 273007L ).findFirst().orElseThrow();
+        TicketTarget second = captured.get().stream().filter( t -> t.getTargetId() == 237804L ).findFirst().orElseThrow();
+        assertThat( first.getPayload() ).contains( "EFO_0009444" );
+        assertThat( first.getPayloadSchemaVersion() ).isEqualTo( 1 );
+        assertThat( second.getPayload() ).contains( "MONDO_0042489" );
+        // Each target carries its own, and an absent version stays absent rather than inheriting a sibling's.
+        assertThat( second.getPayloadSchemaVersion() ).isNull();
+        verify( ticketService ).openTicket( eq( reporter ), eq( TicketType.CURATION ), eq( "Clause label vs URI" ), any() );
+    }
+
+    /** The add-target route carries the same per-target task, for a ticket grown after it was opened. */
+    @Test
+    public void testAddTicketTarget_passesThePerTargetPayloadToTheService() {
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.addTarget( eq( ticket ), eq( TicketTargetType.EXPRESSION_EXPERIMENT ), eq( 167051L ),
+                eq( reporter ), anyString(), eq( 1 ) ) )
+                .thenReturn( new TicketService.TargetAddition( ticket, true ) );
+
+        TicketsWebService.AddTargetRequest req = new TicketsWebService.AddTargetRequest();
+        TicketsWebService.AddTargetRequest.TargetRef ref = new TicketsWebService.AddTargetRequest.TargetRef();
+        ref.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        ref.setTargetId( 167051L );
+        ref.setPayload( "{\"fv\":187891,\"task\":\"CL_0000134 means mesenchymal stem cell\"}" );
+        ref.setPayloadSchemaVersion( 1 );
+        req.setTargets( Collections.singletonList( ref ) );
+
+        TicketsWebService.AddTargetsResult result = webService.addTicketTarget( 1L, req ).getData();
+
+        assertThat( result.getAdded() ).containsExactly( 167051L );
+        verify( ticketService ).addTarget( ticket, TicketTargetType.EXPRESSION_EXPERIMENT, 167051L, reporter,
+                "{\"fv\":187891,\"task\":\"CL_0000134 means mesenchymal stem cell\"}", 1 );
+    }
+
+    /**
      * 🛑 The 201 is projected by the service, inside its transaction — never from the instance the handler
      * is holding. {@code assign()} hands back a REATTACHED ticket whose reporter is an uninitialized proxy,
      * so building the VO here answered 500 "Could not initialize proxy [Contact#6886] - the owning session

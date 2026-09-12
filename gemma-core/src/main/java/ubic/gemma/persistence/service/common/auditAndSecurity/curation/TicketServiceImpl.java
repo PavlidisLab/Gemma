@@ -283,9 +283,25 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         return ticketDao.save( attached );
     }
 
+    /**
+     * 🛑 Implemented here rather than as a {@code default} on the interface delegating to the six-argument
+     * form. A default method carries no {@code @Transactional} attribute, so the proxy opened no
+     * transaction and the delegation was a self-invocation the aspect could not see either: every call
+     * through this signature died on "Could not obtain transaction-synchronized Session for current
+     * thread" inside {@code reattach}. Declaring it on the bean puts the annotation where the proxy
+     * reads it, and the inner call then joins the transaction this one started.
+     */
     @Override
     @Transactional
-    public TicketService.TargetAddition addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor ) {
+    public TicketService.TargetAddition addTarget( Ticket ticket, TicketTargetType targetType, Long targetId,
+            Contact actor ) {
+        return addTarget( ticket, targetType, targetId, actor, null, null );
+    }
+
+    @Override
+    @Transactional
+    public TicketService.TargetAddition addTarget( Ticket ticket, TicketTargetType targetType, Long targetId,
+            Contact actor, @Nullable String payload, @Nullable Integer payloadSchemaVersion ) {
         Assert.notNull( ticket, "Ticket cannot be null." );
         Assert.notNull( targetType, "targetType cannot be null." );
         Assert.notNull( targetId, "targetId cannot be null." );
@@ -314,6 +330,8 @@ public class TicketServiceImpl extends AbstractService<Ticket> implements Ticket
         TicketTarget tgt = new TicketTarget();
         tgt.setTargetType( targetType );
         tgt.setTargetId( targetId );
+        tgt.setPayload( payload );
+        tgt.setPayloadSchemaVersion( payloadSchemaVersion );
         tgt.setTicket( attached );
         attached.getTargets().add( tgt );
         bumpUpdated( attached );
