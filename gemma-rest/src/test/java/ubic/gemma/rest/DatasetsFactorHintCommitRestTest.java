@@ -80,14 +80,17 @@ public class DatasetsFactorHintCommitRestTest extends BaseJerseyIntegrationTest5
             Function<ExperimentalDesignValueObject.ExperimentalFactorEntry, String> hint,
             Function<ExperimentalDesignValueObject.ExperimentalFactorEntry, String> reason ) {
         // Two values, each bound to a real sample, so every survivor below has something to lose.
+        // One accession per distinct sample: the fixture can hang two bioassays on one biomaterial, and binding both
+        // values to it is refused as two values of one factor on a sample (a 409 on the seed, not a test result).
         ExpressionExperiment thawed = expressionExperimentService.thawBioAssays( ee );
-        List<String> gsms = thawed.getBioAssays().stream()
-                .map( BioAssay::getAccession )
-                .filter( Objects::nonNull )
-                .map( a -> a.getAccession() )
-                .limit( 2 )
-                .collect( Collectors.toList() );
-        assertThat( gsms ).as( "the seeded experiment needs two samples with accessions" ).hasSize( 2 );
+        Map<Long, String> accessionBySample = new LinkedHashMap<>();
+        for ( BioAssay ba : thawed.getBioAssays() ) {
+            if ( ba.getAccession() != null && ba.getAccession().getAccession() != null && ba.getSampleUsed() != null ) {
+                accessionBySample.putIfAbsent( ba.getSampleUsed().getId(), ba.getAccession().getAccession() );
+            }
+        }
+        List<String> gsms = accessionBySample.values().stream().limit( 2 ).collect( Collectors.toList() );
+        assertThat( gsms ).as( "the seeded experiment needs two distinct samples with accessions" ).hasSize( 2 );
 
         String seed = "{\"design\":{\"factors\":{\"items\":[{"
                 + "\"clientRef\":\"F1\",\"name\":\"organism part\",\"category\":{\"label\":\"organism part\"},"
