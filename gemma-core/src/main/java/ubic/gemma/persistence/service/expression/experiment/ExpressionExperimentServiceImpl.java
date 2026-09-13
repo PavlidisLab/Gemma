@@ -802,30 +802,64 @@ public class ExpressionExperimentServiceImpl
         int changedBmCount = changedBmIds.size();
 
         // ---- impact: differential expression analyses ----
-        // ONE EXCLUSION, not a list of inclusions: a design commit invalidates this dataset's analyses
-        // UNLESS the only thing that changed was labels on kept factor values. Paul, 2026-08-26 — the
-        // previous four inclusion rules (factor deleted / FV deleted / FV added / assignment changed)
-        // were four places to be wrong, and they missed two real cases: adding a WHOLE factor marked
-        // nothing, because a new factor has no id and no analyses of its own; and a measurement change on
-        // a continuous factor changes the regression while moving no structural counter.
+        // An analysis is deleted when the change reaches a factor the analysis uses: the factor is deleted, one of
+        // its values is deleted or added, a sample moves between its values, or its baseline or a measurement on
+        // it changes. Paul, 2026-09-13: "if the factor isn't used in the DEA, then it shouldn't be deleted", with
+        // "if a few simple rules keep unnecessary churn away, we can do it". So adding a factor, or deleting one no
+        // analysis uses, deletes nothing; re-running an analysis to take in a new factor is left to the curator.
         //
-        // The failure mode is inverted on purpose. Before, a case nobody enumerated rode through silently
-        // and falsified a live analysis; now it triggers a re-run, and re-running a DEA is cheap.
+        // This replaces dataset-wide invalidation (2026-08-26), which deleted every analysis on the experiment for
+        // any of those changes: replacing a categorical age with a continuous one on GSE93069 would have deleted
+        // DEA 352673, whose result sets test biological sex and phenotype only (frinkbro, 2026-09-12).
         //
-        // Invalidation is DATASET-WIDE rather than per-factor: adding a factor invalidates the analyses on
-        // the other factors too, because they were fitted without a variable the design now declares.
-        //
-        // What is excluded, and only this: statement / characteristic / free-text-value edits on a kept
-        // factor value. Those relabel; they do not move a sample, a level, or a baseline.
+        // Unchanged: statement / characteristic / free-text-value edits on a kept factor value reach no factor.
+        // An analysis whose factors cannot be read -- no result set names one and it has no subset -- keeps the
+        // dataset-wide rule, since not knowing what it uses is not evidence that it uses nothing.
         boolean structuralChange = summary.getFactorsToCreate() > 0
                 || summary.getFactorsToDelete() > 0
                 || summary.getFactorValuesToCreate() > 0
                 || summary.getFactorValuesToDelete() > 0
                 || changedBmCount > 0;
-        boolean invalidatingEdit = hasKeptFactorValueEditsThatChangeTheMath( ee, proposed );
+        Set<Long> mathChangedFactorIds = factorsWithEditsThatChangeTheMath( ee, proposed );
 
-        if ( structuralChange || invalidatingEdit ) {
-            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+        Set<Long> touchedFactorIds = new HashSet<>( mathChangedFactorIds );
+        for ( ExperimentalFactor ef : factorsBeingDeleted ) {
+            touchedFactorIds.add( ef.getId() );
+        }
+        for ( FactorValue fv : fvsBeingDeleted ) {
+            touchedFactorIds.add( currentFvParentByFvId.get( fv.getId() ).getId() );
+        }
+        if ( proposed.getExperimentalFactors() != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+                // A value created under an EXISTING factor. One created under a new factor reaches no analysis, and
+                // the deferred bindings in the plan only ever point at created values, so they add nothing here.
+                if ( pf.getId() != null && pf.getValues() != null
+                        && pf.getValues().stream().anyMatch( v -> v.getId() == null ) ) {
+                    touchedFactorIds.add( pf.getId() );
+                }
+            }
+        }
+        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
+            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
+                    .map( FactorValue::getId ).collect( Collectors.toSet() );
+            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
+            Set<Long> moved = new HashSet<>( currentFvIds );
+            moved.addAll( proposedFvIdsForBm );
+            moved.removeAll( intersection( currentFvIds, proposedFvIdsForBm ) );
+            for ( Long fvId : moved ) {
+                ExperimentalFactor parent = currentFvParentByFvId.get( fvId );
+                if ( parent != null ) {
+                    touchedFactorIds.add( parent.getId() );
+                }
+            }
+        }
+
+        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+            Set<Long> used = factorIdsUsedBy( a );
+            boolean invalidated = used.isEmpty()
+                    ? structuralChange || !mathChangedFactorIds.isEmpty()
+                    : !Collections.disjoint( used, touchedFactorIds );
+            if ( invalidated ) {
                 Long subsetFvId = a.getSubsetFactorValue() != null ? a.getSubsetFactorValue().getId() : null;
                 report.getDifferentialExpressionAnalysesToDelete().add(
                         new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFvId ) );
@@ -1273,8 +1307,8 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * The subset of {@link #hasKeptFactorValueEdits} that changes the analysis MATH rather than its labels:
-     * a baseline flip, or a measurement change on a continuous factor value.
+     * The factors on which the proposal makes one of the {@link #hasKeptFactorValueEdits} that change the analysis
+     * MATH rather than its labels: a baseline flip, or a measurement change on a continuous factor value.
      * <p>
      * A baseline flip reverses the direction of every contrast in an existing DEA —
      * {@link ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet} records the factor value
@@ -1291,11 +1325,12 @@ public class ExpressionExperimentServiceImpl
      * through {@code BaselineSelection}, which falls back to control-group characteristics when the flag is
      * absent: that would make a statement edit flip a baseline, and statement edits are the exclusion.
      */
-    private boolean hasKeptFactorValueEditsThatChangeTheMath( ExpressionExperiment ee,
+    private Set<Long> factorsWithEditsThatChangeTheMath( ExpressionExperiment ee,
             ExperimentalDesignValueObject proposed ) {
+        Set<Long> factorIds = new HashSet<>();
         ExperimentalDesign ed = ee.getExperimentalDesign();
         if ( ed == null || proposed.getExperimentalFactors() == null ) {
-            return false;
+            return factorIds;
         }
         Map<Long, FactorValue> currentFvsById = new HashMap<>();
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
@@ -1309,15 +1344,42 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getId() == null ) continue; // a creation; already structural
                 FactorValue cur = currentFvsById.get( pv.getId() );
                 if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
-                if ( baselineChanged( pv, cur ) && !agreesWithFittedBaselines( ee, pv, cur ) ) {
-                    return true;
-                }
-                if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
-                    return true;
+                boolean changesTheMath = ( baselineChanged( pv, cur ) && !agreesWithFittedBaselines( ee, pv, cur ) )
+                        || ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) );
+                if ( changesTheMath && cur.getExperimentalFactor() != null ) {
+                    factorIds.add( cur.getExperimentalFactor().getId() );
                 }
             }
         }
-        return false;
+        return factorIds;
+    }
+
+    /**
+     * The factors an analysis uses: those its result sets test, plus the factor of the subset it was run on.
+     * <p>
+     * Empty when neither can be read, which {@link #previewDesignChange} treats as unknown rather than as none.
+     */
+    private static Set<Long> factorIdsUsedBy( DifferentialExpressionAnalysis a ) {
+        Set<Long> ids = new HashSet<>();
+        if ( a.getResultSets() != null ) {
+            for ( ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet rs : a.getResultSets() ) {
+                if ( rs.getExperimentalFactors() != null ) {
+                    for ( ExperimentalFactor f : rs.getExperimentalFactors() ) {
+                        ids.add( f.getId() );
+                    }
+                }
+            }
+        }
+        if ( a.getSubsetFactorValue() != null && a.getSubsetFactorValue().getExperimentalFactor() != null ) {
+            ids.add( a.getSubsetFactorValue().getExperimentalFactor().getId() );
+        }
+        return ids;
+    }
+
+    private static Set<Long> intersection( Set<Long> a, Set<Long> b ) {
+        Set<Long> both = new HashSet<>( a );
+        both.retainAll( b );
+        return both;
     }
 
     /**
