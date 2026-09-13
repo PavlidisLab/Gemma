@@ -3711,6 +3711,24 @@ public class DatasetsWebService {
                     + "drop the `gemmaId`, send the new content under a `clientRef`, and name the old id in the "
                     + "section's `deletedIds`. The `design` section is different: a `gemmaId` factor / factor-value "
                     + "/ statement IS updated in place from the fields it carries.\n\n"
+                    + "🛑 **What an omission means is a contract** (Paul, 2026-09-13): clients compose minimal documents "
+                    + "that rely on every rule below, so changing one changes what their unchanged payloads do.\n"
+                    + "- **Factors:** a factor the document does not mention is carried forward unchanged. On a "
+                    + "`gemmaId` item a null or absent field is no change. `deletedIds` removes; an id that is not a "
+                    + "factor of this dataset is a 400.\n"
+                    + "- **Factor values:** a value not mentioned is carried forward unchanged. On a `gemmaId` item a "
+                    + "null label, baseline flag or measurement is no change; absent sample bindings leave the "
+                    + "assignments untouched, a list replaces them, and `[]` clears them. An unknown `deletedIds` "
+                    + "entry is a 400.\n"
+                    + "- **Statements:** a statement not mentioned is carried forward unchanged. A `gemmaId` statement "
+                    + "is full-record replacement: omitting its subject, `evidenceCode`, `supportingEvidence` or second "
+                    + "pair while the stored row has one is a 400. Clear them deliberately with `\"\"` (evidenceCode), "
+                    + "`[]` (supportingEvidence) or `clearSecondPair: true`. An unknown `deletedIds` entry is a 400.\n"
+                    + "- **Evidence on a `gemmaId` factor or factor value:** omitted while stored is a 400; `[]` "
+                    + "clears it.\n"
+                    + "- **Tags and sample characteristics:** anything not mentioned is untouched; a `gemmaId` item "
+                    + "is a keep-marker; `deletedIds` removes, and an id that is not on this dataset is a 400, on the "
+                    + "commit and on the preflight.\n\n"
                     + "A design change that would delete "
                     + "differential-expression analyses requires `?force=true` (admin) or returns 409. "
                     + "Optimistic concurrency: `baseline.lastModified` (the dataset `lastUpdated` the draft was "
@@ -4554,18 +4572,15 @@ public class DatasetsWebService {
          * Its values and their statements carry their own evidence at their own levels, and none of the three
          * stands in for another.
          * <p>
-         * Null / omitted leaves any evidence already recorded untouched, so a client that does not carry
-         * provenance cannot wipe provenance somebody else recorded.
-         * <p>
-         * 🛑 An EMPTY ARRAY is the same as omitting it, NOT an erase. A payload built from a reference
-         * file stamps {@code []} on every entity that has no evidence, and reading that as "clear it"
-         * would wipe stored provenance on every entity such a write touches while reporting an ordinary
-         * success. There is deliberately no way to clear evidence through this route.
+         * The design section is full-record replacement (Paul, 2026-09-06): a {@code gemmaId} item that omits this
+         * while the factor HAS evidence is refused with a 400 ({@code requireEvidenceEchoed}), so a client that does
+         * not carry provenance cannot silently wipe it; send the stored evidence back to keep it, or {@code []} to
+         * clear it deliberately.
          */
         @Nullable
         @Schema(description = "Verbatim provenance backing this factor — a JSON array of {quote, source, location} "
-                + "items, stored opaquely. Omitting it, sending null, or sending [] all leave any evidence already "
-                + "recorded untouched; there is no way to clear evidence through this route.")
+                + "items, stored opaquely. Full-record replacement: on a gemmaId item, omitting it while the factor "
+                + "has evidence is a 400; send the stored evidence back to keep it, or [] to clear it.")
         private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
         private Section<FactorValueCommit> factorValues = new Section<>();
     }
@@ -4665,18 +4680,14 @@ public class DatasetsWebService {
          * plain free-text one) still has a curator behind those choices. Both may be sent on one commit and both
          * are kept.
          * <p>
-         * Null / omitted leaves any evidence already recorded untouched, same as everywhere else on this route.
-         * <p>
-         * 🛑 An EMPTY ARRAY is the same as omitting it, NOT an erase. A payload built from a reference
-         * file stamps {@code []} on every entity that has no evidence, and reading that as "clear it"
-         * would wipe stored provenance on every entity such a write touches while reporting an ordinary
-         * success. There is deliberately no way to clear evidence through this route.
+         * Full-record replacement, as for the factor: a {@code gemmaId} item that omits this while the value HAS
+         * evidence is refused with a 400; send the stored evidence back to keep it, or {@code []} to clear it.
          */
         @Nullable
         @Schema(description = "Verbatim provenance backing this factor value — a JSON array of {quote, source, "
                 + "location} items, stored opaquely. Distinct from the evidence on its statements, which backs the "
-                + "triple rather than the value. Omitting it, sending null, or sending [] all leave any evidence "
-                + "already recorded untouched; there is no way to clear evidence through this route.")
+                + "triple rather than the value. Full-record replacement: on a gemmaId item, omitting it while the "
+                + "value has evidence is a 400; send the stored evidence back to keep it, or [] to clear it.")
         private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
         private Section<StatementCommit> statements = new Section<>();
     }
@@ -4745,18 +4756,13 @@ public class DatasetsWebService {
          * the triple rather than in the parent factor value: two factor values whose labels are byte-identical
          * and differ only by a zygosity statement cannot be told apart by evidence hung on the value.
          * <p>
-         * Null / omitted leaves any evidence already recorded untouched, so a client that does not carry
-         * provenance cannot wipe provenance somebody else recorded.
-         * <p>
-         * 🛑 An EMPTY ARRAY is the same as omitting it, NOT an erase. A payload built from a reference
-         * file stamps {@code []} on every entity that has no evidence, and reading that as "clear it"
-         * would wipe stored provenance on every entity such a write touches while reporting an ordinary
-         * success. There is deliberately no way to clear evidence through this route.
+         * Full-record replacement, as for the factor: a {@code gemmaId} item that omits this while the statement HAS
+         * evidence is refused with a 400; send the stored evidence back to keep it, or {@code []} to clear it.
          */
         @Nullable
         @Schema(description = "Verbatim provenance backing this statement — a JSON array of {quote, source, "
-                + "location} items, stored opaquely. Omitting it, sending null, or sending [] all leave any "
-                + "evidence already recorded untouched; there is no way to clear evidence through this route.")
+                + "location} items, stored opaquely. Full-record replacement: on a gemmaId item, omitting it while "
+                + "the statement has evidence is a 400; send the stored evidence back to keep it, or [] to clear it.")
         private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
         /**
          * How this statement was arrived at, as a {@link GOEvidenceCode} name. Accepted case-insensitively; an

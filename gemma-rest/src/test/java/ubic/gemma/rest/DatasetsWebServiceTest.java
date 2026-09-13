@@ -5777,6 +5777,122 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( factors.get( 0 ).getId() ).isEqualTo( 5L );
     }
 
+    // --------------------------------------------------------------------------------------------
+    // The omission contract of PUT /curation (Paul, 2026-09-13: "a contract that Gemma has to keep").
+    // cab's executors and the UI compose minimal documents that rely on each of these rules.
+    // --------------------------------------------------------------------------------------------
+
+    /** Factor values and statements the document does not mention reach the service unchanged. */
+    @Test
+    @WithMockUser
+    public void testCommitCarriesForwardUnmentionedFactorValuesAndStatements() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        StatementValueObject s30 = new StatementValueObject();
+        s30.setId( 30L );
+        s30.setSubject( "astrocyte" );
+        StatementValueObject s31 = new StatementValueObject();
+        s31.setId( 31L );
+        s31.setSubject( "neuron" );
+        ubic.gemma.model.expression.experiment.FactorValueBasicValueObject fv20 =
+                new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject( 20L );
+        fv20.setStatements( new ArrayList<>( List.of( s30 ) ) );
+        ubic.gemma.model.expression.experiment.FactorValueBasicValueObject fv21 =
+                new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject( 21L );
+        fv21.setStatements( new ArrayList<>( List.of( s31 ) ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry f10 = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        f10.setId( 10L );
+        f10.setName( "cell type" );
+        f10.setValues( new ArrayList<>( List.of( fv20, fv21 ) ) );
+        ExperimentalDesignValueObject design = new ExperimentalDesignValueObject();
+        design.setId( 3L );
+        design.setExperimentalFactors( new ArrayList<>( List.of( f10 ) ) );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( design );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        // factor 10 is mentioned, value 20 is mentioned with no statements section, value 21 is not mentioned
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":20}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry proposed =
+                cap.getValue().getProposedDesign().getExperimentalFactors().stream()
+                        .filter( f -> Long.valueOf( 10L ).equals( f.getId() ) )
+                        .findFirst().orElseThrow( AssertionError::new );
+        assertThat( proposed.getValues() )
+                .extracting( ubic.gemma.model.expression.experiment.FactorValueBasicValueObject::getId )
+                .containsExactlyInAnyOrder( 20L, 21L );
+        for ( ubic.gemma.model.expression.experiment.FactorValueBasicValueObject v : proposed.getValues() ) {
+            long expectedStatement = v.getId() == 20L ? 30L : 31L;
+            assertThat( v.getStatements() )
+                    .as( "statements of factor value %s", v.getId() )
+                    .extracting( StatementValueObject::getId )
+                    .containsExactly( expectedStatement );
+        }
+    }
+
+    /** A {@code gemmaId} factor item that omits evidence the factor HAS is refused, not applied as a clear. */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesOmittedEvidenceOnAFactorThatHasSome() {
+        ExperimentalDesignValueObject design = designWithOneStatement( 5L, 6L, 7L );
+        design.getExperimentalFactors().get( 0 ).setSupportingEvidence( new ObjectMapper().createArrayNode()
+                .add( new ObjectMapper().createObjectNode().put( "quote", "the factor exists" ) ) );
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( design );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"name\":\"cell type\"}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "design.factors[gemmaId=5] omits supportingEvidence" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** The same rule one level down: a factor value item that omits the value's evidence is refused. */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesOmittedEvidenceOnAFactorValueThatHasSome() {
+        ExperimentalDesignValueObject design = designWithOneStatement( 5L, 6L, 7L );
+        design.getExperimentalFactors().get( 0 ).getValues().get( 0 ).setSupportingEvidence( new ObjectMapper().createArrayNode()
+                .add( new ObjectMapper().createObjectNode().put( "quote", "these samples are the control" ) ) );
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( design );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,"
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":6}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "[gemmaId=6] omits supportingEvidence" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** A factor value {@code deletedIds} entry that is not a value of that factor is refused. */
+    @Test
+    public void testCommitRefusesFactorValueDeletedIdThatIsNotOnThatFactor() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( designWithOneStatement( 10L, 20L, 30L ) );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
+                + "\"factorValues\":{\"items\":[],\"deletedIds\":[999]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "999" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
     /** Current design with factor 5 → FV 10, and biomaterial 100 assigned to FV 10. */
     private ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject currentDesignWithAssignment() {
         ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject d =

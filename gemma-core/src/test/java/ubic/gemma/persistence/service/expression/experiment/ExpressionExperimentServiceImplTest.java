@@ -1392,6 +1392,30 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     /**
+     * The omission contract (Paul, 2026-09-13): on a {@code gemmaId} factor item, a null field is no change. cab
+     * writes a relevance hint on an existing factor with an item carrying nothing else.
+     */
+    @Test
+    public void testApplyNullFactorFieldsChangeNothing() {
+        buildFixture();
+        treatmentFactor.setDescription( "stored description" );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        ExperimentalDesignValueObject.ExperimentalFactorEntry item = proposal.getExperimentalFactors().get( 0 );
+        item.setName( null );
+        item.setDescription( null );
+        item.setType( null );
+        item.setCategory( null );
+
+        svc.applyDesignChange( fixture, proposal );
+
+        assertThat( treatmentFactor.getName() ).isEqualTo( "treatment" );
+        assertThat( treatmentFactor.getDescription() ).isEqualTo( "stored description" );
+        assertThat( treatmentFactor.getType() ).isEqualTo( FactorType.CATEGORICAL );
+        assertThat( treatmentFactor.getFactorValues() ).hasSize( 2 );
+    }
+
+    /**
      * W11 — same gap, reached through the factor name. A rename with no structural change is the other
      * metadata-only edit the curation side sends.
      */
