@@ -633,6 +633,24 @@ public class ExpressionExperimentServiceImpl
                 }
                 if ( pf.getValues() != null ) {
                     for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                        // Each wire entry is checked as it arrives. The flattened second entry of a compound statement
+                        // carries its clause under predicate/object, so it is a whole pair on its own.
+                        if ( pv.getStatements() != null ) {
+                            for ( StatementValueObject ps : pv.getStatements() ) {
+                                String half = StatementUtils.describeHalfPair( ps );
+                                if ( half != null ) {
+                                    DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                            "STATEMENT_HALF_PAIR",
+                                            "Statement " + ( ps.getId() != null ? ps.getId() + " " : "" )
+                                                    + "'" + ps.getSubject() + "' on factor value "
+                                                    + ( pv.getId() != null ? pv.getId() : "'" + pv.getValue() + "'" )
+                                                    + " carries " + half + "; send both or neither." );
+                                    b.setFactorValueId( pv.getId() );
+                                    b.setStatementId( ps.getId() );
+                                    report.getBlockers().add( b );
+                                }
+                            }
+                        }
                         if ( pv.getId() != null ) {
                             proposedFvIds.add( pv.getId() );
                             if ( pf.getId() != null ) {

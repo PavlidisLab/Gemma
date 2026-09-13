@@ -1349,6 +1349,40 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
                 .contains( "STATEMENT_ID_REPEATED" );
     }
 
+    /** Half a first pair is refused on the design routes, which take the value objects directly. */
+    @Test
+    public void testPreviewRefusesAPredicateWithoutAnObject() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        StatementValueObject ps = proposalFv( proposal, 100L ).getStatements().get( 0 );
+        ps.setPredicate( "has role" );
+        ps.setObject( null );
+        ps.setObjectUri( null );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() )
+                .extracting( DesignPreflightReport.Blocker::getType )
+                .containsExactly( "STATEMENT_HALF_PAIR" );
+    }
+
+    /** And half a second pair, which only PUT /curation refused before. */
+    @Test
+    public void testPreviewRefusesASecondPredicateWithoutASecondObject() {
+        buildFixture();
+        makeControlStatementCompound();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        StatementValueObject ps = proposalFv( proposal, 100L ).getStatements().get( 0 );
+        ps.setSecondObject( null );
+        ps.setSecondObjectUri( null );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() )
+                .extracting( DesignPreflightReport.Blocker::getType )
+                .containsExactly( "STATEMENT_HALF_PAIR" );
+    }
+
     private static FactorValueBasicValueObject proposalFv( ExperimentalDesignValueObject vo, long fvId ) {
         return designFv( vo, fvId );
     }

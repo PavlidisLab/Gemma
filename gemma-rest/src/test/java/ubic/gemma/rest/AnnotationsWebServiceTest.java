@@ -573,6 +573,25 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @Test
     @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationRejectsPredicateWithoutObject() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{"
+                + "\"category\":\"treatment\","
+                + "\"value\":\"castration\","
+                + "\"predicate\":\"has role\","
+                + "\"predicateUri\":\"http://purl.obolibrary.org/obo/RO_0000087\""
+                + "}";
+        try ( Response r = target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "carries predicate without object" );
+        }
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
     public void testRemoveDatasetAnnotation() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setId( 1L );

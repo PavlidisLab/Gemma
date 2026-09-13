@@ -59,6 +59,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.model.expression.experiment.StatementUtils;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
@@ -6431,9 +6432,7 @@ public class AnnotationsWebService {
         Characteristic c;
         if ( dto.hasStatementShape() ) {
             // Reject the "second-* set but no first-*" shape — second-pair semantics depend
-            // on the first pair being present. Predicate-only or object-only is allowed:
-            // common ontology patterns express bare relationships ("has_role X") without a
-            // dedicated object literal.
+            // on the first pair being present. Half of either pair is refused below.
             boolean secondPredicateSet = StringUtils.isNotBlank( dto.getSecondPredicate() )
                     || StringUtils.isNotBlank( dto.getSecondPredicateUri() );
             boolean secondObjectSet = StringUtils.isNotBlank( dto.getSecondObject() )
@@ -6458,6 +6457,11 @@ public class AnnotationsWebService {
             s.setSecondPredicateUri( dto.getSecondPredicateUri() );
             s.setSecondObject( dto.getSecondObject() );
             s.setSecondObjectUri( dto.getSecondObjectUri() );
+            String half = StatementUtils.describeHalfPair( s );
+            if ( half != null ) {
+                throw new BadRequestException( "The annotation carries " + half
+                        + ". A statement clause is a predicate and an object together; send both or neither." );
+            }
             c = s;
         } else {
             c = Characteristic.Factory.newInstance();

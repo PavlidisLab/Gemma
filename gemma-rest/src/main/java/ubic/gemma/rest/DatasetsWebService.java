@@ -4701,8 +4701,10 @@ public class DatasetsWebService {
         @Nullable
         private OntologyTermRef subject;
         @Nullable
+        @Schema(description = "Predicate of the statement's first pair. Send predicate and object together, or neither; half a pair is a 400.")
         private OntologyTermRef predicate;
         @Nullable
+        @Schema(description = "Object, paired with predicate. See predicate.")
         private OntologyTermRef object;
         /**
          * The second predicate-object pair, for a statement that makes two claims about one subject.
@@ -5196,7 +5198,7 @@ public class DatasetsWebService {
                 svo.setObjectUri( sc.getObject().getUri() );
             }
             String stmtLocation = location + ".statements[" + refOrIndex( sc.getClientRef(), idx ) + "]";
-            requireWholeSecondPair( sc, stmtLocation );
+            requireWholePairs( sc, stmtLocation );
             if ( sc.getSecondPredicate() != null || sc.getSecondObject() != null ) {
                 if ( sc.getGemmaId() != null && repeatedIds.contains( sc.getGemmaId() ) ) {
                     throw new BadRequestException( stmtLocation + " carries secondPredicate/secondObject AND"
@@ -5261,22 +5263,36 @@ public class DatasetsWebService {
     }
 
     /**
-     * Refuse half a second pair.
+     * Refuse half a predicate/object pair, first or second.
      * <p>
-     * A {@link ubic.gemma.model.expression.experiment.Statement}'s second clause is a predicate AND an object;
-     * one without the other is not a claim, and storing the half that arrived would put a dangling predicate on
-     * a production row where nothing renders it. Both or neither.
+     * Each clause of a {@link ubic.gemma.model.expression.experiment.Statement} is a predicate AND an object; one
+     * without the other is not a claim, and storing the half that arrived puts a dangling predicate on a production
+     * row where nothing renders it. Both or neither.
+     *
+     * @see StatementUtils#describeHalfPair(String, String, String, String, String, String)
      */
-    private static void requireWholeSecondPair( StatementCommit sc, String location ) {
-        boolean hasPredicate = sc.getSecondPredicate() != null
-                && StringUtils.isNotBlank( sc.getSecondPredicate().getLabel() );
-        boolean hasObject = sc.getSecondObject() != null
-                && StringUtils.isNotBlank( sc.getSecondObject().getLabel() );
-        if ( hasPredicate != hasObject ) {
-            throw new BadRequestException( location + " carries "
-                    + ( hasPredicate ? "secondPredicate without secondObject" : "secondObject without secondPredicate" )
-                    + ". A statement's second clause is a predicate and an object together; send both or neither." );
+    private static void requireWholePairs( StatementCommit sc, String location ) {
+        String half = StatementUtils.describeHalfPair( "predicate", "object",
+                labelOf( sc.getPredicate() ), uriOf( sc.getPredicate() ), labelOf( sc.getObject() ), uriOf( sc.getObject() ) );
+        if ( half == null ) {
+            half = StatementUtils.describeHalfPair( "secondPredicate", "secondObject",
+                    labelOf( sc.getSecondPredicate() ), uriOf( sc.getSecondPredicate() ),
+                    labelOf( sc.getSecondObject() ), uriOf( sc.getSecondObject() ) );
         }
+        if ( half != null ) {
+            throw new BadRequestException( location + " carries " + half
+                    + ". A statement clause is a predicate and an object together; send both or neither." );
+        }
+    }
+
+    @Nullable
+    private static String labelOf( @Nullable OntologyTermRef ref ) {
+        return ref != null ? ref.getLabel() : null;
+    }
+
+    @Nullable
+    private static String uriOf( @Nullable OntologyTermRef ref ) {
+        return ref != null ? ref.getUri() : null;
     }
 
     /** Validate the gemmaId-XOR-clientRef rule; {@code true} = existing entity (has gemmaId), {@code false} = new. */
@@ -6244,7 +6260,7 @@ public class DatasetsWebService {
             }
             // The explicit spelling, which a NEW statement has no other way to express. Checked before the
             // two-item form so the two cannot both fill the slot.
-            requireWholeSecondPair( sc, location + ".statements[0]" );
+            requireWholePairs( sc, location + ".statements[0]" );
             if ( sc.getSecondPredicate() != null || sc.getSecondObject() != null ) {
                 if ( statements.size() == 2 ) {
                     throw new BadRequestException( location + ": the first statement carries"
@@ -6264,7 +6280,7 @@ public class DatasetsWebService {
             // and discarded, which is what made a two-statement tag store one.
             if ( statements.size() == 2 ) {
                 StatementCommit sc2 = statements.get( 1 );
-                requireWholeSecondPair( sc2, location + ".statements[1]" );
+                requireWholePairs( sc2, location + ".statements[1]" );
                 if ( sc2.getSecondPredicate() != null || sc2.getSecondObject() != null ) {
                     throw new BadRequestException( location + ".statements[1] carries"
                             + " secondPredicate/secondObject. A tag row holds two pairs in total, and this item"
@@ -9416,6 +9432,11 @@ public class DatasetsWebService {
             s.setSecondObject( tag.getSecondObject() );
             s.setSecondObjectUri( tag.getSecondObjectUri() );
             s.setSupportingEvidence( serializeEvidence( tag.getSupportingEvidence() ) );
+            String half = StatementUtils.describeHalfPair( s );
+            if ( half != null ) {
+                throw new BadRequestException( "Annotation '" + tag.getValue() + "' carries " + half
+                        + ". A statement clause is a predicate and an object together; send both or neither." );
+            }
             return s;
         } else {
             Characteristic c = Characteristic.Factory.newInstance();

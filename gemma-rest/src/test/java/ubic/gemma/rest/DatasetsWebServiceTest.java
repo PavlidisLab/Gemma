@@ -623,6 +623,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 + "\"clientRef\":\"F1\",\"name\":\"genotype\",\"category\":{\"label\":\"genotype\"},"
                 + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"statements\":{\"items\":[{"
                 + "\"clientRef\":\"S1\",\"subject\":{\"label\":\"Utrn\",\"uri\":\"http://x/subj\"},"
+                + "\"predicate\":{\"label\":\"has genotype\"},"
                 + "\"object\":{\"label\":\"Heterozygous\",\"uri\":\"http://purl.obolibrary.org/obo/TGEMO_00003\"}"
                 + "}]}}]}}]}}}";
         try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
@@ -1556,6 +1557,21 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( s.getObject() ).isEqualTo( "30%" );
         assertThat( s.getSecondPredicate() ).isEqualTo( "for" );
         assertThat( s.getSecondObject() ).isEqualTo( "12 weeks" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsRefusesAPredicateWithoutAnObject() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
+        String body = "{\"annotations\":[{\"category\":\"treatment\",\"value\":\"castration\","
+                + "\"predicate\":\"has role\"}]}";
+        try ( Response r = target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "carries predicate without object" );
+        }
+        verify( expressionExperimentService, never() ).updateAnnotations( any(), any() );
     }
 
     @Test
@@ -6719,6 +6735,47 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
             assertThat( r.readEntity( String.class ) )
                     .contains( "secondPredicate without secondObject" );
         }
+    }
+
+    /** The first pair is held to the same rule. Six factor-value statements reached production with a predicate and no object. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRefusesHalfAFirstPair() {
+        ee.setId( 1L );
+        ee.setExperimentalDesign( ExperimentalDesign.Factory.newInstance() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( new ExperimentalDesignValueObject() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"F1\",\"name\":\"treatment\","
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"statements\":{\"items\":[{"
+                + "\"clientRef\":\"S1\",\"subject\":{\"label\":\"castration\"},"
+                + "\"predicate\":{\"label\":\"has role\"}"
+                + "}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "carries predicate without object" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** A tag's statement goes through the same guard as a factor value's. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRefusesHalfAPairOnATagStatement() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\","
+                + "\"category\":{\"label\":\"cell line\",\"uri\":\"http://www.ebi.ac.uk/efo/EFO_0000322\"},"
+                + "\"value\":{\"label\":\"IMR-90\",\"uri\":\"http://x/imr90\"},\"statements\":{\"items\":[{"
+                + "\"subject\":{\"label\":\"IMR-90\",\"uri\":\"http://x/imr90\"},"
+                + "\"predicate\":{\"label\":\"positive for product of gene\"}}]}}]}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "carries predicate without object" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
     }
 
     /**
