@@ -31,10 +31,13 @@ http://purl.obolibrary.org/obo/CLO_0037227	cell line cell derived from anatomica
 http://purl.obolibrary.org/obo/CLO_0037229	cell line cell derived from organism
 http://purl.obolibrary.org/obo/BFO_0000050	part of
 http://purl.obolibrary.org/obo/RO_0002100	has soma location
-# Added 2026-09-11: three predicates curators had already asserted in gemd that this list did not
-# carry -- 90 has characteristic, 86 has_allele, 43 has quality statements, every one IC (frinkbro).
-# Paul: "if curators use the predicate, that suggests we need it". The agent's own vocabulary
-# (data/predicates.json, 24 terms) deliberately does NOT grow with these.
-http://purl.obolibrary.org/obo/RO_0000053	has characteristic
+# Added 2026-09-11: predicates curators had already asserted in gemd that this list did not carry
+# -- 86 has_allele, 43 has quality statements, every one IC (frinkbro). Paul: "if curators use the
+# predicate, that suggests we need it".
+# RO_0000053 has characteristic was added with them and removed 2026-09-13. It is the RO parent of has
+# quality, has role, has function and has disposition, so it fits whenever a writer is unsure, and 84
+# stored statements use it where a more specific predicate belongs. Paul: "has quality is fine but let's
+# not have characteristic since it is the parent term." Removing it withdraws it from
+# /annotations/predicates; the stored statements still read and still format.
 http://purl.obolibrary.org/obo/RO_0000086	has quality
 http://purl.obolibrary.org/obo/GENO_0000413	has_allele
