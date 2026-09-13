@@ -65,13 +65,6 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
 
     private static final Logger log = LoggerFactory.getLogger( ChebiOntologyService.class );
 
-    /**
-     * Default freshness window for the slim cache. Beyond this age the slim is re-extracted
-     * even when seed coverage hasn't grown. Aligned with the weekly slim cadence agreed in
-     * the Phase 4 design discussion; a future {@code .meta.json}-based check (Phase 4c) will
-     * narrow this so unchanged source + unchanged corpus stays fresh indefinitely.
-     */
-    private static final Duration DEFAULT_SLIM_MAX_AGE = Duration.ofDays( 7 );
 
     /**
      * CHEBI's {@code drug} role. Seeding the slim with everything bearing this role (and its
@@ -93,7 +86,6 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
     private ChebiSeedResolver seedResolver;
     @Nullable
     private File slimCacheDir;
-    private Duration slimMaxAge = DEFAULT_SLIM_MAX_AGE;
     private final java.util.concurrent.atomic.AtomicReference<Thread> slimRebuildThread =
             new java.util.concurrent.atomic.AtomicReference<>();
 
@@ -124,9 +116,6 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
         this.slimCacheDir = slimCacheDir;
     }
 
-    public void setSlimMaxAge( Duration slimMaxAge ) {
-        this.slimMaxAge = requireNonNull( slimMaxAge );
-    }
 
     @Override
     protected OntologyModel loadModel( boolean processImports, LanguageLevel languageLevel,
@@ -256,10 +245,12 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
      *     <li>meta.json exists and parses;</li>
      *     <li>meta {@code seedHash} matches the hash of the current corpus seeds — so any
      *         curator-driven seed-set drift forces re-extraction;</li>
-     *     <li>slim age is within {@link #slimMaxAge} — a belt-and-suspenders ceiling so a
-     *         long-running container eventually picks up upstream source updates even if
-     *         seeds haven't changed.</li>
      * </ul>
+     * <p>
+     * 🛑 There is deliberately no age ceiling. A 7-day one used to discard a correct slim on the calendar
+     * alone — frink loaded the full 865 MB CHEBI from 2026-08-27 to 2026-09-12 for no change in the source
+     * or the corpus (Paul, 2026-09-12: "let's not invalidate it just because we haven't updated"). A
+     * newer CHEBI release is picked up by rebuilding deliberately, not by waiting.
      */
     private boolean isSlimFresh( File slim, File meta, Set<String> currentSeeds ) {
         if ( !slim.isFile() || slim.length() == 0 ) {
@@ -295,13 +286,6 @@ public class ChebiOntologyService extends UrlOntologyService implements Slimmabl
         if ( !currentHash.equals( cached.seedHash ) ) {
             log.info( "Slim freshness: corpus seed set drift ({} seeds in meta, {} now); "
                     + "will rebuild.", cached.seedCount, currentSeeds.size() );
-            return false;
-        }
-        long ageMillis = System.currentTimeMillis() - slim.lastModified();
-        if ( ageMillis >= slimMaxAge.toMillis() ) {
-            log.info( "Slim freshness: slim is {} days old (max {} days); will rebuild to "
-                    + "pick up any upstream source changes.",
-                    ageMillis / 86_400_000L, slimMaxAge.toDays() );
             return false;
         }
         return true;

@@ -45,7 +45,6 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
 
     private static final Logger log = LoggerFactory.getLogger( MondoOntologyService.class );
 
-    private static final Duration DEFAULT_SLIM_MAX_AGE = Duration.ofDays( 7 );
     private static final String SLIM_FILE_NAME = "mondoOntology-slim.owl";
     private static final String SLIM_META_NAME = "mondoOntology-slim.meta.json";
 
@@ -55,7 +54,6 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
     private MondoSeedResolver seedResolver;
     @Nullable
     private File slimCacheDir;
-    private Duration slimMaxAge = DEFAULT_SLIM_MAX_AGE;
     private final AtomicReference<Thread> slimRebuildThread = new AtomicReference<>();
 
     public MondoOntologyService() {
@@ -77,9 +75,6 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
         this.slimCacheDir = slimCacheDir;
     }
 
-    public void setSlimMaxAge( Duration slimMaxAge ) {
-        this.slimMaxAge = requireNonNull( slimMaxAge );
-    }
 
     @Override
     protected OntologyModel loadModel( boolean processImports, LanguageLevel languageLevel,
@@ -183,12 +178,6 @@ public class MondoOntologyService extends UrlOntologyService implements Slimmabl
         if ( !currentHash.equals( cached.seedHash ) ) {
             log.info( "Slim freshness: MONDO corpus seed set drift ({} -> {}); will rebuild.",
                     cached.seedCount, currentSeeds.size() );
-            return false;
-        }
-        long ageMillis = System.currentTimeMillis() - slim.lastModified();
-        if ( ageMillis >= slimMaxAge.toMillis() ) {
-            log.info( "Slim freshness: MONDO slim is {} days old (max {}); will rebuild.",
-                    ageMillis / 86_400_000L, slimMaxAge.toDays() );
             return false;
         }
         return true;
