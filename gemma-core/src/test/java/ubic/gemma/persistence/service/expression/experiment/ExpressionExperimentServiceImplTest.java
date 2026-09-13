@@ -1624,6 +1624,45 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
                 .satisfies( s -> assertThat( s.getSupportingEvidence() ).isNull() );
     }
 
+    /**
+     * frinkbro's notes, rewritten as Python-serialized JSON on 2026-09-13, preflighted as an update on every experiment
+     * that carried one (GSE4036, GSE3489): the echo is compact and the comparison was by string. An echo of the same
+     * content is not an edit, and the apply keeps the stored bytes.
+     */
+    @Test
+    public void testAnEchoOfSpacedJsonEvidenceIsNotAnUpdate() {
+        buildFixture();
+        String spaced = "[{\"source\": \"legacy_note\", \"quote\": \"control arm of a disease-vs-control design\"}]";
+        controlFv.getCharacteristics().iterator().next().setSupportingEvidence( spaced );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        assertThat( designFv( proposal, 100L ).getStatements().get( 0 ).getSupportingEvidence() ).isNotNull();
+
+        assertThat( svc.previewDesignChange( fixture, proposal ).getFactorValuesToUpdate() ).isEmpty();
+        svc.applyDesignChange( fixture, proposal );
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getSupportingEvidence() ).isEqualTo( spaced ) );
+    }
+
+    /**
+     * Stored evidence that is not JSON is served as nothing, so no client can echo it. A proposal without evidence
+     * leaves it in place instead of clearing it (Paul approved, 2026-09-13), and the preflight does not report it.
+     */
+    @Test
+    public void testEvidenceThatCannotBeReadSurvivesAProposalWithoutEvidence() {
+        buildFixture();
+        String text = "control arm of a disease-vs-control design: this sample is the CONTROL";
+        controlFv.getCharacteristics().iterator().next().setSupportingEvidence( text );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        assertThat( designFv( proposal, 100L ).getStatements().get( 0 ).getSupportingEvidence() ).isNull();
+
+        assertThat( svc.previewDesignChange( fixture, proposal ).getFactorValuesToUpdate() ).isEmpty();
+        svc.applyDesignChange( fixture, proposal );
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getSupportingEvidence() ).isEqualTo( text ) );
+    }
+
     /** An evidence code stated on a factor-value statement reaches the entity, so a design write can say how it was decided. */
     @Test
     public void testApplyWritesEvidenceCodeOntoAStatement() {

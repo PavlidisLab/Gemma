@@ -158,4 +158,23 @@ public class CharacteristicUtilsTest {
         return c;
     }
 
+
+    @Test
+    public void sameSupportingEvidenceComparesContentNotSpacing() {
+        String pythonSpaced = "[{\"source\": \"legacy_note\", \"quote\": \"a note\"}]";
+        assertTrue( sameSupportingEvidence( pythonSpaced, parseSupportingEvidence( "[{\"source\":\"legacy_note\",\"quote\":\"a note\"}]" ) ) );
+        assertFalse( sameSupportingEvidence( pythonSpaced, parseSupportingEvidence( "[{\"source\":\"legacy_note\",\"quote\":\"another\"}]" ) ) );
+        assertTrue( sameSupportingEvidence( pythonSpaced, "[{\"source\":\"legacy_note\",\"quote\":\"a note\"}]" ) );
+    }
+
+    @Test
+    public void omittedEvidenceClearsJsonButLeavesTextThatCannotBeRead() {
+        String text = "control arm of a disease-vs-control design";
+        assertFalse( sameSupportingEvidence( "[{\"quote\":\"recorded\"}]", ( com.fasterxml.jackson.databind.JsonNode ) null ) );
+        assertTrue( sameSupportingEvidence( text, ( com.fasterxml.jackson.databind.JsonNode ) null ) );
+        assertTrue( sameSupportingEvidence( text, parseSupportingEvidence( "[]" ) ) );
+        assertFalse( sameSupportingEvidence( text, parseSupportingEvidence( "[{\"quote\":\"x\"}]" ) ) );
+        assertTrue( sameSupportingEvidence( null, ( com.fasterxml.jackson.databind.JsonNode ) null ) );
+        assertFalse( sameSupportingEvidence( null, parseSupportingEvidence( "[{\"quote\":\"x\"}]" ) ) );
+    }
 }

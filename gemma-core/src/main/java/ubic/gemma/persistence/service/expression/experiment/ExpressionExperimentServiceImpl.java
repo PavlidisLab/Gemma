@@ -1479,8 +1479,7 @@ public class ExpressionExperimentServiceImpl
             }
             // Compared in BOTH directions since evidence became replacement: dropping evidence a row has is as
             // much a change as adding it, and skipping payloads that carry none would report a clear as a no-op.
-            String proposedEvidence = CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() );
-            if ( !Objects.equals( proposedEvidence, match.getSupportingEvidence() ) ) {
+            if ( !CharacteristicUtils.sameSupportingEvidence( match.getSupportingEvidence(), ps.getSupportingEvidence() ) ) {
                 return true;
             }
             if ( !Objects.equals( parseEvidenceCode( ps.getEvidenceCode() ), match.getEvidenceCode() ) ) {
@@ -1669,7 +1668,9 @@ public class ExpressionExperimentServiceImpl
         }
         // Provenance: replacement, like the rest of a gemmaId item. See applyStatementFields for why this stopped
         // being a delta field on 2026-09-06.
-        ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
+        if ( !CharacteristicUtils.sameSupportingEvidence( ef.getSupportingEvidence(), pf.getSupportingEvidence() ) ) {
+            ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
+        }
         experimentalFactorService.update( ef );
     }
 
@@ -1703,8 +1704,10 @@ public class ExpressionExperimentServiceImpl
                 }
                 // Provenance on the VALUE itself, distinct from the evidence on its statements: replacement, as
                 // everywhere else on a gemmaId item.
-                existing.setSupportingEvidence(
-                        CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
+                if ( !CharacteristicUtils.sameSupportingEvidence( existing.getSupportingEvidence(), pv.getSupportingEvidence() ) ) {
+                    existing.setSupportingEvidence(
+                            CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
+                }
             }
         }
         // Siblings are deliberately left alone. Clearing them made a second baseline impossible to record at all:
@@ -2076,7 +2079,11 @@ public class ExpressionExperimentServiceImpl
         // and evidence could be set and changed but never removed, because there was no spelling of "I intend
         // none". Paul ruled full-record replacement, which gives `[]` and an omitted key the same unambiguous
         // meaning and makes clearing fall out rather than need a new semantic.
-        s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
+        // Written only when it differs by content, so an echo keeps the stored bytes and text that cannot be read
+        // survives a proposal that could not carry it -- see CharacteristicUtils.sameSupportingEvidence.
+        if ( !CharacteristicUtils.sameSupportingEvidence( s.getSupportingEvidence(), ps.getSupportingEvidence() ) ) {
+            s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
+        }
         s.setEvidenceCode( parseEvidenceCode( ps.getEvidenceCode() ) );
     }
 
@@ -2767,7 +2774,7 @@ public class ExpressionExperimentServiceImpl
                 fresh.setSupportingEvidence( d.getSupportingEvidence() );
                 toAdd.add( fresh );
             } else if ( d.getSupportingEvidence() != null
-                    && !Objects.equals( d.getSupportingEvidence(), match.getSupportingEvidence() ) ) {
+                    && !CharacteristicUtils.sameSupportingEvidence( match.getSupportingEvidence(), d.getSupportingEvidence() ) ) {
                 // Refresh provenance on an existing tag without disturbing its identity. A desired tag
                 // arriving without evidence (null) leaves any stored evidence intact.
                 match.setSupportingEvidence( d.getSupportingEvidence() );

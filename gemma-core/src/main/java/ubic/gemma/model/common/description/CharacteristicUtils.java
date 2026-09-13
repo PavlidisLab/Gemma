@@ -411,6 +411,37 @@ public class CharacteristicUtils {
         return serializeSupportingEvidence( evidence ) != null;
     }
 
+    /**
+     * Whether writing {@code proposed} over a row's {@code stored} evidence would change nothing.
+     * <p>
+     * Compared as JSON trees, not as strings. The agents' Python serializer writes {@code ", "} and {@code ": "}
+     * while Jackson writes compact JSON, so the 2,435 factor-value notes rewritten to JSON on 2026-09-13 each
+     * compared unequal to their own echo: every one preflighted as a factor-value update, and a commit would have
+     * rewritten it for no reason (frinkbro, GSE4036 and GSE3489).
+     * <p>
+     * Stored text that is not JSON cannot be echoed at all, because it parses to {@code null} and is served as
+     * nothing. It therefore counts as unchanged when the proposal records no evidence, so a client that could not
+     * see it does not clear it (Paul approved, 2026-09-13). A proposal that records evidence still replaces it,
+     * and omitting evidence still clears evidence that is JSON: full-record replacement is otherwise unchanged.
+     */
+    public static boolean sameSupportingEvidence( @Nullable String stored, @Nullable JsonNode proposed ) {
+        boolean proposedRecords = hasRecordedEvidence( proposed );
+        JsonNode storedTree = parseSupportingEvidence( stored );
+        if ( !hasRecordedEvidence( storedTree ) ) {
+            // nothing recorded, or text that cannot be read: only a proposal that records evidence changes it
+            return !proposedRecords;
+        }
+        return proposedRecords && storedTree.equals( proposed );
+    }
+
+    /** {@link #sameSupportingEvidence(String, JsonNode)} for a proposal that is already serialized. */
+    public static boolean sameSupportingEvidence( @Nullable String stored, @Nullable String proposed ) {
+        if ( proposed != null && !proposed.isEmpty() && parseSupportingEvidence( proposed ) == null ) {
+            return proposed.equals( stored );
+        }
+        return sameSupportingEvidence( stored, parseSupportingEvidence( proposed ) );
+    }
+
     private static final ObjectMapper SUPPORTING_EVIDENCE_MAPPER = new ObjectMapper();
 
     /**
