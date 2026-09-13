@@ -4152,6 +4152,9 @@ public class DatasetsWebService {
             // A paper this commit attaches stands rejected for the dataset. Its own code, because the client's
             // move is to drop the paper or overrule the rejection, not to re-read anything.
             throw new CurationCommitConflictException( CurationCommitConflictException.Reason.PUBLICATION_REJECTED, e.getMessage() );
+        } catch ( ubic.gemma.persistence.service.expression.experiment.UnknownDeletedIdsException e ) {
+            // A malformed body, as the same mistake is in the design section: 400, and nothing was written.
+            throw new BadRequestException( e.getMessage() );
         } catch ( IllegalArgumentException e ) {
             // e.g. shortName already in use
             throw new CurationCommitConflictException( CurationCommitConflictException.Reason.UNSPECIFIED, e.getMessage() );

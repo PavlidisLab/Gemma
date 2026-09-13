@@ -2912,6 +2912,46 @@ public class ExpressionExperimentServiceImpl
      * whichever of the two was supplied. Composed once here so every annotation the commit touches
      * carries the same sentence, and so the key leads — that is the part a later query can group on.
      */
+    private void requireDeletableCharacteristicIds( ExpressionExperiment ee, CurationCommitRequest request ) {
+        if ( request.isTagsPresent() && !request.getTagsToDelete().isEmpty() ) {
+            Set<Long> tagIds = ee.getCharacteristics().stream()
+                    .map( Characteristic::getId )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            refuseUnknownDeletedIds( request.getTagsToDelete(), tagIds, "tags", "tags of " + ee.getShortName() );
+        }
+        if ( request.isSampleCharsPresent() && !request.getSampleCharsToDelete().isEmpty() ) {
+            Set<Long> sampleCharacteristicIds = new HashSet<>();
+            for ( BioAssay ba : thawBioAssays( ee ).getBioAssays() ) {
+                BioMaterial bm = ba.getSampleUsed();
+                if ( bm == null ) {
+                    continue;
+                }
+                for ( Characteristic c : bm.getCharacteristics() ) {
+                    if ( c.getId() != null ) {
+                        sampleCharacteristicIds.add( c.getId() );
+                    }
+                }
+            }
+            refuseUnknownDeletedIds( request.getSampleCharsToDelete(), sampleCharacteristicIds, "sampleCharacteristics",
+                    "characteristics of a sample of " + ee.getShortName() );
+        }
+    }
+
+    private static void refuseUnknownDeletedIds( Collection<Long> deletedIds, Set<Long> presentIds, String section,
+            String what ) {
+        List<Long> unmatched = deletedIds.stream()
+                .filter( Objects::nonNull )
+                .filter( id -> !presentIds.contains( id ) )
+                .distinct()
+                .sorted()
+                .collect( Collectors.toList() );
+        if ( !unmatched.isEmpty() ) {
+            throw new UnknownDeletedIdsException( section + ".deletedIds references ids that are not " + what + ": "
+                    + unmatched + "." );
+        }
+    }
+
     @Nullable
     private static String auditReason( CurationCommitRequest request ) {
         String code = StringUtils.trimToNull( request.getReasonCode() );
@@ -2936,6 +2976,12 @@ public class ExpressionExperimentServiceImpl
                         + " changed since the draft baseline (expected lastUpdated " + expected + ", found " + current + ")." );
             }
         }
+
+        // Before any section writes, and on the dry run too: a delete that names nothing used to be skipped, so the
+        // commit answered 200 with a lower count while every other section applied, and the preflight reported the
+        // count sent. The design section already refuses the same mistake (DatasetsWebService.requireDeletableIds);
+        // cab's one-click executor needs a finding's edits all-or-none (2026-09-13).
+        requireDeletableCharacteristicIds( ee, request );
 
         CurationCommitResult result = new CurationCommitResult();
         boolean anyChange = false;

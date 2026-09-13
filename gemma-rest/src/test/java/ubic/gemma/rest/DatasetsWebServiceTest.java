@@ -5915,6 +5915,23 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( req.getTagsUnchanged() ).isEqualTo( 1 ); // the gemmaId item
     }
 
+    /** A delete naming nothing on the dataset is a malformed body: 400, like the design section, not a 409. */
+    @Test
+    @WithMockUser
+    public void testCommitAnswers400WhenADeletedIdNamesNothingOnTheDataset() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) ).thenThrow(
+                new ubic.gemma.persistence.service.expression.experiment.UnknownDeletedIdsException(
+                        "tags.deletedIds references ids that are not tags of GSE1: [7]." ) );
+
+        String body = "{\"tags\":{\"items\":[],\"deletedIds\":[7]}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "tags.deletedIds references ids that are not tags" );
+        }
+    }
+
     /**
      * A tags item bearing a gemmaId is a keep-marker: the section is add/delete only, so the mapper reads the id
      * and nothing else. Decorating one used to be a 200 for an edit that never happened — a client that set

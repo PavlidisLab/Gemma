@@ -1080,6 +1080,60 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), isNull() );
     }
 
+    /**
+     * A tag delete that names nothing on the experiment is refused before anything writes, on the commit and on the
+     * dry run. It used to be skipped: the commit answered 200 with a lower count while the other sections applied.
+     */
+    @Test
+    public void testCommitCurationRefusesATagDeleteThatNamesNoTagOfTheExperiment() {
+        buildFixture();
+        Characteristic tag = Characteristic.Factory.newInstance();
+        tag.setId( 99L );
+        tag.setCategory( "organism part" );
+        tag.setValue( "brain" );
+        fixture.getCharacteristics().add( tag );
+        when( eeDao.load( 1L ) ).thenReturn( fixture );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setTagsPresent( true );
+        request.setTagsToDelete( Arrays.asList( 99L, 12345L ) );
+        // the mocks are shared across tests, so earlier tests' calls would otherwise satisfy or break never()
+        clearInvocations( tableMaintenanceUtil );
+
+        for ( boolean dryRun : new boolean[] { false, true } ) {
+            org.assertj.core.api.Assertions.assertThatThrownBy( () -> svc.commitCuration( fixture, request, dryRun ) )
+                    .isInstanceOf( UnknownDeletedIdsException.class )
+                    .hasMessageContaining( "tags.deletedIds" )
+                    .hasMessageContaining( "[12345]" );
+        }
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), any() );
+    }
+
+    /** The same refusal for a sample characteristic that belongs to no sample of the experiment. */
+    @Test
+    public void testCommitCurationRefusesASampleCharacteristicDeleteThatNamesNothingOnTheExperiment() {
+        buildFixture();
+        Characteristic sampleChar = Characteristic.Factory.newInstance();
+        sampleChar.setId( 555L );
+        sampleChar.setCategory( "organism part" );
+        sampleChar.setValue( "cortex" );
+        bm1000.getCharacteristics().add( sampleChar );
+        when( eeDao.load( 1L ) ).thenReturn( fixture );
+        when( readService.thawBioAssays( fixture ) ).thenReturn( fixture );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setSampleCharsPresent( true );
+        request.setSampleCharsToDelete( Arrays.asList( 555L, 777L ) );
+        // the mocks are shared across tests, and the EE2C test above removes this same characteristic
+        clearInvocations( bioMaterialService );
+
+        org.assertj.core.api.Assertions.assertThatThrownBy( () -> svc.commitCuration( fixture, request, false ) )
+                .isInstanceOf( UnknownDeletedIdsException.class )
+                .hasMessageContaining( "sampleCharacteristics.deletedIds" )
+                .hasMessageContaining( "[777]" );
+        verify( bioMaterialService, never() ).removeAnnotation( any(), any(), any(), any() );
+    }
+
     /** A per-sample characteristic change reaches EE2C at the BioMaterial level and at no other. */
     @Test
     public void testCommitCurationRefreshesEe2cAtTheBioMaterialLevelForASampleCharacteristicChange() {

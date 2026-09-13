@@ -729,6 +729,51 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     /**
+     * One commit is all-or-none across sections: when the tags section throws, the design section that applied
+     * before it is rolled back with it. cab's one-click executor relies on this (2026-09-13).
+     * <p>
+     * The tag add duplicates a tag the experiment already carries, which {@code addAnnotation} refuses by throwing,
+     * after the factor rename has been applied in the same transaction.
+     */
+    @Test
+    public void commitCuration_aTagSectionThatThrowsRollsBackTheDesignSection() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        Characteristic existing = Characteristic.Factory.newInstance();
+        existing.setCategory( "organism part" );
+        existing.setValue( "brain" );
+        expressionExperimentService.addAnnotation( ee, existing );
+
+        ExperimentalDesignValueObject design = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = design.getExperimentalFactors().get( 0 );
+        Long factorId = factor.getId();
+        String originalName = factor.getName();
+        factor.setName( originalName + " renamed" );
+
+        Characteristic duplicate = Characteristic.Factory.newInstance();
+        duplicate.setCategory( "organism part" );
+        duplicate.setValue( "brain" );
+
+        CurationCommitRequest req = new CurationCommitRequest();
+        req.setDesignPresent( true );
+        req.setProposedDesign( design );
+        req.setDesignPlan( new DesignCommitPlan() );
+        req.setTagsPresent( true );
+        req.setTagsToAdd( java.util.Collections.singletonList( new CurationCommitRequest.TagAdd( "T1", duplicate ) ) );
+
+        org.junit.jupiter.api.Assertions.assertThrows( IllegalArgumentException.class,
+                () -> expressionExperimentService.commitCuration( ee, req, false ) );
+
+        ExperimentalDesignValueObject after = expressionExperimentService.getExperimentalDesignValueObject(
+                expressionExperimentService.load( ee.getId() ) );
+        assertThat( after.getExperimentalFactors() )
+                .filteredOn( f -> factorId.equals( f.getId() ) )
+                .singleElement()
+                .satisfies( f -> assertEquals( originalName, f.getName(),
+                        "the rename applied before the tag section threw must be rolled back with it" ) );
+    }
+
+    /**
      * Echoing {@code isBaseline: false} on a value whose stored flag is null is NOT an edit.
      * <p>
      * null and FALSE both mean "not the baseline", and the stored flag is null on every value that has never
