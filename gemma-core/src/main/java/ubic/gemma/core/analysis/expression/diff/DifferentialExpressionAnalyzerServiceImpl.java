@@ -194,7 +194,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         Collection<DifferentialExpressionAnalysis> results = this.redoWithoutSave( ee, dea, newConfig );
 
         if ( config.isPersist() ) {
-            return this.persistAnalyses( ee, results, newConfig );
+            // false: a redo re-persists each existing analysis in turn, so replacing a narrower one here would delete
+            // an analysis the same loop has yet to redo.
+            return this.persistAnalyses( ee, results, newConfig, false );
         }
         return results;
     }
@@ -240,7 +242,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                 .analyze( expressionExperiment, config );
 
         if ( config.isPersist() ) {
-            diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
+            diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config, true );
         } else {
             DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
         }
@@ -259,8 +261,18 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
+        return this.persistAnalysis( expressionExperiment, analysis, config, true );
+    }
 
-        this.deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
+    /**
+     * @param replaceSuperseded also delete an existing non-subset analysis whose factors this one covers — see
+     *                          {@link #deleteOldAnalyses}
+     */
+    private DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config,
+            boolean replaceSuperseded ) {
+
+        this.deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude(), replaceSuperseded );
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -445,7 +457,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     private void deleteOldAnalyses( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
+            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors,
+            boolean replaceSuperseded ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .findByExperiment( expressionExperiment, true );
         int numDeleted = 0;
@@ -470,9 +483,18 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             /*
              * Match if: factors are the same, and if this is a subset, it's the same subset factorvalue.
              */
-            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors ) && (
-                    subsetFactorValueForExisting == null || subsetFactorValueForExisting
-                            .equals( newAnalysis.getSubsetFactorValue() ) ) ) {
+            boolean sameAnalysis = factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors )
+                    && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting
+                    .equals( newAnalysis.getSubsetFactorValue() ) );
+            /*
+             * Or, on a fresh run, if a non-subset run covers every factor of a non-subset analysis (Paul's ruling,
+             * 2026-09-13). GSE107259 kept 264375 on {genotype} beside 432412 on {genotype, treatment}, because the
+             * sets differed.
+             */
+            boolean superseded = replaceSuperseded
+                    && subsetFactorValueForExisting == null && newAnalysis.getSubsetFactorValue() == null
+                    && !factorsInAnalysis.isEmpty() && factors.containsAll( factorsInAnalysis );
+            if ( sameAnalysis || superseded ) {
 
                 DifferentialExpressionAnalyzerServiceImpl.log
                         .info( "Deleting analysis with ID=" + existingAnalysis.getId() );
@@ -555,12 +577,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     private Collection<DifferentialExpressionAnalysis> persistAnalyses( ExpressionExperiment expressionExperiment,
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses,
-            DifferentialExpressionAnalysisConfig config ) {
+            DifferentialExpressionAnalysisConfig config, boolean replaceSuperseded ) {
 
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
             DifferentialExpressionAnalysis persistentAnalysis = this
-                    .persistAnalysis( expressionExperiment, analysis, config );
+                    .persistAnalysis( expressionExperiment, analysis, config, replaceSuperseded );
             results.add( persistentAnalysis );
         }
         return results;
