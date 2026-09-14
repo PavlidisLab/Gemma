@@ -6166,6 +6166,93 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( cap.getValue().getTagsToAdd() ).isEmpty();
     }
 
+    /**
+     * A restore re-creates a tag its snapshot holds, and the free-text experiment-tag checks do not apply to it
+     * (Paul's ruling, 2026-09-13). uib measured the refusal on gemma2: snapshot 2116 of dataset 2706, on
+     * {@code CBA/J x C57Bl/6J}, which has no URI and no hook. The same tag on {@code PUT /curation} is still
+     * refused — {@link #testCommitCurationRejectsADeclaredFreeTextTagWithNoHook}.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRestoreRecreatesAFreeTextTagWithNoHook() {
+        stubCommitOk();
+        // tag 42 is no longer on the dataset, so the reconciliation re-sends it as a create
+        when( expressionExperimentService.getAnnotations( any( ExpressionExperiment.class ), anyBoolean() ) )
+                .thenReturn( Collections.emptySet() );
+        when( annotationSetService.load( 5L ) ).thenReturn( snapshotSet( null,
+                "{\"tags\":{\"items\":[{\"gemmaId\":42,\"category\":{\"label\":\"strain\"},"
+                        + "\"value\":{\"label\":\"CBA/J x C57Bl/6J\"}}],\"deletedIds\":[]}}" ) );
+
+        assertThat( target( "/datasets/1/annotation-sets/5/restore" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap = curationCaptor();
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().getTagsToAdd() ).hasSize( 1 );
+    }
+
+    /** {@link #designWithASecondPair()}'s statement 7 as a snapshot saw it before the pair was added. */
+    private static final String SNAPSHOT_OF_STATEMENT_7_WITHOUT_A_SECOND_PAIR =
+            "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                    + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                    + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                    + "\"object\":{\"label\":\"10 nM\"}}]}}]}}]}}}";
+
+    /**
+     * cab, 2026-09-13: 15 of 21 restore points on gemma2 answered 400, each on a statement a commit had given a
+     * second pair after the snapshot was taken. A snapshot that records pairs is the target state, so the live
+     * pair is cleared (Paul's ruling, 2026-09-13).
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRestoreClearsASecondPairAddedAfterTheSnapshot() {
+        stubCommitOk();
+        stubDesignCommitAccepts( designWithASecondPair() );
+        when( annotationSetService.load( 5L ) ).thenReturn( snapshotSet(
+                Date.from( java.time.Instant.parse( "2026-09-13T20:00:00Z" ) ), SNAPSHOT_OF_STATEMENT_7_WITHOUT_A_SECOND_PAIR ) );
+
+        assertThat( target( "/datasets/1/annotation-sets/5/restore" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        StatementValueObject svo = committedStatement( cap );
+        assertThat( svo.getSecondPredicate() ).isNull();
+        assertThat( svo.getSecondObject() ).isNull();
+    }
+
+    /**
+     * A snapshot captured before snapshots recorded pairs cannot say whether the statement had one, so the restore
+     * keeps the live pair rather than clearing what the snapshot never saw (Paul's ruling, 2026-09-13). Together
+     * with the test above, this separates the two eras: clearing always fails this one, keeping always fails that one.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRestoreOfASnapshotFromBeforePairsWereRecordedKeepsTheLivePair() {
+        stubCommitOk();
+        stubDesignCommitAccepts( designWithASecondPair() );
+        when( annotationSetService.load( 5L ) ).thenReturn( snapshotSet(
+                Date.from( java.time.Instant.parse( "2026-09-08T16:43:09Z" ) ), SNAPSHOT_OF_STATEMENT_7_WITHOUT_A_SECOND_PAIR ) );
+
+        assertThat( target( "/datasets/1/annotation-sets/5/restore" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        StatementValueObject svo = committedStatement( cap );
+        assertThat( svo.getSecondPredicate() ).isEqualTo( "for" );
+        assertThat( svo.getSecondObject() ).isEqualTo( "12 hours" );
+    }
+
+    /** Snapshot 5 on dataset 1 ({@code ee}), captured at {@code createdAt}. */
+    private ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet snapshotSet( Date createdAt, String payloadJson ) {
+        ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet set =
+                new ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet();
+        set.setId( 5L );
+        set.setRole( ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole.SNAPSHOT );
+        set.setInvestigation( ee );
+        set.setCreatedAt( createdAt );
+        set.setPayloadJson( payloadJson );
+        return set;
+    }
+
     /** Stub the load + commit a tags-section test needs, and return the captor for the request the mapper built. */
     private ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> curationCaptor() {
         return ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );

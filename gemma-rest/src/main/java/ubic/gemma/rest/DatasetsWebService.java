@@ -2473,7 +2473,12 @@ public class DatasetsWebService {
                     + "🛑 A restore returns the curation's CONTENT, not its IDENTITY. Entities whose ids no longer "
                     + "exist — because an intervening run deleted and recreated them — come back as new rows with "
                     + "new ids, and any differential-expression analysis that survived that run is cascaded again "
-                    + "on the way back. Run with `dryRun=true` first and read `requiresForce`.",
+                    + "on the way back. Run with `dryRun=true` first and read `requiresForce`.\n\n"
+                    + "Two commit rules read differently on a restore. The free-text experiment-tag checks "
+                    + "(`UNGROUNDED_NOT_DECLARED`, `FREE_TEXT_NOT_HOOKED`) do not apply to the tags a snapshot "
+                    + "re-creates. And a statement the snapshot holds WITHOUT a second predicate/object pair has "
+                    + "the live pair cleared — except in a snapshot captured before 2026-09-08T16:43:10Z, when "
+                    + "snapshots did not record pairs at all; there the live pair is kept.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Restored, or (dryRun) the predicted changes."),
                     @ApiResponse(responseCode = "400", description = "The set is not a SNAPSHOT, or its payload is not a CurationDocument.",
@@ -2494,13 +2499,14 @@ public class DatasetsWebService {
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        CurationDocument snapshot = readSnapshotPayload( setId, ee );
-        RestoreIdentityDelta identity = reconcileSnapshotForRestore( snapshot, ee );
+        AnnotationSet set = requireSnapshotFor( setId, ee );
+        CurationDocument snapshot = readSnapshotPayload( set );
+        RestoreIdentityDelta identity = reconcileSnapshotForRestore( snapshot, ee, recordsSecondPairs( set ) );
         // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
         // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
         snapshot.setBaseline( null );
         CurationCommitReport report = doCommitCuration( datasetArg, snapshot, dryRun, force, false,
-                resolveActingIdentityIfNamed( onBehalfOf ), false );
+                resolveActingIdentityIfNamed( onBehalfOf ), false, true );
         // Attached on BOTH the dry run and the apply. The dry run is the only step a human reads before
         // deciding, and its section tallies say "one tag created" for an entity that is really being
         // re-identified -- measured 2026-09-03: tag 9018 came back as 9019 and nothing in the preview said so.
@@ -3178,7 +3184,7 @@ public class DatasetsWebService {
         if ( body != null && body.getRun() != null && doc.getRun() == null ) {
             doc.setRun( body.getRun() );
         }
-        CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true, signer, true );
+        CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true, signer, true, false );
         if ( !dryRun && !Boolean.TRUE.equals( keepLock ) ) {
             // Signing off ends the curator's turn on this dataset, so the lock goes back with it -- otherwise
             // every signed dataset stays locked until its lease runs out or somebody steals it. Only on success,
@@ -3799,7 +3805,7 @@ public class DatasetsWebService {
             @Nullable CurationDocument body
     ) {
         return respond( doCommitCuration( datasetArg, body, false, force, false,
-                resolveActingIdentityIfNamed( onBehalfOf ), true ) );
+                resolveActingIdentityIfNamed( onBehalfOf ), true, false ) );
     }
 
     @POST
@@ -3840,7 +3846,7 @@ public class DatasetsWebService {
         // else, and a preflight that quietly accepted what the commit will reject is a dry run that does not
         // predict the commit -- which is the one thing it is for.
         return respond( doCommitCuration( datasetArg, body, true, false, false,
-                resolveActingIdentityIfNamed( onBehalfOf ), false ) );
+                resolveActingIdentityIfNamed( onBehalfOf ), false, false ) );
     }
 
     /**
@@ -3867,9 +3873,13 @@ public class DatasetsWebService {
      * sign-off's, and they are separate because they are earned differently — {@code force} by being an admin,
      * {@code signed} by holding the curation lock and calling {@code POST /datasets/{id}/curation/sign}.
      * Collapsing them into one boolean would make sign-off admin-only, which is not what gates it.
+     * <p>
+     * {@code restoring} is set only by the snapshot restore. It exempts the tags the snapshot re-creates from the
+     * two free-text experiment-tag checks (Paul's ruling, 2026-09-13); every other check applies as on a commit.
      */
     private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body,
-            boolean dryRun, boolean force, boolean signed, @Nullable String actingAs, boolean advanceTickets ) {
+            boolean dryRun, boolean force, boolean signed, @Nullable String actingAs, boolean advanceTickets,
+            boolean restoring ) {
         if ( body == null ) {
             throw new BadRequestException( "A CurationDocument request body is required." );
         }
@@ -4001,7 +4011,9 @@ public class DatasetsWebService {
                     // An experiment tag must be grounded unless the caller declares the free text deliberate.
                     // 🛑 Sample characteristics are NOT gated this way: a GEO characteristic is a string the
                     // submitter wrote, and requiring a URI there would refuse the corpus.
-                    if ( StringUtils.isBlank( ch.getValueUri() ) ) {
+                    // A restore is exempt from both checks below (Paul's ruling, 2026-09-13); the grounded-term
+                    // checks in collectTermViolations still run on it.
+                    if ( !restoring && StringUtils.isBlank( ch.getValueUri() ) ) {
                         if ( !Boolean.TRUE.equals( tc.getFreeTextIntended() ) ) {
                             termViolations.add( new OntologyTermValidationException.Located( location + ".value",
                                     new TermViolation( "value", ch.getValue(), null, null,
@@ -5418,10 +5430,7 @@ public class DatasetsWebService {
         if ( stored == null ) {
             return;
         }
-        boolean storedHasPair = StringUtils.isNotBlank( stored.getSecondPredicate() )
-                || StringUtils.isNotBlank( stored.getSecondPredicateUri() )
-                || StringUtils.isNotBlank( stored.getSecondObject() )
-                || StringUtils.isNotBlank( stored.getSecondObjectUri() );
+        boolean storedHasPair = hasSecondPair( stored );
         boolean submittedPair = sc.getSecondPredicate() != null || sc.getSecondObject() != null;
         if ( Boolean.TRUE.equals( sc.getClearSecondPair() ) ) {
             if ( submittedPair || idRepeated ) {
@@ -5609,11 +5618,10 @@ public class DatasetsWebService {
     }
 
     /**
-     * Load a SNAPSHOT annotation set and parse its payload back into a {@link CurationDocument}, refusing
-     * anything that is not this dataset's snapshot. A DRAFT or PROPOSAL payload is some other tool's shape;
-     * replaying it as a commit would write whatever happened to parse.
+     * Load a SNAPSHOT annotation set, refusing anything that is not this dataset's snapshot. A DRAFT or PROPOSAL
+     * payload is some other tool's shape; replaying it as a commit would write whatever happened to parse.
      */
-    private CurationDocument readSnapshotPayload( Long setId, ExpressionExperiment ee ) {
+    private AnnotationSet requireSnapshotFor( Long setId, ExpressionExperiment ee ) {
         AnnotationSet set = annotationSetService.load( setId );
         if ( set == null ) {
             throw new NotFoundException( "No annotation set with id " + setId + "." );
@@ -5628,11 +5636,63 @@ public class DatasetsWebService {
         if ( StringUtils.isBlank( set.getPayloadJson() ) ) {
             throw new BadRequestException( "Annotation set " + setId + " has no payload to restore." );
         }
+        return set;
+    }
+
+    /** Parse a snapshot's payload back into a {@link CurationDocument}. */
+    private static CurationDocument readSnapshotPayload( AnnotationSet set ) {
         try {
             return SNAPSHOT_MAPPER.readValue( set.getPayloadJson(), CurationDocument.class );
         } catch ( com.fasterxml.jackson.core.JsonProcessingException e ) {
-            throw new BadRequestException( "Annotation set " + setId
+            throw new BadRequestException( "Annotation set " + set.getId()
                     + " payload is not a CurationDocument: " + e.getOriginalMessage() );
+        }
+    }
+
+    /**
+     * When snapshots began recording a statement's second predicate/object pair. {@code 7cba4a75eb} taught
+     * {@link #buildCurationSnapshot} to write {@code secondPredicate} / {@code secondObject}; it was built
+     * 2026-09-08T16:29:27Z, and gembro's note that it was live on gemma2 was written at 16:43:10Z.
+     * <p>
+     * 🛑 The payload cannot answer this by itself: {@link #SNAPSHOT_MAPPER} omits nulls, so an older snapshot and a
+     * newer one whose statement had no pair serialize identically. Filing an older snapshot as newer clears a pair
+     * it never recorded, while the reverse only leaves a pair in place, so the later of the two instants is used.
+     * An instance still running a build older than {@code 7cba4a75eb} after this date misfiles its snapshots from
+     * that period.
+     */
+    private static final java.time.Instant SNAPSHOTS_RECORD_SECOND_PAIRS_SINCE = java.time.Instant.parse( "2026-09-08T16:43:10Z" );
+
+    /** A snapshot with no capture time counts as older — see {@link #SNAPSHOTS_RECORD_SECOND_PAIRS_SINCE}. */
+    private static boolean recordsSecondPairs( AnnotationSet snapshot ) {
+        return snapshot.getCreatedAt() != null
+                && snapshot.getCreatedAt().getTime() >= SNAPSHOTS_RECORD_SECOND_PAIRS_SINCE.toEpochMilli();
+    }
+
+    private static boolean hasSecondPair( StatementValueObject s ) {
+        return StringUtils.isNotBlank( s.getSecondPredicate() ) || StringUtils.isNotBlank( s.getSecondPredicateUri() )
+                || StringUtils.isNotBlank( s.getSecondObject() ) || StringUtils.isNotBlank( s.getSecondObjectUri() );
+    }
+
+    /**
+     * Make a statement the restore keeps say what should happen to the live row's second pair, which the commit
+     * otherwise refuses to guess ({@link #requireSecondPairEchoed}). Paul's ruling, 2026-09-13:
+     * <ul>
+     *     <li>a snapshot that records pairs is the target state, so a statement it holds without one has the live
+     *         pair cleared — the restore that undoes a commit which folded a pair into an existing statement;</li>
+     *     <li>an older snapshot never recorded pairs, so its silence says nothing, and the live pair is echoed
+     *         back to keep it.</li>
+     * </ul>
+     */
+    private static void reconcileSecondPair( StatementCommit sc, StatementValueObject live,
+            boolean snapshotRecordsSecondPairs ) {
+        if ( sc.getSecondPredicate() != null || sc.getSecondObject() != null || !hasSecondPair( live ) ) {
+            return;
+        }
+        if ( snapshotRecordsSecondPairs ) {
+            sc.setClearSecondPair( true );
+        } else {
+            sc.setSecondPredicate( termRef( live.getSecondPredicate(), live.getSecondPredicateUri() ) );
+            sc.setSecondObject( termRef( live.getSecondObject(), live.getSecondObjectUri() ) );
         }
     }
 
@@ -5854,20 +5914,22 @@ public class DatasetsWebService {
      * run is cascaded again on the way back.
      */
     /**
+     * @param snapshotRecordsSecondPairs see {@link #reconcileSecondPair}
      * @return the identity delta the replay implies, in BOTH eras -- see {@link RestoreIdentityDelta}.
      */
-    private RestoreIdentityDelta reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee ) {
+    private RestoreIdentityDelta reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee,
+            boolean snapshotRecordsSecondPairs ) {
         ExperimentalDesignValueObject current = expressionExperimentService.getExperimentalDesignValueObject( ee );
         Set<Long> liveFactorIds = new HashSet<>();
         Set<Long> liveFvIds = new HashSet<>();
-        Set<Long> liveStatementIds = new HashSet<>();
+        Map<Long, StatementValueObject> liveStatements = new HashMap<>();
         if ( current != null ) {
             for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : nullSafe( current.getExperimentalFactors() ) ) {
                 liveFactorIds.add( f.getId() );
                 for ( FactorValueBasicValueObject v : nullSafe( f.getValues() ) ) {
                     liveFvIds.add( v.getId() );
                     for ( StatementValueObject s : nullSafe( v.getStatements() ) ) {
-                        liveStatementIds.add( s.getId() );
+                        liveStatements.put( s.getId(), s );
                     }
                 }
             }
@@ -5902,8 +5964,9 @@ public class DatasetsWebService {
                         reidentified.put( ref, lost );
                     }
                     for ( StatementCommit sc : nullSafe( fvc.getStatements().getItems() ) ) {
-                        if ( fvc.getGemmaId() != null && sc.getGemmaId() != null && liveStatementIds.contains( sc.getGemmaId() ) ) {
+                        if ( fvc.getGemmaId() != null && sc.getGemmaId() != null && liveStatements.containsKey( sc.getGemmaId() ) ) {
                             snapshotStatementIds.add( sc.getGemmaId() );
+                            reconcileSecondPair( sc, liveStatements.get( sc.getGemmaId() ), snapshotRecordsSecondPairs );
                         } else {
                             Long lost = sc.getGemmaId();
                             String ref = "restore-s-" + ( seq++ );
