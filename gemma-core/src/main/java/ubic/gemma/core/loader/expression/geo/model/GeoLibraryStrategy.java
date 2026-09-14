@@ -55,7 +55,7 @@ public enum GeoLibraryStrategy {
     DNASE_HYPERSENSITIVITY( "DNase-Hypersensitivity" ),
     FAIRE_SEQ( "FAIRE-seq" ),
     HI_C( "Hi-C" ),
-    /** 🛑 Spelled MDB rather than MBD; the constant predates this class and is PERSISTED in {@code BIO_ASSAY.LIBRARY_STRATEGY}, so renaming it would orphan stored rows. */
+    /** 🛑 Spelled MDB rather than MBD. Only the Java constant is misspelled; {@link #getGeoString()} returns GEO's {@code MBD-Seq}, and that is what reaches {@code BIO_ASSAY.LIBRARY_STRATEGY}. */
     MDB_SEQ( "MBD-Seq" ),
     MEDIP_SEQ( "MeDIP-Seq" ),
     MNASE_SEQ( "MNase-Seq" ),

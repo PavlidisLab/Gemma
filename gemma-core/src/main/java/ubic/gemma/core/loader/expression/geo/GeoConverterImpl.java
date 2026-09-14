@@ -940,12 +940,29 @@ public class GeoConverterImpl implements GeoConverter {
     void parseGEOSampleCharacteristicString( String rawGEOString, BioMaterial bioMaterial ) {
         /*
          * Sometimes strings are like Age :8 weeks; Sex: M so we should first split on ";" - sometimes "," is used.
-         * However, "," or ";" can occur in other situations. So we first have to check whether there are multiple ":".
-         * Checking for "=" here is not going to work, as the example I have is "lithium use (non-user=0, user = 1):0", so there is still a rare possibility of parsing errors.
+         * However, "," or ";" can occur in other situations.
+         *
+         * 🛑 The test used to be "more than one colon", and that is the bug uib traced on 2026-09-11.
+         * A SINGLE pair whose value contains a colon also has more than one, so the line was shattered
+         * on its commas into fragments that were never pairs. GSE290074 (imported 2026-04-01) stores 34
+         * rows from exactly this:
+         *
+         *   group: 10-20 granulosa cells, preantral follicle, adult human ovary, Hs9, age36,
+         *          cervical cancer (post chemotherapy: TP 2cycle)
+         *
+         * Two colons, so it split on commas, and the fragment "cervical cancer (post chemotherapy: TP
+         * 2cycle)" then reached the colon split and became the CATEGORY "cervical cancer (post
+         * chemotherapy" -- the value frinkbro measured. The raw GEO line is well formed; the damage is ours.
+         *
+         * So the test is now whether the pieces actually LOOK like pairs. A real multi-pair line gives
+         * fragments that each carry a separating colon; a single pair with a comma in its value gives
+         * fragments like "preantral follicle" that carry none, and those are the tell that the line was
+         * one characteristic all along.
          */
+        String[] candidates = rawGEOString.split( "[;,]" );
         String[] topFields;
-        if ( StringUtils.countMatches( rawGEOString, ":" ) > 1 ) {
-            topFields = rawGEOString.split( "[;,]" );
+        if ( candidates.length > 1 && allLookLikeKeyValuePairs( candidates ) ) {
+            topFields = candidates;
         } else {
             topFields = new String[] { rawGEOString };
         }
@@ -955,7 +972,7 @@ public class GeoConverterImpl implements GeoConverter {
             /*
              * Sometimes values are like Age:8 weeks, so we can try to convert them.
              */
-            String[] fields = field.split( ":", 2 ); // sometimes it is '=' ,but not allowed any more see https://www.ncbi.nlm.nih.gov/geo/info/soft.html#guidelines_tabs
+            String[] fields = GeoCharacteristicKey.split( field );
             if ( fields.length != 2 ) {
                 fields = field.split( "=", 2 ); // this shouldn't occur, but is present in some old GEO records apparently
             }
@@ -966,6 +983,18 @@ public class GeoConverterImpl implements GeoConverter {
                 String value = fields[1].trim().replaceAll( "\t", " " ).replaceAll( "_", " " );
                 value = value.replaceFirst( "^(human|mouse|rat|murine|mus musculus|homo sapiens)\\s", "" );
 
+                // A submitter writing "Strain:" with nothing after the colon parses to a category with no
+                // value. That is ABSENCE, and the column spells absence NULL -- an empty string is a value
+                // that happens to be empty. The corpus said it both ways until 8,141 rows were normalized to
+                // NULL on 2026-09-10 (cab), lopsided enough that `WHERE VALUE IS NULL` had been missing 99.7%
+                // of them. Emit the same spelling here so the import stops reintroducing the other one.
+                // ORIGINAL_VALUE still carries the submitter's unsplit line, so nothing is lost.
+                // stripToNull, not isEmpty(): the underscore substitution two lines up turns a
+                // "Strain: _" into a single space, which is non-empty and would store the blank
+                // this is here to stop -- one that WHERE VALUE IS NULL misses, and that a
+                // VALUE <> TRIM(VALUE) sweep misses too when the value is all whitespace.
+                String valueOrNull = StringUtils.stripToNull( value );
+
                 Characteristic gemmaChar = Characteristic.Factory.newInstance();
                 gemmaChar.setOriginalValue( field ); // always retain the original thing, unsplit.
                 gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
@@ -975,7 +1004,7 @@ public class GeoConverterImpl implements GeoConverter {
                 if ( vartype == null || vartype.equals( VariableType.other ) ) {
                     log.debug( "Could not parse into VariableType: " + category + " (in: " + rawGEOString + ")" );
                     gemmaChar.setCategory( category ); // This is not one of our "standard" categories, but it's okay
-                    gemmaChar.setValue( value );
+                    gemmaChar.setValue( valueOrNull );
                     gemmaChar.setDescription( defaultDescription );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                     continue;
@@ -997,12 +1026,12 @@ public class GeoConverterImpl implements GeoConverter {
                 // Deliberately NOT deleted: ValueStringToOntologyMapping and its resource file are
                 // still used by LoadSimpleExpressionDataCli, which is a different (non-GEO) loader.
                 try {
-                    gemmaChar.setValue( value );
+                    gemmaChar.setValue( valueOrNull );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 } catch ( Exception e ) {
                     // conversion didn't work, fall back. (not sure why this would happen so adding logging)
                     log.warn( "Could not convert " + field + " to rawGEOString ", e );
-                    this.doFallback( bioMaterial, value, defaultDescription );
+                    this.doFallback( bioMaterial, valueOrNull, defaultDescription );
                 }
 
             } else {
@@ -1010,6 +1039,28 @@ public class GeoConverterImpl implements GeoConverter {
                 this.doFallback( bioMaterial, field, defaultDescription );
             }
         }
+    }
+
+
+
+    /**
+     * Whether every piece of a {@code ;} / {@code ,} split carries its own separating colon, which is
+     * what distinguishes "several key: value pairs on one line" from "one pair whose value has commas
+     * in it".
+     * <p>
+     * Deliberately ALL rather than any: one keyless fragment means the delimiter belonged to a value,
+     * and splitting on it invents characteristics the submitter never wrote.
+     */
+    private static boolean allLookLikeKeyValuePairs( String[] candidates ) {
+        for ( String candidate : candidates ) {
+            if ( StringUtils.isBlank( candidate ) ) {
+                return false;
+            }
+            if ( GeoCharacteristicKey.split( candidate.trim() ).length != 2 ) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -1850,7 +1901,10 @@ public class GeoConverterImpl implements GeoConverter {
         bioAssay.setExtractedMolecule( molecule );
         bioAssay.setLibrarySelection( StringUtils.trimToNull( sample.getLibrarySelection() ) );
         GeoLibraryStrategy effectiveStrategy = GeoConverterImpl.effectiveLibStrategy( sample );
-        bioAssay.setLibraryStrategy( effectiveStrategy != null ? effectiveStrategy.toString() : null );
+        // getGeoString(), not toString(): the column stores GEO's spelling. toString() yields the Java
+        // constant name -- RNA_SEQ, and MDB_SEQ for a value GEO writes MBD-Seq -- which is not what
+        // BioAssay.libraryStrategy's javadoc or BioAssayValueObject's @Schema tell a client to expect.
+        bioAssay.setLibraryStrategy( effectiveStrategy != null ? effectiveStrategy.getGeoString() : null );
 
         // Taxon lastTaxon = null;
 
@@ -2862,7 +2916,7 @@ public class GeoConverterImpl implements GeoConverter {
         return null;
     }
 
-    private void doFallback( BioMaterial bioMaterial, String value, String defaultDescription ) {
+    private void doFallback( BioMaterial bioMaterial, @Nullable String value, String defaultDescription ) {
         Characteristic gemmaChar = Characteristic.Factory.newInstance();
         gemmaChar.setValue( value );
         gemmaChar.setOriginalValue( value );
@@ -2882,7 +2936,10 @@ public class GeoConverterImpl implements GeoConverter {
         for ( ExperimentalFactor factor : experimentalFactors ) {
             for ( FactorValue fv : factor.getFactorValues() ) {
                 for ( Characteristic m : fv.getCharacteristics() ) {
-                    if ( Objects.equals( m.getCategory(), c.getCategory() ) && m.getValue().equals( c.getValue() ) ) {
+                    // Objects.equals on the value too: a characteristic parsed from a "key:" line with an empty
+                    // right-hand side now carries a NULL value rather than an empty string, and this was the one
+                    // bare dereference on the import path that a null would reach.
+                    if ( Objects.equals( m.getCategory(), c.getCategory() ) && Objects.equals( m.getValue(), c.getValue() ) ) {
                         matchingFactorValue = fv;
                         break factors;
                     }

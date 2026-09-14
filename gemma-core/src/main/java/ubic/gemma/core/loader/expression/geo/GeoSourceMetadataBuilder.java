@@ -278,13 +278,18 @@ public class GeoSourceMetadataBuilder {
             if ( raw == null || raw.trim().isEmpty() ) {
                 continue;
             }
-            int colon = raw.indexOf( ':' );
-            if ( colon <= 0 ) {
+            // GeoCharacteristicKey, not indexOf(':'): this used to cut at the first colon and so divided
+            // a value that contained one, baking the split into the stored blob -- GSE205450 holds the
+            // key "gender (m" for "gender (m: male, f: female): M" (frinkbro, 2026-09-11). That copy is
+            // worse than the characteristic one, because the blob is meant to be a verbatim cache of
+            // what GEO said, and a re-fetch is the only way back from a damaged one.
+            String[] parts = GeoCharacteristicKey.split( raw );
+            if ( parts.length != 2 ) {
                 unparsed.add( raw.trim() );
                 continue;
             }
-            String tag = raw.substring( 0, colon ).trim();
-            String value = raw.substring( colon + 1 ).trim();
+            String tag = parts[0].trim();
+            String value = parts[1].trim();
             if ( tag.isEmpty() ) {
                 unparsed.add( raw.trim() );
                 continue;

@@ -196,6 +196,47 @@ public class OntologyUtils {
     }
 
     /**
+     * Normalize any spelling of a term identifier to its URI.
+     *
+     * <h4>Why an importer needs this</h4>
+     *
+     * <p>A source file may hand over the same identifier three ways: the URI itself, the CURIE
+     * ({@code CL:0000129}) that OBO ontologies and CELLxGENE use natively, or the local name
+     * ({@code CL_0000129}) that is the tail of the URI. Only the first is what Gemma stores, so a writer that
+     * trusts the source verbatim persists whichever spelling happened to arrive.</p>
+     *
+     * <p>🛑 Measured on production 2026-09-10: <b>64,728</b> characteristics hold a bare {@code CL:} CURIE in
+     * {@code VALUE_URI} while {@code CATEGORY_URI} on the same row holds a resolved PURL — the category side
+     * went through a lookup and the value side did not. The invariant to hold at any ingestion boundary is
+     * that a stored URI either carries a scheme or is null; a CURIE matches no URI predicate, resolves
+     * nowhere, and joins against nothing.</p>
+     *
+     * @return the URI form; {@code s} unchanged when it already carries a scheme; {@code null} when {@code s}
+     * is null, blank, or not an identifier at all (a label such as {@code MacroEC}) — which a caller should
+     * treat as bad input rather than persist in a URI column
+     */
+    @Nullable
+    public static String termIdOrUriToUri( @Nullable String s ) {
+        if ( s == null ) {
+            return null;
+        }
+        String t = StringUtils.strip( s );
+        if ( t.isEmpty() ) {
+            return null;
+        }
+        if ( t.contains( "://" ) ) {
+            // already a URI, on whatever base -- isTermUri knows only three of them and EFO-hosted or
+            // vendor-hosted terms are legitimate, so the scheme is the test rather than the base.
+            return t;
+        }
+        if ( isTermId( t, true ) ) {
+            return termIdToUri( t );
+        }
+        String termId = localNameToTermId( t );
+        return termId != null ? termIdToUri( termId ) : null;
+    }
+
+    /**
      * Check if a given prefix is a known OBO ID space.
      */
     public static boolean isKnownIdSpace( String prefix ) {

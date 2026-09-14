@@ -161,6 +161,22 @@ public class FilterQueryUtilsTest {
     }
 
     @Test
+    public void testSortByJoinedIdResolvedThroughGetSortKeepsNullOrdering() {
+        // The shape getSort() produces: resolveFilterablePropertyMeta splits the registered property into an
+        // alias plus a leaf, so a JOINED id arrives with propertyName "id" -- indistinguishable from a root
+        // sort by name or by alias, since the root sort is aliased too. Only the original property tells them
+        // apart, and reading only the name dropped the clause from every outer-joined sort.
+        assertThat( formOrderByClause( Sort.by( "ad", "id", Sort.Direction.ASC, Sort.NullMode.LAST, "bioAssays.arrayDesignUsed.id" ) ) )
+                .isEqualTo( " order by ad.id asc nulls last" );
+    }
+
+    @Test
+    public void testSortByOwnIdResolvedThroughGetSortOmitsNullOrdering() {
+        assertThat( formOrderByClause( Sort.by( "ee", "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) ) )
+                .isEqualTo( " order by ee.id asc" );
+    }
+
+    @Test
     public void testSortByNullablePropertyKeepsNullOrdering() {
         assertThat( formOrderByClause( Sort.by( "ee", "curationDetails.lastUpdated", Sort.Direction.DESC, Sort.NullMode.LAST ) ) )
                 .isEqualTo( " order by ee.curationDetails.lastUpdated desc nulls last" );

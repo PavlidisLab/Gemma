@@ -306,7 +306,6 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         // beforehand made that the normal case rather than an edge one: getBaselineConditions falls back to the
         // FIRST sample's factor values, so a factor missing on any later sample still gets an entry.
         dropIncompleteFactors( samplesUsed, factors );
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
 
         // A factor with two curator-marked baselines has no single reference level, so it cannot be run as one
         // contrast. That design is legitimate -- a dataset holding two experiments has a baseline per experiment --
@@ -330,11 +329,15 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * Do the analysis, by subsets if requested
          */
         if ( config.getSubsetFactor() != null ) {
-            return doSubSetAnalysis( expressionExperiment, samplesUsed, factors, baselineConditions, config.getSubsetFactor(), dmatrix, config );
+            return doSubSetAnalysis( expressionExperiment, samplesUsed, factors, config.getSubsetFactor(), dmatrix, config );
         } else {
             /*
              * Analyze the whole thing as one
              */
+            // Derived here rather than above the branch: only this leg models the whole experiment. The subset
+            // leg re-derives per arm, so computing it beforehand was a pass over every sample and factor whose
+            // result that leg discards.
+            Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
             return Collections.singleton( doAnalysis( expressionExperiment, dmatrix, samplesUsed, factors, baselineConditions, null, config ) );
         }
     }
@@ -352,14 +355,13 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         Map<FactorValue, ExpressionDataDoubleMatrix> dmatrixBySubSet = makeSubSetMatrices( dmatrix, samplesUsed, factors, config.getSubsetFactor() );
         // Same ordering as the entry point above: prune first, then describe what is left.
         dropIncompleteFactors( samplesUsed, factors );
-        Map<ExperimentalFactor, FactorValue> baselineConditions = BaselineSelection.getBaselineConditions( samplesUsed, factors );
-        return doSubSetAnalysis( subsets, dmatrixBySubSet, factors, baselineConditions, config );
+        return doSubSetAnalysis( subsets, dmatrixBySubSet, factors, config );
     }
 
     /**
      * Perform an analysis by subset.
      */
-    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( ExpressionExperiment expressionExperiment, List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, Map<ExperimentalFactor, FactorValue> baselineConditions, ExperimentalFactor subsetFactor, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
+    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( ExpressionExperiment expressionExperiment, List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, ExperimentalFactor subsetFactor, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         Assert.isTrue( !factors.contains( subsetFactor ),
                 "Subset factor cannot also be included in the analysis [ Factor was: " + subsetFactor + "]" );
 
@@ -400,33 +402,52 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
         LinearModelAnalyzer.log.info( "Total number of subsets: " + subsets.size() );
 
-        return doSubSetAnalysis( subsets, dmatrixBySubset, factors, baselineConditions, config );
+        return doSubSetAnalysis( subsets, dmatrixBySubset, factors, config );
     }
 
-    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( Map<FactorValue, ExpressionExperimentSubSet> subsets, Map<FactorValue, ExpressionDataDoubleMatrix> dmatrix, List<ExperimentalFactor> factors, Map<ExperimentalFactor, FactorValue> baselineConditions, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
+    /**
+     * Takes no whole-experiment baselines: each arm re-derives its own below, over that subset's samples and
+     * its own surviving factors. A whole-experiment map would name a baseline arm the subset need not contain.
+     */
+    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( Map<FactorValue, ExpressionExperimentSubSet> subsets, Map<FactorValue, ExpressionDataDoubleMatrix> dmatrix, List<ExperimentalFactor> factors, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         /*
          * Now analyze each subset
          */
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         Collection<AnalysisException> subsetExceptions = new HashSet<>();
+        int skippedSubsets = 0;
         for ( Map.Entry<FactorValue, ExpressionExperimentSubSet> sEntry : subsets.entrySet() ) {
             FactorValue subsetFactorValue = sEntry.getKey();
             ExpressionExperimentSubSet subSet = sEntry.getValue();
             if ( FactorValueUtils.isDeExcluded( subsetFactorValue ) ) {
                 LinearModelAnalyzer.log.warn( LinearModelAnalyzer.EXCLUDE_WARNING );
+                skippedSubsets++;
+                continue;
+            }
+
+            // makeSubSetMatrices produces no matrix for a factor value no analyzed sample carries. The subsets
+            // handed to this method can come from the database instead (the run(ee, subsets, ...) overload reuses
+            // stored subsets), and those still list an arm whose samples were all filtered out, so the two maps
+            // need not agree. Without this, such an arm reaches orderByExperimentalDesign as a null matrix.
+            ExpressionDataDoubleMatrix subsetMatrix = dmatrix.get( subsetFactorValue );
+            if ( subsetMatrix == null ) {
+                LinearModelAnalyzer.log.warn( "No analyzed samples left in " + subSet + " (" + subsetFactorValue
+                        + "); skipping it." );
+                skippedSubsets++;
                 continue;
             }
 
             LinearModelAnalyzer.log.info( "Analyzing subset: " + subsetFactorValue );
 
-            List<BioMaterial> bioMaterials = orderByExperimentalDesign( dmatrix.get( subsetFactorValue ), factors, null );
+            List<BioMaterial> bioMaterials = orderByExperimentalDesign( subsetMatrix, factors, null );
 
             List<ExperimentalFactor> subsetFactors = this
-                    .fixFactorsForSubset( bioMaterials, dmatrix.get( subsetFactorValue ), factors );
+                    .fixFactorsForSubset( bioMaterials, subsetMatrix, factors );
 
             if ( subsetFactors.isEmpty() ) {
                 LinearModelAnalyzer.log
                         .warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
+                skippedSubsets++;
                 continue;
             }
 
@@ -459,7 +480,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
              * Run analysis on the subset.
              */
             try {
-                results.add( doAnalysis( subSet, dmatrix.get( subsetFactorValue ), bioMaterials,
+                results.add( doAnalysis( subSet, subsetMatrix, bioMaterials,
                         subsetFactors, subsetBaselines, subsetFactorValue, subsetConfig ) );
             } catch ( AnalysisException e ) {
                 if ( config.isIgnoreFailingSubsets() ) {
@@ -471,9 +492,21 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             }
         }
 
-        if ( results.isEmpty() && !subsetExceptions.isEmpty() ) {
-            // all non-skipped analyses failed
-            throw new AllSubSetAnalysesFailedException( "All subset analyses failed for " + config.getSubsetFactor(), subsetExceptions, config );
+        if ( results.isEmpty() ) {
+            // Producing no analysis at all is a failure of the experiment, whether the subsets threw or were
+            // skipped. A subset leaves this loop without an exception when it is DE_Exclude, when nothing is left
+            // to analyze in it, or when fixFactorsForSubset finds nothing it can model -- and the old condition
+            // (empty AND at least one exception) let every-subset-skipped return an empty collection. GSE74400
+            // (eid 12822) did: both its subsets were skipped as "design is not valid", the CLI printed
+            // "Performed 0 differential expression analyses." through addSuccessObject and exited 0, and a batch
+            // runner testing the exit status treated it as done.
+            //
+            // This is a different question from -ignoreFailingSubsets, which is about carrying on when SOME
+            // subsets succeeded. redoAnalyses already raises AllAnalysesFailedException on an empty result with
+            // no exceptions collected; the subset level now agrees with it.
+            throw new AllSubSetAnalysesFailedException( String.format(
+                    "No differential expression analysis was produced for any subset of %s: %d failed, %d skipped.",
+                    config.getSubsetFactor(), subsetExceptions.size(), skippedSubsets ), subsetExceptions, config );
         }
 
         return results;
@@ -1414,9 +1447,23 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             FactorValue fv = ssEntry.getKey();
             List<BioMaterial> samplesInSubset = ssEntry.getValue();
             if ( samplesInSubset.isEmpty() ) {
-                throw new IllegalArgumentException( "The subset was empty for fv: " + fv );
+                // No matrix for this arm, and therefore no entry in the returned map: doSubSetAnalysis skips a
+                // factor value it finds no matrix for. Dropping it HERE rather than raising an exception the
+                // per-subset catch could match is what makes -ignoreFailingSubsets able to help at all -- this
+                // method runs during matrix construction, before the guarded loop exists, so a throw from here
+                // aborts the whole experiment whatever the flag says (GSE74998/eid 34217, "The subset was empty
+                // for fv: ... cell type embryonic stem cell").
+                //
+                // Emptiness is also not a failure to begin with. samplesUsed has already been through filtering
+                // and QC, so a factor value several samples carry can still partition to nothing here; and a
+                // subset factor may simply hold a value no analyzed sample uses. Either way there is nothing to
+                // analyze for this arm, not a broken analysis.
+                LinearModelAnalyzer.log.warn( "No analyzed samples carry " + fv
+                        + "; there is no subset to analyze for it, skipping it." );
+                continue;
             }
-            assert samplesInSubset.size() < samplesUsed.size();
+            // <=, not <: once an empty arm is dropped a single surviving arm can hold every sample.
+            assert samplesInSubset.size() <= samplesUsed.size();
             samplesInSubset = orderByExperimentalDesign( samplesInSubset, factors, null );
             ExpressionDataDoubleMatrix subMatrix = dmatrix.sliceColumns( samplesInSubset, createBADMap( samplesInSubset ) );
             subMatrices.put( fv, subMatrix );

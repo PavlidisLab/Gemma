@@ -12,6 +12,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import org.junit.jupiter.api.Test;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
@@ -142,19 +143,20 @@ public class TicketSearchQueryTest {
         Date updated = new Date( 1756675380000L );
         TicketSearchHitValueObject hit = TicketSearchHitValueObject.fromRow( new Object[] {
                 6L, "Reference 500 — ongoing curation review", TicketState.OPEN, TicketType.CURATION,
-                500L, updated } );
+                500L, updated, TicketPriority.HIGH } );
         assertThat( hit.getId() ).isEqualTo( 6L );
         assertThat( hit.getTitle() ).isEqualTo( "Reference 500 — ongoing curation review" );
         assertThat( hit.getState() ).isEqualTo( TicketState.OPEN );
         assertThat( hit.getType() ).isEqualTo( TicketType.CURATION );
         assertThat( hit.getTargetCount() ).isEqualTo( 500L );
         assertThat( hit.getUpdatedAt() ).isEqualTo( updated );
+        assertThat( hit.getPriority() ).isEqualTo( TicketPriority.HIGH );
     }
 
     @Test
     public void fromRow_readsAZeroTargetTicketAsZeroNotNull() {
         TicketSearchHitValueObject hit = TicketSearchHitValueObject.fromRow( new Object[] {
-                7L, "empty", TicketState.OPEN, TicketType.GENERIC, 0L, new Date() } );
+                7L, "empty", TicketState.OPEN, TicketType.GENERIC, 0L, new Date(), TicketPriority.NORMAL } );
         assertThat( hit.getTargetCount() ).isZero();
     }
 }

@@ -1439,10 +1439,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     /**
-     * Find the first non-null result among loaded ontology services.
-     */
-    @Nullable
-    /**
      * The ontologies a URI-addressed lookup may consult: the fan-out list plus Gene Ontology.
      * <p>
      * GO is removed from {@code ontologyServices} in {@link #afterPropertiesSet()}, which took it out of
@@ -1470,10 +1466,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return services;
     }
 
+    /**
+     * Find the first non-null result among loaded ontology services.
+     */
+    @Nullable
     private <T> T findFirst( Function<ubic.gemma.core.ontology.providers.OntologyService, T> function, String query, long timeoutMs ) throws TimeoutException {
         return findFirst( function, ontologyServices, query, timeoutMs );
     }
 
+    @Nullable
     private <T> T findFirst( Function<ubic.gemma.core.ontology.providers.OntologyService, T> function, List<ubic.gemma.core.ontology.providers.OntologyService> services, String query, long timeoutMs ) throws TimeoutException {
         StopWatch timer = StopWatch.createStarted();
         List<Future<T>> futures = new ArrayList<>( services.size() );

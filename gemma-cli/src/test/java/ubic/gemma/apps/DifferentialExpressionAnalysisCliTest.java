@@ -41,6 +41,7 @@ import ubic.gemma.persistence.util.EntityUrlBuilder;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -173,6 +174,13 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
         deMarker.setId( 6L );
         deMarker.getFactorValues().add( deMarkerValue( deMarker, 61L, "DE_Include", FactorValueUtils.DE_INCLUDE_URI ) );
         deMarker.getFactorValues().add( deMarkerValue( deMarker, 62L, "DE_Exclude", FactorValueUtils.DE_EXCLUDE_URI ) );
+        // The CLI refuses to report an experiment that produced no analysis as a success, so the analyzer has to
+        // be stubbed to return something. Mockito's default for a Collection is an EMPTY one, which is what every
+        // assertion below used to run against — each of them asserted success on a run that performed nothing.
+        when( differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( any(), any() ) )
+                .thenReturn( Collections.singleton( new DifferentialExpressionAnalysis() ) );
+        when( differentialExpressionAnalyzerService.redoAnalyses( any(), any(), any(), anyBoolean() ) )
+                .thenReturn( Collections.singleton( new DifferentialExpressionAnalysis() ) );
         when( entityLocator.locateExpressionExperiment( eq( "1" ), anyBoolean() ) ).thenReturn( ee );
         when( eeService.thawLite( ee ) ).thenReturn( ee );
         when( gemmaRestApiClient.perform( eq( "/datasets/1/refresh" ), eq( "refreshVectors" ), anyBoolean(),
@@ -552,6 +560,50 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
             assertThat( config.getFactorsToInclude() ).isEmpty();
             assertThat( config.getInteractionsToInclude() ).isEmpty();
         } ), eq( false ) );
+    }
+
+    /**
+     * An experiment that produced no analysis is not a success. GSE74400 (eid 12822) had both its subsets skipped
+     * as "design is not valid", printed "Performed 0 differential expression analyses." and exited 0, and a batch
+     * runner testing the exit status counted it as done for hours.
+     */
+    @Test
+    public void testAnExperimentThatProducedNoAnalysisFails() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        when( differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( any(), any() ) )
+                .thenReturn( Collections.emptySet() );
+
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .fails()
+                .exitCause().hasMessageContaining( "No differential expression analysis was performed" );
+        // nothing was produced, so nothing is written or refreshed either
+        verifyNoInteractions( gemmaRestApiClient );
+    }
+
+    /**
+     * Same for a redo: the CLI reports what came back, and nothing coming back is not something to report as done.
+     */
+    @Test
+    public void testARedoThatProducedNoAnalysisFails() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+
+        Collection<DifferentialExpressionAnalysis> deas = new HashSet<>();
+        deas.add( new DifferentialExpressionAnalysis() );
+        when( differentialExpressionAnalysisService.findByExperiment( ee, true ) ).thenReturn( deas );
+        when( differentialExpressionAnalyzerService.redoAnalyses( any(), any(), any(), anyBoolean() ) )
+                .thenReturn( Collections.emptySet() );
+
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-redo" )
+                .fails()
+                .exitCause().hasMessageContaining( "No differential expression analysis was performed" );
     }
 
     @Test

@@ -255,19 +255,27 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
      */
     private boolean isIndexingData( BioAssayDimension dimension ) {
         for ( Class<? extends BulkExpressionDataVector> vectorType : bulkDataVectorTypes ) {
-            if ( countReferencesTo( vectorType.getSimpleName(), dimension ) > 0 ) {
+            if ( isReferencedBy( vectorType.getSimpleName(), dimension ) ) {
                 return true;
             }
         }
-        return countReferencesTo( PrincipalComponentAnalysis.class.getSimpleName(), dimension ) > 0
-                || countReferencesTo( SampleCoexpressionMatrix.class.getSimpleName(), dimension ) > 0;
+        return isReferencedBy( PrincipalComponentAnalysis.class.getSimpleName(), dimension )
+                || isReferencedBy( SampleCoexpressionMatrix.class.getSimpleName(), dimension );
     }
 
-    private long countReferencesTo( String entityName, BioAssayDimension dimension ) {
-        return ( Long ) getSessionFactory().getCurrentSession()
-                .createQuery( "select count(*) from " + entityName + " e where e.bioAssayDimension = :dim" )
+    /**
+     * Whether any {@code entityName} refers to the dimension.
+     * <p>
+     * Deliberately not a {@code count(*)}: the answer is a boolean, and the vector tables this runs over are
+     * the largest in the schema, so counting walks the whole index range of one to learn something the first
+     * row settles. One of these runs per mapped vector subtype per dimension.
+     */
+    private boolean isReferencedBy( String entityName, BioAssayDimension dimension ) {
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select 1 from " + entityName + " e where e.bioAssayDimension = :dim" )
                 .setParameter( "dim", dimension )
-                .uniqueResult();
+                .setMaxResults( 1 )
+                .uniqueResult() != null;
     }
 
     private Collection<BioAssayDimension> getBioAssayDimensions( BioAssay ba ) {

@@ -36,6 +36,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -824,6 +825,49 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
     }
 
     @Test
+    @DisplayName("bulk: each row reports ITS OWN target's status, which is what the queue gates on")
+    public void bulkSummaries_carryThePerTargetStatus() {
+        long base = freshTargetBase();
+        Long done = base, notDone = base + 1;
+        Ticket t = openTargeting( TicketType.CURATION, "bulk-status-" + UUID.randomUUID(), done, notDone );
+        Long doneRowId = t.getTargets().stream()
+                .filter( tt -> tt.getTargetId().equals( done ) )
+                .findFirst().orElseThrow().getId();
+        flushAndClear();
+
+        ticketService.updateTargetStatus( ticketDao.load( t.getId() ), doneRowId, TicketTargetStatus.DONE, reporter );
+        flushAndClear();
+
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Arrays.asList( done, notDone ) );
+
+        // One ticket, two targets, two different answers -- the whole point of the column. Reading the
+        // ticket cannot give this: both rows are the same ticket, so anything per-TICKET is identical
+        // here and only the per-target status separates them.
+        assertEquals( TicketTargetStatus.DONE, byDataset.get( done ).get( 0 ).getTargetStatus(),
+                "the summary row for the finished dataset must say DONE" );
+        assertEquals( TicketTargetStatus.NOT_DONE, byDataset.get( notDone ).get( 0 ).getTargetStatus(),
+                "its sibling on the SAME ticket must still say NOT_DONE" );
+    }
+
+    @Test
+    @DisplayName("bulk: a row carries the ticket's priority, so the caller need not refetch the ticket")
+    public void bulkSummaries_carryTheTicketPriority() {
+        long base = freshTargetBase();
+        Long ee = base;
+        Ticket t = openTargeting( TicketType.CURATION, "bulk-priority-" + UUID.randomUUID(), ee );
+        t.setPriority( TicketPriority.URGENT );
+        flushAndClear();
+
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Collections.singletonList( ee ) );
+
+        assertEquals( TicketPriority.URGENT, byDataset.get( ee ).get( 0 ).getPriority() );
+    }
+
+    @Test
     @DisplayName("bulk: a dataset on no open ticket gets NO key, so an absence means something")
     public void bulkSummaries_quietDatasetIsAbsentNotEmpty() {
         long base = freshTargetBase();
@@ -831,7 +875,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         openTargeting( TicketType.CURATION, "bulk-presence-" + UUID.randomUUID(), onATicket );
         flushAndClear();
 
-        Map<Long, List<TicketSearchHitValueObject>> byDataset =
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
                 ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
                         Arrays.asList( onATicket, quiet ) );
 
@@ -852,12 +896,12 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         ticketService.transition( resolved, TicketState.RESOLVED, reporter, "done" );
         flushAndClear();
 
-        Map<Long, List<TicketSearchHitValueObject>> byDataset =
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
                 ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
                         Arrays.asList( a, b ) );
 
         Set<Long> forA = new HashSet<>();
-        for ( TicketSearchHitValueObject h : byDataset.get( a ) ) {
+        for ( TicketSummaryForTargetValueObject h : byDataset.get( a ) ) {
             forA.add( h.getId() );
         }
         assertEquals( new HashSet<>( Arrays.asList( both.getId(), onlyA.getId() ) ), forA,
@@ -880,7 +924,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
 
         // The glyph on the experiment list and the drawer behind it come from these two routes.
         // A dataset that reads "on a ticket" in one and not the other is the bug this pins.
-        Map<Long, List<TicketSearchHitValueObject>> bulk =
+        Map<Long, List<TicketSummaryForTargetValueObject>> bulk =
                 ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
                         Arrays.asList( a, b, quiet ) );
         for ( Long id : Arrays.asList( a, b, quiet ) ) {
@@ -889,7 +933,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
                 single.add( t.getId() );
             }
             Set<Long> batched = new HashSet<>();
-            for ( TicketSearchHitValueObject h : bulk.getOrDefault( id, Collections.emptyList() ) ) {
+            for ( TicketSummaryForTargetValueObject h : bulk.getOrDefault( id, Collections.emptyList() ) ) {
                 batched.add( h.getId() );
             }
             assertEquals( single, batched, "the two routes disagree about dataset " + id );
@@ -905,7 +949,7 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         flushAndClear();
 
         // Asked about ONE of the three members: the count still reports three.
-        Map<Long, List<TicketSearchHitValueObject>> byDataset =
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
                 ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
                         Collections.singletonList( a ) );
 

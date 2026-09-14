@@ -184,10 +184,17 @@ public class FileLockManagerImpl implements FileLockManager {
      * have an RNA-Seq report. 12,760 of the 27,780 such directories hold an actual report.
      * <p>
      * So a SHARED acquirer whose lock file cannot be created without inventing a directory, or whose directory is
-     * read-only, gets a lock that lives only in this JVM. Nothing is lost by it: a file that has no directory
-     * cannot exist, so there is no writer to coordinate with, and every shared caller checks readability (or
-     * fails opening) immediately afterwards. Once the directory does exist -- which is the moment a writer could
-     * be mid-copy -- the real file lock is taken again and reader/writer coordination is exactly as before.
+     * read-only, gets a lock that lives only in this call: it is not registered, so it is not the object any
+     * other acquirer of the same path will see. A file that has no directory cannot exist, so ordinarily there
+     * is no writer to coordinate with, and every shared caller checks readability (or fails opening) immediately
+     * afterwards. Once the directory does exist -- which is the moment a writer could be mid-copy -- the real
+     * file lock is taken again and reader/writer coordination is exactly as before.
+     * <p>
+     * ⚠️ The residual window: a writer that creates the directory AFTER the check below and starts copying
+     * BEFORE this caller reads is not excluded by the degraded lock, so the read can see a partial file. The
+     * re-check below narrows it to the span between the two tests; it cannot close it, because excluding that
+     * writer means taking a real lock, and taking a real lock means creating the directory this path exists to
+     * avoid creating. A caller that cannot tolerate a partial read wants an EXCLUSIVE acquire.
      * <p>
      * EXCLUSIVE acquirers keep the old behaviour and must: {@code copyMetadataFileInternal} takes the lock first
      * and creates the parent directories second, so the lock file has to be able to make its own way there.
@@ -203,8 +210,18 @@ public class FileLockManagerImpl implements FileLockManager {
             return existing;
         }
         if ( !exclusive && !canCreateLockFileWithoutCreatingDirectories( path ) ) {
-            log.debug( "No writable directory for a lock file beside " + path + "; taking an in-JVM shared lock only." );
-            return new ReentrantReadWriteLock();
+            ReadWriteLock degraded = new ReentrantReadWriteLock();
+            // Re-check both registries a writer could have reached in the meantime. Between the test above
+            // and here a writer may have taken a real lock and created the directory, and returning the
+            // degraded lock then hands back something that excludes nobody at the one moment it matters.
+            ReadWriteFileLock registered = fileLocks.get( path );
+            if ( registered != null ) {
+                return registered;
+            }
+            if ( !canCreateLockFileWithoutCreatingDirectories( path ) ) {
+                log.debug( "No writable directory for a lock file beside " + path + "; taking an in-JVM shared lock only." );
+                return degraded;
+            }
         }
         return fileLocks.computeIfAbsent( path, this::createReadWriteLock );
     }

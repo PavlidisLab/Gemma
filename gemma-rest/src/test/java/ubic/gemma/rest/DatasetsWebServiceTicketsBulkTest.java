@@ -18,7 +18,10 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -96,8 +99,9 @@ public class DatasetsWebServiceTicketsBulkTest {
         return org.mockito.Mockito.mock( Filter.class );
     }
 
-    private static TicketSearchHitValueObject hit( Long id, String title ) {
-        return new TicketSearchHitValueObject( id, title, TicketState.OPEN, TicketType.CURATION, 7L, new Date() );
+    private static TicketSummaryForTargetValueObject hit( Long id, String title ) {
+        return new TicketSummaryForTargetValueObject( id, title, TicketState.OPEN, TicketType.CURATION, 7L,
+                new Date(), TicketPriority.NORMAL, TicketTargetStatus.NOT_DONE );
     }
 
     /**
@@ -111,7 +115,7 @@ public class DatasetsWebServiceTicketsBulkTest {
         when( ticketsWebService.openTicketSummariesForExpressionExperiments( anyCollection() ) )
                 .thenReturn( Collections.singletonMap( 1L, Collections.singletonList( hit( 99L, "review" ) ) ) );
 
-        ResponseDataObject<Map<Long, List<TicketSearchHitValueObject>>> res =
+        ResponseDataObject<Map<Long, List<TicketSummaryForTargetValueObject>>> res =
                 webService.getDatasetTicketsBulk( request( 1L, 2L ) );
 
         @SuppressWarnings("unchecked")
@@ -126,7 +130,7 @@ public class DatasetsWebServiceTicketsBulkTest {
     public void noReadableDatasetsShortCircuits() {
         visibleDatasets();
 
-        ResponseDataObject<Map<Long, List<TicketSearchHitValueObject>>> res =
+        ResponseDataObject<Map<Long, List<TicketSummaryForTargetValueObject>>> res =
                 webService.getDatasetTicketsBulk( request( 1L, 2L ) );
 
         assertThat( res.getData() ).isEmpty();

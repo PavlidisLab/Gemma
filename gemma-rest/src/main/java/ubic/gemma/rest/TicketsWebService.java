@@ -29,6 +29,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -1217,7 +1218,7 @@ public class TicketsWebService {
      * filtered the ids for readability first — this reads the ticket table, which carries no ACL of
      * its own.
      */
-    public Map<Long, List<TicketSearchHitValueObject>> openTicketSummariesForExpressionExperiments(
+    public Map<Long, List<TicketSummaryForTargetValueObject>> openTicketSummariesForExpressionExperiments(
             Collection<Long> eeIds ) {
         return ticketService.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT, eeIds );
     }

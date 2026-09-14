@@ -82,8 +82,10 @@ public class DifferentialExpressionAnalysisConfig {
     /**
      * Keep processing other subsets when encountering an {@link AnalysisException} on a subset.
      * <p>
-     * If all subset fails, an {@link AllSubSetAnalysesFailedException} will be raised which will contain individual
-     * subset failures.
+     * This is about carrying on when SOME subsets succeed. If no subset yields an analysis, an
+     * {@link AllSubSetAnalysesFailedException} is raised regardless of this setting — it carries whichever subset
+     * failures were collected, and a subset can also leave the loop skipped rather than failed (DE_Exclude, no
+     * samples left to analyze, or no factor the subset can model).
      */
     private boolean ignoreFailingSubsets = false;
 

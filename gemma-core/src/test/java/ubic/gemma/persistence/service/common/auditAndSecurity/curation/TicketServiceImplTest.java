@@ -672,7 +672,7 @@ public class TicketServiceImplTest {
     // ---------------------------------------------------------------------
 
     private static TicketSearchHitValueObject hit( long id, String title ) {
-        return new TicketSearchHitValueObject( id, title, TicketState.OPEN, TicketType.CURATION, 3L, new Date() );
+        return new TicketSearchHitValueObject( id, title, TicketState.OPEN, TicketType.CURATION, 3L, new Date(), TicketPriority.NORMAL );
     }
 
     @Test
