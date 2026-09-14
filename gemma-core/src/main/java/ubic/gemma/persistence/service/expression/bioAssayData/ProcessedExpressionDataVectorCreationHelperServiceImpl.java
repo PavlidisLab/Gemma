@@ -452,10 +452,14 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
                 .normalize( mat, referenceColumns );
 
         assert normalizedMat.columns() == cols;
-        assert normalizedMat.rows() == rows;
 
         // rewrite the vectors with normalized data
-        for ( i = 0; i < rows; i++ ) {
+        //
+        // By the NORMALIZED matrix's rows, not the input's: the normalizer's RowMissingFilter drops every row with no
+        // value in any column, so its result can be shorter. Those rows are all-NaN and keep their input vector,
+        // which is what normalizing them would have produced. Iterating by the input count ran off the end --
+        // GSE21509 (eid 30208), "Index 45708 out of bounds for length 45708", 2026-09-14.
+        for ( i = 0; i < normalizedMat.rows(); i++ ) {
             CompositeSequence c = normalizedMat.getRowName( i );
             double[] vector = vectors.get( c );
             for ( int j = 0; j < cols; j++ ) {
