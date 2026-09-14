@@ -109,14 +109,14 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     private String librarySelection;
 
     /**
-     * What kind of library — GEO's {@code library_strategy} ({@code RNA-Seq}, {@code scRNA-seq},
-     * {@code Ribo-Seq}, {@code ATAC-seq}, …). A string rather than an enum so a strategy nobody anticipated
-     * arrives intact instead of needing a schema change.
+     * What kind of library — GEO's {@code library_strategy}, as the {@code GeoLibraryStrategy} constant name
+     * ({@code RNA_SEQ}, {@code SCRNA_SEQ}, {@code RIBO_SEQ}, {@code ATAC_SEQ}, …) rather than GEO's spelling. A
+     * string rather than an enum so a strategy nobody anticipated arrives intact instead of needing a schema change.
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "GEO's library_strategy (RNA-Seq, scRNA-seq, Ribo-Seq, ATAC-seq, …). Free text, so "
-            + "a new strategy needs no schema change.")
+    @Schema(description = "GEO's library_strategy as a constant name (RNA_SEQ, SCRNA_SEQ, RIBO_SEQ, ATAC_SEQ, …), "
+            + "not GEO's spelling (RNA-Seq). Free text, so a new strategy needs no schema change.")
     private String libraryStrategy;
 
     // only for RNA-Seq data

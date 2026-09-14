@@ -1901,10 +1901,11 @@ public class GeoConverterImpl implements GeoConverter {
         bioAssay.setExtractedMolecule( molecule );
         bioAssay.setLibrarySelection( StringUtils.trimToNull( sample.getLibrarySelection() ) );
         GeoLibraryStrategy effectiveStrategy = GeoConverterImpl.effectiveLibStrategy( sample );
-        // getGeoString(), not toString(): the column stores GEO's spelling. toString() yields the Java
-        // constant name -- RNA_SEQ, and MDB_SEQ for a value GEO writes MBD-Seq -- which is not what
-        // BioAssay.libraryStrategy's javadoc or BioAssayValueObject's @Schema tell a client to expect.
-        bioAssay.setLibraryStrategy( effectiveStrategy != null ? effectiveStrategy.getGeoString() : null );
+        // The constant name (RNA_SEQ), not GEO's spelling (RNA-Seq): Paul's ruling, 2026-09-13. Production rows
+        // were already in this form (frinkbro, 2026-09-13) -- the 2026-09-05 backfill copied them from
+        // SOURCE_METADATA, which GeoSourceMetadataBuilder writes with toString() -- so writing getGeoString()
+        // here left the column holding two spellings of the same strategy.
+        bioAssay.setLibraryStrategy( effectiveStrategy != null ? effectiveStrategy.name() : null );
 
         // Taxon lastTaxon = null;
 
