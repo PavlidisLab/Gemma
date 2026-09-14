@@ -589,6 +589,38 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         // level coverage lives in AuditedAspectTest.
     }
 
+    /**
+     * A cell type assignment records its experiment in {@code EXPERIMENT_ANALYZED_FK}, like every other analysis
+     * (Paul, 2026-09-14). frinkbro's join through that column matched nothing, because it was NULL on every
+     * assignment. Covers both writers, adding vectors and relabelling, and deleting the experiment afterwards, since
+     * the column is a foreign key to it.
+     */
+    @Test
+    public void testCellTypeAssignmentsRecordTheirExperiment() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
+        String[] ct = new String[100];
+        for ( int i = 0; i < ct.length; i++ ) {
+            ct[i] = i < 50 ? "A" : "B";
+        }
+        scExpressionExperimentService.relabelCellTypes( ee, qt, scd, Arrays.asList( ct ), null, null, true, true );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        //noinspection unchecked
+        List<CellTypeAssignment> ctas = sessionFactory.getCurrentSession()
+                .createQuery( "select cta from CellTypeAssignment cta" ).list();
+        assertThat( ctas ).hasSize( 2 ).allSatisfy( cta -> {
+            assertThat( cta.getExperimentAnalyzed() ).isNotNull();
+            assertThat( cta.getExperimentAnalyzed().getId() ).isEqualTo( ee.getId() );
+        } );
+
+        expressionExperimentDao.remove( expressionExperimentDao.load( ee.getId() ) );
+        sessionFactory.getCurrentSession().flush();
+    }
+
     @Test
     public void testRelabelCellTypes() {
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );

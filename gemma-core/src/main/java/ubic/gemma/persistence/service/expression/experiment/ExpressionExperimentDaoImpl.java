@@ -75,6 +75,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.util.UninitializedList;
 import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
@@ -3459,13 +3460,34 @@ public class ExpressionExperimentDaoImpl
     @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
+        recordExperimentOnCellTypeAssignments( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().persist( singleCellDimension );
     }
 
     @Override
     public void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
+        recordExperimentOnCellTypeAssignments( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().update( singleCellDimension );
+    }
+
+    /**
+     * Record on each of the dimension's cell type assignments the experiment it belongs to
+     * ({@link CellTypeAssignment#getExperimentAnalyzed()}). The single-cell service adds, relabels and replaces
+     * assignments through {@link #createSingleCellDimension} and {@link #updateSingleCellDimension}, so both call this.
+     */
+    private static void recordExperimentOnCellTypeAssignments( ExpressionExperiment ee, SingleCellDimension dimension ) {
+        if ( !ModelUtils.isInitialized( dimension.getCellTypeAssignments() ) ) {
+            return;
+        }
+        for ( CellTypeAssignment cta : dimension.getCellTypeAssignments() ) {
+            if ( cta.getExperimentAnalyzed() == null ) {
+                cta.setExperimentAnalyzed( ee );
+            } else {
+                Assert.isTrue( ee.getId() == null || ee.getId().equals( cta.getExperimentAnalyzed().getId() ),
+                        cta + " is recorded against a different experiment than " + ee + "." );
+            }
+        }
     }
 
     /**

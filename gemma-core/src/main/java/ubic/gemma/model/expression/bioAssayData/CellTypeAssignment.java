@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import lombok.Getter;
@@ -18,6 +19,7 @@ import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 
@@ -58,6 +60,20 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
     // hbm carried not-null="false" because of other Analysis subclasses sharing the table; preserve that.
     @Column(name = "IS_PREFERRED", columnDefinition = "TINYINT")
     private boolean preferred;
+
+    /**
+     * The experiment whose cells this assigns, in the {@code EXPERIMENT_ANALYZED_FK} column every other analysis in
+     * {@code ANALYSIS} uses for the same fact (Paul, 2026-09-14). An assignment is owned by its
+     * {@link SingleCellDimension}; this records the experiment so a reader of {@code ANALYSIS} does not have to go
+     * through the dimension to find it.
+     * <p>
+     * Set by the DAO whenever the owning dimension is created or updated. Null on rows written before that field
+     * existed, until they are backfilled.
+     */
+    @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EXPERIMENT_ANALYZED_FK", columnDefinition = "BIGINT")
+    private ExpressionExperiment experimentAnalyzed;
 
     /**
      * Cell types assignment to individual cells from the {@link #cellTypes} collections.
