@@ -219,6 +219,11 @@ public class OntologyConfig {
     }
 
     @Bean
+    public FactoryBean<MgiAlleleOntologyService> mgiAlleleOntologyService() {
+        return createOntologyFactory( MgiAlleleOntologyService.class, MgiAlleleOntologyService.URI_PREFIX + "MGI:" );
+    }
+
+    @Bean
     public FactoryBean<NeuroBehaviorOntologyService> neuroBehaviorOntologyService() {
         return createOntologyFactory( NeuroBehaviorOntologyService.class, "http://purl.obolibrary.org/obo/NBO_" );
     }
