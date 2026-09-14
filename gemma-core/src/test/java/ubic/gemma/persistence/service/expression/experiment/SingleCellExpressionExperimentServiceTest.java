@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.EntityKey;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -587,6 +589,82 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         // @Audited / @AuditedConditional on the corresponding service methods; this
         // test context wires the impl bean directly with no AOP proxy, so aspect-
         // level coverage lives in AuditedAspectTest.
+    }
+
+    /**
+     * Deleting a dimension must not load the characteristics of its cell-level characteristics. That load join-fetches
+     * {@code CELL_LEVEL_CHARACTERISTICS} with {@code CHARACTERISTIC}, repeating the per-cell {@code INDICES} blob on
+     * every characteristic row. A CLC made from a continuous column has one characteristic per cell, and GSE244451's
+     * 104 of them (3,369,548 characteristics) ran a 200 GB heap out of memory in {@code deleteSingleCellData}.
+     */
+    @Test
+    public void testRemoveVectorsDoesNotLoadCellLevelCharacteristics() {
+        QuantitationType qt = createVectorsWithOneCharacteristicPerCell();
+
+        scExpressionExperimentService.removeSingleCellDataVectors( ee, qt );
+
+        assertNoCellLevelCharacteristicWasLoaded();
+        sessionFactory.getCurrentSession().flush();
+        assertThat( countRows( "select count(*) from CELL_LEVEL_CHARACTERISTICS" ) ).isZero();
+        assertThat( countRows( "select count(*) from CHARACTERISTIC where CELL_LEVEL_CHARACTERISTICS_FK is not null" ) ).isZero();
+        assertThat( countRows( "select count(*) from SINGLE_CELL_DIMENSION" ) ).isZero();
+    }
+
+    /**
+     * Same as above for {@code deleteSingleCellData -deleteClcs}, which removes the CLCs and keeps the dimension.
+     */
+    @Test
+    public void testRemoveAllCellLevelCharacteristicsDoesNotLoadThem() {
+        QuantitationType qt = createVectorsWithOneCharacteristicPerCell();
+
+        assertThat( scExpressionExperimentService.removeAllCellLevelCharacteristics( ee, qt ) ).isEqualTo( 1 );
+
+        assertNoCellLevelCharacteristicWasLoaded();
+        sessionFactory.getCurrentSession().flush();
+        assertThat( countRows( "select count(*) from CELL_LEVEL_CHARACTERISTICS" ) ).isZero();
+        assertThat( countRows( "select count(*) from CHARACTERISTIC where CELL_LEVEL_CHARACTERISTICS_FK is not null" ) ).isZero();
+        assertThat( countRows( "select count(*) from SINGLE_CELL_DIMENSION" ) ).isEqualTo( 1 );
+        sessionFactory.getCurrentSession().clear();
+        assertThat( scExpressionExperimentService.getSingleCellDimension( ee, qt ).getCellLevelCharacteristics() ).isEmpty();
+    }
+
+    /**
+     * Persist vectors whose dimension has a CLC with a distinct characteristic for each of its 100 cells, then clear
+     * the session so the removal starts from uninitialized collections, as it does in the CLI.
+     */
+    private QuantitationType createVectorsWithOneCharacteristicPerCell() {
+        SingleCellDimension dimension = createSingleCellDimension();
+        int[] indices = new int[100];
+        List<Characteristic> characteristics = new ArrayList<>();
+        for ( int i = 0; i < 100; i++ ) {
+            characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, String.valueOf( i ), null ) );
+            indices[i] = i;
+        }
+        dimension.getCellLevelCharacteristics().add( CellLevelCharacteristics.Factory.newInstance( "pc1", null, characteristics, indices ) );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", dimension );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
+        sessionFactory.getCurrentSession().flush();
+        assertThat( countRows( "select count(*) from CHARACTERISTIC where CELL_LEVEL_CHARACTERISTICS_FK is not null" ) ).isEqualTo( 100 );
+        sessionFactory.getCurrentSession().clear();
+        when( quantitationTypeService.reload( qt ) )
+                .thenAnswer( a -> sessionFactory.getCurrentSession().get( QuantitationType.class, qt.getId() ) );
+        return qt;
+    }
+
+    /**
+     * A cascade delete puts every characteristic it loaded into the persistence context, where it stays until flush.
+     */
+    private void assertNoCellLevelCharacteristicWasLoaded() {
+        List<String> loaded = sessionFactory.getCurrentSession().getStatistics().getEntityKeys().stream()
+                .map( k -> ( ( EntityKey ) k ).getEntityName() )
+                .collect( Collectors.toList() );
+        assertThat( loaded ).doesNotContain( GenericCellLevelCharacteristics.class.getName() );
+        assertThat( loaded ).filteredOn( Characteristic.class.getName()::equals ).hasSizeLessThan( 100 );
+    }
+
+    private long countRows( String sql ) {
+        return ( ( Number ) sessionFactory.getCurrentSession().createNativeQuery( sql ).uniqueResult() ).longValue();
     }
 
     /**

@@ -808,6 +808,13 @@ public interface ExpressionExperimentDao
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     /**
+     * Remove all the cell-level characteristics of a single-cell dimension.
+     *
+     * @return the number of cell-level characteristics removed
+     */
+    int removeAllCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
      * Reload a single-cell dimension.
      * <p>
      * Use this on a detached single-cell dimension such as those returned by {@link #getSingleCellDimensionWithoutCellIds(ExpressionExperiment, QuantitationType)}.

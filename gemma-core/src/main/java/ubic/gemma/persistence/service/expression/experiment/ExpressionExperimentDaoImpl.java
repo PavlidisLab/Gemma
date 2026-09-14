@@ -3588,7 +3588,60 @@ public class ExpressionExperimentDaoImpl
         // BEFORE deleting the dimension itself, otherwise the FK constraint on
         // SINGLE_CELL_DIMENSION_EXPERIMENT.SINGLE_CELL_DIMENSION_FK rejects the delete.
         singleCellDimensionExperimentDao.removeBySingleCellDimension( singleCellDimension );
+        if ( !Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+            // leaves the cascade below nothing to load
+            removeCellLevelCharacteristicsInBulk( singleCellDimension );
+        }
         getSessionFactory().getCurrentSession().delete( singleCellDimension );
+    }
+
+    @Override
+    public int removeAllCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        if ( Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+            int removed = singleCellDimension.getCellLevelCharacteristics().size();
+            singleCellDimension.getCellLevelCharacteristics().clear();
+            updateSingleCellDimension( ee, singleCellDimension );
+            return removed;
+        }
+        return removeCellLevelCharacteristicsInBulk( singleCellDimension );
+    }
+
+    /**
+     * Delete the cell-level characteristics of a dimension, and their characteristics, without loading them.
+     * <p>
+     * Loading them join-fetches {@code CELL_LEVEL_CHARACTERISTICS} with {@code CHARACTERISTIC}, which repeats the
+     * per-cell {@code INDICES} blob on every characteristic row, and the cascade then deletes the characteristics one
+     * statement at a time. A CLC made from a continuous column has one characteristic per cell: GSE244451's 104 CLCs
+     * held 3,369,548 characteristics, and deleting them ran a 200 GB heap out of memory.
+     * <p>
+     * Only valid while {@link SingleCellDimension#getCellLevelCharacteristics()} is uninitialized; otherwise the
+     * session holds entities whose rows this removes.
+     *
+     * @return the number of cell-level characteristics removed
+     */
+    private int removeCellLevelCharacteristicsInBulk( SingleCellDimension singleCellDimension ) {
+        //noinspection unchecked
+        List<Long> clcIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select clc.id from SingleCellDimension scd join scd.cellLevelCharacteristics clc where scd = :scd" )
+                .setParameter( "scd", singleCellDimension )
+                .list();
+        if ( clcIds.isEmpty() ) {
+            return 0;
+        }
+        // neither FK column is mapped as a property, hence native queries
+        int removedCharacteristics = getSessionFactory().getCurrentSession()
+                .createNativeQuery( "delete from CHARACTERISTIC where CELL_LEVEL_CHARACTERISTICS_FK in (:clcIds)" )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setParameterList( "clcIds", clcIds )
+                .executeUpdate();
+        int removedClcs = getSessionFactory().getCurrentSession()
+                .createNativeQuery( "delete from CELL_LEVEL_CHARACTERISTICS where ID in (:clcIds)" )
+                .addSynchronizedEntityClass( GenericCellLevelCharacteristics.class )
+                .setParameterList( "clcIds", clcIds )
+                .executeUpdate();
+        log.info( String.format( "Removed %d cell-level characteristics with %d characteristics from %s.",
+                removedClcs, removedCharacteristics, singleCellDimension ) );
+        return removedClcs;
     }
 
     @Override
