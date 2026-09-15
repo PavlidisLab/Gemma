@@ -448,6 +448,29 @@ class OntologyRelationProducerImplTest {
     }
 
     /**
+     * CLO's two anatomical-part properties are read as CLO wrote them and stored as
+     * {@code ENVO_01003004 derives from part of}, which replaced both in Relation.terms.txt 2026-09-14.
+     * The label is Gemma's, not the ontology's, and one class asserting the same site on both properties
+     * is one row.
+     */
+    @Test
+    void theAnatomicalPartPropertiesAreStoredAsDerivesFromPartOf() {
+        String cellLineCellDerivedFromAnatomicalPart = OBO + "CLO_0037227";
+        cloTerms.put( MCF7, term( MCF7, "MCF7 cell",
+                restriction( DERIVES_FROM_ANATOMIC_PART, "derives from anatomic part", term( BREAST, "breast" ) ),
+                restriction( cellLineCellDerivedFromAnatomicalPart, "cell line cell derived from anatomical part",
+                        term( BREAST, "breast" ) ) ) );
+
+        assertThat( produce( "CLO" ) )
+                .singleElement()
+                .satisfies( r -> {
+                    assertThat( r.getPredicateUri() ).isEqualTo( OBO + "ENVO_01003004" );
+                    assertThat( r.getPredicate() ).isEqualTo( "derives from part of" );
+                    assertThat( r.getObjectValueUri() ).isEqualTo( BREAST );
+                } );
+    }
+
+    /**
      * Taxon is part of the grain because it decides what the relation says, and CLO states it as one of
      * the same class's restrictions — so it is resolved in the same pass and applies to every row the
      * class emits.

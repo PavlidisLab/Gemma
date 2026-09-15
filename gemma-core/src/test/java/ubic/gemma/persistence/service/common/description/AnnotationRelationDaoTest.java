@@ -71,7 +71,7 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
     private static final String OXIDOPAMINE = "http://purl.obolibrary.org/obo/CHEBI_78741";
     private static final String HAS_ROLE = "http://purl.obolibrary.org/obo/RO_0000087";
     private static final String HAS_DISEASE = "http://purl.obolibrary.org/obo/RO_0016002";
-    private static final String DERIVES_FROM_ANATOMIC_PART = "http://purl.obolibrary.org/obo/CLO_0037208";
+    private static final String DERIVES_FROM_PART_OF = "http://purl.obolibrary.org/obo/ENVO_01003004";
     private static final String PROSTATE_GLAND = "http://purl.obolibrary.org/obo/UBERON_0002367";
     private static final String PROSTATE_LINE = "http://purl.obolibrary.org/obo/CLO_0002181";
 
@@ -1161,8 +1161,8 @@ public class AnnotationRelationDaoTest extends BaseDatabaseTest5 {
         r.setSubjectValueUri( cellLineUri );
         r.setSubjectCategory( "cell line" );
         r.setSubjectCategoryUri( "http://purl.obolibrary.org/obo/CLO_0000031" );
-        r.setPredicate( "derives from anatomic part" );
-        r.setPredicateUri( DERIVES_FROM_ANATOMIC_PART );
+        r.setPredicate( "derives from part of" );
+        r.setPredicateUri( DERIVES_FROM_PART_OF );
         r.setObjectValue( "part " + organUri );
         r.setObjectValueUri( organUri );
         r.setBasis( AnnotationRelationBasis.EXTERNAL );

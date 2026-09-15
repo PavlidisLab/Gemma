@@ -55,9 +55,9 @@ import java.util.Set;
  * most existing annotations use, and Cellosaurus's whole value is the lines that are <b>not</b>
  * anywhere else — 111,863 of the 141,670 have no CLO or EFO term at all.</p>
  *
- * <p><b>Same predicates as CLO uses</b> ({@code CLO_0000015}, {@code CLO_0037208}), so where both
- * sources speak about one line the read groups them into a single corroborated relation instead of
- * two that happen to look alike.</p>
+ * <p><b>Same predicates as the CLO source stores</b> ({@code CLO_0000015}, and {@code ENVO_01003004} for
+ * the anatomic site), so where both sources speak about one line the read groups them into a single
+ * corroborated relation instead of two that happen to look alike.</p>
  *
  * <p>Species, cell-line type, donor sex and the misidentification flag are NOT read here. They are
  * already parsed by {@code CellosaurusOntologyService} and served on the term itself, and a relation's
@@ -79,8 +79,12 @@ public class CellosaurusRelationProducer {
 
     private static final String DERIVES_FROM_PATIENT_URI = OBO + "CLO_0000015";
     private static final String DERIVES_FROM_PATIENT_LABEL = "derives from patient having disease";
-    private static final String DERIVES_FROM_PART_URI = OBO + "CLO_0037208";
-    private static final String DERIVES_FROM_PART_LABEL = "derives from anatomic part";
+    /**
+     * Not CLO_0037208 derives from anatomic part, which was removed from Relation.terms.txt 2026-09-14
+     * in favour of this one.
+     */
+    private static final String DERIVES_FROM_PART_URI = OBO + "ENVO_01003004";
+    private static final String DERIVES_FROM_PART_LABEL = "derives from part of";
 
     private static final String XREF_SOURCE_TOKEN = "MONDO";
 

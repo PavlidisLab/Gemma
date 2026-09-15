@@ -338,8 +338,9 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
                             property.getUri() + " -> " + restriction.getClass().getSimpleName(), 1, Integer::sum );
                     continue;
                 }
-                if ( !sanctionedPredicates.isEmpty() && !sanctionedPredicates.contains( property.getUri() ) ) {
-                    unsanctioned.add( property.getUri() + " (" + spec.getFallbackLabel() + ")" );
+                if ( !sanctionedPredicates.isEmpty()
+                        && !sanctionedPredicates.contains( spec.getStoredPredicateUri() ) ) {
+                    unsanctioned.add( spec.getStoredPredicateUri() + " (" + spec.getFallbackLabel() + ")" );
                 }
                 reading.counts( property.getUri() )[0]++;
                 reading.sawClass( property.getUri(), uri );
@@ -487,9 +488,10 @@ public class OntologyRelationProducerImpl implements OntologyRelationProducer {
                 ? spec.getSubjectCategory() : source.getSubjectCategory();
         relation.setSubjectCategory( subjectCategory.getCategory() );
         relation.setSubjectCategoryUri( subjectCategory.getCategoryUri() );
-        relation.setPredicate( truncate(
-                property.getLabel() != null ? property.getLabel() : spec.getFallbackLabel(), VALUE_MAX ) );
-        relation.setPredicateUri( property.getUri() );
+        String predicateLabel = spec.getStoredPredicateLabel() != null ? spec.getStoredPredicateLabel()
+                : property.getLabel() != null ? property.getLabel() : spec.getFallbackLabel();
+        relation.setPredicate( truncate( predicateLabel, VALUE_MAX ) );
+        relation.setPredicateUri( spec.getStoredPredicateUri() );
         relation.setObjectValue( truncate( objectLabel, VALUE_MAX ) );
         relation.setObjectValueUri( objectUri );
         Category objectCategory = spec.getObjectCategory( objectUri );

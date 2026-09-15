@@ -29,9 +29,9 @@ http://purl.obolibrary.org/obo/CLO_0037207	derives from organism
 # CLO_0037208 derives from anatomic part and CLO_0037227 cell line cell derived from anatomical part were
 # removed 2026-09-14: a cell line's tissue of origin takes ENVO_01003004 derives from part of. Paul: "I think
 # we can stick with derives from part of and be consistent with that". No stored statement used either
-# (gemd, 2026-09-14). ANNOTATION_RELATION still carries both -- OntologyRelationSource.CLO reads CLO's
-# axioms on them and CellosaurusRelationProducer writes CLO_0037208 -- so the CLO relation rebuild logs
-# them as unsanctioned when it reads them.
+# (gemd, 2026-09-14). The relation producers store them as ENVO_01003004 too: OntologyRelationSource.CLO
+# still reads CLO's axioms on both properties, and CellosaurusRelationProducer writes its anatomic site
+# under it.
 http://purl.obolibrary.org/obo/CLO_0037229	cell line cell derived from organism
 http://purl.obolibrary.org/obo/BFO_0000050	part of
 http://purl.obolibrary.org/obo/RO_0002100	has soma location
