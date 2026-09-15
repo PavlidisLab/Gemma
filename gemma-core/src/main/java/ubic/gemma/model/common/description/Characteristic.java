@@ -156,8 +156,9 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     /**
      * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
      * backing a curated tag — the verbatim provenance the curation agents emit (the agents-side
-     * {@code FindingEvidence} shape). Stored as-is; Gemma does not parse or query it, so the agents repo
-     * owns the evidence schema. Null on tags with no recorded evidence.
+     * {@code FindingEvidence} shape). Gemma parses it only to serve it and to compare a proposal with it by
+     * content ({@code CharacteristicUtils.sameSupportingEvidence}); it is never queried, and the agents repo owns
+     * the evidence schema. Null on tags with no recorded evidence.
      */
     @Nullable
     @Column(name = "SUPPORTING_EVIDENCE", columnDefinition = "TEXT")
