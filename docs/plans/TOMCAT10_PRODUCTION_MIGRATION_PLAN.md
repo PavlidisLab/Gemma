@@ -31,18 +31,23 @@ continuously.
 That collapses most of what an untried deployment would normally be gated on.
 What is left:
 
-| # | Item | Kind | Where |
-|---|---|---|---|
-| 1 | `2.0.0-alpha-SNAPSHOT` — a master build hard-errors on the version guard | blocker, if deploying via Jenkins | Pre-flight 0 |
-| 2 | `gemma.anonymousAuth.key` absent from prod `Gemma.properties` | blocker | Pre-flight 2 |
-| 3 | The `scheduler` profile — eleven jobs, none of which has ever run in its 2.0 form | new exposure, prod-only | "Scheduled jobs" |
-| 4 | Prod schema is not a contiguous Flyway prefix (V5, V23, V24, V25, V38 below V40) | pre-existing, not new | Pre-flight 6 |
+Re-checked 2026-09-10.
 
-Item 1 is avoidable: build the WAR locally and push it with
-`gemma-rest/deploy.sh`, which skips the version guard and the CLI symlink flip
-both. Item 4 is real but is **not** a reason to hold the Tomcat swap — the same
-code is already reading that schema from staging. Item 3 is the only genuinely
-new risk this migration introduces.
+| # | Item | Kind | State |
+|---|---|---|---|
+| 1 | `gemma.anonymousAuth.key` absent from prod `Gemma.properties` | blocker | **DONE** 2026-09-08 |
+| 2 | `/opt/apache-tomcat-10.1.59/conf` mode `0700` | blocker | dir now `0750`; confirm the files with `sudo -u tomcat` |
+| 3 | No `-Dlog4j2.configurationFile` in moe's `bin/setenv.sh` | silent degradation | **OPEN** — Pre-flight 3 |
+| 4 | No `gemma-rest.war` on moe | blocks the window | **OPEN** — Pre-flight 0 |
+| 5 | `2.0.0-alpha-SNAPSHOT` fails the master version guard | blocker on the Jenkins path only | **OPEN**, avoidable |
+| 6 | `ScheduledSearchReindexer` / `JobReconciler` have never run anywhere | new exposure, prod-only | accepted risk |
+| 7 | Prod schema is not a contiguous Flyway prefix (V5, V23, V24, V25, V38 below V40) | pre-existing, not new | not a gate here |
+
+Item 5 is avoidable: build the WAR locally and push it with
+`gemma-rest/deploy.sh`, which skips the version guard and the production CLI
+symlink flip both. Item 7 is real but is **not** a reason to hold the Tomcat
+swap — the same code is already reading that schema from staging. Item 6 is the
+only genuinely new risk this migration introduces.
 
 ## Why this is needed
 
