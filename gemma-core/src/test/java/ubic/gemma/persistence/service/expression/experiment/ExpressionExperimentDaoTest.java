@@ -294,6 +294,33 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         assertFalse( Hibernate.isInitialized( proxy ) );
     }
 
+    /**
+     * Taking a quantitation type out of its experiment deletes the row.
+     * <p>
+     * Without {@code orphanRemoval} the join column is set to NULL and the row stays behind, owned by no experiment and
+     * unreachable from every finder, all of which take an experiment.
+     */
+    @Test
+    public void testRemovingAQuantitationTypeFromItsExperimentDeletesTheRow() {
+        ee = createExpressionExperiment();
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "log2cpm" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        ee.getQuantitationTypes().add( qt );
+        sessionFactory.getCurrentSession().flush();
+        Long qtId = qt.getId();
+        assertNotNull( qtId );
+
+        ee.getQuantitationTypes().remove( qt );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        assertNull( sessionFactory.getCurrentSession().get( QuantitationType.class, qtId ) );
+    }
+
     @Test
     public void testLoadMultipleReferences() {
         ExpressionExperiment ee1 = createExpressionExperiment();
