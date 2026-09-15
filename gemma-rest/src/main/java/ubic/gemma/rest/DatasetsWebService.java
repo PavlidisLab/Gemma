@@ -10276,7 +10276,12 @@ public class DatasetsWebService {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellLevelCharacteristics")
-    @Operation(summary = "Retrieve all other cell-level characteristics of a single-cell dataset", responses = {
+    @Operation(summary = "Retrieve all other cell-level characteristics of a single-cell dataset",
+            description = "Despite the name, a cell-level characteristic is a grouping of cells, not a value per cell. "
+                    + "`characteristics` lists the distinct labels (for example `mito_outlier` `true` and `false`), and "
+                    + "`characteristicIds` gives, for each cell of the single-cell dimension, the id of its label, or "
+                    + "null when it has none. A continuous per-cell measurement does not fit this shape: every distinct "
+                    + "value would become its own label.", responses = {
             @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectListCellLevelCharacteristicsValueObject.class)),
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
