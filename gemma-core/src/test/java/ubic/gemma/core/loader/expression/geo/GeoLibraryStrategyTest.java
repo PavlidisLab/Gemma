@@ -109,6 +109,36 @@ public class GeoLibraryStrategyTest {
         assertThat( GeoConverterImpl.effectiveLibStrategy( s ) ).isEqualTo( GeoLibraryStrategy.OTHER );
     }
 
+    /**
+     * A microarray sample records how many channels it was hybridized in (Paul, 2026-09-13). The literal strings
+     * are asserted rather than the constants, because rows already in production have to match them.
+     */
+    @Test
+    public void testAMicroarraySampleRecordsItsChannelCount() {
+        GeoSample s = new GeoSample();
+        s.setType( GeoSampleType.RNA );
+        assertThat( GeoConverterImpl.libraryStrategy( s ) ).isEqualTo( "MICROARRAY_ONE_COLOR" );
+        s.addChannel();
+        assertThat( GeoConverterImpl.libraryStrategy( s ) ).isEqualTo( "MICROARRAY_TWO_COLOR" );
+    }
+
+    /** A sequencing sample records the constant name, not GEO's spelling (Paul, 2026-09-13). */
+    @Test
+    public void testASequencingSampleRecordsTheConstantName() {
+        GeoSample s = new GeoSample();
+        s.setType( GeoSampleType.SRA );
+        s.setLibStrategy( GeoLibraryStrategy.SCRNA_SEQ );
+        assertThat( GeoConverterImpl.libraryStrategy( s ) ).isEqualTo( "SCRNA_SEQ" );
+    }
+
+    /** Neither a declared strategy nor a microarray: nothing is recorded. */
+    @Test
+    public void testASampleThatIsNeitherRecordsNothing() {
+        GeoSample s = new GeoSample();
+        s.setType( GeoSampleType.GENOMIC );
+        assertThat( GeoConverterImpl.libraryStrategy( s ) ).isNull();
+    }
+
     private static GeoSample other( String title, String description ) {
         GeoSample s = new GeoSample();
         s.setTitle( title );

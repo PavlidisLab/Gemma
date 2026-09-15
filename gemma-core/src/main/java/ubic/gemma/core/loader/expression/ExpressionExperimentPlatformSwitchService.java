@@ -608,7 +608,7 @@ public class ExpressionExperimentPlatformSwitchService {
      * @param vector vector
      * @param bad    to be used as the replacement.
      */
-    private void vectorReWrite( BulkExpressionDataVector vector, BioAssayDimension bad ) {
+    void vectorReWrite( BulkExpressionDataVector vector, BioAssayDimension bad ) {
         List<BioAssay> desiredOrder = bad.getBioAssays();
         List<BioAssay> currentOrder = vector.getBioAssayDimension().getBioAssays();
         if ( this.equivalent( currentOrder, desiredOrder ) ) {
@@ -646,7 +646,7 @@ public class ExpressionExperimentPlatformSwitchService {
         // initialize
         for ( int i = 0; i < desiredOrder.size(); i++ ) {
             BioAssay ba = desiredOrder.get( i );
-            bm2loc.put( ba.getSampleUsed(), i++ );
+            bm2loc.put( ba.getSampleUsed(), i );
             newData[i] = missingVal;
         }
 

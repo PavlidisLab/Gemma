@@ -633,6 +633,24 @@ public class ExpressionExperimentServiceImpl
                 }
                 if ( pf.getValues() != null ) {
                     for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                        // Each wire entry is checked as it arrives. The flattened second entry of a compound statement
+                        // carries its clause under predicate/object, so it is a whole pair on its own.
+                        if ( pv.getStatements() != null ) {
+                            for ( StatementValueObject ps : pv.getStatements() ) {
+                                String half = StatementUtils.describeHalfPair( ps );
+                                if ( half != null ) {
+                                    DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                            "STATEMENT_HALF_PAIR",
+                                            "Statement " + ( ps.getId() != null ? ps.getId() + " " : "" )
+                                                    + "'" + ps.getSubject() + "' on factor value "
+                                                    + ( pv.getId() != null ? pv.getId() : "'" + pv.getValue() + "'" )
+                                                    + " carries " + half + "; send both or neither." );
+                                    b.setFactorValueId( pv.getId() );
+                                    b.setStatementId( ps.getId() );
+                                    report.getBlockers().add( b );
+                                }
+                            }
+                        }
                         if ( pv.getId() != null ) {
                             proposedFvIds.add( pv.getId() );
                             if ( pf.getId() != null ) {
@@ -802,30 +820,64 @@ public class ExpressionExperimentServiceImpl
         int changedBmCount = changedBmIds.size();
 
         // ---- impact: differential expression analyses ----
-        // ONE EXCLUSION, not a list of inclusions: a design commit invalidates this dataset's analyses
-        // UNLESS the only thing that changed was labels on kept factor values. Paul, 2026-08-26 — the
-        // previous four inclusion rules (factor deleted / FV deleted / FV added / assignment changed)
-        // were four places to be wrong, and they missed two real cases: adding a WHOLE factor marked
-        // nothing, because a new factor has no id and no analyses of its own; and a measurement change on
-        // a continuous factor changes the regression while moving no structural counter.
+        // An analysis is deleted when the change reaches a factor the analysis uses: the factor is deleted, one of
+        // its values is deleted or added, a sample moves between its values, or its baseline or a measurement on
+        // it changes. Paul, 2026-09-13: "if the factor isn't used in the DEA, then it shouldn't be deleted", with
+        // "if a few simple rules keep unnecessary churn away, we can do it". So adding a factor, or deleting one no
+        // analysis uses, deletes nothing; re-running an analysis to take in a new factor is left to the curator.
         //
-        // The failure mode is inverted on purpose. Before, a case nobody enumerated rode through silently
-        // and falsified a live analysis; now it triggers a re-run, and re-running a DEA is cheap.
+        // This replaces dataset-wide invalidation (2026-08-26), which deleted every analysis on the experiment for
+        // any of those changes: replacing a categorical age with a continuous one on GSE93069 would have deleted
+        // DEA 352673, whose result sets test biological sex and phenotype only (frinkbro, 2026-09-12).
         //
-        // Invalidation is DATASET-WIDE rather than per-factor: adding a factor invalidates the analyses on
-        // the other factors too, because they were fitted without a variable the design now declares.
-        //
-        // What is excluded, and only this: statement / characteristic / free-text-value edits on a kept
-        // factor value. Those relabel; they do not move a sample, a level, or a baseline.
+        // Unchanged: statement / characteristic / free-text-value edits on a kept factor value reach no factor.
+        // An analysis whose factors cannot be read -- no result set names one and it has no subset -- keeps the
+        // dataset-wide rule, since not knowing what it uses is not evidence that it uses nothing.
         boolean structuralChange = summary.getFactorsToCreate() > 0
                 || summary.getFactorsToDelete() > 0
                 || summary.getFactorValuesToCreate() > 0
                 || summary.getFactorValuesToDelete() > 0
                 || changedBmCount > 0;
-        boolean invalidatingEdit = hasKeptFactorValueEditsThatChangeTheMath( ee, proposed );
+        Set<Long> mathChangedFactorIds = factorsWithEditsThatChangeTheMath( ee, proposed );
 
-        if ( structuralChange || invalidatingEdit ) {
-            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+        Set<Long> touchedFactorIds = new HashSet<>( mathChangedFactorIds );
+        for ( ExperimentalFactor ef : factorsBeingDeleted ) {
+            touchedFactorIds.add( ef.getId() );
+        }
+        for ( FactorValue fv : fvsBeingDeleted ) {
+            touchedFactorIds.add( currentFvParentByFvId.get( fv.getId() ).getId() );
+        }
+        if ( proposed.getExperimentalFactors() != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+                // A value created under an EXISTING factor. One created under a new factor reaches no analysis, and
+                // the deferred bindings in the plan only ever point at created values, so they add nothing here.
+                if ( pf.getId() != null && pf.getValues() != null
+                        && pf.getValues().stream().anyMatch( v -> v.getId() == null ) ) {
+                    touchedFactorIds.add( pf.getId() );
+                }
+            }
+        }
+        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
+            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
+                    .map( FactorValue::getId ).collect( Collectors.toSet() );
+            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
+            Set<Long> moved = new HashSet<>( currentFvIds );
+            moved.addAll( proposedFvIdsForBm );
+            moved.removeAll( intersection( currentFvIds, proposedFvIdsForBm ) );
+            for ( Long fvId : moved ) {
+                ExperimentalFactor parent = currentFvParentByFvId.get( fvId );
+                if ( parent != null ) {
+                    touchedFactorIds.add( parent.getId() );
+                }
+            }
+        }
+
+        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+            Set<Long> used = factorIdsUsedBy( a );
+            boolean invalidated = used.isEmpty()
+                    ? structuralChange || !mathChangedFactorIds.isEmpty()
+                    : !Collections.disjoint( used, touchedFactorIds );
+            if ( invalidated ) {
                 Long subsetFvId = a.getSubsetFactorValue() != null ? a.getSubsetFactorValue().getId() : null;
                 report.getDifferentialExpressionAnalysesToDelete().add(
                         new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFvId ) );
@@ -1273,8 +1325,8 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * The subset of {@link #hasKeptFactorValueEdits} that changes the analysis MATH rather than its labels:
-     * a baseline flip, or a measurement change on a continuous factor value.
+     * The factors on which the proposal makes one of the {@link #hasKeptFactorValueEdits} that change the analysis
+     * MATH rather than its labels: a baseline flip, or a measurement change on a continuous factor value.
      * <p>
      * A baseline flip reverses the direction of every contrast in an existing DEA —
      * {@link ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet} records the factor value
@@ -1291,11 +1343,12 @@ public class ExpressionExperimentServiceImpl
      * through {@code BaselineSelection}, which falls back to control-group characteristics when the flag is
      * absent: that would make a statement edit flip a baseline, and statement edits are the exclusion.
      */
-    private boolean hasKeptFactorValueEditsThatChangeTheMath( ExpressionExperiment ee,
+    private Set<Long> factorsWithEditsThatChangeTheMath( ExpressionExperiment ee,
             ExperimentalDesignValueObject proposed ) {
+        Set<Long> factorIds = new HashSet<>();
         ExperimentalDesign ed = ee.getExperimentalDesign();
         if ( ed == null || proposed.getExperimentalFactors() == null ) {
-            return false;
+            return factorIds;
         }
         Map<Long, FactorValue> currentFvsById = new HashMap<>();
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
@@ -1309,15 +1362,42 @@ public class ExpressionExperimentServiceImpl
                 if ( pv.getId() == null ) continue; // a creation; already structural
                 FactorValue cur = currentFvsById.get( pv.getId() );
                 if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
-                if ( baselineChanged( pv, cur ) ) {
-                    return true;
-                }
-                if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
-                    return true;
+                boolean changesTheMath = ( baselineChanged( pv, cur ) && !agreesWithFittedBaselines( ee, pv, cur ) )
+                        || ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) );
+                if ( changesTheMath && cur.getExperimentalFactor() != null ) {
+                    factorIds.add( cur.getExperimentalFactor().getId() );
                 }
             }
         }
-        return false;
+        return factorIds;
+    }
+
+    /**
+     * The factors an analysis uses: those its result sets test, plus the factor of the subset it was run on.
+     * <p>
+     * Empty when neither can be read, which {@link #previewDesignChange} treats as unknown rather than as none.
+     */
+    private static Set<Long> factorIdsUsedBy( DifferentialExpressionAnalysis a ) {
+        Set<Long> ids = new HashSet<>();
+        if ( a.getResultSets() != null ) {
+            for ( ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet rs : a.getResultSets() ) {
+                if ( rs.getExperimentalFactors() != null ) {
+                    for ( ExperimentalFactor f : rs.getExperimentalFactors() ) {
+                        ids.add( f.getId() );
+                    }
+                }
+            }
+        }
+        if ( a.getSubsetFactorValue() != null && a.getSubsetFactorValue().getExperimentalFactor() != null ) {
+            ids.add( a.getSubsetFactorValue().getExperimentalFactor().getId() );
+        }
+        return ids;
+    }
+
+    private static Set<Long> intersection( Set<Long> a, Set<Long> b ) {
+        Set<Long> both = new HashSet<>( a );
+        both.retainAll( b );
+        return both;
     }
 
     /**
@@ -1417,8 +1497,7 @@ public class ExpressionExperimentServiceImpl
             }
             // Compared in BOTH directions since evidence became replacement: dropping evidence a row has is as
             // much a change as adding it, and skipping payloads that carry none would report a clear as a no-op.
-            String proposedEvidence = CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() );
-            if ( !Objects.equals( proposedEvidence, match.getSupportingEvidence() ) ) {
+            if ( !CharacteristicUtils.sameSupportingEvidence( match.getSupportingEvidence(), ps.getSupportingEvidence() ) ) {
                 return true;
             }
             if ( !Objects.equals( parseEvidenceCode( ps.getEvidenceCode() ), match.getEvidenceCode() ) ) {
@@ -1505,6 +1584,51 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
+     * Whether a baseline-flag change agrees with the reference every existing analysis on that factor was fitted
+     * against, so that it moves no contrast.
+     * <p>
+     * The flag and the fitted reference are separate facts. {@code ExpressionAnalysisResultSet.baselineGroup} is
+     * what the analysis used; the flag on the factor value is often never set. GSE391: result set 559530 of DEA
+     * 316735 names FV 783 (30 minute) as its baseline while FV 783's flag is stored null, so a draft setting
+     * {@code isBaseline: true} on it read as a flip and was refused as deleting that analysis — for an edit that
+     * changes no contrast (Paul, 2026-09-12).
+     * <p>
+     * 🛑 Exempts only what is proven harmless, and fails closed otherwise. At least one result set must involve
+     * the factor, every such result set must name its baseline on that factor, and the proposal must agree with
+     * all of them: {@code true} on the value they all use, {@code false} on a value none of them uses. A result
+     * set with no baseline group, or one whose reference sits on another factor (an interaction's second
+     * reference is not mapped on the entity), leaves the reference unknown, and the change still invalidates.
+     */
+    private boolean agreesWithFittedBaselines( ExpressionExperiment ee, FactorValueBasicValueObject pv, FactorValue cur ) {
+        ExperimentalFactor factor = cur.getExperimentalFactor();
+        Long factorId = factor != null ? factor.getId() : null;
+        if ( factorId == null || cur.getId() == null ) {
+            return false;
+        }
+        boolean proposedBaseline = Boolean.TRUE.equals( pv.getBaseline() );
+        int resultSetsOnFactor = 0;
+        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+            for ( ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet rs : a.getResultSets() ) {
+                if ( rs.getExperimentalFactors() == null || rs.getExperimentalFactors().stream()
+                        .noneMatch( f -> factorId.equals( f.getId() ) ) ) {
+                    continue;
+                }
+                resultSetsOnFactor++;
+                FactorValue fitted = rs.getBaselineGroup();
+                if ( fitted == null || fitted.getExperimentalFactor() == null
+                        || !factorId.equals( fitted.getExperimentalFactor().getId() ) ) {
+                    return false;
+                }
+                boolean fittedHere = cur.getId().equals( fitted.getId() );
+                if ( proposedBaseline != fittedHere ) {
+                    return false;
+                }
+            }
+        }
+        return resultSetsOnFactor > 0;
+    }
+
+    /**
      * Whether a proposed factor value actually moves the baseline flag.
      * <p>
      * 🛑 {@code null} and {@code FALSE} both mean "not the baseline", and the stored flag is null on most
@@ -1562,7 +1686,9 @@ public class ExpressionExperimentServiceImpl
         }
         // Provenance: replacement, like the rest of a gemmaId item. See applyStatementFields for why this stopped
         // being a delta field on 2026-09-06.
-        ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
+        if ( !CharacteristicUtils.sameSupportingEvidence( ef.getSupportingEvidence(), pf.getSupportingEvidence() ) ) {
+            ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
+        }
         experimentalFactorService.update( ef );
     }
 
@@ -1596,8 +1722,10 @@ public class ExpressionExperimentServiceImpl
                 }
                 // Provenance on the VALUE itself, distinct from the evidence on its statements: replacement, as
                 // everywhere else on a gemmaId item.
-                existing.setSupportingEvidence(
-                        CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
+                if ( !CharacteristicUtils.sameSupportingEvidence( existing.getSupportingEvidence(), pv.getSupportingEvidence() ) ) {
+                    existing.setSupportingEvidence(
+                            CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
+                }
             }
         }
         // Siblings are deliberately left alone. Clearing them made a second baseline impossible to record at all:
@@ -1969,7 +2097,11 @@ public class ExpressionExperimentServiceImpl
         // and evidence could be set and changed but never removed, because there was no spelling of "I intend
         // none". Paul ruled full-record replacement, which gives `[]` and an omitted key the same unambiguous
         // meaning and makes clearing fall out rather than need a new semantic.
-        s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
+        // Written only when it differs by content, so an echo keeps the stored bytes and text that cannot be read
+        // survives a proposal that could not carry it -- see CharacteristicUtils.sameSupportingEvidence.
+        if ( !CharacteristicUtils.sameSupportingEvidence( s.getSupportingEvidence(), ps.getSupportingEvidence() ) ) {
+            s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
+        }
         s.setEvidenceCode( parseEvidenceCode( ps.getEvidenceCode() ) );
     }
 
@@ -2660,7 +2792,7 @@ public class ExpressionExperimentServiceImpl
                 fresh.setSupportingEvidence( d.getSupportingEvidence() );
                 toAdd.add( fresh );
             } else if ( d.getSupportingEvidence() != null
-                    && !Objects.equals( d.getSupportingEvidence(), match.getSupportingEvidence() ) ) {
+                    && !CharacteristicUtils.sameSupportingEvidence( match.getSupportingEvidence(), d.getSupportingEvidence() ) ) {
                 // Refresh provenance on an existing tag without disturbing its identity. A desired tag
                 // arriving without evidence (null) leaves any stored evidence intact.
                 match.setSupportingEvidence( d.getSupportingEvidence() );
@@ -2798,6 +2930,46 @@ public class ExpressionExperimentServiceImpl
      * whichever of the two was supplied. Composed once here so every annotation the commit touches
      * carries the same sentence, and so the key leads — that is the part a later query can group on.
      */
+    private void requireDeletableCharacteristicIds( ExpressionExperiment ee, CurationCommitRequest request ) {
+        if ( request.isTagsPresent() && !request.getTagsToDelete().isEmpty() ) {
+            Set<Long> tagIds = ee.getCharacteristics().stream()
+                    .map( Characteristic::getId )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            refuseUnknownDeletedIds( request.getTagsToDelete(), tagIds, "tags", "tags of " + ee.getShortName() );
+        }
+        if ( request.isSampleCharsPresent() && !request.getSampleCharsToDelete().isEmpty() ) {
+            Set<Long> sampleCharacteristicIds = new HashSet<>();
+            for ( BioAssay ba : thawBioAssays( ee ).getBioAssays() ) {
+                BioMaterial bm = ba.getSampleUsed();
+                if ( bm == null ) {
+                    continue;
+                }
+                for ( Characteristic c : bm.getCharacteristics() ) {
+                    if ( c.getId() != null ) {
+                        sampleCharacteristicIds.add( c.getId() );
+                    }
+                }
+            }
+            refuseUnknownDeletedIds( request.getSampleCharsToDelete(), sampleCharacteristicIds, "sampleCharacteristics",
+                    "characteristics of a sample of " + ee.getShortName() );
+        }
+    }
+
+    private static void refuseUnknownDeletedIds( Collection<Long> deletedIds, Set<Long> presentIds, String section,
+            String what ) {
+        List<Long> unmatched = deletedIds.stream()
+                .filter( Objects::nonNull )
+                .filter( id -> !presentIds.contains( id ) )
+                .distinct()
+                .sorted()
+                .collect( Collectors.toList() );
+        if ( !unmatched.isEmpty() ) {
+            throw new UnknownDeletedIdsException( section + ".deletedIds references ids that are not " + what + ": "
+                    + unmatched + "." );
+        }
+    }
+
     @Nullable
     private static String auditReason( CurationCommitRequest request ) {
         String code = StringUtils.trimToNull( request.getReasonCode() );
@@ -2812,6 +2984,10 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public CurationCommitResult commitCuration( ExpressionExperiment ee, CurationCommitRequest request, boolean dryRun ) {
         ee = ensureInSession( ee );
+        // The baseline is compared with the row, not the cached copy: a gemma-cli run writes CURATION_DETAILS without
+        // reaching this process's second-level cache. On GSE90654, 2026-09-15, this check refused the current baseline
+        // after a CLI DEA run, then accepted the one from before the run.
+        expressionExperimentDao.refreshCurationDetails( ee );
 
         // Optimistic concurrency: reject if the dataset moved since the draft's baseline.
         Date expected = request.getExpectedLastUpdated();
@@ -2822,6 +2998,12 @@ public class ExpressionExperimentServiceImpl
                         + " changed since the draft baseline (expected lastUpdated " + expected + ", found " + current + ")." );
             }
         }
+
+        // Before any section writes, and on the dry run too: a delete that names nothing used to be skipped, so the
+        // commit answered 200 with a lower count while every other section applied, and the preflight reported the
+        // count sent. The design section already refuses the same mistake (DatasetsWebService.requireDeletableIds);
+        // cab's one-click executor needs a finding's edits all-or-none (2026-09-13).
+        requireDeletableCharacteristicIds( ee, request );
 
         CurationCommitResult result = new CurationCommitResult();
         boolean anyChange = false;

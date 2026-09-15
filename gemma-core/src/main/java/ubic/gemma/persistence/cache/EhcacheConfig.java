@@ -106,6 +106,11 @@ public class EhcacheConfig {
 
         // OlsTermResolverImpl: IRI -> term fallback lookups against EBI OLS (positive and negative results).
         APP_CACHES.put( "OlsTermResolver.terms", new CacheSpec( 10000, Duration.ofHours( 12 ) ) );
+        // NcbiGeneResolverImpl: gene id -> NCBI summary, for ids Gemma's gene table does not carry (QTLs,
+        // complexes, pseudogenes, cross-species constructs). Entrez allows 3 req/s unauthenticated and
+        // EntrezUtils.doNicely serializes calls, so the cache is what keeps a multi-statement commit from
+        // waiting one request at a time. Negative answers are cached too.
+        APP_CACHES.put( "NcbiGeneResolver.genes", new CacheSpec( 10000, Duration.ofHours( 12 ) ) );
 
         // ChemblCodeResolverImpl: trial code -> compound identification against ChEMBL (positive
         // and negative). Long TTL: a compound's research codes do not change between releases.

@@ -222,6 +222,111 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
     }
 
     @Test
+    @DisplayName("acceptsTargets written through updateMetadata survives, and the ticket then takes an added target")
+    public void acceptsTargets_survivesUpdateMetadata() {
+        // 🛑 The same copy-list regression as payload above, one field later. Reported from the field
+        // (frinkbro, 2026-09-11): "PATCH with {\"acceptsTargets\":true} returns 200 and has no effect,
+        // and the subsequent add still 409s with 'Its targets were fixed when it was opened'".
+        // openTicket() opens every ticket with the flag false, so until the copy list carried it the
+        // flag could not be set through the API at all -- not at create, not after.
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.CURATION, "accepts-targets-roundtrip",
+                Collections.singleton( TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 5151L ) ) );
+        Long id = created.getId();
+        assertNotNull( id );
+        assertFalse( created.isAcceptsTargets(), "openTicket opens with the flag false -- the starting state" );
+        flushAndClear();
+
+        // Detached, as on the REST path: the handler mutates an instance loaded in an earlier transaction.
+        Ticket detached = ticketDao.load( id );
+        assertNotNull( detached );
+        flushAndClear();
+        detached.setAcceptsTargets( true );
+        detached.setTitle( "accepts-targets-roundtrip-edited" );
+        ticketService.updateMetadata( detached, "acceptsTargets, title" );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        assertNotNull( reloaded );
+        assertTrue( reloaded.isAcceptsTargets(), "acceptsTargets must survive updateMetadata, not just be echoed back" );
+        assertEquals( "accepts-targets-roundtrip-edited", reloaded.getTitle(),
+                "title was already on the copy list and is the control -- if this fails the test is wrong, not the fix" );
+
+        // The refusal the flag governs: the addition that answered 409 now goes through.
+        TicketService.TargetAddition addition = ticketService.addTarget( reloaded,
+                TicketTargetType.EXPRESSION_EXPERIMENT, 5252L, reporter );
+        assertTrue( addition.isAdded(), "a ticket that accepts targets must take one" );
+        flushAndClear();
+
+        Ticket afterAdd = ticketDao.load( id );
+        assertNotNull( afterAdd );
+        assertEquals( 2, afterAdd.getTargets().size() );
+    }
+
+    @Test
+    @DisplayName("a target carries its own task: per-target payload round-trips, and a re-add does not overwrite it")
+    public void perTargetPayload_roundTripsAndSurvivesAReAdd() throws Exception {
+        // The ticket's own body and payload are one per ticket, so a thousand-target ticket cannot say
+        // what is true of only one of them (frinkbro, 2026-09-11). Written with the target, in the same
+        // insert, which is what keeps a bulk open to one call.
+        String hypoxia = "{\"fv\":307136,\"task\":\"EFO_0009444 means hypoxia; drop the URI\"}";
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 273007L );
+        target.setPayload( hypoxia );
+        target.setPayloadSchemaVersion( 1 );
+        Ticket created = ticketService.openTicket( reporter, TicketType.CURATION, "per-target-task",
+                Collections.singleton( target ) );
+        Long id = created.getId();
+        assertNotNull( id );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        assertNotNull( reloaded );
+        TicketTarget storedTarget = reloaded.getTargets().iterator().next();
+        // 🛑 Compared as a parsed document, not as bytes: PAYLOAD is a MySQL `json` column, so the server
+        // normalises whitespace and key order on write. Same rule as TICKET.PAYLOAD above.
+        assertEquals( PAYLOAD_TEST_MAPPER.readTree( hypoxia ),
+                PAYLOAD_TEST_MAPPER.readTree( storedTarget.getPayload() ),
+                "the target's own task must round-trip as an equivalent document" );
+        assertEquals( Integer.valueOf( 1 ), storedTarget.getPayloadSchemaVersion() );
+
+        // Grown after opening: the add-target path carries the task too.
+        reloaded.setAcceptsTargets( true );
+        ticketService.updateMetadata( reloaded, "acceptsTargets" );
+        flushAndClear();
+        String mesenchymal = "{\"fv\":187891,\"task\":\"CL_0000134 means mesenchymal stem cell\"}";
+        Ticket afterAdd = ticketService.addTarget( ticketDao.load( id ), TicketTargetType.EXPRESSION_EXPERIMENT,
+                167051L, reporter, mesenchymal, 1 ).getTicket();
+        flushAndClear();
+
+        TicketTarget added = targetFor( ticketDao.load( id ), 167051L );
+        assertEquals( PAYLOAD_TEST_MAPPER.readTree( mesenchymal ),
+                PAYLOAD_TEST_MAPPER.readTree( added.getPayload() ) );
+
+        // Re-adding is idempotent on (targetType, targetId), and that has to include the payload: a
+        // second bulk call with a stale task must not rewrite what a curator is working from.
+        TicketService.TargetAddition again = ticketService.addTarget( afterAdd,
+                TicketTargetType.EXPRESSION_EXPERIMENT, 167051L, reporter, "{\"task\":\"stale\"}", 9 );
+        assertFalse( again.isAdded(), "the target was already there" );
+        flushAndClear();
+        TicketTarget unchanged = targetFor( ticketDao.load( id ), 167051L );
+        assertEquals( PAYLOAD_TEST_MAPPER.readTree( mesenchymal ),
+                PAYLOAD_TEST_MAPPER.readTree( unchanged.getPayload() ),
+                "a re-add must leave the existing target's task alone" );
+        assertEquals( Integer.valueOf( 1 ), unchanged.getPayloadSchemaVersion() );
+    }
+
+    /** The one target on {@code t} whose {@code targetId} is {@code targetId}. */
+    private static TicketTarget targetFor( Ticket t, long targetId ) {
+        assertNotNull( t );
+        for ( TicketTarget tgt : t.getTargets() ) {
+            if ( tgt.getTargetId() == targetId ) {
+                return tgt;
+            }
+        }
+        throw new AssertionError( "no target " + targetId + " on ticket " + t.getId() );
+    }
+
+    @Test
     @DisplayName("explicit mode=AUTO, body, target status=UNDERWAY round-trip")
     public void explicitFields_roundTrip() {
         TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 6789L );

@@ -298,6 +298,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
             expressionExperimentDao.evictBioAssaysCache( ee );
             expressionExperimentDao.evictQuantitationTypesCache( ee );
             expressionExperimentDao.evictOtherPartsCache( ee );
+            expressionExperimentDao.refreshCurationDetails( ee );
             expressionExperimentDao.thawLite( ee );
         }
         return ee;

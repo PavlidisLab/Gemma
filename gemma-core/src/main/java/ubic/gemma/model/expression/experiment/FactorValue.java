@@ -125,7 +125,9 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
      * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
      * backing this factor value as a curated claim — the same verbatim provenance
      * {@link ubic.gemma.model.common.description.Characteristic#getSupportingEvidence()} carries for a tag or a
-     * statement. Stored as-is; Gemma does not parse or query it, so the agents repo owns the evidence schema.
+     * statement. Gemma parses it only to serve it and to compare a proposal with it by content
+     * ({@code CharacteristicUtils.sameSupportingEvidence}); it is never queried, and the agents repo owns the
+     * evidence schema.
      * <p>
      * 🛑 Distinct from the evidence on this value's {@link #getCharacteristics() statements}, which is not a
      * fallback for it. A statement's evidence backs the triple; this backs the VALUE — its label, its baseline

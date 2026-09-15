@@ -103,6 +103,34 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         assertEquals( NUM_PROBES, summary.getNumberOfDataVectors() );
     }
 
+    /**
+     * A row with no value in any sample survives quantile normalization untouched. The normalizer drops such rows
+     * before it ranks, so its output has fewer rows than its input; writing the result back by the input's row count
+     * ran off the end. frinkbro hit it on GSE21509 (eid 30208, 2026-09-14) through {@code corrMat -force}:
+     * {@code Index 45708 out of bounds for length 45708} against 46,628 design elements.
+     * <p>
+     * 4,000 rows is the smallest size that is normalized at all.
+     */
+    @Test
+    public void testCreateProcessedDataVectorsWithARowMissingInEverySample() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        setSeed( 123L );
+        int numProbes = 4000;
+        double[][] matrix = randomExpressionMatrix( numProbes, 4, new NormalDistribution( 10, 1 ) );
+        Arrays.fill( matrix[0], Double.NaN );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
+        ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
+
+        processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( ee, false, summary );
+
+        assertTrue( summary.isQuantileNormalized() );
+        assertEquals( numProbes, summary.getNumberOfDataVectors() );
+        ee = expressionExperimentService.thaw( expressionExperimentService.load( ee.getId() ) );
+        assertThat( ee.getProcessedExpressionDataVectors() )
+                .filteredOn( v -> v.getDesignElement().getName().equals( "cs0" ) )
+                .singleElement()
+                .satisfies( v -> assertThat( v.getDataAsDoubles() ).containsOnly( Double.NaN ) );
+    }
+
     @Test
     public void testThaw() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         setSeed( 123L );

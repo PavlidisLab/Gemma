@@ -2,6 +2,7 @@ package ubic.gemma.cli.batch;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AnsiEscapeCodes;
 
@@ -125,7 +126,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     }
 
     public void addWarningObject( @Nullable Serializable warningObject, String message, Throwable throwable ) {
-        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, throwable ) );
+        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, withApplicationException( throwable ) ) );
     }
 
     /**
@@ -138,7 +139,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
      * @param throwable   throwable to produce a stacktrace
      */
     public void addErrorObject( @Nullable Serializable errorObject, String message, Throwable throwable ) {
-        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, throwable ) );
+        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, withApplicationException( throwable ) ) );
     }
 
     /**
@@ -156,7 +157,24 @@ public class BatchTaskProgressReporter implements AutoCloseable {
      * @see #addErrorObject(Serializable, String, Throwable)
      */
     public void addErrorObject( @Nullable Serializable errorObject, Exception exception ) {
-        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, exception.getMessage(), exception ) );
+        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, exception.getMessage(), withApplicationException( exception ) ) );
+    }
+
+    /**
+     * When a rollback fails, Spring throws the rollback's {@link TransactionSystemException} and keeps the exception
+     * that caused the rollback only as {@link TransactionSystemException#getApplicationException()}, which is not in
+     * the cause chain. Summaries print the root cause, so an {@link OutOfMemoryError} that desynchronized the JDBC
+     * connection was reported as the rollback's own {@code SQLException: Index 221 out of bounds for length 219}.
+     * <p>
+     * Report the application exception instead, with the rollback failure attached as suppressed.
+     */
+    private static Throwable withApplicationException( Throwable throwable ) {
+        if ( throwable instanceof TransactionSystemException tse && tse.getApplicationException() != null ) {
+            Throwable applicationException = tse.getApplicationException();
+            applicationException.addSuppressed( tse );
+            return applicationException;
+        }
+        return throwable;
     }
 
     private void addBatchProcessingResult( BatchTaskProcessingResult result ) {

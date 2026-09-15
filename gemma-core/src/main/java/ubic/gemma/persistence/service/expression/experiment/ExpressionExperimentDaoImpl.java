@@ -75,6 +75,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.util.UninitializedList;
 import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
@@ -249,6 +250,13 @@ public class ExpressionExperimentDaoImpl
     @Override
     public void evictBioAssaysCache( ExpressionExperiment ee ) {
         getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".bioAssays", ee.getId() );
+    }
+
+    @Override
+    public void refreshCurationDetails( ExpressionExperiment ee ) {
+        if ( ee.getCurationDetails() != null && ee.getCurationDetails().getId() != null ) {
+            getSessionFactory().getCurrentSession().refresh( ee.getCurationDetails() );
+        }
     }
 
     @Override
@@ -3493,13 +3501,34 @@ public class ExpressionExperimentDaoImpl
     @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
+        recordExperimentOnCellTypeAssignments( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().persist( singleCellDimension );
     }
 
     @Override
     public void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
+        recordExperimentOnCellTypeAssignments( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().update( singleCellDimension );
+    }
+
+    /**
+     * Record on each of the dimension's cell type assignments the experiment it belongs to
+     * ({@link CellTypeAssignment#getExperimentAnalyzed()}). The single-cell service adds, relabels and replaces
+     * assignments through {@link #createSingleCellDimension} and {@link #updateSingleCellDimension}, so both call this.
+     */
+    private static void recordExperimentOnCellTypeAssignments( ExpressionExperiment ee, SingleCellDimension dimension ) {
+        if ( !ModelUtils.isInitialized( dimension.getCellTypeAssignments() ) ) {
+            return;
+        }
+        for ( CellTypeAssignment cta : dimension.getCellTypeAssignments() ) {
+            if ( cta.getExperimentAnalyzed() == null ) {
+                cta.setExperimentAnalyzed( ee );
+            } else {
+                Assert.isTrue( ee.getId() == null || ee.getId().equals( cta.getExperimentAnalyzed().getId() ),
+                        cta + " is recorded against a different experiment than " + ee + "." );
+            }
+        }
     }
 
     /**
@@ -3600,7 +3629,60 @@ public class ExpressionExperimentDaoImpl
         // BEFORE deleting the dimension itself, otherwise the FK constraint on
         // SINGLE_CELL_DIMENSION_EXPERIMENT.SINGLE_CELL_DIMENSION_FK rejects the delete.
         singleCellDimensionExperimentDao.removeBySingleCellDimension( singleCellDimension );
+        if ( !Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+            // leaves the cascade below nothing to load
+            removeCellLevelCharacteristicsInBulk( singleCellDimension );
+        }
         getSessionFactory().getCurrentSession().delete( singleCellDimension );
+    }
+
+    @Override
+    public int removeAllCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        if ( Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+            int removed = singleCellDimension.getCellLevelCharacteristics().size();
+            singleCellDimension.getCellLevelCharacteristics().clear();
+            updateSingleCellDimension( ee, singleCellDimension );
+            return removed;
+        }
+        return removeCellLevelCharacteristicsInBulk( singleCellDimension );
+    }
+
+    /**
+     * Delete the cell-level characteristics of a dimension, and their characteristics, without loading them.
+     * <p>
+     * Loading them join-fetches {@code CELL_LEVEL_CHARACTERISTICS} with {@code CHARACTERISTIC}, which repeats the
+     * per-cell {@code INDICES} blob on every characteristic row, and the cascade then deletes the characteristics one
+     * statement at a time. A CLC made from a continuous column has one characteristic per cell: GSE244451's 104 CLCs
+     * held 3,369,548 characteristics, and deleting them ran a 200 GB heap out of memory.
+     * <p>
+     * Only valid while {@link SingleCellDimension#getCellLevelCharacteristics()} is uninitialized; otherwise the
+     * session holds entities whose rows this removes.
+     *
+     * @return the number of cell-level characteristics removed
+     */
+    private int removeCellLevelCharacteristicsInBulk( SingleCellDimension singleCellDimension ) {
+        //noinspection unchecked
+        List<Long> clcIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select clc.id from SingleCellDimension scd join scd.cellLevelCharacteristics clc where scd = :scd" )
+                .setParameter( "scd", singleCellDimension )
+                .list();
+        if ( clcIds.isEmpty() ) {
+            return 0;
+        }
+        // neither FK column is mapped as a property, hence native queries
+        int removedCharacteristics = getSessionFactory().getCurrentSession()
+                .createNativeQuery( "delete from CHARACTERISTIC where CELL_LEVEL_CHARACTERISTICS_FK in (:clcIds)" )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setParameterList( "clcIds", clcIds )
+                .executeUpdate();
+        int removedClcs = getSessionFactory().getCurrentSession()
+                .createNativeQuery( "delete from CELL_LEVEL_CHARACTERISTICS where ID in (:clcIds)" )
+                .addSynchronizedEntityClass( GenericCellLevelCharacteristics.class )
+                .setParameterList( "clcIds", clcIds )
+                .executeUpdate();
+        log.info( String.format( "Removed %d cell-level characteristics with %d characteristics from %s.",
+                removedClcs, removedCharacteristics, singleCellDimension ) );
+        return removedClcs;
     }
 
     @Override

@@ -2473,7 +2473,12 @@ public class DatasetsWebService {
                     + "🛑 A restore returns the curation's CONTENT, not its IDENTITY. Entities whose ids no longer "
                     + "exist — because an intervening run deleted and recreated them — come back as new rows with "
                     + "new ids, and any differential-expression analysis that survived that run is cascaded again "
-                    + "on the way back. Run with `dryRun=true` first and read `requiresForce`.",
+                    + "on the way back. Run with `dryRun=true` first and read `requiresForce`.\n\n"
+                    + "Two commit rules read differently on a restore. The free-text experiment-tag checks "
+                    + "(`UNGROUNDED_NOT_DECLARED`, `FREE_TEXT_NOT_HOOKED`) do not apply to the tags a snapshot "
+                    + "re-creates. And a statement the snapshot holds WITHOUT a second predicate/object pair has "
+                    + "the live pair cleared — except in a snapshot captured before 2026-09-08T16:43:10Z, when "
+                    + "snapshots did not record pairs at all; there the live pair is kept.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Restored, or (dryRun) the predicted changes."),
                     @ApiResponse(responseCode = "400", description = "The set is not a SNAPSHOT, or its payload is not a CurationDocument.",
@@ -2494,13 +2499,14 @@ public class DatasetsWebService {
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        CurationDocument snapshot = readSnapshotPayload( setId, ee );
-        RestoreIdentityDelta identity = reconcileSnapshotForRestore( snapshot, ee );
+        AnnotationSet set = requireSnapshotFor( setId, ee );
+        CurationDocument snapshot = readSnapshotPayload( set );
+        RestoreIdentityDelta identity = reconcileSnapshotForRestore( snapshot, ee, recordsSecondPairs( set ) );
         // The baseline token belongs to the moment the snapshot was taken, not to now; a restore is deliberately
         // overwriting whatever happened since, so carrying it would 409 on exactly the case this exists for.
         snapshot.setBaseline( null );
         CurationCommitReport report = doCommitCuration( datasetArg, snapshot, dryRun, force, false,
-                resolveActingIdentityIfNamed( onBehalfOf ), false );
+                resolveActingIdentityIfNamed( onBehalfOf ), false, true );
         // Attached on BOTH the dry run and the apply. The dry run is the only step a human reads before
         // deciding, and its section tallies say "one tag created" for an entity that is really being
         // re-identified -- measured 2026-09-03: tag 9018 came back as 9019 and nothing in the preview said so.
@@ -2562,28 +2568,33 @@ public class DatasetsWebService {
                     + "`reason` is REQUIRED -- a refusal has no other content, and a later reader needs it to "
                     + "judge whether the refusal still applies. Free text.\n\n"
                     + "Append-only: lifting a refusal means posting `allowed`, not deleting the `refused`, so "
-                    + "why it was refused survives the reversal. `?onBehalfOf=` names the deciding curator "
-                    + "when an agent relays the call; honoured only for `GROUP_AGENT` / `GROUP_ADMIN`.\n\n"
+                    + "why it was refused survives the reversal.\n\n"
+                    + "`?onBehalfOf=` names the person deciding and is honoured only for `GROUP_AGENT` / "
+                    + "`GROUP_ADMIN`. 🛑 An agent MUST send it, naming the person who directed it and never its own "
+                    + "account: `decidedBy` names a person. The agent's part is recorded in `judgeKind`, which "
+                    + "defaults to `agent` for an agent caller and `curator` for anyone else.\n\n"
                     + "Per dataset. A ruling that applies corpus-wide is a CONVENTION and belongs in the "
                     + "curation rules the agent reads, not here.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "The decision was recorded.",
                             content = @Content(schema = @Schema(implementation = CurationDecisionResponse.class))),
                     @ApiResponse(responseCode = "400",
-                            description = "A field is missing or names no value, `reason` is blank, or the "
-                                    + "scope disagrees with the key / proposal given.",
+                            description = "A field is missing or names no value, `reason` is blank, the "
+                                    + "scope disagrees with the key / proposal given, or an agent sent no "
+                                    + "`onBehalfOf` or named its own account.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No such dataset or annotation set.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response recordCurationDecision(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Who is deciding. Agents and admins only.")
+            @Parameter(description = "The person deciding. Required from an agent; agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable CurationDecisionRequest body
     ) {
         if ( body == null ) {
             throw new BadRequestException( "Request body is required." );
         }
+        SecurityUtil.requireOnBehalfOfFromAgent( onBehalfOf );
         CurationDecisionType decision;
         CurationDecisionScope scope;
         try {
@@ -2601,7 +2612,7 @@ public class DatasetsWebService {
             }
         }
         String decidedBy = SecurityUtil.resolveActingIdentity( onBehalfOf );
-        TriageJudgeKind kind = resolveDecisionJudgeKind( body.judgeKind, onBehalfOf );
+        TriageJudgeKind kind = resolveDecisionJudgeKind( body.judgeKind );
         CurationDecision d;
         try {
             d = curationDecisionService.decide( ee, decision, scope, body.decisionKey,
@@ -2646,14 +2657,12 @@ public class DatasetsWebService {
     }
 
     /**
-     * Who decided: a person, or a machine. Taken from the caller rather than
-     * inferred from the transport, for the reason the triage endpoint gives --
-     * the agent authenticates as whichever account runs it, which today is a
-     * human administrator, so inferring from the principal reports CURATOR for
-     * an agent's own rulings.
+     * Who decided: a person, or a machine. The caller's declaration wins; otherwise an agent caller records AGENT.
+     * <p>
+     * An agent must name the person it acts for (Paul, 2026-09-15), so naming someone no longer says a curator
+     * judged. A curator's ruling that the agent only relays is declared as {@code judgeKind=curator}.
      */
-    private static TriageJudgeKind resolveDecisionJudgeKind( @Nullable String declared,
-            @Nullable String onBehalfOf ) {
+    private static TriageJudgeKind resolveDecisionJudgeKind( @Nullable String declared ) {
         if ( declared != null && !declared.isBlank() ) {
             try {
                 return TriageJudgeKind.fromDbValue( declared );
@@ -2662,9 +2671,7 @@ public class DatasetsWebService {
                         + "'; expected agent or curator." );
             }
         }
-        boolean decidedForSomeoneNamed = onBehalfOf != null && !onBehalfOf.isBlank();
-        return !decidedForSomeoneNamed && SecurityUtil.isUserAgent()
-                ? TriageJudgeKind.AGENT : TriageJudgeKind.CURATOR;
+        return SecurityUtil.isUserAgent() ? TriageJudgeKind.AGENT : TriageJudgeKind.CURATOR;
     }
 
     private static CurationDecisionResponse toDecisionResponse( CurationDecision d ) {
@@ -3132,9 +3139,10 @@ public class DatasetsWebService {
                     + "(409 `REQUIRES_FORCE`). Sign-off is where such a change belongs: it is the same commit, run "
                     + "once, with the analysis cascade, and **the signature is the consent** — no `?force=true`, "
                     + "and no admin requirement.\n\n"
-                    + "**The lock is what gates it** — the only thing the advisory curation lock gates. Take it "
-                    + "with `POST /datasets/{id}/curation/lock` first; signing without it is 409 `LOCK_REQUIRED`, "
-                    + "as is signing while someone else holds it.\n\n"
+                    + "**The lock is what gates it.** Take it with `POST /datasets/{id}/curation/lock` first; "
+                    + "signing without it is 409 `LOCK_REQUIRED`, as is signing while someone else holds it. Sign "
+                    + "is the one write that requires holding the lock; a commit or restore is refused only while "
+                    + "someone else holds it.\n\n"
                     + "**With no request body — or an empty one** — the caller's `DRAFT` annotation set is what "
                     + "gets signed: that is the held-back delta, and its payload must be a `CurationDocument`. "
                     + "Pass a body with at least one section to sign something else; the body wins.\n\n"
@@ -3178,7 +3186,7 @@ public class DatasetsWebService {
         if ( body != null && body.getRun() != null && doc.getRun() == null ) {
             doc.setRun( body.getRun() );
         }
-        CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true, signer, true );
+        CurationCommitReport report = doCommitCuration( datasetArg, doc, dryRun, false, true, signer, true, false );
         if ( !dryRun && !Boolean.TRUE.equals( keepLock ) ) {
             // Signing off ends the curator's turn on this dataset, so the lock goes back with it -- otherwise
             // every signed dataset stays locked until its lease runs out or somebody steals it. Only on success,
@@ -3711,6 +3719,24 @@ public class DatasetsWebService {
                     + "drop the `gemmaId`, send the new content under a `clientRef`, and name the old id in the "
                     + "section's `deletedIds`. The `design` section is different: a `gemmaId` factor / factor-value "
                     + "/ statement IS updated in place from the fields it carries.\n\n"
+                    + "🛑 **What an omission means is a contract** (Paul, 2026-09-13): clients compose minimal documents "
+                    + "that rely on every rule below, so changing one changes what their unchanged payloads do.\n"
+                    + "- **Factors:** a factor the document does not mention is carried forward unchanged. On a "
+                    + "`gemmaId` item a null or absent field is no change. `deletedIds` removes; an id that is not a "
+                    + "factor of this dataset is a 400.\n"
+                    + "- **Factor values:** a value not mentioned is carried forward unchanged. On a `gemmaId` item a "
+                    + "null label, baseline flag or measurement is no change; absent sample bindings leave the "
+                    + "assignments untouched, a list replaces them, and `[]` clears them. An unknown `deletedIds` "
+                    + "entry is a 400.\n"
+                    + "- **Statements:** a statement not mentioned is carried forward unchanged. A `gemmaId` statement "
+                    + "is full-record replacement: omitting its subject, `evidenceCode`, `supportingEvidence` or second "
+                    + "pair while the stored row has one is a 400. Clear them deliberately with `\"\"` (evidenceCode), "
+                    + "`[]` (supportingEvidence) or `clearSecondPair: true`. An unknown `deletedIds` entry is a 400.\n"
+                    + "- **Evidence on a `gemmaId` factor or factor value:** omitted while stored is a 400; `[]` "
+                    + "clears it.\n"
+                    + "- **Tags and sample characteristics:** anything not mentioned is untouched; a `gemmaId` item "
+                    + "is a keep-marker; `deletedIds` removes, and an id that is not on this dataset is a 400, on the "
+                    + "commit and on the preflight.\n\n"
                     + "A design change that would delete "
                     + "differential-expression analyses requires `?force=true` (admin) or returns 409. "
                     + "Optimistic concurrency: `baseline.lastModified` (the dataset `lastUpdated` the draft was "
@@ -3781,7 +3807,7 @@ public class DatasetsWebService {
             @Nullable CurationDocument body
     ) {
         return respond( doCommitCuration( datasetArg, body, false, force, false,
-                resolveActingIdentityIfNamed( onBehalfOf ), true ) );
+                resolveActingIdentityIfNamed( onBehalfOf ), true, false ) );
     }
 
     @POST
@@ -3822,7 +3848,7 @@ public class DatasetsWebService {
         // else, and a preflight that quietly accepted what the commit will reject is a dry run that does not
         // predict the commit -- which is the one thing it is for.
         return respond( doCommitCuration( datasetArg, body, true, false, false,
-                resolveActingIdentityIfNamed( onBehalfOf ), false ) );
+                resolveActingIdentityIfNamed( onBehalfOf ), false, false ) );
     }
 
     /**
@@ -3849,9 +3875,13 @@ public class DatasetsWebService {
      * sign-off's, and they are separate because they are earned differently — {@code force} by being an admin,
      * {@code signed} by holding the curation lock and calling {@code POST /datasets/{id}/curation/sign}.
      * Collapsing them into one boolean would make sign-off admin-only, which is not what gates it.
+     * <p>
+     * {@code restoring} is set only by the snapshot restore. It exempts the tags the snapshot re-creates from the
+     * two free-text experiment-tag checks (Paul's ruling, 2026-09-13); every other check applies as on a commit.
      */
     private CurationCommitReport doCommitCuration( DatasetArg<?> datasetArg, @Nullable CurationDocument body,
-            boolean dryRun, boolean force, boolean signed, @Nullable String actingAs, boolean advanceTickets ) {
+            boolean dryRun, boolean force, boolean signed, @Nullable String actingAs, boolean advanceTickets,
+            boolean restoring ) {
         if ( body == null ) {
             throw new BadRequestException( "A CurationDocument request body is required." );
         }
@@ -3983,7 +4013,9 @@ public class DatasetsWebService {
                     // An experiment tag must be grounded unless the caller declares the free text deliberate.
                     // 🛑 Sample characteristics are NOT gated this way: a GEO characteristic is a string the
                     // submitter wrote, and requiring a URI there would refuse the corpus.
-                    if ( StringUtils.isBlank( ch.getValueUri() ) ) {
+                    // A restore is exempt from both checks below (Paul's ruling, 2026-09-13); the grounded-term
+                    // checks in collectTermViolations still run on it.
+                    if ( !restoring && StringUtils.isBlank( ch.getValueUri() ) ) {
                         if ( !Boolean.TRUE.equals( tc.getFreeTextIntended() ) ) {
                             termViolations.add( new OntologyTermValidationException.Located( location + ".value",
                                     new TermViolation( "value", ch.getValue(), null, null,
@@ -4152,6 +4184,9 @@ public class DatasetsWebService {
             // A paper this commit attaches stands rejected for the dataset. Its own code, because the client's
             // move is to drop the paper or overrule the rejection, not to re-read anything.
             throw new CurationCommitConflictException( CurationCommitConflictException.Reason.PUBLICATION_REJECTED, e.getMessage() );
+        } catch ( ubic.gemma.persistence.service.expression.experiment.UnknownDeletedIdsException e ) {
+            // A malformed body, as the same mistake is in the design section: 400, and nothing was written.
+            throw new BadRequestException( e.getMessage() );
         } catch ( IllegalArgumentException e ) {
             // e.g. shortName already in use
             throw new CurationCommitConflictException( CurationCommitConflictException.Reason.UNSPECIFIED, e.getMessage() );
@@ -4551,18 +4586,15 @@ public class DatasetsWebService {
          * Its values and their statements carry their own evidence at their own levels, and none of the three
          * stands in for another.
          * <p>
-         * Null / omitted leaves any evidence already recorded untouched, so a client that does not carry
-         * provenance cannot wipe provenance somebody else recorded.
-         * <p>
-         * 🛑 An EMPTY ARRAY is the same as omitting it, NOT an erase. A payload built from a reference
-         * file stamps {@code []} on every entity that has no evidence, and reading that as "clear it"
-         * would wipe stored provenance on every entity such a write touches while reporting an ordinary
-         * success. There is deliberately no way to clear evidence through this route.
+         * The design section is full-record replacement (Paul, 2026-09-06): a {@code gemmaId} item that omits this
+         * while the factor HAS evidence is refused with a 400 ({@code requireEvidenceEchoed}), so a client that does
+         * not carry provenance cannot silently wipe it; send the stored evidence back to keep it, or {@code []} to
+         * clear it deliberately.
          */
         @Nullable
         @Schema(description = "Verbatim provenance backing this factor — a JSON array of {quote, source, location} "
-                + "items, stored opaquely. Omitting it, sending null, or sending [] all leave any evidence already "
-                + "recorded untouched; there is no way to clear evidence through this route.")
+                + "items, stored opaquely. Full-record replacement: on a gemmaId item, omitting it while the factor "
+                + "has evidence is a 400; send the stored evidence back to keep it, or [] to clear it.")
         private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
         private Section<FactorValueCommit> factorValues = new Section<>();
     }
@@ -4662,18 +4694,14 @@ public class DatasetsWebService {
          * plain free-text one) still has a curator behind those choices. Both may be sent on one commit and both
          * are kept.
          * <p>
-         * Null / omitted leaves any evidence already recorded untouched, same as everywhere else on this route.
-         * <p>
-         * 🛑 An EMPTY ARRAY is the same as omitting it, NOT an erase. A payload built from a reference
-         * file stamps {@code []} on every entity that has no evidence, and reading that as "clear it"
-         * would wipe stored provenance on every entity such a write touches while reporting an ordinary
-         * success. There is deliberately no way to clear evidence through this route.
+         * Full-record replacement, as for the factor: a {@code gemmaId} item that omits this while the value HAS
+         * evidence is refused with a 400; send the stored evidence back to keep it, or {@code []} to clear it.
          */
         @Nullable
         @Schema(description = "Verbatim provenance backing this factor value — a JSON array of {quote, source, "
                 + "location} items, stored opaquely. Distinct from the evidence on its statements, which backs the "
-                + "triple rather than the value. Omitting it, sending null, or sending [] all leave any evidence "
-                + "already recorded untouched; there is no way to clear evidence through this route.")
+                + "triple rather than the value. Full-record replacement: on a gemmaId item, omitting it while the "
+                + "value has evidence is a 400; send the stored evidence back to keep it, or [] to clear it.")
         private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
         private Section<StatementCommit> statements = new Section<>();
     }
@@ -4687,8 +4715,10 @@ public class DatasetsWebService {
         @Nullable
         private OntologyTermRef subject;
         @Nullable
+        @Schema(description = "Predicate of the statement's first pair. Send predicate and object together, or neither; half a pair is a 400.")
         private OntologyTermRef predicate;
         @Nullable
+        @Schema(description = "Object, paired with predicate. See predicate.")
         private OntologyTermRef object;
         /**
          * The second predicate-object pair, for a statement that makes two claims about one subject.
@@ -4722,6 +4752,19 @@ public class DatasetsWebService {
         @Schema(description = "Second object, paired with secondPredicate. See secondPredicate.")
         private OntologyTermRef secondObject;
         /**
+         * Drop the statement's second predicate/object pair, on a {@code gemmaId} item.
+         * <p>
+         * The explicit spelling of a clear, and the only one available: both second-pair fields are objects, so
+         * Jackson cannot tell an omitted key from an explicit null, and omission now means "you did not tell me"
+         * rather than "remove it" — see {@link DatasetsWebService#requireSecondPairEchoed}. Sending this together
+         * with a pair, in either spelling, is a 400 rather than a precedence rule.
+         */
+        @Nullable
+        @Schema(description = "Set true on a gemmaId item to drop the statement's second predicate/object pair. "
+                + "Omitting the pair is refused when the stored statement has one, so this is how a deliberate "
+                + "removal is expressed. Sending it alongside a secondPredicate/secondObject is a 400.")
+        private Boolean clearSecondPair;
+        /**
          * Verbatim provenance for this statement — a JSON array of {@code {quote, source, location, …}} items.
          * Stored and served opaquely; the agents repo owns the schema.
          * <p>
@@ -4729,18 +4772,13 @@ public class DatasetsWebService {
          * the triple rather than in the parent factor value: two factor values whose labels are byte-identical
          * and differ only by a zygosity statement cannot be told apart by evidence hung on the value.
          * <p>
-         * Null / omitted leaves any evidence already recorded untouched, so a client that does not carry
-         * provenance cannot wipe provenance somebody else recorded.
-         * <p>
-         * 🛑 An EMPTY ARRAY is the same as omitting it, NOT an erase. A payload built from a reference
-         * file stamps {@code []} on every entity that has no evidence, and reading that as "clear it"
-         * would wipe stored provenance on every entity such a write touches while reporting an ordinary
-         * success. There is deliberately no way to clear evidence through this route.
+         * Full-record replacement, as for the factor: a {@code gemmaId} item that omits this while the statement HAS
+         * evidence is refused with a 400; send the stored evidence back to keep it, or {@code []} to clear it.
          */
         @Nullable
         @Schema(description = "Verbatim provenance backing this statement — a JSON array of {quote, source, "
-                + "location} items, stored opaquely. Omitting it, sending null, or sending [] all leave any "
-                + "evidence already recorded untouched; there is no way to clear evidence through this route.")
+                + "location} items, stored opaquely. Full-record replacement: on a gemmaId item, omitting it while "
+                + "the statement has evidence is a 400; send the stored evidence back to keep it, or [] to clear it.")
         private com.fasterxml.jackson.databind.JsonNode supportingEvidence;
         /**
          * How this statement was arrived at, as a {@link GOEvidenceCode} name. Accepted case-insensitively; an
@@ -5154,6 +5192,8 @@ public class DatasetsWebService {
                             + " does not send. Send the statement's full content, or name its id in the section's"
                             + " deletedIds to remove it." );
                 }
+                requireSecondPairEchoed( location + ".statements[" + refOrIndex( sc.getClientRef(), idx ) + "]",
+                        sc, curStmt, repeatedIds.contains( sc.getGemmaId() ) );
             }
             if ( sc.getCategory() != null ) {
                 svo.setCategory( sc.getCategory().getLabel() );
@@ -5172,7 +5212,7 @@ public class DatasetsWebService {
                 svo.setObjectUri( sc.getObject().getUri() );
             }
             String stmtLocation = location + ".statements[" + refOrIndex( sc.getClientRef(), idx ) + "]";
-            requireWholeSecondPair( sc, stmtLocation );
+            requireWholePairs( sc, stmtLocation );
             if ( sc.getSecondPredicate() != null || sc.getSecondObject() != null ) {
                 if ( sc.getGemmaId() != null && repeatedIds.contains( sc.getGemmaId() ) ) {
                     throw new BadRequestException( stmtLocation + " carries secondPredicate/secondObject AND"
@@ -5237,22 +5277,36 @@ public class DatasetsWebService {
     }
 
     /**
-     * Refuse half a second pair.
+     * Refuse half a predicate/object pair, first or second.
      * <p>
-     * A {@link ubic.gemma.model.expression.experiment.Statement}'s second clause is a predicate AND an object;
-     * one without the other is not a claim, and storing the half that arrived would put a dangling predicate on
-     * a production row where nothing renders it. Both or neither.
+     * Each clause of a {@link ubic.gemma.model.expression.experiment.Statement} is a predicate AND an object; one
+     * without the other is not a claim, and storing the half that arrived puts a dangling predicate on a production
+     * row where nothing renders it. Both or neither.
+     *
+     * @see StatementUtils#describeHalfPair(String, String, String, String, String, String)
      */
-    private static void requireWholeSecondPair( StatementCommit sc, String location ) {
-        boolean hasPredicate = sc.getSecondPredicate() != null
-                && StringUtils.isNotBlank( sc.getSecondPredicate().getLabel() );
-        boolean hasObject = sc.getSecondObject() != null
-                && StringUtils.isNotBlank( sc.getSecondObject().getLabel() );
-        if ( hasPredicate != hasObject ) {
-            throw new BadRequestException( location + " carries "
-                    + ( hasPredicate ? "secondPredicate without secondObject" : "secondObject without secondPredicate" )
-                    + ". A statement's second clause is a predicate and an object together; send both or neither." );
+    private static void requireWholePairs( StatementCommit sc, String location ) {
+        String half = StatementUtils.describeHalfPair( "predicate", "object",
+                labelOf( sc.getPredicate() ), uriOf( sc.getPredicate() ), labelOf( sc.getObject() ), uriOf( sc.getObject() ) );
+        if ( half == null ) {
+            half = StatementUtils.describeHalfPair( "secondPredicate", "secondObject",
+                    labelOf( sc.getSecondPredicate() ), uriOf( sc.getSecondPredicate() ),
+                    labelOf( sc.getSecondObject() ), uriOf( sc.getSecondObject() ) );
         }
+        if ( half != null ) {
+            throw new BadRequestException( location + " carries " + half
+                    + ". A statement clause is a predicate and an object together; send both or neither." );
+        }
+    }
+
+    @Nullable
+    private static String labelOf( @Nullable OntologyTermRef ref ) {
+        return ref != null ? ref.getLabel() : null;
+    }
+
+    @Nullable
+    private static String uriOf( @Nullable OntologyTermRef ref ) {
+        return ref != null ? ref.getUri() : null;
     }
 
     /** Validate the gemmaId-XOR-clientRef rule; {@code true} = existing entity (has gemmaId), {@code false} = new. */
@@ -5351,6 +5405,52 @@ public class DatasetsWebService {
      * absent means "you did not tell me" and is refused. Neither is treated as "leave unchanged"; that hybrid is
      * what this section moved away from on 2026-09-06.
      */
+    /**
+     * Refuse a {@code gemmaId} statement item that omits the row's SECOND predicate/object pair while the stored
+     * row has one — the same rule {@link #requireEvidenceEchoed} applies to {@code supportingEvidence} and the
+     * {@code evidenceCode} check beside it applies to the code (Paul, 2026-09-11: "Guard it like evidence. It's
+     * too dangerous.").
+     * <p>
+     * {@code applyStatementFields} sets {@code secondPredicate} / {@code secondObject} unconditionally from the
+     * payload, so before this an omitted pair was written null and the commit reported {@code updated: 1} — the
+     * same report a successful edit gets. 9,338 production {@code CHARACTERISTIC} rows across 8,470 factor values
+     * carry a pair (measured 2026-09-11), and a client composing from a model with no second-pair support drops
+     * one without being told; {@code design_apply.second_pairs_at_risk} on the agents' side existed only to
+     * compensate for this gap (cab, 2026-09-11).
+     * <p>
+     * Either spelling counts as echoing it: the explicit {@code secondPredicate} / {@code secondObject} fields,
+     * or the flattened form — a second {@code statements[]} item under the same {@code gemmaId}, which is how a
+     * compound statement is SERIALIZED and therefore how a client that echoes what it read sends it back.
+     * <p>
+     * Dropping a pair deliberately is spelled {@code "clearSecondPair": true}, because neither field can carry
+     * the intent itself: both are objects, and Jackson gives null for a missing key and for an explicit null
+     * alike. Before the guard, omission WAS the clear, so taking that reading away needs a replacement spelling
+     * or the pair becomes unremovable.
+     */
+    private static void requireSecondPairEchoed( String location, StatementCommit sc,
+            @Nullable StatementValueObject stored, boolean idRepeated ) {
+        if ( stored == null ) {
+            return;
+        }
+        boolean storedHasPair = hasSecondPair( stored );
+        boolean submittedPair = sc.getSecondPredicate() != null || sc.getSecondObject() != null;
+        if ( Boolean.TRUE.equals( sc.getClearSecondPair() ) ) {
+            if ( submittedPair || idRepeated ) {
+                throw new BadRequestException( location + " carries clearSecondPair AND a second"
+                        + " predicate/object pair. One says drop it and the other says store it; send one." );
+            }
+            return;
+        }
+        if ( !storedHasPair || submittedPair || idRepeated ) {
+            return;
+        }
+        throw new BadRequestException( location + " omits the statement's second predicate/object pair, but that"
+                + " statement HAS one (" + stored.getSecondPredicate() + " -> " + stored.getSecondObject() + ")."
+                + " This section is full-record replacement, so an omitted pair would clear it. Send the pair"
+                + " back to keep it — as secondPredicate/secondObject, or as a second statements[] item with the"
+                + " same gemmaId — or send \"clearSecondPair\": true to drop it deliberately." );
+    }
+
     private static void requireEvidenceEchoed( String location, @Nullable com.fasterxml.jackson.databind.JsonNode submitted,
             @Nullable com.fasterxml.jackson.databind.JsonNode stored ) {
         if ( submitted == null && CharacteristicUtils.hasRecordedEvidence( stored ) ) {
@@ -5520,11 +5620,10 @@ public class DatasetsWebService {
     }
 
     /**
-     * Load a SNAPSHOT annotation set and parse its payload back into a {@link CurationDocument}, refusing
-     * anything that is not this dataset's snapshot. A DRAFT or PROPOSAL payload is some other tool's shape;
-     * replaying it as a commit would write whatever happened to parse.
+     * Load a SNAPSHOT annotation set, refusing anything that is not this dataset's snapshot. A DRAFT or PROPOSAL
+     * payload is some other tool's shape; replaying it as a commit would write whatever happened to parse.
      */
-    private CurationDocument readSnapshotPayload( Long setId, ExpressionExperiment ee ) {
+    private AnnotationSet requireSnapshotFor( Long setId, ExpressionExperiment ee ) {
         AnnotationSet set = annotationSetService.load( setId );
         if ( set == null ) {
             throw new NotFoundException( "No annotation set with id " + setId + "." );
@@ -5539,11 +5638,63 @@ public class DatasetsWebService {
         if ( StringUtils.isBlank( set.getPayloadJson() ) ) {
             throw new BadRequestException( "Annotation set " + setId + " has no payload to restore." );
         }
+        return set;
+    }
+
+    /** Parse a snapshot's payload back into a {@link CurationDocument}. */
+    private static CurationDocument readSnapshotPayload( AnnotationSet set ) {
         try {
             return SNAPSHOT_MAPPER.readValue( set.getPayloadJson(), CurationDocument.class );
         } catch ( com.fasterxml.jackson.core.JsonProcessingException e ) {
-            throw new BadRequestException( "Annotation set " + setId
+            throw new BadRequestException( "Annotation set " + set.getId()
                     + " payload is not a CurationDocument: " + e.getOriginalMessage() );
+        }
+    }
+
+    /**
+     * When snapshots began recording a statement's second predicate/object pair. {@code 7cba4a75eb} taught
+     * {@link #buildCurationSnapshot} to write {@code secondPredicate} / {@code secondObject}; it was built
+     * 2026-09-08T16:29:27Z, and gembro's note that it was live on gemma2 was written at 16:43:10Z.
+     * <p>
+     * 🛑 The payload cannot answer this by itself: {@link #SNAPSHOT_MAPPER} omits nulls, so an older snapshot and a
+     * newer one whose statement had no pair serialize identically. Filing an older snapshot as newer clears a pair
+     * it never recorded, while the reverse only leaves a pair in place, so the later of the two instants is used.
+     * An instance still running a build older than {@code 7cba4a75eb} after this date misfiles its snapshots from
+     * that period.
+     */
+    private static final java.time.Instant SNAPSHOTS_RECORD_SECOND_PAIRS_SINCE = java.time.Instant.parse( "2026-09-08T16:43:10Z" );
+
+    /** A snapshot with no capture time counts as older — see {@link #SNAPSHOTS_RECORD_SECOND_PAIRS_SINCE}. */
+    private static boolean recordsSecondPairs( AnnotationSet snapshot ) {
+        return snapshot.getCreatedAt() != null
+                && snapshot.getCreatedAt().getTime() >= SNAPSHOTS_RECORD_SECOND_PAIRS_SINCE.toEpochMilli();
+    }
+
+    private static boolean hasSecondPair( StatementValueObject s ) {
+        return StringUtils.isNotBlank( s.getSecondPredicate() ) || StringUtils.isNotBlank( s.getSecondPredicateUri() )
+                || StringUtils.isNotBlank( s.getSecondObject() ) || StringUtils.isNotBlank( s.getSecondObjectUri() );
+    }
+
+    /**
+     * Make a statement the restore keeps say what should happen to the live row's second pair, which the commit
+     * otherwise refuses to guess ({@link #requireSecondPairEchoed}). Paul's ruling, 2026-09-13:
+     * <ul>
+     *     <li>a snapshot that records pairs is the target state, so a statement it holds without one has the live
+     *         pair cleared — the restore that undoes a commit which folded a pair into an existing statement;</li>
+     *     <li>an older snapshot never recorded pairs, so its silence says nothing, and the live pair is echoed
+     *         back to keep it.</li>
+     * </ul>
+     */
+    private static void reconcileSecondPair( StatementCommit sc, StatementValueObject live,
+            boolean snapshotRecordsSecondPairs ) {
+        if ( sc.getSecondPredicate() != null || sc.getSecondObject() != null || !hasSecondPair( live ) ) {
+            return;
+        }
+        if ( snapshotRecordsSecondPairs ) {
+            sc.setClearSecondPair( true );
+        } else {
+            sc.setSecondPredicate( termRef( live.getSecondPredicate(), live.getSecondPredicateUri() ) );
+            sc.setSecondObject( termRef( live.getSecondObject(), live.getSecondObjectUri() ) );
         }
     }
 
@@ -5765,20 +5916,22 @@ public class DatasetsWebService {
      * run is cascaded again on the way back.
      */
     /**
+     * @param snapshotRecordsSecondPairs see {@link #reconcileSecondPair}
      * @return the identity delta the replay implies, in BOTH eras -- see {@link RestoreIdentityDelta}.
      */
-    private RestoreIdentityDelta reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee ) {
+    private RestoreIdentityDelta reconcileSnapshotForRestore( CurationDocument snapshot, ExpressionExperiment ee,
+            boolean snapshotRecordsSecondPairs ) {
         ExperimentalDesignValueObject current = expressionExperimentService.getExperimentalDesignValueObject( ee );
         Set<Long> liveFactorIds = new HashSet<>();
         Set<Long> liveFvIds = new HashSet<>();
-        Set<Long> liveStatementIds = new HashSet<>();
+        Map<Long, StatementValueObject> liveStatements = new HashMap<>();
         if ( current != null ) {
             for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : nullSafe( current.getExperimentalFactors() ) ) {
                 liveFactorIds.add( f.getId() );
                 for ( FactorValueBasicValueObject v : nullSafe( f.getValues() ) ) {
                     liveFvIds.add( v.getId() );
                     for ( StatementValueObject s : nullSafe( v.getStatements() ) ) {
-                        liveStatementIds.add( s.getId() );
+                        liveStatements.put( s.getId(), s );
                     }
                 }
             }
@@ -5813,8 +5966,9 @@ public class DatasetsWebService {
                         reidentified.put( ref, lost );
                     }
                     for ( StatementCommit sc : nullSafe( fvc.getStatements().getItems() ) ) {
-                        if ( fvc.getGemmaId() != null && sc.getGemmaId() != null && liveStatementIds.contains( sc.getGemmaId() ) ) {
+                        if ( fvc.getGemmaId() != null && sc.getGemmaId() != null && liveStatements.containsKey( sc.getGemmaId() ) ) {
                             snapshotStatementIds.add( sc.getGemmaId() );
+                            reconcileSecondPair( sc, liveStatements.get( sc.getGemmaId() ), snapshotRecordsSecondPairs );
                         } else {
                             Long lost = sc.getGemmaId();
                             String ref = "restore-s-" + ( seq++ );
@@ -6171,7 +6325,7 @@ public class DatasetsWebService {
             }
             // The explicit spelling, which a NEW statement has no other way to express. Checked before the
             // two-item form so the two cannot both fill the slot.
-            requireWholeSecondPair( sc, location + ".statements[0]" );
+            requireWholePairs( sc, location + ".statements[0]" );
             if ( sc.getSecondPredicate() != null || sc.getSecondObject() != null ) {
                 if ( statements.size() == 2 ) {
                     throw new BadRequestException( location + ": the first statement carries"
@@ -6191,7 +6345,7 @@ public class DatasetsWebService {
             // and discarded, which is what made a two-statement tag store one.
             if ( statements.size() == 2 ) {
                 StatementCommit sc2 = statements.get( 1 );
-                requireWholeSecondPair( sc2, location + ".statements[1]" );
+                requireWholePairs( sc2, location + ".statements[1]" );
                 if ( sc2.getSecondPredicate() != null || sc2.getSecondObject() != null ) {
                     throw new BadRequestException( location + ".statements[1] carries"
                             + " secondPredicate/secondObject. A tag row holds two pairs in total, and this item"
@@ -6243,6 +6397,17 @@ public class DatasetsWebService {
      * unverified term (OLS unreachable) is dropped rather than blocking when fail-open is configured.
      */
     private void collectTermViolations( Characteristic c, String location, @Nullable String clientRef,
+            List<OntologyTermValidationException.Located> sink, @Nullable List<Canonicalization> canonSink ) {
+        collectTermViolations( ontologyTermValidator, ontologyValidationOlsFailClosed, c, location, clientRef, sink, canonSink );
+    }
+
+    /**
+     * As {@link #collectTermViolations(Characteristic, String, String, List, List)}, with the validator and the
+     * OLS fail-closed setting passed in, so the tag write paths that live on {@code AnnotationsWebService} check
+     * terms through this method rather than a second copy of it.
+     */
+    static void collectTermViolations( OntologyTermValidator ontologyTermValidator, boolean ontologyValidationOlsFailClosed,
+            Characteristic c, String location, @Nullable String clientRef,
             List<OntologyTermValidationException.Located> sink, @Nullable List<Canonicalization> canonSink ) {
         List<TermCanonicalization> canons = new ArrayList<>();
         for ( TermViolation v : ontologyTermValidator.validateAndCanonicalize( c, canons ) ) {
@@ -9191,8 +9356,23 @@ public class DatasetsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> updateDatasetAnnotations(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable AnnotationsUpdateRequest body
+            @Nullable AnnotationsUpdateRequest body,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
+        // Bound for the whole handler: updateAnnotations emits one TagAddedEvent / TagRemovedEvent per row,
+        // and they all belong to the same write.
+        try ( ubic.gemma.core.security.util.ActingIdentity.Scope ignored =
+                      ubic.gemma.core.security.util.ActingIdentity.scope(
+                              AnnotationsWebService.actingIdentityIfNamed( onBehalfOf ) ) ) {
+            return doUpdateDatasetAnnotations( datasetArg, body );
+        }
+    }
+
+    private ResponseDataObject<Set<AnnotationValueObject>> doUpdateDatasetAnnotations(
+            DatasetArg<?> datasetArg, @Nullable AnnotationsUpdateRequest body ) {
         if ( body == null || body.getAnnotations() == null ) {
             throw new BadRequestException( "A request body with an 'annotations' field is required (use an empty list to clear)." );
         }
@@ -9210,6 +9390,7 @@ public class DatasetsWebService {
             }
             desired.add( tagToCharacteristic( tag ) );
         }
+        validateNewTags( desired, expressionExperimentService.getAnnotations( ee, true ), "annotations" );
         expressionExperimentService.updateAnnotations( ee, desired );
         // Echo unmapped tags too. This endpoint accepts a tag with nothing but a category and a
         // value — no URIs required — so filtering them out of its own response meant it could
@@ -9253,10 +9434,14 @@ public class DatasetsWebService {
             @Nullable AnnotationsWebService.AnnotationDto body,
             @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
                     + "linkage is parked until the source-set → emitted-event audit link lands.")
-            @QueryParam("annotationSetId") @Nullable Long annotationSetId
+            @QueryParam("annotationSetId") @Nullable Long annotationSetId,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
         return AnnotationsWebService.doAddDatasetAnnotation( datasetArgService, expressionExperimentService,
-                datasetArg, body, annotationSetId );
+                ontologyTermValidator, ontologyValidationOlsFailClosed, datasetArg, body, annotationSetId, onBehalfOf );
     }
 
     @DELETE
@@ -9276,10 +9461,14 @@ public class DatasetsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response removeDatasetAnnotationTag(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("annotationId") Long annotationId
+            @PathParam("annotationId") Long annotationId,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
         return AnnotationsWebService.doRemoveDatasetAnnotation( datasetArgService, expressionExperimentService,
-                datasetArg, annotationId );
+                datasetArg, annotationId, onBehalfOf );
     }
 
     /**
@@ -9308,6 +9497,11 @@ public class DatasetsWebService {
             s.setSecondObject( tag.getSecondObject() );
             s.setSecondObjectUri( tag.getSecondObjectUri() );
             s.setSupportingEvidence( serializeEvidence( tag.getSupportingEvidence() ) );
+            String half = StatementUtils.describeHalfPair( s );
+            if ( half != null ) {
+                throw new BadRequestException( "Annotation '" + tag.getValue() + "' carries " + half
+                        + ". A statement clause is a predicate and an object together; send both or neither." );
+            }
             return s;
         } else {
             Characteristic c = Characteristic.Factory.newInstance();
@@ -9318,6 +9512,78 @@ public class DatasetsWebService {
             c.setSupportingEvidence( serializeEvidence( tag.getSupportingEvidence() ) );
             return c;
         }
+    }
+
+    /**
+     * Ground-check the terms a tag write is about to ADD, and reject the whole call if any of them fails.
+     * <p>
+     * Only the items the write would add are walked, which is the rule the curation commit already follows.
+     * {@code updateAnnotations} keeps a tag whose content matches one already stored, and the corpus holds
+     * tags whose stored URI is malformed — 105 colon-form ones and 29 in the statement slots, measured
+     * 2026-09-11 — so ground-checking the whole desired set would refuse a client the unrelated edit it came
+     * to make. What counts as new is decided by {@link CharacteristicUtils#sameTag}, the predicate the
+     * service diffs on.
+     * <p>
+     * These routes reach the four statement URI columns (predicate, object, and the second pair) and carried
+     * no term check at all, while the identical payload on {@code PUT /datasets/{id}/curation} answers 400.
+     *
+     * @param arrayName the request-body array {@code desired} was read from, for the violation's location
+     */
+    private void validateNewTags( List<Characteristic> desired, Collection<AnnotationValueObject> stored, String arrayName ) {
+        validateNewTags( ontologyTermValidator, ontologyValidationOlsFailClosed, desired, stored, arrayName );
+    }
+
+    /**
+     * As {@link #validateNewTags(List, Collection, String)}, with the validator and the OLS fail-closed setting
+     * passed in, for the tag write paths declared on {@code AnnotationsWebService}.
+     */
+    static void validateNewTags( OntologyTermValidator ontologyTermValidator, boolean ontologyValidationOlsFailClosed,
+            List<Characteristic> desired, Collection<AnnotationValueObject> stored, String arrayName ) {
+        List<Characteristic> storedTags = stored.stream()
+                .map( DatasetsWebService::storedTagAsCharacteristic )
+                .collect( Collectors.toList() );
+        List<OntologyTermValidationException.Located> sink = new ArrayList<>();
+        for ( int i = 0; i < desired.size(); i++ ) {
+            Characteristic d = desired.get( i );
+            if ( storedTags.stream().anyMatch( s -> CharacteristicUtils.sameTag( s, d ) ) ) {
+                continue;
+            }
+            collectTermViolations( ontologyTermValidator, ontologyValidationOlsFailClosed, d,
+                    arrayName + "[" + i + "]", null, sink, null );
+        }
+        if ( !sink.isEmpty() ) {
+            throw new OntologyTermValidationException( sink );
+        }
+    }
+
+    /**
+     * A stored tag as a content-only {@link Statement}, for the {@link CharacteristicUtils#sameTag} comparison
+     * in {@link #validateNewTags}.
+     * <p>
+     * The stored side is only reachable as a value object here: there is no OSIV in this tree, so the entity a
+     * resource holds is detached and its characteristic set cannot be walked. Only the slots {@code sameTag}
+     * reads are copied — ids and evidence are not part of tag identity. A stored plain tag reads as all-null on
+     * the statement slots, which is how {@code sameTag} already treats a non-Statement, so one shape covers
+     * both.
+     * <p>
+     * 🛑 The value object carries the read-time canonicalized URIs ({@link CharacteristicUtils#canonicalUri}),
+     * so the comparison happens in the form the client was served and is echoing back.
+     */
+    private static Characteristic storedTagAsCharacteristic( AnnotationValueObject vo ) {
+        Statement s = Statement.Factory.newInstance();
+        s.setCategory( vo.getCategory() );
+        s.setCategoryUri( vo.getCategoryUri() );
+        s.setSubject( vo.getValue() );
+        s.setSubjectUri( vo.getValueUri() );
+        s.setPredicate( vo.getPredicate() );
+        s.setPredicateUri( vo.getPredicateUri() );
+        s.setObject( vo.getObject() );
+        s.setObjectUri( vo.getObjectUri() );
+        s.setSecondPredicate( vo.getSecondPredicate() );
+        s.setSecondPredicateUri( vo.getSecondPredicateUri() );
+        s.setSecondObject( vo.getSecondObject() );
+        s.setSecondObjectUri( vo.getSecondObjectUri() );
+        return s;
     }
 
     /**
@@ -9425,6 +9691,7 @@ public class DatasetsWebService {
             }
             desired.add( tagToCharacteristic( tag ) );
         }
+        validateNewTags( desired, sampleAnnotationVos( bm ), "annotations" );
         bioMaterialService.updateAnnotations( ee, bm, desired );
         return respond( sampleAnnotationVos( resolveSampleBioMaterial( ee, bioAssayId ) ) );
     }
@@ -9465,9 +9732,11 @@ public class DatasetsWebService {
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         BioMaterial bm = resolveSampleBioMaterial( ee, bioAssayId );
+        Characteristic desired = tagToCharacteristic( body );
+        validateNewTags( Collections.singletonList( desired ), sampleAnnotationVos( bm ), "annotation" );
         Characteristic created;
         try {
-            created = bioMaterialService.addAnnotation( ee, bm, tagToCharacteristic( body ) );
+            created = bioMaterialService.addAnnotation( ee, bm, desired );
         } catch ( IllegalArgumentException e ) {
             // 409 Conflict for duplicate (category, value) — service throws IAE on dup.
             throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
@@ -10008,7 +10277,12 @@ public class DatasetsWebService {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellLevelCharacteristics")
-    @Operation(summary = "Retrieve all other cell-level characteristics of a single-cell dataset", responses = {
+    @Operation(summary = "Retrieve all other cell-level characteristics of a single-cell dataset",
+            description = "Despite the name, a cell-level characteristic is a grouping of cells, not a value per cell. "
+                    + "`characteristics` lists the distinct labels (for example `mito_outlier` `true` and `false`), and "
+                    + "`characteristicIds` gives, for each cell of the single-cell dimension, the id of its label, or "
+                    + "null when it has none. A continuous per-cell measurement does not fit this shape: every distinct "
+                    + "value would become its own label.", responses = {
             @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectListCellLevelCharacteristicsValueObject.class)),
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
@@ -10498,7 +10772,7 @@ public class DatasetsWebService {
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response replaceDatasetDesign(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Set to true to consent to the change's consequences: deleting this dataset's differential-expression analyses, and leaving subsets anchored on factor values that would no longer exist. The cascade is dataset-wide, not confined to the factors the payload touches — a design change that adds, removes or re-assigns anything invalidates every analysis fitted against the old design. The one exception is an edit that only relabels kept factor values, which cascades nothing.") @QueryParam("force") @DefaultValue("false") Boolean force,
+            @Parameter(description = "Set to true to consent to the change's consequences: deleting the differential-expression analyses it invalidates, and leaving subsets anchored on factor values that would no longer exist. An analysis is invalidated when the change reaches a factor it uses: the factor is deleted, one of its values is deleted or added, a sample moves between its values, or its baseline or a measurement on it changes. Adding a factor, deleting a factor no analysis uses, and relabelling kept factor values invalidate nothing. An analysis whose factors cannot be read is invalidated by any structural change.") @QueryParam("force") @DefaultValue("false") Boolean force,
             @Parameter(description = "Optional id of the PROPOSAL annotation set driving this apply. On success the apply is recorded as a COMMIT annotation set carrying that proposal's run reference and parented to it, so the trail reads proposal -> decision -> effect. The set must belong to this dataset and must be a PROPOSAL.") @QueryParam("agentProposalId") @Nullable Long agentProposalId,
             ExperimentalDesignValueObject proposed
     ) {

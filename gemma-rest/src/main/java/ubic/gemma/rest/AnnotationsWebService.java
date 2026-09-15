@@ -35,10 +35,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.ontology.model.AnnotationProperty;
+import ubic.gemma.core.ontology.model.OntologyProperty;
 import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.*;
+import ubic.gemma.core.security.util.ActingIdentity;
 import ubic.gemma.core.security.util.SecurityUtil;
 import ubic.gemma.core.security.concurrent.DelegatingSecurityContextExecutorService;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -57,6 +59,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.model.expression.experiment.StatementUtils;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
@@ -169,6 +172,13 @@ public class AnnotationsWebService {
      * Injected as a field rather than through the constructor to keep this class's already long
      * constructor from growing a tenth argument; the same reason the resolvers below are.
      */
+    @Autowired
+    private ubic.gemma.core.ontology.OntologyTermValidator ontologyTermValidator;
+    /**
+     * @see DatasetsWebService#ontologyValidationOlsFailClosed
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.ontology.validation.olsFailClosed}")
+    private boolean ontologyValidationOlsFailClosed;
     @Autowired
     private ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService;
     @Autowired(required = false)
@@ -549,6 +559,10 @@ public class AnnotationsWebService {
             // get term returns the first match
             OntologyTerm term = ontologyService.getTerm( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
             if ( term == null ) {
+                OntologyTermValueObject relation = relationTermValueObject( termUri );
+                if ( relation != null ) {
+                    return respond( relation );
+                }
                 throw new NotFoundException( "No ontology term with URI " + termUri );
             }
             String definition = ontologyService.getDefinition( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
@@ -609,6 +623,32 @@ public class AnnotationsWebService {
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
+    }
+
+    /**
+     * A predicate from Gemma's own relation vocabulary ({@code Relation.terms.txt}), for a URI no loaded ontology
+     * carries.
+     * <p>
+     * RO and ENVO relations are sanctioned predicates but not loaded ontologies, so this route answered 404 for
+     * {@code RO_0000087 has role}, {@code RO_0002573 has modifier} and {@code ENVO_01003004 derives from part of}
+     * (measured on production 2026-09-12) — while the curation gate resolved the very same URIs offline, from the
+     * very same file. Any client asking Gemma for a predicate's label was sent to OLS for a term Gemma ships.
+     * <p>
+     * Only uri and label are known here: a definition, parents, synonyms and a version live in an ontology Gemma
+     * does not load, and loading one to fill them is not worth it for a vocabulary we use a few dozen terms of.
+     * {@code usageCount} is null rather than 0, because the count reads value URIs and a predicate is never one.
+     */
+    @Nullable
+    private OntologyTermValueObject relationTermValueObject( String uri ) {
+        for ( OntologyProperty p : ontologyService.getRelationTerms() ) {
+            if ( uri.equals( p.getUri() ) ) {
+                return new OntologyTermValueObject( p.getUri(), p.getLabel(), null, false, null,
+                        Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+                        Collections.emptyList(), 0, null, sourceMetadataOf( null ), null, null,
+                        Collections.emptyList(), null );
+            }
+        }
+        return null;
     }
 
     /**
@@ -6106,9 +6146,14 @@ public class AnnotationsWebService {
             @Nullable AnnotationDto body,
             @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
                     + "linkage is parked until the source-set → emitted-event audit link lands.")
-            @QueryParam("annotationSetId") @Nullable Long annotationSetId
+            @QueryParam("annotationSetId") @Nullable Long annotationSetId,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
-        return doAddDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg, body, annotationSetId );
+        return doAddDatasetAnnotation( datasetArgService, expressionExperimentService, ontologyTermValidator,
+                ontologyValidationOlsFailClosed, datasetArg, body, annotationSetId, onBehalfOf );
     }
 
     /**
@@ -6124,16 +6169,36 @@ public class AnnotationsWebService {
      * rather than injecting one resource into the other keeps both classes' Spring wiring — and the
      * mocked test contexts built over it — unchanged.</p>
      */
+    /**
+     * The curator a write is being carried FOR, or null when the credential is acting for itself.
+     * <p>
+     * 🛑 The direction, because it reads both ways and only one is implemented (Paul, 2026-09-11): the AGENT
+     * authenticates as itself and names the person in charge here. So {@code PERFORMER} on the audit row is
+     * {@code gemmaAgent} and {@code ON_BEHALF_OF} is the curator — never the reverse.
+     * {@code SecurityUtil.resolveActingIdentity} enforces that only an agent or an admin may name anyone but
+     * themselves.
+     */
+    @Nullable
+    static String actingIdentityIfNamed( @Nullable String onBehalfOf ) {
+        return StringUtils.isBlank( onBehalfOf ) ? null : SecurityUtil.resolveActingIdentity( onBehalfOf );
+    }
+
     static Response doAddDatasetAnnotation( DatasetArgService datasetArgService,
             ExpressionExperimentService expressionExperimentService,
-            DatasetArg<?> datasetArg, @Nullable AnnotationDto body, @Nullable Long annotationSetId ) {
+            ubic.gemma.core.ontology.OntologyTermValidator ontologyTermValidator, boolean ontologyValidationOlsFailClosed,
+            DatasetArg<?> datasetArg, @Nullable AnnotationDto body, @Nullable Long annotationSetId,
+            @Nullable String onBehalfOf ) {
         if ( body == null ) {
             throw new BadRequestException( "A request body is required." );
         }
         Characteristic vc = annotationDtoToCharacteristic( body );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        DatasetsWebService.validateNewTags( ontologyTermValidator, ontologyValidationOlsFailClosed,
+                Collections.singletonList( vc ), expressionExperimentService.getAnnotations( ee, true ), "annotation" );
         Characteristic persisted;
-        try {
+        // The audit row is written inside the service's transaction by an aspect with no argument for this,
+        // so the name is scoped to the call instead. See ActingIdentity.
+        try ( ActingIdentity.Scope ignored = ActingIdentity.scope( actingIdentityIfNamed( onBehalfOf ) ) ) {
             persisted = expressionExperimentService.addAnnotation( ee, vc );
         } catch ( IllegalArgumentException e ) {
             // 409 Conflict for duplicate (category, value) — service throws IAE on dup.
@@ -6170,9 +6235,14 @@ public class AnnotationsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response removeDatasetAnnotation(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("annotationId") Long annotationId
+            @PathParam("annotationId") Long annotationId,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
-        return doRemoveDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg, annotationId );
+        return doRemoveDatasetAnnotation( datasetArgService, expressionExperimentService, datasetArg,
+                annotationId, onBehalfOf );
     }
 
     /**
@@ -6184,12 +6254,15 @@ public class AnnotationsWebService {
      */
     static Response doRemoveDatasetAnnotation( DatasetArgService datasetArgService,
             ExpressionExperimentService expressionExperimentService,
-            DatasetArg<?> datasetArg, @Nullable Long annotationId ) {
+            DatasetArg<?> datasetArg, @Nullable Long annotationId, @Nullable String onBehalfOf ) {
         if ( annotationId == null ) {
             throw new BadRequestException( "An annotation id is required." );
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        Characteristic removed = expressionExperimentService.removeAnnotation( ee, annotationId );
+        Characteristic removed;
+        try ( ActingIdentity.Scope ignored = ActingIdentity.scope( actingIdentityIfNamed( onBehalfOf ) ) ) {
+            removed = expressionExperimentService.removeAnnotation( ee, annotationId );
+        }
         if ( removed == null ) {
             throw new NotFoundException( "No annotation with id " + annotationId + " on dataset " + ee.getShortName() + "." );
         }
@@ -6222,8 +6295,21 @@ public class AnnotationsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<AnnotationReplaceReport> replaceDatasetAnnotations(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Nullable AnnotationsReplaceRequest body
+            @Nullable AnnotationsReplaceRequest body,
+            @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
+                    + "it. The authenticated credential stays the performer on the audit row; this names the "
+                    + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
+            @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
+        // Bound for the whole handler: this one writes row by row, so every TagAddedEvent /
+        // TagRemovedEvent it emits has to carry the same name.
+        try ( ActingIdentity.Scope ignored = ActingIdentity.scope( actingIdentityIfNamed( onBehalfOf ) ) ) {
+            return doReplaceDatasetAnnotations( datasetArg, body );
+        }
+    }
+
+    private ResponseDataObject<AnnotationReplaceReport> doReplaceDatasetAnnotations(
+            DatasetArg<?> datasetArg, @Nullable AnnotationsReplaceRequest body ) {
         if ( body == null || body.getAnnotations() == null ) {
             throw new BadRequestException( "A request body with an 'annotations' field is required (use an empty list to clear)." );
         }
@@ -6240,6 +6326,8 @@ public class AnnotationsWebService {
                     body.getAnnotationSetId() );
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        DatasetsWebService.validateNewTags( ontologyTermValidator, ontologyValidationOlsFailClosed, desired,
+                expressionExperimentService.getAnnotations( ee, true ), "annotations" );
 
         // The mutations are applied per-row through expressionExperimentService so each call fires
         // its own @Audited aspect (one TagAddedEvent / TagRemovedEvent per row).
@@ -6344,9 +6432,7 @@ public class AnnotationsWebService {
         Characteristic c;
         if ( dto.hasStatementShape() ) {
             // Reject the "second-* set but no first-*" shape — second-pair semantics depend
-            // on the first pair being present. Predicate-only or object-only is allowed:
-            // common ontology patterns express bare relationships ("has_role X") without a
-            // dedicated object literal.
+            // on the first pair being present. Half of either pair is refused below.
             boolean secondPredicateSet = StringUtils.isNotBlank( dto.getSecondPredicate() )
                     || StringUtils.isNotBlank( dto.getSecondPredicateUri() );
             boolean secondObjectSet = StringUtils.isNotBlank( dto.getSecondObject() )
@@ -6371,6 +6457,11 @@ public class AnnotationsWebService {
             s.setSecondPredicateUri( dto.getSecondPredicateUri() );
             s.setSecondObject( dto.getSecondObject() );
             s.setSecondObjectUri( dto.getSecondObjectUri() );
+            String half = StatementUtils.describeHalfPair( s );
+            if ( half != null ) {
+                throw new BadRequestException( "The annotation carries " + half
+                        + ". A statement clause is a predicate and an object together; send both or neither." );
+            }
             c = s;
         } else {
             c = Characteristic.Factory.newInstance();

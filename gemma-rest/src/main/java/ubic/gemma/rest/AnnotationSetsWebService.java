@@ -745,14 +745,16 @@ public class AnnotationSetsWebService {
                     + "and the two never supersede each other.\n\n"
                     + "Rulings are append-only, so this always writes a new row; `GET` returns the "
                     + "standing ruling per finding and `?history=true` the full sequence. "
-                    + "`?onBehalfOf=` records the ruling curator when the call is relayed by an "
-                    + "agent, and is honoured only for `GROUP_AGENT` / `GROUP_ADMIN`.",
+                    + "`?onBehalfOf=` names the person ruling and is honoured only for `GROUP_AGENT` / "
+                    + "`GROUP_ADMIN`. 🛑 An agent MUST send it, naming the person who directed it and never its "
+                    + "own account: `decidedBy` names a person.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "The ruling was recorded.",
                             content = @Content(schema = @Schema(implementation = DispositionResponse.class))),
                     @ApiResponse(responseCode = "400",
                             description = "`targetId` or `disposition` is missing, `disposition` names no value, "
-                                    + "or `needs_more_info` came without a `reason`.",
+                                    + "`needs_more_info` came without a `reason`, or an agent sent no `onBehalfOf` "
+                                    + "or named its own account.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -761,7 +763,7 @@ public class AnnotationSetsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response ruleOnFinding(
             @PathParam("id") Long id,
-            @Parameter(description = "Who is ruling. Agents and admins only.")
+            @Parameter(description = "The person ruling. Required from an agent; agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable DispositionRequest body
     ) {
@@ -778,6 +780,7 @@ public class AnnotationSetsWebService {
         } catch ( IllegalArgumentException e ) {
             throw new BadRequestException( e.getMessage() );
         }
+        SecurityUtil.requireOnBehalfOfFromAgent( onBehalfOf );
         AnnotationSet set = requireLoad( id, "id" );
         String decidedBy = resolveCurator( onBehalfOf );
         TriageJudgeKind kind = resolveJudgeKind( body.judgeKind, onBehalfOf );

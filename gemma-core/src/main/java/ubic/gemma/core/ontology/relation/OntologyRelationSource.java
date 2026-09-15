@@ -76,6 +76,10 @@ class OntologyRelationSource {
         private final boolean categoryFromTargetVocabulary;
         @Nullable
         private final Category subjectCategory;
+        @Nullable
+        private final String storedPredicateUri;
+        @Nullable
+        private final String storedPredicateLabel;
 
         Relation( String propertyUri, String fallbackLabel, @Nullable Category objectCategory,
                 boolean foreignTargets ) {
@@ -90,12 +94,51 @@ class OntologyRelationSource {
         Relation( String propertyUri, String fallbackLabel, @Nullable Category objectCategory,
                 boolean foreignTargets, boolean categoryFromTargetVocabulary,
                 @Nullable Category subjectCategory ) {
+            this( propertyUri, fallbackLabel, objectCategory, foreignTargets, categoryFromTargetVocabulary,
+                    subjectCategory, null, null );
+        }
+
+        private Relation( String propertyUri, String fallbackLabel, @Nullable Category objectCategory,
+                boolean foreignTargets, boolean categoryFromTargetVocabulary,
+                @Nullable Category subjectCategory, @Nullable String storedPredicateUri,
+                @Nullable String storedPredicateLabel ) {
             this.propertyUri = propertyUri;
             this.fallbackLabel = fallbackLabel;
             this.objectCategory = objectCategory;
             this.foreignTargets = foreignTargets;
             this.categoryFromTargetVocabulary = categoryFromTargetVocabulary;
             this.subjectCategory = subjectCategory;
+            this.storedPredicateUri = storedPredicateUri;
+            this.storedPredicateLabel = storedPredicateLabel;
+        }
+
+        /**
+         * The same property, stored under a different predicate from {@code Relation.terms.txt}.
+         *
+         * <p>For an ontology property Gemma does not use as a predicate, where a sanctioned one says the
+         * same thing: the axiom is still read on the ontology's own property, and the row carries
+         * Gemma's.</p>
+         */
+        Relation storedAs( String predicateUri, String predicateLabel ) {
+            return new Relation( propertyUri, fallbackLabel, objectCategory, foreignTargets,
+                    categoryFromTargetVocabulary, subjectCategory, predicateUri, predicateLabel );
+        }
+
+        /**
+         * The predicate URI a row read on this property is stored with: the property itself unless
+         * {@link #storedAs} named another.
+         */
+        String getStoredPredicateUri() {
+            return storedPredicateUri != null ? storedPredicateUri : propertyUri;
+        }
+
+        /**
+         * The predicate label set by {@link #storedAs}, or null to use the ontology's label for the
+         * property.
+         */
+        @Nullable
+        String getStoredPredicateLabel() {
+            return storedPredicateLabel;
         }
 
         /**
@@ -317,8 +360,14 @@ class OntologyRelationSource {
     static final OntologyRelationSource CLO = new OntologyRelationSource( "CLO", "CLO", OBO + "CLO_", CELL_LINE, Arrays.asList(
             new Relation( OBO + "CLO_0000015", "derives from patient having disease", Categories.DISEASE, true ),
             new Relation( OBO + "CLO_0000179", "is disease model for", Categories.DISEASE, true ),
-            new Relation( OBO + "CLO_0037208", "derives from anatomic part", Categories.ORGANISM_PART, false ),
-            new Relation( OBO + "CLO_0037227", "cell line cell derived from anatomical part", Categories.ORGANISM_PART, false ),
+            // Stored as ENVO_01003004, the predicate a cell line's tissue of origin takes in curation. Both
+            // CLO properties were removed from Relation.terms.txt 2026-09-14; Paul: "I think we can stick
+            // with derives from part of and be consistent with that". CellosaurusRelationProducer stores
+            // its anatomic site the same way, so the two sources still corroborate.
+            new Relation( OBO + "CLO_0037208", "derives from anatomic part", Categories.ORGANISM_PART, false )
+                    .storedAs( OBO + "ENVO_01003004", "derives from part of" ),
+            new Relation( OBO + "CLO_0037227", "cell line cell derived from anatomical part", Categories.ORGANISM_PART, false )
+                    .storedAs( OBO + "ENVO_01003004", "derives from part of" ),
             // the object is an NCBITaxon class, which is not one of Gemma's annotation categories; the
             // taxon itself is carried on TAXON_FK where it can be joined
             new Relation( OBO + "CLO_0037207", "derives from organism", null, false ),

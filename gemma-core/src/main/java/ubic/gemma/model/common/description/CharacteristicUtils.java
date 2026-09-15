@@ -274,19 +274,39 @@ public class CharacteristicUtils {
      * Comparisons delegate to {@link #equals(String, String, String, String)} (case-insensitive,
      * URI-aware). Used by both {@code ExpressionExperimentService.updateAnnotations} and
      * {@code BioMaterialService.updateAnnotations} so the two diff implementations cannot drift.
+     * <p>
+     * The value, object and second-object slots compare their CANONICAL form — see
+     * {@code equalsCanonically} below.
      */
     public static boolean sameTag( Characteristic a, Characteristic b ) {
         if ( !equals( a.getCategory(), a.getCategoryUri(), b.getCategory(), b.getCategoryUri() )
-                || !equals( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() ) ) {
+                || !equalsCanonically( a.getValue(), a.getValueUri(), b.getValue(), b.getValueUri() ) ) {
             return false;
         }
         // A non-Statement reads as all-null on the statement slots, so a plain Characteristic and a
         // Statement carrying no predicate/object compare equal, while either one differs from a
         // composed Statement.
         return equals( predicateOf( a ), predicateUriOf( a ), predicateOf( b ), predicateUriOf( b ) )
-                && equals( objectOf( a ), objectUriOf( a ), objectOf( b ), objectUriOf( b ) )
+                && equalsCanonically( objectOf( a ), objectUriOf( a ), objectOf( b ), objectUriOf( b ) )
                 && equals( secondPredicateOf( a ), secondPredicateUriOf( a ), secondPredicateOf( b ), secondPredicateUriOf( b ) )
-                && equals( secondObjectOf( a ), secondObjectUriOf( a ), secondObjectOf( b ), secondObjectUriOf( b ) );
+                && equalsCanonically( secondObjectOf( a ), secondObjectUriOf( a ), secondObjectOf( b ), secondObjectUriOf( b ) );
+    }
+
+    /**
+     * {@link #equals(String, String, String, String)} on the canonical form of both sides.
+     * <p>
+     * The read serves {@link #canonicalUri} for the value, object and second-object slots, so a client that
+     * echoes back what it was served arrives holding the canonical URI while the stored row still holds the raw
+     * one. Compared literally those are two different tags, and a set-replace would then drop the stored row and
+     * insert a canonical one — performing the parked migration ({@code scripts/sql/term_uri_migration.sql}) on
+     * whichever rows rode along with an unrelated edit, one row at a time, under a new id. 634 stored tags carry
+     * a URI the shim rewrites (36 experiment tags and 598 biomaterial characteristics, measured against
+     * {@code gemd} 2026-09-11).
+     * <p>
+     * Category and predicate are compared raw, here as on the read, because the shim leaves them alone.
+     */
+    private static boolean equalsCanonically( @Nullable String a, @Nullable String aUri, @Nullable String b, @Nullable String bUri ) {
+        return equals( canonicalLabel( aUri, a ), canonicalUri( aUri ), canonicalLabel( bUri, b ), canonicalUri( bUri ) );
     }
 
     @Nullable
@@ -389,6 +409,37 @@ public class CharacteristicUtils {
      */
     public static boolean hasRecordedEvidence( @Nullable JsonNode evidence ) {
         return serializeSupportingEvidence( evidence ) != null;
+    }
+
+    /**
+     * Whether writing {@code proposed} over a row's {@code stored} evidence would change nothing.
+     * <p>
+     * Compared as JSON trees, not as strings. The agents' Python serializer writes {@code ", "} and {@code ": "}
+     * while Jackson writes compact JSON, so the 2,435 factor-value notes rewritten to JSON on 2026-09-13 each
+     * compared unequal to their own echo: every one preflighted as a factor-value update, and a commit would have
+     * rewritten it for no reason (frinkbro, GSE4036 and GSE3489).
+     * <p>
+     * Stored text that is not JSON cannot be echoed at all, because it parses to {@code null} and is served as
+     * nothing. It therefore counts as unchanged when the proposal records no evidence, so a client that could not
+     * see it does not clear it (Paul approved, 2026-09-13). A proposal that records evidence still replaces it,
+     * and omitting evidence still clears evidence that is JSON: full-record replacement is otherwise unchanged.
+     */
+    public static boolean sameSupportingEvidence( @Nullable String stored, @Nullable JsonNode proposed ) {
+        boolean proposedRecords = hasRecordedEvidence( proposed );
+        JsonNode storedTree = parseSupportingEvidence( stored );
+        if ( !hasRecordedEvidence( storedTree ) ) {
+            // nothing recorded, or text that cannot be read: only a proposal that records evidence changes it
+            return !proposedRecords;
+        }
+        return proposedRecords && storedTree.equals( proposed );
+    }
+
+    /** {@link #sameSupportingEvidence(String, JsonNode)} for a proposal that is already serialized. */
+    public static boolean sameSupportingEvidence( @Nullable String stored, @Nullable String proposed ) {
+        if ( proposed != null && !proposed.isEmpty() && parseSupportingEvidence( proposed ) == null ) {
+            return proposed.equals( stored );
+        }
+        return sameSupportingEvidence( stored, parseSupportingEvidence( proposed ) );
     }
 
     private static final ObjectMapper SUPPORTING_EVIDENCE_MAPPER = new ObjectMapper();

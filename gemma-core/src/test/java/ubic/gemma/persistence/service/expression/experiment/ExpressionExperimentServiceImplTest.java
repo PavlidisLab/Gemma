@@ -544,7 +544,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
         dea.setName( "treatment effect" );
-        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        testsFactor( dea, treatmentFactor );
         when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         // remove controlFv from the proposal, AND remove its id from bm1000's assignment
@@ -568,7 +568,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         buildFixture();
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
-        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        testsFactor( dea, treatmentFactor );
         when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
@@ -587,7 +587,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         buildFixture();
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
-        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        testsFactor( dea, treatmentFactor );
         when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         // No FVs deleted, no factors changed; only bm1000 switches from controlFv (100) to treatedFv (101)
@@ -608,7 +608,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         buildFixture();
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
-        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        testsFactor( dea, treatmentFactor );
         when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
@@ -712,7 +712,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         buildFixture();
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
-        // Invalidation is dataset-wide since 2026-08-26: the preflight asks by EXPERIMENT, not by factor.
+        testsFactor( dea, treatmentFactor );
         when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
 
         // rename "control" -> "vehicle" on the kept FV; nothing structural changes
@@ -1080,6 +1080,60 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), isNull() );
     }
 
+    /**
+     * A tag delete that names nothing on the experiment is refused before anything writes, on the commit and on the
+     * dry run. It used to be skipped: the commit answered 200 with a lower count while the other sections applied.
+     */
+    @Test
+    public void testCommitCurationRefusesATagDeleteThatNamesNoTagOfTheExperiment() {
+        buildFixture();
+        Characteristic tag = Characteristic.Factory.newInstance();
+        tag.setId( 99L );
+        tag.setCategory( "organism part" );
+        tag.setValue( "brain" );
+        fixture.getCharacteristics().add( tag );
+        when( eeDao.load( 1L ) ).thenReturn( fixture );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setTagsPresent( true );
+        request.setTagsToDelete( Arrays.asList( 99L, 12345L ) );
+        // the mocks are shared across tests, so earlier tests' calls would otherwise satisfy or break never()
+        clearInvocations( tableMaintenanceUtil );
+
+        for ( boolean dryRun : new boolean[] { false, true } ) {
+            org.assertj.core.api.Assertions.assertThatThrownBy( () -> svc.commitCuration( fixture, request, dryRun ) )
+                    .isInstanceOf( UnknownDeletedIdsException.class )
+                    .hasMessageContaining( "tags.deletedIds" )
+                    .hasMessageContaining( "[12345]" );
+        }
+        verify( tableMaintenanceUtil, never() ).updateExpressionExperiment2CharacteristicEntries( any(), any() );
+    }
+
+    /** The same refusal for a sample characteristic that belongs to no sample of the experiment. */
+    @Test
+    public void testCommitCurationRefusesASampleCharacteristicDeleteThatNamesNothingOnTheExperiment() {
+        buildFixture();
+        Characteristic sampleChar = Characteristic.Factory.newInstance();
+        sampleChar.setId( 555L );
+        sampleChar.setCategory( "organism part" );
+        sampleChar.setValue( "cortex" );
+        bm1000.getCharacteristics().add( sampleChar );
+        when( eeDao.load( 1L ) ).thenReturn( fixture );
+        when( readService.thawBioAssays( fixture ) ).thenReturn( fixture );
+
+        CurationCommitRequest request = new CurationCommitRequest();
+        request.setSampleCharsPresent( true );
+        request.setSampleCharsToDelete( Arrays.asList( 555L, 777L ) );
+        // the mocks are shared across tests, and the EE2C test above removes this same characteristic
+        clearInvocations( bioMaterialService );
+
+        org.assertj.core.api.Assertions.assertThatThrownBy( () -> svc.commitCuration( fixture, request, false ) )
+                .isInstanceOf( UnknownDeletedIdsException.class )
+                .hasMessageContaining( "sampleCharacteristics.deletedIds" )
+                .hasMessageContaining( "[777]" );
+        verify( bioMaterialService, never() ).removeAnnotation( any(), any(), any(), any() );
+    }
+
     /** A per-sample characteristic change reaches EE2C at the BioMaterial level and at no other. */
     @Test
     public void testCommitCurationRefreshesEe2cAtTheBioMaterialLevelForASampleCharacteristicChange() {
@@ -1295,6 +1349,40 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
                 .contains( "STATEMENT_ID_REPEATED" );
     }
 
+    /** Half a first pair is refused on the design routes, which take the value objects directly. */
+    @Test
+    public void testPreviewRefusesAPredicateWithoutAnObject() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        StatementValueObject ps = proposalFv( proposal, 100L ).getStatements().get( 0 );
+        ps.setPredicate( "has role" );
+        ps.setObject( null );
+        ps.setObjectUri( null );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() )
+                .extracting( DesignPreflightReport.Blocker::getType )
+                .containsExactly( "STATEMENT_HALF_PAIR" );
+    }
+
+    /** And half a second pair, which only PUT /curation refused before. */
+    @Test
+    public void testPreviewRefusesASecondPredicateWithoutASecondObject() {
+        buildFixture();
+        makeControlStatementCompound();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        StatementValueObject ps = proposalFv( proposal, 100L ).getStatements().get( 0 );
+        ps.setSecondObject( null );
+        ps.setSecondObjectUri( null );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() )
+                .extracting( DesignPreflightReport.Blocker::getType )
+                .containsExactly( "STATEMENT_HALF_PAIR" );
+    }
+
     private static FactorValueBasicValueObject proposalFv( ExperimentalDesignValueObject vo, long fvId ) {
         return designFv( vo, fvId );
     }
@@ -1335,6 +1423,30 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         // a metadata-only edit must not disturb the factor values
         assertThat( treatmentFactor.getFactorValues() ).hasSize( 2 );
         verify( factorValueService, never() ).remove( any( FactorValue.class ) );
+    }
+
+    /**
+     * The omission contract (Paul, 2026-09-13): on a {@code gemmaId} factor item, a null field is no change. cab
+     * writes a relevance hint on an existing factor with an item carrying nothing else.
+     */
+    @Test
+    public void testApplyNullFactorFieldsChangeNothing() {
+        buildFixture();
+        treatmentFactor.setDescription( "stored description" );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        ExperimentalDesignValueObject.ExperimentalFactorEntry item = proposal.getExperimentalFactors().get( 0 );
+        item.setName( null );
+        item.setDescription( null );
+        item.setType( null );
+        item.setCategory( null );
+
+        svc.applyDesignChange( fixture, proposal );
+
+        assertThat( treatmentFactor.getName() ).isEqualTo( "treatment" );
+        assertThat( treatmentFactor.getDescription() ).isEqualTo( "stored description" );
+        assertThat( treatmentFactor.getType() ).isEqualTo( FactorType.CATEGORICAL );
+        assertThat( treatmentFactor.getFactorValues() ).hasSize( 2 );
     }
 
     /**
@@ -1624,6 +1736,45 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
                 .satisfies( s -> assertThat( s.getSupportingEvidence() ).isNull() );
     }
 
+    /**
+     * frinkbro's notes, rewritten as Python-serialized JSON on 2026-09-13, preflighted as an update on every experiment
+     * that carried one (GSE4036, GSE3489): the echo is compact and the comparison was by string. An echo of the same
+     * content is not an edit, and the apply keeps the stored bytes.
+     */
+    @Test
+    public void testAnEchoOfSpacedJsonEvidenceIsNotAnUpdate() {
+        buildFixture();
+        String spaced = "[{\"source\": \"legacy_note\", \"quote\": \"control arm of a disease-vs-control design\"}]";
+        controlFv.getCharacteristics().iterator().next().setSupportingEvidence( spaced );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        assertThat( designFv( proposal, 100L ).getStatements().get( 0 ).getSupportingEvidence() ).isNotNull();
+
+        assertThat( svc.previewDesignChange( fixture, proposal ).getFactorValuesToUpdate() ).isEmpty();
+        svc.applyDesignChange( fixture, proposal );
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getSupportingEvidence() ).isEqualTo( spaced ) );
+    }
+
+    /**
+     * Stored evidence that is not JSON is served as nothing, so no client can echo it. A proposal without evidence
+     * leaves it in place instead of clearing it (Paul approved, 2026-09-13), and the preflight does not report it.
+     */
+    @Test
+    public void testEvidenceThatCannotBeReadSurvivesAProposalWithoutEvidence() {
+        buildFixture();
+        String text = "control arm of a disease-vs-control design: this sample is the CONTROL";
+        controlFv.getCharacteristics().iterator().next().setSupportingEvidence( text );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        assertThat( designFv( proposal, 100L ).getStatements().get( 0 ).getSupportingEvidence() ).isNull();
+
+        assertThat( svc.previewDesignChange( fixture, proposal ).getFactorValuesToUpdate() ).isEmpty();
+        svc.applyDesignChange( fixture, proposal );
+        assertThat( controlFv.getCharacteristics() ).singleElement()
+                .satisfies( s -> assertThat( s.getSupportingEvidence() ).isEqualTo( text ) );
+    }
+
     /** An evidence code stated on a factor-value statement reaches the entity, so a design write can say how it was decided. */
     @Test
     public void testApplyWritesEvidenceCodeOntoAStatement() {
@@ -1881,27 +2032,42 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     /**
-     * The inversion, 2026-08-26: invalidation is ONE exclusion — labels on kept factor values — and
-     * everything else invalidates, dataset-wide. These four pin the cases the four old inclusion rules
-     * got wrong, and the one they got right.
+     * Since 2026-09-13 an analysis is deleted only when the change reaches a factor it uses (Paul: "if the factor
+     * isn't used in the DEA, then it shouldn't be deleted"). The analysis stubbed here tests the treatment factor.
      */
-    private DifferentialExpressionAnalysis stubDatasetWideAnalysis() {
+    private DifferentialExpressionAnalysis stubAnalysisOnTreatment() {
+        return stubAnalysisOn( treatmentFactor, null );
+    }
+
+    private DifferentialExpressionAnalysis stubAnalysisOn( ExperimentalFactor factor, FactorValue baseline ) {
         DifferentialExpressionAnalysis dea = new DifferentialExpressionAnalysis();
         dea.setId( 9001L );
         dea.setName( "treatment effect" );
+        ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet rs =
+                ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.Factory.newInstance();
+        rs.setId( 9101L );
+        rs.setExperimentalFactors( new java.util.HashSet<>( Collections.singleton( factor ) ) );
+        rs.setBaselineGroup( baseline );
+        dea.getResultSets().add( rs );
         when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( dea ) );
         return dea;
     }
 
+    private static void testsFactor( DifferentialExpressionAnalysis dea, ExperimentalFactor factor ) {
+        ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet rs =
+                ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.Factory.newInstance();
+        rs.setExperimentalFactors( new java.util.HashSet<>( Collections.singleton( factor ) ) );
+        dea.getResultSets().add( rs );
+    }
+
     /**
-     * Adding a WHOLE factor used to mark nothing: the old rule (c) only fired for a new value under an
-     * EXISTING factor, and a brand-new factor has no id and no analyses of its own. The analyses on the
-     * other factors were fitted without a variable the design now declares, so they go.
+     * Adding a factor deletes nothing: the existing analyses still test what they tested. Re-running one to take in
+     * the new factor is the curator's call (Paul, 2026-09-13).
      */
     @Test
-    public void testPreviewAddingAWholeFactorInvalidatesTheExistingAnalyses() {
+    public void testPreviewAddingAWholeFactorDeletesNoAnalysis() {
         buildFixture();
-        stubDatasetWideAnalysis();
+        stubAnalysisOnTreatment();
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
         ExperimentalDesignValueObject.ExperimentalFactorEntry added =
@@ -1911,8 +2077,33 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         proposal.getExperimentalFactors().add( added );
 
         DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
-        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).hasSize( 1 );
-        assertThat( report.requiresForce() ).isTrue();
+        assertThat( report.getSummary().getFactorsToCreate() ).isEqualTo( 1 );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).isEmpty();
+        assertThat( report.requiresForce() ).isFalse();
+    }
+
+    /**
+     * An analysis whose factors cannot be read is still deleted by a structural change: not knowing what it uses is
+     * not evidence that it uses nothing.
+     */
+    @Test
+    public void testPreviewStillDeletesAnAnalysisWhoseFactorsCannotBeRead() {
+        buildFixture();
+        DifferentialExpressionAnalysis unreadable = new DifferentialExpressionAnalysis();
+        unreadable.setId( 9003L );
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( unreadable ) );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        ExperimentalDesignValueObject.ExperimentalFactorEntry added =
+                new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        added.setId( null );
+        added.setName( "batch" );
+        proposal.getExperimentalFactors().add( added );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() )
+                .extracting( DesignPreflightReport.AnalysisRef::getId )
+                .containsExactly( 9003L );
     }
 
     /**
@@ -1922,7 +2113,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     @Test
     public void testPreviewFlippingABaselineInvalidatesTheAnalyses() {
         buildFixture();
-        stubDatasetWideAnalysis();
+        stubAnalysisOnTreatment();
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
         proposalFv( proposal, 100L ).setBaseline( true );
@@ -1933,13 +2124,49 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     /**
+     * 🛑 Flagging the value the analysis was already fitted against moves no reference. GSE391: result set 559530
+     * names FV 783 as baseline while its flag is stored null, and a draft setting {@code isBaseline: true} on it
+     * was refused as deleting DEA 316735 (Paul, 2026-09-12).
+     */
+    @Test
+    public void testPreviewFlaggingTheBaselineTheAnalysisWasFittedWithDoesNotInvalidateIt() {
+        buildFixture();
+        stubAnalysisFittedAgainst( controlFv );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 100L ).setBaseline( true );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).isEmpty();
+        assertThat( report.requiresForce() ).isFalse();
+    }
+
+    /** The other side of that exemption: flagging a value other than the fitted reference still invalidates. */
+    @Test
+    public void testPreviewFlaggingADifferentBaselineThanTheFittedOneStillInvalidates() {
+        buildFixture();
+        stubAnalysisFittedAgainst( controlFv );
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposalFv( proposal, 101L ).setBaseline( true );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).hasSize( 1 );
+        assertThat( report.requiresForce() ).isTrue();
+    }
+
+    private void stubAnalysisFittedAgainst( FactorValue baseline ) {
+        stubAnalysisOn( treatmentFactor, baseline );
+    }
+
+    /**
      * The exclusion, and the only one: relabelling a kept factor value does not move a sample, a level or a
      * reference, so the analysis still describes what it described.
      */
     @Test
     public void testPreviewRelabellingAKeptFactorValueDoesNotInvalidateAnything() {
         buildFixture();
-        stubDatasetWideAnalysis();
+        stubAnalysisOnTreatment();
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
         //noinspection deprecation
@@ -1959,7 +2186,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     @Test
     public void testApplyRemovesTheAnalysesThePreflightEnumerated() {
         buildFixture();
-        DifferentialExpressionAnalysis dea = stubDatasetWideAnalysis();
+        DifferentialExpressionAnalysis dea = stubAnalysisOnTreatment();
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
         proposalFv( proposal, 100L ).setBaseline( true );
@@ -1980,7 +2207,7 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     @Test
     public void testApplyRemovesNoAnalysisForALabelOnlyEdit() {
         buildFixture();
-        stubDatasetWideAnalysis();
+        stubAnalysisOnTreatment();
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
         designFv( proposal, 100L ).getStatements().get( 0 ).setSubject( "vehicle" );
@@ -1993,20 +2220,28 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
     }
 
     /**
-     * Invalidation is DATASET-wide, not per-factor: a sibling factor's analyses go too, because the design
-     * they were fitted against changed.
+     * An analysis on another factor survives a change to the treatment factor. Before 2026-09-13 it went too.
      */
     @Test
-    public void testPreviewInvalidationIsDatasetWideNotPerFactor() {
+    public void testPreviewKeepsAnAnalysisOnAFactorTheChangeDoesNotReach() {
         buildFixture();
+        ExperimentalFactor sex = new ExperimentalFactor();
+        sex.setId( 11L );
+        sex.setName( "biological sex" );
+        sex.setType( FactorType.CATEGORICAL );
+        fixture.getExperimentalDesign().getExperimentalFactors().add( sex );
         DifferentialExpressionAnalysis sibling = new DifferentialExpressionAnalysis();
         sibling.setId( 9002L );
-        sibling.setName( "unrelated factor effect" );
-        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Collections.singletonList( sibling ) );
+        sibling.setName( "sex effect" );
+        testsFactor( sibling, sex );
+        DifferentialExpressionAnalysis onTreatment = new DifferentialExpressionAnalysis();
+        onTreatment.setId( 9001L );
+        testsFactor( onTreatment, treatmentFactor );
+        when( deaService.findByExperiment( fixture, true ) ).thenReturn( Arrays.asList( sibling, onTreatment ) );
 
         ExperimentalDesignValueObject proposal = mirrorProposal();
-        proposal.getExperimentalFactors().get( 0 ).getValues()
-                .removeIf( v -> v.getId() != null && v.getId() == 100L );
+        proposal.getExperimentalFactors().stream().filter( f -> f.getId() == 10L ).findFirst().orElseThrow( AssertionError::new )
+                .getValues().removeIf( v -> v.getId() != null && v.getId() == 100L );
         proposal.getBioMaterialAssignments().stream()
                 .filter( a -> a.getBioMaterialId().equals( 1000L ) )
                 .forEach( a -> a.setFactorValueIds( new ArrayList<>() ) );
@@ -2014,7 +2249,44 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
         assertThat( report.getDifferentialExpressionAnalysesToDelete() )
                 .extracting( DesignPreflightReport.AnalysisRef::getId )
-                .containsExactly( 9002L );
+                .containsExactly( 9001L );
+    }
+
+    /**
+     * The re-type frinkbro preflighted on GSE93069 (2026-09-12): delete a categorical age factor and create a
+     * continuous one. The only analysis tests another factor, so nothing is deleted, although a sample loses its
+     * age value.
+     */
+    @Test
+    public void testPreviewReplacingAFactorNoAnalysisUsesDeletesNoAnalysis() {
+        buildFixture();
+        ExperimentalFactor age = new ExperimentalFactor();
+        age.setId( 12L );
+        age.setName( "age" );
+        age.setType( FactorType.CATEGORICAL );
+        fixture.getExperimentalDesign().getExperimentalFactors().add( age );
+        FactorValue fortyNine = makeFv( 102L, age, 1002L, "age", "49" );
+        bm1000.getFactorValues().add( fortyNine );
+        stubAnalysisOnTreatment();
+
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        proposal.getExperimentalFactors().removeIf( f -> f.getId() != null && f.getId() == 12L );
+        proposal.getBioMaterialAssignments().stream()
+                .filter( a -> a.getBioMaterialId().equals( 1000L ) )
+                .forEach( a -> a.setFactorValueIds( Collections.singletonList( 100L ) ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry continuousAge =
+                new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        continuousAge.setId( null );
+        continuousAge.setName( "age" );
+        continuousAge.setType( "continuous" );
+        proposal.getExperimentalFactors().add( continuousAge );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+        assertThat( report.getBlockers() ).isEmpty();
+        assertThat( report.getFactorsToDelete() ).extracting( DesignPreflightReport.EntityRef::getId ).containsExactly( 12L );
+        assertThat( report.getSummary().getBiomaterialsWithChangedAssignments() ).isEqualTo( 1 );
+        assertThat( report.getDifferentialExpressionAnalysesToDelete() ).isEmpty();
+        assertThat( report.requiresForce() ).isFalse();
     }
 
     /**

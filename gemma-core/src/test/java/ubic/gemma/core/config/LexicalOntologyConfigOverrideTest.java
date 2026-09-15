@@ -20,9 +20,11 @@ class LexicalOntologyConfigOverrideTest {
     void defaultsAreReadableAndDisabled() {
         assertFalse( Boolean.TRUE.equals( Configuration.getBoolean( "load.cellosaurus" ) ) );
         assertFalse( Boolean.TRUE.equals( Configuration.getBoolean( "load.mgiStrain" ) ) );
+        assertFalse( Boolean.TRUE.equals( Configuration.getBoolean( "load.mgiAllele" ) ) );
         // the URL default must resolve (was the regression: moving it out of basecode.properties null'd it)
         assertNotNull( Configuration.getString( "url.cellosaurus" ), "url.cellosaurus must be in basecode.properties" );
         assertNotNull( Configuration.getString( "url.mgiStrain" ), "url.mgiStrain must be in basecode.properties" );
+        assertNotNull( Configuration.getString( "url.mgiAllele" ), "url.mgiAllele must be in basecode.properties" );
     }
 
     @Test

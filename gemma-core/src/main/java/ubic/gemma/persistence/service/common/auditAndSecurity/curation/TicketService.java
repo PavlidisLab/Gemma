@@ -172,6 +172,18 @@ public interface TicketService extends BaseService<Ticket> {
     TargetAddition addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor );
 
     /**
+     * {@link #addTarget(Ticket, TicketTargetType, Long, Contact)} with the new target's own task
+     * attached — see {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget#getPayload()}.
+     * Both payload arguments are optional; passing null for each is the four-argument call.
+     * <p>
+     * On a target already present nothing is written, payload included: the call is idempotent on
+     * {@code (targetType, targetId)}, so a re-add cannot quietly overwrite the task a curator is
+     * working from.
+     */
+    TargetAddition addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor,
+            @Nullable String payload, @Nullable Integer payloadSchemaVersion );
+
+    /**
      * What {@link #addTarget} did: the saved ticket, and whether the target was new to it.
      * <p>
      * 🛑 The flag is reported here rather than left for the caller to infer, because inferring it

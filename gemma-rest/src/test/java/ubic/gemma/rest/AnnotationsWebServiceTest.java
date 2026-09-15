@@ -97,12 +97,22 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             // verification only.
             return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080",
                     "annotation.category.prefixes=treatment:CHEBI_,EFO_;genotype:TGEMO_,GENO_,EFO_",
-                    "annotation.category.excludedPrefixes=genotype:MONDO_" );
+                    "annotation.category.excludedPrefixes=genotype:MONDO_",
+                    "gemma.ontology.validation.olsFailClosed=true" );
         }
 
         @Bean
         public OntologyService ontologyService() {
             return mock( OntologyService.class );
+        }
+
+        /**
+         * Required since the tag write paths here ground-check the terms they are about to add. A mock: the
+         * checking itself is covered by {@code DatasetsWebServiceTest} and {@code OntologyTermValidatorImplTest}.
+         */
+        @Bean
+        public ubic.gemma.core.ontology.OntologyTermValidator ontologyTermValidator() {
+            return mock( ubic.gemma.core.ontology.OntologyTermValidator.class );
         }
 
         /**
@@ -355,6 +365,85 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService ).addAnnotation( eq( ee ), any( Characteristic.class ) );
     }
 
+    /**
+     * 🛑 The direction, which reads both ways and only one is implemented (Paul, 2026-09-11): the AGENT
+     * authenticates as itself and names the person in charge. So the audit row's PERFORMER stays the
+     * credential and ON_BEHALF_OF carries the curator — never the reverse. Asserted where the name is
+     * readable: bound for the duration of the service call, which is where the @Audited aspect reads it.
+     * <p>
+     * 0 of 16,511 TagAddedEvent rows carried a name before this, because the tag routes took no such
+     * parameter at all (frinkbro, 2026-09-11).
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_AGENT" })
+    public void testAddDatasetAnnotationBindsOnBehalfOfForTheAuditRow() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        java.util.concurrent.atomic.AtomicReference<String> boundDuringTheCall = new java.util.concurrent.atomic.AtomicReference<>();
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> {
+                    boundDuringTheCall.set( ubic.gemma.core.security.util.ActingIdentity.get() );
+                    Characteristic vc = a.getArgument( 1, Characteristic.class );
+                    vc.setId( 42L );
+                    return vc;
+                } );
+        String body = "{\"category\":\"organism part\",\"categoryUri\":\"http://purl.obolibrary.org/obo/UBERON_0000479\","
+                + "\"value\":\"liver\",\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).queryParam( "onBehalfOf", "paul" )
+                .request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+
+        assertThat( boundDuringTheCall.get() ).isEqualTo( "paul" );
+        // 🛑 And it must not outlive the request: threads are pooled, so a name left bound is attributed to
+        // whoever lands on this thread next.
+        assertThat( ubic.gemma.core.security.util.ActingIdentity.get() ).isNull();
+    }
+
+    /** Without the parameter nothing is bound, which is the ordinary case and must stay null rather than "". */
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationBindsNothingWhenNoOneIsNamed() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        java.util.concurrent.atomic.AtomicReference<String> boundDuringTheCall = new java.util.concurrent.atomic.AtomicReference<>();
+        when( expressionExperimentService.addAnnotation( eq( ee ), any( Characteristic.class ) ) )
+                .thenAnswer( a -> {
+                    boundDuringTheCall.set( ubic.gemma.core.security.util.ActingIdentity.get() );
+                    Characteristic vc = a.getArgument( 1, Characteristic.class );
+                    vc.setId( 42L );
+                    return vc;
+                } );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
+                .hasStatus( Response.Status.CREATED );
+        assertThat( boundDuringTheCall.get() ).isNull();
+    }
+
+    /** A plain curator may not write as somebody else; only an agent or an admin carries a name. */
+    @Test
+    @WithMockUser(username = "alice", authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationRefusesANameFromAPlainCurator() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        ee.setShortName( "GSE-test" );
+        ee.setCharacteristics( new LinkedHashSet<>() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{\"category\":\"organism part\",\"value\":\"liver\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/UBERON_0002107\"}";
+        try ( Response r = target( "/annotations/datasets/1/annotations" ).queryParam( "onBehalfOf", "paul" )
+                .request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 403 );
+        }
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
     @Test
     @WithMockUser(authorities = { "GROUP_CURATOR" })
     public void testAddDatasetAnnotationDuplicateReturns409() {
@@ -479,6 +568,25 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 + "}";
         assertThat( target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testAddDatasetAnnotationRejectsPredicateWithoutObject() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        String body = "{"
+                + "\"category\":\"treatment\","
+                + "\"value\":\"castration\","
+                + "\"predicate\":\"has role\","
+                + "\"predicateUri\":\"http://purl.obolibrary.org/obo/RO_0000087\""
+                + "}";
+        try ( Response r = target( "/annotations/datasets/1/annotations" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "carries predicate without object" );
+        }
         verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
     }
 
@@ -1270,6 +1378,40 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
         verify( ontologyService ).getRelationTerms();
     }
 
+    /**
+     * A sanctioned predicate from an ontology Gemma does not load is served from the relation vocabulary, instead
+     * of the 404 that sent every client to OLS for a term Gemma ships.
+     */
+    @Test
+    public void testGetAnnotationTermServesAPredicateFromTheRelationVocabulary() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/RO_0000087";
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( null );
+        OntologyProperty hasRole = mock( OntologyProperty.class );
+        when( hasRole.getUri() ).thenReturn( uri );
+        when( hasRole.getLabel() ).thenReturn( "has role" );
+        when( ontologyService.getRelationTerms() ).thenReturn( Collections.singleton( hasRole ) );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.uri", uri )
+                .hasFieldOrPropertyWithValue( "data.label", "has role" )
+                .hasFieldOrPropertyWithValue( "data.obsolete", false );
+        // No ontology owns it, so nothing ontology-shaped is asked for.
+        verify( ontologyService, never() ).getDefinition( anyString(), anyLong(), any() );
+    }
+
+    /** A URI neither a loaded ontology nor the relation vocabulary has is still a 404. */
+    @Test
+    public void testGetAnnotationTermStill404sForAUriNobodyHas() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/RO_9999999";
+        when( ontologyService.getTerm( eq( uri ), anyLong(), any() ) ).thenReturn( null );
+        when( ontologyService.getRelationTerms() ).thenReturn( Collections.emptySet() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
     @Test
     public void testGetAnnotationPredicatesEmpty() {
         when( ontologyService.getRelationTerms() ).thenReturn( Collections.emptySet() );
@@ -1601,6 +1743,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
 
         verify( ontologyService ).getTerm( eq( "http://example.com/missing" ), anyLong(), any() );
+        // A miss consults Gemma's own relation vocabulary before answering 404, and nothing else.
+        verify( ontologyService ).getRelationTerms();
         verifyNoMoreInteractions( ontologyService );
         verify( characteristicService, never() ).countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() );
     }

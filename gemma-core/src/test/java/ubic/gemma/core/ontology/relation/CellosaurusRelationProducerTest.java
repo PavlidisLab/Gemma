@@ -162,7 +162,7 @@ class CellosaurusRelationProducerTest {
     @Test
     void theAnatomicSiteIsReadOutOfTheFreeTextComment() throws Exception {
         assertThat( produce( MCF7 ) )
-                .filteredOn( r -> r.getPredicateUri().endsWith( "CLO_0037208" ) )
+                .filteredOn( r -> r.getPredicateUri().endsWith( "ENVO_01003004" ) )
                 .isNotEmpty()
                 .allSatisfy( r -> {
                     assertThat( r.getObjectValueUri() )
@@ -179,7 +179,7 @@ class CellosaurusRelationProducerTest {
     @Test
     void theSiteObjectIsTheTermsLabelAndTheRawFieldIsTheEvidence() throws Exception {
         assertThat( produce( MCF7 ) )
-                .filteredOn( r -> r.getPredicateUri().endsWith( "CLO_0037208" ) )
+                .filteredOn( r -> r.getPredicateUri().endsWith( "ENVO_01003004" ) )
                 .isNotEmpty()
                 .allSatisfy( r -> {
                     assertThat( r.getObjectValue() ).isEqualTo( "pleural effusion" );
@@ -196,7 +196,7 @@ class CellosaurusRelationProducerTest {
     @Test
     void theRawSiteFieldIsKeptWhenUberonCannotNameTheTerm() throws Exception {
         assertThat( produce( MCF7, false ) )
-                .filteredOn( r -> r.getPredicateUri().endsWith( "CLO_0037208" ) )
+                .filteredOn( r -> r.getPredicateUri().endsWith( "ENVO_01003004" ) )
                 .isNotEmpty()
                 .allSatisfy( r -> {
                     assertThat( r.getObjectValue() ).isEqualTo( "Metastatic; Pleural effusion" );
@@ -224,15 +224,24 @@ class CellosaurusRelationProducerTest {
         verify( dao ).removeByBasis( AnnotationRelationBasis.EXTERNAL, null, "CELLOSAURUS" );
     }
 
-    /** Same predicates CLO uses, so the two sources corroborate instead of sitting side by side. */
+    /**
+     * Same predicates the CLO source stores, so the two sources corroborate instead of sitting side by
+     * side. The site is {@code ENVO_01003004}, not {@code CLO_0037208}, which left Relation.terms.txt
+     * 2026-09-14.
+     */
     @Test
-    void thePredicatesMatchTheOnesCloAsserts() throws Exception {
-        assertThat( produce( MCF7 ) )
+    void thePredicatesMatchTheOnesTheCloSourceStores() throws Exception {
+        List<AnnotationRelation> rows = produce( MCF7 );
+
+        assertThat( rows )
                 .extracting( AnnotationRelation::getPredicate, AnnotationRelation::getPredicateUri )
                 .contains(
                         tuple( "derives from patient having disease",
                                 "http://purl.obolibrary.org/obo/CLO_0000015" ),
-                        tuple( "derives from anatomic part",
-                                "http://purl.obolibrary.org/obo/CLO_0037208" ) );
+                        tuple( "derives from part of",
+                                "http://purl.obolibrary.org/obo/ENVO_01003004" ) );
+        assertThat( rows )
+                .extracting( AnnotationRelation::getPredicateUri )
+                .doesNotContain( "http://purl.obolibrary.org/obo/CLO_0037208" );
     }
 }

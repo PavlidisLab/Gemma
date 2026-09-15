@@ -181,7 +181,15 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ExpressionExperiment> otherParts = new HashSet<>();
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    /**
+     * 🛑 {@code orphanRemoval}: a quantitation type taken out of this set is deleted. Without it the join column was set
+     * to NULL and the row stayed, owned by no experiment and unreachable, since every quantitation type finder takes
+     * an experiment. One way that happened: merging a stale detached experiment nulled the owner of every quantitation
+     * type created after it was loaded. With {@code orphanRemoval} the same merge deletes an empty quantitation type
+     * and fails on one that still has vectors. It does nothing for a quantitation type that was never added to an
+     * experiment.
+     */
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "EXPRESSION_EXPERIMENT_FK", columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "QUANTITATION_TYPE_EXPRESSION_EXPERIMENT_FKC"))
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)

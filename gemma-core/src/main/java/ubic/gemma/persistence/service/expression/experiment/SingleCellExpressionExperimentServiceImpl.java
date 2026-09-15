@@ -1574,17 +1574,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional
     public long removeAllCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt ) {
+        Assert.notNull( ee.getId(), "Dataset must be persistent." );
         SingleCellDimension dim = getSingleCellDimension( ee, qt );
         if ( dim == null ) {
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
-        long removed = 0;
-        List<CellLevelCharacteristics> clcsToRemove = new ArrayList<>( dim.getCellLevelCharacteristics() );
-        for ( CellLevelCharacteristics clc : clcsToRemove ) {
-            removeCellLevelCharacteristics( ee, dim, clc );
-            removed++;
-        }
-        return removed;
+        return expressionExperimentDao.removeAllCellLevelCharacteristics( ee, dim );
     }
 
     @Override

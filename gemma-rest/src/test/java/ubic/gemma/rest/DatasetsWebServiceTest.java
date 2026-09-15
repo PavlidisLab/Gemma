@@ -542,6 +542,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     private OntologyTermValidator ontologyTermValidator;
 
     @Autowired
+    private ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService bioMaterialService;
+
+    @Autowired
     private ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetTriageService annotationSetTriageService;
 
     @Autowired
@@ -577,7 +580,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService, bioAssayService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService, bioAssayService, bioMaterialService );
     }
 
     private static final String HALLUCINATED_TAG_BODY = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t7\","
@@ -620,6 +623,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 + "\"clientRef\":\"F1\",\"name\":\"genotype\",\"category\":{\"label\":\"genotype\"},"
                 + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"statements\":{\"items\":[{"
                 + "\"clientRef\":\"S1\",\"subject\":{\"label\":\"Utrn\",\"uri\":\"http://x/subj\"},"
+                + "\"predicate\":{\"label\":\"has genotype\"},"
                 + "\"object\":{\"label\":\"Heterozygous\",\"uri\":\"http://purl.obolibrary.org/obo/TGEMO_00003\"}"
                 + "}]}}]}}]}}}";
         try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
@@ -770,6 +774,46 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
                 .queryParam( "onBehalfOf", "someCurator" ).request().put( Entity.json( body ) ) ) {
             assertThat( r.getStatus() ).as( "commit accepts onBehalfOf" ).isNotEqualTo( 400 );
         }
+    }
+
+    private static final String DECISION_BODY = "{\"decision\":\"refused\",\"scope\":\"key\","
+            + "\"decisionKey\":\"tag:disease\",\"reason\":\"not a disease study\"}";
+
+    /**
+     * An agent recording a decision must name the person it acts for, and never its own account. Paul, 2026-09-15, of
+     * {@code CURATION_DECISION.DECIDED_BY}: "it should be the person". All 1,074 rows on gemd named gemmaAgent.
+     */
+    @Test
+    @WithMockUser(username = "gemmaAgent", authorities = { "GROUP_AGENT" })
+    public void testAnAgentRecordingADecisionMustNameThePersonItActsFor(
+            @Autowired ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationDecisionService curationDecisionService ) {
+        reset( curationDecisionService );
+        try ( Response r = target( "/datasets/1/curation/decisions" ).request().post( Entity.json( DECISION_BODY ) ) ) {
+            assertThat( r.getStatus() ).as( "without onBehalfOf" ).isEqualTo( 400 );
+        }
+        try ( Response r = target( "/datasets/1/curation/decisions" ).queryParam( "onBehalfOf", "gemmaAgent" )
+                .request().post( Entity.json( DECISION_BODY ) ) ) {
+            assertThat( r.getStatus() ).as( "naming its own account" ).isEqualTo( 400 );
+        }
+        verifyNoInteractions( curationDecisionService );
+    }
+
+    /**
+     * The agent's part is recorded in the judge kind, which defaults to AGENT for an agent caller.
+     */
+    @Test
+    @WithMockUser(username = "gemmaAgent", authorities = { "GROUP_AGENT" })
+    public void testAnAgentDecisionNamesThePersonAndRecordsTheAgentAsJudge(
+            @Autowired ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationDecisionService curationDecisionService ) {
+        reset( curationDecisionService );
+        when( curationDecisionService.decide( any(), any(), any(), any(), any(), any(), any(), any() ) )
+                .thenReturn( new ubic.gemma.model.common.auditAndSecurity.curation.CurationDecision() );
+        try ( Response r = target( "/datasets/1/curation/decisions" ).queryParam( "onBehalfOf", "administrator" )
+                .request().post( Entity.json( DECISION_BODY ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 201 );
+        }
+        verify( curationDecisionService ).decide( eq( ee ), any(), any(), any(), any(), any(), eq( "administrator" ),
+                eq( ubic.gemma.model.common.auditAndSecurity.curation.TriageJudgeKind.AGENT ) );
     }
 
     /**
@@ -1331,8 +1375,114 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( c.getValue() ).isEqualTo( "liver" );
         assertThat( c.getValueUri() ).isEqualTo( "http://purl.obolibrary.org/obo/UBERON_0002107" );
         // The write echoes unmapped tags too — it accepts them, so it must not answer with a list
-        // that silently omits what was just written.
-        verify( expressionExperimentService ).getAnnotations( ee, true );
+        // that silently omits what was just written. atLeastOnce because the term gate reads the stored
+        // set as well, to tell a new tag from one being echoed back.
+        verify( expressionExperimentService, atLeastOnce() ).getAnnotations( ee, true );
+    }
+
+    /**
+     * A tag write reaches the four statement URI columns, so its new terms are ground-checked the way the
+     * curation commit's are: an object URI that resolves nowhere is a 400 and nothing is written. Before this,
+     * the identical payload was a 400 on {@code PUT /datasets/{id}/curation} and a 200 here — which is how
+     * {@code OBJECT_URI = 'Prethalamus'} reached three factor values in production.
+     */
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsRejectsUngroundedStatementTerm() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "object", "prethalamus", "Prethalamus", null, TermViolation.Reason.URI_UNRESOLVED ) ) );
+        String body = "{\"annotations\":[{\"category\":\"cell type\",\"value\":\"neuron\","
+                + "\"predicate\":\"derives from part of\",\"object\":\"prethalamus\",\"objectUri\":\"Prethalamus\"}]}";
+        try ( Response r = target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].reason", "URI_UNRESOLVED" )
+                    .hasPathWithValue( "$.error.errors[0].location", "annotations[0].object" );
+        }
+        verify( expressionExperimentService, never() ).updateAnnotations( any(), any() );
+    }
+
+    /**
+     * 🛑 A tag that is already stored is NOT re-checked, even when the stored URI is malformed. A set-replace
+     * carries the whole desired set, so a client editing one tag echoes back every other one as served —
+     * including the 105 colon-form URIs the read serves verbatim (they are not in the migration shim). Checking
+     * the whole desired set would answer 400 to the unrelated edit. Same rule as the commit's carry-forward
+     * items; identity is {@code CharacteristicUtils.sameTag}, the predicate the service diffs on.
+     */
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsDoesNotRecheckAnAlreadyStoredTag() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        ubic.gemma.model.common.description.AnnotationValueObject stored =
+                new ubic.gemma.model.common.description.AnnotationValueObject();
+        stored.setCategory( "molecular entity" );
+        stored.setValue( "polysome-associated RNA" );
+        stored.setValueUri( "http://gemma.msl.ubc.ca/ont/TGEMO:00203" );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.singleton( stored ) );
+        // Would reject anything it is handed; the point is that it is never handed this tag.
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "value", "polysome-associated RNA", "http://gemma.msl.ubc.ca/ont/TGEMO:00203",
+                        null, TermViolation.Reason.URI_UNRESOLVED ) ) );
+        String body = "{\"annotations\":[{\"category\":\"molecular entity\",\"value\":\"polysome-associated RNA\","
+                + "\"valueUri\":\"http://gemma.msl.ubc.ca/ont/TGEMO:00203\"}]}";
+        assertThat( target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+        verify( expressionExperimentService ).updateAnnotations( eq( ee ), any() );
+        verify( ontologyTermValidator, never() ).validateAndCanonicalize( any(), any() );
+    }
+
+    /** The single-tag add is ground-checked too: it is always an add, so every term it carries is new. */
+    @Test
+    @WithMockUser
+    public void testAddDatasetAnnotationRejectsUngroundedTerm() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "value", "endothelial cell", "http://purl.obolibrary.org/obo/CL:0000115",
+                        null, TermViolation.Reason.URI_UNRESOLVED ) ) );
+        String body = "{\"category\":\"cell type\",\"value\":\"endothelial cell\","
+                + "\"valueUri\":\"http://purl.obolibrary.org/obo/CL:0000115\"}";
+        try ( Response r = target( "/datasets/1/annotations" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].location", "annotation[0].value" );
+        }
+        verify( expressionExperimentService, never() ).addAnnotation( any(), any() );
+    }
+
+    /** The sample-level add goes through the same gate — sample characteristics carry statements as well. */
+    @Test
+    @WithMockUser
+    public void testAddSampleCharacteristicRejectsUngroundedTerm() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        BioAssay ba = BioAssay.Factory.newInstance( "BA1" );
+        ba.setId( 7L );
+        ubic.gemma.model.expression.biomaterial.BioMaterial bm =
+                ubic.gemma.model.expression.biomaterial.BioMaterial.Factory.newInstance( "BM1" );
+        bm.setId( 70L );
+        ba.setSampleUsed( bm );
+        ee.getBioAssays().clear();
+        ee.getBioAssays().add( ba );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( bioMaterialService.thaw( bm ) ).thenReturn( bm );
+        when( ontologyTermValidator.validateAndCanonicalize( any(), any() ) ).thenReturn( Collections.singletonList(
+                new TermViolation( "secondObject", "oligodendrocyte", "http://purl.obolibrary.org/obo/CL:0000128",
+                        null, TermViolation.Reason.URI_UNRESOLVED ) ) );
+        String body = "{\"category\":\"genotype\",\"value\":\"KDM6A\",\"predicate\":\"has_genotype\","
+                + "\"object\":\"Homozygous negative\",\"secondPredicate\":\"in\",\"secondObject\":\"oligodendrocyte\","
+                + "\"secondObjectUri\":\"http://purl.obolibrary.org/obo/CL:0000128\"}";
+        try ( Response r = target( "/datasets/1/samples/7/characteristics" ).request().post( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.error.errors[0].location", "annotation[0].secondObject" );
+        }
+        verify( bioMaterialService, never() ).addAnnotation( any(), any(), any() );
     }
 
     @Test
@@ -1447,6 +1597,21 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( s.getObject() ).isEqualTo( "30%" );
         assertThat( s.getSecondPredicate() ).isEqualTo( "for" );
         assertThat( s.getSecondObject() ).isEqualTo( "12 weeks" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testUpdateDatasetAnnotationsRefusesAPredicateWithoutAnObject() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getAnnotations( ee, true ) ).thenReturn( Collections.emptySet() );
+        String body = "{\"annotations\":[{\"category\":\"treatment\",\"value\":\"castration\","
+                + "\"predicate\":\"has role\"}]}";
+        try ( Response r = target( "/datasets/1/annotations" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "carries predicate without object" );
+        }
+        verify( expressionExperimentService, never() ).updateAnnotations( any(), any() );
     }
 
     @Test
@@ -5312,6 +5477,196 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
     }
 
+    /** A stored statement on factor 5 / factor value 6 / statement 7, carrying a second predicate-object pair. */
+    private static ExperimentalDesignValueObject designWithASecondPair() {
+        StatementValueObject stmt = new StatementValueObject();
+        stmt.setId( 7L );
+        stmt.setSubject( "dexamethasone" );
+        stmt.setPredicate( "has dose" );
+        stmt.setObject( "10 nM" );
+        stmt.setSecondPredicate( "for" );
+        stmt.setSecondObject( "12 hours" );
+        ubic.gemma.model.expression.experiment.FactorValueBasicValueObject fv =
+                new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject();
+        fv.setId( 6L );
+        fv.setStatements( Collections.singletonList( stmt ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        factor.setId( 5L );
+        factor.setName( "treatment" );
+        factor.setValues( Collections.singletonList( fv ) );
+        ExperimentalDesignValueObject design = new ExperimentalDesignValueObject();
+        design.setExperimentalFactors( Collections.singletonList( factor ) );
+        return design;
+    }
+
+    /** Stubs for a commit that is expected to reach the service. */
+    private void stubDesignCommitAccepts( ExperimentalDesignValueObject design ) {
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( design );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any( ExperimentalDesignValueObject.class ), any() ) )
+                .thenReturn( new DesignPreflightReport() );
+        // Both forms: the preflight is this same call with dryRun=true.
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), anyBoolean() ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+    }
+
+    private static StatementValueObject committedStatement( ArgumentCaptor<ExperimentalDesignValueObject> cap ) {
+        return cap.getValue().getExperimentalFactors().iterator().next()
+                .getValues().iterator().next().getStatements().iterator().next();
+    }
+
+    /**
+     * 🛑 Omitting the second predicate-object pair on a {@code gemmaId} statement that HAS one is refused
+     * (Paul, 2026-09-11: "Guard it like evidence. It's too dangerous."). applyStatementFields writes the pair
+     * from the payload unconditionally, so before this the omission cleared it and the commit reported
+     * {@code updated: 1} -- the same report a successful edit gets. 9,338 production rows carry a pair.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesOmittedSecondPairOnAStatementThatHasOne() {
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( designWithASecondPair() );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"}}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            // Named: this payload is otherwise well-formed, so a bare 400 would not prove which gate fired.
+            assertThat( r.readEntity( String.class ) )
+                    .contains( "omits the statement's second predicate/object pair" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** Echoing the pair explicitly keeps it, which is what a client that read the row sends back. */
+    @Test
+    @WithMockUser
+    public void testCommitAcceptsASecondPairEchoedExplicitly() {
+        stubDesignCommitAccepts( designWithASecondPair() );
+
+        String echoes = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"},\"secondPredicate\":{\"label\":\"for\"},"
+                + "\"secondObject\":{\"label\":\"12 hours\"}}]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( echoes ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        StatementValueObject svo = committedStatement( cap );
+        assertThat( svo.getSecondPredicate() ).isEqualTo( "for" );
+        assertThat( svo.getSecondObject() ).isEqualTo( "12 hours" );
+    }
+
+    /**
+     * The FLATTENED spelling counts as echoing it too — a second {@code statements[]} item under the same
+     * {@code gemmaId}, which is how Gemma SERIALIZES a compound statement and therefore how uib sends it back.
+     */
+    @Test
+    @WithMockUser
+    public void testCommitAcceptsASecondPairEchoedAsTheFlattenedSecondItem() {
+        stubDesignCommitAccepts( designWithASecondPair() );
+
+        String flattened = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":["
+                + "{\"gemmaId\":7,\"subject\":{\"label\":\"dexamethasone\"},"
+                + "\"predicate\":{\"label\":\"has dose\"},\"object\":{\"label\":\"10 nM\"}},"
+                + "{\"gemmaId\":7,\"subject\":{\"label\":\"dexamethasone\"},"
+                + "\"predicate\":{\"label\":\"for\"},\"object\":{\"label\":\"12 hours\"}}"
+                + "]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( flattened ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        // Two VOs share id 7 on the way in; the service's unflattenStatements re-joins them into one row.
+        assertThat( cap.getValue().getExperimentalFactors().iterator().next()
+                .getValues().iterator().next().getStatements() ).hasSize( 2 );
+    }
+
+    /** Dropping a pair stays possible, but only when asked for in so many words. */
+    @Test
+    @WithMockUser
+    public void testCommitClearsASecondPairWhenClearSecondPairIsSent() {
+        stubDesignCommitAccepts( designWithASecondPair() );
+
+        String clears = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"},\"clearSecondPair\":true}]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( clears ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        StatementValueObject svo = committedStatement( cap );
+        assertThat( svo.getSecondPredicate() ).isNull();
+        assertThat( svo.getSecondObject() ).isNull();
+    }
+
+    /**
+     * The preflight is the call a client makes FIRST, so it has to accept every document the commit would —
+     * {@code clearSecondPair} included — and refuse the ones it would refuse. Both routes go through
+     * {@code doCommitCuration}, so this pins the sharing rather than trusting it (uib asked, 2026-09-11).
+     */
+    @Test
+    @WithMockUser
+    public void testPreflightAppliesTheSameSecondPairRule() {
+        stubDesignCommitAccepts( designWithASecondPair() );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"}}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( omits ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) )
+                    .contains( "omits the statement's second predicate/object pair" );
+        }
+
+        String clears = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"},\"clearSecondPair\":true}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation/preflight" ).request().post( Entity.json( clears ) ) ) {
+            assertThat( r.getStatus() ).isNotEqualTo( 400 );
+        }
+        // A preflight is the same service call with dryRun=true -- that flag is what makes it write nothing,
+        // so the thing to pin is that the apply form was never reached.
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), eq( false ) );
+    }
+
+    /** Asking to drop it and sending it are contradictory, so neither wins silently. */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesClearSecondPairTogetherWithAPair() {
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( designWithASecondPair() );
+
+        String both = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                + "\"object\":{\"label\":\"10 nM\"},\"secondPredicate\":{\"label\":\"for\"},"
+                + "\"secondObject\":{\"label\":\"12 hours\"},\"clearSecondPair\":true}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( both ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "clearSecondPair AND a second" );
+        }
+    }
+
+    /** No false positive: a statement with no stored pair may omit it, which is every ordinary statement. */
+    @Test
+    @WithMockUser
+    public void testCommitAllowsOmittingTheSecondPairWhenTheStoredRowHasNone() {
+        stubDesignCommitAccepts( designWithOneStatement( 5L, 6L, 7L ) );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                + "\"subject\":{\"label\":\"astrocyte\"}}]}}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) )
+                .hasStatus( Response.Status.OK );
+    }
+
     /**
      * Omitting evidence on a row that HAS evidence is refused; sending {@code []} clears it deliberately.
      * <p>
@@ -5478,6 +5833,122 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( factors.get( 0 ).getId() ).isEqualTo( 5L );
     }
 
+    // --------------------------------------------------------------------------------------------
+    // The omission contract of PUT /curation (Paul, 2026-09-13: "a contract that Gemma has to keep").
+    // cab's executors and the UI compose minimal documents that rely on each of these rules.
+    // --------------------------------------------------------------------------------------------
+
+    /** Factor values and statements the document does not mention reach the service unchanged. */
+    @Test
+    @WithMockUser
+    public void testCommitCarriesForwardUnmentionedFactorValuesAndStatements() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        StatementValueObject s30 = new StatementValueObject();
+        s30.setId( 30L );
+        s30.setSubject( "astrocyte" );
+        StatementValueObject s31 = new StatementValueObject();
+        s31.setId( 31L );
+        s31.setSubject( "neuron" );
+        ubic.gemma.model.expression.experiment.FactorValueBasicValueObject fv20 =
+                new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject( 20L );
+        fv20.setStatements( new ArrayList<>( List.of( s30 ) ) );
+        ubic.gemma.model.expression.experiment.FactorValueBasicValueObject fv21 =
+                new ubic.gemma.model.expression.experiment.FactorValueBasicValueObject( 21L );
+        fv21.setStatements( new ArrayList<>( List.of( s31 ) ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry f10 = new ExperimentalDesignValueObject.ExperimentalFactorEntry();
+        f10.setId( 10L );
+        f10.setName( "cell type" );
+        f10.setValues( new ArrayList<>( List.of( fv20, fv21 ) ) );
+        ExperimentalDesignValueObject design = new ExperimentalDesignValueObject();
+        design.setId( 3L );
+        design.setExperimentalFactors( new ArrayList<>( List.of( f10 ) ) );
+        when( expressionExperimentService.getExperimentalDesignValueObject( ee ) ).thenReturn( design );
+        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.previewDesignChange( eq( ee ), any(), any() ) )
+                .thenReturn( new ubic.gemma.model.expression.experiment.DesignPreflightReport() );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) )
+                .thenReturn( new ubic.gemma.persistence.service.expression.experiment.CurationCommitResult() );
+
+        // factor 10 is mentioned, value 20 is mentioned with no statements section, value 21 is not mentioned
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":20}]}}]}}}";
+        assertThat( target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK );
+
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap =
+                ArgumentCaptor.forClass( ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest.class );
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry proposed =
+                cap.getValue().getProposedDesign().getExperimentalFactors().stream()
+                        .filter( f -> Long.valueOf( 10L ).equals( f.getId() ) )
+                        .findFirst().orElseThrow( AssertionError::new );
+        assertThat( proposed.getValues() )
+                .extracting( ubic.gemma.model.expression.experiment.FactorValueBasicValueObject::getId )
+                .containsExactlyInAnyOrder( 20L, 21L );
+        for ( ubic.gemma.model.expression.experiment.FactorValueBasicValueObject v : proposed.getValues() ) {
+            long expectedStatement = v.getId() == 20L ? 30L : 31L;
+            assertThat( v.getStatements() )
+                    .as( "statements of factor value %s", v.getId() )
+                    .extracting( StatementValueObject::getId )
+                    .containsExactly( expectedStatement );
+        }
+    }
+
+    /** A {@code gemmaId} factor item that omits evidence the factor HAS is refused, not applied as a clear. */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesOmittedEvidenceOnAFactorThatHasSome() {
+        ExperimentalDesignValueObject design = designWithOneStatement( 5L, 6L, 7L );
+        design.getExperimentalFactors().get( 0 ).setSupportingEvidence( new ObjectMapper().createArrayNode()
+                .add( new ObjectMapper().createObjectNode().put( "quote", "the factor exists" ) ) );
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( design );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"name\":\"cell type\"}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "design.factors[gemmaId=5] omits supportingEvidence" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** The same rule one level down: a factor value item that omits the value's evidence is refused. */
+    @Test
+    @WithMockUser
+    public void testCommitRefusesOmittedEvidenceOnAFactorValueThatHasSome() {
+        ExperimentalDesignValueObject design = designWithOneStatement( 5L, 6L, 7L );
+        design.getExperimentalFactors().get( 0 ).getValues().get( 0 ).setSupportingEvidence( new ObjectMapper().createArrayNode()
+                .add( new ObjectMapper().createObjectNode().put( "quote", "these samples are the control" ) ) );
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) ).thenReturn( design );
+
+        String omits = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,"
+                + "\"factorValues\":{\"items\":[{\"gemmaId\":6}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( omits ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "[gemmaId=6] omits supportingEvidence" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** A factor value {@code deletedIds} entry that is not a value of that factor is refused. */
+    @Test
+    public void testCommitRefusesFactorValueDeletedIdThatIsNotOnThatFactor() {
+        when( expressionExperimentService.thawBioAssays( any() ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( designWithOneStatement( 10L, 20L, 30L ) );
+        when( expressionExperimentService.previewDesignChange( any(), any() ) ).thenReturn( new DesignPreflightReport() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":10,"
+                + "\"factorValues\":{\"items\":[],\"deletedIds\":[999]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "999" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
     /** Current design with factor 5 → FV 10, and biomaterial 100 assigned to FV 10. */
     private ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject currentDesignWithAssignment() {
         ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject d =
@@ -5616,6 +6087,23 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         assertThat( req.getTagsUnchanged() ).isEqualTo( 1 ); // the gemmaId item
     }
 
+    /** A delete naming nothing on the dataset is a malformed body: 400, like the design section, not a 409. */
+    @Test
+    @WithMockUser
+    public void testCommitAnswers400WhenADeletedIdNamesNothingOnTheDataset() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.commitCuration( eq( ee ), any(), eq( false ) ) ).thenThrow(
+                new ubic.gemma.persistence.service.expression.experiment.UnknownDeletedIdsException(
+                        "tags.deletedIds references ids that are not tags of GSE1: [7]." ) );
+
+        String body = "{\"tags\":{\"items\":[],\"deletedIds\":[7]}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "tags.deletedIds references ids that are not tags" );
+        }
+    }
+
     /**
      * A tags item bearing a gemmaId is a keep-marker: the section is add/delete only, so the mapper reads the id
      * and nothing else. Decorating one used to be a 200 for an edit that never happened — a client that set
@@ -5716,6 +6204,93 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
         assertThat( cap.getValue().getTagsUnchanged() ).isEqualTo( 1 );
         assertThat( cap.getValue().getTagsToAdd() ).isEmpty();
+    }
+
+    /**
+     * A restore re-creates a tag its snapshot holds, and the free-text experiment-tag checks do not apply to it
+     * (Paul's ruling, 2026-09-13). uib measured the refusal on gemma2: snapshot 2116 of dataset 2706, on
+     * {@code CBA/J x C57Bl/6J}, which has no URI and no hook. The same tag on {@code PUT /curation} is still
+     * refused — {@link #testCommitCurationRejectsADeclaredFreeTextTagWithNoHook}.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRestoreRecreatesAFreeTextTagWithNoHook() {
+        stubCommitOk();
+        // tag 42 is no longer on the dataset, so the reconciliation re-sends it as a create
+        when( expressionExperimentService.getAnnotations( any( ExpressionExperiment.class ), anyBoolean() ) )
+                .thenReturn( Collections.emptySet() );
+        when( annotationSetService.load( 5L ) ).thenReturn( snapshotSet( null,
+                "{\"tags\":{\"items\":[{\"gemmaId\":42,\"category\":{\"label\":\"strain\"},"
+                        + "\"value\":{\"label\":\"CBA/J x C57Bl/6J\"}}],\"deletedIds\":[]}}" ) );
+
+        assertThat( target( "/datasets/1/annotation-sets/5/restore" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ubic.gemma.persistence.service.expression.experiment.CurationCommitRequest> cap = curationCaptor();
+        verify( expressionExperimentService ).commitCuration( eq( ee ), cap.capture(), eq( false ) );
+        assertThat( cap.getValue().getTagsToAdd() ).hasSize( 1 );
+    }
+
+    /** {@link #designWithASecondPair()}'s statement 7 as a snapshot saw it before the pair was added. */
+    private static final String SNAPSHOT_OF_STATEMENT_7_WITHOUT_A_SECOND_PAIR =
+            "{\"design\":{\"factors\":{\"items\":[{\"gemmaId\":5,\"factorValues\":{\"items\":["
+                    + "{\"gemmaId\":6,\"statements\":{\"items\":[{\"gemmaId\":7,"
+                    + "\"subject\":{\"label\":\"dexamethasone\"},\"predicate\":{\"label\":\"has dose\"},"
+                    + "\"object\":{\"label\":\"10 nM\"}}]}}]}}]}}}";
+
+    /**
+     * cab, 2026-09-13: 15 of 21 restore points on gemma2 answered 400, each on a statement a commit had given a
+     * second pair after the snapshot was taken. A snapshot that records pairs is the target state, so the live
+     * pair is cleared (Paul's ruling, 2026-09-13).
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRestoreClearsASecondPairAddedAfterTheSnapshot() {
+        stubCommitOk();
+        stubDesignCommitAccepts( designWithASecondPair() );
+        when( annotationSetService.load( 5L ) ).thenReturn( snapshotSet(
+                Date.from( java.time.Instant.parse( "2026-09-13T20:00:00Z" ) ), SNAPSHOT_OF_STATEMENT_7_WITHOUT_A_SECOND_PAIR ) );
+
+        assertThat( target( "/datasets/1/annotation-sets/5/restore" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        StatementValueObject svo = committedStatement( cap );
+        assertThat( svo.getSecondPredicate() ).isNull();
+        assertThat( svo.getSecondObject() ).isNull();
+    }
+
+    /**
+     * A snapshot captured before snapshots recorded pairs cannot say whether the statement had one, so the restore
+     * keeps the live pair rather than clearing what the snapshot never saw (Paul's ruling, 2026-09-13). Together
+     * with the test above, this separates the two eras: clearing always fails this one, keeping always fails that one.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testRestoreOfASnapshotFromBeforePairsWereRecordedKeepsTheLivePair() {
+        stubCommitOk();
+        stubDesignCommitAccepts( designWithASecondPair() );
+        when( annotationSetService.load( 5L ) ).thenReturn( snapshotSet(
+                Date.from( java.time.Instant.parse( "2026-09-08T16:43:09Z" ) ), SNAPSHOT_OF_STATEMENT_7_WITHOUT_A_SECOND_PAIR ) );
+
+        assertThat( target( "/datasets/1/annotation-sets/5/restore" ).request().post( Entity.json( "" ) ) )
+                .hasStatus( Response.Status.OK );
+        ArgumentCaptor<ExperimentalDesignValueObject> cap = ArgumentCaptor.forClass( ExperimentalDesignValueObject.class );
+        verify( expressionExperimentService ).previewDesignChange( eq( ee ), cap.capture(), any() );
+        StatementValueObject svo = committedStatement( cap );
+        assertThat( svo.getSecondPredicate() ).isEqualTo( "for" );
+        assertThat( svo.getSecondObject() ).isEqualTo( "12 hours" );
+    }
+
+    /** Snapshot 5 on dataset 1 ({@code ee}), captured at {@code createdAt}. */
+    private ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet snapshotSet( Date createdAt, String payloadJson ) {
+        ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet set =
+                new ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet();
+        set.setId( 5L );
+        set.setRole( ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole.SNAPSHOT );
+        set.setInvestigation( ee );
+        set.setCreatedAt( createdAt );
+        set.setPayloadJson( payloadJson );
+        return set;
     }
 
     /** Stub the load + commit a tags-section test needs, and return the captor for the request the mapper built. */
@@ -6287,6 +6862,47 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
             assertThat( r.readEntity( String.class ) )
                     .contains( "secondPredicate without secondObject" );
         }
+    }
+
+    /** The first pair is held to the same rule. Six factor-value statements reached production with a predicate and no object. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRefusesHalfAFirstPair() {
+        ee.setId( 1L );
+        ee.setExperimentalDesign( ExperimentalDesign.Factory.newInstance() );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.getExperimentalDesignValueObject( any() ) )
+                .thenReturn( new ExperimentalDesignValueObject() );
+
+        String body = "{\"design\":{\"factors\":{\"items\":[{\"clientRef\":\"F1\",\"name\":\"treatment\","
+                + "\"factorValues\":{\"items\":[{\"clientRef\":\"FV1\",\"statements\":{\"items\":[{"
+                + "\"clientRef\":\"S1\",\"subject\":{\"label\":\"castration\"},"
+                + "\"predicate\":{\"label\":\"has role\"}"
+                + "}]}}]}}]}}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "carries predicate without object" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
+    }
+
+    /** A tag's statement goes through the same guard as a factor value's. */
+    @Test
+    @WithMockUser
+    public void testCommitCurationRefusesHalfAPairOnATagStatement() {
+        ee.setId( 1L );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
+
+        String body = "{\"tags\":{\"items\":[{\"clientRef\":\"t1\","
+                + "\"category\":{\"label\":\"cell line\",\"uri\":\"http://www.ebi.ac.uk/efo/EFO_0000322\"},"
+                + "\"value\":{\"label\":\"IMR-90\",\"uri\":\"http://x/imr90\"},\"statements\":{\"items\":[{"
+                + "\"subject\":{\"label\":\"IMR-90\",\"uri\":\"http://x/imr90\"},"
+                + "\"predicate\":{\"label\":\"positive for product of gene\"}}]}}]}}";
+        try ( Response r = target( "/datasets/1/curation" ).request().put( Entity.json( body ) ) ) {
+            assertThat( r ).hasStatus( Response.Status.BAD_REQUEST );
+            assertThat( r.readEntity( String.class ) ).contains( "carries predicate without object" );
+        }
+        verify( expressionExperimentService, never() ).commitCuration( any(), any(), anyBoolean() );
     }
 
     /**

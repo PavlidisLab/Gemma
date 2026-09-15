@@ -857,6 +857,41 @@ public class GeoConverterImpl implements GeoConverter {
         return declared;
     }
 
+    /**
+     * What {@code BIO_ASSAY.LIBRARY_STRATEGY} records for a sample.
+     * <ul>
+     *     <li>A sequencing sample: its {@linkplain #effectiveLibStrategy effective strategy}, as the constant name
+     *         ({@code RNA_SEQ}) rather than GEO's spelling ({@code RNA-Seq}). Paul's ruling, 2026-09-13: production
+     *         rows were already in that form, because the 2026-09-05 backfill copied them from
+     *         {@code SOURCE_METADATA}, which {@code GeoSourceMetadataBuilder} writes with {@code toString()}.</li>
+     *     <li>A microarray sample, which GEO types {@link GeoSampleType#RNA} (the same test the eligibility gate
+     *         uses): how many channels it was hybridized in, {@link BioAssay#LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR} or
+     *         {@link BioAssay#LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR} (Paul, 2026-09-13). The sample's channel count,
+     *         not the platform's technology type — Paul, 2026-09-13: "dualmode is the technology, not the
+     *         application. library strategy is the application."</li>
+     * </ul>
+     *
+     * @return null for a sample that is neither, or a microarray sample reporting other than one or two channels
+     */
+    @Nullable
+    static String libraryStrategy( GeoSample sample ) {
+        GeoLibraryStrategy effective = effectiveLibStrategy( sample );
+        if ( effective != null ) {
+            return effective.name();
+        }
+        if ( !Objects.equals( sample.getType(), GeoSampleType.RNA ) ) {
+            return null;
+        }
+        switch ( sample.getChannels().size() ) {
+            case 1:
+                return BioAssay.LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR;
+            case 2:
+                return BioAssay.LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR;
+            default:
+                return null;
+        }
+    }
+
     @Nullable
     static ExtractedMolecule convertMolecule( @Nullable GeoChannel.ChannelMolecule molecule ) {
         if ( molecule == null ) {
@@ -1900,11 +1935,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
         bioAssay.setExtractedMolecule( molecule );
         bioAssay.setLibrarySelection( StringUtils.trimToNull( sample.getLibrarySelection() ) );
-        GeoLibraryStrategy effectiveStrategy = GeoConverterImpl.effectiveLibStrategy( sample );
-        // getGeoString(), not toString(): the column stores GEO's spelling. toString() yields the Java
-        // constant name -- RNA_SEQ, and MDB_SEQ for a value GEO writes MBD-Seq -- which is not what
-        // BioAssay.libraryStrategy's javadoc or BioAssayValueObject's @Schema tell a client to expect.
-        bioAssay.setLibraryStrategy( effectiveStrategy != null ? effectiveStrategy.getGeoString() : null );
+        bioAssay.setLibraryStrategy( GeoConverterImpl.libraryStrategy( sample ) );
 
         // Taxon lastTaxon = null;
 
