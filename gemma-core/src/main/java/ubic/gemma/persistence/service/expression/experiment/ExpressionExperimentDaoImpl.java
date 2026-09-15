@@ -253,6 +253,13 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public void refreshCurationDetails( ExpressionExperiment ee ) {
+        if ( ee.getCurationDetails() != null && ee.getCurationDetails().getId() != null ) {
+            getSessionFactory().getCurrentSession().refresh( ee.getCurationDetails() );
+        }
+    }
+
+    @Override
     public void evictOtherPartsCache( ExpressionExperiment ee ) {
         getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".otherParts", ee.getId() );
     }

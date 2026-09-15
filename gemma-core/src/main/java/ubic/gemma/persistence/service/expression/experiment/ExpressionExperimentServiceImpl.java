@@ -2984,6 +2984,10 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public CurationCommitResult commitCuration( ExpressionExperiment ee, CurationCommitRequest request, boolean dryRun ) {
         ee = ensureInSession( ee );
+        // The baseline is compared with the row, not the cached copy: a gemma-cli run writes CURATION_DETAILS without
+        // reaching this process's second-level cache. On GSE90654, 2026-09-15, this check refused the current baseline
+        // after a CLI DEA run, then accepted the one from before the run.
+        expressionExperimentDao.refreshCurationDetails( ee );
 
         // Optimistic concurrency: reject if the dataset moved since the draft's baseline.
         Date expected = request.getExpectedLastUpdated();
