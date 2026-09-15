@@ -1,30 +1,50 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.ObjectIdentityRetrievalStrategyImpl;
+import ubic.gemma.core.security.acl.BaseAclAdvice;
+import ubic.gemma.core.security.acl.ObjectIdentityRetrievalStrategyImpl;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class AclLinterServiceTest extends BaseDatabaseTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class AclLinterServiceTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -33,6 +53,11 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         @Bean
         public AclLinterService aclLinterService() {
             return new AclLinterServiceImpl();
+        }
+
+        @Bean
+        public AclLinterHelperService aclLinterHelperService() {
+            return new AclLinterHelperServiceImpl();
         }
 
         @Bean
@@ -54,10 +79,22 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         public AclClassMetadata aclClassMetadata( SessionFactory sessionFactory ) {
             return new AclClassMetadata( sessionFactory );
         }
+
+        @Bean
+        public BaseAclAdvice aclAdvice( AclService aclService, SessionFactory sessionFactory,
+                ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy ) {
+            return new AclAdvice( aclService, sessionFactory, objectIdentityRetrievalStrategy );
+        }
     }
 
     @Autowired
     private AclLinterService aclLinterService;
+
+    @Autowired
+    private DataSource dataSource;
+
+    @Autowired
+    private AclService aclService;
 
     @Test
     @WithMockUser(authorities = { "GROUP_ADMIN" })
@@ -99,5 +136,362 @@ public class AclLinterServiceTest extends BaseDatabaseTest {
         aclLinterService.lintAcls( config );
         aclLinterService.lintAcls( ExpressionExperiment.class, config );
         aclLinterService.lintAcls( ExpressionExperiment.class, 1L, config );
+    }
+
+    /**
+     * Phase 3 gsec HQL deprecation: regression coverage for the converted JdbcTemplate-backed
+     * {@code lintSecurableLackingObjectIdentity} (bulk variant).
+     * <p>
+     * The pre-conversion HQL path returned entity-ids in {@code Entity} but not in
+     * {@code AclObjectIdentity}. The new path reads existing AOI identifiers from
+     * {@code acl_object_identity} JOIN {@code acl_class} via raw SQL and does the set difference
+     * in Java. We verify two cases:
+     * <ol>
+     *   <li>Empty path: a class with zero entity rows produces zero "lacking identity" results.</li>
+     *   <li>Happy path: when we seed an AOI for an entity-id, that id is NOT reported as lacking.</li>
+     * </ol>
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintSecurableLackingObjectIdentity_emptyAndHappyPath() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintSecurablesLackingIdentities( true )
+                .applyFixes( false )
+                .build();
+
+        // Empty path: ExpressionExperiment has zero rows in the fresh test DB.
+        Collection<AclLinterService.LintResult> empty = aclLinterService.lintAcls( ExpressionExperiment.class, config );
+        for ( AclLinterService.LintResult r : empty ) {
+            assertFalse(
+                    r.getMessage().contains( "lacks an ACL identity" ),
+                    "Empty entity table should not produce 'lacking identity' results, got: " + r );
+        }
+
+        // Happy path: insert a real AOI for ExpressionExperiment id=99999 (no entity row of that
+        // id exists, so the dangling-identity lint will still report it, but the
+        // lacks-AOI lint should not — that's the path under test).
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        List<Long> existingClass = jt.queryForList(
+                "select id from acl_class where class = ?", Long.class,
+                ExpressionExperiment.class.getName() );
+        Long classId;
+        if ( existingClass.isEmpty() ) {
+            jt.update( "insert into acl_class (class) values (?)", ExpressionExperiment.class.getName() );
+            classId = jt.queryForObject(
+                    "select id from acl_class where class = ?", Long.class,
+                    ExpressionExperiment.class.getName() );
+        } else {
+            classId = existingClass.get( 0 );
+        }
+        // owner_sid=1 (GROUP_ADMIN) seeded by V3__seed_data.sql.
+        jt.update(
+                "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, 1, 0)",
+                classId, 99999L );
+
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExpressionExperiment.class, config );
+        // The id we seeded should not appear in the "lacking identity" set — there are no EE rows
+        // so the set should still be empty under the lacking-identity lint.
+        for ( AclLinterService.LintResult r : results ) {
+            assertFalse(
+                    r.getMessage().contains( "lacks an ACL identity" ) && r.getIdentifier().equals( 99999L ),
+                    "Seeded AOI id should not be reported as lacking identity, got: " + r );
+        }
+    }
+
+    /**
+     * Phase 3 gsec HQL deprecation: regression coverage for the single-id variant of
+     * {@code lintSecurableLackingObjectIdentity}.
+     * <p>
+     * Verifies that querying an entity-id that has an AOI returns no "lacks ACL identity"
+     * results, and that querying an entity-id with no AOI does report it (when there is no entity
+     * row, the lacks-AOI lint short-circuits cleanly).
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintSecurableLackingObjectIdentity_singleId() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintSecurablesLackingIdentities( true )
+                .applyFixes( false )
+                .build();
+
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        // Resolve / create the acl_class row.
+        List<Long> existing = jt.queryForList(
+                "select id from acl_class where class = ?", Long.class,
+                BioAssay.class.getName() );
+        Long classId;
+        if ( existing.isEmpty() ) {
+            jt.update( "insert into acl_class (class) values (?)", BioAssay.class.getName() );
+            classId = jt.queryForObject(
+                    "select id from acl_class where class = ?", Long.class,
+                    BioAssay.class.getName() );
+        } else {
+            classId = existing.get( 0 );
+        }
+        // Seed an AOI for identifier 77777.
+        jt.update(
+                "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, 1, 0)",
+                classId, 77777L );
+
+        // Lint with a specific identifier that DOES have an AOI: should not report it as lacking.
+        Collection<AclLinterService.LintResult> withAoi = aclLinterService.lintAcls( BioAssay.class, 77777L, config );
+        List<AclLinterService.LintResult> lacking = new ArrayList<>();
+        for ( AclLinterService.LintResult r : withAoi ) {
+            if ( r.getMessage().contains( "lacks an ACL identity" ) && r.getIdentifier().equals( 77777L ) ) {
+                lacking.add( r );
+            }
+        }
+        assertEquals( 0, lacking.size(),
+                "Identifier with seeded AOI should not be reported as lacking identity: " + lacking );
+
+        // Lint with an identifier that does NOT have an AOI: should report it.
+        Collection<AclLinterService.LintResult> withoutAoi = aclLinterService.lintAcls( BioAssay.class, 88888L, config );
+        boolean reportedLacking = false;
+        for ( AclLinterService.LintResult r : withoutAoi ) {
+            if ( r.getMessage().contains( "lacks an ACL identity" ) && r.getIdentifier().equals( 88888L ) ) {
+                reportedLacking = true;
+                break;
+            }
+        }
+        assertTrue( reportedLacking,
+                "Identifier without an AOI should be reported as lacking identity" );
+    }
+
+    /**
+     * Phase 3 gsec HQL deprecation: regression coverage for the converted JdbcTemplate-backed
+     * {@code lintAclObjectIdentityLackingSecurable} (dangling-AOI variant).
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintAclObjectIdentityLackingSecurable_reportsDangling() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintDanglingIdentities( true )
+                .applyFixes( false )
+                .build();
+
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        List<Long> existing = jt.queryForList(
+                "select id from acl_class where class = ?", Long.class,
+                ExpressionExperiment.class.getName() );
+        Long classId;
+        if ( existing.isEmpty() ) {
+            jt.update( "insert into acl_class (class) values (?)", ExpressionExperiment.class.getName() );
+            classId = jt.queryForObject(
+                    "select id from acl_class where class = ?", Long.class,
+                    ExpressionExperiment.class.getName() );
+        } else {
+            classId = existing.get( 0 );
+        }
+        // owner_sid=1 (GROUP_ADMIN) seeded by V3__seed_data.sql. No INVESTIGATION row exists
+        // for id=98765 in the fresh test DB, so this AOI is dangling.
+        long danglingId = 98765L;
+        jt.update(
+                "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, 1, 0)",
+                classId, danglingId );
+
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExpressionExperiment.class, config );
+        boolean reported = false;
+        for ( AclLinterService.LintResult r : results ) {
+            if ( Long.valueOf( danglingId ).equals( r.getIdentifier() )
+                    && r.getMessage().contains( "no corresponding entity" ) ) {
+                reported = true;
+                break;
+            }
+        }
+        assertTrue( reported, "Dangling AOI id " + danglingId + " should be reported by the linter" );
+    }
+
+    /**
+     * Phase 3 gsec HQL deprecation: empty path for {@code lintAclObjectIdentityLackingSecurable}.
+     * <p>
+     * With no acl_object_identity rows seeded for {@code BioAssay}, the dangling-AOI lint must
+     * report nothing for that class.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintAclObjectIdentityLackingSecurable_emptyPath() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintDanglingIdentities( true )
+                .applyFixes( false )
+                .build();
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( BioAssay.class, config );
+        for ( AclLinterService.LintResult r : results ) {
+            assertFalse(
+                    r.getMessage().contains( "no corresponding entity" ),
+                    "Empty AOI table should not produce dangling results for BioAssay, got: " + r );
+        }
+    }
+
+    /**
+     * Phase 3 gsec HQL deprecation: regression coverage for the converted JdbcTemplate-backed
+     * {@code lintSecuredNotChildWithParent} (bulk variant).
+     * <p>
+     * Seeds an AOI for {@link ExpressionExperiment} (a {@link ubic.gemma.model.common.auditAndSecurity.SecuredNotChild})
+     * carrying a non-null {@code parent_object}, then verifies the linter reports the entity
+     * in dry-run mode.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintSecuredNotChildWithParent_reportsWhenParentSet() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintNotChildWithParent( true )
+                .applyFixes( false )
+                .build();
+
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        // Seed acl_class for ExpressionExperiment.
+        List<Long> existing = jt.queryForList(
+                "select id from acl_class where class = ?", Long.class,
+                ExpressionExperiment.class.getName() );
+        Long classId;
+        if ( existing.isEmpty() ) {
+            jt.update( "insert into acl_class (class) values (?)", ExpressionExperiment.class.getName() );
+            classId = jt.queryForObject(
+                    "select id from acl_class where class = ?", Long.class,
+                    ExpressionExperiment.class.getName() );
+        } else {
+            classId = existing.get( 0 );
+        }
+        // Insert a parent AOI (any class will do as the FK target; reuse the same class row).
+        jt.update(
+                "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, 1, 0)",
+                classId, 11111L );
+        Long parentAoiId = jt.queryForObject(
+                "select id from acl_object_identity where object_id_class = ? and object_id_identity = ?",
+                Long.class, classId, 11111L );
+        // Insert the SecuredNotChild AOI pointing at the parent — this is the misconfiguration the
+        // linter targets.
+        jt.update(
+                "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, ?, 1, 0)",
+                classId, 22222L, parentAoiId );
+
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExpressionExperiment.class, config );
+        boolean reported = false;
+        for ( AclLinterService.LintResult r : results ) {
+            if ( Long.valueOf( 22222L ).equals( r.getIdentifier() )
+                    && r.getMessage().contains( "implements the SecuredNotChild interface" ) ) {
+                reported = true;
+                break;
+            }
+        }
+        assertTrue( reported,
+                "SecuredNotChild with non-null parent_object should be reported by the linter" );
+    }
+
+    /**
+     * Phase 3 gsec HQL deprecation: regression coverage for the single-id variant of
+     * {@code lintSecuredNotChildWithParent}. Verifies that an identifier with no AOI does not
+     * surface as a finding (short-circuits cleanly).
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintSecuredNotChildWithParent_singleId_noAoi() {
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintNotChildWithParent( true )
+                .applyFixes( false )
+                .build();
+        // Id 33333 has no AOI row; the linter must not report it as having a parent.
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExpressionExperiment.class, 33333L, config );
+        for ( AclLinterService.LintResult r : results ) {
+            assertFalse(
+                    r.getMessage().contains( "implements the SecuredNotChild interface" )
+                            && Long.valueOf( 33333L ).equals( r.getIdentifier() ),
+                    "Id with no AOI should not be reported by SecuredNotChild lint, got: " + r );
+        }
+    }
+
+    /**
+     * Repairing a top-level Securable must leave it editable.
+     * <p>
+     * The fix used to be a bare {@code aclService.createAcl(oi)}, which writes an identity with no
+     * parent, no access control entries and {@code entries_inheriting} set — "inherit from a parent
+     * that does not exist". Nothing then grants ADMINISTRATION or WRITE, so the
+     * {@code ACL_SECURABLE_EDIT} voter denies every caller including an administrator, and the
+     * linter reports a successful fix on an entity that is still un-writable. That is how
+     * ExpressionExperiments 93287, 93288, 93289, 93433 and 93434 came out of a repair run still
+     * answering 403.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testFixingATopLevelSecurableGrantsAdministration() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        assertNotNull( ee.getId() );
+
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintSecurablesLackingIdentities( true )
+                .applyFixes( true )
+                .build();
+        aclLinterService.lintAcls( ExpressionExperiment.class, ee.getId(), config );
+
+        Acl acl = aclService.readAclById( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        assertNull( acl.getParentAcl(), "A top-level Securable inherits from nothing." );
+        assertFalse( acl.getEntries().isEmpty(),
+                "The repaired ACL carries no access control entries, so nothing grants edit." );
+
+        boolean adminMayAdminister = false;
+        boolean anonymousMayRead = false;
+        for ( AccessControlEntry ace : acl.getEntries() ) {
+            String sid = ace.getSid().toString();
+            if ( sid.contains( "GROUP_ADMIN" ) && ace.getPermission().getMask() == BasePermission.ADMINISTRATION.getMask()
+                    && ace.isGranting() ) {
+                adminMayAdminister = true;
+            }
+            if ( sid.contains( "IS_AUTHENTICATED_ANONYMOUSLY" ) ) {
+                anonymousMayRead = true;
+            }
+        }
+        assertTrue( adminMayAdminister,
+                "GROUP_ADMIN has no ADMINISTRATION entry, so ACL_SECURABLE_EDIT denies an administrator: "
+                        + acl.getEntries() );
+        // ExpressionExperiment is an Investigation, which AclAdvice keeps private on creation. A
+        // repair must not hand anonymous read to a dataset that never had it.
+        assertFalse( anonymousMayRead,
+                "Repairing an Investigation made it publicly readable: " + acl.getEntries() );
+    }
+
+    /**
+     * 🛑 A SecuredChild whose parent is present AND CORRECT but which does not inherit reaches no other
+     * predicate, and grants nothing.
+     * <p>
+     * {@code lintSecuredChildWithIncorrectParent} compares parent type and identifier and passes such a row;
+     * this check used to require a null parent and passed it too. The row carries no ACEs of its own, so an ACL
+     * lookup finds no permissions and denies — "Access is denied" even for an administrator.
+     * <p>
+     * Two live populations on production 2026-09-10: 292 ExpressionAnalysisResultSet rows in exactly this state,
+     * 285 of them under PUBLIC experiments, and 8 ExperimentalFactor rows this linter had itself created.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintChildWithoutParentAlsoSeesAPresentParentThatIsNotInherited() {
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        Long classId = aclClassIdFor( jt, ExperimentalFactor.class.getName() );
+        Long parentClassId = aclClassIdFor( jt, ExpressionExperiment.class.getName() );
+
+        // a parent identity, and a child that points at it but does NOT inherit
+        jt.update( "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, 1, 0)",
+                parentClassId, 88801L );
+        Long parentAoiId = jt.queryForObject(
+                "select id from acl_object_identity where object_id_class = ? and object_id_identity = ?",
+                Long.class, parentClassId, 88801L );
+        jt.update( "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, ?, 1, 0)",
+                classId, 88802L, parentAoiId );
+
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExperimentalFactor.class,
+                AclLinterConfig.builder().lintChildWithoutParent( true ).applyFixes( false ).build() );
+
+        assertTrue( results.stream().anyMatch( r -> Long.valueOf( 88802L ).equals( r.getIdentifier() ) ),
+                "a child with a present-but-not-inherited parent must be reported; it grants nothing. Got: " + results );
+    }
+
+    /** Resolve or create the acl_class row for a class name. */
+    private Long aclClassIdFor( JdbcTemplate jt, String className ) {
+        List<Long> existing = jt.queryForList( "select id from acl_class where class = ?", Long.class, className );
+        if ( !existing.isEmpty() ) {
+            return existing.get( 0 );
+        }
+        jt.update( "insert into acl_class (class) values (?)", className );
+        return jt.queryForObject( "select id from acl_class where class = ?", Long.class, className );
     }
 }

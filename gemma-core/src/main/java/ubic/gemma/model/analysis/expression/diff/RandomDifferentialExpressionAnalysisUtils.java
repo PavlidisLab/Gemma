@@ -100,7 +100,7 @@ public class RandomDifferentialExpressionAnalysisUtils {
     }
 
     private static ContrastResult randomContrastResult( FactorValue fv1 ) {
-        Assert.isTrue( fv1.getExperimentalFactor().getType() == FactorType.CATEGORICAL );
+        Assert.isTrue( fv1.getExperimentalFactor().getType() == FactorType.CATEGORICAL , "expected true");
         ContrastResult cr = new ContrastResult();
         cr.setFactorValue( fv1 );
         cr.setLogFoldChange( normalDistribution().sample() );
@@ -109,8 +109,8 @@ public class RandomDifferentialExpressionAnalysisUtils {
     }
 
     private static ContrastResult randomContrastResult( FactorValue fv1, FactorValue fv2 ) {
-        Assert.isTrue( fv1.getExperimentalFactor().getType() == FactorType.CATEGORICAL );
-        Assert.isTrue( fv2.getExperimentalFactor().getType() == FactorType.CATEGORICAL );
+        Assert.isTrue( fv1.getExperimentalFactor().getType() == FactorType.CATEGORICAL , "expected true");
+        Assert.isTrue( fv2.getExperimentalFactor().getType() == FactorType.CATEGORICAL , "expected true");
         ContrastResult cr = new ContrastResult();
         cr.setFactorValue( fv1 );
         cr.setSecondFactorValue( fv2 );
@@ -120,7 +120,7 @@ public class RandomDifferentialExpressionAnalysisUtils {
     }
 
     private static ContrastResult randomContrastResult( ExperimentalFactor factor ) {
-        Assert.isTrue( factor.getType() == FactorType.CONTINUOUS );
+        Assert.isTrue( factor.getType() == FactorType.CONTINUOUS , "expected true");
         ContrastResult cr = new ContrastResult();
         cr.setCoefficient( normalDistribution().sample() );
         cr.setTstat( normalDistribution().sample() );

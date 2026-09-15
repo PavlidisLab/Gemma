@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.util;
 
 import org.apache.commons.collections4.IterableUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

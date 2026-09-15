@@ -1,18 +1,18 @@
 package ubic.gemma.core.analysis.report;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.experiment.BatchEffectType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest {
+public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -22,7 +22,7 @@ public class ExpressionExperimentReportServiceTest extends BaseSpringContextTest
 
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             expressionExperimentService.remove( ee );

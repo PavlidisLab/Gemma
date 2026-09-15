@@ -1,0 +1,19 @@
+-- H2 sibling of mysql/V13__agent_proposal_kind.sql. Differences:
+--   * H2 drops a named unique constraint with DROP CONSTRAINT (not DROP KEY).
+--   * H2 does not honour `DESC` inside CREATE INDEX (parsed but ignored since
+--     H2 walks both directions on btrees) — keyword dropped.
+--
+-- See mysql/V13 for the motivation (KIND discriminator on AGENT_PROPOSAL).
+
+ALTER TABLE AGENT_PROPOSAL
+    ADD COLUMN KIND VARCHAR(16) NOT NULL DEFAULT 'PROPOSAL';
+
+ALTER TABLE AGENT_PROPOSAL
+    DROP CONSTRAINT UK_AGENT_PROPOSAL_INVESTIGATION_RUN;
+
+ALTER TABLE AGENT_PROPOSAL
+    ADD CONSTRAINT UK_AGENT_PROPOSAL_INVESTIGATION_KIND_RUN
+        UNIQUE (INVESTIGATION_FK, KIND, RUN_ID);
+
+CREATE INDEX IF NOT EXISTS IDX_AGENT_PROPOSAL_INVESTIGATION_KIND_RAN_AT
+    ON AGENT_PROPOSAL (INVESTIGATION_FK, KIND, RAN_AT);

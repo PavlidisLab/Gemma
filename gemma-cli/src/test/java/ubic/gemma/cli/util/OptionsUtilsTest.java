@@ -2,9 +2,9 @@ package ubic.gemma.cli.util;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.text.ParseException;
 import java.util.Date;
@@ -16,13 +16,13 @@ public class OptionsUtilsTest {
 
     private static TimeZone tz;
 
-    @BeforeClass
+    @BeforeAll
     public static void setTimeZoneToAmericaVancouver() {
         tz = TimeZone.getDefault();
         TimeZone.setDefault( TimeZone.getTimeZone( "America/Vancouver" ) );
     }
 
-    @AfterClass
+    @AfterAll
     public static void resetTimeZone() {
         TimeZone.setDefault( tz );
     }

@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -45,7 +45,7 @@ import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @Service
-@CommonsLog
+@Slf4j
 public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderService {
 
     @Autowired
@@ -75,7 +75,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         Assert.isNull( config.getDataPath(), "An explicit path cannot be provided when detecting the data type automatically." );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
@@ -88,7 +88,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         if ( config.getDataPath() != null ) {
             log.info( "Loading single-cell data for " + ee + " from " + config.getDataPath() + "..." );
@@ -109,7 +109,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             return loadCellTypeAssignments( loader, ee, config );
@@ -121,7 +121,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
             return loadCellTypeAssignments( loader, ee, config );
@@ -149,7 +149,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             return loadOtherCellLevelCharacteristics( loader, ee, config );
@@ -161,7 +161,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
             return loadOtherCellLevelCharacteristics( loader, ee, config );
@@ -234,7 +234,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoader loader, SingleCellDataLoaderConfig config ) {
-        ee = requireNonNull( singleCellExpressionExperimentService.loadWithSingleCellVectors( ee.getId() ) );
+        ee = requireNonNull( singleCellExpressionExperimentService.loadAndInitializeSingleCellDimensions( ee.getId() ) );
         Assert.isTrue( platform.getPrimaryTaxon().equals( expressionExperimentService.getTaxon( ee ) ),
                 "Platform primary taxon does not match dataset." );
         SingleCellDimension dim = loadSingleCellDimension( loader, ee.getBioAssays() );
@@ -277,11 +277,11 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
         QuantitationType qt;
         if ( qts.isEmpty() ) {
-            throw new IllegalArgumentException( String.format( "No quantitation available%s. Choose one among:\n\t%s",
+            throw new IllegalArgumentException( String.format( "No quantitation available%s. Choose one among:%n\t%s",
                     qtName != null ? " with name " + qtName : "",
                     availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         } else if ( qts.size() > 1 ) {
-            throw new IllegalArgumentException( String.format( "More than one available quantitation type%s. Choose one among:\n%s",
+            throw new IllegalArgumentException( String.format( "More than one available quantitation type%s. Choose one among:%n%s",
                     qtName != null ? " with name " + qtName : "",
                     availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         } else {
@@ -308,7 +308,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                 applyQuantitationTypeOverrides( qt, config );
             } else {
                 availableQts = singleCellExpressionExperimentService.getSingleCellQuantitationTypes( ee );
-                throw new IllegalArgumentException( String.format( "%s does not match any existing single-cell quantitation type. Choose one among:\n\t%s",
+                throw new IllegalArgumentException( String.format( "%s does not match any existing single-cell quantitation type. Choose one among:%n\t%s",
                         qt,
                         availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
             }
@@ -419,7 +419,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
-        Assert.isNull( dim.getId() );
+        Assert.isNull( dim.getId() , "must be null");
         try {
             return DescribableUtils.addAllByName( dim.getCellLevelCharacteristics(),
                     loader.getOtherCellLevelCharacteristics( dim ),
@@ -611,7 +611,10 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         BioAssayMapper bioAssayMapper = getBioAssayMapper( ee, config );
-        Path p = config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee );
+        // Pin to a single local so SpotBugs sees a stable non-null binding (it cannot reason
+        // that the two getDataPath() reads in the ternary return the same reference).
+        Path configDataPath = config.getDataPath();
+        Path p = configDataPath != null ? configDataPath : getAnnDataFile( ee );
         if ( config instanceof CellXGeneAnnDataSingleCellDataLoaderConfig ) {
             log.info( "Loading single-cell data from " + p + " using the CELLxGENE preset." );
             CellXGeneAnnDataSingleCellDataConfigurer annDataConfigurer = new CellXGeneAnnDataSingleCellDataConfigurer( p, singleCellDataTransformationFactory );

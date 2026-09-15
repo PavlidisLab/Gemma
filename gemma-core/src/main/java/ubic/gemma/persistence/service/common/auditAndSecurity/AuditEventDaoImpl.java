@@ -19,10 +19,10 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -30,9 +30,12 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -73,6 +76,90 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
                 .list();
     }
 
+    @Override
+    public CursorPage<AuditEvent> getEventsByCursor( Auditable auditable, @org.springframework.lang.Nullable Cursor cursor, int limit ) {
+        // Step 1q: keyset pagination over /datasets/{dataset}/auditEvents (and any
+        // future entity-typed audit-event listings). Mirrors getEvents()'s scope
+        // (events on the auditable's AuditTrail) but switches the sort from the
+        // legacy (date, id) ordering to a single-component +id sort so the cursor
+        // DAO restriction (id-only keyset, pending the phase-B index audit) is
+        // honoured. AuditEvents are append-only over time, so id-asc tracks
+        // date-asc in practice.
+        Assert.notNull( auditable.getAuditTrail(), "Auditable did not have an audit trail: " + auditable );
+        Assert.notNull( auditable.getAuditTrail().getId(), "Auditable did not have a persistent audit trail: " + auditable );
+        if ( limit <= 0 ) {
+            throw new IllegalArgumentException( "Cursor page limit must be > 0." );
+        }
+        final String expectedSortSpec = "+id";
+        if ( cursor != null ) {
+            if ( !expectedSortSpec.equals( cursor.getSortSpec() ) ) {
+                throw new IllegalArgumentException( "Cursor sort spec '" + cursor.getSortSpec()
+                        + "' does not match the requested sort '" + expectedSortSpec + "'." );
+            }
+            Object[] key = cursor.getKeyTuple();
+            if ( key.length != 1 ) {
+                throw new IllegalArgumentException( "Cursor key tuple must have exactly 1 component for sort '"
+                        + expectedSortSpec + "'; got " + key.length + "." );
+            }
+        }
+        boolean backward = cursor != null && cursor.getDirection() == Cursor.Direction.BACKWARD;
+        Long lastSeenId = null;
+        if ( cursor != null ) {
+            try {
+                lastSeenId = ( ( Number ) cursor.getKeyTuple()[0] ).longValue();
+            } catch ( ClassCastException e ) {
+                throw new IllegalArgumentException( "Cursor key component must be numeric for sort '"
+                        + expectedSortSpec + "'.", e );
+            }
+        }
+
+        StringBuilder hql = new StringBuilder( "select e from AuditTrail t join t.events e where t = :at" );
+        if ( lastSeenId != null ) {
+            // forward: id > x; backward: id < x (id-asc client-visible order). When backward,
+            // we reverse the order in the driver query and reverse the returned page below.
+            hql.append( backward ? " and e.id < :lastSeenId" : " and e.id > :lastSeenId" );
+        }
+        // backward cursor: order by id DESC in the driver query, reverse the returned page.
+        hql.append( backward ? " order by e.id desc" : " order by e.id asc" );
+
+        org.hibernate.query.Query<?> q = this.getSessionFactory().getCurrentSession().createQuery( hql.toString() )
+                .setParameter( "at", auditable.getAuditTrail() );
+        if ( lastSeenId != null ) {
+            q.setParameter( "lastSeenId", lastSeenId );
+        }
+        q.setMaxResults( limit + 1 );
+        //noinspection unchecked
+        List<AuditEvent> data = ( List<AuditEvent> ) q.list();
+
+        boolean hasMore = data.size() > limit;
+        if ( hasMore ) {
+            data = new ArrayList<>( data.subList( 0, limit ) );
+        } else {
+            data = new ArrayList<>( data );
+        }
+        if ( backward ) {
+            Collections.reverse( data );
+        }
+
+        String nextCursor = null;
+        String prevCursor = null;
+        if ( !data.isEmpty() ) {
+            AuditEvent last = data.get( data.size() - 1 );
+            AuditEvent first = data.get( 0 );
+            // emit nextCursor only when there's another page in the forward direction
+            if ( backward || hasMore ) {
+                nextCursor = new Cursor( expectedSortSpec, new Object[] { last.getId() }, Cursor.Direction.FORWARD ).encode();
+            }
+            // emit prevCursor whenever we have a cursor (at least one page is behind us)
+            if ( cursor != null ) {
+                prevCursor = new Cursor( expectedSortSpec, new Object[] { first.getId() }, Cursor.Direction.BACKWARD ).encode();
+            }
+        }
+
+        Sort idSort = Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" );
+        return new CursorPage<>( data, idSort, limit, nextCursor, prevCursor, null );
+    }
+
     @Nullable
     @Override
     public AuditEvent getLastEvent( Auditable auditable ) {
@@ -90,6 +177,11 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     }
 
     @Override
+    public <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables ) {
+        return getLastEvents( auditables, null, null );
+    }
+
+    @Override
     public <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables, Class<? extends AuditEventType> type ) {
         return getLastEvents( auditables, type, null );
     }
@@ -100,8 +192,51 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
     }
 
     @Override
+    public <T extends Auditable> Set<Long> getIdsHavingEvent( Class<T> auditableClass, Collection<Class<? extends AuditEventType>> types ) {
+        if ( types.isEmpty() ) {
+            return Collections.emptySet();
+        }
+
+        // Union the subclass closures of every requested type into one IN list, so the number of
+        // requested types does not multiply the query count. Contrast getLastEvents(Collection,
+        // Collection), which loops the types because each one needs its own per-trail max.
+        Set<Class<? extends AuditEventType>> classes = new HashSet<>();
+        for ( Class<? extends AuditEventType> type : types ) {
+            classes.addAll( getClassHierarchy( type, null ) );
+        }
+        if ( classes.isEmpty() ) {
+            throw new IllegalArgumentException( "No classes found" );
+        }
+
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
+
+        // Walks trail.events rather than trail.lastEvent: the question here is whether the event
+        // occurred at all, at any point in the trail's history, so the denormalised latest-event
+        // pointer would answer a different (and much narrower) question.
+        //language=HQL
+        final String query = "select distinct a.id from " + entityName + " a "
+                + "join a.auditTrail trail "
+                + "join trail.events ae "
+                + "join ae.eventType et "
+                + "where type(et) in :classes";
+
+        StopWatch timer = StopWatch.createStarted();
+        //noinspection unchecked
+        List<Long> ids = ( List<Long> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( query )
+                .setParameterList( "classes", classes )
+                .list();
+        timer.stop();
+        if ( timer.getTime() > 500 ) {
+            log.info( String.format( "Found %d %s having an event in %s in %d ms", ids.size(), entityName,
+                    classes.stream().map( Class::getSimpleName ).collect( Collectors.joining( ", " ) ), timer.getTime() ) );
+        }
+        return new LinkedHashSet<>( ids );
+    }
+
+    @Override
     public <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date ) {
-        String entityName = getSessionFactory().getClassMetadata( auditableClass ).getEntityName();
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select adb from " + entityName + " adb "
@@ -115,13 +250,19 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
     @Override
     public <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date ) {
-        String entityName = getSessionFactory().getClassMetadata( auditableClass ).getEntityName();
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
+        // "Updated" = received any typed AuditEvent in the window. We intentionally do NOT filter on
+        // ae.action='U' (generic auto-UPDATE) because that machinery is being retired in Phase C of the
+        // audit migration (see AUDIT_SYSTEM_AUDIT.md Section 5, risk #1). Filtering on
+        // ae.eventType IS NOT NULL keeps semantic updates (typed events emitted explicitly by services)
+        // and naturally excludes generic auto-UPDATE rows (eventType=null) and creation events
+        // (action='C', also eventType=null). Output shape is unchanged: one auditable per row.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select adb from " + entityName + " adb "
                         + "join adb.auditTrail atr "
                         + "join atr.events as ae "
-                        + "where ae.date >= :date and ae.action='U' "
+                        + "where ae.date >= :date and ae.eventType is not null "
                         + "group by adb" )
                 .setParameter( "date", date )
                 .list();
@@ -131,7 +272,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
         if ( auditables.isEmpty() ) {
             return Collections.emptyMap();
         }
-        Map<T, AuditEvent> result = new HashMap<>( auditables.size() );
+        Map<T, AuditEvent> result = HashMap.newHashMap( auditables.size() );
         final Map<Long, T> atMap = auditables.stream()
                 .collect( Collectors.toMap( a -> a.getAuditTrail().getId(), Function.identity() ) );
         //noinspection unchecked
@@ -158,7 +299,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
         StopWatch timer = StopWatch.createStarted();
 
-        Map<T, AuditEvent> result = new HashMap<>( auditables.size() );
+        Map<T, AuditEvent> result = HashMap.newHashMap( auditables.size() );
 
         // getId() does not require proxy initialization, otherwise we might inadvertently initialize the audit trail
         final Map<Long, T> atMap = auditables.stream()
@@ -171,17 +312,46 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             classes = null;
         }
 
+        // HQL_SQL_AUDIT P4: prior implementation fetched every event for every requested trail
+        // (group-by-trail-and-event was effectively a no-op, since (trail, ae) pairs are distinct)
+        // then reduced in Java via putIfAbsent on an ordered scan. For long-lived auditables that
+        // materialised thousands of rows per trail to discard all but one.
+        //
+        // Rewrite: per-trail correlated subquery picks the single event matching (max date,
+        // max id on tie) within the type filter. Two-level subquery — outer max(id) breaks
+        // ties on the inner max(date) — mirrors the prior Java reducer's `order by date desc,
+        // id desc; putIfAbsent` exactly. (max(id) alone would be wrong on test fixtures where
+        // events are inserted out of date order; see V8__audit_trail_last_event_id.sql's note
+        // on why the migration backfill's max(id) shortcut is OK for prod but not in general.)
+        // Both subqueries join AuditTrail.events via `trail2.id = trail.id`, hitting the
+        // AUDIT_EVENT.AUDIT_TRAIL_FK index — one row per trail instead of every historical event.
+        //
+        // The `join fetch ae.eventType et` inner-join survives unchanged: the prior query also
+        // used `join fetch` (not `left join fetch`), so events with a null eventType were
+        // dropped even in the no-types-filter path. Preserving that to keep behaviour identical
+        // for callers like BatchInfoRepopulationJob that pass no type filter — they want the
+        // latest event WITH an eventType, since downstream `instanceof` checks on null are
+        // false anyway.
         //language=HQL
         final String queryString = "select trail.id, ae from AuditTrail trail "
                 + "join trail.events ae "
-                + "join fetch ae.eventType et " // fetching here prevents a separate select query
+                + "join fetch ae.eventType et "
                 + "where trail.id in :trails "
                 + ( classes != null ? "and type(et) in :classes " : "" )
-                // annoyingly, Hibernate does not select the latest event when grouping by trail, so we have to fetch
-                // them all
-                + "group by trail, ae "
-                // latest by date or ID to break ties
-                + "order by ae.date desc, ae.id desc";
+                + "and ae.id = ("
+                + "  select max(ae2.id) from AuditTrail trail2 "
+                + "  join trail2.events ae2 "
+                + "  where trail2.id = trail.id "
+                + "  and ae2.eventType is not null"
+                + ( classes != null ? " and type(ae2.eventType) in :classes" : "" )
+                + "  and ae2.date = ("
+                + "    select max(ae3.date) from AuditTrail trail3 "
+                + "    join trail3.events ae3 "
+                + "    where trail3.id = trail.id "
+                + "    and ae3.eventType is not null"
+                + ( classes != null ? " and type(ae3.eventType) in :classes" : "" )
+                + "  )"
+                + ")";
 
         Query queryObject = this.getSessionFactory().getCurrentSession()
                 .createQuery( queryString )
@@ -196,7 +366,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             Object[] ar = ( Object[] ) o;
             Long t = ( Long ) ar[0];
             AuditEvent e = ( AuditEvent ) ar[1];
-            // only retain the first one which is the latest (by date or ID)
+            // one row per trail by construction; putIfAbsent is now belt-and-braces
             result.putIfAbsent( atMap.get( t ), e );
         }
 
@@ -221,31 +391,54 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
             throw new IllegalArgumentException( "No classes found" );
         }
 
-        String entityName = getSessionFactory().getClassMetadata( auditableClass ).getEntityName();
+        String entityName = ubic.gemma.persistence.hibernate.HibernateUtils.getEntityName( getSessionFactory(), auditableClass );
+
+        // Whole-corpus path (e.g. ArrayDesignReportServiceImpl, ExpressionExperimentReportServiceImpl
+        // dashboards, scheduled stats). Rewrite chain:
+        //
+        //   round-3 baseline   8.7 s  — pulled 1.5 M AUDIT_EVENT rows into the JVM, reduced
+        //                                 in Java to one event per trail.
+        //   commit 0570c46416  5.3 s  — SQL-side per-trail MAX(date) + MAX(id) aggregate;
+        //                                 still scans the full AUDIT_EVENT bag once per trail.
+        //   this rewrite       O(trails)  via AUDIT_TRAIL.LAST_EVENT_FK denormalised pointer
+        //                                 (V6 migration). Each trail contributes one index-
+        //                                 resolved row; no per-trail aggregate; no second
+        //                                 hydration query because lastEvent is fetched in the
+        //                                 same select via inner join.
+        //
+        // Semantics preserved: the writers (AuditTrailServiceImpl.doAddUpdateEvent +
+        // AuditTrailEventListener.emitLifecycleEvent) repoint lastEvent under the same
+        // (date desc, id desc) ordering the prior MAX rewrite used. The migration backfill
+        // uses MAX(id) per trail, which on monotonically-growing AUDIT_EVENT ids is equivalent
+        // to date-max+id-max-on-tie (and matches the prior rewrite's tie-breaker convention).
+        //
+        // Type filter: we still join through ae.eventType and restrict by type(et). Trails
+        // whose lastEvent isn't of the requested type (the more common case) are simply
+        // absent from the result map. This matches the prior contract: getLastEvents only
+        // returns auditables whose LATEST event matches the type filter.
+        //
+        // The exception is the eventType-IS-NULL case (generic auto-UPDATE rows): if a trail's
+        // lastEvent has no eventType, the inner-join on ae.eventType drops it. That's the
+        // pre-rewrite behaviour too — both old and new forms required typed events to filter
+        // by class.
         //language=HQL
-        final String queryString = "select a.id, ae from " + entityName + " a  "
+        final String query = "select a, ae from " + entityName + " a "
                 + "join a.auditTrail trail "
-                + "join trail.events ae "
-                + "join fetch ae.eventType et " // fetching here prevents a separate select query
-                + "where type(et) in :classes "
-                // annoyingly, Hibernate does not select the latest event when grouping by trail, so we have to fetch
-                // them all
-                + "group by trail, ae "
-                // latest by date or ID to break ties
-                + "order by ae.date desc, ae.id desc";
+                + "join trail.lastEvent ae "
+                + "join fetch ae.eventType et "
+                + "where type(et) in :classes";
 
-        Query queryObject = this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
-                .setParameterList( "classes", classes ); // optimizing this one is unnecessary
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = this.getSessionFactory().getCurrentSession()
+                .createQuery( query )
+                .setParameterList( "classes", classes )
+                .list();
 
-        List<?> qr = queryObject.list();
-        for ( Object o : qr ) {
-            Object[] ar = ( Object[] ) o;
-            Long t = ( Long ) ar[0];
-            AuditEvent e = ( AuditEvent ) ar[1];
-            // only retain the first one which is the latest (by date or ID)
-            //noinspection unchecked
-            result.putIfAbsent( ( T ) getSessionFactory().getCurrentSession().load( auditableClass, t ), e );
+        for ( Object[] row : rows ) {
+            @SuppressWarnings("unchecked")
+            T auditable = ( T ) row[0];
+            AuditEvent ae = ( AuditEvent ) row[1];
+            result.put( auditable, ae );
         }
 
         timer.stop();
@@ -266,13 +459,17 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
      * @return A List of class names, including the given type.
      */
     private Set<Class<? extends AuditEventType>> getClassHierarchy( Class<? extends AuditEventType> type, @Nullable Collection<Class<? extends AuditEventType>> excludedTypes ) {
-        // how to determine subclasses? There is no way to do this but the hibernate way.
-        ClassMetadata classMetadata = this.getSessionFactory().getClassMetadata( type );
-        if ( classMetadata instanceof SingleTableEntityPersister ) {
+        // Hibernate 6 path: walk MappingMetamodel for the subclass entity names.
+        EntityPersister persister;
+        try {
+            persister = ( ( SessionFactoryImplementor ) getSessionFactory() ).getMappingMetamodel()
+                    .getEntityDescriptor( type.getName() );
+        } catch ( IllegalArgumentException e ) {
+            persister = null;
+        }
+        if ( persister != null ) {
             Set<Class<? extends AuditEventType>> classes = new HashSet<>();
-            // this includes the superclass, fully qualified
-            String[] subclasses = ( ( SingleTableEntityPersister ) classMetadata ).getSubclassClosure();
-            for ( String className : subclasses ) {
+            for ( String className : persister.getEntityMetamodel().getSubclassEntityNames() ) {
                 try {
                     //noinspection unchecked
                     classes.add( ( Class<? extends AuditEventType> ) Class.forName( className ) );

@@ -1,10 +1,9 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import org.junit.Assume;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -25,10 +24,9 @@ import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellTransfor
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,15 +37,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assumptions.assumeThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ContextConfiguration
+@Tag("integration")
 @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
-public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -64,6 +62,9 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
 
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
+
+    @Value("${cellranger.dir}")
+    private Path cellRangerPrefix;
 
     @Test
     public void testDetect10xUnfiltered10XData() throws IOException {
@@ -83,25 +84,25 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
      * This is an older single-cell dataset with many typos in the GEO record.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE217511() throws IOException, NoSingleCellDataFoundException {
         testUnfiltered10xDataset( "GSE217511", "GSM6720852", "Homo sapiens", "SC3Pv3-polyA" );
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE178226() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE178226", "GSM5384778", "Mus musculus", "SC3Pv3-polyA" );
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE280175() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE280175", "GSM8591175", "Homo sapiens", null );
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE221042() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE221042", "GSM6841143", "Homo sapiens", "SC3Pv3-polyA" );
     }
@@ -112,7 +113,7 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE143355() throws NoSingleCellDataFoundException, IOException {
         // the extraction protocol does not specify if it's 3' or 5' v3
         testUnfiltered10xDataset( "GSE143355", "GSM4257550", "Mus musculus", null );
@@ -124,13 +125,13 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE132355() throws NoSingleCellDataFoundException, IOException {
         testUnfiltered10xDataset( "GSE132355", "GSM3860733", "Mus musculus", null );
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE295078() throws NoSingleCellDataFoundException, IOException {
         // TODO: this is a dataset with a 5' chemistry
         testUnfiltered10xDataset( "GSE295078", "GSM8941791", "Mus musculus", null );
@@ -173,10 +174,13 @@ public class GeoMexSingleCellDataLoaderConfigurerTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testParallelFiltering() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = singleCellDataTransformationFactory.getTransformation( SingleCell10xMexFilter.class );
-        Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
+        // The actual filter step shells out to the Cell Ranger binary; skip on hosts (e.g. dev Macs) without it.
+        assumeThat( cellRangerPrefix.resolve( "bin/cellranger" ) ).exists();
+        assumeThat( cellRangerPrefix.resolve( "external/anaconda/bin/python" ) ).exists();
         GeoSeries series = readSeriesFromGeo( "GSE269482" );
         Path dataDir;
         ExecutorService executor = Executors.newFixedThreadPool( 4 );

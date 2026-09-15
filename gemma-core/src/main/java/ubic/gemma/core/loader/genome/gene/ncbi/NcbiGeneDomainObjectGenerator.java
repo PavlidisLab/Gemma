@@ -20,7 +20,7 @@ package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NcbiGeneHistory;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
@@ -198,11 +198,13 @@ public class NcbiGeneDomainObjectGenerator {
         }
         supportedTaxaWithNCBIGenes = new HashSet<>();
         if ( supportedTaxa != null ) {
-            for ( Integer taxId : taxaCount.keySet() ) {
+            for ( Map.Entry<Integer, Integer> tcEntry : taxaCount.entrySet() ) {
+                Integer taxId = tcEntry.getKey();
+                Integer count = tcEntry.getValue();
 
-                if ( taxaCount.get( taxId ) > 0 ) {
+                if ( count > 0 ) {
                     NcbiGeneDomainObjectGenerator.log
-                            .debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
+                            .debug( "Taxon " + taxId + ": " + count + " genes" );
                     Taxon t = supportedTaxa.get( taxId );
                     supportedTaxaWithNCBIGenes.add( t );
                 }

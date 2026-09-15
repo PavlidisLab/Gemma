@@ -8,7 +8,7 @@ import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Date;
 

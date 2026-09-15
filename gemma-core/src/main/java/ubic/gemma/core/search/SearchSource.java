@@ -51,7 +51,7 @@ public interface SearchSource {
      * I wanted to remove this, but there's some logic with indirect gene hit penalty that we might want to keep around.
      *
      * @return a mixture of {@link BioSequence} and {@link Gene} matching the search settings.
-     * @deprecated use {@link #searchBioSequence(SearchSettings, SearchContext)} (SearchSettings)} instead
+     * @deprecated use {@link #searchBioSequence(SearchSettings, SearchContext)} instead
      */
     @Deprecated
     default Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
@@ -69,7 +69,7 @@ public interface SearchSource {
     /**
      * Search for composite sequences and, unfortunately, genes.
      * <p>
-     * FIXME: this should solely return {@link CompositeSequence}
+     * FIXME: this should solely return {@link CompositeSequence}.
      *
      * @return a mixture of {@link Gene} and {@link CompositeSequence} matching the search settings
      * @deprecated use {@link #searchCompositeSequence(SearchSettings, SearchContext)} instead

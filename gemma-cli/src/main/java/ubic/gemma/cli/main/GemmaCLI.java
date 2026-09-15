@@ -38,7 +38,7 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.ShellUtils;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;

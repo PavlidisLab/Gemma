@@ -18,13 +18,29 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
- * Read-compatibility marker for audit rows written by Gemma 2.0.
+ * Emitted by the {@code PUT /datasets/{id}/design} apply path when a proposed
+ * {@link ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject}
+ * is successfully written back as the experiment's new design.
  * <p>
- * Gemma 2.0 emits this {@link AuditEventType} subclass; the 1.x line shares the audit trail, so it
- * must be able to load a row with this discriminator without a Hibernate {@code WrongClassException}.
- * The 1.x code never writes it and it carries no behaviour of its own — it exists only so the read
- * resolves. (In 2.0 it extends a richer hierarchy; here it is flattened onto an existing parent.)
+ * Carries the same audit-trail semantics as its parent
+ * {@link ExperimentalDesignUpdatedEvent} (so existing trail queries on the
+ * parent class continue to pick it up) but disambiguates curator-initiated
+ * whole-design replacements from the older imperative
+ * {@code addUpdateEvent(ee, ExperimentalDesignUpdatedEvent.class, ...)} callers
+ * that mutate factor metadata in narrower ways.
+ * <p>
+ * Idempotent no-ops do NOT emit this event: the apply method short-circuits
+ * when the preflight summary shows zero changes, so repeated PUTs of an
+ * already-applied design produce one event, not many. See
+ * {@code AUDIT_PHASE_C_RECCE.md} for the declarative-audit pattern this event
+ * participates in.
  */
+@Entity
+@DiscriminatorValue("DesignChangeEvent")
 public class DesignChangeEvent extends ExperimentalDesignUpdatedEvent {
 }

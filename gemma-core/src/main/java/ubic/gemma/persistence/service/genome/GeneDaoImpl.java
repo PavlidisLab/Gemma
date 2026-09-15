@@ -20,9 +20,12 @@ package ubic.gemma.persistence.service.genome;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Criteria;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +45,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -159,16 +162,35 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Gene findByOfficialSymbol( String symbol, Taxon taxon ) {
         return ( Gene ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select g from Gene as g where g.officialSymbol = :symbol and g.taxon = :taxon" )
+                .createQuery( "select g from Gene as g where lower(g.officialSymbol) = lower(:symbol) and g.taxon = :taxon" )
                 .setParameter( "symbol", symbol ).setParameter( "taxon", taxon ).uniqueResult();
     }
 
     @Override
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
+        // Drop the LOWER() wrappers: gemd's official_symbol column uses the table default
+        // collation (utf8mb4_general_ci or equivalent _ci), so case-insensitive comparison
+        // is already what plain LIKE provides. With LOWER() in place, MySQL can't use the
+        // standard B-tree index on official_symbol — it does a full-table scan that took
+        // ~2s on the prod-tunneled DB regardless of hit count. Without LOWER() the index
+        // services LIKE 'prefix%' patterns in milliseconds.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from Gene g where g.officialSymbol like :officialSymbol order by g.officialSymbol" )
                 .setParameter( "officialSymbol", officialSymbol ).setMaxResults( GeneDaoImpl.MAX_RESULTS ).list();
+    }
+
+    @Override
+    public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol, final Taxon taxon ) {
+        // Same drop-LOWER() rationale as the no-taxon variant, plus an indexed taxon FK
+        // prefilter for endpoints with a taxon constraint.
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from Gene g where g.taxon = :taxon and g.officialSymbol like :officialSymbol order by g.officialSymbol" )
+                .setParameter( "officialSymbol", officialSymbol )
+                .setParameter( "taxon", taxon )
+                .setMaxResults( GeneDaoImpl.MAX_RESULTS )
+                .list();
     }
 
     @Override
@@ -382,18 +404,53 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     }
 
     @Override
+    @Nullable
     public Gene thaw( final Gene gene ) {
         if ( gene.getId() == null )
             return gene;
-        return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct g from Gene g " + " left join fetch g.aliases left join fetch g.accessions acc"
-                                + " left join fetch acc.externalDatabase left join fetch g.products gp "
-                                + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
-                                + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
-                                + " left join fetch g.taxon t left join fetch t.externalDatabase "
+        // HQL_SQL_AUDIT P5: avoid the Cartesian product that arises from one mega-query
+        // joining g.aliases x g.accessions x g.products x gp.accessions x ... (rows scale as
+        // the product of all collection sizes). Issue a separate fetch per collection branch;
+        // entries land in the same Hibernate first-level cache so the Gene returned by the
+        // first query is the same instance whose collections the follow-up queries populate.
+        Long gid = gene.getId();
+        // Branch 1: Gene + taxon ToOne chain + aliases collection.
+        Gene g = ( Gene ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct g from Gene g "
+                                + " left join fetch g.taxon t left join fetch t.externalDatabase"
+                                + " left join fetch g.aliases"
                                 + " where g.id=:gid" )
-                .setParameter( "gid", gene.getId() )
+                .setParameter( "gid", gid )
                 .uniqueResult();
+        if ( g == null )
+            return null;
+        // Branch 2: gene accessions + their externalDatabase ToOne.
+        this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct g from Gene g "
+                                + " left join fetch g.accessions acc left join fetch acc.externalDatabase"
+                                + " where g.id=:gid" )
+                .setParameter( "gid", gid )
+                .uniqueResult();
+        // Branch 3: gene products + their physicalLocation -> chromosome -> taxon ToOne chain.
+        this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct g from Gene g "
+                                + " left join fetch g.products gp"
+                                + " left join fetch gp.physicalLocation gppl"
+                                + " left join fetch gppl.chromosome chr"
+                                + " left join fetch chr.taxon"
+                                + " where g.id=:gid" )
+                .setParameter( "gid", gid )
+                .uniqueResult();
+        // Branch 4: gene products' accessions + their externalDatabase ToOne.
+        this.getSessionFactory().getCurrentSession().createQuery(
+                        "select distinct g from Gene g "
+                                + " left join fetch g.products gp"
+                                + " left join fetch gp.accessions gpacc"
+                                + " left join fetch gpacc.externalDatabase"
+                                + " where g.id=:gid" )
+                .setParameter( "gid", gid )
+                .uniqueResult();
+        return g;
     }
 
     /**
@@ -455,17 +512,16 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .createQuery( "delete from Gene2GOAssociation g2g where g2g.gene is not null" )
                 .executeUpdate();
         int removedAccessions = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from DATABASE_ENTRY where GENE_FK is not null" )
+                .createNativeQuery( "delete from DATABASE_ENTRY where GENE_FK is not null" )
                 .executeUpdate();
         // we have to do some manual deletion because no cascading is performed when deleting in batch
-        //noinspection unchecked
         List<Long> gpIds = getSessionFactory().getCurrentSession()
-                .createQuery( "select gp.id from Gene g join g.products gp" )
+                .createQuery( "select gp.id from Gene g join g.products gp", Long.class )
                 .list();
         int removedGeneProductsAccessions;
         if ( !gpIds.isEmpty() ) {
             removedGeneProductsAccessions = executeUpdateByBatch( getSessionFactory().getCurrentSession()
-                            .createSQLQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" ),
+                            .createNativeQuery( "delete from DATABASE_ENTRY where GENE_PRODUCT_FK in :gpIds" ),
                     "gpIds", gpIds, 2048 );
         } else {
             removedGeneProductsAccessions = 0;
@@ -473,9 +529,8 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         int removedProducts = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from GeneProduct gp where gp.gene is not null" )
                 .executeUpdate();
-        //noinspection unchecked
         List<Long> gaIds = getSessionFactory().getCurrentSession()
-                .createQuery( "select ga.id from Gene g join g.aliases ga" )
+                .createQuery( "select ga.id from Gene g join g.aliases ga", Long.class )
                 .list();
         int removedAliases;
         if ( !gaIds.isEmpty() ) {
@@ -485,9 +540,8 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         } else {
             removedAliases = 0;
         }
-        //noinspection unchecked
         List<Long> plIds = getSessionFactory().getCurrentSession()
-                .createQuery( "select pl.id from Gene g join g.physicalLocation pl" )
+                .createQuery( "select pl.id from Gene g join g.physicalLocation pl", Long.class )
                 .list();
         int removedGenes = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from Gene" )
@@ -522,7 +576,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 .setParameter( "g", gene )
                 .executeUpdate();
         // those genes are not visible from the products collection
-        int removedDummyProducts = this.getSessionFactory().getCurrentSession()
+        this.getSessionFactory().getCurrentSession()
                 .createQuery( "delete from GeneProduct where gene = :g and dummy = true" )
                 .setParameter( "g", gene )
                 .executeUpdate();
@@ -532,14 +586,24 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     public Gene find( Gene gene ) {
 
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Gene.class );
-
         BusinessKey.checkKey( gene );
 
-        BusinessKey.createQueryObject( queryObject, gene );
-
-        //noinspection unchecked,unchecked
-        List<Gene> results = queryObject.list();
+        org.hibernate.Session session = this.getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Gene> cq = cb.createQuery( Gene.class );
+        Root<Gene> root = cq.from( Gene.class );
+        List<Predicate> preds;
+        if ( gene.getId() != null ) {
+            preds = new ArrayList<>();
+            preds.add( cb.equal( root.get( "id" ), gene.getId() ) );
+        } else {
+            preds = BusinessKey.matches( cb, root, gene, true );
+        }
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        List<Gene> results = session.createQuery( cq ).list();
         Gene result;
 
         if ( results.isEmpty() ) {
@@ -549,22 +613,22 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         } else if ( results.size() > 1 ) {
 
             /*
-             * As a side-effect, we remove relics. This is a bit ugly, but takes care of the problem! It was put in
-             * place to help in the cleanup of duplicated genes. But this can happen fairly routinely when NCBI
-             * information changes in messy ways.
+             * find() is a read method and MUST NOT mutate state. Previously this block deleted "relic" duplicate
+             * genes whose previousNcbiGeneId pointed at the incoming gene's current id; that delete blew up under
+             * read-only transactions (Hibernate flush on commit). The dedup side effect has been removed (HQL_SQL_AUDIT C4).
              *
-             * FIXME this can fail because 'find' methods are read-only; it will be okay if it is a nested call from a
-             * read-write method.
+             * If duplicates are observed here we log loudly so they can be reconciled by a separate write step
+             * (GeneWriteServiceImpl handles legitimate NCBI-ID merges via previousNcbiGeneId during persistence).
              */
-            Collection<Gene> toDelete = new HashSet<>();
+            Collection<Gene> deprecated = new HashSet<>();
             for ( Gene foundGene : results ) {
                 if ( StringUtils.isBlank( foundGene.getPreviousNcbiGeneId() ) )
                     continue;
                 // Note hack we used to allow multiple previous ids.
                 for ( String previousId : StringUtils.split( foundGene.getPreviousNcbiGeneId(), "," ) ) {
                     try {
-                        if ( gene.getNcbiGeneId().equals( Integer.parseInt( previousId ) ) ) {
-                            toDelete.add( foundGene );
+                        if ( gene.getNcbiGeneId() != null && gene.getNcbiGeneId().equals( Integer.parseInt( previousId ) ) ) {
+                            deprecated.add( foundGene );
                         }
                     } catch ( NumberFormatException e ) {
                         // no action
@@ -572,13 +636,12 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 }
             }
 
-            if ( !toDelete.isEmpty() ) {
-                assert toDelete.size() < results.size(); // it shouldn't be everything!
-                log.warn(
-                        "Deleting gene(s) that use a deprecated NCBI ID: " + StringUtils.join( toDelete, " | " ) );
-                this.remove( toDelete ); // WARNING this might fail due to constraints.
+            if ( !deprecated.isEmpty() ) {
+                log.warn( "find(Gene) observed gene(s) with a deprecated NCBI ID that shadow " + gene
+                        + "; they will be ignored for this lookup but were NOT deleted (find() is read-only). "
+                        + "Deprecated duplicates: " + StringUtils.join( deprecated, " | " ) );
+                results.removeAll( deprecated );
             }
-            results.removeAll( toDelete );
 
             for ( Gene foundGene : results ) {
                 if ( foundGene.getNcbiGeneId() != null && gene.getNcbiGeneId() != null && foundGene.getNcbiGeneId()
@@ -596,6 +659,9 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                 results.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
                 result = results.iterator().next();
                 log.error( "Returning arbitrary gene: " + result );
+            } else if ( results.isEmpty() ) {
+                // every candidate was a deprecated-NCBI-id duplicate
+                return null;
             } else {
                 result = results.get( 0 );
             }
@@ -640,6 +706,26 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
     @Override
     protected void initializeCachedFilteringResult( Gene entity ) {
         Hibernate.initialize( entity.getMultifunctionality() );
+    }
+
+    @Override
+    public Map<Long, Set<String>> getAliasesByGeneId( Collection<Long> ids ) {
+        Map<Long, Set<String>> result = new HashMap<>();
+        if ( ids == null || ids.isEmpty() ) {
+            return result;
+        }
+        //noinspection unchecked
+        List<Object[]> rows = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids" )
+                .setParameterList( "ids", ids )
+                .list();
+        for ( Object[] row : rows ) {
+            String alias = ( String ) row[1];
+            if ( alias != null ) {
+                result.computeIfAbsent( ( Long ) row[0], k -> new TreeSet<>() ).add( alias );
+            }
+        }
+        return result;
     }
 
     @Override

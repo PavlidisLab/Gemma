@@ -1,39 +1,36 @@
 package ubic.gemma.core.loader.expression.geo;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.description.Characteristic;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(Parameterized.class)
+@ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable
 @ContextConfiguration
 public class GeoConverterTest2 {
 
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
-
     private GeoConverter gc;
     private FTPClientFactory ftpClientFactory;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         gc = new GeoConverterImpl();
         gc.setElementLimitForStrictness( 100000 );
@@ -43,9 +40,8 @@ public class GeoConverterTest2 {
     /**
      * These datasets were pulled from Gemma database on January 14th, 2026.
      */
-    @Parameterized.Parameters(name = "{0}")
-    public static String[] facSortedDatasets() {
-        return new String[] {
+    public static Stream<String> facSortedDatasets() {
+        return Stream.of(
                 "GSE65411",
                 "GSE65309",
                 "GSE155871",
@@ -75,14 +71,12 @@ public class GeoConverterTest2 {
                 "GSE161255",
                 // "GSE127449", has the "sorted" keyword, but nothing else around, so it's too generic
                 "GSE158962",
-                "GSE307375" };
+                "GSE307375" );
     }
 
-    @Parameterized.Parameter
-    public String geoAccession;
-
-    @Test
-    public void testFacSorted() throws IOException {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("facSortedDatasets")
+    public void testFacSorted( String geoAccession ) throws IOException {
         GeoSeries geoSeries = readSeriesFromGeo( geoAccession );
         assertThat( gc.convert( geoSeries ) )
                 .singleElement()

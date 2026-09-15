@@ -45,25 +45,29 @@ public class ScaleTypeConversionUtils {
         if ( qt.getScale() == scaleType ) {
             return val.doubleValue();
         }
-        if ( val instanceof Float ) {
-            float[] vec = ONE_FLOAT_VALUE.get();
-            vec[0] = val.floatValue();
-            return convertData( vec, qt, scaleType )[0];
-        } else if ( val instanceof Double ) {
-            double[] vec = ONE_DOUBLE_VALUE.get();
-            vec[0] = val.doubleValue();
-            return convertData( vec, qt, scaleType )[0];
-        } else if ( val instanceof Integer ) {
-            int[] vec = ONE_INT_VALUE.get();
-            vec[0] = val.intValue();
-            return convertData( vec, scaleType )[0];
-        } else if ( val instanceof Long ) {
-            long[] vec = ONE_LONG_VALUE.get();
-            vec[0] = val.longValue();
-            return convertData( vec, scaleType )[0];
-        } else {
-            throw new UnsupportedOperationException( "Cannot convert " + val.getClass().getSimpleName() + " to " + scaleType + " scale." );
-        }
+        return switch ( val ) {
+            case Float f -> {
+                float[] vec = ONE_FLOAT_VALUE.get();
+                vec[0] = f;
+                yield convertData( vec, qt, scaleType )[0];
+            }
+            case Double d -> {
+                double[] vec = ONE_DOUBLE_VALUE.get();
+                vec[0] = d;
+                yield convertData( vec, qt, scaleType )[0];
+            }
+            case Integer i -> {
+                int[] vec = ONE_INT_VALUE.get();
+                vec[0] = i;
+                yield convertData( vec, scaleType )[0];
+            }
+            case Long l -> {
+                long[] vec = ONE_LONG_VALUE.get();
+                vec[0] = l;
+                yield convertData( vec, scaleType )[0];
+            }
+            default -> throw new UnsupportedOperationException( "Cannot convert " + val.getClass().getSimpleName() + " to " + scaleType + " scale." );
+        };
     }
 
     /**

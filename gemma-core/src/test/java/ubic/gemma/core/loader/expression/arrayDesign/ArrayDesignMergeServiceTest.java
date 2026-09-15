@@ -15,9 +15,9 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -26,13 +26,13 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author paul
  *
  */
-public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
+public class ArrayDesignMergeServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     ArrayDesignMergeService arrayDesignMergeService;

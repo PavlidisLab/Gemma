@@ -12,7 +12,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 public class BulkExpressionDataDoubleMatrix extends AbstractBulkExpressionDataMatrix<Double> implements BulkExpressionDataPrimitiveDoubleMatrix {
@@ -69,6 +69,7 @@ public class BulkExpressionDataDoubleMatrix extends AbstractBulkExpressionDataMa
     }
 
     @Override
+    @Nullable
     public double[] getColumnAsDoubles( BioAssay bioAssay ) {
         int column = getColumnIndex( bioAssay );
         if ( column == -1 ) {

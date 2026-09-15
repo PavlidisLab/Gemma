@@ -1,6 +1,6 @@
 package ubic.gemma.cli.options;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.OptionsUtils;
@@ -16,7 +16,7 @@ import java.util.function.BiConsumer;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class DataFileOptionsUtils {
 
     public static final String OUTPUT_FILE_OPTION = "o";

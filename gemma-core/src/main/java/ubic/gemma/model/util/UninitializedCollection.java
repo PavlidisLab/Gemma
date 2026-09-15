@@ -1,7 +1,7 @@
 package ubic.gemma.model.util;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -48,21 +48,21 @@ public abstract class UninitializedCollection<T> implements Collection<T> {
         throw uninitializedException();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Iterator<T> iterator() {
         throw uninitializedException();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Object[] toArray() {
         throw uninitializedException();
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <T1> T1[] toArray( @Nonnull T1[] a ) {
+    public <T1> T1[] toArray( @NonNull T1[] a ) {
         throw uninitializedException();
     }
 
@@ -77,22 +77,22 @@ public abstract class UninitializedCollection<T> implements Collection<T> {
     }
 
     @Override
-    public boolean containsAll( @Nonnull Collection<?> c ) {
+    public boolean containsAll( @NonNull Collection<?> c ) {
         throw uninitializedException();
     }
 
     @Override
-    public boolean addAll( @Nonnull Collection<? extends T> c ) {
+    public boolean addAll( @NonNull Collection<? extends T> c ) {
         throw uninitializedException();
     }
 
     @Override
-    public boolean removeAll( @Nonnull Collection<?> c ) {
+    public boolean removeAll( @NonNull Collection<?> c ) {
         throw uninitializedException();
     }
 
     @Override
-    public boolean retainAll( @Nonnull Collection<?> c ) {
+    public boolean retainAll( @NonNull Collection<?> c ) {
         throw uninitializedException();
     }
 

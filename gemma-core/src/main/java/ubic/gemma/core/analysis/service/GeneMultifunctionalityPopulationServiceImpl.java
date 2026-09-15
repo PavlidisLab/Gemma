@@ -23,8 +23,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.math.Rank;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.util.math.Rank;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -34,7 +34,7 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.Multifunctionality;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -51,7 +51,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
     private static final Log log = LogFactory.getLog( GeneMultifunctionalityPopulationServiceImpl.class );
 
     @Autowired
-    private Gene2GOAssociationService gene2GOService;
+    private Gene2GOAssociationReadService gene2GOService;
 
     @Autowired
     private GeneService geneService;
@@ -144,8 +144,8 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         assert !gomap.isEmpty();
 
         Map<String, Integer> goGroupSizes = new HashMap<>();
-        for ( Gene g : gomap.keySet() ) {
-            for ( String go : gomap.get( g ) ) {
+        for ( Set<String> gos : gomap.values() ) {
+            for ( String go : gos ) {
                 if ( !goGroupSizes.containsKey( go ) ) {
                     goGroupSizes.put( go, 1 );
                 } else {
@@ -160,11 +160,12 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         Map<Gene, Multifunctionality> geneMultifunctionality = new HashMap<>();
         int numGenes = gomap.size();
 
-        for ( Gene gene : gomap.keySet() ) {
+        for ( Map.Entry<Gene, Set<String>> goEntry : gomap.entrySet() ) {
+            Gene gene = goEntry.getKey();
+            Set<String> sets = goEntry.getValue();
 
             Multifunctionality mf = Multifunctionality.Factory.newInstance();
             double mfscore = 0.0;
-            Collection<String> sets = gomap.get( gene );
             for ( String goset : sets ) {
                 assert goGroupSizes.containsKey( goset );
                 int inGroup = goGroupSizes.get( goset );
@@ -181,7 +182,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
             }
             assert mfscore >= 0.0 && mfscore <= 1.0;
 
-            mf.setNumGoTerms( gomap.get( gene ).size() );
+            mf.setNumGoTerms( sets.size() );
             mf.setScore( mfscore );
 
             geneMultifunctionalityScore.put( gene, mfscore );
@@ -190,9 +191,10 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
         Map<Gene, Double> rawGeneMultifunctionalityRanks = Rank.rankTransform( geneMultifunctionalityScore, true );
         assert numGenes == rawGeneMultifunctionalityRanks.size();
-        for ( Gene gene : rawGeneMultifunctionalityRanks.keySet() ) {
+        for ( Map.Entry<Gene, Double> rEntry : rawGeneMultifunctionalityRanks.entrySet() ) {
+            Gene gene = rEntry.getKey();
             // 1-base the rank before calculating ratio
-            double relRank = ( rawGeneMultifunctionalityRanks.get( gene ) + 1 ) / numGenes;
+            double relRank = ( rEntry.getValue() + 1 ) / numGenes;
             assert relRank >= 0.0 && relRank <= 1.0;
 
             // big values are "more multifunctional".

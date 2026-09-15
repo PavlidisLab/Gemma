@@ -24,11 +24,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.AbstractMatrix;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.basecode.math.Rank;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.Rank;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -38,7 +37,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -287,7 +286,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         int k = 0;
         int[] originalBioMaterialIndices = new int[columnsToUse.size()];
         for ( BioMaterial bm : columnsToUse ) {
-            originalBioMaterialIndices[k++] = sourceMatrix.getColumnIndex( bm );
+            originalBioMaterialIndices[k++] = columnIndexOrThrow( sourceMatrix, bm );
         }
 
         Map<BioAssayDimension, BioAssayDimension> dimMap = new HashMap<>();
@@ -341,6 +340,26 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * @param sourceMatrix matrix
      * @param reorderedDim the reordered bioAssayDimension.
      */
+    /**
+     * Resolve a sample's column in the source matrix, refusing one the matrix does not hold.
+     * <p>
+     * {@link #getColumnIndex(BioMaterial)} answers -1 for a sample it does not have, and that -1 used to be
+     * written straight into the index array: the failure then surfaced further down as "Index -1 out of bounds
+     * for length N" while reading a row, naming neither the sample nor the fact that it was missing. Both
+     * slicing constructors go through here so the two cannot drift apart.
+     */
+    private static int columnIndexOrThrow( ExpressionDataDoubleMatrix sourceMatrix, BioMaterial bm ) {
+        int columnIndex = sourceMatrix.getColumnIndex( bm );
+        if ( columnIndex < 0 ) {
+            throw new IllegalArgumentException( String.format(
+                    "Cannot slice %s out of this matrix: it is not one of its %d samples. A sample dropped from "
+                            + "the matrix (marked DE_Exclude, or flagged as an outlier) is still listed by the "
+                            + "experiment or subset it came from, so the caller has to drop it too.",
+                    bm, sourceMatrix.columns() ) );
+        }
+        return columnIndex;
+    }
+
     private ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<BioMaterial> columnsToUse,
             BioAssayDimension reorderedDim ) {
         super( sourceMatrix.getExpressionExperiment() );
@@ -352,7 +371,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         int k = 0;
         int[] originalBioMaterialIndices = new int[columnsToUse.size()];
         for ( BioMaterial bm : columnsToUse ) {
-            originalBioMaterialIndices[k++] = sourceMatrix.getColumnIndex( bm );
+            originalBioMaterialIndices[k++] = columnIndexOrThrow( sourceMatrix, bm );
         }
 
         int[][] numberOfCells = null;
@@ -384,7 +403,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, @Nullable int[][] numberOfCells ) {
         super( sourceMatrix );
-        Assert.isTrue( numberOfCells == null || ( numberOfCells.length == sourceMatrix.rows() && Arrays.stream( numberOfCells ).allMatch( row -> row.length == sourceMatrix.columns() ) ) );
+        Assert.isTrue( numberOfCells == null || ( numberOfCells.length == sourceMatrix.rows() && Arrays.stream( numberOfCells ).allMatch( row -> row.length == sourceMatrix.columns() ) ) , "expected true");
         this.matrix = sourceMatrix.matrix;
         this.ranks = sourceMatrix.ranks;
         this.numberOfCells = numberOfCells;
@@ -401,6 +420,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
     }
 
     @Override
+    @Nullable
     public double[] getColumnAsDoubles( BioAssay bioAssay ) {
         int j = getColumnIndex( bioAssay );
         if ( j == -1 ) {
@@ -609,7 +629,7 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
             means.add( DescriptiveWithMissing.mean( matrix.getRowArrayList( i ) ) );
         }
         DoubleArrayList ranks = Rank.rankTransform( means );
-        Map<CompositeSequence, Double> rankMap = new HashMap<>( matrix.rows() );
+        Map<CompositeSequence, Double> rankMap = HashMap.newHashMap( matrix.rows() );
         for ( int i = 0; i < matrix.rows(); i++ ) {
             rankMap.put( matrix.getRowName( i ), ranks.get( i ) / matrix.rows() );
         }
@@ -643,18 +663,17 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         int numRows = rows();
         int numColumns = columns();
 
-        DoubleMatrix<CompositeSequence, BioMaterial> mat = new DenseDoubleMatrix<>( numRows, numColumns );
+        DenseDoubleMatrix<CompositeSequence, BioMaterial> mat = new DenseDoubleMatrix<>( numRows, numColumns );
 
         for ( int j = 0; j < mat.columns(); j++ ) {
             mat.addColumnName( this.getBioMaterialForColumn( j ) );
         }
 
-        // initialize the matrix to -Infinity; this marks values that are not yet initialized.
-        for ( int i = 0; i < mat.rows(); i++ ) {
-            for ( int j = 0; j < mat.columns(); j++ ) {
-                mat.set( i, j, Double.NEGATIVE_INFINITY );
-            }
-        }
+        // Initialize the matrix to NaN in a single primitive pass, then overwrite cells with the data from each vector.
+        // (Previously: fill every cell with -Infinity in a double loop, then scan every cell and rewrite -Infinity to NaN.
+        // Both passes did O(rows*cols) work through DoubleMatrix.set(int,int,Double), each call boxing a Double.)
+        // Vectors that themselves contain NaN-valued cells are unaffected: those NaNs are written on top of NaN.
+        mat.fill( Double.NaN );
 
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
         for ( BulkExpressionDataVector vector : vectors ) {
@@ -678,7 +697,11 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
 
             Iterator<BioAssay> it = bioAssays.iterator();
 
-            this.setMatBioAssayValues( mat, rowIndex, ArrayUtils.toObject( vals ), bioAssays, it );
+            // Primitive path: no double[] -> Double[] boxing (was ArrayUtils.toObject(vals), which allocated
+            // one Double per cell -- ~17.5M for a 175k x 100 matrix, all garbage). vals comes from
+            // DataVector.getDataAsDoubles() which returns a fresh double[] decoded from the byte payload,
+            // so we may read it directly without copying.
+            this.setMatBioAssayValuesAsDoubles( mat, rowIndex, vals, bioAssays, it );
         }
 
         /*
@@ -689,15 +712,6 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         }
         assert mat.getRowNames().size() == mat.rows();
 
-        // fill in remaining missing values.
-        for ( int i = 0; i < mat.rows(); i++ ) {
-            for ( int j = 0; j < mat.columns(); j++ ) {
-                if ( mat.get( i, j ) == Double.NEGATIVE_INFINITY ) {
-                    // log.debug( "Missing value at " + i + " " + j );
-                    mat.set( i, j, Double.NaN );
-                }
-            }
-        }
         ExpressionDataDoubleMatrix.log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
         return mat;
     }
@@ -717,13 +731,25 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         return result;
     }
 
-    private <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
-            Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
+    /**
+     * Writes a row of vector values into the dense double matrix. Takes a primitive {@code double[]} so the
+     * row's payload does not need to be boxed into a {@code Double[]} before assignment (the generic
+     * {@code AbstractMatrix.set(int, int, V)} path would otherwise allocate one Double per cell -- ~17.5M
+     * Doubles for a 175k x 100 matrix, all garbage).
+     * <p>
+     * -Infinity sentinel: the legacy two-pass path filled cells with -Infinity then scanned-and-rewrote them
+     * to NaN at the end. That replaced both unwritten sentinels AND any actual -Infinity values produced by
+     * upstream conversions (e.g. log2(0) for a count of 0). The single-pass path here preserves the same
+     * end-state by substituting NaN for -Infinity at write time.
+     */
+    private void setMatBioAssayValuesAsDoubles( DenseDoubleMatrix<CompositeSequence, BioMaterial> mat, int rowIndex,
+            double[] vals, Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
         for ( int j = 0; j < bioAssays.size(); j++ ) {
             BioAssay bioAssay = it.next();
             int column = getColumnIndex( bioAssay );
             assert column != -1;
-            mat.set( rowIndex, column, vals[j] );
+            double v = vals[j];
+            mat.set( rowIndex, column, v == Double.NEGATIVE_INFINITY ? Double.NaN : v );
         }
     }
 }

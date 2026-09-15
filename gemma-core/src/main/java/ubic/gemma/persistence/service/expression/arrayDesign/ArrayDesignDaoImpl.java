@@ -21,16 +21,22 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -42,20 +48,22 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
 
-import javax.annotation.Nullable;
-import java.math.BigInteger;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -81,6 +89,18 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Autowired
     public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
         super( ArrayDesignDao.OBJECT_ALIAS, ArrayDesign.class, sessionFactory );
+    }
+
+    @Override
+    public Map<Long, ArrayDesign> loadAsMap( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // Delegates to AbstractDao.load(Collection<Long>) which already issues a single
+        // WHERE id IN (...) fetch (with parameter optimisation + per-batch chunking when
+        // batchSize is set). See AbstractDao#loadByIds.
+        return load( ids ).stream()
+                .collect( Collectors.toMap( ArrayDesign::getId, Function.identity() ) );
     }
 
     @Override
@@ -127,9 +147,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign ) {
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
-                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
-
+        // HB6: previously acquired Session.lock(arrayDesign, PESSIMISTIC_WRITE) as a
+        // defensive serialisation guard. HB6 cascades the lock through cascade="all"
+        // (compositeSequences -> biologicalCharacteristic -> ...) and trips
+        // ImmutableEntityEntry.setLockMode with "Lock mode not supported" when it reaches
+        // an immutable entity (Chromosome / ExternalDatabase). The lock served no
+        // functional purpose for this child-record cleanup — DB row locks on the
+        // BlatAssociation/AnnotationAssociation deletes provide the per-row mutex —
+        // so it has been dropped.
         //noinspection unchecked
         List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ba from CompositeSequence  cs "
@@ -147,9 +172,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign ) {
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
-                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
-
+        // See deleteGeneProductAlignmentAssociations for the HB6 cascading-lock rationale
+        // (the parent-entity lock was dropped — DB row locks on the delete suffice).
         //noinspection unchecked
         List<AnnotationAssociation> annotAssociations = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ba from CompositeSequence cs "
@@ -170,6 +194,30 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
+        Filters composed = composeBlacklistFilters( filters );
+        if ( composed == null ) {
+            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+        }
+        return loadValueObjects( composed, sort, offset, limit );
+    }
+
+    @Override
+    public CursorPage<ArrayDesignValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        Filters composed = composeBlacklistFilters( filters );
+        if ( composed == null ) {
+            return new CursorPage<>( Collections.emptyList(), sort, limit, null, null, 0L );
+        }
+        return loadValueObjectsByCursor( composed, sort, cursor, limit );
+    }
+
+    /**
+     * Compose the blacklist filter (matching either {@code shortName} or {@code accession}) on
+     * top of the caller-supplied {@link Filters}. Returns {@code null} when there are no
+     * blacklisted platforms — both {@link #loadBlacklistedValueObjects} and
+     * {@link #loadBlacklistedValueObjectsByCursor} short-circuit to an empty page in that case.
+     */
+    @Nullable
+    private Filters composeBlacklistFilters( @Nullable Filters filters ) {
         if ( filters == null ) {
             filters = Filters.empty();
         } else {
@@ -181,7 +229,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // or by accession
         Set<String> blacklistedAccessions = getBlacklistedAccessions();
         if ( blacklistedShortNames.isEmpty() && blacklistedAccessions.isEmpty() ) {
-            return new Slice<>( Collections.emptyList(), sort, offset, limit, 0L );
+            return null;
         }
         Filters.FiltersClauseBuilder clauseBuilder = filters.and();
         if ( !blacklistedShortNames.isEmpty() ) {
@@ -190,16 +238,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( !blacklistedAccessions.isEmpty() ) {
             clauseBuilder = clauseBuilder.or( EXTERNAL_REFERENCE_ALIAS, "accession", String.class, Filter.Operator.in, blacklistedAccessions );
         }
-        filters = clauseBuilder.build();
-        return loadValueObjects( filters, sort, offset, limit );
+        return clauseBuilder.build();
     }
 
     @Override
     public void deleteGeneProductAssociations( ArrayDesign arrayDesign ) {
 
-        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
-                .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
-
+        // See deleteGeneProductAlignmentAssociations for the HB6 cascading-lock rationale
+        // (the parent-entity lock was dropped — DB row locks on the delete suffice).
         // these two queries could be combined by using BioSequence2GeneProduct.
         //noinspection unchecked
         List<BlatAssociation> blatAssociations = this.getSessionFactory().getCurrentSession()
@@ -263,9 +309,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public ArrayDesign find( ArrayDesign entity ) {
         BusinessKey.checkValidKey( entity );
-        Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
-        BusinessKey.addRestrictions( query, entity );
-        return ( ArrayDesign ) query.uniqueResult();
+        return BusinessKey.find( super.getSessionFactory().getCurrentSession(), entity );
     }
 
     @Override
@@ -386,7 +430,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             //noinspection unchecked
             return getSessionFactory().getCurrentSession()
                     // using distinct for multi-mapping probes
-                    .createSQLQuery( "select {G.*} from GENE2CS "
+                    .createNativeQuery( "select {G.*} from GENE2CS "
                             + "join CHROMOSOME_FEATURE G on GENE2CS.GENE = G.ID "
                             + "where GENE2CS.AD = :ad "
                             + "group by G.ID" )
@@ -429,7 +473,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             }
             //noinspection unchecked
             List<Object[]> results = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD = :arrayDesignId" )
+                    .createNativeQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD = :arrayDesignId" )
                     .addScalar( "CS", StandardBasicTypes.LONG )
                     .addEntity( "G", Gene.class )
                     .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
@@ -464,12 +508,50 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesigns, boolean useGene2Cs ) {
-        return arrayDesigns.stream()
-                .map( ad -> getGenesByCompositeSequence( ad, useGene2Cs ) )
-                .reduce( new HashMap<>(), ( m1, m2 ) -> {
-                    m1.putAll( m2 );
-                    return m1;
-                } );
+        if ( arrayDesigns.isEmpty() ) {
+            return new HashMap<>();
+        }
+        if ( useGene2Cs ) {
+            // Fetch CSs for all ADs in one query so the gene2cs row's CS id can be resolved.
+            //noinspection unchecked
+            List<CompositeSequence> allCs = getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs from CompositeSequence cs where cs.arrayDesign in :ads" )
+                    .setParameterList( "ads", optimizeIdentifiableParameterList( arrayDesigns ) )
+                    .list();
+            Map<Long, CompositeSequence> idMap = IdentifiableUtils.getIdMap( allCs );
+            //noinspection unchecked
+            List<Object[]> results = getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD in :arrayDesignIds" )
+                    .addScalar( "CS", StandardBasicTypes.LONG )
+                    .addEntity( "G", Gene.class )
+                    .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                    .addSynchronizedEntityClass( ArrayDesign.class )
+                    .addSynchronizedEntityClass( CompositeSequence.class )
+                    .addSynchronizedEntityClass( Gene.class )
+                    .setParameterList( "arrayDesignIds", IdentifiableUtils.getIds( arrayDesigns ) )
+                    .setCacheable( true )
+                    .list();
+            return results.stream()
+                    .collect( Collectors.groupingBy(
+                            row -> requireNonNull( idMap.get( ( Long ) row[0] ) ),
+                            Collectors.mapping( row -> ( Gene ) row[1], Collectors.toSet() ) ) );
+        } else {
+            //noinspection unchecked
+            List<Object[]> results = getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs, gene from CompositeSequence cs "
+                            + "join cs.biologicalCharacteristic bs "
+                            + "join bs.bioSequence2GeneProduct bs2gp "
+                            + "join bs2gp.geneProduct gp "
+                            + "join gp.gene gene "
+                            + "where cs.arrayDesign in :ads "
+                            + "group by cs, gene" )
+                    .setParameterList( "ads", optimizeIdentifiableParameterList( arrayDesigns ) )
+                    .list();
+            return results.stream()
+                    .collect( Collectors.groupingBy(
+                            row -> ( CompositeSequence ) row[0],
+                            Collectors.mapping( row -> ( Gene ) row[1], Collectors.toSet() ) ) );
+        }
     }
 
     @Override
@@ -631,12 +713,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign, int limit, int offset ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
+        Query<CompositeSequence> query = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select cs from CompositeSequence as cs where cs.arrayDesign = :ad" )
-                .setParameter( "ad", arrayDesign )
-                .setFirstResult( offset )
-                .setMaxResults( limit )
-                .list();
+                .setParameter( "ad", arrayDesign );
+        if ( offset > 0 ) query.setFirstResult( offset );
+        if ( limit > 0 ) query.setMaxResults( limit );
+        return query.list();
     }
 
     /**
@@ -647,13 +729,25 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
      */
     @Override
     protected ArrayDesignValueObject doLoadValueObject( ArrayDesign ad ) {
-        return new ArrayDesignValueObject( ad );
+        // skipEvents=true — the three last*Event proxies are batch-hydrated post-hoc in
+        // postProcessValueObjects(populateLastEvents). Without skipEvents the ctor would
+        // walk AbstractCuratableValueObject's eager-init path which reads
+        // curationDetails.last*Event.getPerformer(); since a557a37122 dropped the
+        // matching JOIN FETCH lastXEvent lines from the filtering query, the lazy
+        // proxies on a detached entity (e.g. an AD passed in from a prior query in
+        // DatasetsWebService.getDatasetsPlatformsUsageStatistics) blow up with
+        // LazyInitializationException. The filtering-query path already does the
+        // skipEvents+batch pattern via transformListTyped; this brings the direct-
+        // entity-list path (loadValueObjects(Collection<O>)) into parity.
+        return new ArrayDesignValueObject( ad, true );
     }
 
     @Override
     protected void postProcessValueObjects( List<ArrayDesignValueObject> results ) {
         StopWatch timer = StopWatch.createStarted();
+        populateLastEvents( results );
         populateIsMerged( results );
+        populateMergeRelations( results );
         populateBlacklisted( results );
         populateExpressionExperimentCount( results );
         populateSwitchedExpressionExperimentCount( results );
@@ -661,6 +755,137 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > 100 ) {
             log.warn( String.format( "Populating %d ArrayDesign VOs took %d ms.", results.size(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
+    }
+
+    /**
+     * Batch-hydrate the three {@code last*Event} proxies (lastTroubledEvent /
+     * lastNeedsAttentionEvent / lastNoteUpdateEvent) for the VOs that came in with
+     * {@code skipEvents=true} from {@link #doLoadValueObject(ArrayDesign)}.
+     * <p>
+     * Same batched-load shape used by {@link #getValueObjectTransformer()
+     * transformListTyped} on the filtering-query path — three HQL queries grouped by
+     * AD id, applied to the VOs via {@link AbstractCuratableValueObject#applyLastEventTriple}.
+     * For the typical small AD pages this is a single round-trip per event-kind.
+     */
+    private void populateLastEvents( Collection<ArrayDesignValueObject> results ) {
+        if ( results.isEmpty() ) {
+            return;
+        }
+        List<Long> ids = results.stream()
+                .filter( Objects::nonNull )
+                .map( IdentifiableUtils::getRequiredId )
+                .sorted()
+                .distinct()
+                .collect( Collectors.toList() );
+        Map<Long, AbstractCuratableValueObject.LastEventTriple> eventsByAdId =
+                loadLastEventsByArrayDesignIds( ids );
+        for ( ArrayDesignValueObject vo : results ) {
+            if ( vo != null ) {
+                vo.applyLastEventTriple( eventsByAdId.get( vo.getId() ) );
+            }
+        }
+    }
+
+    @Override
+    protected TypedResultTransformer<ArrayDesignValueObject> getValueObjectTransformer() {
+        TypedResultTransformer<ArrayDesignValueObject> defaultTransformer = super.getValueObjectTransformer();
+        return new TypedResultTransformer<ArrayDesignValueObject>() {
+            @Override
+            public ArrayDesignValueObject transformTuple( Object[] tuple, String[] aliases ) {
+                // The three CurationDetails.last*Event proxies are batch-hydrated in
+                // transformListTyped — passing skipEvents=true here leaves them untouched at
+                // row-mapping time. Mirrors ExpressionExperimentDaoImpl#getValueObjectTransformer.
+                ArrayDesign ad = ( ArrayDesign ) tuple[0];
+                if ( ad == null ) {
+                    return null;
+                }
+                initializeCachedFilteringResult( ad );
+                return new ArrayDesignValueObject( ad, true );
+            }
+
+            @Override
+            public List<ArrayDesignValueObject> transformListTyped( List<ArrayDesignValueObject> collection ) {
+                List<Long> ids = collection.stream()
+                        .filter( Objects::nonNull )
+                        .map( IdentifiableUtils::getRequiredId )
+                        .sorted()
+                        .distinct()
+                        .collect( Collectors.toList() );
+                // Batch-hydrate the three last*Event proxies that the row-mapping skipped. See
+                // #loadLastEventsByArrayDesignIds for the per-page SELECT shape.
+                Map<Long, AbstractCuratableValueObject.LastEventTriple> eventsByAdId =
+                        loadLastEventsByArrayDesignIds( ids );
+                for ( ArrayDesignValueObject vo : collection ) {
+                    if ( vo != null ) {
+                        vo.applyLastEventTriple( eventsByAdId.get( vo.getId() ) );
+                    }
+                }
+                return defaultTransformer.transformListTyped( collection );
+            }
+        };
+    }
+
+    /**
+     * Batch-load the three {@code last*Event} associations off {@code CurationDetails} for a page
+     * of ArrayDesigns, returning a per-AD {@link AbstractCuratableValueObject.LastEventTriple}. One
+     * SELECT per event-kind, all keyed on AD id (with {@code listByBatch} for chunking large
+     * pages); {@code eventType} ({@code fetch="join"} on the {@code AuditEvent} mapping) and
+     * {@code performer} ({@code lazy="false"} on the same mapping) come along automatically, so
+     * the downstream {@code AuditEventValueObject} constructor walks initialised state.
+     * <p>
+     * Replaces the six {@code left join fetch} lines on {@link #getFilteringQuery}: the join-fetch
+     * form bloated every multi-AD list query with three extra LEFT JOINs against
+     * {@code AUDIT_EVENT} + {@code AUDIT_EVENT_TYPE} regardless of whether the result-set payload
+     * was ever read. Mirrors {@code ExpressionExperimentDaoImpl#loadLastEventsByExperimentIds}.
+     */
+    private Map<Long, AbstractCuratableValueObject.LastEventTriple> loadLastEventsByArrayDesignIds( Collection<Long> adIds ) {
+        if ( adIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Session session = getSessionFactory().getCurrentSession();
+        //noinspection unchecked
+        List<Object[]> troubledRows = QueryUtils.listByBatch( session
+                        .createQuery( "select ad.id, e from ArrayDesign ad "
+                                + "join ad.curationDetails s "
+                                + "join s.lastTroubledEvent e "
+                                + "where ad.id in :adIds" ),
+                "adIds", adIds, 2048 );
+        //noinspection unchecked
+        List<Object[]> attentionRows = QueryUtils.listByBatch( session
+                        .createQuery( "select ad.id, e from ArrayDesign ad "
+                                + "join ad.curationDetails s "
+                                + "join s.lastNeedsAttentionEvent e "
+                                + "where ad.id in :adIds" ),
+                "adIds", adIds, 2048 );
+        //noinspection unchecked
+        List<Object[]> noteRows = QueryUtils.listByBatch( session
+                        .createQuery( "select ad.id, e from ArrayDesign ad "
+                                + "join ad.curationDetails s "
+                                + "join s.lastNoteUpdateEvent e "
+                                + "where ad.id in :adIds" ),
+                "adIds", adIds, 2048 );
+        Map<Long, AuditEvent> troubled = new HashMap<>();
+        for ( Object[] row : troubledRows ) {
+            troubled.put( ( Long ) row[0], ( AuditEvent ) row[1] );
+        }
+        Map<Long, AuditEvent> attention = new HashMap<>();
+        for ( Object[] row : attentionRows ) {
+            attention.put( ( Long ) row[0], ( AuditEvent ) row[1] );
+        }
+        Map<Long, AuditEvent> note = new HashMap<>();
+        for ( Object[] row : noteRows ) {
+            note.put( ( Long ) row[0], ( AuditEvent ) row[1] );
+        }
+        Map<Long, AbstractCuratableValueObject.LastEventTriple> result = new HashMap<>();
+        for ( Long adId : adIds ) {
+            AuditEvent t = troubled.get( adId );
+            AuditEvent a = attention.get( adId );
+            AuditEvent n = note.get( adId );
+            if ( t != null || a != null || n != null ) {
+                result.put( adId, new AbstractCuratableValueObject.LastEventTriple( t, a, n ) );
+            }
+        }
+        return result;
     }
 
     @Override
@@ -674,6 +899,29 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "join ee.bioAssays b join b.arrayDesignUsed ad "
                         + "where ee.id = :eeId "
                         + "group by ad" )
+                .setParameter( "eeId", eeId )
+                .setCacheable( true )
+                .list();
+        return this.loadValueObjectsByIds( ids );
+    }
+
+    @Override
+    public List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( @Nullable Long eeId ) {
+        if ( eeId == null ) {
+            return Collections.emptyList();
+        }
+        // A no-op switch — a platform recorded as the original that is ALSO the one in use — is excluded, so
+        // this answers "what was this submitted on, before it became what it is" rather than "what ids appear
+        // in the originalPlatform column". Same rule the details VO applies (ExpressionExperimentDaoImpl,
+        // "omit noop switches"), kept identical so the two cannot drift into disagreeing.
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select op.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays b join b.originalPlatform op "
+                        + "where ee.id = :eeId and op.id not in ("
+                        + "select ad.id from ExpressionExperiment as ee2 "
+                        + "join ee2.bioAssays b2 join b2.arrayDesignUsed ad where ee2.id = :eeId) "
+                        + "group by op" )
                 .setParameter( "eeId", eeId )
                 .setCacheable( true )
                 .list();
@@ -700,15 +948,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countCompositeSequencesWithGenes( boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct CS) from GENE2CS" )
+            return ( ( Number ) this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select count(distinct CS) from GENE2CS" )
                     .uniqueResult() ).longValue();
 
         } else {
             return ( Long ) this.getSessionFactory().getCurrentSession()
                     .createQuery( "select count(distinct cs) from CompositeSequence as cs join cs.arrayDesign as ar "
                             + ", BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp "
-                            + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp" )
+                            + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp "
+                            + "and gp.dummy = false" )
                     .uniqueResult();
         }
     }
@@ -716,14 +965,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countGenes( boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct GENE) from GENE2CS" )
+            return ( ( Number ) this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select count(distinct GENE) from GENE2CS" )
                     .uniqueResult() ).longValue();
         } else {
             return ( Long ) this.getSessionFactory().getCurrentSession()
                     .createQuery( "select count(distinct gene) from  CompositeSequence as cs join cs.arrayDesign as ar "
                             + ", BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp "
-                            + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp" )
+                            + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp "
+                            + "and gp.dummy = false" )
                     .uniqueResult();
         }
     }
@@ -772,8 +1022,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countCompositeSequencesWithGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct CS) from GENE2CS where AD = :adId" )
+            return ( ( Number ) getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select count(distinct CS) from GENE2CS where AD = :adId" )
                     .setParameter( "adId", arrayDesign.getId() )
                     .uniqueResult() ).longValue();
         } else {
@@ -781,7 +1031,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     .createQuery( "select count(distinct cs) from  CompositeSequence as cs join cs.arrayDesign as ar "
                             + " , BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp "
                             + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                            + "bs2gp.geneProduct=gp and ar = :ar" )
+                            + "bs2gp.geneProduct=gp and gp.dummy = false and ar = :ar" )
                     .setParameter( "ar", arrayDesign ).uniqueResult();
         }
     }
@@ -789,8 +1039,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countCompositeSequencesWithGenes( Collection<ArrayDesign> arrayDesigns, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select count(distinct CS) from GENE2CS where AD in :adIds" )
+            return ( ( Number ) getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select count(distinct CS) from GENE2CS where AD in :adIds" )
                     .setParameterList( "adIds", IdentifiableUtils.getIds( arrayDesigns ) )
                     .uniqueResult() ).longValue();
         } else {
@@ -798,7 +1048,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     .createQuery( "select count(distinct cs) from  CompositeSequence as cs join cs.arrayDesign as ar "
                             + " , BioSequence2GeneProduct bs2gp, Gene gene join gene.products gp "
                             + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                            + "bs2gp.geneProduct=gp and ar in :ar" )
+                            + "bs2gp.geneProduct=gp and gp.dummy = false and ar in :ar" )
                     .setParameterList( "ar", arrayDesigns ).uniqueResult();
         }
     }
@@ -806,7 +1056,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
         if ( useGene2Cs ) {
-            return ( ( BigInteger ) getSessionFactory().getCurrentSession().createSQLQuery(
+            return ( ( Number ) getSessionFactory().getCurrentSession().createNativeQuery(
                             "select count(distinct g2cs.GENE) from GENE2CS g2cs "
                                     + "where g2cs.AD = :arrayDesignId" )
                     .setParameter( "arrayDesignId", arrayDesign.getId() )
@@ -816,7 +1066,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                     .createQuery( "select count(distinct gene) from CompositeSequence cs "
                             + "join cs.biologicalCharacteristic bs "
                             + "join bs.bioSequence2GeneProduct bs2gp join bs2gp.geneProduct gp join gp.gene gene "
-                            + "where cs.arrayDesign = :ad" )
+                            + "where cs.arrayDesign = :ad and gp.dummy = false" )
                     .setParameter( "ad", arrayDesign )
                     .uniqueResult();
         }
@@ -834,11 +1084,38 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         arrayDesign.getMergees().clear();
         arrayDesign.getSubsumedArrayDesigns().clear();
 
-        Iterator<CompositeSequence> iterator = arrayDesign.getCompositeSequences().iterator();
-        while ( iterator.hasNext() ) {
-            CompositeSequence cs = iterator.next();
-            iterator.remove();
-            this.getSessionFactory().getCurrentSession().delete( cs );
+        /*
+         * Hibernate 6 fix (HIBERNATE6_CASCADE_AUDIT.md MEDIUM #7).
+         *
+         * Old shape: Iterator<CompositeSequence>#remove() interleaved with
+         * session.delete(cs) per element, then super.remove(arrayDesign).
+         * The CompositeSequence set is mapped cascade="all" on ArrayDesign
+         * (not delete-orphan), so iterator.remove() alone does NOT delete
+         * the row; the explicit session.delete(cs) is what removes it.
+         * Under HB6 the mid-iteration mutation of the managed collection
+         * leaves cleared children in DELETING state inside the
+         * PersistenceContext; the subsequent session.remove(arrayDesign)
+         * cascade walk through compositeSequences then re-visits the same
+         * children and ACTION_CHECK_ON_FLUSH raises TransientObjectException
+         * (same family as the EE-DAO vector bug, c99be75b47, and the DEA
+         * resultSet bug, 10ffc16627).
+         *
+         * Safe pattern: snapshot the children, clear the collection in one
+         * shot, session.delete() each captured child, then session.evict()
+         * it so the dangling managed orphan is gone before super.remove
+         * cascades. By the time super.remove(arrayDesign) runs the parent's
+         * compositeSequences collection is empty and the PersistenceContext
+         * no longer holds the deleted children, so the cascade walk has
+         * nothing to re-visit. Pattern A + safe-clear from the audit doc.
+         */
+        Session session = this.getSessionFactory().getCurrentSession();
+        List<CompositeSequence> toDelete = new ArrayList<>( arrayDesign.getCompositeSequences() );
+        arrayDesign.getCompositeSequences().clear();
+        for ( CompositeSequence cs : toDelete ) {
+            session.delete( cs );
+            if ( session.contains( cs ) ) {
+                session.evict( cs );
+            }
         }
 
         super.remove( arrayDesign );
@@ -988,14 +1265,17 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //language=HQL
+        // The three CurationDetails.last*Event proxies are batch-hydrated post-fetch via
+        // #loadLastEventsByArrayDesignIds and applied to each VO through
+        // AbstractCuratableValueObject#applyLastEventTriple — see getValueObjectTransformer().
+        // Reverting to the prior `left join fetch s.lastTroubledEvent / lastNeedsAttentionEvent /
+        // lastNoteUpdateEvent` form re-introduces three JOIN-FETCHes against AUDIT_EVENT (+
+        // AUDIT_EVENT_TYPE via fetch="join") on every AD list query, payload usually unread.
         return finishFilteringQuery( "select ad "
                 + "from ArrayDesign as ad "
                 + "left join fetch ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                 + "left join fetch ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                 + "left join fetch ad.mergedInto m "
-                + "left join fetch s.lastNeedsAttentionEvent as eAttn "
-                + "left join fetch s.lastNoteUpdateEvent as eNote "
-                + "left join fetch s.lastTroubledEvent as eTrbl "
                 + "left join fetch ad.alternativeTo alt", filters, sort, groupByIfNecessary( sort, EXTERNAL_REFERENCE_ALIAS ) );
     }
 
@@ -1016,23 +1296,17 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                         + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                         + "left join ad.mergedInto m "
-                        + "left join s.lastNeedsAttentionEvent as eAttn "
-                        + "left join s.lastNoteUpdateEvent as eNote "
-                        + "left join s.lastTroubledEvent as eTrbl "
                         + "left join ad.alternativeTo alt", filters, sort, groupByIfNecessary( sort, EXTERNAL_REFERENCE_ALIAS ) );
     }
 
     @Override
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
         //language=HQL
-        return finishFilteringQuery( "select count(" + distinctIfNecessary() + "ad) "
+        return finishFilteringQuery( "select count(ad) "
                 + "from ArrayDesign as ad "
                 + "left join ad.curationDetails " + CURATION_DETAILS_ALIAS + " "
                 + "left join ad.primaryTaxon " + PRIMARY_TAXON_ALIAS + " "
                 + "left join ad.mergedInto m "
-                + "left join s.lastNeedsAttentionEvent as eAttn "
-                + "left join s.lastNoteUpdateEvent as eNote "
-                + "left join s.lastTroubledEvent as eTrbl "
                 + "left join ad.alternativeTo alt", filters, null, null );
     }
 
@@ -1121,6 +1395,63 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
     }
 
+    /**
+     * Batch-hydrate {@code mergedInto} + {@code mergees} — which platform this one was merged into,
+     * and which were merged into it.
+     * <p>
+     * Two HQL projections rather than a walk of the entity associations: both edges are
+     * {@code LAZY}, so reading {@code shortName} off the {@code mergedInto} proxy per VO would fire
+     * one query per row. Projecting {@code (owner id, other id, other shortName)} keeps it at two
+     * statements per page regardless of page size, and both sides key off {@code MERGED_INTO_FK}.
+     * <p>
+     * Answers the mergee direction, which had no route at all before: {@code isMergee} said only
+     * THAT a platform was merged, and {@code mergees.id} is not a filterable property, so a mergee
+     * could not name its target from the side a visitor stands on.
+     */
+    private void populateMergeRelations( Collection<ArrayDesignValueObject> results ) {
+        if ( results.isEmpty() ) {
+            return;
+        }
+        List<Long> ids = results.stream()
+                .filter( Objects::nonNull )
+                .map( IdentifiableUtils::getRequiredId )
+                .sorted()
+                .distinct()
+                .collect( Collectors.toList() );
+        //language=HQL
+        //noinspection unchecked
+        List<Object[]> mergedIntoRows = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id, m.id, m.shortName from ArrayDesign ad join ad.mergedInto m where ad.id in :ids" )
+                .setParameterList( "ids", ids )
+                .list();
+        Map<Long, ArrayDesignReferenceValueObject> mergedIntoByAd = new HashMap<>( mergedIntoRows.size() );
+        for ( Object[] row : mergedIntoRows ) {
+            mergedIntoByAd.put( ( Long ) row[0], new ArrayDesignReferenceValueObject( ( Long ) row[1], ( String ) row[2] ) );
+        }
+        //language=HQL
+        //noinspection unchecked
+        List<Object[]> mergeeRows = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id, m.id, m.shortName from ArrayDesign ad join ad.mergees m where ad.id in :ids order by m.shortName" )
+                .setParameterList( "ids", ids )
+                .list();
+        Map<Long, List<ArrayDesignReferenceValueObject>> mergeesByAd = new HashMap<>();
+        for ( Object[] row : mergeeRows ) {
+            mergeesByAd.computeIfAbsent( ( Long ) row[0], k -> new ArrayList<>() )
+                    .add( new ArrayDesignReferenceValueObject( ( Long ) row[1], ( String ) row[2] ) );
+        }
+        for ( ArrayDesignValueObject vo : results ) {
+            if ( vo == null ) {
+                continue;
+            }
+            vo.setMergedInto( mergedIntoByAd.get( vo.getId() ) );
+            // Empty rather than null: the question was asked for every VO on this path, so an empty
+            // list means "nothing was merged into this platform" and null would wrongly read as
+            // "not determined".
+            List<ArrayDesignReferenceValueObject> mergees = mergeesByAd.get( vo.getId() );
+            vo.setMergees( mergees != null ? mergees : Collections.emptyList() );
+        }
+    }
+
     private void populateBlacklisted( Collection<ArrayDesignValueObject> vos ) {
         Set<String> blacklistedShortnames = getBlacklistedShortNames();
         Set<String> blacklistedAccessions = getBlacklistedAccessions();
@@ -1135,11 +1466,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     private void populateExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
-                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
+                .createNativeQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
                         + "where ee2ad.ARRAY_DESIGN_FK in :ids "
                         + "and not ee2ad.IS_ORIGINAL_PLATFORM"
-                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.EXPRESSION_EXPERIMENT_FK", "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                         + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
                         + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )
@@ -1161,13 +1491,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     private void populateSwitchedExpressionExperimentCount( Collection<ArrayDesignValueObject> entities ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
-                        + EE2CAclQueryUtils.formNativeAclJoinClause( "ee2ad.EXPRESSION_EXPERIMENT_FK" ) + " "
+                .createNativeQuery( "select ee2ad.ARRAY_DESIGN_FK as ID, count(distinct ee2ad.EXPRESSION_EXPERIMENT_FK) as EE_COUNT from EXPRESSION_EXPERIMENT2ARRAY_DESIGN ee2ad "
                         + "where ee2ad.ARRAY_DESIGN_FK in :ids "
                         + "and ee2ad.IS_ORIGINAL_PLATFORM "
                         // ignore noop switches
                         + "and ee2ad.ARRAY_DESIGN_FK not in (select ARRAY_DESIGN_FK from EXPRESSION_EXPERIMENT2ARRAY_DESIGN where EXPRESSION_EXPERIMENT_FK = ee2ad.EXPRESSION_EXPERIMENT_FK and ARRAY_DESIGN_FK = ee2ad.ARRAY_DESIGN_FK and not IS_ORIGINAL_PLATFORM)"
-                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
+                        + EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "ee2ad.EXPRESSION_EXPERIMENT_FK", "ee2ad.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" )
                         + formNativeNonTroubledClause( "ee2ad.EXPRESSION_EXPERIMENT_FK", ExpressionExperiment.class )
                         + " group by ee2ad.ARRAY_DESIGN_FK" )
                 .addScalar( "ID", StandardBasicTypes.LONG )

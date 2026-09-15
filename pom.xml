@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.32.8</version>
+	<version>2.0.0-alpha-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -22,7 +22,6 @@
 		<module>gemma-core</module>
 		<module>gemma-cli</module>
 		<module>gemma-rest</module>
-		<module>gemma-web</module>
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
@@ -144,18 +143,475 @@
 			<name>Rachel Schwartz</name>
 		</contributor>
 	</contributors>
-	<dependencies>
-		<dependency>
-			<groupId>baseCode</groupId>
-			<artifactId>baseCode</artifactId>
-			<version>1.1.34</version>
-		</dependency>
+	<dependencyManagement>
+		<dependencies>
+			<!--
+			Phase 3: Spring Boot dependencies BOM. NOT making Gemma a Boot application - no
+			@SpringBootApplication, no embedded Tomcat, no autoconfig. Pure version management
+			over the (large) common-transitive surface (jackson-bom, micrometer-bom, jakarta,
+			commons-*, slf4j, logback, mockito, junit, assertj, tomcat embed, etc.). Boot 3.5.x
+			targets Spring Framework 6.2 + Spring Security 6.5 + Hibernate 6.6 - aligned with
+			Gemma's SF 6.2.8 / SS 6.5.1 / HB 6.6.18.Final stack. Bumping the BOM major minor
+			MUST be coordinated with the spring.version / spring.security.version / hibernate.version
+			properties below; see SPRING_BOOT_BOM_ADOPTION.md.
+			-->
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring-boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 
-		<dependency>
-			<groupId>pavlab</groupId>
-			<artifactId>gemma-gsec</artifactId>
-			<version>${gsec.version}</version>
-		</dependency>
+			<!--
+			Overrides retained AFTER BOM adoption. Each entry is here because either (a) the BOM
+			does not manage the artifact, or (b) Gemma needs a different version than the BOM picks.
+			-->
+			<!-- (a) Not managed by Boot 3.3 BOM. -->
+			<dependency>
+				<groupId>org.hibernate.common</groupId>
+				<artifactId>hibernate-commons-annotations</artifactId>
+				<version>6.0.6.Final</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-collections4</artifactId>
+				<version>4.5.0</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.module</groupId>
+				<artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+				<version>2.19.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.antlr</groupId>
+				<artifactId>antlr4-runtime</artifactId>
+				<version>4.13.2</version>
+			</dependency>
+			<!-- (b) BOM-managed but Gemma needs a different version. Each override below
+			     wins over the BOM's pick. dependencyConvergence requires the override to
+			     match every transitive arrival path - that's the whole point of pinning
+			     in dependencyManagement. -->
+			<!-- Jackson 2.21.x: Boot 3.3 BOM imports jackson-bom 2.17.3; Gemma needs 2.21.x for
+			     security fixes + jakarta-xmlbind module compatibility. Override the three core
+			     jars + datatypes that arrive transitively at 2.17.3. -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-core</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
+				<version>${jackson-annotations.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.datatype</groupId>
+				<artifactId>jackson-datatype-jsr310</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
+			<!-- Hibernate 6.4.10: BOM ships 6.5.3.Final. Gemma stays on 6.4.x until a
+			     coordinated Hibernate minor bump (separate worktree). -->
+			<dependency>
+				<groupId>org.hibernate.orm</groupId>
+				<artifactId>hibernate-core</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate.orm</groupId>
+				<artifactId>hibernate-jcache</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+			<!-- Hibernate Search 7 + Lucene 9 (Renovations Phase 3, search restoration Step 1).
+			     - hibernate-search-mapper-orm: integrates HS into the Hibernate ORM SessionFactory.
+			     - hibernate-search-backend-lucene: the embedded-Lucene (local filesystem) backend.
+			     Lucene 9 is transitively pinned by these artifacts; we deliberately do NOT pin
+			     a standalone Lucene version. See SEARCH_RECCE.md Section 3.1. -->
+			<dependency>
+				<groupId>org.hibernate.search</groupId>
+				<artifactId>hibernate-search-mapper-orm</artifactId>
+				<version>${hibernate.search.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate.search</groupId>
+				<artifactId>hibernate-search-backend-lucene</artifactId>
+				<version>${hibernate.search.version}</version>
+			</dependency>
+			<!-- Phase 3 ontology Step 1: Jena 4.10.0 + Lucene 9.11.1 convergence.
+			     Manage every Jena artifact the dependency graph could reach (direct +
+			     transitive from baseCode's old jena-core 2.13.0 + jena-tdb 1.1.2)
+			     so they all converge on 4.10.0. The maven-enforcer dependencyConvergence
+			     rule fails if any one Jena jar leaks through at 2.x. -->
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-tdb2</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-text</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-core</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<!-- baseCode dep retirement: commons-cli used to be excluded on the
+			     baseCode path; with baseCode gone, jena-core (transitively, via
+			     jena-text -> jena-arq -> jena-core) is now the source of an older
+			     commons-cli 1.5.0. Pin commons-cli at 1.11.0 here so the gemma-cli
+			     direct dependency (1.11.0) and the Jena transitive both converge.
+			     The maven-enforcer dependencyConvergence rule requires this. -->
+			<dependency>
+				<groupId>commons-cli</groupId>
+				<artifactId>commons-cli</artifactId>
+				<version>1.11.0</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-arq</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-base</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-iri</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-shaded-guava</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-tdb</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-cmds</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-base</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-index</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-trans-data</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-transaction</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.jena</groupId>
+				<artifactId>jena-dboe-storage</artifactId>
+				<version>${jena.version}</version>
+			</dependency>
+			<!-- Lucene 9.11.1 convergence: jena-text 4.10.0's parent POM pins these at
+			     9.7.0; HS 7.2.4 ships them at 9.11.1. Override to HS's choice so
+			     there's a single Lucene 9.x train across both consumers. -->
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-core</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-analysis-common</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-queryparser</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-highlighter</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-backward-codecs</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-queries</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-sandbox</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-memory</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-join</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-facet</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<!-- Micrometer 1.13.11: BOM imports micrometer-bom 1.13.15. Gemma's pavlab note
+			     flags issues on the 1.14 series; we hold 1.13.11 explicitly. -->
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-core</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-commons</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-observation</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-registry-jmx</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.micrometer</groupId>
+				<artifactId>micrometer-registry-prometheus</artifactId>
+				<version>${micrometer.version}</version>
+			</dependency>
+			<!-- commons-* overrides: Gemma carries newer commons jars than Boot 3.3 BOM. -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>3.20.0</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId>
+				<version>1.20.0</version>
+			</dependency>
+			<!-- aspectjweaver: Gemma 1.9.25.1 > BOM 1.9.24 (the .1 is a Gemma-relevant fix). -->
+			<dependency>
+				<groupId>org.aspectj</groupId>
+				<artifactId>aspectjweaver</artifactId>
+				<version>1.9.25.1</version>
+			</dependency>
+			<!-- commons-pool2: Gemma 2.13.1 > BOM 2.12.1. -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-pool2</artifactId>
+				<version>2.13.1</version>
+			</dependency>
+			<!-- mysql-connector-j: Gemma pins 8.4.0 LTS; BOM has 8.3.0. -->
+			<dependency>
+				<groupId>com.mysql</groupId>
+				<artifactId>mysql-connector-j</artifactId>
+				<version>${mysql.version}</version>
+			</dependency>
+			<!-- protobuf-java: transitive via mysql-connector-j 8.4.0 ships 3.25.1;
+			     pin to 3.25.5+ for CVE-2024-7254 (parser DoS). Per DEPENDENCY_AUDIT.md. -->
+			<dependency>
+				<groupId>com.google.protobuf</groupId>
+				<artifactId>protobuf-java</artifactId>
+				<version>3.25.5</version>
+			</dependency>
+			<!-- log4j 2: pavlab-starter-parent pins ${log4j.version} = 2.25.3 (transitively
+			     reaching log4j-jcl / log4j-jul direct deps), BOM is on 2.23.1. We track parent. -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-jcl</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-jul</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<!-- Phase 3 logging: override parent's slf4j-api 1.7.36 (EOL) to 2.0.x. -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<!-- log4j-slf4j2-impl: Boot 3.3 BOM ships 2.23.1; Gemma tracks 2.25.3 (parent). -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j2-impl</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<!-- Phase 3 logging A: JSON-line layout for production rolling-file appender.
+			     Boot 3.5 BOM ships 2.24.3; pin to ${log4j.version} (2.25.3) so it stays
+			     on the same release train as log4j-core. -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-layout-template-json</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<!-- jakarta.xml.bind-api: Boot 3.5 BOM ships 4.0.2; Gemma tracks 4.0.5. -->
+			<dependency>
+				<groupId>jakarta.xml.bind</groupId>
+				<artifactId>jakarta.xml.bind-api</artifactId>
+				<version>4.0.5</version>
+			</dependency>
+			<!-- jaxb-runtime / jaxb-core: Boot 3.5 BOM ships glassfish-jaxb 4.0.5 (matches Gemma); no override needed. -->
+			<!-- error_prone_annotations: gson 2.13.2 (via slack-api) pulls 2.41.0; caffeine 3.2.2
+			     (via yauaa) pulls 2.40.0. Pin to the newer to satisfy convergence. -->
+			<dependency>
+				<groupId>com.google.errorprone</groupId>
+				<artifactId>error_prone_annotations</artifactId>
+				<version>2.41.0</version>
+			</dependency>
+
+			<!-- JUnit 5 (Jupiter). Boot 3.5 BOM imports junit-bom at 5.12.2
+			     (matches Gemma's junit.jupiter.version), so junit-jupiter no
+			     longer needs an override.
+			     Mockito stays pinned because Gemma leads BOM (5.21.0 > BOM 5.17.0). -->
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-junit-jupiter</artifactId>
+				<version>${mockito.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<!--
+			Phase 3 framework bump: force convergence across all transitive Spring deps
+			(notably from gsec built against 6.1.20 and spring-security pulling its own
+			spring-* set). dependencyManagement here overrides any version anywhere in the
+			transitive graph, satisfying the dependencyConvergence enforcer rule.
+			-->
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-core</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-beans</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context-support</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-expression</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aop</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aspects</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-tx</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-jdbc</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-orm</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-web</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-webmvc</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-core</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-acl</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-config</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-web</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-crypto</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-taglibs</artifactId>
+				<version>${spring.security.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<dependencies>
+		<!-- baseCode dependency retired in Phase 3 (ontology / util / Configuration
+		     ports). All required classes now live in-tree under
+		     ubic.gemma.core.util.*, ubic.gemma.core.ontology.basecode.*,
+		     and ubic.gemma.core.config.Configuration. The final piece, the
+		     classpath-loaded basecode.properties, ships from
+		     gemma-core/src/main/resources/basecode.properties. -->
+
+		<!-- pavlab:gemma-gsec dependency removed in Phase 3 absorption: gsec source now lives
+		     under gemma-core/src/main/java/ubic/gemma/core/security/ (Phase D-1 intermediate
+		     home at ubic.gemma.core.security.gsec.* merged into ubic.gemma.core.security.*
+		     proper in Phase D-2; gsec's UserService renamed to BaseUserService to avoid an
+		     FQN collision with the Gemma-owned UserService). See GSEC_ABSORPTION_ROADMAP.md. -->
 
 		<!-- Spring -->
 		<dependency>
@@ -201,11 +657,14 @@
 			<artifactId>aspectjweaver</artifactId>
 			<version>1.9.25.1</version>
 		</dependency>
+		<!-- Renovations Phase 3: scope promoted from runtime to compile so MethodSecurityConfig
+		     can transitively reach AopInfrastructureBean (implemented by
+		     GlobalMethodSecurityConfiguration's MethodInterceptor return type). Already on the
+		     runtime classpath; this is a scope adjustment, not a new dependency. -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-aop</artifactId>
 			<version>${spring.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -224,11 +683,14 @@
 			<artifactId>spring-security-acl</artifactId>
 			<version>${spring.security.version}</version>
 		</dependency>
+		<!-- Renovations Phase 3: scope promoted from runtime to compile so MethodSecurityConfig
+		     (Java-config replacement for <s:global-method-security>) can reference
+		     @EnableGlobalMethodSecurity and GlobalMethodSecurityConfiguration at compile time.
+		     The artifact was already on the runtime classpath for the XML namespace handler. -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-config</artifactId>
 			<version>${spring.security.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 
 		<!-- Database -->
@@ -243,20 +705,37 @@
 			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate.common</groupId>
-			<artifactId>hibernate-commons-annotations</artifactId>
+			<version>${hibernate.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.dom4j</groupId>
 			<artifactId>dom4j</artifactId>
 		</dependency>
+		<!-- Hibernate 6 dropped hibernate-ehcache; L2 cache via JCache + Ehcache 3 jakarta. -->
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-ehcache</artifactId>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-jcache</artifactId>
+			<version>${hibernate.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.ehcache</groupId>
+			<artifactId>ehcache</artifactId>
+			<version>3.10.9</version>
+			<classifier>jakarta</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>org.glassfish.jaxb</groupId>
+					<artifactId>jaxb-runtime</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>4.0.5</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.logging</groupId>
@@ -271,19 +750,15 @@
 			<artifactId>mysql-connector-j</artifactId>
 			<version>${mysql.version}</version>
 		</dependency>
-		<!-- used in dataSource.xml and testDataSource.xml -->
+		<!-- used in DataSourceConfig. Boot 3.5 BOM ships 6.3.3; track BOM. -->
 		<dependency>
 			<groupId>com.zaxxer</groupId>
 			<artifactId>HikariCP</artifactId>
-			<version>5.1.0</version>
+			<version>6.3.3</version>
 		</dependency>
 
 
-		<!-- Caching (version is dictated by hibernate-ehcache) -->
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache-core</artifactId>
-		</dependency>
+		<!-- Caching moved to JCache + Ehcache 3 above. Ehcache 2.x removed in Phase 2. -->
 
 		<!-- Utilities -->
 		<dependency>
@@ -327,11 +802,6 @@
 			<artifactId>commons-logging</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging-api</artifactId>
-			<version>1.1</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-collections4</artifactId>
 			<version>4.5.0</version>
@@ -339,7 +809,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-configuration2</artifactId>
-			<version>2.13.0</version>
+			<version>2.15.1</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.commons</groupId>
@@ -350,7 +820,7 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.21.0</version>
+			<version>2.22.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
@@ -435,15 +905,11 @@
 			<artifactId>xercesImpl</artifactId>
 			<version>2.12.2</version>
 		</dependency>
+		<!-- Renovations Phase 2: javax.xml.bind -> jakarta.xml.bind (JAXB 4.x). -->
 		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-impl</artifactId>
-			<version>2.2.11</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-core</artifactId>
-			<version>2.2.11</version>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+			<version>4.0.5</version>
 		</dependency>
 
 		<!-- Logging -->
@@ -453,7 +919,9 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
+			<!-- parent manages log4j-slf4j-impl (1.x bridge) but not the slf4j2 variant; pin explicitly to the same log4j BOM version -->
+			<version>${log4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -478,6 +946,11 @@
 			<artifactId>micrometer-registry-jmx</artifactId>
 			<version>${micrometer.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<version>${micrometer.version}</version>
+		</dependency>
 
 		<!-- Test -->
 		<dependency>
@@ -490,6 +963,16 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 		</dependency>
+		<!--
+		JUnit 5 (Jupiter) is added at the root so every module gets it
+		transitively. Versions are managed via the root <dependencyManagement>
+		block above.
+		-->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>io.takari.junit</groupId>
 			<artifactId>takari-cpsuite</artifactId>
@@ -500,6 +983,19 @@
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 		</dependency>
+		<!--
+		Phase 3 JUnit 5 migration, base class step (Phase B0).
+		mockito-junit-jupiter ships MockitoExtension, which replaces the
+		JUnit 4 MockitoRule held by BaseSpringContextTest. Pulled into every
+		module so the new JUnit 5 parallel base classes
+		(BaseSpringContextTest5 et al.) can be referenced anywhere a JUnit 4
+		base class was previously used.
+		-->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
@@ -508,6 +1004,16 @@
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<version>2.4.240</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- Phase 3 build hygiene: ArchUnit drives architecture-rule JUnit tests
+		     (e.g. forbid @Autowired on Impl-typed fields, which break under AOP
+		     JDK-proxy wrapping). JUnit 5 (Jupiter) flavor: discovered by the
+		     ArchUnitTestEngine via the JUnit Platform launcher. -->
+		<dependency>
+			<groupId>com.tngtech.archunit</groupId>
+			<artifactId>archunit-junit5</artifactId>
+			<version>1.4.1</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -540,8 +1046,16 @@
 									<version>[3.6.3,)</version>
 								</requireMavenVersion>
 								<requireJavaVersion>
-									<version>[11,)</version>
+									<version>[17,)</version>
 								</requireJavaVersion>
+								<!--
+								Re-enabled in Phase 2 Step 9 once the Spring 6 / Hibernate 6 / Jersey 3 /
+								jakarta climb settled. The 8 transitive-version overrides live in the
+								<dependencyManagement> block above (micrometer, jaxb, jakarta.xml.bind,
+								jackson-core, jackson-module-jakarta-xmlbind-annotations, javax.cache,
+								antlr4-runtime). Re-validate when any of Spring / Hibernate / Jersey /
+								Swagger bumps a minor version.
+								-->
 								<dependencyConvergence/>
 							</rules>
 						</configuration>
@@ -578,13 +1092,38 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.4</version>
 				<configuration>
-					<runOrder>alphabetical</runOrder>
 					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+					<!-- libhdf5_java.dylib has @rpath references to libhdf5.200.dylib; java.library.path
+					     only resolves the JNI lib itself, not its dynamic-link dependencies. macOS uses
+					     DYLD_LIBRARY_PATH; Linux uses LD_LIBRARY_PATH. Both are set to hdf5.libDir so the
+					     OS can find the C library next to the JNI shim. -->
+					<environmentVariables>
+						<DYLD_LIBRARY_PATH>${hdf5.libDir}</DYLD_LIBRARY_PATH>
+						<LD_LIBRARY_PATH>${hdf5.libDir}</LD_LIBRARY_PATH>
+					</environmentVariables>
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
-					<excludedGroups>ubic.gemma.core.util.test.category.IntegrationTest,${excludedGroups}</excludedGroups>
+					<!--
+					Excludes @Tag("integration") JUnit 5 markers from surefire
+					(unit) runs. Comma-separated entries form a tag-expression
+					OR on the JUnit Platform.
+					-->
+					<excludedGroups>integration,${excludedGroups}</excludedGroups>
+					<!--
+					Pinned so Jenkins and a dev box execute test classes in the same
+					sequence. Surefire/failsafe otherwise default to `filesystem`,
+					which is directory-entry order and therefore differs per machine;
+					that is why the TAXON foreign-key cascade seen on Jenkins
+					2026-09-11 could not be reproduced locally at the same commit,
+					and why reasoning about "what ran before the failure" needed a
+					console log that no longer existed. Override with
+					-DtestRunOrder=filesystem to replay the old behaviour, or with
+					any other surefire runOrder (random, reversealphabetical, ...)
+					to hunt order-dependent failures on purpose.
+					-->
+					<runOrder>${testRunOrder}</runOrder>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipUnitTests}</skip>
 				</configuration>
@@ -594,13 +1133,56 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>3.5.4</version>
 				<configuration>
-					<runOrder>alphabetical</runOrder>
 					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
+					<!--
+					Bump the JVM-shutdown grace window past failsafe's 30s
+					default. TaskRunningServiceImpl.destroy() awaits up to 5
+					min for in-flight Task futures to drain (see
+					handoffs/FAILSAFE_FORKER_SHUTDOWN_RECCE.md); under the
+					default forker timeout, the JVM gets killed mid-drain
+					and the `verify` goal reports 'There was a timeout in
+					the fork' even when the test phase completed cleanly.
+					120s is a belt-and-braces cushion that absorbs normal
+					drain time without masking a real wedge. If a forked
+					JVM stays alive longer than this, that's a genuine
+					leak worth investigating, not a knob to widen further.
+					-->
+					<forkedProcessExitTimeoutInSeconds>120</forkedProcessExitTimeoutInSeconds>
+					<!--
+					**/*IT.java is here because failsafe's own default
+					includes do NOT apply once <includes> is declared, and
+					this block previously listed only **/*Test.java. Five
+					classes were therefore compiled and never run:
+					AnnotationSetPersistenceIT, TicketPersistenceIT,
+					PublicationAssociationPersistenceIT, HqlSmokeIT and
+					HibernateSqmFragileShapesIT. Measured 2026-08-25: 841
+					surefire reports under gemma-core/target, zero for any
+					of them. Nothing fails when a test class matches no
+					include pattern, which is why it went unnoticed.
+					Prefer the *IT.java suffix for new integration tests;
+					they will now actually run.
+					-->
 					<includes>
 						<include>**/*Test.java</include>
+						<include>**/*IT.java</include>
 					</includes>
-					<groups>ubic.gemma.core.util.test.category.IntegrationTest</groups>
+					<!--
+					<groups> is a JUnit Platform tag expression. "integration"
+					picks up classes annotated with @Tag("integration").
+					-->
+					<groups>integration</groups>
+					<!--
+					Failsafe exclusions mirror surefire's: anything tagged
+					@Tag("slow") is skipped from the default `mvn verify` run.
+					The `${excludedGroups}` default (set lower in this pom) is
+					`network,slow`. Override with -DexcludedGroups=network (run
+					slow tests) or -DexcludedGroups= (clear all exclusions,
+					run everything).
+					-->
+					<excludedGroups>${excludedGroups}</excludedGroups>
+					<!-- Pinned for reproducibility; see the surefire <runOrder> note above. -->
+					<runOrder>${testRunOrder}</runOrder>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
 				</configuration>
@@ -658,15 +1240,33 @@
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
 						<!--
-						 Changed to docs.hibernate.org: the old
-						 docs.jboss.org host  now returns HTTP 503 for every
-						 version, which broke the javadocs
+						 Hibernate ORM 4.2 javadocs. Use docs.hibernate.org: the old
+						 docs.jboss.org host was retired and now returns HTTP 503 for every
+						 version, which broke attach-javadocs since javadoc treats an
+						 unreachable -link as a fatal error.
 						-->
 						<link>https://docs.hibernate.org/orm/4.2/javadocs/</link>
 					</links>
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
 					</additionalJOptions>
+					<additionalOptions>
+						<additionalOption>-Xmaxerrs 100000</additionalOption>
+						<additionalOption>-Xmaxwarns 100000</additionalOption>
+					</additionalOptions>
+					<!--
+					    @todo is used in the ported baseCode math/ sources and a few
+					    older Gemma classes. It is not a standard javadoc tag, so
+					    doclint rejects it as an unknown tag; registering it here keeps
+					    the notes rendering instead of rewriting them into prose.
+					-->
+					<tags>
+						<tag>
+							<name>todo</name>
+							<placement>a</placement>
+							<head>To Do:</head>
+						</tag>
+					</tags>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -677,6 +1277,19 @@
 					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
 					<yarnAuditAnalyzerEnabled>false</yarnAuditAnalyzerEnabled>
 				</configuration>
+			</plugin>
+			<!--
+			    SpotBugs + FindSecBugs. Opt-in only: invoke with
+			        mvn spotbugs:spotbugs  (generate report)
+			        mvn spotbugs:check     (drives <failOnError>)
+			    NOT bound to a phase, so day-to-day builds stay fast. CI / scheduled
+			    runs invoke explicitly. Version + configuration centralised in
+			    pluginManagement below; this entry is the active opt-in registration
+			    so child modules inherit the configuration without re-declaring it.
+			-->
+			<plugin>
+				<groupId>com.github.spotbugs</groupId>
+				<artifactId>spotbugs-maven-plugin</artifactId>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -771,6 +1384,73 @@
 					<artifactId>maven-dependency-plugin</artifactId>
 					<version>3.10.0</version>
 				</plugin>
+				<!--
+				    SpotBugs + FindSecBugs. Opt-in only: invoke with
+				        mvn spotbugs:spotbugs   (generate report)
+				        mvn spotbugs:check      (fail-or-report driven by <failOnError>)
+				    Not bound to the verify phase so day-to-day builds stay fast.
+				    The exclude filter at ${main.basedir}/spotbugs-exclude.xml
+				    suppresses the well-known false positives on entity classes that
+				    inherit equals/hashCode from AbstractIdentifiable /
+				    AbstractDescribable.
+				    findsecbugs-plugin adds OWASP-style detectors (relevant to the
+				    JAX-RS layer in gemma-rest).
+				-->
+				<plugin>
+					<groupId>com.github.spotbugs</groupId>
+					<artifactId>spotbugs-maven-plugin</artifactId>
+					<version>${spotbugs.maven.plugin.version}</version>
+					<!-- Override the bundled ASM (which doesn't know class major v69 = JDK 25)
+					     with a current standalone ASM. Drop this block when spotbugs-maven-plugin
+					     ships an ASM that reads v69 natively. See feedback_spotbugs_jdk21_workaround
+					     memory for the prior two-step JDK-21-rebuild dance this replaces. -->
+					<dependencies>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm-tree</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm-analysis</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm-commons</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.ow2.asm</groupId>
+							<artifactId>asm-util</artifactId>
+							<version>${asm.override.version}</version>
+						</dependency>
+					</dependencies>
+					<configuration>
+						<effort>Max</effort>
+						<threshold>Medium</threshold>
+						<!-- Start non-blocking; can tighten to true once the backlog clears. -->
+						<failOnError>false</failOnError>
+						<includeTests>false</includeTests>
+						<!-- effort=Max + the gemma-core class graph blows the default 768m heap.
+						     4 GB suffices on amazon-corretto-21. -->
+						<fork>true</fork>
+						<maxHeap>4096</maxHeap>
+						<excludeFilterFile>${project.parent.basedir}/spotbugs-exclude.xml</excludeFilterFile>
+						<plugins>
+							<plugin>
+								<groupId>com.h3xstream.findsecbugs</groupId>
+								<artifactId>findsecbugs-plugin</artifactId>
+								<version>${findsecbugs.plugin.version}</version>
+							</plugin>
+						</plugins>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -825,6 +1505,78 @@
 				<skipDelombok>true</skipDelombok>
 			</properties>
 		</profile>
+		<!--
+			testdb-reset: opt-in profile that wires flyway-maven-plugin's `clean` goal
+			to the pre-integration-test phase, so `mvn verify -Dtestdb.reset ...` will
+			drop the gemdtest schema before Failsafe runs the integration tests. The
+			schema is then rebuilt by Flyway + Hibernate inside the Spring test context.
+
+			Default `mvn verify` does NOT activate this profile — activation requires
+			the `testdb.reset` system property to be set, so production builds and
+			day-to-day `mvn install` invocations cannot trigger a destructive clean.
+
+			Requires `gemmatest` to hold `DROP ON gemdtest.*` (already granted via
+			the one-time `GRANT ALL PRIVILEGES ON gemdtest.*` documented in CLAUDE.md).
+			flyway-mysql is declared as a plugin dependency since the Flyway 10 split
+			moved MySQL support out of flyway-core.
+		-->
+		<profile>
+			<id>testdb-reset</id>
+			<activation>
+				<property>
+					<name>testdb.reset</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.flywaydb</groupId>
+						<artifactId>flyway-maven-plugin</artifactId>
+						<version>${flyway.version}</version>
+						<dependencies>
+							<dependency>
+								<groupId>org.flywaydb</groupId>
+								<artifactId>flyway-mysql</artifactId>
+								<version>${flyway.version}</version>
+							</dependency>
+							<dependency>
+								<groupId>com.mysql</groupId>
+								<artifactId>mysql-connector-j</artifactId>
+								<version>${mysql.version}</version>
+							</dependency>
+						</dependencies>
+						<configuration>
+							<url>jdbc:mysql://${gemma.testdb.host}:${gemma.testdb.port}/${gemma.testdb.name}?useSSL=false&amp;allowPublicKeyRetrieval=true</url>
+							<user>${gemma.testdb.user}</user>
+							<password>${gemma.testdb.password}</password>
+							<schemas>
+								<schema>${gemma.testdb.name}</schema>
+							</schemas>
+							<!-- Flyway 7+ disables clean by default as a safety; opt in explicitly. -->
+							<cleanDisabled>false</cleanDisabled>
+						</configuration>
+						<executions>
+							<execution>
+								<id>testdb-clean</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>clean</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+			<properties>
+				<!-- Default testdb coordinates; override via -Dgemma.testdb.* if needed.
+				     These mirror gemma-core/src/main/resources/default.properties so the
+				     plugin and the Spring test context agree on where gemdtest lives. -->
+				<gemma.testdb.host>localhost</gemma.testdb.host>
+				<gemma.testdb.port>3307</gemma.testdb.port>
+				<gemma.testdb.name>gemdtest</gemma.testdb.name>
+				<gemma.testdb.user>gemmatest</gemma.testdb.user>
+			</properties>
+		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
@@ -841,6 +1593,17 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
+				<!--
+				    Pinned because <pluginManagement> does NOT apply to <reporting> plugins:
+				    without a version here Maven resolves whatever it finds, which was 3.12.0
+				    locally and 3.3.2 on the Jenkins agent. Two machines running different
+				    doclint versions over the same sources is not a reproducible gate. 3.3.2
+				    matches what CI already ran and what attach-javadocs uses in <build>, so
+				    this pins current behaviour rather than changing it. Moving to 3.12.0 is a
+				    separate job: it is stricter, and test-aggregate reports 34 errors in test
+				    sources under it.
+				-->
+				<version>3.3.2</version>
 				<configuration>
 					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
@@ -859,6 +1622,26 @@
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
 					</additionalJOptions>
+					<!--
+					    KEEP IN SYNC with the maven-javadoc-plugin configuration in <build>
+					    above. The two are separate configurations that Maven does not share:
+					    `mvn javadoc:aggregate` reads the build one, while the aggregate REPORT
+					    run by maven-site-plugin reads this one. Anything added there and not
+					    here passes locally and fails in the Deploy Maven website stage.
+					    That is how the @todo registration below came to be missing: five
+					    "unknown tag" errors that only the site stage could see.
+					-->
+					<additionalOptions>
+						<additionalOption>-Xmaxerrs 100000</additionalOption>
+						<additionalOption>-Xmaxwarns 100000</additionalOption>
+					</additionalOptions>
+					<tags>
+						<tag>
+							<name>todo</name>
+							<placement>a</placement>
+							<head>To Do:</head>
+						</tag>
+					</tags>
 				</configuration>
 				<reportSets>
 					<!--
@@ -877,7 +1660,6 @@
 							<sourcepath>
 								${project.basedir}/gemma-core/target/delombok
 								:${project.basedir}/gemma-cli/target/delombok
-								:${project.basedir}/gemma-web/target/delombok
 								:${project.basedir}/gemma-rest/target/delombok
 								:${project.basedir}/gemma-rest/target/generated-sources/antlr4
 							</sourcepath>
@@ -894,7 +1676,6 @@
 								${project.basedir}/gemma-core/src/test/java
 								:${project.basedir}/gemma-core/target/generated-test-sources/spring-security-test
 								:${project.basedir}/gemma-cli/src/test/java
-								:${project.basedir}/gemma-web/src/test/java
 								:${project.basedir}/gemma-rest/src/test/java
 							</sourcepath>
 						</configuration>
@@ -904,31 +1685,121 @@
 		</plugins>
 	</reporting>
 	<properties>
-		<gsec.version>0.0.22</gsec.version>
-		<spring.version>3.2.18.RELEASE</spring.version>
-		<spring.security.version>3.2.10.RELEASE</spring.security.version>
-		<jersey.version>2.25.1</jersey.version>
+		<!--
+		Renovations Phase 3 (2026-05-22): target bytecode 25 (was 21 earlier in Phase 3;
+		17 during Phase 2; 11 during Phase 0/1; Java 8 from pavlab-starter-parent originally).
+		Production Tomcat runs JDK 25 LTS, so we hold bytecode at the runtime level.
+		Spring 6.2 / Hibernate 6.6 / Jersey 3 + their bundled CGLIB/ASM/ByteBuddy are all
+		class-file-version-current. Local build JDK: temurin-25 (see CLAUDE.md).
+		-->
+		<maven.compiler.release>25</maven.compiler.release>
+		<!-- Renovations Phase 3: emit parameter names in bytecode so Spring's
+		     DefaultParameterNameDiscoverer can resolve @PreAuthorize SpEL named bindings
+		     like `hasPermission(#group, 'administration')`. Without -parameters the
+		     discoverer falls through to debug info / ASM (may or may not have names) and
+		     ultimately Spring's SpEL evaluates `#group` to null, returning false and
+		     denying admin invocations. Matched on the gsec side. -->
+		<maven.compiler.parameters>true</maven.compiler.parameters>
+		<!--
+		Renovations Phase 2: Spring 6.1 + Spring Security 6.3 + Hibernate 6.4 + jakarta everywhere.
+		Hibernate Search 5 (and its Lucene 3-era successor lineage) is gutted on this branch — the
+		HS 5 -> 7 DSL rewrite is its own multi-day project. SearchService / HibernateSearchSource
+		are stubbed to return empty; reinstating real ontology / entity full-text search is a future
+		phase (likely on HS 7 or an external engine like OpenSearch).
+		-->
+		<!-- gsec.version property removed in Phase 3 absorption (gsec source absorbed into gemma-core). -->
+		<!-- Spring Boot dependencies BOM (managed via dependencyManagement above). Boot 3.5.x
+		     targets SF 6.2 + SS 6.5 + Hibernate 6.6 natively - matches Gemma's pins. -->
+		<spring-boot.version>3.5.6</spring-boot.version>
+		<spring.version>6.2.18</spring.version>
+		<spring.security.version>6.5.10</spring.security.version>
+		<!-- log4j: override pavlab-starter-parent's 2.25.3 to clear CVE-2026-34477..34480.
+		     Drop this once pavlab-starter-parent bumps. -->
+		<log4j.version>2.26.0</log4j.version>
+		<hibernate.version>6.6.18.Final</hibernate.version>
+		<!-- Renovations Phase 3: Hibernate Search 7 + Lucene 9 restoration.
+		     HS 7.2.x pairs with Hibernate ORM 6.6 and ships against Lucene 9.x
+		     (Lucene is pinned transitively by HS 7's POM; do not declare a
+		     standalone Lucene version unless overriding). See SEARCH_RECCE.md
+		     Section 3.1. Step 1 wires bootstrap only; entity annotations land
+		     in Step 2 and the SearchSource / IndexerService restoration in
+		     Steps 3-4. -->
+		<hibernate.search.version>7.2.4.Final</hibernate.search.version>
+		<!-- Phase 3 ontology indexer: the (now in-tree) baseCode-derived ontology
+		     classes under ubic.gemma.core.ontology.basecode.* target Jena 4.x's
+		     pre-5.0 API. We pin Jena 4.10.0 — the LAST 4.x release (4.10.0 ->
+		     5.0.0; no 4.11.x exists). Staying on 4.x because Jena 5 dropped
+		     `org.apache.jena.atlas` APIs the in-tree port references AND bumped
+		     its Java baseline to 17. jena-text 4.10.0 pins Lucene 9.7.0 via its
+		     parent POM — we override transitively to Lucene 9.11.1 (HS 7.2.4's
+		     pinned Lucene) so the two consumers converge on one Lucene 9.x line.
+		     See SEARCH_RECCE.md Section 6.3 footnote. -->
+		<jena.version>4.10.0</jena.version>
+		<!-- Lucene 9.11.1: pinned transitively by hibernate-search-backend-lucene
+		     7.2.4 (do NOT bump independently). jena-text 4.10.0 ships with Lucene
+		     9.7.0 in its dependencyManagement; we override to match HS 7's pin so
+		     the maven-enforcer dependencyConvergence rule passes. -->
+		<lucene.version>9.11.1</lucene.version>
+		<!-- Flyway 10.x split out database-specific modules; tests need flyway-database-h2.
+		     Production wiring (flyway-mysql) lands in the follow-on session. -->
+		<flyway.version>10.22.0</flyway.version>
+		<jersey.version>3.1.11</jersey.version>
+		<!-- Phase 3 logging: bump slf4j-api from parent's 1.7.36 (EOL) to 2.0.x.
+		     log4j-slf4j-impl (1.x bridge) swapped to log4j-slf4j2-impl in <dependencies>. -->
+		<slf4j.version>2.0.16</slf4j.version>
 		<jackson.version>2.21.0</jackson.version>
 		<jackson-annotations.version>2.21</jackson-annotations.version>
-		<swagger.version>2.2.42</swagger.version>
-		<lucene.version>3.6.2</lucene.version>
+		<swagger.version>2.2.50</swagger.version>
+		<!-- Lucene 9.11.1: see lucene.version above (defined alongside jena.version). -->
 		<slack.version>1.47.0</slack.version>
 		<!-- I've been running into some issues with the 1.14 series, to be investigated... -->
 		<micrometer.version>1.13.11</micrometer.version>
 		<!-- HDF5 -->
-		<!-- You may override this in ~/.m2/settings.xml -->
-		<hdf5.version>1.12.1</hdf5.version>
+		<!-- You may override these in ~/.m2/settings.xml. On macOS install with the HDF Group
+		     binary tarball (which ships libhdf5_java.dylib and jarhdf5-X.Y.Z.jar) and set
+		     hdf5.libDir to the bundled lib/ directory. -->
+		<hdf5.version>1.12.3</hdf5.version>
 		<!-- directory containing the HDF5 JNI shared library -->
 		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
 		<mysql.version>8.4.0</mysql.version>
-		<tomcat.version>9.0.115</tomcat.version>
+		<tomcat.version>10.1.34</tomcat.version>
 		<antlr4.version>4.13.2</antlr4.version>
 		<!-- 5.0.7.Final is broken due to https://github.com/ocpsoft/prettytime/issues/276 -->
 		<prettytime.version>5.0.6.Final</prettytime.version>
 		<mockito.version>5.21.0</mockito.version>
 		<assertj.version>3.27.7</assertj.version>
-		<!-- this ensures that -DexcludedGroups works properly -->
-		<excludedGroups/>
+		<!-- JUnit 5 (Jupiter) migration, Phase A: Jupiter + Vintage engine + Mockito-Jupiter
+		     run alongside the legacy junit:junit 4.13.2 transitive (from pavlab-starter-parent).
+		     Vintage engine lets the JUnit 5 Platform run the existing ~399 JUnit 4 test classes
+		     while new tests use Jupiter. Aligned to 5.12.2 to match the spring-boot 3.5.6 BOM,
+		     which transitively pulls junit-jupiter-api/engine/params at 5.12.2 and
+		     junit-platform-* at 1.12.2; an older pin here (e.g. 5.11.4) splits the JUnit jars
+		     across versions and breaks the surefire fork with NoClassDefFoundError. -->
+		<junit.jupiter.version>5.12.2</junit.jupiter.version>
+		<!--
+		Default surefire + failsafe excluded tag set.
+
+		Tag taxonomy:
+		  - @Tag("integration"):
+		      runs in failsafe only, skipped from surefire. The day-to-day
+		      mvn verify entry point.
+		  - @Tag("network") / ExternalUrlReachabilityTest:
+		      cheap reachability probe; opt-in via -DexcludedGroups= or a
+		      different tag list. Excluded by default to keep verify offline.
+		  - @Tag("slow"):
+		      heavy in-JVM work or large external download (GEO archives,
+		      Uberon OWL, UCSC matrices, etc.). Excluded from BOTH phases
+		      by default — run explicitly with
+		      `-DexcludedGroups=network` (drop the slow exclusion, keep
+		      network excluded) or `-DexcludedGroups=` (clear everything).
+		  - @Tag("geo") / @Tag("pubmed") / @Tag("goldenPath"):
+		      opt-in narrow integration markers; not excluded by default
+		      but typically paired with @Tag("slow") and/or
+		      @Tag("integration"), so they're filtered transitively.
+		-->
+		<excludedGroups>network,slow</excludedGroups>
+		<!-- Test-class execution order for surefire and failsafe; see their <runOrder> notes. -->
+		<testRunOrder>alphabetical</testRunOrder>
 		<skipJavadoc>false</skipJavadoc>
 		<skipWebpack>false</skipWebpack>
 		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>
@@ -954,5 +1825,14 @@
 		</testJvmOptions>
 		<delombok.output>${project.build.directory}/delombok</delombok.output>
 		<javadocSourcePaths>${delombok.output}</javadocSourcePaths>
+		<!-- SpotBugs / FindSecBugs pinned versions; see pluginManagement entry below.
+		     The exclude filter lives at ${project.parent.basedir}/spotbugs-exclude.xml;
+		     all direct children of this top-level pom (gemma-core, gemma-rest, gemma-cli)
+		     resolve project.parent.basedir to this repo root. -->
+		<spotbugs.maven.plugin.version>4.9.3.0</spotbugs.maven.plugin.version>
+		<findsecbugs.plugin.version>1.13.0</findsecbugs.plugin.version>
+		<!-- Standalone ASM injected into the spotbugs-maven-plugin classpath so it can
+		     read JDK-25 (class major v69) bytecode. Drop when the bundled ASM catches up. -->
+		<asm.override.version>9.9.1</asm.override.version>
 	</properties>
 </project>

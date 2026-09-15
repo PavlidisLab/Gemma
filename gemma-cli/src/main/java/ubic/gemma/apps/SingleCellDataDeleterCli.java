@@ -12,7 +12,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @author poirigui
@@ -112,7 +112,6 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
                 addSuccessObject( ee, qt, "Deleted cell type assignment: " + cta + "." );
                 break;
             case DELETE_ALL_CELL_LEVEL_CHARACTERISTICS:
-                ee = eeService.thawLite( ee );
                 removed = singleCellExpressionExperimentService.removeAllCellLevelCharacteristics( ee, qt );
                 addSuccessObject( ee, qt, "Deleted " + removed + " cell-level characteristics." );
                 break;

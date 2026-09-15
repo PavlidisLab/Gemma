@@ -18,11 +18,17 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * <p>
  * The event that this experiment has had its array design switched (typically to a 'merged' one.
  * </p>
  */
+@Entity
+@DiscriminatorValue("ExpressionExperimentPlatformSwitchEvent")
 public class ExpressionExperimentPlatformSwitchEvent extends ExpressionExperimentAnalysisEvent {
 
 }

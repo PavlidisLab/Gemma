@@ -1,8 +1,8 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,10 +16,9 @@ import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAssetDownloadMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,11 +28,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration
+@ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
-public class CellXGeneFetcherTest extends BaseTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+public class CellXGeneFetcherTest extends BaseTest5 {
 
     @Import(SettingsConfig.class)
     @Configuration
@@ -57,7 +54,7 @@ public class CellXGeneFetcherTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testFetchCollectionMetadata() throws IOException {
         String collectionId = pickDataset().getCollectionId();
         CollectionMetadata metadata = fetcher.fetchCollectionMetadata( collectionId );
@@ -65,7 +62,7 @@ public class CellXGeneFetcherTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testFetchAllDatasetMetadata() throws IOException {
         List<DatasetMetadata> metadata = fetcher.fetchAllDatasetMetadata();
         assertThat( metadata ).isNotEmpty();
@@ -95,7 +92,7 @@ public class CellXGeneFetcherTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testFetchDatasetMetadata() throws IOException {
         String datasetId = pickDataset().getId();
 
@@ -114,7 +111,7 @@ public class CellXGeneFetcherTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testDownloadDatasetAsset() throws IOException {
         DatasetMetadata dataset = pickDataset();
         fetcher.downloadDatasetAsset( dataset.getId(), annDataAsset( dataset ).getId(), FileType.H5AD );

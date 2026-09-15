@@ -14,10 +14,8 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.hibernate.Criteria;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -44,35 +42,86 @@ public class BibliographicReferenceDaoImpl
         extends AbstractVoEnabledDao<BibliographicReference, BibliographicReferenceValueObject>
         implements BibliographicReferenceDao {
 
+    /**
+     * Whitelist of column names that {@link #browse(int, int, String, boolean)} accepts as
+     * the ORDER BY target. Mirrors the four properties the web controller exposes; values
+     * not in this set are rejected to keep the ORDER BY clause from absorbing arbitrary
+     * caller input.
+     */
+    private static final Set<String> BROWSE_SORTABLE_FIELDS = new HashSet<>( Arrays.asList(
+            "title", "publicationDate", "publication", "authorList" ) );
+
     private final int eeBatchSize;
 
     @Autowired
     public BibliographicReferenceDaoImpl( SessionFactory sessionFactory ) {
         super( BibliographicReference.class, sessionFactory );
-        this.eeBatchSize = HibernateUtils.getBatchSize( sessionFactory.getClassMetadata( ExpressionExperiment.class ), sessionFactory );
+        this.eeBatchSize = HibernateUtils.getBatchSize( ExpressionExperiment.class, sessionFactory );
     }
 
     @Override
     public BibliographicReference findByExternalId( final String id, final String databaseName ) {
-        return ( BibliographicReference ) this.getSessionFactory().getCurrentSession().createQuery(
+        //noinspection unchecked
+        List<BibliographicReference> matches = this.getSessionFactory().getCurrentSession().createQuery(
                         "from BibliographicReference b "
-                                + "where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
+                                + "where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName "
+                                + "order by b.id" )
                 .setParameter( "id", id )
                 .setParameter( "databaseName", databaseName )
-                .uniqueResult();
+                .setMaxResults( 2 )
+                .list();
+        return firstOfPossibleDuplicates( matches, databaseName + ":" + id );
+    }
+
+    @Override
+    public List<BibliographicReference> findAllByExternalId( final String id, final String databaseName ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "from BibliographicReference b "
+                                + "where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName "
+                                + "order by b.id" )
+                .setParameter( "id", id )
+                .setParameter( "databaseName", databaseName )
+                .list();
     }
 
     @Override
     public BibliographicReference findByExternalId( final DatabaseEntry externalId ) {
-        return ( BibliographicReference ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "from BibliographicReference b where b.pubAccession=:externalId" )
-                .setParameter( "externalId", externalId ).uniqueResult();
+        //noinspection unchecked
+        List<BibliographicReference> matches = this.getSessionFactory().getCurrentSession()
+                .createQuery( "from BibliographicReference b where b.pubAccession=:externalId order by b.id" )
+                .setParameter( "externalId", externalId )
+                .setMaxResults( 2 )
+                .list();
+        return firstOfPossibleDuplicates( matches, String.valueOf( externalId.getAccession() ) );
+    }
+
+    /**
+     * Collapse a possibly-duplicated external-id lookup to a single, deterministic result. Duplicate
+     * {@link BibliographicReference} rows for the same accession exist in prod (a known data issue); a naive
+     * {@code uniqueResult()} throws {@link org.hibernate.NonUniqueResultException} on them, which surfaced as
+     * a 500 on {@code PUT /datasets/{id}/publications}. Return the lowest-id (oldest, canonical) match and
+     * warn so the duplicates get cleaned up, rather than failing the caller.
+     *
+     * @param matches up to two matches (query capped at {@code setMaxResults(2)} — enough to detect a dup).
+     * @param key     accession key for the warning message.
+     * @return the lowest-id match, or {@code null} when there is none.
+     */
+    private BibliographicReference firstOfPossibleDuplicates( List<BibliographicReference> matches, String key ) {
+        if ( matches.isEmpty() ) {
+            return null;
+        }
+        if ( matches.size() > 1 ) {
+            log.warn( "Multiple BibliographicReferences share external id '" + key + "'; returning the lowest-id one (id="
+                    + matches.get( 0 ).getId() + "). The bibref table needs de-duplication for this accession." );
+        }
+        return matches.get( 0 );
     }
 
     @Override
     public long countDistinctWithRelatedExperiments() {
         Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select count(" + ( AclQueryUtils.requiresCountDistinct() ? "distinct " : "" ) + " b)" + " "
+                .createQuery( "select count(b) "
                         + "from ExpressionExperiment e join e.primaryPublication b "
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) );
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
@@ -84,7 +133,7 @@ public class BibliographicReferenceDaoImpl
         Query q = this.getSessionFactory().getCurrentSession()
                 // the slight difference here is that we count the number of distinct experiment, which is equivalent to
                 // the number of ref-experiment pairs due to the one-to-many relation
-                .createQuery( "select count(" + ( AclQueryUtils.requiresCountDistinct() ? "distinct " : "" ) + " e)" + " "
+                .createQuery( "select count(e) "
                         + "from ExpressionExperiment e join e.primaryPublication b"
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) );
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
@@ -96,14 +145,14 @@ public class BibliographicReferenceDaoImpl
         Query q = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select b, e.id, e.shortName from ExpressionExperiment e join e.primaryPublication b "
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) + " "
-                        + ( AclQueryUtils.requiresGroupBy() ? "group by b, e " : "" )
                         + "order by b.authorList nulls last, b.title nulls last"
                 );
         AclQueryUtils.addAclParameters( q, ExpressionExperiment.class );
         //noinspection unchecked
         List<Object[]> os = q
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list();
         LinkedHashMap<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> result = new LinkedHashMap<>();
         for ( Object[] o : os ) {
@@ -124,7 +173,6 @@ public class BibliographicReferenceDaoImpl
                 .createQuery( "select b, e from ExpressionExperiment e join e.primaryPublication b "
                         + AclQueryUtils.formAclRestrictionClause( "e.id" ) + " "
                         + "and b in (:recs) "
-                        + ( AclQueryUtils.requiresGroupBy() ? "group by b, e " : "" )
                         + "order by b.authorList nulls last, b.title nulls last" );
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         List<Object[]> os = QueryUtils.listByIdentifiableBatch( query, "recs", records, eeBatchSize );
@@ -152,53 +200,62 @@ public class BibliographicReferenceDaoImpl
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
         if ( bibliographicReferences.isEmpty() )
             return bibliographicReferences;
-        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
-                                + "left join fetch b.meshTerms left join fetch b.keywords where b in (:bs) " )
+                                + "left join fetch b.meshTerms left join fetch b.keywords where b in (:bs) ",
+                        BibliographicReference.class )
                 .setParameterList( "bs", optimizeIdentifiableParameterList( bibliographicReferences ) ).list();
     }
 
     @Override
     public Collection<Long> listAll() {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "select id from BibliographicReference" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select id from BibliographicReference", Long.class )
                 .list();
     }
 
     @Override
     public List<BibliographicReference> browse( int start, int limit ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from BibliographicReference" )
-                .setMaxResults( limit ).setFirstResult( start ).list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from BibliographicReference", BibliographicReference.class )
+                // HB6 rejects setMaxResults(<0); browse contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE ).setFirstResult( start ).list();
     }
 
     @Override
     public List<BibliographicReference> browse( int start, int limit, String orderField, boolean descending ) {
-        //noinspection unchecked
+        // ORDER BY column names cannot be bound as HQL parameters; whitelist + inject so
+        // the column reference is fixed alphabet, then append the direction explicitly so
+        // descending=false produces a well-formed ASC clause (the prior code emitted
+        // 'order by ?' with no direction in that arm).
+        if ( !BROWSE_SORTABLE_FIELDS.contains( orderField ) ) {
+            throw new IllegalArgumentException( "Unsupported BibliographicReference sort field: " + orderField
+                    + " (allowed: " + BROWSE_SORTABLE_FIELDS + ")" );
+        }
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from BibliographicReference order by :orderField " + ( descending ? "desc" : "" ) )
-                .setMaxResults( limit ).setFirstResult( start ).setParameter( "orderField", orderField ).list();
+                .createQuery( "from BibliographicReference order by " + orderField + ( descending ? " desc" : " asc" ),
+                        BibliographicReference.class )
+                // HB6 rejects setMaxResults(<0); browse contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE ).setFirstResult( start ).list();
     }
 
     @Override
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
-
         BusinessKey.checkKey( bibliographicReference );
-        Criteria queryObject = this.getSessionFactory().getCurrentSession()
-                .createCriteria( BibliographicReference.class );
-
-        /*
-         * This syntax allows you to look at an association.
-         */
-        if ( bibliographicReference.getPubAccession() != null ) {
-            queryObject.createCriteria( "pubAccession" )
-                    .add( Restrictions.eq( "accession", bibliographicReference.getPubAccession().getAccession() ) );
-        } else {
+        if ( bibliographicReference.getPubAccession() == null ) {
             throw new NullPointerException( "PubAccession cannot be null" );
         }
-
-        return ( BibliographicReference ) queryObject.uniqueResult();
+        // Tolerate pre-existing duplicate rows (return the lowest-id match) rather than throwing. Beyond
+        // not 500-ing reads, this is what keeps findOrCreate from ADDING another duplicate: an accession
+        // that already has 2-3 rows still resolves to an existing one here, so create() is not reached.
+        String accession = bibliographicReference.getPubAccession().getAccession();
+        //noinspection unchecked
+        List<BibliographicReference> matches = this.getSessionFactory().getCurrentSession()
+                .createQuery( "from BibliographicReference b where b.pubAccession.accession = :acc order by b.id" )
+                .setParameter( "acc", accession )
+                .setMaxResults( 2 )
+                .list();
+        return firstOfPossibleDuplicates( matches, accession );
     }
 
     @Override

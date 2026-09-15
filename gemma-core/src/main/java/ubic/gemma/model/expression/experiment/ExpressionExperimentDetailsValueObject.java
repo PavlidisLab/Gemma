@@ -18,8 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclSid;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclSid;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.text.StringEscapeUtils;
@@ -29,7 +29,7 @@ import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -110,18 +110,15 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     private Long numPopulatedFactors;
 
-    // if it was switched
-    private Collection<ArrayDesignValueObject> originalPlatforms;
+    // if it was switched: inherited from ExpressionExperimentValueObject as a list of platform
+    // references. It used to be redeclared here as full ArrayDesignValueObjects, which nothing read
+    // -- the field had no reader anywhere in the codebase -- and which now collides with the base
+    // field every filtered read populates.
 
-    // if it was split.
-    /**
-     * Experiments that are related to this one via the splitting of a source experiment.
-     */
-    private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
+    // otherParts moved to ExpressionExperimentValueObject, as compact references rather than whole VOs, so
+    // that GET /datasets/{id} carries the split linkage too.
 
     private CitationValueObject primaryCitation;
-    @Nullable
-    private Integer pubmedId;
     /**
      * Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress,
      * this might be a link to the ArrayExpress version.
@@ -135,21 +132,9 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     private String QChtml;
 
-    /**
-     * Indicate if this experiment is a single-cell experiment.
-     */
-    private boolean isSingleCell;
-    /**
-     * The number of cells this experiment has.
-     * @see ExpressionExperiment#getNumberOfCells()
-     */
-    @Nullable
-    private Integer numberOfCells;
-    /**
-     * The number of cell IDs that the preferred single-cell dimension has.
-     * @see SingleCellDimension#getNumberOfCellIds()
-     */
-    private Integer numberOfCellIds;
+    // isSingleCell / numberOfCells / numberOfCellIds moved to ExpressionExperimentValueObject, where they are
+    // actually populated. Declared here since 2024 and never written by anything: every response carrying this
+    // VO said isSingleCell=false and numberOfCells=null regardless of the data.
     /**
      * Indicate if this experiment has a Cell Browser associated with it.
      */
@@ -176,6 +161,15 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee ) {
         super( ee );
+    }
+
+    /**
+     * Variant that skips reading the three {@code last*Event} associations off
+     * {@code CurationDetails} when {@code skipEvents=true}. See
+     * {@link ExpressionExperimentValueObject#ExpressionExperimentValueObject(ExpressionExperiment, boolean, boolean, boolean)}.
+     */
+    public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, boolean skipEvents ) {
+        super( ee, false, false, skipEvents );
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, AclObjectIdentity aoi,
@@ -222,13 +216,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return hasMultipleTechnologyTypes;
     }
 
-    public boolean getIsSingleCell() {
-        return isSingleCell;
-    }
-
-    public void setIsSingleCell( boolean isSingleCell ) {
-        this.isSingleCell = isSingleCell;
-    }
 
     public boolean getIsRNASeq() {
         return isRNASeq;

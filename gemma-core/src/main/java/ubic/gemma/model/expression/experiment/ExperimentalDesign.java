@@ -18,25 +18,59 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import org.hibernate.search.annotations.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 
-import javax.annotation.Nullable;
-import javax.persistence.Transient;
 import java.util.Set;
 
+/**
+ * Hibernate Search 7 mapping: indexed root and embedded contributor to
+ * {@link ExpressionExperiment#getExperimentalDesign()}. The deep
+ * {@code experimentalFactors.factorValues.characteristics.{value,valueUri}} path on EE
+ * runs through this entity.
+ */
+@Entity
+@Table(name = "EXPERIMENTAL_DESIGN")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class ExperimentalDesign extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
+    @Column(name = "REPLICATE_DESCRIPTION", columnDefinition = "VARCHAR(255)")
     private String replicateDescription;
+    @Column(name = "QUALITY_CONTROL_DESCRIPTION", columnDefinition = "VARCHAR(255)")
     private String qualityControlDescription;
+    @Column(name = "NORMALIZATION_DESCRIPTION", columnDefinition = "VARCHAR(255)")
     private String normalizationDescription;
+    @OneToMany(mappedBy = "experimentalDesign", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ExperimentalFactor> experimentalFactors = new java.util.HashSet<>();
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "EXPERIMENTAL_DESIGN_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "CHARACTERISTIC_EXPERIMENTAL_DESIGN_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Characteristic> types = new java.util.HashSet<>();
 
     @Nullable
+    @Transient
     private ExpressionExperiment securityOwner;
 
     @Override
@@ -46,13 +80,13 @@ public class ExperimentalDesign extends AbstractDescribable implements SecuredCh
     }
 
     @Override
-    @Field
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
@@ -60,6 +94,7 @@ public class ExperimentalDesign extends AbstractDescribable implements SecuredCh
     /**
      * @return The description of the factors (TimeCourse, Dosage, etc.) that group the BioAssays.
      */
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;
@@ -94,7 +129,6 @@ public class ExperimentalDesign extends AbstractDescribable implements SecuredCh
     }
 
     @Nullable
-    @Transient
     @Override
     public ExpressionExperiment getSecurityOwner() {
         return securityOwner;

@@ -18,6 +18,12 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -25,8 +31,14 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import java.util.HashSet;
 import java.util.Set;
 
+@Entity
 public abstract class FactorAssociatedAnalysisResultSet<R extends AnalysisResult> extends AnalysisResultSet<R> {
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "EXPERIMENTAL_FACTORS2FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS",
+            joinColumns = @JoinColumn(name = "FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "EXPERIMENTAL_FACTORS_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "EXPERIMENTAL_FACTOR_FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS_C"))
     private Set<ExperimentalFactor> experimentalFactors = new HashSet<>();
 
     public Set<ExperimentalFactor> getExperimentalFactors() {

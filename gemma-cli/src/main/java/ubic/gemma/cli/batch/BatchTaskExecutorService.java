@@ -1,6 +1,6 @@
 package ubic.gemma.cli.batch;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.concurrent.AbstractDelegatingExecutorService;
 
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * A task executor that automatically reports errors in batch tasks.
  */
-@CommonsLog
+@Slf4j
 public class BatchTaskExecutorService extends AbstractDelegatingExecutorService implements AutoCloseable {
 
     private final BatchTaskProgressReporter progressReporter;

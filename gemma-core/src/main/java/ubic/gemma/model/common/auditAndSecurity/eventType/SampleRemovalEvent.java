@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Event used when a sample is removed from an experiment (typically due to QC concerns or when marked as an outlier).
  */
+@Entity
+@DiscriminatorValue("SampleRemovalEvent")
 public class SampleRemovalEvent extends ExpressionExperimentAnalysisEvent {
 
 }

@@ -3,7 +3,7 @@ package ubic.gemma.model.common.search;
 import lombok.Value;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.stream.Collectors;
 
 @Value

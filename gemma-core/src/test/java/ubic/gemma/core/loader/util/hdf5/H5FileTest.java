@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.util.hdf5;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.FileNotFoundException;
 import java.nio.file.Path;

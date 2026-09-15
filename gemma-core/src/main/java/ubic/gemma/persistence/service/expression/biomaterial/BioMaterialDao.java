@@ -61,4 +61,34 @@ public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMateria
      * This also includes experiments that are using this via one of their parent?
      */
     Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm );
+
+    /**
+     * Batched counterpart to the per-{@link BioMaterial} {@link ubic.gemma.persistence.util.Thaws#thawBioMaterial}
+     * pattern: warm the source-{@link BioMaterial} chain plus the per-row lazy associations
+     * (sourceTaxon, treatments, factorValues.experimentalFactor) for the {@link BioMaterial}s
+     * referenced by every {@link BioAssay} in {@code bas}, using a small constant number of
+     * SQL round-trips instead of the per-BA, per-chain-level {@code Hibernate.initialize}
+     * pattern.
+     * <p>
+     * Implementation:
+     * <ol>
+     *   <li>Seed with the BAs' {@code sampleUsed} IDs (the eager-fetched {@link BioMaterial}
+     *       on each BA — no extra query).</li>
+     *   <li>Walk the source chain breadth-first via one ID-only HQL per chain level — terminates
+     *       when a level yields no new BMs.</li>
+     *   <li>Issue one HQL fetch-joining {@code treatments} on the union of chain BM IDs.</li>
+     *   <li>Issue one HQL fetch-joining {@code factorValues.experimentalFactor} on the union of
+     *       chain BM IDs.</li>
+     * </ol>
+     * Total query count is {@code 1 + chainDepth} (chain walk) + 2 (collection fetches),
+     * independent of {@link BioAssay} count. Replaces the O(N&times;depth) per-row
+     * {@link ubic.gemma.persistence.util.Thaws#thawBioMaterial} round-trips that dominated
+     * the {@code /datasets/{id}/samples} endpoint (PERF_PROBE_REPORT_ROUND2 finding #2:
+     * ~15.8 s projected for a 92-BM EE vs ~150 ms batched).
+     * <p>
+     * No-op when {@code bas} is empty. Mutates the BioMaterial entities (and their source-chain
+     * ancestors) attached to the current session — does not return them; callers continue to
+     * access the chain via {@code bioAssay.getSampleUsed()...}.
+     */
+    void thawBioMaterialsForBioAssays( Collection<BioAssay> bas );
 }

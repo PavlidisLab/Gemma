@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.w3c.dom.Document;
 import ubic.gemma.core.loader.entrez.EntrezQuery;
@@ -29,7 +29,7 @@ import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.common.description.BibliographicReference;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -43,7 +43,7 @@ import static ubic.gemma.core.loader.entrez.EntrezUtils.quoteTerm;
  *
  * @author pavlidis
  */
-@CommonsLog
+@Slf4j
 public class PubMedSearch {
 
     private static final int MAX_TRIES = 3;

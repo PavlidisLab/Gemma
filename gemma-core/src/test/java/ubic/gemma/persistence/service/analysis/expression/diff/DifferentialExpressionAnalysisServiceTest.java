@@ -19,15 +19,18 @@
 
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import gemma.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
@@ -38,12 +41,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author klc
  */
-public class DifferentialExpressionAnalysisServiceTest extends BaseIntegrationTest {
+public class DifferentialExpressionAnalysisServiceTest extends BaseIntegrationTest5 {
 
     @Autowired
     private DifferentialExpressionAnalysisService analysisService;
@@ -53,6 +56,12 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseIntegrationTe
 
     @Autowired
     private AclService aclService;
+
+    @Autowired
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     @Autowired
     private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy;
@@ -71,7 +80,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseIntegrationTe
     private DifferentialExpressionAnalysis eAnalysis4;
     private ExpressionAnalysisResultSet resultSet1;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         e1 = ExpressionExperiment.Factory.newInstance();
         e1.setShortName( RandomStringUtils.insecure().nextAlphabetic( 6 ) );
@@ -128,11 +137,28 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseIntegrationTe
         eAnalysis4 = analysisService.create( eAnalysis4 );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         expressionExperimentService.remove( e1 );
         expressionExperimentService.remove( e2 );
         expressionExperimentService.remove( e3 );
+    }
+
+    /**
+     * The curation cascade reaches {@code deleteAnalysis} from inside its own transaction
+     * ({@code ExpressionExperimentServiceImpl} step 2, which routes there so the analysis takes its diffex
+     * archive and result-set TSV caches with it). {@code DifferentialExpressionAnalyzerServiceImpl} carries
+     * {@code Propagation.NEVER} at class level, so without the {@code SUPPORTS} override this call throws
+     * {@code IllegalTransactionStateException}. A mocked test cannot see that: it has no proxy, so no
+     * propagation is enforced.
+     */
+    @Test
+    public void testDeleteAnalysisJoinsACallersTransaction() {
+        Long id = eAnalysis1.getId();
+        assertNotNull( id );
+        new TransactionTemplate( transactionManager )
+                .executeWithoutResult( status -> differentialExpressionAnalyzerService.deleteAnalysis( e1, eAnalysis1 ) );
+        assertNull( analysisService.load( id ) );
     }
 
     @Test

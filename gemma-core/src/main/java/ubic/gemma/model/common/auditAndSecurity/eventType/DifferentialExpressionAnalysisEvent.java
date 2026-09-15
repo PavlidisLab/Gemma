@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicates the experiment was the subject of a differential expression analysis.
  */
+@Entity
+@DiscriminatorValue("DifferentialExpressionAnalysisEvent")
 public class DifferentialExpressionAnalysisEvent extends ExpressionExperimentAnalysisEvent {
 
 }

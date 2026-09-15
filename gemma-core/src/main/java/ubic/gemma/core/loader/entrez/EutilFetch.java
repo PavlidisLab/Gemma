@@ -18,12 +18,12 @@
  */
 package ubic.gemma.core.loader.entrez;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -32,7 +32,7 @@ import java.net.URL;
  * High-level API for interacting with NCBI Entrez utilities.
  * @author paul
  */
-@CommonsLog
+@Slf4j
 public class EutilFetch {
 
     private static final int MAX_TRIES = 3;

@@ -2,7 +2,7 @@
  * This package contains classes for subsetting and aggregating single-cell data.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.analysis.singleCell.aggregate;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

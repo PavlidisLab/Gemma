@@ -1,16 +1,20 @@
 package ubic.gemma.rest.util.args;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.DatasetPublicationValueObject;
+import ubic.gemma.model.common.description.PublicationAssociation;
+import ubic.gemma.model.common.description.PublicationAssociationStatus;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchResult;
@@ -20,43 +24,52 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.DesignApplyOutcome;
 import ubic.gemma.model.expression.experiment.DesignPreflightReport;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.expression.experiment.DesignCommitPlan;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nullable;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.ServiceUnavailableException;
+import org.springframework.lang.Nullable;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.InternalServerErrorException;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.ServiceUnavailableException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @Service
-@CommonsLog
+@Slf4j
 public class DatasetArgService extends AbstractEntityArgService<ExpressionExperiment, ExpressionExperimentService> {
 
     private final SearchService searchService;
     private final ArrayDesignService adService;
     private final BioAssayService baService;
     private final OutlierDetectionService outlierDetectionService;
+    private final PublicationAssociationService publicationAssociationService;
 
     @Autowired
-    public DatasetArgService( ExpressionExperimentService service, SearchService searchService, ArrayDesignService adService, BioAssayService baService, OutlierDetectionService outlierDetectionService ) {
+    public DatasetArgService( ExpressionExperimentService service, SearchService searchService, ArrayDesignService adService, BioAssayService baService, OutlierDetectionService outlierDetectionService,
+            PublicationAssociationService publicationAssociationService ) {
         super( service );
         this.searchService = searchService;
         this.adService = adService;
         this.baService = baService;
         this.outlierDetectionService = outlierDetectionService;
+        this.publicationAssociationService = publicationAssociationService;
     }
 
     /**
@@ -112,6 +125,33 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         return service.getEnhancedFilters( super.getFilters( filterArg ), mentionedTerms, inferredTerms, timeout, timeUnit );
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link ExpressionExperimentService#loadValueObjects(Filters, Sort, int, int)}.
+     * Always sorts by ascending {@code id} (the primary key, indexed and unique) — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1d. The caller's {@code Filters} still
+     * applies (so endpoints like {@code GET /taxa/{taxon}/datasets} can pre-compose the
+     * {@code taxon.id = ?} constraint into the filter and pass it through). The user's
+     * {@code ?sort=} arg is intentionally not honoured in cursor mode because the DAO
+     * currently restricts cursors to single-component id sorts (recce sec. 3.4 — to be
+     * lifted in phase B once the index audit is complete).
+     */
+    public CursorPage<ExpressionExperimentValueObject> getDatasetsByCursor( @Nullable Filters filters, @Nullable Cursor cursor, int limit ) {
+        return service.loadValueObjectsByCursor( filters, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link ExpressionExperimentService#loadBlacklistedValueObjects(Filters, Sort, int, int)}.
+     * Always sorts by ascending {@code id} (the primary key, indexed and unique) — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1t (the EE-targeted twin of step 1h).
+     * The caller's {@code Filters} still applies on top of the blacklist short-name/accession
+     * predicate composed inside the DAO. The user's {@code ?sort=} arg is intentionally not
+     * honoured in cursor mode because the DAO currently restricts cursors to single-component
+     * id sorts (recce §3.4 — to be lifted in phase B once the index audit is complete).
+     */
+    public CursorPage<ExpressionExperimentValueObject> getBlacklistedDatasetsByCursor( @Nullable Filters filters, @Nullable Cursor cursor, int limit ) {
+        return service.loadBlacklistedValueObjectsByCursor( filters, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
     }
 
     /**
@@ -183,19 +223,70 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
-     * @return a collection of BioAssays that represent the experiments samples.
+     * The platforms the dataset was originally submitted on, before any switch — empty when it was never
+     * switched. Plural because a dataset's assays need not have come from one submitted platform.
      */
-    public List<BioAssayValueObject> getSamples( DatasetArg<?> arg ) {
-        ExpressionExperiment ee = service.thawLite( this.getEntity( arg ) );
+    public List<ArrayDesignValueObject> getOriginalPlatforms( DatasetArg<?> arg ) {
+        ExpressionExperiment ee = this.getEntity( arg );
+        return adService.loadOriginalPlatformValueObjectsForEE( ee.getId() );
+    }
+
+    /**
+     * @return a collection of BioAssays that represent the experiments samples.
+     * <p>
+     * Uses the narrow {@link ExpressionExperimentService#thawBioAssays(ExpressionExperiment)}
+     * thaw rather than the broader {@code thawLite}: the {@code BioAssayValueObject}
+     * ctor only reads the per-assay shape (array design, original platform,
+     * biomaterial-with-factor-values), so warming the nine EE-level lazy
+     * collections that {@code thawLite} touches (publications, otherParts,
+     * factors, factor values, quantitation types, characteristics, accession,
+     * mean-variance, geeq, curationDetails) is dead pre-fetch on this code
+     * path. See {@code SAMPLES_DESIGN_PERF_RECCE.md} for the measurement.
+     */
+    public List<BioAssayValueObject> getSamples( DatasetArg<?> arg, boolean includePredictedOutliers ) {
+        ExpressionExperiment ee = service.thawBioAssays( this.getEntity( arg ) );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), null, true, true );
-        populateOutliers( ee, bioAssayValueObjects );
+        if ( includePredictedOutliers ) {
+            populateOutliers( ee, bioAssayValueObjects );
+        }
         return bioAssayValueObjects;
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link #getSamples(DatasetArg, boolean)} for the {@code GET
+     * /datasets/{dataset}/samples} endpoint — see {@code CURSOR_PAGINATION_STEP1_PLAN.md}
+     * step 1k. Walks the EE→bioAssays association directly via
+     * {@link BioAssayService#loadValueObjectsByCursorForExpressionExperiment(ExpressionExperiment, Cursor, int)};
+     * always sorts by ascending {@code id} (the primary key, indexed and unique). The
+     * {@code thawLite} step is intentionally omitted in cursor mode because the keyset
+     * HQL fetches the assays directly (it doesn't iterate {@code ee.getBioAssays()} as
+     * a lazy collection). Outliers are populated post-hoc on the returned page's data,
+     * matching the offset-mode VO shape.
+     * <p>
+     * Note: this branch is taken only when no {@code quantitationType} / {@code
+     * useProcessedQuantitationType} parameter is supplied — see
+     * {@link ubic.gemma.rest.DatasetsWebService#getDatasetSamples}. The QT-narrowed
+     * variants intentionally remain offset-mode (they sort by
+     * {@code BioAssay::getName} and apply a {@link BioAssayDimension} restriction that
+     * is not expressible as an {@code id}-only cursor).
+     */
+    public CursorPage<BioAssayValueObject> getSamplesByCursor( DatasetArg<?> arg, @Nullable Cursor cursor, int limit,
+            boolean includePredictedOutliers ) {
+        ExpressionExperiment ee = this.getEntity( arg );
+        CursorPage<BioAssayValueObject> page = baService.loadValueObjectsByCursorForExpressionExperiment( ee, cursor, limit );
+        if ( includePredictedOutliers ) {
+            // populateOutliers takes the underlying VOs in place; the CursorPage's data
+            // list is what it iterates (CursorPage IS-A List<VO>).
+            populateOutliers( ee, page );
+        }
+        return page;
     }
 
     /**
      * Obtain a collection of BioAssays that represent the experiments samples for a particular quantitation type.
      */
-    public List<BioAssayValueObject> getSamples( DatasetArg<?> datasetArg, QuantitationType qt ) {
+    public List<BioAssayValueObject> getSamples( DatasetArg<?> datasetArg, QuantitationType qt,
+            boolean includePredictedOutliers ) {
         ExpressionExperiment ee = service.thawLite( getEntity( datasetArg ) );
         List<BioAssay> bad = service.getBioAssayDimensionsWithAssays( ee, qt ).stream()
                 .map( BioAssayDimension::getBioAssays )
@@ -208,7 +299,9 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
         Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( ee, bad );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( bad, assay2sourceAssayMap, true, true );
-        populateOutliers( ee, bioAssayValueObjects );
+        if ( includePredictedOutliers ) {
+            populateOutliers( ee, bioAssayValueObjects );
+        }
         return bioAssayValueObjects;
     }
 
@@ -216,8 +309,16 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * @return a collection of Annotations value objects that represent the experiments annotations.
      */
     public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
+        return getAnnotations( arg, false );
+    }
+
+    /**
+     * @param includeFreeText also return tags with no ontology mapping
+     * @return a collection of Annotations value objects that represent the experiments annotations.
+     */
+    public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg, boolean includeFreeText ) {
         ExpressionExperiment ee = this.getEntity( arg );
-        return service.getAnnotations( ee );
+        return service.getAnnotations( ee, includeFreeText );
     }
 
     /**
@@ -242,6 +343,22 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
         ExpressionExperiment ee = this.getEntity( arg );
         return service.previewDesignChange( ee, proposed );
+    }
+
+    /**
+     * Run a dry-run preflight for a design commit, counting the bindings {@code plan} defers to a second apply
+     * pass. For the curation commit, which is the one caller that has a plan; a payload that can only name factor
+     * values that already exist goes through {@link #previewDesignChange(DatasetArg, ExperimentalDesignValueObject)}.
+     *
+     * @see ExpressionExperimentService#previewDesignChange(ExpressionExperiment, ExperimentalDesignValueObject, DesignCommitPlan)
+     */
+    public DesignPreflightReport previewDesignChange( DatasetArg<?> arg, ExperimentalDesignValueObject proposed,
+            DesignCommitPlan plan ) {
+        if ( proposed == null ) {
+            throw new BadRequestException( "A proposed design must be supplied in the request body." );
+        }
+        ExpressionExperiment ee = this.getEntity( arg );
+        return service.previewDesignChange( ee, proposed, plan );
     }
 
     /**
@@ -280,10 +397,11 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * Validate and apply a proposed design replacement.
      * <p>
      * When the preflight report carries blockers, returns {@link DesignChangeResult#blocked} without
-     * mutating state. When the preflight report has no blockers but predicts differential-expression analyses
-     * to be deleted and {@code force} is false, returns {@link DesignChangeResult#forceRequired} (the cascade
-     * needs explicit consent). Otherwise applies the change and returns {@link DesignChangeResult#ok} with the
-     * fresh design VO.
+     * mutating state. When the preflight report has no blockers but
+     * {@link DesignPreflightReport#requiresForce() requires consent} — it would delete differential-expression
+     * analyses, or strand a subset on deleted factor values — and {@code force} is false, returns
+     * {@link DesignChangeResult#forceRequired}. Otherwise applies the change and returns
+     * {@link DesignChangeResult#ok} with the fresh design VO.
      */
     public DesignChangeResult applyDesignChange( DatasetArg<?> arg, ExperimentalDesignValueObject proposed, boolean force ) {
         if ( proposed == null ) {
@@ -294,11 +412,11 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         if ( !report.getBlockers().isEmpty() ) {
             return DesignChangeResult.blocked( report );
         }
-        if ( !report.getDifferentialExpressionAnalysesToDelete().isEmpty() && !force ) {
+        if ( report.requiresForce() && !force ) {
             return DesignChangeResult.forceRequired( report );
         }
-        ExperimentalDesignValueObject updated = service.applyDesignChange( ee, proposed );
-        return DesignChangeResult.ok( updated );
+        DesignApplyOutcome outcome = service.applyDesignChange( ee, proposed );
+        return DesignChangeResult.ok( outcome.getDesign() );
     }
 
     public List<ExpressionExperimentSubSet> getSubSets( DatasetArg<?> datasetArg ) {
@@ -334,7 +452,8 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         return subSetGroups;
     }
 
-    public List<BioAssayValueObject> getSubSetSamples( DatasetArg<?> datasetArg, Long subSetId ) {
+    public List<BioAssayValueObject> getSubSetSamples( DatasetArg<?> datasetArg, Long subSetId,
+            boolean includePredictedOutliers ) {
         ExpressionExperiment ee = getEntity( datasetArg );
         ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
         if ( subset == null ) {
@@ -342,8 +461,78 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
         Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( subset.getSourceExperiment(), subset.getBioAssays() );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( subset.getBioAssays(), assay2sourceAssayMap, true, true );
-        populateOutliers( subset.getSourceExperiment(), bioAssayValueObjects );
+        if ( includePredictedOutliers ) {
+            populateOutliers( subset.getSourceExperiment(), bioAssayValueObjects );
+        }
         return bioAssayValueObjects;
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link #getSubSetSamples(DatasetArg, Long, boolean)} for the
+     * {@code GET /datasets/{dataset}/subSets/{subSet}/samples} endpoint — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1u (the subset-scoped twin of step 1k
+     * for {@code GET /datasets/{dataset}/samples}). Walks the
+     * {@code ExpressionExperimentSubSet→bioAssays} association directly via
+     * {@link BioAssayService#loadValueObjectsByCursorForSubSet(ExpressionExperimentSubSet, Cursor, int)};
+     * always sorts by ascending {@code id} (primary key, indexed and unique).
+     * <p>
+     * The assay→source-assay mapping (used to populate the VO's {@code sourceBioAssayId})
+     * is built post-hoc against the subset's source experiment so the VO shape matches
+     * offset mode exactly. Outliers are also populated post-hoc on the returned page.
+     * <p>
+     * Subset existence is validated up-front (mirroring the offset variant's
+     * {@link NotFoundException} on unknown {@code subSetId}); the
+     * {@code getSubSetByIdWithCharacteristicsAndBioAssays} loader is reused intentionally
+     * — it returns the subset entity with its source experiment populated, which the
+     * source-assay map and outlier helpers both need, without forcing the full
+     * {@code subset.bioAssays} collection to materialise (Hibernate lazy-loads on access).
+     */
+    public CursorPage<BioAssayValueObject> getSubSetSamplesByCursor( DatasetArg<?> datasetArg, Long subSetId,
+            @Nullable Cursor cursor, int limit, boolean includePredictedOutliers ) {
+        ExpressionExperiment ee = getEntity( datasetArg );
+        ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
+        if ( subset == null ) {
+            throw new NotFoundException( "No subset found with ID " + subSetId );
+        }
+        CursorPage<BioAssayValueObject> rawPage = baService.loadValueObjectsByCursorForSubSet( subset, cursor, limit );
+        // The DAO returns VOs without sourceBioAssayId populated (the source-assay map needs
+        // the source experiment's bioAssays as a filter set, which only the service layer has).
+        // Build the source-assay map against subset.getSourceExperiment() and rewrite the
+        // VOs so the shape matches the offset mode caller (sourceBioAssayId /
+        // sourceBioAssayShortName populated). createBioAssayToSourceBioAssayMap uses
+        // subset.getBioAssays() as the *filter* (not iteration), so it is bounded to the
+        // subset's assay set (not the page's, intentionally — a subset's assay set is
+        // already finite by construction).
+        CursorPage<BioAssayValueObject> page;
+        if ( !rawPage.isEmpty() ) {
+            Map<Long, BioAssay> byId = new HashMap<>();
+            for ( BioAssay ba : subset.getBioAssays() ) {
+                byId.put( ba.getId(), ba );
+            }
+            List<BioAssay> pageAssays = new ArrayList<>( rawPage.size() );
+            for ( BioAssayValueObject vo : rawPage ) {
+                BioAssay ba = byId.get( vo.getId() );
+                if ( ba != null ) {
+                    pageAssays.add( ba );
+                }
+            }
+            Map<BioAssay, BioAssay> assay2sourceAssayMap = BioAssayUtils.createBioAssayToSourceBioAssayMap( subset.getSourceExperiment(), pageAssays );
+            // Use CursorPage#map to project the VOs while preserving cursor tokens/limit/sort.
+            page = rawPage.map( vo -> {
+                BioAssay ba = byId.get( vo.getId() );
+                if ( ba == null ) {
+                    return vo;
+                }
+                BioAssay src = assay2sourceAssayMap.get( ba );
+                return new BioAssayValueObject( ba, null, src, true, true );
+            } );
+        } else {
+            page = rawPage;
+        }
+        if ( includePredictedOutliers ) {
+            populateOutliers( subset.getSourceExperiment(), page );
+        }
+        return page;
     }
 
     public QuantitationType getPreferredQuantitationType( DatasetArg<?> datasetArg ) {
@@ -351,7 +540,20 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
                 .orElseThrow( () -> new NotFoundException( "No preferred quantitation type found for dataset with ID " + datasetArg + "." ) );
     }
 
-    public List<BibliographicReferenceValueObject> getPublications( DatasetArg<?> datasetArg ) {
+    public List<DatasetPublicationValueObject> getPublications( DatasetArg<?> datasetArg ) {
+        return getPublications( datasetArg, false );
+    }
+
+    /**
+     * A dataset's publications, each carrying the evidenced claim that attaches it.
+     *
+     * @param includeRejected also emit the publications that were considered and ruled out for this
+     *                        dataset. Off by default: a rejection is a record of a decision, not a
+     *                        publication of the dataset, and anything listing "the dataset's papers"
+     *                        must not pick them up by accident. Turn it on to see what a publication
+     *                        finder should not re-propose.
+     */
+    public List<DatasetPublicationValueObject> getPublications( DatasetArg<?> datasetArg, boolean includeRejected ) {
         Long eeId = getEntityId( datasetArg );
         if ( eeId == null ) {
             throw new NotFoundException( "Dataset " + datasetArg + " does not exist." );
@@ -362,23 +564,59 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
         BibliographicReference prim_ref = ee.getPrimaryPublication();
         Set<BibliographicReference> other_refs = ee.getOtherRelevantPublications();
-        List<BibliographicReferenceValueObject> out = new ArrayList<>();
+
+        List<BibliographicReference> linked = new ArrayList<>();
         if ( prim_ref != null ) {
-            out.add( new BibliographicReferenceValueObject( prim_ref ) );
+            linked.add( prim_ref );
         }
         for ( BibliographicReference ref : other_refs ) {
-            if ( prim_ref != null && Objects.equals( ref.getId(), prim_ref.getId() ) ) {
-                continue;
+            if ( prim_ref == null || !Objects.equals( ref.getId(), prim_ref.getId() ) ) {
+                linked.add( ref );
             }
-            out.add( new BibliographicReferenceValueObject( ref ) );
         }
 
+        // One query for the whole list rather than one per publication.
+        Map<Long, PublicationAssociation> assertions = publicationAssociationService.findByPublications( ee, linked );
+
+        List<DatasetPublicationValueObject> out = new ArrayList<>();
+        for ( BibliographicReference ref : linked ) {
+            out.add( new DatasetPublicationValueObject( ref, assertions.get( ref.getId() ) ) );
+        }
         out.sort( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
+
+        if ( includeRejected ) {
+            // Appended after the sort, not merged into it: a rejected paper is not one of the
+            // dataset's publications and should not be interleaved with them as though it were.
+            for ( PublicationAssociation pa : publicationAssociationService.findByInvestigation( ee, PublicationAssociationStatus.REJECTED ) ) {
+                out.add( new DatasetPublicationValueObject( pa.getPublication(), pa ) );
+            }
+        }
 
         return out;
     }
 
+    /**
+     * Set {@link BioAssayValueObject#getPredictedOutlier()} from the median-correlation algorithm.
+     * <p>
+     * This is expensive and does not scale with the number of VOs passed in: it loads the
+     * experiment's whole N&times;N sample-correlation matrix ({@code SampleCoexpressionMatrix.coexpressionMatrix},
+     * a LONGBLOB) to compute the prediction, so the cost is set by the correlation analysis, not by
+     * the page size. On experiments whose matrix is dimensioned over subset assays it reaches
+     * ~100&nbsp;MB and the request exceeds the 60&nbsp;s proxy timeout; because
+     * {@link OutlierDetectionService#getOutlierDetails} caches only on completion, a request that
+     * times out never populates the cache and the next one pays the same cost again.
+     * <p>
+     * Callers therefore opt in. The persisted, curator-facing
+     * {@link BioAssayValueObject#isOutlier()} flag is read from {@code BIO_ASSAY.IS_OUTLIER} by the
+     * VO constructor and is always present at no cost; only the algorithmic prediction needs this.
+     */
     public void populateOutliers( ExpressionExperiment ee, Collection<BioAssayValueObject> bioAssayValueObjects ) {
+        // 🛑 TEMPORARY (Paul, 2026-08-31): a single-cell dataset's correlation matrix spans cell types
+        // rather than samples, so the median-correlation prediction drawn from it is not defensible.
+        // Leave predictedOutlier unset (absent, meaning "not computed") rather than serve that.
+        if ( service.isSingleCell( ee ) ) {
+            return;
+        }
         outlierDetectionService.getOutlierDetails( ee ).ifPresent( outliers -> {
             Set<Long> predictedOutlierBioAssayIds = outliers.stream()
                     .map( OutlierDetails::getBioAssayId )

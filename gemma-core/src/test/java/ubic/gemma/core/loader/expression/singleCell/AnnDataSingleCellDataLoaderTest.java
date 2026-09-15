@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -14,7 +15,7 @@ import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -39,7 +40,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ContextConfiguration
-public class AnnDataSingleCellDataLoaderTest extends BaseTest {
+/**
+ * Two methods here are tagged slow and excluded by default; the other six are not. Measured warm:
+ * testUnrawAndTranspose 6.21 s and testGSE216457 3.18 s against 0.9 s for the remaining six
+ * together, so excluding the pair takes ~9.4 s off every run and leaves the loader's structural
+ * checks guarding it. No network is involved — the cost is in-JVM work on large .h5ad payloads.
+ * Run the excluded pair with mvn verify -DexcludedGroups= (everything) or
+ * -Dgroups=slow -DexcludedGroups=network (slow only).
+ */
+public class AnnDataSingleCellDataLoaderTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -457,6 +466,7 @@ public class AnnDataSingleCellDataLoaderTest extends BaseTest {
     /**
      * AnnData on-disk format was formalized in the 0.8.x series. This file was generated with 0.7.x.
      */
+    @Tag("slow")
     @Test
     public void testGSE216457() throws IOException {
         SingleCellDataTransformationPipeline transformation = singleCellDataTransformationFactory.createPipeline( Arrays.asList(
@@ -554,6 +564,7 @@ public class AnnDataSingleCellDataLoaderTest extends BaseTest {
     /**
      * This test exercise the ability of the Configurer to detect datasets that need to be unrawed and transposed.
      */
+    @Tag("slow")
     @Test
     public void testUnrawAndTranspose() throws IOException {
         Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE216457.h5ad" ).getFile().toPath();

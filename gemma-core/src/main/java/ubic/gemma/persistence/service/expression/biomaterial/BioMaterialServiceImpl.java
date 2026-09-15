@@ -17,10 +17,18 @@ package ubic.gemma.persistence.service.expression.biomaterial;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TagAddedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TagRemovedEvent;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -36,12 +44,9 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
-import ubic.gemma.persistence.util.Thaws;
 
 import java.util.*;
 import java.util.function.Function;
-
-import static ubic.gemma.persistence.util.Thaws.thawBioMaterial;
 
 /**
  * @author pavlidis
@@ -57,83 +62,65 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     private final BioAssayDao bioAssayDao;
     private final ExperimentalFactorDao experimentalFactorDao;
     private final CharacteristicService characteristicService;
+    private final BioMaterialReadService bioMaterialReadService;
 
     @Autowired
     public BioMaterialServiceImpl( BioMaterialDao bioMaterialDao, FactorValueDao factorValueDao,
-            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao, CharacteristicService characteristicService ) {
+            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao,
+            CharacteristicService characteristicService,
+            BioMaterialReadService bioMaterialReadService ) {
         super( bioMaterialDao );
         this.bioMaterialDao = bioMaterialDao;
         this.factorValueDao = factorValueDao;
         this.bioAssayDao = bioAssayDao;
         this.experimentalFactorDao = experimentalFactorDao;
         this.characteristicService = characteristicService;
+        this.bioMaterialReadService = bioMaterialReadService;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BioMaterial copy( BioMaterial bioMaterial ) {
-        return this.bioMaterialDao.copy( bioMaterial );
+        return bioMaterialReadService.copy( bioMaterial );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial, boolean direct ) {
-        return bioMaterialDao.findSubBioMaterials( bioMaterial, direct );
+        return bioMaterialReadService.findSubBioMaterials( bioMaterial, direct );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> findSiblings( BioMaterial bioMaterial ) {
-        if ( bioMaterial.getSourceBioMaterial() == null ) {
-            return Collections.emptySet();
-        }
-        Collection<BioMaterial> siblings = findSubBioMaterials( bioMaterial.getSourceBioMaterial(), true );
-        siblings.remove( bioMaterial );
-        return siblings;
+        return bioMaterialReadService.findSiblings( bioMaterial );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
-        return this.bioMaterialDao.findByExperiment( experiment );
+        return bioMaterialReadService.findByExperiment( experiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor ) {
-        return this.bioMaterialDao.findByFactor( experimentalFactor );
+        return bioMaterialReadService.findByFactor( experimentalFactor );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> BioMaterial loadAndThawOrFail( Long bmId, Function<String, T> exceptionSupplier, String message ) throws T {
-        BioMaterial bm = loadOrFail( bmId, exceptionSupplier, message );
-        thawBioMaterial( bm );
-        return bm;
+        return bioMaterialReadService.loadAndThawOrFail( bmId, exceptionSupplier, message );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm ) {
-        // source biomaterials need to be visited, so this must be in the session
-        bm = ensureInSession( bm );
-        return this.bioMaterialDao.getExpressionExperiments( bm );
+        return bioMaterialReadService.getExpressionExperiments( bm );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BioMaterial thaw( BioMaterial bioMaterial ) {
-        bioMaterial = ensureInSession( bioMaterial );
-        thawBioMaterial( bioMaterial );
-        return bioMaterial;
+        return bioMaterialReadService.thaw( bioMaterial );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
-        bioMaterials = ensureInSession( bioMaterials );
-        bioMaterials.forEach( Thaws::thawBioMaterial );
-        return bioMaterials;
+        return bioMaterialReadService.thaw( bioMaterials );
     }
 
     @Override
@@ -225,10 +212,213 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Transactional
     public void removeCharacteristics( BioMaterial bm, Collection<Characteristic> characteristicsToRemove ) {
         Assert.isTrue( characteristicsToRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics must be persistent." );
-        Assert.isTrue( bm.getCharacteristics().containsAll( characteristicsToRemove ) );
+        Assert.isTrue( bm.getCharacteristics().containsAll( characteristicsToRemove ) , "expected true");
         bm.getCharacteristics().removeAll( characteristicsToRemove );
         update( bm );
         characteristicService.remove( characteristicsToRemove );
+    }
+
+    @Override
+    @Transactional
+    @AuditedConditional( value = ManualAnnotationEvent.class,
+            when = "#result > 0",
+            messageSpel = "'Replaced sample annotations via API (' + #result + ' change(s)) on biomaterial ' + #bm.id" )
+    public int updateAnnotations( ExpressionExperiment owner, BioMaterial bm, Collection<Characteristic> desired ) {
+        Assert.notNull( owner, "Owner experiment must not be null." );
+        Assert.notNull( bm, "Biomaterial must not be null." );
+        Assert.notNull( desired, "Desired characteristic set must not be null (use an empty collection to clear)." );
+        for ( Characteristic vc : desired ) {
+            Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Each desired characteristic must have a non-blank category." );
+            Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Each desired characteristic must have a non-blank value." );
+        }
+
+        bm = Objects.requireNonNull( bioMaterialDao.load( bm.getId() ),
+                String.format( "No BioMaterial with ID %d.", bm.getId() ) );
+
+        Set<Characteristic> current = bm.getCharacteristics();
+        List<Characteristic> toRemove = new ArrayList<>();
+        List<Characteristic> toAdd = new ArrayList<>();
+
+        // anything in current not represented in desired -> remove
+        for ( Characteristic c : current ) {
+            boolean keep = false;
+            for ( Characteristic d : desired ) {
+                if ( CharacteristicUtils.sameTag( c, d ) ) {
+                    keep = true;
+                    break;
+                }
+            }
+            if ( !keep ) {
+                toRemove.add( c );
+            }
+        }
+        // anything in desired not already present -> add; a matched-but-present tag arriving with new
+        // supporting evidence -> refresh the evidence in place (identity by sameTag is unchanged).
+        int evidenceUpdates = 0;
+        for ( Characteristic d : desired ) {
+            Characteristic match = null;
+            for ( Characteristic c : current ) {
+                if ( CharacteristicUtils.sameTag( c, d ) ) {
+                    match = c;
+                    break;
+                }
+            }
+            if ( match == null ) {
+                toAdd.add( copyForAdd( d ) );
+            } else if ( d.getSupportingEvidence() != null
+                    && !Objects.equals( d.getSupportingEvidence(), match.getSupportingEvidence() ) ) {
+                match.setSupportingEvidence( d.getSupportingEvidence() );
+                evidenceUpdates++;
+            }
+        }
+
+        if ( toRemove.isEmpty() && toAdd.isEmpty() && evidenceUpdates == 0 ) {
+            BioMaterialServiceImpl.log.debug( "updateAnnotations: no change for biomaterial " + bm.getId() );
+            return 0;
+        }
+
+        if ( !toRemove.isEmpty() ) {
+            Assert.isTrue( toRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics to remove must be persistent." );
+            current.removeAll( toRemove );
+        }
+        if ( !toAdd.isEmpty() ) {
+            current.addAll( toAdd );
+        }
+        update( bm );
+        if ( !toRemove.isEmpty() ) {
+            characteristicService.remove( toRemove );
+        }
+
+        BioMaterialServiceImpl.log.info( "updateAnnotations: biomaterial " + bm.getId() + " added=" + toAdd.size()
+                + " removed=" + toRemove.size() + " evidenceUpdates=" + evidenceUpdates );
+        // Audit event written on the owning experiment by @AuditedConditional (the aspect targets the
+        // first Auditable argument, i.e. owner); the SpEL guard keeps the no-change branch silent.
+        return toAdd.size() + toRemove.size() + evidenceUpdates;
+    }
+
+    @Override
+    @Transactional
+    @Audited( value = TagAddedEvent.class,
+            messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value + ' to biomaterial ' + #bm.id" )
+    public Characteristic addAnnotation( ExpressionExperiment owner, BioMaterial bm, Characteristic vc ) {
+        return doAddAnnotation( owner, bm, vc );
+    }
+
+    /**
+     * Reason-carrying overload. A separate method rather than a parameter on the one above so every
+     * existing caller keeps its signature; the two differ only in the audit note the aspect writes.
+     * Both delegate to the same private body through a plain {@code this} call, which is not re-advised,
+     * so one call still writes one event.
+     */
+    @Override
+    @Transactional
+    @Audited( value = TagAddedEvent.class,
+            messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value + ' to biomaterial ' + #bm.id + (#reason != null ? ' \u2014 ' + #reason : '')" )
+    public Characteristic addAnnotation( ExpressionExperiment owner, BioMaterial bm, Characteristic vc,
+            @Nullable String reason ) {
+        return doAddAnnotation( owner, bm, vc );
+    }
+
+    private Characteristic doAddAnnotation( ExpressionExperiment owner, BioMaterial bm, Characteristic vc ) {
+        Assert.notNull( owner, "Owner experiment must not be null." );
+        Assert.notNull( vc, "Characteristic must not be null." );
+        Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
+        Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
+        bm = Objects.requireNonNull( bioMaterialDao.load( bm.getId() ),
+                String.format( "No BioMaterial with ID %d.", bm.getId() ) );
+        for ( Characteristic existing : bm.getCharacteristics() ) {
+            if ( CharacteristicUtils.sameTag( existing, vc ) ) {
+                throw new IllegalArgumentException( "An annotation with the same (category, value) already exists on biomaterial "
+                        + bm.getId() + " (existing id=" + existing.getId() + ")." );
+            }
+        }
+        if ( vc.getEvidenceCode() == null ) {
+            vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
+        }
+        bm.getCharacteristics().add( vc );
+        update( bm );
+        return vc;
+    }
+
+    @Override
+    @Transactional
+    @AuditedConditional( value = TagRemovedEvent.class,
+            when = "#result != null",
+            messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value + ' from biomaterial ' + #bm.id" )
+    @Nullable
+    public Characteristic removeAnnotation( ExpressionExperiment owner, BioMaterial bm, Long annotationId ) {
+        return doRemoveAnnotation( owner, bm, annotationId );
+    }
+
+    /** Reason-carrying overload; see {@link #addAnnotation(ExpressionExperiment, BioMaterial, Characteristic, String)}. */
+    @Override
+    @Transactional
+    @AuditedConditional( value = TagRemovedEvent.class,
+            when = "#result != null",
+            messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value + ' from biomaterial ' + #bm.id + (#reason != null ? ' \u2014 ' + #reason : '')" )
+    @Nullable
+    public Characteristic removeAnnotation( ExpressionExperiment owner, BioMaterial bm, Long annotationId,
+            @Nullable String reason ) {
+        return doRemoveAnnotation( owner, bm, annotationId );
+    }
+
+    @Nullable
+    private Characteristic doRemoveAnnotation( ExpressionExperiment owner, BioMaterial bm, Long annotationId ) {
+        Assert.notNull( owner, "Owner experiment must not be null." );
+        Assert.notNull( annotationId, "Annotation id must not be null." );
+        bm = Objects.requireNonNull( bioMaterialDao.load( bm.getId() ),
+                String.format( "No BioMaterial with ID %d.", bm.getId() ) );
+        Characteristic target = null;
+        for ( Characteristic c : bm.getCharacteristics() ) {
+            if ( annotationId.equals( c.getId() ) ) {
+                target = c;
+                break;
+            }
+        }
+        if ( target == null ) {
+            return null;
+        }
+        bm.getCharacteristics().remove( target );
+        update( bm );
+        characteristicService.remove( Collections.singleton( target ) );
+        return target;
+    }
+
+    /**
+     * Build the row to persist for an added characteristic, preserving the {@link Statement} discriminator
+     * and its predicate / object pair (a plain {@code Characteristic.Factory} would silently downgrade a
+     * Statement and drop the S-P-O semantics). Mirrors the experiment-level add path.
+     */
+    private static Characteristic copyForAdd( Characteristic d ) {
+        Characteristic fresh;
+        if ( d instanceof Statement ) {
+            Statement ds = ( Statement ) d;
+            Statement fs = Statement.Factory.newInstance();
+            fs.setCategory( ds.getCategory() );
+            fs.setCategoryUri( ds.getCategoryUri() );
+            fs.setSubject( ds.getSubject() );
+            if ( ds.getSubjectUri() != null ) {
+                fs.setSubjectUri( ds.getSubjectUri() );
+            }
+            fs.setPredicate( ds.getPredicate() );
+            fs.setPredicateUri( ds.getPredicateUri() );
+            fs.setObject( ds.getObject() );
+            fs.setObjectUri( ds.getObjectUri() );
+            fs.setSecondPredicate( ds.getSecondPredicate() );
+            fs.setSecondPredicateUri( ds.getSecondPredicateUri() );
+            fs.setSecondObject( ds.getSecondObject() );
+            fs.setSecondObjectUri( ds.getSecondObjectUri() );
+            fresh = fs;
+        } else {
+            fresh = Characteristic.Factory.newInstance();
+            fresh.setCategory( d.getCategory() );
+            fresh.setCategoryUri( d.getCategoryUri() );
+            fresh.setValue( d.getValue() );
+            fresh.setValueUri( d.getValueUri() );
+        }
+        fresh.setEvidenceCode( d.getEvidenceCode() != null ? d.getEvidenceCode() : GOEvidenceCode.IC );
+        fresh.setSupportingEvidence( d.getSupportingEvidence() );
+        return fresh;
     }
 
     private BioMaterial update( BioMaterialValueObject bmvo ) {
@@ -237,8 +427,9 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
         Collection<FactorValue> updatedFactorValues = new HashSet<>();
         Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
-        for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
-            String factorValueString = factorIdToFactorValueId.get( factorIdString );
+        for ( Map.Entry<String, String> fEntry : factorIdToFactorValueId.entrySet() ) {
+            String factorIdString = fEntry.getKey();
+            String factorValueString = fEntry.getValue();
 
             assert factorIdString.matches( "factor\\d+" );
             Long factorId = Long.parseLong( factorIdString.substring( 6 ) );

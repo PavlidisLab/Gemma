@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,17 +20,20 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Thaws;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@CommonsLog
+@Slf4j
 class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedExpressionDataVectorService {
 
     private final ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
@@ -38,6 +41,12 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
+    private BioMaterialDao bioMaterialDao;
 
     @Autowired
     private ProcessedDataVectorByGeneCache processedDataVectorByGeneCache;
@@ -226,11 +235,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
                 vecsForBas = processedDataVectors;
             } else {
                 // isolate the vectors for the current experiment.
-                for ( Iterator<ProcessedExpressionDataVector> it = processedDataVectors.keySet().iterator(); it
-                        .hasNext(); ) {
-                    ProcessedExpressionDataVector v = it.next();
+                for ( Iterator<Map.Entry<ProcessedExpressionDataVector, Collection<Long>>> it = processedDataVectors.entrySet().iterator(); it.hasNext(); ) {
+                    Map.Entry<ProcessedExpressionDataVector, Collection<Long>> entry = it.next();
+                    ProcessedExpressionDataVector v = entry.getKey();
                     if ( v.getExpressionExperiment().equals( bas ) ) {
-                        vecsForBas.put( v, processedDataVectors.get( v ) );
+                        vecsForBas.put( v, entry.getValue() );
                         it.remove(); // since we're done with it.
                     }
                 }
@@ -309,8 +318,8 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          * To Check the cache we need the list of genes 1st. Get from CS2Gene list then check the cache.
          */
         Collection<Long> genes = new HashSet<>();
-        for ( Long cs : cs2gene.keySet() ) {
-            genes.addAll( cs2gene.get( cs ) );
+        for ( Collection<Long> csGenes : cs2gene.values() ) {
+            genes.addAll( csGenes );
         }
 
         // this will be populated with experiments for which we don't have all the needed results cached
@@ -422,10 +431,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          */
         Map<Long, Map<Long, Collection<DoubleVectorValueObject>>> mapForCache = this.makeCacheMap( newResults );
         int i = 0;
-        for ( Long eeid : mapForCache.keySet() ) {
-            for ( Long g : mapForCache.get( eeid ).keySet() ) {
+        for ( Map.Entry<Long, Map<Long, Collection<DoubleVectorValueObject>>> mfcEntry : mapForCache.entrySet() ) {
+            Long eeid = mfcEntry.getKey();
+            for ( Map.Entry<Long, Collection<DoubleVectorValueObject>> gEntry : mfcEntry.getValue().entrySet() ) {
                 i++;
-                this.processedDataVectorByGeneCache.putById( eeid, g, mapForCache.get( eeid ).get( g ) );
+                this.processedDataVectorByGeneCache.putById( eeid, gEntry.getKey(), gEntry.getValue() );
             }
         }
         // WARNING cache size() can be slow, esp. terracotta.
@@ -560,10 +570,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
                 ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
         Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data.keySet(),
                 vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
-        for ( ProcessedExpressionDataVector v : data.keySet() ) {
+        for ( Map.Entry<ProcessedExpressionDataVector, Collection<Long>> dEntry : data.entrySet() ) {
+            ProcessedExpressionDataVector v = dEntry.getKey();
             result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
                     qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
-                    adVos.get( v.getDesignElement().getArrayDesign() ), data.get( v ) ) );
+                    adVos.get( v.getDesignElement().getArrayDesign() ), dEntry.getValue() ) );
         }
         return result;
     }
@@ -580,10 +591,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data.keySet(),
                 vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
         BioAssayDimensionValueObject dimToMatch = new BioAssayDimensionValueObject( longestBad );
-        for ( ProcessedExpressionDataVector v : data.keySet() ) {
+        for ( Map.Entry<ProcessedExpressionDataVector, Collection<Long>> dEntry : data.entrySet() ) {
+            ProcessedExpressionDataVector v = dEntry.getKey();
             result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
                     qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
-                    adVos.get( v.getDesignElement().getArrayDesign() ), data.get( v ), dimToMatch ) );
+                    adVos.get( v.getDesignElement().getArrayDesign() ), dEntry.getValue(), dimToMatch ) );
         }
         return result;
     }
@@ -614,7 +626,12 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         return results;
     }
 
+    @Nullable
     private Collection<DoubleVectorValueObject> sliceSubSet( BioAssaySet bas, @Nullable Collection<DoubleVectorValueObject> obs ) {
+        // unproxy before the test: a subset arriving as a BioAssaySet proxy is an instance of neither
+        // subclass, so it would take the else branch and hand back the source experiment's full set of
+        // vectors unsliced -- the wrong data, silently, rather than an exception.
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
         if ( bas instanceof ExpressionExperimentSubSet ) {
             return sliceSubSet( ( ExpressionExperimentSubSet ) bas, obs );
         } else {
@@ -629,6 +646,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
      * just the
      * data for the subset.
      */
+    @Nullable
     private Collection<DoubleVectorValueObject> sliceSubSet( ExpressionExperimentSubSet ee,
             @Nullable Collection<DoubleVectorValueObject> obs ) {
         if ( obs == null || obs.isEmpty() )
@@ -675,26 +693,58 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
 
     private Map<BioAssaySet, Collection<BioAssayDimension>> getBioAssayDimensions( Collection<? extends BioAssaySet> ees ) {
+        if ( ees.isEmpty() ) {
+            return new HashMap<>();
+        }
+        // Map each input BioAssaySet -> its source ExpressionExperiment (subsets resolve to their owner).
+        Map<BioAssaySet, ExpressionExperiment> basToEe = new HashMap<>();
+        for ( BioAssaySet bas : ees ) {
+            basToEe.put( bas, getExperiment( bas ) );
+        }
+        // One HQL fetches all (ee, bad) pairs for the union of source experiments.
+        Map<ExpressionExperiment, Collection<BioAssayDimension>> eeToBads = expressionExperimentDao
+                .getProcessedBioAssayDimensions( new HashSet<>( basToEe.values() ) );
+        // Batched thaw of every assay's source chain in a small constant number of queries —
+        // mirrors the per-EE-callee path (Thaws::thawBioAssayDimension -> thawBioAssay) but
+        // replaces the O(N x chainDepth) Hibernate.initialize loop with the batched BioMaterial
+        // loader introduced in 352118e781. Platform-side proxies are warmed per-assay.
+        List<BioAssay> allAssays = new ArrayList<>();
+        for ( Collection<BioAssayDimension> bads : eeToBads.values() ) {
+            for ( BioAssayDimension bad : bads ) {
+                for ( BioAssay ba : bad.getBioAssays() ) {
+                    Thaws.thawBioAssayPlatforms( ba );
+                    allAssays.add( ba );
+                }
+            }
+        }
+        if ( !allAssays.isEmpty() ) {
+            bioMaterialDao.thawBioMaterialsForBioAssays( allAssays );
+        }
+        // Stitch back to the input keys (multiple BAS may share an EE).
         Map<BioAssaySet, Collection<BioAssayDimension>> result = new HashMap<>();
-        for ( BioAssaySet ee : ees ) {
-            result.put( ee, getBioAssayDimensions( ee ) );
+        for ( Map.Entry<BioAssaySet, ExpressionExperiment> entry : basToEe.entrySet() ) {
+            Collection<BioAssayDimension> bads = eeToBads.get( entry.getValue() );
+            result.put( entry.getKey(), bads != null ? bads : Collections.emptyList() );
         }
         return result;
     }
 
     private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet bas ) {
-        return expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( getExperiment( bas ) );
+        // Delegate to the batched multi-EE path so the per-bioassay lazy-init chain
+        // (arrayDesign / designProvider / sourceTaxon / treatments / factorValues.EF for
+        // every assay in every BAD) collapses into the batched BioMaterial loader instead
+        // of N+1 round-trips. Saves ~13s cold on /datasets/{id}/expressions/differential.
+        Map<BioAssaySet, Collection<BioAssayDimension>> m = getBioAssayDimensions( Collections.singletonList( bas ) );
+        return m.getOrDefault( bas, Collections.emptyList() );
     }
 
+    /**
+     * Delegates to {@link CommonQueries#getExperiment(BioAssaySet)}, which was a byte-identical copy of
+     * what used to live here. Keeping one body means the unproxy that copy needed cannot be applied to
+     * only one of them.
+     */
     private ExpressionExperiment getExperiment( BioAssaySet bas ) {
-        ExpressionExperiment e;
-        if ( bas instanceof ExpressionExperiment ) {
-            e = ( ExpressionExperiment ) bas;
-        } else if ( bas instanceof ExpressionExperimentSubSet ) {
-            e = ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
-        } else {
-            throw new UnsupportedOperationException( "Couldn't handle a " + bas.getClass() );
-        }
+        ExpressionExperiment e = CommonQueries.getExperiment( bas );
         assert e != null;
         return e;
     }

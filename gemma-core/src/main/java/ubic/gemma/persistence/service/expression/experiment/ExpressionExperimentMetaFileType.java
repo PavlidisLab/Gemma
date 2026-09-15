@@ -114,7 +114,7 @@ public enum ExpressionExperimentMetaFileType {
     }
 
     public ExpressionExperimentMetaFileType getMultiQCDataFileType() {
-        Assert.isTrue( multiqcDataTypeId != -1 );
+        Assert.isTrue( multiqcDataTypeId != -1 , "expected true");
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
             if ( type.id == multiqcDataTypeId ) {
                 return type;
@@ -124,7 +124,7 @@ public enum ExpressionExperimentMetaFileType {
     }
 
     public ExpressionExperimentMetaFileType getMultiQCLogFileType() {
-        Assert.isTrue( multiqcLogTypeId != -1 );
+        Assert.isTrue( multiqcLogTypeId != -1 , "expected true");
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
             if ( type.id == multiqcLogTypeId ) {
                 return type;

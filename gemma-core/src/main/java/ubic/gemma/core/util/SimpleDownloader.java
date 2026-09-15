@@ -1,7 +1,7 @@
 package ubic.gemma.core.util;
 
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.io.IOUtils;
@@ -15,7 +15,7 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +40,7 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class SimpleDownloader {
 
     @Nullable
@@ -201,8 +201,11 @@ public class SimpleDownloader {
     }
 
     private long downloadFtp( URL url, Path dest, boolean force ) throws IOException {
-        Assert.notNull( ftpClientFactory, "A FTPClientFactory must be set to download files from FTP servers." );
-        FTPClient client = ftpClientFactory.getFtpClient( url );
+        FTPClientFactory factory = this.ftpClientFactory;
+        if ( factory == null ) {
+            throw new IllegalStateException( "FTP client factory not configured; call setFtpClientFactory() before downloading from FTP." );
+        }
+        FTPClient client = factory.getFtpClient( url );
         try {
             String remoteFile = url.getFile();
             boolean download;
@@ -264,10 +267,10 @@ public class SimpleDownloader {
             } else {
                 downloadedBytes = 0;
             }
-            ftpClientFactory.recycleClient( url, client );
+            factory.recycleClient( url, client );
             return downloadedBytes;
         } catch ( Exception e ) {
-            ftpClientFactory.destroyClient( url, client );
+            factory.destroyClient( url, client );
             throw e;
         }
     }

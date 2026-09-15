@@ -19,15 +19,19 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author paul
@@ -42,6 +46,18 @@ public interface AuditEventService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<AuditEvent> getEventsWithType( Auditable auditable );
+
+    /**
+     * Keyset-pagination counterpart to {@link #getEvents(Auditable)} for the
+     * {@code GET /datasets/{dataset}/auditEvents} endpoint &mdash; see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1q. Mirrors the
+     * {@link AuditEventDao#getEventsByCursor(Auditable, Cursor, int)} contract
+     * (id-asc keyset, {@code limit+1} probe for {@code hasMore},
+     * {@code totalElements} null by default). The auditable-trail scope and
+     * ACL check is preserved.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CursorPage<AuditEvent> getEventsByCursor( Auditable auditable, @Nullable Cursor cursor, int limit );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditable );
@@ -58,8 +74,36 @@ public interface AuditEventService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type, Collection<Class<? extends AuditEventType>> excludedTypes );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject.key, 'READ') or hasPermission(filterObject.key, 'ADMINISTRATION')")
     <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type );
+
+    /**
+     * Obtain the ids of every auditable of a class whose trail carries at least one event of any of
+     * the given types. One query, whatever the number of types.
+     * <p>
+     * 🛑 Bare ids, so there is no securable object to hang an ACL check on and none is applied —
+     * the {@code @PostFilter} the sibling above uses has nothing to filter here. Treat the result
+     * as a narrowing step and intersect it with an ACL-filtered load (e.g.
+     * {@code ExpressionExperimentService.load(Filters, Sort)}, whose ACL clause is in-query) before
+     * any of these ids reaches a caller.
+     *
+     * @see AuditEventDao#getIdsHavingEvent(Class, Collection)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    <T extends Auditable> Set<Long> getIdsHavingEvent( Class<T> auditableClass, Collection<Class<? extends AuditEventType>> types );
+
+    /**
+     * Obtain the latest typed event for each of the given auditables, whatever its type.
+     * <p>
+     * One query for the whole collection. Auditables whose trail carries no typed event at all are
+     * absent from the map rather than mapped to {@code null}; {@link #getCreateEvents(Collection)}
+     * is the batched fallback for those.
+     *
+     * @see AuditEventDao#getLastEvents(Collection)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables );
 
     /**
      * Fast method to retrieve auditEventTypes of multiple classes.
@@ -76,17 +120,22 @@ public interface AuditEventService {
     /**
      *
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     <T extends Auditable> Collection<T> getNewSinceDate( Class<T> auditableClass, Date date );
 
     /**
      * @param date date
-     * @return a collection of Auditable objects that were updated since the date entered.
+     * @return a collection of Auditable objects that received at least one typed
+     * {@link ubic.gemma.model.common.auditAndSecurity.AuditEvent} (i.e. {@code eventType IS NOT NULL})
+     * since the date entered. Generic auto-UPDATE rows ({@code action='U'}, {@code eventType=null})
+     * are NOT counted — see {@code AUDIT_SYSTEM_AUDIT.md} Section 5, risk #1.
      * Note that this security setting works even though auditables aren't necessarily securable; non-securable
      * auditables will be returned. See AclEntryAfterInvocationCollectionFilteringProvider and
      * applicationContext-security.xml
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     <T extends Auditable> Collection<T> getUpdatedSinceDate( Class<T> auditableClass, Date date );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

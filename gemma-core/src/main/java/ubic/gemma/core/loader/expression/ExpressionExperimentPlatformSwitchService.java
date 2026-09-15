@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -41,7 +42,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
@@ -110,9 +110,6 @@ public class ExpressionExperimentPlatformSwitchService {
     private AnalysisUtilService analysisUtilService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     /**
@@ -123,6 +120,8 @@ public class ExpressionExperimentPlatformSwitchService {
      *                     changed for them.
      */
     @Transactional
+    @Audited(value = ExpressionExperimentPlatformSwitchEvent.class,
+            messageSpel = "'Switch to use ' + #arrayDesign.shortName")
     public void switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
@@ -211,8 +210,8 @@ public class ExpressionExperimentPlatformSwitchService {
         }
 
         expressionExperimentService.update( ee );
-        auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
-                "Switch to use " + arrayDesign.getShortName() );
+        // Audit event written by @Audited on this method via AuditedAspect.
+        // Note "Switch to use <shortName>" is built by SpEL in the annotation (Phase B-2).
         log.info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.
 
         if ( hasData && targetBioAssayDimension != null /* case 2 */ ) {
@@ -549,9 +548,11 @@ public class ExpressionExperimentPlatformSwitchService {
                 continue;
             }
 
+            String badSuffix = targetBioAssayDimension == null ? "" : ", BioAssayDimension=" + targetBioAssayDimension;
+
             log.info( "Switching " + vecsForQt.size() + " vectors for " + type + " from " + oldAd.getShortName()
                     + " to " + arrayDesign.getShortName()
-                    + ( targetBioAssayDimension == null ? "" : ", BioAssayDimension=" + targetBioAssayDimension ) );
+                    + badSuffix );
 
             int numwarns = 0;
             int maxwarns = 30;
@@ -571,7 +572,7 @@ public class ExpressionExperimentPlatformSwitchService {
             if ( count != vecsForQt.size() ) {
                 throw new IllegalStateException(
                         "Found matches for only " + count + "/" + vecsForQt.size() + " vectors for " + type + " from " + oldAd.getShortName()
-                                + ( targetBioAssayDimension == null ? "" : ", BioAssayDimension=" + targetBioAssayDimension ) );
+                                + badSuffix );
             }
 
             // sanity check. this is all fine.

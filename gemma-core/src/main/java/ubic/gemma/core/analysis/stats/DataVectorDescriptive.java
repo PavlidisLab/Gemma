@@ -3,7 +3,7 @@ package ubic.gemma.core.analysis.stats;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 import org.springframework.util.Assert;
-import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
@@ -17,7 +17,7 @@ import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.get
  * Compute descriptive statistics for {@link ubic.gemma.model.expression.bioAssayData.DataVector}.
  * @author poirigui
  * @see SingleCellDescriptive
- * @see ubic.basecode.math.DescriptiveWithMissing
+ * @see ubic.gemma.core.util.math.DescriptiveWithMissing
  */
 public class DataVectorDescriptive {
 
@@ -294,7 +294,7 @@ public class DataVectorDescriptive {
     }
 
     public static int sum( int[] data, ScaleType scaleType ) {
-        Assert.isTrue( scaleType == ScaleType.COUNT );
+        Assert.isTrue( scaleType == ScaleType.COUNT , "expected true");
         int s = 0;
         for ( int d : data ) {
             s += d;
@@ -303,7 +303,7 @@ public class DataVectorDescriptive {
     }
 
     public static long sum( long[] data, ScaleType scaleType ) {
-        Assert.isTrue( scaleType == ScaleType.COUNT );
+        Assert.isTrue( scaleType == ScaleType.COUNT , "expected true");
         long s = 0;
         for ( long d : data ) {
             s += d;
@@ -476,14 +476,14 @@ public class DataVectorDescriptive {
     }
 
     public static double sampleVariance( int[] data, ScaleType scaleType ) {
-        Assert.isTrue( scaleType == ScaleType.COUNT );
+        Assert.isTrue( scaleType == ScaleType.COUNT , "expected true");
         DoubleArrayList d = new DoubleArrayList( int2double( data ) );
         // no need to use DescriptiveWithMissing for integer data
         return Descriptive.sampleVariance( d, Descriptive.mean( d ) );
     }
 
     public static double sampleVariance( long[] data, ScaleType scaleType ) {
-        Assert.isTrue( scaleType == ScaleType.COUNT );
+        Assert.isTrue( scaleType == ScaleType.COUNT , "expected true");
         DoubleArrayList d = new DoubleArrayList( long2double( data ) );
         // no need to use DescriptiveWithMissing for long data
         return Descriptive.sampleVariance( d, Descriptive.mean( d ) );

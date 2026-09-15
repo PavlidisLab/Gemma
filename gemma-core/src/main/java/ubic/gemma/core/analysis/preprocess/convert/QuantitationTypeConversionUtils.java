@@ -19,10 +19,10 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
 import cern.colt.matrix.DoubleMatrix1D;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.MatrixStats;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.detect.SuspiciousValuesForQuantitationException;
@@ -47,7 +47,7 @@ import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetecti
  *
  * @author pavlidis
  */
-@CommonsLog
+@Slf4j
 public class QuantitationTypeConversionUtils {
 
     public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix expressionData ) throws QuantitationTypeConversionException {
@@ -160,7 +160,7 @@ public class QuantitationTypeConversionUtils {
             detectSuspiciousValues( log2Matrix, log2Qts.values().iterator().next() );
         } catch ( SuspiciousValuesForQuantitationException e ) {
             if ( ignoreQuantitationMismatch ) {
-                log.warn( String.format( "Expression data matrix contains suspicious values:\n\n - %s",
+                log.warn( String.format( "Expression data matrix contains suspicious values:%n%n - %s",
                         e.getSuspiciousValues().stream()
                                 .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
                                 .collect( Collectors.joining( "\n - " ) ) ) );

@@ -19,7 +19,7 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.Writer;
@@ -53,7 +53,7 @@ import static ubic.gemma.core.util.TsvUtils.format;
  * @author pavlidis
  */
 @Setter
-@CommonsLog
+@Slf4j
 @ParametersAreNonnullByDefault
 public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
@@ -69,7 +69,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     private boolean useBioAssayIds = false;
     /**
      * Do not make the column names R-friendly.
-     * @see ubic.basecode.util.StringUtil#makeNames(String)
+     * @see ubic.gemma.core.util.StringUtil#makeNames(String)
      */
     private boolean useRawColumnNames = false;
     private boolean autoFlush = false;

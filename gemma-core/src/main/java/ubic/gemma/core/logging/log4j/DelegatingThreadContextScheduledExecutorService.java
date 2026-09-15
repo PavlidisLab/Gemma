@@ -3,7 +3,7 @@ package ubic.gemma.core.logging.log4j;
 import ubic.gemma.core.util.concurrent.AbstractDelegatingExecutorService;
 import ubic.gemma.core.util.concurrent.DelegatingScheduledExecutorService;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -26,27 +26,27 @@ public class DelegatingThreadContextScheduledExecutorService extends AbstractDel
         return delegate;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public ScheduledFuture<?> schedule( @Nonnull Runnable command, long delay, @Nonnull TimeUnit unit ) {
+    public ScheduledFuture<?> schedule( @NonNull Runnable command, long delay, @NonNull TimeUnit unit ) {
         return delegate.schedule( command, delay, unit );
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public <V> ScheduledFuture<V> schedule( @Nonnull Callable<V> callable, long delay, @Nonnull TimeUnit unit ) {
+    public <V> ScheduledFuture<V> schedule( @NonNull Callable<V> callable, long delay, @NonNull TimeUnit unit ) {
         return delegate.schedule( callable, delay, unit );
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate( @Nonnull Runnable command, long initialDelay, long period, @Nonnull TimeUnit unit ) {
+    public ScheduledFuture<?> scheduleAtFixedRate( @NonNull Runnable command, long initialDelay, long period, @NonNull TimeUnit unit ) {
         return delegate.scheduleAtFixedRate( command, initialDelay, period, unit );
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay( @Nonnull Runnable command, long initialDelay, long delay, @Nonnull TimeUnit unit ) {
+    public ScheduledFuture<?> scheduleWithFixedDelay( @NonNull Runnable command, long initialDelay, long delay, @NonNull TimeUnit unit ) {
         return delegate.scheduleWithFixedDelay( command, initialDelay, delay, unit );
     }
 

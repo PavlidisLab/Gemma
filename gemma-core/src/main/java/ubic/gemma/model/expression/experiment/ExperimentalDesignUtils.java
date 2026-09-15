@@ -14,7 +14,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * @author paul
  */
-@CommonsLog
+@Slf4j
 @ParametersAreNonnullByDefault
 public class ExperimentalDesignUtils {
 
@@ -43,16 +43,16 @@ public class ExperimentalDesignUtils {
     public static Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> getFactorValueMap( Collection<ExperimentalFactor> factors, Collection<BioMaterial> samples ) {
         int numSamples = samples.size();
         int numFactors = factors.size();
-        Map<BioMaterial, Map<ExperimentalFactor, Set<FactorValue>>> factorValueIndex = new HashMap<>( numSamples );
+        Map<BioMaterial, Map<ExperimentalFactor, Set<FactorValue>>> factorValueIndex = HashMap.newHashMap( numSamples );
         for ( BioMaterial sample : samples ) {
             for ( FactorValue fv : sample.getAllFactorValues() ) {
                 factorValueIndex
-                        .computeIfAbsent( sample, k -> new HashMap<>( numFactors ) )
-                        .computeIfAbsent( fv.getExperimentalFactor(), k -> new HashSet<>( 1 ) )
+                        .computeIfAbsent( sample, k -> HashMap.newHashMap( numFactors ) )
+                        .computeIfAbsent( fv.getExperimentalFactor(), k -> HashSet.newHashSet( 1 ) )
                         .add( fv );
             }
         }
-        Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> result = new HashMap<>( factors.size() );
+        Map<ExperimentalFactor, Map<BioMaterial, FactorValue>> result = HashMap.newHashMap( factors.size() );
         for ( ExperimentalFactor factor : factors ) {
             for ( BioMaterial sample : samples ) {
                 Map<ExperimentalFactor, Set<FactorValue>> fvm = factorValueIndex.get( sample );
@@ -65,7 +65,7 @@ public class ExperimentalDesignUtils {
                     } else if ( values.size() == 1 ) {
                         value = values.iterator().next();
                     } else {
-                        throw new IllegalStateException( String.format( "%s has more than one value for %s:\n\t%s",
+                        throw new IllegalStateException( String.format( "%s has more than one value for %s:%n\t%s",
                                 sample, factor,
                                 values.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
                     }

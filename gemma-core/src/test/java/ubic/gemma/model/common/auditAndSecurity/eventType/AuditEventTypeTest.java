@@ -1,6 +1,6 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchProblemsUpdateEvent;
 
 import static org.assertj.core.api.Assertions.assertThat;

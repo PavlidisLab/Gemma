@@ -21,7 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.springframework.stereotype.Service;
-import ubic.basecode.math.KruskalWallis;
+import ubic.gemma.core.util.math.KruskalWallis;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -40,6 +40,14 @@ import java.util.*;
 public class BatchConfoundUtils {
 
     private static final Log log = LogFactory.getLog( BatchConfoundUtils.class.getName() );
+
+    /**
+     * Smallest number of usable biomaterials the Kruskal-Wallis leg will accept.
+     * <p>
+     * {@link KruskalWallis#test(DoubleArrayList, IntArrayList)} asserts {@code scores.size() > 2} and its statistic
+     * scales by {@code 12 / (n * (n + 1))}, so a smaller sample is either an assertion error or a meaningless number.
+     */
+    private static final int MIN_BIOMATERIALS_FOR_KRUSKAL_WALLIS = 3;
 
     /**
      *
@@ -101,10 +109,12 @@ public class BatchConfoundUtils {
                     batchIndexes.put( fv, index++ );
                 }
 
-                for ( BioMaterial bm : bmToFvId.keySet() ) {
+                for ( Map.Entry<BioMaterial, Number> bmEntry : bmToFvId.entrySet() ) {
+                    BioMaterial bm = bmEntry.getKey();
+                    Number fvId = bmEntry.getValue();
                     FactorValue val;
-                    if ( bmToFvId.get( bm ) != null ) {
-                        val = factorValueById.get( ( Long ) bmToFvId.get( bm ) );
+                    if ( fvId != null ) {
+                        val = factorValueById.get( ( Long ) fvId );
                     } else {
                         // If a sample is missing a FV for the batch factor, that will basically break all the following
                         // logic, so by assigning a factor value, we can at least continue the analysis.
@@ -130,15 +140,17 @@ public class BatchConfoundUtils {
          * Compare other factors to batches to look for confounds.
          */
 
-        for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
+        for ( Map.Entry<ExperimentalFactor, Map<BioMaterial, Number>> bmfmEntry : bioMaterialFactorMap.entrySet() ) {
+            ExperimentalFactor ef = bmfmEntry.getKey();
             if ( ef.equals( batchFactor ) )
                 continue;
 
             // ignore factors that we add with the aim of resolving confounds.
-            if ( ef.getCategory() != null && ef.getCategory().getValue().equalsIgnoreCase( "collection of material" ) )
+            // Characteristic.getValue() is nullable, so compare from the literal side
+            if ( ef.getCategory() != null && "collection of material".equalsIgnoreCase( ef.getCategory().getValue() ) )
                 continue;
 
-            Map<BioMaterial, Number> bmToFv = bioMaterialFactorMap.get( ef );
+            Map<BioMaterial, Number> bmToFv = bmfmEntry.getValue();
             int numBioMaterials = bmToFv.keySet().size();
 
             assert numBioMaterials > 0 : "No biomaterials for " + ef;
@@ -150,18 +162,42 @@ public class BatchConfoundUtils {
             int numBatches = batchFactor.getFactorValues().size();
             if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
+                // getBioMaterialFactorMap() pads every factor's map with a null for each biomaterial that has no
+                // factor value, so bmToFv may hold fewer usable entries than numBioMaterials. Append rather than
+                // index into a pre-sized list: setSize() pre-fills with 0.0 / 0, so skipping an entry in a pre-sized
+                // list would leave the two index-aligned lists carrying a fabricated observation in batch 0.
                 DoubleArrayList factorValues = new DoubleArrayList( numBioMaterials );
-                factorValues.setSize( numBioMaterials );
-
                 IntArrayList batches = new IntArrayList( numBioMaterials );
-                batches.setSize( numBioMaterials );
+                Set<Integer> usedBatchesForFactor = new HashSet<>();
 
-                int j = 0;
-                for ( BioMaterial bm : bmToFv.keySet() ) {
-                    assert !factorValues.isEmpty() : "Biomaterial to factorValue is empty for " + ef;
-                    factorValues.set( j, bmToFv.get( bm ).doubleValue() ); // ensures we only look at actually used factorvalues.
-                    batches.set( j, batchIndexes.get( batchMembership.get( bm ) ) );
-                    j++;
+                for ( Map.Entry<BioMaterial, Number> bmEntry : bmToFv.entrySet() ) {
+                    BioMaterial bm = bmEntry.getKey();
+                    Number value = bmEntry.getValue();
+                    if ( value == null ) {
+                        // no value for this factor, so this biomaterial cannot be ranked
+                        log.debug( "No factor value for " + bm + " and " + ef + "." );
+                        continue;
+                    }
+                    Integer batchIndex = batchIndexes.get( batchMembership.get( bm ) );
+                    if ( batchIndex == null ) {
+                        // no batch to rank it against
+                        log.warn( "No batch membership for : " + bm );
+                        continue;
+                    }
+                    factorValues.add( value.doubleValue() ); // ensures we only look at actually used factorvalues.
+                    batches.add( batchIndex );
+                    usedBatchesForFactor.add( batchIndex );
+                }
+
+                if ( factorValues.size() < numBioMaterials ) {
+                    log.warn( ( numBioMaterials - factorValues.size() ) + "/" + numBioMaterials + " biomaterials lack a value for "
+                            + ef + " or a batch assignment in " + ee + "; they are excluded from its batch confound test." );
+                }
+
+                if ( factorValues.size() < MIN_BIOMATERIALS_FOR_KRUSKAL_WALLIS || usedBatchesForFactor.size() < 2 ) {
+                    log.warn( "Only " + factorValues.size() + " biomaterial(s) in " + usedBatchesForFactor.size()
+                            + " batch(es) can be tested for confound with " + ef + " in " + ee + ", skipping it." );
+                    continue; // to the next factor
                 }
 
                 p = KruskalWallis.test( factorValues, batches );
@@ -174,8 +210,14 @@ public class BatchConfoundUtils {
             } else {
                 Map<Long, FactorValue> factorValueById = IdentifiableUtils.getIdMap( ef.getFactorValues() );
 
+                // getBioMaterialFactorMap() pads every factor's map with a null for each biomaterial that
+                // has no factor value (see the CONTINUOUS branch above). Skip those: a null counted as a
+                // used factor value widens the contingency table below by one permanently-empty column.
                 Set<FactorValue> usedFactorValues = new HashSet<>( bmToFv.size() );
                 for ( Number val : bmToFv.values() ) {
+                    if ( val == null ) {
+                        continue;
+                    }
                     usedFactorValues.add( factorValueById.get( ( Long ) val ) );
                 }
 
@@ -196,18 +238,15 @@ public class BatchConfoundUtils {
 
                 Map<BioMaterial, FactorValue> factorValueMembership = new HashMap<>();
 
-                for ( BioMaterial bm : bmToFv.keySet() ) {
-                    factorValueMembership.put( bm, factorValueById.get( ( Long ) bmToFv.get( bm ) ) );
+                for ( Map.Entry<BioMaterial, Number> bmEntry : bmToFv.entrySet() ) {
+                    factorValueMembership.put( bmEntry.getKey(), factorValueById.get( ( Long ) bmEntry.getValue() ) );
                 }
 
-                // numbatches could still be incorrect, so we have to clean this up later.
-                long[][] counts = new long[numBatches][usedFactorValues.size()];
-
-                for ( int i = 0; i < batchIndexes.size(); i++ ) {
-                    for ( int j = 0; j < factorValueToIndex.size(); j++ ) {
-                        counts[i][j] = 0;
-                    }
-                }
+                // numbatches could still be incorrect, so we have to clean this up later. Width comes from
+                // factorValueToIndex, the only map the counting loop below indexes through; sizing it from
+                // usedFactorValues instead leaves a trailing all-zero column whenever the two disagree,
+                // which defeats the finalCounts[0].length == 2 odds-ratio case and makes chi-square NaN.
+                long[][] counts = new long[numBatches][factorValueToIndex.size()];
 
                 for ( BioMaterial bm : bmToFv.keySet() ) {
                     FactorValue batch = batchMembership.get( bm );

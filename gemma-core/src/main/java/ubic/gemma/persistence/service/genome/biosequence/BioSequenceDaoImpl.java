@@ -18,10 +18,14 @@
  */
 package ubic.gemma.persistence.service.genome.biosequence;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -32,7 +36,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
@@ -140,7 +144,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
                         + "join gene.products gp, BioSequence2GeneProduct as bs2gp "
                         + "where gp=bs2gp.geneProduct and bs2gp.bioSequence.name like :search "
                         + "group by gene" )
-                .setString( "search", search ).list();
+                .setParameter( "search", search ).list();
     }
 
     @Override
@@ -192,20 +196,27 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
         return BioSequenceValueObject.fromEntity( entity );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public BioSequence find( BioSequence bioSequence ) {
 
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = BusinessKey
-                .createQueryObject( this.getSessionFactory().getCurrentSession(), bioSequence );
+        org.hibernate.Session session = this.getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<BioSequence> cq = cb.createQuery( BioSequence.class );
+        Root<BioSequence> root = cq.from( BioSequence.class );
+        List<Predicate> preds = BusinessKey.matches( cb, root, bioSequence );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        Query<BioSequence> queryObject = session.createQuery( cq );
         queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
+        queryObject.setHibernateFlushMode( FlushMode.MANUAL );
         /*
          * this initially matches on name and taxon only.
          */
-        java.util.List<?> results = queryObject.list();
+        List<BioSequence> results = queryObject.list();
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
@@ -214,7 +225,7 @@ public class BioSequenceDaoImpl extends AbstractVoEnabledDao<BioSequence, BioSeq
                 // Try to find the best match. See BusinessKey for more
                 // explanation of why this is needed.
                 BioSequence match = null;
-                for ( BioSequence res : ( Collection<BioSequence> ) results ) {
+                for ( BioSequence res : results ) {
                     if ( res.equals( bioSequence ) ) {
                         if ( match != null ) {
                             log.warn( "More than one sequence in the database matches " + bioSequence

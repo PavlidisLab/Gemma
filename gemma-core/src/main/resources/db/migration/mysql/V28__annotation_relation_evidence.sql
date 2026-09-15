@@ -1,0 +1,38 @@
+-- ANNOTATION_RELATION.EVIDENCE -- the one-line basis a source gives for a relation.
+--
+-- The table has always recorded an evidence CODE (GOEvidenceCode: was this curated, derived,
+-- imported) and never the evidence itself. That was fine while every row came from an ontology
+-- axiom, which cites nothing. It stops being fine with MGI: 94% of its 4,124 genotype-to-disease
+-- statements carry a PubMed id, and without somewhere to put it the citation survives only as
+-- the difference between TAS and IIA -- real information, but a curator cannot click a code.
+--
+-- TWO COLUMNS, because they are two different jobs and one of them does not fit in a line.
+--
+--   EVIDENCE            a one-line quotable basis, MEANT TO BE SHOWN. `PMID:11242117`.
+--   SUPPORTING_EVIDENCE opaque JSON, owned by whatever wrote it, for anything structured or long.
+--
+-- This is CHARACTERISTIC's arrangement (V22) and PUBLICATION_ASSOCIATION's (V25), and matching it
+-- matters more than the shape of either column: three tables now carry evidence and a reader
+-- should not have to learn a third convention. Making EVIDENCE itself JSON would have done that,
+-- and would have put a payload in the field a UI renders verbatim.
+--
+-- Measured before choosing the width: of MGI's 3,870 cited statements, 2,922 cite exactly one
+-- paper, the mean is 1.5, the maximum is 32, and 5 (0.1%) would exceed 255 characters. So 255 is
+-- right for the display line -- and the producer truncates at a citation boundary rather than
+-- mid-identifier -- while anything that genuinely needs room has somewhere to go.
+--
+-- BOTH IN ONE STATEMENT, deliberately: each ALTER on this table pays for a metadata lock (see the
+-- warning below), and paying twice for two columns known in advance is a self-inflicted outage.
+--
+-- NULLABLE, because most rows have no citation and never will: an OWL restriction is asserted by
+-- the ontology and cites nothing, and a corpus co-occurrence is evidence rather than having any.
+-- An empty string would be a second spelling of null, so writers store null.
+--
+-- ⚠️ ADD COLUMN on this table waits for a METADATA LOCK, and the wait is the slow part rather
+-- than the copy -- 70k rows is nothing. gemma-rest reads ANNOTATION_RELATION on every
+-- /annotations/relations call, and a pooled connection idle inside a transaction holds the lock
+-- while showing as `Sleep` in the processlist. Stop gemma-rest, or kill the holder, before
+-- running this; V27 hung until that was cleared.
+ALTER TABLE ANNOTATION_RELATION
+    ADD COLUMN EVIDENCE VARCHAR(255) DEFAULT NULL,
+    ADD COLUMN SUPPORTING_EVIDENCE TEXT NULL;

@@ -27,7 +27,7 @@ public class DenseMatrix implements Matrix {
 
     @Override
     public int[] getShape() {
-        return shape;
+        return shape.clone();
     }
 
     @Override

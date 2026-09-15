@@ -19,7 +19,12 @@
 package ubic.gemma.persistence.persister;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.FlushMode;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.Identifiable;
@@ -33,21 +38,48 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult;
 import ubic.gemma.persistence.service.genome.ChromosomeDao;
 import ubic.gemma.persistence.service.genome.GeneDao;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceDao;
 import ubic.gemma.persistence.service.genome.gene.GeneProductDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
+import ubic.gemma.persistence.util.BusinessKey;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 /**
+ * Persister-shrink S2b: lifted out of the {@link CommonPersister} inheritance chain
+ * into a concrete {@code @Component}. Genome-level CRUD (Gene, GeneProduct,
+ * BioSequence, Taxon, Chromosome, BlatAssociation, BlatResult, AnnotationAssociation)
+ * stays here; common-level helpers ({@link CommonPersister#persistExternalDatabase},
+ * {@link CommonPersister#persistDatabaseEntry}, {@link CommonPersister#fillInDatabaseEntry})
+ * are now reached through the {@code @Autowired CommonPersister common} field.
+ * <p>
+ * The protected {@code doPersist} / {@code doPersistOrUpdate} entry points remain so the
+ * upper layers ({@code ArrayDesignPersister}, {@code RelationshipPersister},
+ * {@code PersisterHelperImpl}) can keep their {@code super.doPersist} chains compiling
+ * until S2c/S2d/S2e detach them in turn; they delegate to the new public typed methods
+ * {@link #doGenome} / {@link #doGenomeUpdate} and fall through to
+ * {@link CommonPersister#doCommon} for User/Characteristic, then throw.
+ *
  * @author pavlidis
  */
-public abstract class GenomePersister extends CommonPersister {
+@Component("genomePersister")
+public class GenomePersister {
 
+    /**
+     * Mirror of {@link CommonPersister#REPORT_BATCH_SIZE}; kept here so the still-extant
+     * {@code ArrayDesignPersister} subclass keeps inheriting the constant during S2b/c.
+     */
+    protected static final int REPORT_BATCH_SIZE = 100;
+
+    @Autowired
+    private SessionFactory sessionFactory;
+    @Autowired
+    private CommonPersister common;
     @Autowired
     private GeneDao geneDao;
     @Autowired
@@ -65,39 +97,276 @@ public abstract class GenomePersister extends CommonPersister {
     @Autowired
     private AnnotationAssociationDao annotationAssociationDao;
 
-    @Override
+    protected SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
+    /**
+     * Polymorphic dispatch entry point reached by {@code ArrayDesignPersister} via the
+     * still-extant inheritance chain. Tries the Genome typed arms first
+     * ({@link #doGenome}), then falls through to {@link CommonPersister#doCommon} for
+     * User/Characteristic, otherwise throws {@link UnsupportedOperationException}.
+     */
+    @Nullable
     @SuppressWarnings("unchecked")
-    protected <T extends Identifiable> T doPersist( T entity, Caches caches ) {
+    protected <T extends Identifiable> T doPersist( T entity, Map<String, ExternalDatabase> xdbCache ) {
+        T handled = doGenome( entity, xdbCache );
+        if ( handled != null || entity instanceof Taxon ) {
+            // doGenome returns null only for entity types not in the Genome arms; Taxon
+            // is the one Genome arm whose typed helper could in principle return null,
+            // so we explicitly treat any Taxon hit as handled to keep the contract clean.
+            return handled;
+        }
+        T commonHandled = ( T ) this.common.doCommon( entity, xdbCache );
+        if ( commonHandled != null || entity instanceof ubic.gemma.model.common.description.Characteristic
+                || entity instanceof ubic.gemma.model.common.auditAndSecurity.User ) {
+            return commonHandled;
+        }
+        throw new UnsupportedOperationException( String.format( "Don't know how to persist a %s.", entity.getClass().getSimpleName() ) );
+    }
+
+    /**
+     * Polymorphic dispatch entry point for persist-or-update reached by the chain.
+     */
+    @SuppressWarnings("unchecked")
+    protected <T extends Identifiable> T doPersistOrUpdate( T entity, Map<String, ExternalDatabase> xdbCache ) {
+        T handled = doGenomeUpdate( entity, xdbCache );
+        if ( handled != null ) {
+            return handled;
+        }
+        throw new UnsupportedOperationException( String.format( "Don't know how to persist or update a %s.", entity.getClass().getSimpleName() ) );
+    }
+
+    /**
+     * Persister-shrink S2 typed dispatch: handles the Gene / GeneProduct / BioSequence /
+     * Taxon / BioSequence2GeneProduct / SequenceSimilaritySearchResult / Chromosome
+     * arms formerly carried by the {@code doPersist} override. Returns {@code null}
+     * for any entity type this persister does not recognise; callers should fall
+     * through to {@link CommonPersister#doCommon} on null.
+     */
+    @Nullable
+    @SuppressWarnings("unchecked")
+    public <T extends Identifiable> T doGenome( T entity, Map<String, ExternalDatabase> xdbCache ) {
+        // Phase 3 lift: taxonCache and chromosomeCache are explicit per-call
+        // parameters on the GenomePersister-internal helpers. At this polymorphic
+        // dispatch entry point we allocate fresh maps; callers wanting cache reuse
+        // across a batch should drive the typed helpers directly.
+        Map<Object, Taxon> taxonCache = new HashMap<>();
+        Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
         if ( entity instanceof Gene ) {
-            return ( T ) this.persistGene( ( Gene ) entity, caches );
+            return ( T ) this.persistGene( ( Gene ) entity, xdbCache, taxonCache, chromosomeCache );
         } else if ( entity instanceof GeneProduct ) {
-            return ( T ) this.persistGeneProduct( ( GeneProduct ) entity, caches );
+            return ( T ) this.persistGeneProduct( ( GeneProduct ) entity, xdbCache, taxonCache, chromosomeCache );
         } else if ( entity instanceof BioSequence ) {
-            return ( T ) this.persistBioSequence( ( BioSequence ) entity, caches );
+            return ( T ) this.persistBioSequence( ( BioSequence ) entity, xdbCache, taxonCache, chromosomeCache );
         } else if ( entity instanceof Taxon ) {
-            return ( T ) this.persistTaxon( ( Taxon ) entity, caches );
+            return ( T ) this.persistTaxon( ( Taxon ) entity, taxonCache );
         } else if ( entity instanceof BioSequence2GeneProduct ) {
-            return ( T ) this.persistBioSequence2GeneProduct( ( BioSequence2GeneProduct ) entity, caches );
+            return ( T ) this.persistBioSequence2GeneProduct( ( BioSequence2GeneProduct ) entity, xdbCache, taxonCache, chromosomeCache );
         } else if ( entity instanceof SequenceSimilaritySearchResult ) {
-            return ( T ) this.persistSequenceSimilaritySearchResult( ( SequenceSimilaritySearchResult ) entity, caches );
+            return ( T ) this.persistSequenceSimilaritySearchResult( ( SequenceSimilaritySearchResult ) entity, xdbCache, taxonCache, chromosomeCache );
         } else if ( entity instanceof Chromosome ) {
-            return ( T ) this.persistChromosome( ( Chromosome ) entity, null, caches );
-        } else {
-            return super.doPersist( entity, caches );
+            return ( T ) this.persistChromosome( ( Chromosome ) entity, null, xdbCache, taxonCache, chromosomeCache );
+        }
+        return null;
+    }
+
+    /**
+     * Persister-shrink S2 typed dispatch for persist-or-update.
+     */
+    @Nullable
+    @SuppressWarnings("unchecked")
+    public <T extends Identifiable> T doGenomeUpdate( T entity, Map<String, ExternalDatabase> xdbCache ) {
+        Map<Object, Taxon> taxonCache = new HashMap<>();
+        Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
+        if ( entity instanceof BioSequence ) {
+            return ( T ) this.persistOrUpdateBioSequence( ( BioSequence ) entity, xdbCache, taxonCache, chromosomeCache );
+        } else if ( entity instanceof Gene ) {
+            return ( T ) this.persistOrUpdateGene( ( Gene ) entity, xdbCache, taxonCache, chromosomeCache );
+        } else if ( entity instanceof GeneProduct ) {
+            return ( T ) this.persistOrUpdateGeneProduct( ( GeneProduct ) entity, xdbCache, taxonCache, chromosomeCache );
+        }
+        return null;
+    }
+
+    // -----------------------------------------------------------------------
+    // Persister-shrink S3 public entry points.
+    //
+    // External callers (Section 2.1 of PERSISTER_SHRINK_RECCE.md) used to inject
+    // the polymorphic {@link Persister} / {@link PersisterHelper} and route through
+    // {@link PersisterHelperImpl#persist}, which opened the {@link FlushMode#MANUAL}
+    // window and dispatched by instanceof. Step S3 inlines that dispatch: each
+    // typed entry point below owns its own flush-mode window and calls the typed
+    // helper directly. Per-call caches are fresh (matches the prior
+    // {@link PersisterHelperImpl} semantics — callers wanting cache reuse across
+    // a batch should drive the underlying helpers themselves).
+    // -----------------------------------------------------------------------
+
+    /**
+     * Persist a {@link Taxon}: find by business key, else create.
+     */
+    @Transactional
+    public Taxon persistTaxon( Taxon taxon ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Taxon result = this.persistTaxon( taxon, new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    protected <T extends Identifiable> T doPersistOrUpdate( T entity, Caches caches ) {
-        if ( entity instanceof BioSequence ) {
-            return ( T ) this.persistOrUpdateBioSequence( ( BioSequence ) entity, caches );
-        } else if ( entity instanceof Gene ) {
-            return ( T ) this.persistOrUpdateGene( ( Gene ) entity, caches );
-        } else if ( entity instanceof GeneProduct ) {
-            return ( T ) this.persistOrUpdateGeneProduct( ( GeneProduct ) entity, caches );
-        } else {
-            return super.doPersistOrUpdate( entity, caches );
+    /**
+     * Persist a {@link Gene}: find by business key, else create.
+     */
+    @Transactional
+    public Gene persistGene( Gene gene ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Gene result = this.persistGene( gene, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a {@link BioSequence}: find by business key, else create.
+     */
+    @Transactional
+    public BioSequence persistBioSequence( BioSequence bioSequence ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            BioSequence result = this.persistBioSequence( bioSequence, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist-or-update a {@link BioSequence}: equivalent to the
+     * {@code persistOrUpdate(BioSequence)} arm formerly routed through
+     * {@link PersisterHelperImpl#persistOrUpdate}.
+     */
+    @Transactional
+    public BioSequence persistOrUpdateBioSequence( BioSequence bioSequence ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            BioSequence result = this.persistOrUpdateBioSequence( bioSequence, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist-or-update a {@link Gene}: equivalent to the
+     * {@code persistOrUpdate(Gene)} arm formerly routed through
+     * {@link PersisterHelperImpl#persistOrUpdate}.
+     */
+    @Transactional
+    public Gene persistOrUpdateGene( Gene gene ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Gene result = this.persistOrUpdateGene( gene, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a collection of {@link BlatResult}s. Equivalent to the
+     * {@code persist(Collection&lt;BlatResult&gt;)} arm formerly routed
+     * through {@link PersisterHelperImpl#persist(Collection)} into the
+     * {@code SequenceSimilaritySearchResult} dispatch arm.
+     */
+    @Transactional
+    public Collection<BlatResult> persistBlatResults( Collection<BlatResult> blatResults ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Map<String, ExternalDatabase> xdbCache = new HashMap<>();
+            Map<Object, Taxon> taxonCache = new HashMap<>();
+            Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
+            List<BlatResult> result = new ArrayList<>( blatResults.size() );
+            for ( BlatResult br : blatResults ) {
+                result.add( ( BlatResult ) this.persistSequenceSimilaritySearchResult( br, xdbCache, taxonCache, chromosomeCache ) );
+            }
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a {@link GeneProduct}. Equivalent to the
+     * {@code persist(GeneProduct)} arm formerly routed through
+     * {@link PersisterHelperImpl#persist} into the {@code GeneProduct}
+     * dispatch arm. Per-call caches are fresh; callers wanting cache reuse
+     * across a batch should drive the underlying helper directly.
+     * <p>
+     * Persister-shrink S4c: public no-cache overload added so test fixtures
+     * (notably {@code PersistentDummyObjectHelper}) can stop routing through
+     * the polymorphic {@link PersisterHelper#persist} dispatch.
+     */
+    @Transactional
+    public GeneProduct persistGeneProduct( GeneProduct geneProduct ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            GeneProduct result = this.persistGeneProduct( geneProduct, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a {@link Chromosome}. Equivalent to the
+     * {@code persist(Chromosome)} arm formerly routed through
+     * {@link PersisterHelperImpl#persist} into the {@code Chromosome}
+     * dispatch arm. The chromosome's taxon is used as the lookup taxon
+     * (matches the {@code doGenome} dispatch which passes a {@code null}
+     * override). Per-call caches are fresh.
+     * <p>
+     * Persister-shrink S4c: public no-cache overload added so test fixtures
+     * (notably {@code PersistentDummyObjectHelper}) can stop routing through
+     * the polymorphic {@link PersisterHelper#persist} dispatch.
+     */
+    @Transactional
+    public Chromosome persistChromosome( Chromosome chromosome ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            Chromosome result = this.persistChromosome( chromosome, null, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    /**
+     * Persist a {@link BlatAssociation}. Equivalent to the
+     * {@code persist(BlatAssociation)} arm formerly routed through
+     * {@link PersisterHelperImpl#persist} into the
+     * {@code BioSequence2GeneProduct} dispatch arm.
+     */
+    @Transactional
+    public BlatAssociation persistBlatAssociation( BlatAssociation association ) {
+        try {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.MANUAL );
+            BlatAssociation result = ( BlatAssociation ) this.persistBlatAssociation( association, new HashMap<>(), new HashMap<>(), new HashMap<>() );
+            sessionFactory.getCurrentSession().flush();
+            return result;
+        } finally {
+            sessionFactory.getCurrentSession().setHibernateFlushMode( FlushMode.AUTO );
         }
     }
 
@@ -105,13 +374,22 @@ public abstract class GenomePersister extends CommonPersister {
      * Update a gene.
      *
      * @param newGeneInfo the non-persistent gene we are copying information from
+     * @deprecated Phase 3 Chunk 5.4 strangler-fig hand-off. The NCBI loader
+     *         path now calls
+     *         {@link ubic.gemma.persistence.service.genome.gene.GeneWriteService#upsert}
+     *         instead of dispatching here. This method remains on disk to keep
+     *         the polymorphic {@code persistOrUpdate} path working for callers
+     *         not yet migrated (Chunk 5.5). Do not introduce new call sites;
+     *         use {@code GeneWriteService.upsert} or {@code updateGene} on the
+     *         service interface instead.
      */
-    private Gene updateGene( Gene existingGene, Gene newGeneInfo, Caches caches ) {
+    @Deprecated
+    private Gene updateGene( Gene existingGene, Gene newGeneInfo, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
 
         // NCBI id can be null if gene has been loaded from a gene info file.
         Integer existingNcbiId = existingGene.getNcbiGeneId();
         if ( existingNcbiId != null && !existingNcbiId.equals( newGeneInfo.getNcbiGeneId() ) ) {
-            AbstractPersister.log
+            CommonPersister.log
                     .info( "NCBI ID Change for " + existingGene + ", new id =" + newGeneInfo.getNcbiGeneId() );
 
             String previousIdString = newGeneInfo.getPreviousNcbiGeneId();
@@ -169,7 +447,8 @@ public abstract class GenomePersister extends CommonPersister {
         }
         for ( DatabaseEntry de : newGeneInfo.getAccessions() ) {
             if ( !updatedAcMap.containsKey( de.getAccession() ) ) {
-                this.fillInDatabaseEntry( de, caches );
+                // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note.
+                common.fillInDatabaseEntry( de, xdbCache );
                 existingGene.getAccessions().add( de );
             }
         }
@@ -180,7 +459,7 @@ public abstract class GenomePersister extends CommonPersister {
         existingGene.setOfficialSymbol( newGeneInfo.getOfficialSymbol() );
         existingGene.setPhysicalLocation( newGeneInfo.getPhysicalLocation() );
 
-        this.fillChromosomeLocationAssociations( existingGene.getPhysicalLocation(), existingGene.getTaxon(), caches );
+        this.fillChromosomeLocationAssociations( existingGene.getPhysicalLocation(), existingGene.getTaxon(), xdbCache, taxonCache, chromosomeCache );
 
         existingGene.getAliases().clear();
         existingGene.getAliases().addAll( newGeneInfo.getAliases() );
@@ -201,20 +480,20 @@ public abstract class GenomePersister extends CommonPersister {
         Map<String, GeneProduct> usedGIs = new HashMap<>();
         for ( GeneProduct newGeneProductInfo : newGeneInfo.getProducts() ) {
             if ( updatedGpMap.containsKey( newGeneProductInfo.getName() ) ) {
-                AbstractPersister.log.debug( "Updating gene product based on name: " + newGeneProductInfo );
+                CommonPersister.log.debug( "Updating gene product based on name: " + newGeneProductInfo );
                 GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getName() );
-                this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, caches );
+                this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, xdbCache, taxonCache, chromosomeCache );
             } else if ( updatedGpMap.containsKey( newGeneProductInfo.getNcbiGi() ) ) {
-                AbstractPersister.log.debug( "Updating gene product based on GI: " + newGeneProductInfo );
+                CommonPersister.log.debug( "Updating gene product based on GI: " + newGeneProductInfo );
                 GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getNcbiGi() );
-                this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, caches );
+                this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, xdbCache, taxonCache, chromosomeCache );
             } else {
                 GeneProduct existingGeneProduct = geneProductDao.find( newGeneProductInfo );
                 if ( existingGeneProduct == null ) {
                     // it is, in fact, new, so far as we can tell.
                     newGeneProductInfo.setGene( existingGene );
-                    this.fillInGeneProductAssociations( newGeneProductInfo, caches );
-                    AbstractPersister.log.debug( "New product for " + existingGene + ": " + newGeneProductInfo );
+                    this.fillInGeneProductAssociations( newGeneProductInfo, xdbCache, taxonCache, chromosomeCache );
+                    CommonPersister.log.debug( "New product for " + existingGene + ": " + newGeneProductInfo );
                     existingGene.getProducts().add( newGeneProductInfo );
                 } else {
                     /*
@@ -231,7 +510,7 @@ public abstract class GenomePersister extends CommonPersister {
                         Gene geneInfo = newGeneProductInfo.getGene(); // transient.
                         if ( !oldGeneForExistingGeneProduct.equals( geneInfo ) ) {
 
-                            AbstractPersister.log
+                            CommonPersister.log
                                     .warn( "Switching gene product from one gene to another: " + existingGeneProduct
                                             + " switching to " + geneInfo
                                             + " (this can also happen if an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
@@ -239,12 +518,12 @@ public abstract class GenomePersister extends CommonPersister {
                             // Here we just remove its old association.
                             oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
                             oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
-                            log.debug( "Switch: Removing " + existingGeneProduct + " from " + oldGeneForExistingGeneProduct + " GI="
+                            CommonPersister.log.debug( "Switch: Removing " + existingGeneProduct + " from " + oldGeneForExistingGeneProduct + " GI="
                                     + existingGeneProduct.getNcbiGi() );
                             geneDao.update( oldGeneForExistingGeneProduct );
 
                             if ( oldGeneForExistingGeneProduct.getProducts().isEmpty() ) {
-                                AbstractPersister.log
+                                CommonPersister.log
                                         .warn( "Gene has no products left after removing that gene product (but it might change later): "
                                                 + oldGeneForExistingGeneProduct );
 
@@ -262,7 +541,7 @@ public abstract class GenomePersister extends CommonPersister {
 
                         assert !oldGeneForExistingGeneProduct.getProducts().contains( existingGeneProduct );
                     } else {
-                        AbstractPersister.log.debug( "Attaching orphaned gene product to " + existingGene + " : "
+                        CommonPersister.log.debug( "Attaching orphaned gene product to " + existingGene + " : "
                                 + existingGeneProduct );
                     }
 
@@ -270,7 +549,7 @@ public abstract class GenomePersister extends CommonPersister {
                     existingGene.getProducts().add( existingGeneProduct );
                     assert existingGeneProduct.getGene().equals( existingGene );
 
-                    this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, caches );
+                    this.updateGeneProduct( existingGeneProduct, newGeneProductInfo, xdbCache, taxonCache, chromosomeCache );
 
                 }
             }
@@ -292,31 +571,43 @@ public abstract class GenomePersister extends CommonPersister {
         }
 
         if ( existingGene.getProducts().isEmpty() ) {
-            AbstractPersister.log.debug( "No products left for: " + existingGene );
+            CommonPersister.log.debug( "No products left for: " + existingGene );
         }
 
         return existingGene;
     }
 
-    protected BioSequence persistBioSequence( BioSequence bioSequence, Caches caches ) {
-        BioSequence existingBioSequence = bioSequenceDao.find( bioSequence );
+    /**
+     * Public after S2b: reached by {@code ArrayDesignPersister} via {@code @Autowired}.
+     */
+    public BioSequence persistBioSequence( BioSequence bioSequence, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
+        // BK lookup by (name, taxon); on miss, persist a new sequence after filling in its associations.
+        Session session = getSessionFactory().getCurrentSession();
+        BioSequence existingBioSequence = BusinessKey.find( session, bioSequence );
 
         // try to avoid making the instance 'dirty' if we don't have to, to avoid updates.
         if ( existingBioSequence != null ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( "Found existing: " + existingBioSequence );
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( "Found existing: " + existingBioSequence );
             return existingBioSequence;
         }
 
-        return this.persistNewBioSequence( bioSequence, caches );
+        return this.persistNewBioSequence( bioSequence, xdbCache, taxonCache, chromosomeCache );
     }
 
-    protected Gene persistGene( Gene gene, Caches caches ) {
-        return this.persistGene( gene, true, caches );
+    /**
+     * Public after S2b: reached by {@code RelationshipPersister} via {@code @Autowired}.
+     */
+    public Gene persistGene( Gene gene, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
+        return this.persistGene( gene, true, xdbCache, taxonCache, chromosomeCache );
     }
 
-    protected Taxon persistTaxon( Taxon taxon, Caches caches ) {
-        Map<Object, Taxon> seenTaxa = caches.getTaxonCache();
+    /**
+     * Public after S2b: reached by {@code ArrayDesignPersister} and
+     * {@code EeWriteServiceImpl} via {@code @Autowired}.
+     */
+    public Taxon persistTaxon( Taxon taxon, Map<Object, Taxon> taxonCache ) {
+        Map<Object, Taxon> seenTaxa = taxonCache;
 
         // Avoid trips to the database to get the taxon.
         String scientificName = taxon.getScientificName();
@@ -330,12 +621,19 @@ public abstract class GenomePersister extends CommonPersister {
         } else if ( commonName != null && seenTaxa.containsKey( commonName.toLowerCase() ) ) {
             return seenTaxa.get( commonName.toLowerCase() );
         } else {
-            Taxon fTaxon = taxonDao.findOrCreate( taxon );
+            // BK lookup; on miss, persist a new taxon. Equivalent to taxonDao.findOrCreate, which
+            // itself delegates to BusinessKey.find under the hood; inlining here keeps the persister
+            // self-contained and consistent with the other simple find-or-create methods.
+            Session session = getSessionFactory().getCurrentSession();
+            Taxon fTaxon = BusinessKey.find( session, taxon );
+            if ( fTaxon == null ) {
+                fTaxon = taxonDao.create( taxon );
+            }
             assert fTaxon != null;
             assert fTaxon.getId() != null;
 
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( "Fetched or created taxon " + fTaxon );
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( "Fetched or created taxon " + fTaxon );
 
             if ( fTaxon.getScientificName() != null ) {
                 seenTaxa.put( fTaxon.getScientificName().toLowerCase(), fTaxon );
@@ -354,7 +652,7 @@ public abstract class GenomePersister extends CommonPersister {
     private void removeGeneProducts( Collection<GeneProduct> toRemove ) {
         Collection<BlatAssociation> associations = this.blatAssociationDao.find( toRemove );
         if ( !associations.isEmpty() ) {
-            AbstractPersister.log
+            CommonPersister.log
                     .info( "Removing " + associations.size() + " blat associations involving up to " + toRemove.size()
                             + " products." );
             this.blatAssociationDao.remove( associations );
@@ -362,7 +660,7 @@ public abstract class GenomePersister extends CommonPersister {
 
         Collection<AnnotationAssociation> annotationAssociations = this.annotationAssociationDao.find( toRemove );
         if ( !annotationAssociations.isEmpty() ) {
-            AbstractPersister.log
+            CommonPersister.log
                     .info( "Removing " + annotationAssociations.size() + " annotationAssociations involving up to "
                             + toRemove.size() + " products." );
             this.annotationAssociationDao.remove( annotationAssociations );
@@ -389,65 +687,66 @@ public abstract class GenomePersister extends CommonPersister {
         }
     }
 
-    private void fillInBioSequenceTaxon( BioSequence bioSequence, Caches caches ) {
+    private void fillInBioSequenceTaxon( BioSequence bioSequence, Map<Object, Taxon> taxonCache ) {
         Taxon t = bioSequence.getTaxon();
         if ( t == null )
             throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
         if ( t.getId() == null ) {
-            bioSequence.setTaxon( this.persistTaxon( t, caches ) );
+            bioSequence.setTaxon( this.persistTaxon( t, taxonCache ) );
         }
     }
 
-    private BioSequence2GeneProduct persistBioSequence2GeneProduct( BioSequence2GeneProduct bioSequence2GeneProduct, Caches caches ) {
+    private BioSequence2GeneProduct persistBioSequence2GeneProduct( BioSequence2GeneProduct bioSequence2GeneProduct, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( bioSequence2GeneProduct instanceof BlatAssociation ) {
-            return this.persistBlatAssociation( ( BlatAssociation ) bioSequence2GeneProduct, caches );
+            return this.persistBlatAssociation( ( BlatAssociation ) bioSequence2GeneProduct, xdbCache, taxonCache, chromosomeCache );
         }
         throw new UnsupportedOperationException(
                 "Don't know how to deal with " + bioSequence2GeneProduct.getClass().getName() );
 
     }
 
-    private BioSequence2GeneProduct persistBlatAssociation( BlatAssociation association, Caches caches ) {
+    private BioSequence2GeneProduct persistBlatAssociation( BlatAssociation association, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         BlatResult blatResult = association.getBlatResult();
         if ( blatResult.getId() == null ) {
             association.setBlatResult( blatResultDao.create( blatResult ) );
         }
-        if ( AbstractPersister.log.isDebugEnabled() ) {
-            AbstractPersister.log.debug( "Persisting " + association );
+        if ( CommonPersister.log.isDebugEnabled() ) {
+            CommonPersister.log.debug( "Persisting " + association );
         }
-        association.setGeneProduct( this.persistGeneProduct( association.getGeneProduct(), caches ) );
-        association.setBioSequence( this.persistBioSequence( association.getBioSequence(), caches ) );
+        association.setGeneProduct( this.persistGeneProduct( association.getGeneProduct(), xdbCache, taxonCache, chromosomeCache ) );
+        association.setBioSequence( this.persistBioSequence( association.getBioSequence(), xdbCache, taxonCache, chromosomeCache ) );
         return blatAssociationDao.create( association );
     }
 
-    private Gene persistGene( Gene gene, boolean checkFirst, Caches caches ) {
+    private Gene persistGene( Gene gene, boolean checkFirst, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( checkFirst ) {
             Gene existingGene = geneDao.find( gene );
 
             if ( existingGene != null ) {
-                if ( AbstractPersister.log.isDebugEnabled() )
-                    AbstractPersister.log.debug( "Gene exists, will not update" );
+                if ( CommonPersister.log.isDebugEnabled() )
+                    CommonPersister.log.debug( "Gene exists, will not update" );
                 return existingGene;
             }
         }
 
         if ( !gene.getAccessions().isEmpty() ) {
             for ( DatabaseEntry de : gene.getAccessions() ) {
-                this.fillInDatabaseEntry( de, caches );
+                // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note.
+                common.fillInDatabaseEntry( de, xdbCache );
             }
         }
 
         Collection<GeneProduct> tempGeneProduct = gene.getProducts();
         gene.setProducts( null );
         if ( gene.getTaxon() != null ) {
-            gene.setTaxon( this.persistTaxon( gene.getTaxon(), caches ) );
+            gene.setTaxon( this.persistTaxon( gene.getTaxon(), taxonCache ) );
         }
         if ( gene.getPhysicalLocation() != null ) {
-            this.fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon(), caches );
+            this.fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon(), xdbCache, taxonCache, chromosomeCache );
         }
 
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "New gene: " + gene );
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "New gene: " + gene );
         gene = geneDao.create( gene );
 
         Set<GeneProduct> geneProductsForNewGene = new HashSet<>();
@@ -463,7 +762,7 @@ public abstract class GenomePersister extends CommonPersister {
                 existingProduct.setGene( gene );
                 geneProductsForNewGene.add( existingProduct );
 
-                AbstractPersister.log.warn( "While creating new gene: Gene product: [New=" + product
+                CommonPersister.log.warn( "While creating new gene: Gene product: [New=" + product
                         + "] is already associated with a gene [Old=" + existingProduct
                         + "], will move to associate with new gene: " + gene );
             } else {
@@ -475,7 +774,7 @@ public abstract class GenomePersister extends CommonPersister {
         // attach the products.
         gene.setProducts( geneProductsForNewGene );
         for ( GeneProduct gp : gene.getProducts() ) {
-            this.fillInGeneProductAssociations( gp, caches );
+            this.fillInGeneProductAssociations( gp, xdbCache, taxonCache, chromosomeCache );
         }
 
         try {
@@ -486,7 +785,7 @@ public abstract class GenomePersister extends CommonPersister {
             geneDao.update( gene );
             return gene;
         } catch ( Exception e ) {
-            AbstractPersister.log.error( "**** Error while creating gene: " + gene + "; products:" );
+            CommonPersister.log.error( "**** Error while creating gene: " + gene + "; products:" );
             for ( GeneProduct gp : gene.getProducts() ) {
                 System.err.println( gp );
             }
@@ -495,23 +794,23 @@ public abstract class GenomePersister extends CommonPersister {
 
     }
 
-    private GeneProduct persistGeneProduct( GeneProduct geneProduct, Caches caches ) {
+    private GeneProduct persistGeneProduct( GeneProduct geneProduct, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         GeneProduct existing = geneProductDao.find( geneProduct );
 
         if ( existing != null ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( geneProduct + " exists, will not update" );
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( geneProduct + " exists, will not update" );
             return existing;
         }
 
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "*** New: " + geneProduct + " *** " );
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "*** New: " + geneProduct + " *** " );
 
-        this.fillInGeneProductAssociations( geneProduct, caches );
+        this.fillInGeneProductAssociations( geneProduct, xdbCache, taxonCache, chromosomeCache );
 
         if ( geneProduct.getGene().getId() == null ) {
             // this results in the persistence of the gene products, but only if the gene is transient.
-            geneProduct.setGene( this.persistGene( geneProduct.getGene(), caches ) );
+            geneProduct.setGene( this.persistGene( geneProduct.getGene(), xdbCache, taxonCache, chromosomeCache ) );
         } else {
             geneProduct = geneProductDao.create( geneProduct );
         }
@@ -524,25 +823,25 @@ public abstract class GenomePersister extends CommonPersister {
 
     }
 
-    private BioSequence persistOrUpdateBioSequence( BioSequence bioSequence, Caches caches ) {
+    private BioSequence persistOrUpdateBioSequence( BioSequence bioSequence, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         // Note that this method is only really used by the ArrayDesignSequencePersister: it's for filling in
         //information about probes on arrays.
         BioSequence existingBioSequence = bioSequenceDao.find( bioSequence );
 
         if ( existingBioSequence == null ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                AbstractPersister.log.debug( "Creating new: " + bioSequence );
-            return this.persistNewBioSequence( bioSequence, caches );
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( "Creating new: " + bioSequence );
+            return this.persistNewBioSequence( bioSequence, xdbCache, taxonCache, chromosomeCache );
         }
 
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "Found existing: " + existingBioSequence );
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "Found existing: " + existingBioSequence );
 
         // the sequence is the main field we might update.
         if ( bioSequence.getSequence() != null && !bioSequence.getSequence()
                 .equals( existingBioSequence.getSequence() ) ) {
-            if ( AbstractPersister.log.isDebugEnabled() )
-                log.debug( "Updating sequence:" + bioSequence.getName() + "\nFROM:" + existingBioSequence.getSequence()
+            if ( CommonPersister.log.isDebugEnabled() )
+                CommonPersister.log.debug( "Updating sequence:" + bioSequence.getName() + "\nFROM:" + existingBioSequence.getSequence()
                         + "\nTO:" + bioSequence.getSequence() + "\n" );
             existingBioSequence.setSequence( bioSequence.getSequence() );
         }
@@ -580,7 +879,9 @@ public abstract class GenomePersister extends CommonPersister {
 
         if ( bioSequence.getSequenceDatabaseEntry() != null && !bioSequence.getSequenceDatabaseEntry()
                 .equals( existingBioSequence.getSequenceDatabaseEntry() ) ) {
-            existingBioSequence.setSequenceDatabaseEntry( this.doPersist( bioSequence.getSequenceDatabaseEntry(), caches ) );
+            // Phase 3 lift: was doPersist (instanceof DatabaseEntry arm); now a direct
+            // call to the per-call-Map persistDatabaseEntry helper.
+            existingBioSequence.setSequenceDatabaseEntry( common.persistDatabaseEntry( bioSequence.getSequenceDatabaseEntry(), xdbCache ) );
         }
 
         // I don't fully understand what's going on here, but if we don't do this we fail to synchronize changes.
@@ -593,7 +894,7 @@ public abstract class GenomePersister extends CommonPersister {
      * @param gene transient instance that will be used to provide information to update persistent version.
      * @return new or updated gene instance.
      */
-    private Gene persistOrUpdateGene( Gene gene, Caches caches ) {
+    private Gene persistOrUpdateGene( Gene gene, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         Gene existingGene;
         if ( gene.getId() != null ) {
             existingGene = geneDao.load( gene.getId() );
@@ -602,16 +903,16 @@ public abstract class GenomePersister extends CommonPersister {
         }
 
         if ( existingGene == null ) {
-            return this.persistGene( gene, false, caches );
+            return this.persistGene( gene, false, xdbCache, taxonCache, chromosomeCache );
         }
 
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "Updating " + existingGene );
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "Updating " + existingGene );
 
-        return this.updateGene( existingGene, gene, caches );
+        return this.updateGene( existingGene, gene, xdbCache, taxonCache, chromosomeCache );
     }
 
-    private GeneProduct persistOrUpdateGeneProduct( GeneProduct geneProduct, Caches caches ) {
+    private GeneProduct persistOrUpdateGeneProduct( GeneProduct geneProduct, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         GeneProduct existing;
         if ( geneProduct.getId() != null ) {
             existing = geneProductDao.load( geneProduct.getId() );
@@ -620,15 +921,15 @@ public abstract class GenomePersister extends CommonPersister {
         }
 
         if ( existing == null ) {
-            return this.persistGeneProduct( geneProduct, caches );
+            return this.persistGeneProduct( geneProduct, xdbCache, taxonCache, chromosomeCache );
         }
 
-        this.updateGeneProduct( existing, geneProduct, caches );
+        this.updateGeneProduct( existing, geneProduct, xdbCache, taxonCache, chromosomeCache );
 
         return existing;
     }
 
-    private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct, Caches caches ) {
+    private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct, Map<String, ExternalDatabase> xdbCache ) {
         Map<String, DatabaseEntry> updatedGpMap = new HashMap<>();
         existing = geneProductDao.thaw( existing );
         for ( DatabaseEntry de : existing.getAccessions() ) {
@@ -636,34 +937,37 @@ public abstract class GenomePersister extends CommonPersister {
         }
         for ( DatabaseEntry de : geneProduct.getAccessions() ) {
             if ( !updatedGpMap.containsKey( de.getAccession() ) ) {
-                this.fillInDatabaseEntry( de, caches );
+                // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note.
+                common.fillInDatabaseEntry( de, xdbCache );
                 existing.getAccessions().add( de );
             }
         }
     }
 
-    private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation, Taxon t, Caches caches ) {
+    private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation, Taxon t, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( chromosomeLocation.getChromosome() != null ) {
-            chromosomeLocation.setChromosome( this.persistChromosome( chromosomeLocation.getChromosome(), t, caches ) );
+            chromosomeLocation.setChromosome( this.persistChromosome( chromosomeLocation.getChromosome(), t, xdbCache, taxonCache, chromosomeCache ) );
         }
     }
 
-    private void fillInGeneProductAssociations( GeneProduct geneProduct, Caches caches ) {
+    private void fillInGeneProductAssociations( GeneProduct geneProduct, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( geneProduct.getPhysicalLocation() != null ) {
             geneProduct.getPhysicalLocation().setChromosome(
                     this.persistChromosome( geneProduct.getPhysicalLocation().getChromosome(),
-                            geneProduct.getGene().getTaxon(), caches ) );
+                            geneProduct.getGene().getTaxon(), xdbCache, taxonCache, chromosomeCache ) );
         }
 
         if ( geneProduct.getAccessions() != null ) {
             for ( DatabaseEntry de : geneProduct.getAccessions() ) {
-                de.setExternalDatabase( this.persistExternalDatabase( de.getExternalDatabase(), caches ) );
+                // Phase 3 lift: helper takes the per-call Map<String, ExternalDatabase>
+                // threaded through this persist (formerly carried on Caches).
+                de.setExternalDatabase( common.persistExternalDatabase( de.getExternalDatabase(), xdbCache ) );
             }
         }
     }
 
-    private PhysicalLocation fillPhysicalLocationAssociations( PhysicalLocation physicalLocation, Caches caches ) {
-        physicalLocation.setChromosome( this.persistChromosome( physicalLocation.getChromosome(), null, caches ) );
+    private PhysicalLocation fillPhysicalLocationAssociations( PhysicalLocation physicalLocation, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
+        physicalLocation.setChromosome( this.persistChromosome( physicalLocation.getChromosome(), null, xdbCache, taxonCache, chromosomeCache ) );
 
         if ( physicalLocation.getBin() == null && physicalLocation.getNucleotide() != null
                 && physicalLocation.getNucleotideLength() != null ) {
@@ -679,7 +983,14 @@ public abstract class GenomePersister extends CommonPersister {
      * the system.
      *
      * @param usedGIs return toRemove
+     * @deprecated Phase 3 Chunk 5.4 strangler-fig hand-off. The canonical
+     *         implementation now lives in
+     *         {@link ubic.gemma.persistence.service.genome.gene.GeneWriteService#handleGeneProductChangedGIs}.
+     *         This copy is retained only because {@link #updateGene} still
+     *         calls it on the polymorphic legacy path (Chunk 5.5 will remove
+     *         both together).
      */
+    @Deprecated
     private Collection<GeneProduct> handleGeneProductChangedGIs( Gene existingGene, Map<String, GeneProduct> usedGIs ) {
         Collection<String> switchedGis = new HashSet<>();
         Collection<GeneProduct> toRemove = new HashSet<>();
@@ -720,14 +1031,14 @@ public abstract class GenomePersister extends CommonPersister {
                      * remove the duplicate. This is due to cruft, we shouldn't have such duplicates.
                      */
                     if ( switchedGis.contains( ngp.getNcbiGi() ) ) {
-                        AbstractPersister.log.warn( "Another gene product with the same intended GI will be deleted: "
+                        CommonPersister.log.warn( "Another gene product with the same intended GI will be deleted: "
                                 + existingGp );
                         deleteIt = true;
                         continue;
                     }
 
                     // ok
-                    AbstractPersister.log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi() );
+                    CommonPersister.log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi() );
                     existingGp.setNcbiGi( ngp.getNcbiGi() );
                     deleteIt = false;
                     switchedGis.add( ngp.getNcbiGi() );
@@ -740,7 +1051,7 @@ public abstract class GenomePersister extends CommonPersister {
 
                 Gene oldGeneForExistingGeneProduct = otherGpUsingThisGi.getGene();
                 if ( oldGeneForExistingGeneProduct == null ) {
-                    AbstractPersister.log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi()
+                    CommonPersister.log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi()
                             + " and deleting orphan GP with same GI: " + otherGpUsingThisGi );
 
                     existingGp.setNcbiGi( ngp.getNcbiGi() );
@@ -749,7 +1060,7 @@ public abstract class GenomePersister extends CommonPersister {
                     deleteIt = false;
                 } else if ( oldGeneForExistingGeneProduct.equals( existingGene ) ) {
                     // this is the common case, for crufted database.
-                    AbstractPersister.log
+                    CommonPersister.log
                             .warn( "Removing outdated gp for which there is already an existing copy: " + existingGp
                                     + " (already have " + otherGpUsingThisGi + ")" );
                     deleteIt = true;
@@ -758,7 +1069,7 @@ public abstract class GenomePersister extends CommonPersister {
                      * That GI is associated with another gene's products. In effect, switch it to this gene. This
                      * should not generally happen.
                      */
-                    AbstractPersister.log
+                    CommonPersister.log
                             .warn( "Removing gene product: " + otherGpUsingThisGi + " and effectively switching to "
                                     + existingGene + " -- detected during GI update checks " );
 
@@ -778,7 +1089,7 @@ public abstract class GenomePersister extends CommonPersister {
                 toRemove.add( existingGp );
                 existingGp.setGene( null ); // we are erasing this association as we assume it is no longer
                 // valid.
-                AbstractPersister.log.warn( "Removing gene product from system: " + existingGp
+                CommonPersister.log.warn( "Removing gene product from system: " + existingGp
                         + ", it is no longer listed as a product of " + existingGene );
             }
         } // over this gene's gene products.
@@ -791,17 +1102,18 @@ public abstract class GenomePersister extends CommonPersister {
         return toRemove;
     }
 
-    private void persistBioSequenceAssociations( BioSequence bioSequence, Caches caches ) {
-        this.fillInBioSequenceTaxon( bioSequence, caches );
+    private void persistBioSequenceAssociations( BioSequence bioSequence, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
+        this.fillInBioSequenceTaxon( bioSequence, taxonCache );
 
         if ( bioSequence.getSequenceDatabaseEntry() != null
                 && bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getId() == null ) {
+            // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note above.
             bioSequence.getSequenceDatabaseEntry().setExternalDatabase(
-                    this.persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase(), caches ) );
+                    common.persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase(), xdbCache ) );
         }
 
         for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequence.getBioSequence2GeneProduct() ) {
-            this.persistBioSequence2GeneProduct( bioSequence2GeneProduct, caches );
+            this.persistBioSequence2GeneProduct( bioSequence2GeneProduct, xdbCache, taxonCache, chromosomeCache );
         }
     }
 
@@ -809,22 +1121,23 @@ public abstract class GenomePersister extends CommonPersister {
      * NOTE this method is not a regular 'persist' method: It does not use findOrCreate! A new result is made every
      * time.
      */
-    private BlatResult persistBlatResult( BlatResult blatResult, Caches caches ) {
+    private BlatResult persistBlatResult( BlatResult blatResult, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( blatResult.getQuerySequence() == null ) {
             throw new IllegalArgumentException( "Blat result with null query sequence" );
         }
-        blatResult.setQuerySequence( this.persistBioSequence( blatResult.getQuerySequence(), caches ) );
-        blatResult.setTargetChromosome( this.persistChromosome( blatResult.getTargetChromosome(), null, caches ) );
+        blatResult.setQuerySequence( this.persistBioSequence( blatResult.getQuerySequence(), xdbCache, taxonCache, chromosomeCache ) );
+        blatResult.setTargetChromosome( this.persistChromosome( blatResult.getTargetChromosome(), null, xdbCache, taxonCache, chromosomeCache ) );
         if ( blatResult.getSearchedDatabase() != null ) {
-            blatResult.setSearchedDatabase( this.persistExternalDatabase( blatResult.getSearchedDatabase(), caches ) );
+            // Phase 3 lift: per-call Map; see fillInGeneProductAssociations note above.
+            blatResult.setSearchedDatabase( common.persistExternalDatabase( blatResult.getSearchedDatabase(), xdbCache ) );
         }
         if ( blatResult.getTargetAlignedRegion() != null )
             blatResult.setTargetAlignedRegion(
-                    this.fillPhysicalLocationAssociations( blatResult.getTargetAlignedRegion(), caches ) );
+                    this.fillPhysicalLocationAssociations( blatResult.getTargetAlignedRegion(), xdbCache, taxonCache, chromosomeCache ) );
         return blatResultDao.create( blatResult );
     }
 
-    private Chromosome persistChromosome( Chromosome chromosome, @Nullable Taxon t, Caches caches ) {
+    private Chromosome persistChromosome( Chromosome chromosome, @Nullable Taxon t, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         Taxon ct = t;
         if ( ct == null ) {
             ct = chromosome.getTaxon();
@@ -840,30 +1153,37 @@ public abstract class GenomePersister extends CommonPersister {
             key += ct.getScientificName().hashCode();
         }
 
-        Map<Integer, Chromosome> seenChromosomes = caches.getChromosomeCache();
+        Map<Integer, Chromosome> seenChromosomes = chromosomeCache;
 
         if ( seenChromosomes.containsKey( key ) ) {
             return seenChromosomes.get( key );
         }
 
-        Collection<Chromosome> chromosomes = chromosomeDao.find( chromosome.getName(), ct );
+        // Ensure the probe's taxon is set so BusinessKey.find can use it; the caller may pass an
+        // explicit override via t when chromosome.getTaxon() is null.
+        chromosome.setTaxon( ct );
 
-        if ( chromosomes == null || chromosomes.isEmpty() ) {
+        Session session = getSessionFactory().getCurrentSession();
+        Chromosome existing = BusinessKey.find( session, chromosome );
 
-            // no point in doing this if it already exists.
-            chromosome.setTaxon( this.doPersist( ct, caches ) );
+        if ( existing == null ) {
+            // Persist associations only on miss (no point if it already exists). Phase 3 lift:
+            // taxonCache is now an explicit parameter, so call persistTaxon directly to keep
+            // the cache hit (the former dispatch through doPersist routed back to persistTaxon
+            // anyway). BioSequence is similarly direct to keep the taxonCache thread alive.
+            chromosome.setTaxon( this.persistTaxon( ct, taxonCache ) );
             if ( chromosome.getSequence() != null ) {
                 // cascade should do?
-                chromosome.setSequence( this.doPersist( chromosome.getSequence(), caches ) );
+                chromosome.setSequence( this.persistBioSequence( chromosome.getSequence(), xdbCache, taxonCache, chromosomeCache ) );
             }
             if ( chromosome.getAssemblyDatabase() != null ) {
-                chromosome.setAssemblyDatabase( this.doPersist( chromosome.getAssemblyDatabase(), caches ) );
+                // Phase 3 lift: was doPersist (instanceof ExternalDatabase arm); now a direct
+                // call to the per-call-Map helper. See fillInGeneProductAssociations note above.
+                chromosome.setAssemblyDatabase( common.persistExternalDatabase( chromosome.getAssemblyDatabase(), xdbCache ) );
             }
             chromosome = chromosomeDao.create( chromosome );
-        } else if ( chromosomes.size() == 1 ) {
-            chromosome = chromosomes.iterator().next();
         } else {
-            throw new IllegalArgumentException( "Non-unique chromosome name  " + chromosome.getName() + " on " + ct );
+            chromosome = existing;
         }
 
         seenChromosomes.put( key, chromosome );
@@ -873,20 +1193,20 @@ public abstract class GenomePersister extends CommonPersister {
 
     }
 
-    private BioSequence persistNewBioSequence( BioSequence bioSequence, Caches caches ) {
-        if ( AbstractPersister.log.isDebugEnabled() )
-            AbstractPersister.log.debug( "Creating new: " + bioSequence );
+    private BioSequence persistNewBioSequence( BioSequence bioSequence, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
+        if ( CommonPersister.log.isDebugEnabled() )
+            CommonPersister.log.debug( "Creating new: " + bioSequence );
 
-        this.persistBioSequenceAssociations( bioSequence, caches );
+        this.persistBioSequenceAssociations( bioSequence, xdbCache, taxonCache, chromosomeCache );
 
         assert bioSequence.getTaxon().getId() != null;
         return bioSequenceDao.create( bioSequence );
     }
 
     private SequenceSimilaritySearchResult persistSequenceSimilaritySearchResult(
-            SequenceSimilaritySearchResult result, Caches caches ) {
+            SequenceSimilaritySearchResult result, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         if ( result instanceof BlatResult ) {
-            return this.persistBlatResult( ( BlatResult ) result, caches );
+            return this.persistBlatResult( ( BlatResult ) result, xdbCache, taxonCache, chromosomeCache );
         }
         throw new UnsupportedOperationException( "Don't know how to persist a " + result.getClass().getName() );
 
@@ -895,7 +1215,7 @@ public abstract class GenomePersister extends CommonPersister {
     /**
      * @param updatedGeneProductInfo information from this is copied onto the 'existing' gene product.
      */
-    private void updateGeneProduct( GeneProduct existingGeneProduct, GeneProduct updatedGeneProductInfo, Caches caches ) {
+    private void updateGeneProduct( GeneProduct existingGeneProduct, GeneProduct updatedGeneProductInfo, Map<String, ExternalDatabase> xdbCache, Map<Object, Taxon> taxonCache, Map<Integer, Chromosome> chromosomeCache ) {
         Gene geneForExistingGeneProduct = existingGeneProduct.getGene();
 
         existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
@@ -907,13 +1227,13 @@ public abstract class GenomePersister extends CommonPersister {
         existingGeneProduct.setDescription( updatedGeneProductInfo.getDescription() );
         existingGeneProduct.setNcbiGi( updatedGeneProductInfo.getNcbiGi() );
 
-        this.addAnyNewAccessions( existingGeneProduct, updatedGeneProductInfo, caches );
+        this.addAnyNewAccessions( existingGeneProduct, updatedGeneProductInfo, xdbCache );
 
         existingGeneProduct.setPhysicalLocation( updatedGeneProductInfo.getPhysicalLocation() );
         if ( existingGeneProduct.getPhysicalLocation() != null ) {
             existingGeneProduct.getPhysicalLocation().setChromosome(
                     this.persistChromosome( existingGeneProduct.getPhysicalLocation().getChromosome(),
-                            geneForExistingGeneProduct.getTaxon(), caches ) );
+                            geneForExistingGeneProduct.getTaxon(), xdbCache, taxonCache, chromosomeCache ) );
         }
 
     }

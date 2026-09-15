@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,13 +44,13 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -80,7 +80,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
-    private Persister persister;
+    private EeWriteService eeWriteService;
 
     @Autowired
     private SecurityService securityService;
@@ -275,14 +275,15 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             }
 
             log.info( "Building vectors for " + qt2mat.size() + " quantitation types ..." );
-            for ( QuantitationType qt : qt2mat.keySet() ) {
+            for ( Map.Entry<QuantitationType, BulkExpressionDataMatrix<?>> qtEntry : qt2mat.entrySet() ) {
+                QuantitationType qt = qtEntry.getKey();
 
                 QuantitationType clonedQt = this.cloneQt( qt, split );
 
                 split.getQuantitationTypes().add( clonedQt );
 
                 // these bms are same as the ones associated with the vectors, not the clones
-                BulkExpressionDataMatrix<?> expressionDataMatrix = qt2mat.get( qt ).sliceColumns( bms, newBAD );
+                BulkExpressionDataMatrix<?> expressionDataMatrix = qtEntry.getValue().sliceColumns( bms, newBAD );
 
                 Collection<RawExpressionDataVector> rawDataVectors = BulkExpressionDataMatrixUtils.toVectors( expressionDataMatrix, RawExpressionDataVector.class );
                 for ( RawExpressionDataVector v : rawDataVectors ) {
@@ -298,7 +299,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 split.getRawExpressionDataVectors().addAll( rawDataVectors );
             }
 
-            split = ( ExpressionExperiment ) persister.persist( split );
+            split = eeWriteService.create( split );
 
             // securityService.makePublic( split ); // temporary 
             result.add( split );
@@ -348,6 +349,31 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 splitValue.getExperimentalFactor().getCategory().getValue() :
                 splitValue.getExperimentalFactor().getName() );
         String factorValueString = FactorValueUtils.getSummaryString( splitValue );
+        // The full prefix has the form "Split part N of: <ee-name>"; reserve at least PREFIX_MIN_BUDGET
+        // bytes for it so the suffix never consumes the entire MAX_NAME_LENGTH budget. Issue #1019: when
+        // the FV stringification was longer than 255 chars, the old abbreviateWithSuffix call threw
+        // IllegalArgumentException because the suffix budget went negative. We now truncate the
+        // factorValueString instead — the split-part suffix still differentiates the parts.
+        final int PREFIX_MIN_BUDGET = 32; // enough for "Split part NN of: …" + a few chars of name
+        final String suffixFrame = " [" + categoryString + " = ]"; // bytes contributed by frame around FV
+        int frameBytes = ubic.gemma.core.util.StringUtils.sizeInBytes( suffixFrame, StandardCharsets.UTF_8 );
+        int maxFvBudget = ExpressionExperiment.MAX_NAME_LENGTH - PREFIX_MIN_BUDGET - frameBytes;
+        if ( maxFvBudget < 4 ) {
+            // category alone is too long; abbreviate it so we still produce a usable name
+            String shortCategory = ubic.gemma.core.util.StringUtils.abbreviateInBytes( categoryString, "…",
+                    Math.max( 4, ExpressionExperiment.MAX_NAME_LENGTH - PREFIX_MIN_BUDGET - " [ = ]".length() - 4 ),
+                    true, StandardCharsets.UTF_8 );
+            categoryString = shortCategory != null ? shortCategory : "?";
+            maxFvBudget = ExpressionExperiment.MAX_NAME_LENGTH - PREFIX_MIN_BUDGET
+                    - ubic.gemma.core.util.StringUtils.sizeInBytes( " [" + categoryString + " = ]", StandardCharsets.UTF_8 );
+        }
+        if ( ubic.gemma.core.util.StringUtils.sizeInBytes( factorValueString, StandardCharsets.UTF_8 ) > maxFvBudget ) {
+            String abbreviated = ubic.gemma.core.util.StringUtils.abbreviateInBytes( factorValueString, "…",
+                    maxFvBudget, true, StandardCharsets.UTF_8 );
+            if ( abbreviated != null ) {
+                factorValueString = abbreviated;
+            }
+        }
         String suffix = String.format( " [%s = %s]", categoryString, factorValueString );
         return abbreviateWithSuffix(
                 String.format( "Split part %d of: %s", splitNumber, StringUtils.strip( toSplit.getName() ) ), suffix,
@@ -530,6 +556,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return clone;
     }
 
+    @Nullable
     private DatabaseEntry cloneAccession( @Nullable DatabaseEntry de ) {
         if ( de == null ) return null;
         DatabaseEntry clone = DatabaseEntry.Factory.newInstance();

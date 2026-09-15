@@ -27,11 +27,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
-import ubic.basecode.graphics.ColorMap;
-import ubic.basecode.graphics.ColorMatrix;
-import ubic.basecode.graphics.MatrixDisplay;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixFactory;
+import ubic.gemma.core.util.graphics.ColorMap;
+import ubic.gemma.core.util.graphics.ColorMatrix;
+import ubic.gemma.core.util.graphics.MatrixDisplay;
 import ubic.gemma.core.datastructure.matrix.EmptyExpressionMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
@@ -46,7 +46,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -80,7 +80,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     public Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedVs, @Nullable ExperimentalFactor primaryFactor ) {
         if ( dedVs == null || dedVs.isEmpty() ) {
-            return new HashMap<>( 0 );
+            return HashMap.newHashMap( 0 );
         }
 
         StopWatch timer = new StopWatch();
@@ -97,8 +97,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
          */
         this.prepare( dedVs, primaryFactor, eeCache, bdsCache, cachedLayouts );
 
-        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<>(
-                dedVs.size() );
+        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = HashMap.newHashMap( dedVs.size() );
         Map<DoubleVectorValueObject, List<BioAssayValueObject>> newOrderingsForBioAssayDimensions = new HashMap<>();
         for ( DoubleVectorValueObject vec : dedVs ) {
 
@@ -234,17 +233,20 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         List<double[]> rows = new ArrayList<>();
         boolean first = true;
         int i = 0;
-        for ( BioAssayValueObject ba : layout.keySet() ) {
+        for ( Map.Entry<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> baEntry : layout.entrySet() ) {
+            BioAssayValueObject ba = baEntry.getKey();
+            LinkedHashMap<ExperimentalFactor, Double> efMap = baEntry.getValue();
             baStrings.add( ba.getName() );
 
             int j = 0;
-            for ( ExperimentalFactor ef : layout.get( ba ).keySet() ) {
+            for ( Map.Entry<ExperimentalFactor, Double> efEntry : efMap.entrySet() ) {
+                ExperimentalFactor ef = efEntry.getKey();
                 if ( first ) {
                     double[] nextRow = new double[layout.size()];
                     rows.add( nextRow );
                     efStrings.add( ef.getName() + " ( id=" + ef.getId() + ")" ); // make sure they are unique.
                 }
-                double d = layout.get( ba ).get( ef );
+                double d = efEntry.getValue();
 
                 rows.get( j )[i] = d;
                 j++;
@@ -408,7 +410,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             Collection<FactorValue> fvs = bm.getAllFactorValues();
 
-            LinkedHashMap<ExperimentalFactor, Double> v = new LinkedHashMap<>( fvs.size() );
+            LinkedHashMap<ExperimentalFactor, Double> v = LinkedHashMap.newLinkedHashMap( fvs.size() );
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
                 Double value = fvV.get( fv ); // we use IDs to stratify the groups.

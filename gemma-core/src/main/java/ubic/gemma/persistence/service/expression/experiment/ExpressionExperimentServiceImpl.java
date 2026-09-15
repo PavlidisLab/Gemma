@@ -18,33 +18,46 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.CacheMode;
-import org.hibernate.Hibernate;
+import ubic.gemma.core.util.SymbolFontPua;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.ConfigAttribute;
-import org.springframework.security.access.SecurityConfig;
+import org.springframework.context.annotation.Lazy;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.simple.OntologyTermSimple;
-import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import org.hibernate.Hibernate;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.ListUtils;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.association.GOEvidenceCode;
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
+import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.common.search.SearchResult;
-import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -54,25 +67,25 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
+import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.persistence.util.Thaws;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -80,9 +93,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
-import static ubic.gemma.model.expression.experiment.StatementUtils.formatStatement;
 
 /**
  * @author pavlidis
@@ -96,6 +107,12 @@ public class ExpressionExperimentServiceImpl
 
     private final ExpressionExperimentDao expressionExperimentDao;
 
+    @Autowired
+    private AnnotationSetService annotationSetService;
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService ticketService;
+    @Autowired
+    private ubic.gemma.core.security.authentication.UserManager userManager;
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
@@ -114,30 +131,70 @@ public class ExpressionExperimentServiceImpl
     private ExperimentalDesignService experimentalDesignService;
     @Autowired
     private FactorValueService factorValueService;
+    /**
+     * Resolves a curated measurement's unit to a persistent {@link Unit}. {@code Measurement.unit} does not cascade
+     * on a factor-value persist, so a transient one would be silently dropped.
+     */
+    @Autowired
+    private UnitDao unitDao;
     @Autowired
     private OntologyService ontologyService;
+    /**
+     * Keeps the publication assertions in step with the publication links. The two are one record
+     * split across two tables (Gemma 1.32.x shares the database and reads only the links), so every
+     * write to either goes through {@link #updatePublications} and reaches both.
+     */
+    @Autowired
+    private PublicationAssociationService publicationAssociationService;
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
     @Autowired
-    private SearchService searchService;
-    @Autowired
-    private SecurityService securityService;
-    @Autowired
-    private CoexpressionAnalysisService coexpressionAnalysisService;
-    @Autowired
-    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
-    @Autowired
     private BlacklistedEntityService blacklistedEntityService;
-    @Autowired
-    private CoexpressionService coexpressionService;
     @Autowired
     private ExpressionExperimentFilterRewriteHelperService filterRewriteService;
     @Autowired
-    private CharacteristicService characteristicService;
+    private ExpressionExperimentReadService readService;
     @Autowired
-    private AuditTrailService auditTrailService;
+    private ExpressionExperimentWriteService writeService;
+    @Autowired
+    private ExpressionExperimentSubSetReadService subSetReadService;
+    @Autowired
+    private ExpressionExperimentDataVectorService dataVectorService;
+    @Autowired
+    private ubic.gemma.persistence.service.common.description.CharacteristicService characteristicService;
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService auditTrailService;
+    /**
+     * Self-reference through the Spring proxy. Used by {@link #commitCuration} to invoke
+     * {@link #applyDesignChange} so its {@code @AuditedConditional} aspect still fires — a same-class
+     * {@code this.applyDesignChange(...)} would join the transaction but bypass the proxy (and thus the audit).
+     * {@code @Lazy} avoids a circular-init failure on the self-injection.
+     */
+    @Autowired
+    @Lazy
+    private ExpressionExperimentService self;
+    /**
+     * Used by {@link #applyDesignChange} step 2 so a cascaded analysis takes its on-disk artifacts with it.
+     * {@code @Lazy} because {@code DifferentialExpressionAnalyzerServiceImpl} autowires this service back.
+     */
+    @Autowired
+    @Lazy
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+    /**
+     * Used inside {@link #commitCuration} to flush after tag/sample-characteristic adds (so the cascaded inserts
+     * assign their ids in time to echo {@code clientRef → newId}) and to bump the curation {@code lastUpdated}
+     * concurrency token on any change.
+     */
+    @Autowired
+    private SessionFactory sessionFactory;
+    /**
+     * Used by {@link #commitCuration} to bring {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} up to date for the
+     * one experiment the commit touched, inside the commit's own transaction.
+     */
+    @Autowired
+    private ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil tableMaintenanceUtil;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -146,673 +203,365 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Nonnull
+    @NonNull
     @Transactional(readOnly = true)
     public ExpressionExperiment loadReference( Long id ) {
-        return expressionExperimentDao.loadReference( id );
+        return readService.loadReference( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadReferences( Collection<Long> ids ) {
-        return expressionExperimentDao.loadReference( ids );
+        return readService.loadReferences( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadAllReferences() {
-        return expressionExperimentDao.loadReference( expressionExperimentDao.loadIds( null, null ) );
+        return readService.loadAllReferences();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithAuditTrail( Long id ) {
-        ExpressionExperiment ee = expressionExperimentDao.load( id );
-        if ( ee != null ) {
-            Hibernate.initialize( ee.getAuditTrail() );
-        }
-        return ee;
+        return readService.loadWithAuditTrail( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Long> loadTroubledIds() {
-        return expressionExperimentDao.loadTroubledIds();
+        return readService.loadTroubledIds();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames ) {
-        List<ExpressionExperimentDao.Identifiers> allIds = expressionExperimentDao.loadAllIdentifiers();
-        TreeMap<String, String> finalIds = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
-        populateIdentifierMap( allIds, identifiers -> String.valueOf( identifiers.getId() ), finalIds );
-        populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getShortName, finalIds );
-        populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getAccession, finalIds );
-        if ( includeNames ) {
-            populateIdentifierMap( allIds, ExpressionExperimentDao.Identifiers::getName, finalIds );
-        }
-        return finalIds;
-    }
-
-    private void populateIdentifierMap( Collection<ExpressionExperimentDao.Identifiers> identifiers,
-            Function<ExpressionExperimentDao.Identifiers, String> extractor, Map<String, String> identifierMap ) {
-        Map<String, String> eeIds = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
-        Set<String> ambiguousIdentifiers = new HashSet<>();
-        for ( ExpressionExperimentDao.Identifiers ids : identifiers ) {
-            String id = extractor.apply( ids );
-            if ( id == null ) {
-                continue;
-            }
-            if ( identifierMap.containsKey( id ) ) {
-                // this indicates that there is already a higher-priority identifier for this EE
-                continue;
-            }
-            if ( eeIds.put( id, ids.getName() ) != null ) {
-                // another EE has the same ID
-                ambiguousIdentifiers.add( id );
-            }
-        }
-        ambiguousIdentifiers.forEach( eeIds::remove );
-        log.info( "Removed " + ambiguousIdentifiers.size() + " ambiguous identifiers." );
-        identifierMap.putAll( eeIds );
+        return readService.loadAllIdentifiersAndName( includeNames );
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public List<ExpressionExperimentDao.Identifiers> loadIdentifiers( Collection<Long> ids ) {
+        return readService.loadIdentifiers( ids );
+    }
+
+    @Override
     public ExpressionExperiment reload( ExpressionExperiment ee ) {
-        return expressionExperimentDao.reload( ee );
+        return readService.reload( ee );
     }
 
     @Override
-    @Transactional
     public ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
-        ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
-        if ( experiment == null ) {
-            throw new IllegalArgumentException( "The passed EE does not exist anymore." );
-        }
-        factor.setExperimentalDesign( experiment.getExperimentalDesign() );
-        factor.setSecurityOwner( experiment );
-        factor = experimentalFactorService.create( factor ); // to make sure we get acls.
-        if ( experiment.getExperimentalDesign() == null ) {
-            log.info( "Creating missing experimental design for " + experiment );
-            experiment.setExperimentalDesign( new ExperimentalDesign() );
-        }
-        experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
-        expressionExperimentDao.update( experiment );
-        return factor;
+        return writeService.addFactor( ee, factor );
     }
 
     @Override
-    @Transactional
     public FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv ) {
-        assert fv.getExperimentalFactor() != null;
-        ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
-        fv.setSecurityOwner( experiment );
-        if ( experiment.getExperimentalDesign() == null ) {
-            log.info( "Creating missing experimental design for " + experiment );
-            experiment.setExperimentalDesign( new ExperimentalDesign() );
-        }
-        Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        fv = this.factorValueService.create( fv );
-        for ( ExperimentalFactor ef : efs ) {
-            if ( fv.getExperimentalFactor().equals( ef ) ) {
-                ef.getFactorValues().add( fv );
-                break;
-            }
-        }
-        expressionExperimentDao.update( experiment );
-        return fv;
+        return writeService.addFactorValue( ee, fv );
     }
 
-
     @Override
-    @Transactional
     public void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
-        ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
-        if ( experiment.getExperimentalDesign() == null ) {
-            log.info( "Creating missing experimental design for " + experiment );
-            experiment.setExperimentalDesign( new ExperimentalDesign() );
-        }
-        Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        int count = 0;
-        for ( BioMaterial bm : fvs.keySet() ) {
-            FactorValue fv = fvs.get( bm );
-            fv.setSecurityOwner( experiment );
-            fv = this.factorValueService.create( fv );
-
-            for ( ExperimentalFactor ef : efs ) {
-                if ( fv.getExperimentalFactor().equals( ef ) ) {
-                    ef.getFactorValues().add( fv );
-                    break;
-                }
-            }
-            bm.getFactorValues().add( fv );
-            ++count;
-            if ( count % 50 == 0 ) {
-                log.info( "Processed: " + count + " biomaterials for new factor values" );
-            }
-        }
-        log.info( "Processed: " + count + " biomaterials for new factor values, updating ..." );
-        //  expressionExperimentDao.update( experiment );
-        bioMaterialService.update( fvs.keySet() );
+        writeService.addFactorValues( ee, fvs );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        return expressionExperimentDao.getRawDataVectors( ee, qt );
+        return dataVectorService.getRawDataVectors( ee, qt );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt ) {
-        return expressionExperimentDao.getRawDataVectors( ee, samples, qt );
+        return dataVectorService.getRawDataVectors( ee, samples, qt );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment expressionExperiment ) {
-        return expressionExperimentDao.getPreferredRawDataVectors( expressionExperiment );
+        return dataVectorService.getPreferredRawDataVectors( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<QuantitationType, Collection<RawExpressionDataVector>> getMissingValuesVectors( ExpressionExperiment ee ) {
-        return expressionExperimentDao.getMissingValuesVectors( ee );
+        return dataVectorService.getMissingValuesVectors( ee );
     }
 
     @Override
-    @Transactional
     public int addRawDataVectors( ExpressionExperiment ee,
             QuantitationType quantitationType,
             Collection<RawExpressionDataVector> newVectors ) {
-        createDimensionIfNecessary( newVectors );
-        createQuantitationTypeIfNecessary( newVectors, RawExpressionDataVector.class );
-        return expressionExperimentDao.addRawDataVectors( ee, quantitationType, newVectors );
+        return dataVectorService.addRawDataVectors( ee, quantitationType, newVectors );
     }
 
     @Override
-    @Transactional
     public int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors ) {
-        createDimensionIfNecessary( vectors );
-        return expressionExperimentDao.replaceRawDataVectors( ee, qt, vectors );
+        return dataVectorService.replaceRawDataVectors( ee, qt, vectors );
     }
 
     @Override
-    @Transactional
     public int replaceAllRawDataVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
-        if ( newVectors.isEmpty() ) {
-            throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
-        }
-
-        Set<QuantitationType> existingQts = ee.getRawExpressionDataVectors().stream()
-                .map( DataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
-
-        Set<QuantitationType> newQts = newVectors.stream()
-                .map( RawExpressionDataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
-
-        Set<QuantitationType> preferredQts = newQts.stream()
-                .filter( QuantitationType::getIsPreferred )
-                .collect( Collectors.toSet() );
-        if ( preferredQts.size() > 1 ) {
-            throw new IllegalArgumentException( "There must be exactly one preferred quantitation type." );
-        }
-
-        // group the vectors up by QT
-        Map<QuantitationType, Set<RawExpressionDataVector>> vectorsByQt = newVectors.stream()
-                .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toSet() ) );
-
-        int replaced = 0;
-        for ( Map.Entry<QuantitationType, Set<RawExpressionDataVector>> e : vectorsByQt.entrySet() ) {
-            if ( existingQts.contains( e.getKey() ) ) {
-                replaced += replaceRawDataVectors( ee, e.getKey(), e.getValue() );
-            } else {
-                replaced += addRawDataVectors( ee, e.getKey(), e.getValue() );
-            }
-        }
-
-        for ( QuantitationType qt : existingQts ) {
-            if ( !newQts.contains( qt ) ) {
-                removeRawDataVectors( ee, qt );
-            }
-        }
-
-        return replaced;
+        return dataVectorService.replaceAllRawDataVectors( ee, newVectors );
     }
 
     @Override
-    @Transactional
     public int removeAllRawDataVectors( ExpressionExperiment ee ) {
-        return expressionExperimentDao.removeAllRawDataVectors( ee );
+        return dataVectorService.removeAllRawDataVectors( ee );
     }
 
     @Override
-    @Transactional
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        return removeRawDataVectors( ee, qt, false );
+        return dataVectorService.removeRawDataVectors( ee, qt );
     }
 
     @Override
-    @Transactional
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension ) {
-        return expressionExperimentDao.removeRawDataVectors( ee, qt, keepDimension );
+        return dataVectorService.removeRawDataVectors( ee, qt, keepDimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee ) {
-        return Optional.ofNullable( expressionExperimentDao.getProcessedDataVectors( ee ) );
+        return dataVectorService.getProcessedDataVectors( ee );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays ) {
-        return Optional.ofNullable( expressionExperimentDao.getProcessedDataVectors( ee, assays ) );
+        return dataVectorService.getProcessedDataVectors( ee, assays );
     }
 
     @Override
-    @Transactional
     public int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
-        createDimensionIfNecessary( vectors );
-        createQuantitationTypeIfNecessary( vectors, ProcessedExpressionDataVector.class );
-        return expressionExperimentDao.createProcessedDataVectors( ee, vectors );
+        return dataVectorService.createProcessedDataVectors( ee, vectors );
     }
 
     @Override
-    @Transactional
     public int removeProcessedDataVectors( ExpressionExperiment ee ) {
-        return expressionExperimentDao.removeProcessedDataVectors( ee );
+        return dataVectorService.removeProcessedDataVectors( ee );
     }
 
     @Override
-    @Transactional
     public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
-        createDimensionIfNecessary( vectors );
-        // unlike raw vectors, the "new" processed vectors might use a different QT
-        createQuantitationTypeIfNecessary( vectors, ProcessedExpressionDataVector.class );
-        return expressionExperimentDao.replaceProcessedDataVectors( ee, vectors );
-    }
-
-    private void createDimensionIfNecessary( Collection<? extends BulkExpressionDataVector> vectors ) {
-        Collection<BioAssayDimension> dimension = vectors.stream()
-                .map( BulkExpressionDataVector::getBioAssayDimension )
-                .collect( Collectors.toSet() );
-        if ( dimension.size() != 1 ) {
-            throw new IllegalArgumentException( "Vectors must share a common bioassay dimension" );
-        }
-        BioAssayDimension bad = dimension.iterator().next();
-        if ( bad.getId() == null ) {
-            log.info( "Creating " + bad + "..." );
-            bad = this.bioAssayDimensionService.findOrCreate( bad );
-            for ( BulkExpressionDataVector vector : vectors ) {
-                vector.setBioAssayDimension( bad );
-            }
-        }
-    }
-
-    private <T extends DataVector> void createQuantitationTypeIfNecessary( Collection<T> vectors, Class<? extends DataVector> vectorType ) {
-        Set<QuantitationType> quantitationType = vectors.stream()
-                .map( DataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
-        if ( quantitationType.size() != 1 ) {
-            throw new IllegalArgumentException( "Vectors must share a common quantitation type." );
-        }
-        QuantitationType qt = quantitationType.iterator().next();
-        if ( qt.getId() == null ) {
-            log.info( "Creating " + qt + "..." );
-            qt = quantitationTypeService.create( qt, vectorType );
-            for ( DataVector vector : vectors ) {
-                vector.setQuantitationType( qt );
-            }
-        }
+        return dataVectorService.replaceProcessedDataVectors( ee, vectors );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ExpressionExperiment> browse( int start, int limit ) {
-        return this.expressionExperimentDao.browse( start, limit );
+        return readService.browse( start, limit );
     }
 
-    /**
-     * returns ids of search results
-     *
-     * @return collection of ids or an empty collection
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<Long> filter( String searchString ) throws SearchException {
-
-        SearchService.SearchResultMap searchResultsMap = searchService
-                .search( SearchSettings.expressionExperimentSearch( searchString ) );
-
-        assert searchResultsMap != null;
-
-        List<SearchResult<ExpressionExperiment>> searchResults = searchResultsMap.getByResultObjectType( ExpressionExperiment.class );
-
-        Collection<Long> ids = new ArrayList<>( searchResults.size() );
-
-        for ( SearchResult<ExpressionExperiment> s : searchResults ) {
-            ids.add( s.getResultId() );
-        }
-
-        return ids;
+        return readService.filter( searchString );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon ) {
-        return this.expressionExperimentDao.filterByTaxon( ids, taxon );
+        return readService.filterByTaxon( ids, taxon );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithPrimaryPublication( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            if ( ee.getPrimaryPublication() != null ) {
-                Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
-            }
-        }
-        return ee;
+        return readService.loadWithPrimaryPublication( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithPrimaryPublicationAndOtherRelevantPublications( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            if ( ee.getPrimaryPublication() != null ) {
-                Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
-            }
-            ee.getOtherRelevantPublications().forEach( Thaws::thawBibliographicReference );
-        }
-        return ee;
+        return readService.loadWithPrimaryPublicationAndOtherRelevantPublications( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithMeanVarianceRelation( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            Hibernate.initialize( ee.getMeanVarianceRelation() );
-        }
-        return ee;
+        return readService.loadWithMeanVarianceRelation( id );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByAccession(DatabaseEntry)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByAccession( final DatabaseEntry accession ) {
-        return this.expressionExperimentDao.findByAccession( accession );
+        return readService.findByAccession( accession );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByAccession( String accession ) {
-        return this.expressionExperimentDao.findByAccession( accession );
+        return readService.findByAccession( accession );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findOneByAccession( String accession ) {
-        return this.expressionExperimentDao.findOneByAccession( accession );
+        return readService.findOneByAccession( accession );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByBibliographicReference(BibliographicReference)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBibliographicReference( final BibliographicReference bibRef ) {
-        return this.expressionExperimentDao.findByBibliographicReference( bibRef );
+        return readService.findByBibliographicReference( bibRef );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByBioAssay(BioAssay)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByBioAssay( final BioAssay ba ) {
-        return this.expressionExperimentDao.findByBioAssay( ba );
+        return readService.findByBioAssay( ba );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByBioAssay( BioAssay ba, boolean includeSubSets ) {
-        return this.expressionExperimentDao.findByBioAssay( ba, includeSubSets );
+        return readService.findByBioAssay( ba, includeSubSets );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByBioAssay( BioAssay ba, boolean includeSubSets ) {
-        return this.expressionExperimentDao.findIdByBioAssay( ba, includeSubSets );
+        return readService.findIdByBioAssay( ba, includeSubSets );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByBioMaterial(BioMaterial)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBioMaterial( final BioMaterial bm ) {
-        return this.expressionExperimentDao.findByBioMaterial( bm );
+        return readService.findByBioMaterial( bm );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
-        return this.expressionExperimentDao.findByBioMaterial( bm, includeSubSets );
+        return readService.findByBioMaterial( bm, includeSubSets );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets ) {
-        return this.expressionExperimentDao.findIdsByBioMaterial( bm, includeSubSets );
+        return readService.findIdsByBioMaterial( bm, includeSubSets );
     }
 
     @Override
     public Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials ) {
-        return this.expressionExperimentDao.findByBioMaterials( biomaterials );
+        return readService.findByBioMaterials( biomaterials );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByExpressedGene(Gene, double)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByExpressedGene( final Gene gene, final double rank ) {
-        return this.expressionExperimentDao.findByExpressedGene( gene, rank );
+        return readService.findByExpressedGene( gene, rank );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByDesign( ExperimentalDesign ed ) {
-        return this.expressionExperimentDao.findByDesign( ed );
+        return readService.findByDesign( ed );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByDesign( ExperimentalDesign design ) {
-        return this.expressionExperimentDao.findIdByDesign( design );
+        return readService.findIdByDesign( design );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByDesignId( Long designId ) {
-        return this.expressionExperimentDao.findByDesignId( designId );
+        return readService.findByDesignId( designId );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByFactor(ExperimentalFactor)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByFactor( final ExperimentalFactor factor ) {
-        return this.expressionExperimentDao.findByFactor( factor );
+        return readService.findByFactor( factor );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByFactor( ExperimentalFactor factor ) {
-        return this.expressionExperimentDao.findIdByFactor( factor );
+        return readService.findIdByFactor( factor );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByFactors( Collection<ExperimentalFactor> factors ) {
-        return this.expressionExperimentDao.findByFactors( factors );
+        return readService.findByFactors( factors );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByFactorValue(FactorValue)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByFactorValue( final FactorValue factorValue ) {
-        return this.expressionExperimentDao.findByFactorValue( factorValue );
+        return readService.findByFactorValue( factorValue );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByFactorValue( FactorValue factorValue ) {
-        return this.expressionExperimentDao.findIdByFactorValue( factorValue );
+        return readService.findIdByFactorValue( factorValue );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByFactorValue(FactorValue)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByFactorValueId( final Long factorValueId ) {
-        return this.expressionExperimentDao.findByFactorValueId( factorValueId );
+        return readService.findByFactorValueId( factorValueId );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByFactorValues(Collection)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
-        return this.expressionExperimentDao.findByFactorValues( factorValues );
+        return readService.findByFactorValues( factorValues );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByFactorValueIds( Collection<Long> factorValueIds ) {
-        return this.expressionExperimentDao.findByFactorValueIds( factorValueIds );
+        return readService.findByFactorValueIds( factorValueIds );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByGene(Gene)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByGene( final Gene gene ) {
-        return this.expressionExperimentDao.findByGene( gene );
+        return readService.findByGene( gene );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByName(String)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByName( final String name ) {
-        return this.expressionExperimentDao.findByName( name );
+        return readService.findByName( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findOneByName( String name ) {
-        return expressionExperimentDao.findOneByName( name );
+        return readService.findOneByName( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
-        return this.expressionExperimentDao.findByQuantitationType( type );
+        return readService.findByQuantitationType( type );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByShortName(String)
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByShortName( final String shortName ) {
-        return this.expressionExperimentDao.findByShortName( shortName );
+        return readService.findByShortName( shortName );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByShortNameWithPrimaryPublication( String shortName ) {
-        ExpressionExperiment ee = this.expressionExperimentDao.findByShortName( shortName );
-        if ( ee != null && ee.getPrimaryPublication() != null ) {
-            Thaws.thawBibliographicReference( ee.getPrimaryPublication() );
-        }
-        return ee;
+        return readService.findByShortNameWithPrimaryPublication( shortName );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByShortNameAndThawLite( String shortName ) {
-        ExpressionExperiment ee = this.expressionExperimentDao.findByShortName( shortName );
-        if ( ee != null ) {
-            expressionExperimentDao.thawLite( ee );
-        }
-        return ee;
+        return readService.findByShortNameAndThawLite( shortName );
     }
 
-    /**
-     * @see ExpressionExperimentService#findByTaxon(Taxon)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByTaxon( final Taxon taxon ) {
-        return this.expressionExperimentDao.findByTaxon( taxon );
+        return readService.findByTaxon( taxon );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
-        return this.expressionExperimentDao.findByUpdatedLimit( limit );
+        return readService.findByUpdatedLimit( limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findUpdatedAfter( Date date ) {
-        return this.expressionExperimentDao.findUpdatedAfter( date );
+        return readService.findUpdatedAfter( date );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment findByMeanVarianceRelation( MeanVarianceRelation mvr ) {
-        return this.expressionExperimentDao.findByMeanVarianceRelation( mvr );
+        return readService.findByMeanVarianceRelation( mvr );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Long findIdByMeanVarianceRelation( MeanVarianceRelation mvr ) {
-        return this.expressionExperimentDao.findIdByMeanVarianceRelation( mvr );
+        return readService.findIdByMeanVarianceRelation( mvr );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean existsByShortName( String shortName ) {
-        return this.expressionExperimentDao.existsByShortName( shortName );
+        return readService.existsByShortName( shortName );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, Long> getAnnotationCountsByIds( final Collection<Long> ids ) {
-        return this.expressionExperimentDao.getAnnotationCounts( ids );
+        return readService.getAnnotationCountsByIds( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
     public DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        return previewDesignChange( ee, proposed, null );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed,
+            @Nullable DesignCommitPlan plan ) {
         ee = expressionExperimentDao.reload( ee );
         DesignPreflightReport report = new DesignPreflightReport();
         DesignPreflightReport.Summary summary = report.getSummary();
@@ -909,13 +658,34 @@ public class ExpressionExperimentServiceImpl
                             } else if ( existingFv != null && pv.getStatements() != null ) {
                                 Set<Long> existingStmtIds = existingFv.getCharacteristics().stream()
                                         .map( Statement::getId ).collect( Collectors.toSet() );
+                                Map<Long, Integer> proposedPerStatement = new HashMap<>();
                                 for ( StatementValueObject ps : pv.getStatements() ) {
-                                    if ( ps.getId() != null && !existingStmtIds.contains( ps.getId() ) ) {
+                                    if ( ps.getId() == null ) {
+                                        continue;
+                                    }
+                                    if ( !existingStmtIds.contains( ps.getId() ) ) {
                                         DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
                                                 "UNKNOWN_STATEMENT_ID",
                                                 "Statement id " + ps.getId() + " does not belong to factor value " + pv.getId() + "." );
                                         b.setFactorValueId( pv.getId() );
                                         b.setStatementId( ps.getId() );
+                                        report.getBlockers().add( b );
+                                    }
+                                    proposedPerStatement.merge( ps.getId(), 1, Integer::sum );
+                                }
+                                // Two entries for one id is the normal shape of a compound statement on the wire
+                                // (see unflattenStatements). A statement holds two object slots and no more, so a
+                                // third entry has nowhere to go — refuse it here rather than let the extra clause
+                                // be silently dropped on the way in.
+                                for ( Map.Entry<Long, Integer> e : proposedPerStatement.entrySet() ) {
+                                    if ( e.getValue() > 2 ) {
+                                        DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                                "STATEMENT_ID_REPEATED",
+                                                "Statement id " + e.getKey() + " appears " + e.getValue()
+                                                        + " times on factor value " + pv.getId()
+                                                        + "; a statement carries at most two objects." );
+                                        b.setFactorValueId( pv.getId() );
+                                        b.setStatementId( e.getKey() );
                                         report.getBlockers().add( b );
                                     }
                                 }
@@ -924,6 +694,12 @@ public class ExpressionExperimentServiceImpl
                             summary.setFactorValuesToCreate( summary.getFactorValuesToCreate() + 1 );
                         }
                     }
+                    // NOTE: more than one baseline per factor is allowed and is NOT blocked here. A dataset that
+                    // holds two experiments legitimately has a reference level per experiment, and a curator has to
+                    // be able to record that. The constraint belongs where it actually bites: LinearModelAnalyzer
+                    // refuses to run such a factor as a single contrast unless a subset factor is configured
+                    // (MultipleBaselinesRequireSubsetException). Blocking it at curation time instead made the
+                    // legitimate design unrecordable while leaving the analysis free to pick one arbitrarily.
                 }
             }
         }
@@ -990,76 +766,69 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        // ---- impact: differential expression analyses ----
-        // A factor is "affected" (and therefore its DE analyses must be deleted) when:
-        //   (a) the factor itself is being deleted;
-        //   (b) any of its FactorValues is being deleted (Gemma's existing cascade rule, see FactorValueDeletionImpl);
-        //   (c) a new FactorValue is being added under it (changes the design space);
-        //   (d) any biomaterial assignment to one of its FactorValues changes (different sample groupings -> different
-        //       analysis result, even if every row still exists).
-        // Statement edits on a kept FV do NOT count: the analysis math is unchanged, only labels would be stale.
-        Set<Long> factorIdsAffected = new HashSet<>();
-        for ( ExperimentalFactor ef : factorsBeingDeleted ) {
-            factorIdsAffected.add( ef.getId() );
-        }
-        for ( FactorValue fv : fvsBeingDeleted ) {
-            ExperimentalFactor parent = currentFvParentByFvId.get( fv.getId() );
-            if ( parent != null ) {
-                factorIdsAffected.add( parent.getId() );
-            }
-        }
-        // (c) new FV being added under an existing factor
-        if ( proposed.getExperimentalFactors() != null ) {
-            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
-                if ( pf.getId() == null || pf.getValues() == null ) continue;
-                for ( FactorValueBasicValueObject pv : pf.getValues() ) {
-                    if ( pv.getId() == null ) {
-                        factorIdsAffected.add( pf.getId() );
-                        break;
-                    }
-                }
-            }
-        }
-        // (d) biomaterial assignment changes — for each FV whose membership set changed, mark its parent factor
+        // Counted once, here, because the invalidation rule below needs it and the summary needs it too.
+        // It used to be recomputed in a second pass over the same two maps further down.
+        //
+        // Identifiers rather than a running total, because the deferred bindings below can name a biomaterial
+        // this loop has already counted. A biomaterial's assignments changed or they did not.
+        Set<Long> changedBmIds = new HashSet<>();
         for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
             Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
                     .map( FactorValue::getId ).collect( Collectors.toSet() );
             Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
-            if ( currentFvIds.equals( proposedFvIdsForBm ) ) continue;
-            // factor membership changed for this biomaterial — flag every involved factor
-            Set<Long> changedFvIds = new HashSet<>( currentFvIds );
-            changedFvIds.addAll( proposedFvIdsForBm );
-            Set<Long> commonFvIds = new HashSet<>( currentFvIds );
-            commonFvIds.retainAll( proposedFvIdsForBm );
-            changedFvIds.removeAll( commonFvIds );
-            for ( Long fvId : changedFvIds ) {
-                ExperimentalFactor parent = currentFvParentByFvId.get( fvId );
-                if ( parent != null ) {
-                    factorIdsAffected.add( parent.getId() );
-                }
-                // Proposed-new FVs (id != null but not in currentFvParentByFvId) are unreachable here because
-                // they have id == null in the proposal; their parent factor is already flagged by rule (c).
+            if ( !currentFvIds.equals( proposedFvIdsForBm ) ) {
+                changedBmIds.add( e.getKey() );
             }
         }
 
-        Set<Long> seenAnalysisIds = new HashSet<>();
-        for ( Long efId : factorIdsAffected ) {
-            ExperimentalFactor ef = currentFactorsById.get( efId );
-            if ( ef == null ) continue;
-            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByFactor( ef ) ) {
-                if ( seenAnalysisIds.add( a.getId() ) ) {
-                    Long subsetFvId = a.getSubsetFactorValue() != null ? a.getSubsetFactorValue().getId() : null;
-                    report.getDifferentialExpressionAnalysesToDelete().add(
-                            new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFvId ) );
+        // A biomaterial bound to a factor value this commit CREATES cannot appear in the loop above.
+        // BioMaterialFactorValueAssignment carries factor value ids, and a new factor value has none until the
+        // first apply pass makes it, so the binding is deferred to DesignCommitPlan.pendingAssignments and
+        // attached by a second pass -- see buildAssignmentPass. Preflighting without the plan therefore reports
+        // 0 for a pure create whose bindings do land: measured on GSE35977, preflight 0 against 168 of 168
+        // biomaterials bound (cab, 2026-09-10). A caller reading the field as authoritative refuses a good write.
+        //
+        // Biomaterials the experiment does not carry are skipped for the same reason buildAssignmentPass skips
+        // them -- it binds nothing for a biomaterial absent from the design -- so the prediction matches the apply.
+        if ( plan != null ) {
+            for ( DesignCommitPlan.PendingAssignment pa : plan.getPendingAssignments() ) {
+                for ( Long bmId : pa.getBioMaterialIds() ) {
+                    if ( currentBmsById.containsKey( bmId ) ) {
+                        changedBmIds.add( bmId );
+                    }
                 }
             }
         }
-        // Also: subset-level analyses anchored on a deleted FV (subsetFactorValue FK becomes dangling)
-        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
-            FactorValue subsetFv = a.getSubsetFactorValue();
-            if ( subsetFv != null && fvIdsBeingDeleted.contains( subsetFv.getId() ) && seenAnalysisIds.add( a.getId() ) ) {
+        int changedBmCount = changedBmIds.size();
+
+        // ---- impact: differential expression analyses ----
+        // ONE EXCLUSION, not a list of inclusions: a design commit invalidates this dataset's analyses
+        // UNLESS the only thing that changed was labels on kept factor values. Paul, 2026-08-26 — the
+        // previous four inclusion rules (factor deleted / FV deleted / FV added / assignment changed)
+        // were four places to be wrong, and they missed two real cases: adding a WHOLE factor marked
+        // nothing, because a new factor has no id and no analyses of its own; and a measurement change on
+        // a continuous factor changes the regression while moving no structural counter.
+        //
+        // The failure mode is inverted on purpose. Before, a case nobody enumerated rode through silently
+        // and falsified a live analysis; now it triggers a re-run, and re-running a DEA is cheap.
+        //
+        // Invalidation is DATASET-WIDE rather than per-factor: adding a factor invalidates the analyses on
+        // the other factors too, because they were fitted without a variable the design now declares.
+        //
+        // What is excluded, and only this: statement / characteristic / free-text-value edits on a kept
+        // factor value. Those relabel; they do not move a sample, a level, or a baseline.
+        boolean structuralChange = summary.getFactorsToCreate() > 0
+                || summary.getFactorsToDelete() > 0
+                || summary.getFactorValuesToCreate() > 0
+                || summary.getFactorValuesToDelete() > 0
+                || changedBmCount > 0;
+        boolean invalidatingEdit = hasKeptFactorValueEditsThatChangeTheMath( ee, proposed );
+
+        if ( structuralChange || invalidatingEdit ) {
+            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+                Long subsetFvId = a.getSubsetFactorValue() != null ? a.getSubsetFactorValue().getId() : null;
                 report.getDifferentialExpressionAnalysesToDelete().add(
-                        new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFv.getId() ) );
+                        new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFvId ) );
             }
         }
         summary.setDifferentialExpressionAnalysesToDelete( report.getDifferentialExpressionAnalysesToDelete().size() );
@@ -1090,23 +859,39 @@ public class ExpressionExperimentServiceImpl
         summary.setSubsetsWithStaleAnchor( report.getSubsetsWithStaleAnchor().size() );
 
         // ---- impact: biomaterials with changed assignments ----
-        int changedBmCount = 0;
-        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
-            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
-                    .map( FactorValue::getId ).collect( Collectors.toSet() );
-            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
-            if ( !currentFvIds.equals( proposedFvIdsForBm ) ) {
-                changedBmCount++;
-            }
-        }
         summary.setBiomaterialsWithChangedAssignments( changedBmCount );
+
+        // ---- impact: in-place edits on kept factors and factor values ----
+        // Reported, never counted as structural. These are the edits the invalidation rule above deliberately
+        // excludes -- they relabel, they move no sample and no level -- so they must stay out of
+        // `structuralChange`. What they must NOT stay out of is the report: before this, re-terming a factor
+        // value preflighted as all-zero, which the caller reads as "nothing to do" for an edit a PUT applies.
+        for ( ExperimentalFactor ef : keptFactorMetadataEdits( ee, proposed ) ) {
+            report.getFactorsToUpdate().add( new DesignPreflightReport.EntityRef( ef.getId(), ef.getName() ) );
+        }
+        summary.setFactorsToUpdate( report.getFactorsToUpdate().size() );
+        for ( FactorValue fv : keptFactorValueEdits( ee, proposed ) ) {
+            report.getFactorValuesToUpdate().add(
+                    new DesignPreflightReport.EntityRef( fv.getId(), FactorValueUtils.getSummaryString( fv ) ) );
+        }
+        summary.setFactorValuesToUpdate( report.getFactorValuesToUpdate().size() );
 
         return report;
     }
 
     @Override
     @Transactional
-    public ExperimentalDesignValueObject applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+    @AuditedConditional(value = DesignChangeEvent.class,
+            when = "#result.applied",
+            // 🛑 The `~` counts are the point. This note used to report creates, deletes, assignment
+            // moves and analyses only, so a commit that re-termed a statement, attached evidence,
+            // flipped a baseline or renamed a factor wrote "+0 / -0 ... changed: 0" -- a description
+            // of a real write that reads as a no-op. uib was led to report the commit path as
+            // non-idempotent on the strength of it (2026-09-04); the write was real and the note
+            // denied it. factorsToUpdate / factorValuesToUpdate were already on the summary and
+            // simply were not being said.
+            messageSpel = "'Design replaced via REST: factors +' + #result.preflightAtApply.summary.factorsToCreate + ' / -' + #result.preflightAtApply.summary.factorsToDelete + ' / ~' + #result.preflightAtApply.summary.factorsToUpdate + ', factor values +' + #result.preflightAtApply.summary.factorValuesToCreate + ' / -' + #result.preflightAtApply.summary.factorValuesToDelete + ' / ~' + #result.preflightAtApply.summary.factorValuesToUpdate + ', biomaterial assignments changed: ' + #result.preflightAtApply.summary.biomaterialsWithChangedAssignments + ', analyses removed: ' + #result.preflightAtApply.summary.differentialExpressionAnalysesToDelete + '.'")
+    public DesignApplyOutcome applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
         Assert.notNull( proposed, "A proposed design must be supplied." );
         ee = expressionExperimentDao.reload( ee );
 
@@ -1116,6 +901,13 @@ public class ExpressionExperimentServiceImpl
         if ( !report.getBlockers().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot apply proposed design: "
                     + report.getBlockers().get( 0 ).getMessage() );
+        }
+
+        // Idempotent no-op short-circuit. If the apply-time preflight reports zero changes across every dimension
+        // (factors, factor values, biomaterial assignments, design-level metadata), return applied=false without
+        // mutating anything. @AuditedConditional's `when` predicate then suppresses the audit row.
+        if ( isNoOpDesignApply( ee, report, proposed ) ) {
+            return new DesignApplyOutcome( false, getExperimentalDesignValueObject( ee ), report );
         }
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
@@ -1198,28 +990,27 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        // ---- step 2: remove diff-ex analyses dependent on factors being deleted (or that become invalid) ----
-        // Step 3 (factor removal) will also cascade DE analyses through ExperimentalFactorService#remove, so we
-        // only explicitly remove analyses tied to surviving factors whose membership / structure changed in a way
-        // that the FV/factor cascade won't reach. The preflight already enumerated these (see factorIdsAffected).
-        Set<Long> factorIdsAffected = computeAffectedFactorIds( currentFactorsById, currentFvsById,
-                proposedFactorIds, fvIdsBeingDeleted, proposed, currentBmsById );
-        Set<Long> removedAnalysisIds = new HashSet<>();
-        for ( Long efId : factorIdsAffected ) {
-            ExperimentalFactor ef = currentFactorsById.get( efId );
-            if ( ef == null ) continue;
-            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByFactor( ef ) ) {
-                if ( removedAnalysisIds.add( a.getId() ) ) {
-                    differentialExpressionAnalysisService.remove( a );
+        // ---- step 2: remove the diff-ex analyses the preflight enumerated ----
+        // The invalidation rule lives in previewDesignChange and nowhere else; this side executes the list the
+        // report already carries instead of deriving it a second time. The two derivations DID drift: when the
+        // report was widened to dataset-wide invalidation (2026-08-26) this side still asked per-factor, so a
+        // baseline flip the curator was warned would delete an analysis left that analysis in place, falsified.
+        // Subset-anchored analyses need no separate pass -- the report is built from findByExperiment(ee, true),
+        // so it already names them. Step 4 (factor removal) cascades through ExperimentalFactorService#remove;
+        // whatever it would have reached is already gone by then.
+        Set<Long> analysisIdsToRemove = report.getDifferentialExpressionAnalysesToDelete().stream()
+                .map( DesignPreflightReport.AnalysisRef::getId )
+                .collect( Collectors.toCollection( HashSet::new ) );
+        // Routed through deleteAnalysis, not differentialExpressionAnalysisService.remove: remove drops the rows
+        // only, leaving each analysis's diffex archive and its per-result-set TSV caches on the deployment
+        // volume. deleteAnalysis does the same removal and then those files. It runs at SUPPORTS so it joins
+        // this transaction -- which means the files go before the commit, and a rollback here leaves a
+        // surviving analysis without its caches; both are rebuilt from the database on next request.
+        if ( !analysisIdsToRemove.isEmpty() ) {
+            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+                if ( analysisIdsToRemove.contains( a.getId() ) ) {
+                    differentialExpressionAnalyzerService.deleteAnalysis( ee, a );
                 }
-            }
-        }
-        // Subset-anchored analyses pointing at deleted FVs would dangle.
-        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
-            FactorValue subsetFv = a.getSubsetFactorValue();
-            if ( subsetFv != null && fvIdsBeingDeleted.contains( subsetFv.getId() )
-                    && removedAnalysisIds.add( a.getId() ) ) {
-                differentialExpressionAnalysisService.remove( a );
             }
         }
 
@@ -1248,7 +1039,22 @@ public class ExpressionExperimentServiceImpl
             }
         }
         for ( ExperimentalFactor ef : factorsToRemove ) {
-            ed.getExperimentalFactors().remove( ef );
+            // 🛑 Do NOT detach the factor from ed.experimentalFactors here. experimentalFactorService.remove is a
+            // SECURED call (GROUP_USER + ACL_SECURABLE_EDIT), and an ExperimentalFactor is a SecuredChild whose
+            // ACL parent is resolved by ParentIdentityRetrievalStrategyImpl through
+            // ExpressionExperimentDao.findIdByFactor -- an HQL query that joins ed.experimentalFactors. Removing
+            // the factor from that collection first makes the query auto-flush the pending change and match no
+            // row, so the parent identity comes back null, the factor's ACL cannot inherit from the experiment,
+            // and the vote denies with "Access is denied" -- for an administrator, because the failure is a
+            // lookup that returned nothing rather than a permission that was refused.
+            //
+            // ExperimentalFactorServiceImpl.remove performs exactly this detach itself, after the interceptor
+            // has passed, with the comment "otherwise it will be re-saved in cascade". The line here was a
+            // duplicate of that one, and being on the wrong side of the security proxy is what made it fatal.
+            //
+            // cab hit it on GSE19804 (2026-09-09) re-typing an age factor: the sign 403'd after
+            // deleteAnalysis had already removed DEA 432031's archive, so the transaction rolled back and left
+            // a surviving analysis without its cached files.
             experimentalFactorService.remove( ef );
         }
 
@@ -1336,71 +1142,385 @@ public class ExpressionExperimentServiceImpl
         }
 
         // ---- step 8: audit event ----
-        DesignPreflightReport.Summary s = report.getSummary();
-        String note = String.format(
-                "Design replaced via REST: factors +%d / -%d, factor values +%d / -%d, biomaterial assignments changed: %d, analyses removed: %d.",
-                s.getFactorsToCreate(), s.getFactorsToDelete(),
-                s.getFactorValuesToCreate(), s.getFactorValuesToDelete(),
-                s.getBiomaterialsWithChangedAssignments(),
-                s.getDifferentialExpressionAnalysesToDelete() );
-        auditTrailService.addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, note );
-
-        return getExperimentalDesignValueObject( ee );
+        // Emitted declaratively via @AuditedConditional on the public method (DesignChangeEvent). The aspect
+        // fires only when #result.applied is true, which suppresses the no-op early-return branch above.
+        return new DesignApplyOutcome( true, getExperimentalDesignValueObject( ee ), report );
     }
 
-    private Set<Long> computeAffectedFactorIds( Map<Long, ExperimentalFactor> currentFactorsById,
-            Map<Long, FactorValue> currentFvsById, Set<Long> proposedFactorIds, Set<Long> fvIdsBeingDeleted,
-            ExperimentalDesignValueObject proposed, Map<Long, BioMaterial> currentBmsById ) {
-        Set<Long> affected = new HashSet<>();
-        // factor being deleted -> handled by experimentalFactorService.remove later; not in this set
-        // factor losing a FV but staying -> affected
-        for ( Long fvId : fvIdsBeingDeleted ) {
-            FactorValue fv = currentFvsById.get( fvId );
-            if ( fv != null && fv.getExperimentalFactor() != null
-                    && proposedFactorIds.contains( fv.getExperimentalFactor().getId() ) ) {
-                affected.add( fv.getExperimentalFactor().getId() );
+    /**
+     * Decide whether the proposed design change is a no-op against the current state.
+     * <p>
+     * Returns true iff the preflight summary shows zero changes AND the design-level metadata fields would not
+     * change either. The metadata check mirrors step 7 of the apply path; the summary check covers steps 3-6
+     * (factor / factor value / biomaterial assignment deltas).
+     */
+    private boolean isNoOpDesignApply( ExpressionExperiment ee, DesignPreflightReport report,
+            ExperimentalDesignValueObject proposed ) {
+        DesignPreflightReport.Summary s = report.getSummary();
+        if ( s.getFactorsToCreate() > 0 || s.getFactorsToDelete() > 0
+                || s.getFactorValuesToCreate() > 0 || s.getFactorValuesToDelete() > 0
+                || s.getBiomaterialsWithChangedAssignments() > 0
+                || s.getDifferentialExpressionAnalysesToDelete() > 0 ) {
+            return false;
+        }
+        // The summary counters above track only structural add/delete of factors, factor values, and biomaterial
+        // assignments. An in-place edit to a KEPT factor value (its baseline flag, deprecated value, or statement
+        // set) leaves every counter at zero, so without this check such a PUT would be mistaken for a no-op and
+        // silently dropped — the mutation in applyFactorValueChanges / updateFactorValueStatements would never be
+        // reached.
+        if ( hasKeptFactorValueEdits( ee, proposed ) ) {
+            return false;
+        }
+        // Same blind spot one level up: renaming a kept factor, rewriting its description, or re-terming its
+        // category leaves every structural counter at zero and touches no factor value at all. Without this the
+        // PUT is swallowed and readers keep seeing the old category with nothing to signal otherwise.
+        if ( hasKeptFactorMetadataEdits( ee, proposed ) ) {
+            return false;
+        }
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null ) {
+            // current design is null; proposal that introduces any non-null metadata is not a no-op
+            return proposed.getName() == null && proposed.getDescription() == null
+                    && proposed.getReplicateDescription() == null
+                    && proposed.getQualityControlDescription() == null
+                    && proposed.getNormalizationDescription() == null;
+        }
+        return Objects.equals( ed.getName(), proposed.getName() )
+                && Objects.equals( ed.getDescription(), proposed.getDescription() )
+                && Objects.equals( ed.getReplicateDescription(), proposed.getReplicateDescription() )
+                && Objects.equals( ed.getQualityControlDescription(), proposed.getQualityControlDescription() )
+                && Objects.equals( ed.getNormalizationDescription(), proposed.getNormalizationDescription() );
+    }
+
+    /**
+     * Whether {@code proposed} carries an in-place edit to an existing (kept) <em>factor</em>: its name, its
+     * description, its category, or its baseline-relevance hint. None of these move a structural counter, and
+     * none of them live on a factor value, so {@link #hasKeptFactorValueEdits} cannot see them either. Mirrors the fields
+     * {@link #updateFactorMetadata} writes and its {@code null = "no change"} convention, including the rule that
+     * a category is only applied when the factor already has one.
+     */
+    private boolean hasKeptFactorMetadataEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        return !keptFactorMetadataEdits( ee, proposed ).isEmpty();
+    }
+
+    /**
+     * The kept factors {@link #hasKeptFactorMetadataEdits} finds an in-place edit on, in proposal order.
+     *
+     * @see #keptFactorValueEdits
+     */
+    private List<ExperimentalFactor> keptFactorMetadataEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null || proposed.getExperimentalFactors() == null ) {
+            return Collections.emptyList();
+        }
+        Map<Long, ExperimentalFactor> currentFactorsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            currentFactorsById.put( ef.getId(), ef );
+        }
+        List<ExperimentalFactor> edited = new ArrayList<>();
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+            if ( pf.getId() == null ) continue; // creations are already counted in the summary
+            ExperimentalFactor cur = currentFactorsById.get( pf.getId() );
+            if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
+            if ( pf.getName() != null && !Objects.equals( pf.getName(), cur.getName() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getDescription() != null && !Objects.equals( pf.getDescription(), cur.getDescription() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getCategory() != null && cur.getCategory() != null
+                    && ( !Objects.equals( pf.getCategory().getCategory(), cur.getCategory().getCategory() )
+                    || !Objects.equals( pf.getCategory().getCategoryUri(), cur.getCategory().getCategoryUri() )
+                    || !Objects.equals( pf.getCategory().getValue(), cur.getCategory().getValue() )
+                    || !Objects.equals( pf.getCategory().getValueUri(), cur.getCategory().getValueUri() ) ) ) {
+                edited.add( cur );
+                continue;
+            }
+            // Ticking "no baseline" with a reason and changing nothing else moves no counter, so without these
+            // two the commit would be reported unchanged and the write never reached — the same blind spot the
+            // factor-value evidence clause exists to cover.
+            if ( pf.getBaselineRelevance() != null
+                    && !Objects.equals( blankToNull( pf.getBaselineRelevance() ), cur.getBaselineRelevance() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getBaselineRelevanceReason() != null
+                    && !Objects.equals( blankToNull( pf.getBaselineRelevanceReason() ), cur.getBaselineRelevanceReason() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            // Same blind spot, same fix, for the subset-relevance hint: recommending a subset factor and
+            // changing nothing else moves no counter.
+            if ( pf.getSubsetRelevance() != null
+                    && !Objects.equals( blankToNull( pf.getSubsetRelevance() ), cur.getSubsetRelevance() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getSubsetRelevanceReason() != null
+                    && !Objects.equals( blankToNull( pf.getSubsetRelevanceReason() ), cur.getSubsetRelevanceReason() ) ) {
+                edited.add( cur );
             }
         }
-        // new FV under existing factor -> affected
-        if ( proposed.getExperimentalFactors() != null ) {
-            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
-                if ( pf.getId() == null || pf.getValues() == null ) continue;
-                for ( FactorValueBasicValueObject pv : pf.getValues() ) {
-                    if ( pv.getId() == null ) {
-                        affected.add( pf.getId() );
-                        break;
-                    }
+        return edited;
+    }
+
+    /** An empty baseline-relevance field is the explicit clear, so it compares equal to an unset one. */
+    @Nullable
+    private static String blankToNull( @Nullable String s ) {
+        return StringUtils.isBlank( s ) ? null : s;
+    }
+
+    /**
+     * The subset of {@link #hasKeptFactorValueEdits} that changes the analysis MATH rather than its labels:
+     * a baseline flip, or a measurement change on a continuous factor value.
+     * <p>
+     * A baseline flip reverses the direction of every contrast in an existing DEA —
+     * {@link ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet} records the factor value
+     * that WAS the reference, and each contrast's fold change is relative to it. For a two-level factor that
+     * is a pure negation; for three or more the contrast SET changes (baseline A gives B-vs-A and C-vs-A;
+     * baseline B needs A-vs-B and C-vs-B), so there is no in-place correction and the analysis must be re-run.
+     * A measurement change moves the regression the same way.
+     * <p>
+     * 🛑 Statement, characteristic and free-text {@code value} edits are deliberately NOT here. They relabel a
+     * factor value; they do not move a sample, a level or a reference. That is the ONE exclusion the
+     * invalidation rule in {@link #previewDesignChange} is built around.
+     * <p>
+     * 🛑 Baseline-hood is read from the explicit {@code baseline} flag only. It is deliberately NOT computed
+     * through {@code BaselineSelection}, which falls back to control-group characteristics when the flag is
+     * absent: that would make a statement edit flip a baseline, and statement edits are the exclusion.
+     */
+    private boolean hasKeptFactorValueEditsThatChangeTheMath( ExpressionExperiment ee,
+            ExperimentalDesignValueObject proposed ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null || proposed.getExperimentalFactors() == null ) {
+            return false;
+        }
+        Map<Long, FactorValue> currentFvsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                currentFvsById.put( fv.getId(), fv );
+            }
+        }
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+            if ( pf.getValues() == null ) continue;
+            for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                if ( pv.getId() == null ) continue; // a creation; already structural
+                FactorValue cur = currentFvsById.get( pv.getId() );
+                if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
+                if ( baselineChanged( pv, cur ) ) {
+                    return true;
+                }
+                if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
+                    return true;
                 }
             }
         }
-        // biomaterial assignment changes -> affected (only via parent factor of changed FVs)
-        Map<Long, Set<Long>> proposedAssignByBmId = new HashMap<>();
-        if ( proposed.getBioMaterialAssignments() != null ) {
-            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : proposed.getBioMaterialAssignments() ) {
-                if ( a.getBioMaterialId() != null && a.getFactorValueIds() != null ) {
-                    proposedAssignByBmId.put( a.getBioMaterialId(), new HashSet<>( a.getFactorValueIds() ) );
+        return false;
+    }
+
+    /**
+     * Whether {@code proposed} carries an in-place edit to an existing (kept) factor value that the structural
+     * preflight summary does not count: a baseline-flag change, a deprecated-{@code value} change, a statement
+     * edit, or a measurement edit on a continuous factor value. All honour the {@code null = "no change"}
+     * convention used by {@link #applyFactorValueChanges}. Used by {@link #isNoOpDesignApply} so such edits are
+     * not short-circuited away.
+     */
+    private boolean hasKeptFactorValueEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        return !keptFactorValueEdits( ee, proposed ).isEmpty();
+    }
+
+    /**
+     * The kept factor values {@link #hasKeptFactorValueEdits} finds an in-place edit on, in proposal order.
+     * <p>
+     * Returning them rather than a bare boolean is what lets {@link #previewDesignChange} report the edit
+     * instead of counting it as {@code unchanged}: one comparison, read by the no-op gate and by the report,
+     * so the two cannot disagree about what an edit is.
+     */
+    private List<FactorValue> keptFactorValueEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null || proposed.getExperimentalFactors() == null ) {
+            return Collections.emptyList();
+        }
+        Map<Long, FactorValue> currentFvsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                currentFvsById.put( fv.getId(), fv );
+            }
+        }
+        List<FactorValue> edited = new ArrayList<>();
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+            if ( pf.getValues() == null ) continue;
+            for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                if ( pv.getId() == null ) continue; // creations are already counted in the summary
+                FactorValue cur = currentFvsById.get( pv.getId() );
+                if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
+                if ( baselineChanged( pv, cur ) ) {
+                    edited.add( cur );
+                    continue;
+                }
+                //noinspection deprecation
+                if ( pv.getValue() != null && !Objects.equals( pv.getValue(), cur.getValue() ) ) {
+                    edited.add( cur );
+                    continue;
+                }
+                // Statements are replaced wholesale by updateFactorValueStatements when the payload provides them
+                // (null = "no change"). Compare by content so an add / remove / edit registers, while a pure
+                // round-trip that echoes the same statements stays a no-op.
+                if ( pv.getStatements() != null && statementsChanged( cur, pv ) ) {
+                    edited.add( cur );
+                    continue;
+                }
+                // Attaching provenance to an otherwise-unchanged statement leaves the content keys identical, so
+                // statementsChanged cannot see it. Without this an evidence-only write is swallowed exactly the
+                // way a factor description-only write used to be.
+                if ( pv.getStatements() != null && statementEvidenceChanged( cur, proposedStatements( pv ) ) ) {
+                    edited.add( cur );
+                    continue;
+                }
+                // A continuous factor value's measurement is the field its whole meaning rests on; retiming a
+                // timepoint from 7 to 37 days moves no structural counter.
+                if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
+                    edited.add( cur );
                 }
             }
         }
-        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
-            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
-                    .map( FactorValue::getId ).collect( Collectors.toSet() );
-            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
-            if ( currentFvIds.equals( proposedFvIdsForBm ) ) continue;
-            Set<Long> changed = new HashSet<>( currentFvIds );
-            changed.addAll( proposedFvIdsForBm );
-            Set<Long> common = new HashSet<>( currentFvIds );
-            common.retainAll( proposedFvIdsForBm );
-            changed.removeAll( common );
-            for ( Long fvId : changed ) {
-                FactorValue fv = currentFvsById.get( fvId );
-                if ( fv != null && fv.getExperimentalFactor() != null
-                        && proposedFactorIds.contains( fv.getExperimentalFactor().getId() ) ) {
-                    affected.add( fv.getExperimentalFactor().getId() );
-                }
+        return edited;
+    }
+
+    /**
+     * Whether any proposed statement carries provenance — supporting evidence or an evidence code — that differs
+     * from what the statement it refers to already holds. Resolution mirrors
+     * {@link #updateFactorValueStatements}: by id when the payload supplies one, otherwise by content key. A
+     * proposed statement matching nothing is a creation, which {@link #statementsChanged} already counts, so it
+     * is not considered here.
+     * <p>
+     * Only non-null proposed values are compared, honouring the {@code null = "no change"} convention that
+     * {@link #applyStatementFields} writes under. Both slots go through this one comparison: an evidence code is
+     * as invisible to {@link #statementsChanged} as supporting evidence is, and a second check beside this one
+     * would be a second place for the no-op gate to disagree with the apply.
+     */
+    private static boolean statementEvidenceChanged( FactorValue cur, List<StatementValueObject> proposed ) {
+        Map<Long, Statement> byId = new HashMap<>();
+        Map<String, Statement> byContent = new HashMap<>();
+        for ( Statement s : cur.getCharacteristics() ) {
+            if ( s.getId() != null ) {
+                byId.put( s.getId(), s );
+            }
+            byContent.putIfAbsent( statementContentKey( s ), s );
+        }
+        for ( StatementValueObject ps : proposed ) {
+            Statement match = ps.getId() != null ? byId.get( ps.getId() ) : byContent.get( statementContentKey( ps ) );
+            if ( match == null ) {
+                continue; // a creation; statementsChanged covers it
+            }
+            // Compared in BOTH directions since evidence became replacement: dropping evidence a row has is as
+            // much a change as adding it, and skipping payloads that carry none would report a clear as a no-op.
+            String proposedEvidence = CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() );
+            if ( !Objects.equals( proposedEvidence, match.getSupportingEvidence() ) ) {
+                return true;
+            }
+            if ( !Objects.equals( parseEvidenceCode( ps.getEvidenceCode() ), match.getEvidenceCode() ) ) {
+                return true;
             }
         }
-        return affected;
+        return false;
+    }
+
+    /**
+     * Whether the proposed measurement differs from the one the factor value currently carries. A factor value
+     * that has no measurement yet and is given one counts as changed. Compares the four fields
+     * {@link #applyMeasurementFields} writes, so a verbatim round-trip stays a no-op.
+     */
+    private static boolean measurementChanged( FactorValue cur, MeasurementValueObject proposed ) {
+        Measurement m = cur.getMeasurement();
+        if ( m == null ) {
+            return true;
+        }
+        String currentUnit = m.getUnit() != null ? m.getUnit().getUnitNameCV() : null;
+        String currentType = m.getType() != null ? m.getType().name() : null;
+        String currentRepresentation = m.getRepresentation() != null ? m.getRepresentation().name() : null;
+        return !Objects.equals( m.getValue(), proposed.getValue() )
+                || !Objects.equals( currentUnit, proposed.getUnit() )
+                || !Objects.equals( currentType, proposed.getType() )
+                || !Objects.equals( currentRepresentation, proposed.getRepresentation() );
+    }
+
+    /**
+     * Whether the proposed statement set differs in content from what the factor value currently carries. Compares
+     * a multiset of {@link #statementContentKey content keys} so ordering and database ids are irrelevant — only
+     * add / remove / field edits count. Echoing the current statements verbatim (the common baseline-edit
+     * round-trip) yields equal multisets and is therefore not a change.
+     */
+    /**
+     * Whether the statements {@code pv} proposes differ in content from the ones the factor value holds.
+     * <p>
+     * Compares the multiset of content keys the apply would end up with against the one it starts from, so an
+     * add, a removal and a re-term all register while a payload that echoes what it read stays a no-op.
+     * <p>
+     * 🛑 <b>The proposed side is BOTH projections, not just {@code statements}.</b> A statement with no object
+     * is rendered under {@code characteristics} and left out of {@code statements} entirely
+     * ({@code AbstractFactorValueValueObjectSerializer} writes a statement only when it has an object), and
+     * that is the commonest shape there is — a plain {@code organism part: chorionic villus}. Reading the
+     * statements list alone, a client PUTting back exactly what {@code GET /design} gave it looks like it is
+     * deleting every such row, which cost a spurious design-change event on every full-design round trip and
+     * would have counted the whole design as edited in the preflight report. {@link #updateFactorValueStatements}
+     * has always resolved the two projections together; this is the same resolution, read-only.
+     */
+    private static boolean statementsChanged( FactorValue cur, FactorValueBasicValueObject pv ) {
+        List<StatementValueObject> proposed = proposedStatements( pv );
+        Map<String, Integer> currentKeys = new HashMap<>();
+        Map<Long, Statement> existingById = new HashMap<>();
+        for ( Statement s : cur.getCharacteristics() ) {
+            currentKeys.merge( statementContentKey( s ), 1, Integer::sum );
+            if ( s.getId() != null ) {
+                existingById.put( s.getId(), s );
+            }
+        }
+        Map<String, Integer> proposedKeys = new HashMap<>();
+        Set<Long> claimedByStatement = new HashSet<>();
+        for ( StatementValueObject ps : proposed ) {
+            proposedKeys.merge( statementContentKey( ps ), 1, Integer::sum );
+            if ( ps.getId() != null ) {
+                claimedByStatement.add( ps.getId() );
+            }
+        }
+        if ( pv.getCharacteristics() != null ) {
+            for ( CharacteristicValueObject pc : pv.getCharacteristics() ) {
+                if ( pc.getId() == null || claimedByStatement.contains( pc.getId() ) ) continue;
+                Statement target = existingById.get( pc.getId() );
+                if ( target == null ) continue;
+                // Mirrors applyCharacteristicSubjectFields: the characteristic projection rewrites the subject
+                // side and cannot express a predicate or an object, so the ones on the row survive.
+                proposedKeys.merge( statementContentKey( pc.getCategory(), pc.getCategoryUri(),
+                        pc.getValue(), pc.getValueUri(),
+                        target.getPredicate(), target.getPredicateUri(),
+                        target.getObject(), target.getObjectUri(),
+                        target.getSecondPredicate(), target.getSecondPredicateUri(),
+                        target.getSecondObject(), target.getSecondObjectUri() ), 1, Integer::sum );
+            }
+        }
+        return !currentKeys.equals( proposedKeys );
+    }
+
+    /**
+     * Whether a proposed factor value actually moves the baseline flag.
+     * <p>
+     * 🛑 {@code null} and {@code FALSE} both mean "not the baseline", and the stored flag is null on most
+     * values that have never been one. Comparing them with {@code Objects.equals} makes them differ, so a
+     * client that sends {@code isBaseline: false} — which is what any checkbox-backed UI sends for every value
+     * it renders — marked EVERY value of the factor as edited and wrote false over null on each.
+     * <p>
+     * Measured on GSE7866 (Paul, 2026-09-05): renaming one factor, touching no values, reported
+     * "factor values +0 / -0 / ~2" in the audit note and updated both rows. The factor has exactly two values
+     * and both were stored null.
+     * <p>
+     * {@code null} on the proposal still means "no change" and returns false, unchanged.
+     */
+    private static boolean baselineChanged( FactorValueBasicValueObject pv, FactorValue cur ) {
+        return pv.getBaseline() != null
+                && pv.getBaseline() != Boolean.TRUE.equals( cur.getIsBaseline() );
     }
 
     private void updateFactorMetadata( ExperimentalFactor ef, ExperimentalDesignValueObject.ExperimentalFactorEntry pf ) {
@@ -1424,6 +1544,25 @@ public class ExpressionExperimentServiceImpl
             ef.getCategory().setValue( pf.getCategory().getValue() );
             ef.getCategory().setValueUri( pf.getCategory().getValueUri() );
         }
+        // Baseline-relevance hint: null = "no change", like everything else here, but an EMPTY string is an
+        // explicit clear. Evidence below deliberately has no clear because it is an append-only justification;
+        // this is a checkbox with a reason box, and a curator who unticks it has to be able to say so.
+        if ( pf.getBaselineRelevance() != null ) {
+            ef.setBaselineRelevance( StringUtils.isBlank( pf.getBaselineRelevance() ) ? null : pf.getBaselineRelevance() );
+        }
+        if ( pf.getBaselineRelevanceReason() != null ) {
+            ef.setBaselineRelevanceReason( StringUtils.isBlank( pf.getBaselineRelevanceReason() ) ? null : pf.getBaselineRelevanceReason() );
+        }
+        // Subset-relevance hint: same null = "no change" / empty = clear convention.
+        if ( pf.getSubsetRelevance() != null ) {
+            ef.setSubsetRelevance( StringUtils.isBlank( pf.getSubsetRelevance() ) ? null : pf.getSubsetRelevance() );
+        }
+        if ( pf.getSubsetRelevanceReason() != null ) {
+            ef.setSubsetRelevanceReason( StringUtils.isBlank( pf.getSubsetRelevanceReason() ) ? null : pf.getSubsetRelevanceReason() );
+        }
+        // Provenance: replacement, like the rest of a gemmaId item. See applyStatementFields for why this stopped
+        // being a delta field on 2026-09-06.
+        ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
         experimentalFactorService.update( ef );
     }
 
@@ -1446,8 +1585,25 @@ public class ExpressionExperimentServiceImpl
                     //noinspection deprecation
                     existing.setValue( pv.getValue() );
                 }
+                // Baseline flag: null = "no change" (same round-trip-safe convention as `value`). Written only
+                // when it actually differs, so echoing the current state touches no row -- see baselineChanged.
+                if ( baselineChanged( pv, existing ) ) {
+                    existing.setIsBaseline( pv.getBaseline() );
+                }
+                // Measurement on a continuous factor value: same null = "no change" convention.
+                if ( pv.getMeasurementObject() != null ) {
+                    applyMeasurementFields( existing, pv.getMeasurementObject() );
+                }
+                // Provenance on the VALUE itself, distinct from the evidence on its statements: replacement, as
+                // everywhere else on a gemmaId item.
+                existing.setSupportingEvidence(
+                        CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
             }
         }
+        // Siblings are deliberately left alone. Clearing them made a second baseline impossible to record at all:
+        // marking B would silently unmark A, so a two-experiment dataset could never carry its two reference
+        // levels. Each factor value's flag now means exactly what the payload said about that value, and nothing
+        // about its neighbours -- `null` still means "no change", so a client that omits the field is unaffected.
     }
 
     private ExperimentalFactor createFactor( ExperimentalDesign ed, ExpressionExperiment ee,
@@ -1468,6 +1624,11 @@ public class ExpressionExperimentServiceImpl
             cat.setValueUri( pf.getCategory().getValueUri() );
             ef.setCategory( cat );
         }
+        ef.setBaselineRelevance( StringUtils.isBlank( pf.getBaselineRelevance() ) ? null : pf.getBaselineRelevance() );
+        ef.setBaselineRelevanceReason( StringUtils.isBlank( pf.getBaselineRelevanceReason() ) ? null : pf.getBaselineRelevanceReason() );
+        ef.setSubsetRelevance( StringUtils.isBlank( pf.getSubsetRelevance() ) ? null : pf.getSubsetRelevance() );
+        ef.setSubsetRelevanceReason( StringUtils.isBlank( pf.getSubsetRelevanceReason() ) ? null : pf.getSubsetRelevanceReason() );
+        ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
         ef = experimentalFactorService.create( ef );
         if ( pf.getValues() != null ) {
             for ( FactorValueBasicValueObject pv : pf.getValues() ) {
@@ -1490,27 +1651,50 @@ public class ExpressionExperimentServiceImpl
             //noinspection deprecation
             fv.setValue( pv.getValue() );
         }
-        if ( pv.getStatements() != null ) {
-            for ( StatementValueObject ps : pv.getStatements() ) {
-                fv.getCharacteristics().add( buildStatement( ps ) );
-            }
+        if ( pv.getBaseline() != null ) {
+            fv.setIsBaseline( pv.getBaseline() );
+        }
+        for ( StatementValueObject ps : proposedStatements( pv ) ) {
+            fv.getCharacteristics().add( buildStatement( ps ) );
         }
         if ( pv.getMeasurementObject() != null ) {
-            ubic.gemma.model.common.measurement.Measurement m = ubic.gemma.model.common.measurement.Measurement.Factory.newInstance();
-            m.setValue( pv.getMeasurementObject().getValue() );
-            if ( pv.getMeasurementObject().getRepresentation() != null ) {
-                m.setRepresentation( ubic.gemma.model.common.quantitationtype.PrimitiveType.valueOf( pv.getMeasurementObject().getRepresentation() ) );
-            }
-            if ( pv.getMeasurementObject().getType() != null ) {
-                m.setType( ubic.gemma.model.common.measurement.MeasurementType.valueOf( pv.getMeasurementObject().getType() ) );
-            }
-            fv.setMeasurement( m );
+            applyMeasurementFields( fv, pv.getMeasurementObject() );
         }
+        fv.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
         return factorValueService.create( fv );
     }
 
+    /**
+     * Write a proposed measurement onto a factor value, creating the {@link Measurement} if the factor value does
+     * not have one yet. Shared by the create and update halves of the design apply so a continuous factor value
+     * carries the same fields however it was reached.
+     * <p>
+     * The unit is resolved through {@link UnitDao} rather than attached transiently: {@code FactorValue.measurement}
+     * cascades on persist but {@code Measurement.unit} does not, so a fresh {@link Unit} would be dropped and the
+     * measurement would land as a bare number. Mirrors {@code EeWriteServiceImpl#findOrCreateUnit}.
+     */
+    private void applyMeasurementFields( FactorValue fv, MeasurementValueObject pm ) {
+        Measurement m = fv.getMeasurement();
+        if ( m == null ) {
+            m = Measurement.Factory.newInstance();
+            fv.setMeasurement( m );
+        }
+        m.setValue( pm.getValue() );
+        if ( pm.getRepresentation() != null ) {
+            m.setRepresentation( PrimitiveType.valueOf( pm.getRepresentation() ) );
+        }
+        if ( pm.getType() != null ) {
+            m.setType( MeasurementType.valueOf( pm.getType() ) );
+        }
+        if ( StringUtils.isNotBlank( pm.getUnit() ) ) {
+            Unit unit = Unit.Factory.newInstance( pm.getUnit() );
+            Unit existing = unitDao.find( unit );
+            m.setUnit( existing != null ? existing : unitDao.create( unit ) );
+        }
+    }
+
     private void updateFactorValueStatements( FactorValue existing, FactorValueBasicValueObject pv ) {
-        List<StatementValueObject> proposedStatements = pv.getStatements() != null ? pv.getStatements() : Collections.emptyList();
+        List<StatementValueObject> proposedStatements = proposedStatements( pv );
         List<CharacteristicValueObject> proposedCharacteristics = pv.getCharacteristics() != null ? pv.getCharacteristics() : Collections.emptyList();
 
         Map<Long, Statement> existingById = existing.getCharacteristics().stream()
@@ -1624,17 +1808,130 @@ public class ExpressionExperimentServiceImpl
                 s.getSecondObject(), s.getSecondObjectUri() );
     }
 
+    /**
+     * The entity half of the comparison, canonicalized to match the VO half.
+     * <p>
+     * {@link StatementValueObject} canonicalizes its term URIs and labels on construction and this
+     * side did not, so every stored statement holding a retired URI compared unequal to the very
+     * document that was rendered from it: a preflight that asserted nothing reported updates, on 9
+     * of 9 datasets probed on 2026-08-29. Category and predicate are raw on both sides — the shim
+     * deliberately leaves them alone — so they stay raw here.
+     */
     private static String statementContentKey( Statement s ) {
         return statementContentKey( s.getCategory(), s.getCategoryUri(),
-                s.getSubject(), s.getSubjectUri(),
+                CharacteristicUtils.canonicalLabel( s.getSubjectUri(), s.getSubject() ),
+                CharacteristicUtils.canonicalUri( s.getSubjectUri() ),
                 s.getPredicate(), s.getPredicateUri(),
-                s.getObject(), s.getObjectUri(),
+                CharacteristicUtils.canonicalLabel( s.getObjectUri(), s.getObject() ),
+                CharacteristicUtils.canonicalUri( s.getObjectUri() ),
                 s.getSecondPredicate(), s.getSecondPredicateUri(),
-                s.getSecondObject(), s.getSecondObjectUri() );
+                CharacteristicUtils.canonicalLabel( s.getSecondObjectUri(), s.getSecondObject() ),
+                CharacteristicUtils.canonicalUri( s.getSecondObjectUri() ) );
     }
 
     private static String statementContentKey( String... fields ) {
-        return Stream.of( fields ).map( f -> f == null ? " " : f ).collect( Collectors.joining( "" ) );
+        return Stream.of( fields ).map( f -> f == null ? "\0" : f ).collect( Collectors.joining( "\u001F" ) );
+    }
+
+    /**
+     * Whether a proposed term differs from the stored one ONLY by the read-time canonicalisation.
+     * <p>
+     * A client edits what the API served it, and the API serves canonical URIs, so a document that
+     * changes nothing still proposes the canonical form of every retired URI it was shown. Writing
+     * that back performs the parked database migration
+     * ({@code scripts/sql/term_uri_migration.sql}) on whichever rows happen to ride along with an
+     * unrelated edit — a migration nobody ran, one row at a time, and no way to tell afterwards
+     * which rows moved. The stored value stays until someone runs the migration deliberately.
+     */
+    private static boolean isOnlyCanonicalization( @Nullable String storedLabel, @Nullable String storedUri,
+            @Nullable String proposedLabel, @Nullable String proposedUri ) {
+        if ( storedUri == null || proposedUri == null || storedUri.equals( proposedUri ) ) {
+            return false;
+        }
+        return proposedUri.equals( CharacteristicUtils.canonicalUri( storedUri ) )
+                && Objects.equals( proposedLabel, CharacteristicUtils.canonicalLabel( storedUri, storedLabel ) );
+    }
+
+    /**
+     * Re-join the halves of a compound statement that the wire format splits apart.
+     * <p>
+     * A statement carrying two objects reaches clients as <em>two</em> entries in {@code statements[]} sharing
+     * one id, the second putting the second clause under the generic {@code predicate} / {@code object} keys.
+     * That flattening is the settled contract (#814, {@code dff752727c}) and is why
+     * {@link StatementValueObject}'s {@code second*} slots are withheld from the API. The write path never
+     * learned the inverse: both entries claimed the same row, {@link #applyStatementFields} ran twice, and each
+     * run wrote the {@code second*} slots as null because neither entry carries them. A GET followed by an
+     * unedited PUT therefore dropped the second clause of every compound statement it touched.
+     * <p>
+     * Rows with no id cannot be two halves of one statement and pass through untouched, in order. A third row
+     * claiming one id is refused by the preflight ({@code STATEMENT_ID_REPEATED}) before anything reaches here,
+     * so the extras dropped below are unreachable from an accepted payload.
+     *
+     * @param proposed statements exactly as the payload carried them
+     * @return one entry per statement, with both object slots filled; never the caller's own instances, since
+     * the same payload is walked again by the preflight
+     */
+    private static List<StatementValueObject> unflattenStatements( List<StatementValueObject> proposed ) {
+        List<StatementValueObject> out = new ArrayList<>( proposed.size() );
+        Map<Long, StatementValueObject> firstById = new HashMap<>();
+        for ( StatementValueObject ps : proposed ) {
+            if ( ps.getId() == null ) {
+                out.add( ps );
+                continue;
+            }
+            StatementValueObject first = firstById.get( ps.getId() );
+            if ( first == null ) {
+                StatementValueObject copy = copyStatementValueObject( ps );
+                firstById.put( ps.getId(), copy );
+                out.add( copy );
+                continue;
+            }
+            if ( first.getSecondPredicate() != null || first.getSecondObject() != null ) {
+                continue;
+            }
+            first.setSecondPredicate( ps.getPredicate() );
+            first.setSecondPredicateUri( ps.getPredicateUri() );
+            first.setSecondObject( ps.getObject() );
+            first.setSecondObjectUri( ps.getObjectUri() );
+            // Provenance rides on whichever half recorded it; the serializer emits it on neither, so this only
+            // matters for a hand-built payload that puts it on the second row.
+            if ( first.getSupportingEvidence() == null ) {
+                first.setSupportingEvidence( ps.getSupportingEvidence() );
+            }
+            if ( first.getEvidenceCode() == null ) {
+                first.setEvidenceCode( ps.getEvidenceCode() );
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The statements a factor-value payload proposes, with split compound statements re-joined.
+     *
+     * @see #unflattenStatements(List)
+     */
+    private static List<StatementValueObject> proposedStatements( FactorValueBasicValueObject pv ) {
+        return pv.getStatements() != null ? unflattenStatements( pv.getStatements() ) : Collections.emptyList();
+    }
+
+    private static StatementValueObject copyStatementValueObject( StatementValueObject ps ) {
+        StatementValueObject copy = new StatementValueObject();
+        copy.setId( ps.getId() );
+        copy.setCategory( ps.getCategory() );
+        copy.setCategoryUri( ps.getCategoryUri() );
+        copy.setSubject( ps.getSubject() );
+        copy.setSubjectUri( ps.getSubjectUri() );
+        copy.setPredicate( ps.getPredicate() );
+        copy.setPredicateUri( ps.getPredicateUri() );
+        copy.setObject( ps.getObject() );
+        copy.setObjectUri( ps.getObjectUri() );
+        copy.setSecondPredicate( ps.getSecondPredicate() );
+        copy.setSecondPredicateUri( ps.getSecondPredicateUri() );
+        copy.setSecondObject( ps.getSecondObject() );
+        copy.setSecondObjectUri( ps.getSecondObjectUri() );
+        copy.setSupportingEvidence( ps.getSupportingEvidence() );
+        copy.setEvidenceCode( ps.getEvidenceCode() );
+        return copy;
     }
 
     private Statement buildStatement( StatementValueObject ps ) {
@@ -1646,210 +1943,99 @@ public class ExpressionExperimentServiceImpl
     private void applyStatementFields( Statement s, StatementValueObject ps ) {
         s.setCategory( ps.getCategory() );
         s.setCategoryUri( ps.getCategoryUri() );
-        s.setSubject( ps.getSubject() );
-        s.setSubjectUri( ps.getSubjectUri() );
+        if ( !isOnlyCanonicalization( s.getSubject(), s.getSubjectUri(), ps.getSubject(), ps.getSubjectUri() ) ) {
+            s.setSubject( ps.getSubject() );
+            s.setSubjectUri( ps.getSubjectUri() );
+        }
         s.setPredicate( ps.getPredicate() );
         s.setPredicateUri( ps.getPredicateUri() );
-        s.setObject( ps.getObject() );
-        s.setObjectUri( ps.getObjectUri() );
+        if ( !isOnlyCanonicalization( s.getObject(), s.getObjectUri(), ps.getObject(), ps.getObjectUri() ) ) {
+            s.setObject( ps.getObject() );
+            s.setObjectUri( ps.getObjectUri() );
+        }
         s.setSecondPredicate( ps.getSecondPredicate() );
         s.setSecondPredicateUri( ps.getSecondPredicateUri() );
-        s.setSecondObject( ps.getSecondObject() );
-        s.setSecondObjectUri( ps.getSecondObjectUri() );
+        if ( !isOnlyCanonicalization( s.getSecondObject(), s.getSecondObjectUri(), ps.getSecondObject(), ps.getSecondObjectUri() ) ) {
+            s.setSecondObject( ps.getSecondObject() );
+            s.setSecondObjectUri( ps.getSecondObjectUri() );
+        }
+        // Evidence follows the section's REPLACEMENT semantics, like every other field here: a gemmaId item is
+        // the row as the client intends it, so evidence the payload does not carry is evidence the client is
+        // saying the row should not have.
+        //
+        // 🛑 This was a delta field until 2026-09-06 and the split is what made both of that night's incidents
+        // possible. The core fields cleared on omission while these two ignored it, so one object carried two
+        // contracts with nothing marking which was which: a delta-shaped item silently blanked a live statement,
+        // and evidence could be set and changed but never removed, because there was no spelling of "I intend
+        // none". Paul ruled full-record replacement, which gives `[]` and an omitted key the same unambiguous
+        // meaning and makes clearing fall out rather than need a new semantic.
+        s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
+        s.setEvidenceCode( parseEvidenceCode( ps.getEvidenceCode() ) );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public ExperimentalDesignValueObject getExperimentalDesignValueObject( ExpressionExperiment ee ) {
-        ee = expressionExperimentDao.reload( ee );
-        ExperimentalDesign ed = ee.getExperimentalDesign();
-        if ( ed == null ) {
+    /**
+     * Resolve a {@link GOEvidenceCode} name, case-insensitively. The REST layer validates first and answers a
+     * 400; this is the guard for a direct service caller, and it names the offending value rather than letting
+     * {@code valueOf}'s bare message surface.
+     */
+    /**
+     * Parse an evidence code, or {@code null} for absent.
+     * <p>
+     * Null-tolerant because evidence became a REPLACEMENT field on 2026-09-06: the callers no longer guard on
+     * non-null, since an absent code has to reach the setter to clear a stored one. Returning null keeps
+     * "clear it" and "unknown code" distinct — the latter still throws.
+     */
+    @Nullable
+    private static GOEvidenceCode parseEvidenceCode( @Nullable String name ) {
+        if ( name == null || StringUtils.isBlank( name ) ) {
+            // Blank is the DELIBERATE clear. The field is a String, so an absent key and an explicit null are the
+            // same value to Jackson and cannot carry intent; "" can, and the REST layer refuses a bare omission
+            // on a row that has a code so the two are never confused.
             return null;
         }
-        // initialize the bits the VO ctor will touch
-        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
-            Hibernate.initialize( ef.getFactorValues() );
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                Hibernate.initialize( fv.getCharacteristics() );
-                if ( fv.getMeasurement() != null ) {
-                    Hibernate.initialize( fv.getMeasurement() );
-                }
-            }
+        try {
+            return GOEvidenceCode.valueOf( name.trim().toUpperCase( Locale.ROOT ) );
+        } catch ( IllegalArgumentException e ) {
+            throw new IllegalArgumentException( "Unknown evidence code '" + name
+                    + "'; expected a GOEvidenceCode name (IC, IEA, IIA, TAS, …).", e );
         }
-        Hibernate.initialize( ee.getBioAssays() );
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
-            if ( bm != null ) {
-                Thaws.thawBioMaterial( bm );
-            }
-        }
-        return new ExperimentalDesignValueObject( ed, ee.getBioAssays() );
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public ExperimentalDesignValueObject getExperimentalDesignValueObject( ExpressionExperiment ee ) {
+        return readService.getExperimentalDesignValueObject( ee );
+    }
+
+    @Override
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment ) {
-        Set<AnnotationValueObject> annotations = new LinkedHashSet<>();
-        Set<String> seenTerms = new HashSet<>();
-
-        expressionExperimentDao.getExperimentAnnotations( expressionExperiment, false ).stream()
-                .filter( this::filterExperimentAnnotations )
-                .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
-
-        expressionExperimentDao.getExperimentSubSetAnnotations( expressionExperiment ).stream()
-                .filter( this::filterSubSetAnnotations )
-                .map( c -> new AnnotationValueObject( c, ExpressionExperimentSubSet.class ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
-
-        String[] ignoredPredicates = new String[] {
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // duration
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
-        };
-        expressionExperimentDao.getFactorValueAnnotations( expressionExperiment ).stream()
-                .filter( this::filterFactorValueAnnotation )
-                .map( c -> new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSubjectUri(), formatStatement( c, ignoredPredicates ), FactorValue.class ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
-
-        expressionExperimentDao.getBioMaterialAnnotations( expressionExperiment, false ).stream()
-                .filter( this::filterBioMaterialAnnotation )
-                .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
-
-        return annotations;
+        return readService.getAnnotations( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment, boolean includeFreeText ) {
+        return readService.getAnnotations( expressionExperiment, includeFreeText );
+    }
+
+    @Override
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee ) {
-        Set<AnnotationValueObject> annotations = new HashSet<>();
-        Set<String> seenTerms = new HashSet<>();
-
-        // inherited from the EE
-        expressionExperimentDao.getExperimentAnnotations( ee.getSourceExperiment(), false ).stream()
-                .filter( this::filterExperimentAnnotations )
-                .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
-
-        // specifically for the subset
-        ee.getCharacteristics().stream()
-                .filter( this::filterSubSetAnnotations )
-                .map( c -> new AnnotationValueObject( c, ExpressionExperimentSubSet.class ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
-
-        String[] ignoredPredicates = new String[] {
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // duration
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
-        };
-        expressionExperimentDao.getFactorValueAnnotations( ee ).stream()
-                .filter( this::filterFactorValueAnnotation )
-                .map( c -> new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSubjectUri(), formatStatement( c, ignoredPredicates ), FactorValue.class ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
-
-        expressionExperimentDao.getBioMaterialAnnotations( ee ).stream()
-                .filter( this::filterBioMaterialAnnotation )
-                .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
-
-        return annotations;
+        return readService.getAnnotations( ee );
     }
 
-    /**
-     * Check if a term is novel and add it to the set of seen terms.
-     */
-    private void addIfNovel( Collection<AnnotationValueObject> annotations, AnnotationValueObject term, Set<String> seenTerms ) {
-        if ( seenTerms.add( StringUtils.lowerCase( StringUtils.normalizeSpace( term.getTermName() ) ) ) ) {
-            annotations.add( term );
-        }
-    }
-
-    private boolean filterExperimentAnnotations( Characteristic c ) {
-        return filterAnnotation( c );
-    }
-
-    private boolean filterSubSetAnnotations( Characteristic c ) {
-        return filterAnnotation( c );
-    }
-
-    /**
-     * Filter factor value annotations to be included as experiment tags.
-     * <p>
-     * FIXME filtering here is going to have to be more elaborate for this to be useful.
-     * URIs checked for validity Aug 2024
-     */
-    private boolean filterFactorValueAnnotation( Statement c ) {
-        return filterAnnotation( c )
-                // ignore baseline conditions
-                && !BaselineSelection.isBaselineCondition( c ) && !hasCategory( c, Categories.BLOCK )
-                // ignore timepoints
-                && !"http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() )
-                // DE_include/exclude
-                && !"http://gemma.msl.ubc.ca/ont/TGEMO_00013".equals( c.getSubjectUri() )
-                && !"http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() );// ignore baseline conditions
-// ignore batch factors
-// ignore timepoints
-// DE_include/exclude
-    }
-
-    /**
-     * Filter sample annotations to be included as experiment tags.
-     * <p>
-     * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
-     * biomaterials? (non-redundant with tags)
-     */
-    private boolean filterBioMaterialAnnotation( Characteristic c ) {
-        return filterAnnotation( c )
-                && !"MaterialType".equalsIgnoreCase( c.getCategory() )
-                && !"molecular entity".equalsIgnoreCase( c.getCategory() )
-                && !"LabelCompound".equalsIgnoreCase( c.getCategory() )
-                && !BaselineSelection.isBaselineCondition( c );
-    }
-
-    private boolean filterAnnotation( Characteristic characteristic ) {
-        return filterAnnotation( characteristic.getCategoryUri(), characteristic.getCategory(), characteristic.getValueUri(), characteristic.getValue() );
-    }
-
-    /**
-     * Filter the object of a statement.
-     */
-    private boolean filterStatementObject( Statement statement, boolean first ) {
-        if ( first ) {
-            Assert.notNull( statement.getPredicate() );
-            Assert.notNull( statement.getObject() );
-            return filterStatementObject( statement.getCategoryUri(), statement.getCategory(), statement.getSubjectUri(), statement.getSubject(), statement.getPredicateUri(), statement.getPredicate(), statement.getObjectUri(), statement.getObject() );
-        } else {
-            Assert.notNull( statement.getSecondPredicate() );
-            Assert.notNull( statement.getSecondObject() );
-            return filterStatementObject( statement.getCategoryUri(), statement.getCategory(), statement.getSubjectUri(), statement.getSubject(), statement.getSecondPredicateUri(), statement.getSecondPredicate(), statement.getSecondObjectUri(), statement.getSecondObject() );
-        }
-    }
-
-    private boolean filterStatementObject( @Nullable String categoryUri, @Nullable String category, @Nullable String subjectUri, String subject, @Nullable String predicateUri, String predicate, @Nullable String objectUri, String object ) {
-        return filterAnnotation( categoryUri, category, objectUri, object );
-    }
-
-    /**
-     * Minimal requirements for an annotation to be included as an experiment tag.
-     */
-    private boolean filterAnnotation( @Nullable String categoryUri, @Nullable String category, @Nullable String valueUri, String value ) {
-        // ignore uncategorized terms
-        return category != null
-                // ignore free-text categories
-                && categoryUri != null // free-text categories
-                // ignore free-text terms
-                && valueUri != null;
+    @Override
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee, boolean includeFreeText ) {
+        return readService.getAnnotations( ee, includeFreeText );
     }
 
     @Override
     public Filters getEnhancedFilters( Filters f, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
-        // do the inference first, some of the terms that we *duplicate* for a second property are subject to inference
-        f = filterRewriteService.getFiltersWithInferredAnnotations( f, "ee", mentionedTerms, inferredTerms, timeout, timeUnit );
-        f = filterRewriteService.getFiltersWithAdditionalProperties( f );
-        return f;
+        return readService.getEnhancedFilters( f, mentionedTerms, inferredTerms, timeout, timeUnit );
     }
 
+    /**
+     * Augments the base service description with a note about ontology inference. Remains
+     * on the facade because it overrides the {@code AbstractFilteringVoEnabledService}
+     * hierarchy's contract; pure delegation here would break the inheritance chain.
+     */
     @Override
     public String getFilterablePropertyDescription( String property ) {
         String desc = super.getFilterablePropertyDescription( property );
@@ -1860,262 +2046,88 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssay, Long> getNumberOfDesignElementsPerSample( ExpressionExperiment expressionExperiment ) {
-        return expressionExperimentDao.getNumberOfDesignElementsPerSample( expressionExperiment );
+        return readService.getNumberOfDesignElementsPerSample( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithCharacteristics( Long id ) {
-        ExpressionExperiment ee = expressionExperimentDao.load( id );
-        if ( ee != null ) {
-            Hibernate.initialize( ee.getCharacteristics() );
-        }
-        return ee;
+        return readService.loadWithCharacteristics( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
-        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
-        this.expressionExperimentDao.thawLite( ee );
-        return ee;
+        return readService.loadAndThawLiteOrFail( id, exceptionSupplier, message );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
-        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
-        this.expressionExperimentDao.thawLite( ee );
-        return ee;
+        return readService.loadAndThawLiteOrFail( id, exceptionSupplier );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiterOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
-        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
-        this.expressionExperimentDao.thawLiter( ee );
-        return ee;
+        return readService.loadAndThawLiterOrFail( id, exceptionSupplier );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThaw( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            this.expressionExperimentDao.thaw( ee );
-        }
-        return ee;
+        return readService.loadAndThaw( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThawLite( Long id ) {
-        ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            this.expressionExperimentDao.thawLite( ee );
-        }
-        return ee;
+        return readService.loadAndThawLite( id );
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * FIXME: There seems to be a bug in Hibernate where collections are not evicted, so newly added entities might
-     *        not appear as a result of using the {@link CacheMode#REFRESH} mode. To workaround this, we explicitly
-     *        evict collections that are cached prior to thawing their contents.
-     */
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id ) {
-        ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
-        if ( ee != null ) {
-            this.expressionExperimentDao.evictCharacteristicsCache( ee );
-            this.expressionExperimentDao.evictBioAssaysCache( ee );
-            this.expressionExperimentDao.evictQuantitationTypesCache( ee );
-            this.expressionExperimentDao.evictOtherPartsCache( ee );
-            this.expressionExperimentDao.thawLite( ee );
-        }
-        return ee;
+        return readService.loadAndThawLiteWithRefreshCacheMode( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
-        ExpressionExperiment ee = loadOrFail( id, exceptionSupplier );
-        this.expressionExperimentDao.thaw( ee );
-        return ee;
+        return readService.loadAndThawOrFail( id, exceptionSupplier );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Long> loadIdsWithCache( @Nullable Filters filters, @Nullable Sort sort ) {
-        return expressionExperimentDao.loadIdsWithCache( filters, sort );
+        return readService.loadIdsWithCache( filters, sort );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long countWithCache( @Nullable Filters filters, @Nullable Set<Long> extraIds ) {
-        if ( extraIds != null ) {
-            List<Long> eeIds = loadIdsWithCache( filters, null );
-            eeIds.retainAll( extraIds );
-            return eeIds.size();
-        }
-        return expressionExperimentDao.countWithCache( filters );
+        return readService.countWithCache( filters, extraIds );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Slice<ExpressionExperimentValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        return expressionExperimentDao.loadValueObjectsWithCache( filters, sort, offset, limit );
+        return readService.loadValueObjectsWithCache( filters, sort, offset, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Characteristic, Long> getCategoriesUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, int maxResults ) {
-        Collection<Long> eeIds;
-        if ( filters == null || filters.isEmpty() ) {
-            eeIds = extraIds;
-        } else {
-            eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
-            if ( extraIds != null ) {
-                eeIds.retainAll( extraIds );
-            }
-        }
-        if ( excludedTermUris != null ) {
-            try {
-                excludedTermUris = inferTermsUris( excludedTermUris, 30000 );
-            } catch ( TimeoutException e ) {
-                log.warn( "Inference for excluded terms too too much time to compute, will only use the original set of terms." );
-            }
-        }
-        return expressionExperimentDao.getCategoriesUsageFrequency( eeIds, excludedCategoryUris, excludedTermUris, retainedTermUris, maxResults );
+        return readService.getCategoriesUsageFrequency( filters, extraIds, excludedCategoryUris, excludedTermUris, retainedTermUris, maxResults );
     }
 
-    /**
-     * If the term cannot be resolved via {@link OntologyService#getTerm(String, long, TimeUnit)}, an attempt is done to
-     * resolve its category and assign it as its parent. This handles free-text terms that lack a value URI.
-     */
     @Override
-    @Transactional(readOnly = true)
     public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults, boolean includePredicates, boolean includeObjects, long timeout, TimeUnit timeUnit ) throws TimeoutException {
-        StopWatch timer = StopWatch.createStarted();
-        if ( excludedTermUris != null ) {
-            try {
-                excludedTermUris = inferTermsUris( excludedTermUris, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ) );
-            } catch ( TimeoutException e ) {
-                log.warn( "Inference for excluded terms too too much time to compute, will only use the original set of terms." );
-            }
-        }
-
-        Collection<Long> eeIds;
-        if ( filters == null || filters.isEmpty() ) {
-            eeIds = extraIds;
-        } else {
-            eeIds = expressionExperimentDao.loadIdsWithCache( filters, null );
-            if ( extraIds != null ) {
-                eeIds.retainAll( extraIds );
-            }
-        }
-
-        Map<Characteristic, Long> result = expressionExperimentDao.getAnnotationsUsageFrequency( eeIds, null, maxResults, minFrequency, category, excludedCategoryUris, excludedTermUris, retainedTermUris, includePredicates, includeObjects );
-
-        List<CharacteristicWithUsageStatisticsAndOntologyTerm> resultWithParents = new ArrayList<>( result.size() );
-
-        // gather all the values and categories
-        Set<String> uris = result.keySet().stream()
-                .flatMap( c -> Stream.of( c.getValueUri(), c.getCategoryUri() ) )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toSet() );
-        Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ).stream()
-                .filter( t -> t.getUri() != null ) // should never occur, but better be safe than sorry
-                .collect( Collectors.groupingBy( OntologyTerm::getUri, Collectors.toSet() ) );
-
-        for ( Map.Entry<Characteristic, Long> entry : result.entrySet() ) {
-            Characteristic c = entry.getKey();
-            OntologyTerm term;
-            if ( c.getValueUri() != null && termByUri.containsKey( c.getValueUri() ) ) {
-                // TODO: handle more than one term per URI
-                term = termByUri.get( c.getValueUri() ).iterator().next();
-            } else if ( c.getCategoryUri() != null && termByUri.containsKey( c.getCategoryUri() ) ) {
-                term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), termByUri.get( c.getCategoryUri() ).iterator().next() );
-            } else {
-                // create an uncategorized term
-                term = new OntologyTermSimpleWithCategory( c.getValueUri(), c.getValue(), null );
-            }
-            resultWithParents.add( new CharacteristicWithUsageStatisticsAndOntologyTerm( entry.getKey(), entry.getValue(), term ) );
-        }
-
-        // sort in descending order
-        resultWithParents.sort( Comparator.comparing( CharacteristicWithUsageStatisticsAndOntologyTerm::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) );
-
-        return resultWithParents;
-    }
-
-    /**
-     * Infer all the implied terms from the given collection of term URIs.
-     */
-    private Set<String> inferTermsUris( Collection<String> termUris, long timeoutMs ) throws TimeoutException {
-        StopWatch timer = StopWatch.createStarted();
-        Set<String> excludedTermUris = new HashSet<>( termUris );
-        // null is a special indicator for free-text terms or categories
-        boolean removedFreeText = excludedTermUris.remove( FREE_TEXT );
-        boolean removedUncategorized = excludedTermUris.remove( UNCATEGORIZED );
-        // expand exclusions with implied terms via subclass relation
-        Set<OntologyTerm> excludedTerms = ontologyService.getTerms( excludedTermUris, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
-        // exclude terms using the subClass relation
-        Set<OntologyTerm> impliedTerms = ontologyService.getChildren( excludedTerms, false, false, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
-        for ( OntologyTerm t : impliedTerms ) {
-            excludedTermUris.add( t.getUri() );
-        }
-        if ( removedFreeText ) {
-            excludedTermUris.add( FREE_TEXT );
-        }
-        if ( removedUncategorized ) {
-            excludedTermUris.add( UNCATEGORIZED );
-        }
-        return excludedTermUris;
-    }
-
-    /**
-     * Extension of {@link OntologyTermSimple} that adds a category term as unique parent.
-     */
-    private static class OntologyTermSimpleWithCategory extends OntologyTermSimple {
-
-        @Nullable
-        private final OntologyTerm categoryTerm;
-
-        public OntologyTermSimpleWithCategory( @Nullable String uri, String term, @Nullable OntologyTerm categoryTerm ) {
-            //noinspection DataFlowIssue
-            super( uri, term );
-            this.categoryTerm = categoryTerm;
-        }
-
-        @Override
-        public Collection<OntologyTerm> getParents( boolean direct, boolean includeAdditionalProperties, boolean keepObsoletes ) {
-            if ( categoryTerm == null ) {
-                return Collections.emptySet();
-            }
-            if ( direct ) {
-                return Collections.singleton( categoryTerm );
-            } else {
-                // combine the direct parents + all the parents from the parents
-                return Stream.concat( Stream.of( categoryTerm ), Stream.of( categoryTerm ).flatMap( t -> t.getParents( false, includeAdditionalProperties, keepObsoletes ).stream() ) )
-                        .collect( Collectors.toSet() );
-            }
-        }
-
-        @Override
-        public boolean isRoot() {
-            return categoryTerm == null;
-        }
+        return readService.getAnnotationsUsageFrequency( filters, extraIds, category, excludedCategoryUris, excludedTermUris, minFrequency, retainedTermUris, maxResults, includePredicates, includeObjects, timeout, timeUnit );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> getArrayDesignsUsed( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExpressionExperiment, Collection<ArrayDesign>> getArrayDesignsUsedByExperiment( Collection<ExpressionExperiment> expressionExperiments ) {
+        if ( expressionExperiments == null || expressionExperiments.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        return this.expressionExperimentDao.getArrayDesignsUsedByExperiment( expressionExperiments );
     }
 
     @Override
@@ -2142,77 +2154,18 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds ) {
-        if ( filters == null || filters.isEmpty() ) {
-            if ( extraIds != null ) {
-                return expressionExperimentDao.getTechnologyTypeUsageFrequency( extraIds );
-            } else {
-                return expressionExperimentDao.getTechnologyTypeUsageFrequency();
-            }
-        } else {
-            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
-            if ( extraIds != null ) {
-                ids.retainAll( extraIds );
-            }
-            return expressionExperimentDao.getTechnologyTypeUsageFrequency( ids );
-        }
+        return readService.getTechnologyTypeUsageFrequency( filters, extraIds );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<ArrayDesign, Long> getArrayDesignUsedOrOriginalPlatformUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, int maxResults ) {
-        Map<ArrayDesign, Long> result;
-        if ( filters == null || filters.isEmpty() ) {
-            if ( extraIds != null ) {
-                result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( extraIds, maxResults ) );
-                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( extraIds, maxResults ).entrySet() ) {
-                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
-                }
-            } else {
-                result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( maxResults ) );
-                for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( maxResults ).entrySet() ) {
-                    result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
-                }
-            }
-        } else {
-            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
-            if ( extraIds != null ) {
-                ids.retainAll( extraIds );
-            }
-            result = new HashMap<>( expressionExperimentDao.getArrayDesignsUsageFrequency( ids, maxResults ) );
-            for ( Map.Entry<ArrayDesign, Long> e : expressionExperimentDao.getOriginalPlatformsUsageFrequency( ids, maxResults ).entrySet() ) {
-                result.compute( e.getKey(), ( k, v ) -> ( v != null ? v : 0L ) + e.getValue() );
-            }
-        }
-        // retain top results
-        // this happens when original platforms are mixed in
-        if ( maxResults > 0 && result.size() > maxResults ) {
-            return result.entrySet()
-                    .stream()
-                    .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
-                    .limit( maxResults )
-                    .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
-        }
-        return result;
+        return readService.getArrayDesignUsedOrOriginalPlatformUsageFrequency( filters, extraIds, maxResults );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Taxon, Long> getTaxaUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds ) {
-        if ( filters == null || filters.isEmpty() ) {
-            if ( extraIds != null ) {
-                return expressionExperimentDao.getPerTaxonCount( extraIds );
-            } else {
-                return expressionExperimentDao.getPerTaxonCount();
-            }
-        } else {
-            List<Long> ids = this.expressionExperimentDao.loadIdsWithCache( filters, null );
-            if ( extraIds != null ) {
-                ids.retainAll( extraIds );
-            }
-            return expressionExperimentDao.getPerTaxonCount( ids );
-        }
+        return readService.getTaxaUsageFrequency( filters, extraIds );
     }
 
     @Override
@@ -2279,69 +2232,58 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.getBioMaterialCount( expressionExperiment );
+        return readService.getBioMaterialCount( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long getRawDataVectorCount( final ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getRawDataVectorCount( ee );
+        return readService.getRawDataVectorCount( ee );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsWithOutliers() {
-        return this.expressionExperimentDao.getExperimentsWithOutliers();
+        return readService.getExperimentsWithOutliers();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, Date> getLastArrayDesignUpdate( final Collection<ExpressionExperiment> expressionExperiments ) {
-        return this.expressionExperimentDao.getLastArrayDesignUpdate( expressionExperiments );
+        return readService.getLastArrayDesignUpdate( expressionExperiments );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Date getLastArrayDesignUpdate( final ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getLastArrayDesignUpdate( ee );
+        return readService.getLastArrayDesignUpdate( ee );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastLinkAnalysis( final Collection<Long> ids ) {
-        return this.getLastEvent( this.load( ids ), new LinkAnalysisEvent() );
+        return readService.getLastLinkAnalysis( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastMissingValueAnalysis( final Collection<Long> ids ) {
-        return this.getLastEvent( this.load( ids ), new MissingValueAnalysisEvent() );
+        return readService.getLastMissingValueAnalysis( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastProcessedDataUpdate( final Collection<Long> ids ) {
-        return this.getLastEvent( this.load( ids ), new ProcessedVectorComputationEvent() );
+        return readService.getLastProcessedDataUpdate( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Taxon, Long> getPerTaxonCount() {
-        return this.expressionExperimentDao.getPerTaxonCount();
+        return readService.getPerTaxonCount();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, Long> getPopulatedFactorCounts( final Collection<Long> ids ) {
-        return this.expressionExperimentDao.getPopulatedFactorCounts( ids );
+        return readService.getPopulatedFactorCounts( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, Long> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
-        return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
+        return readService.getPopulatedFactorCountsExcludeBatch( ids );
     }
 
     @Override
@@ -2360,6 +2302,18 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public boolean hasProcessedExpressionData( ExpressionExperiment ee ) {
         return expressionExperimentDao.hasProcessedExpressionData( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasSourceMetadata( ExpressionExperiment ee ) {
+        return expressionExperimentDao.hasSourceMetadata( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getSourceMetadata( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getSourceMetadata( ee );
     }
 
     @Override
@@ -2403,139 +2357,69 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             final Collection<ExpressionExperiment> expressionExperiments ) {
-        return this.expressionExperimentDao.getSampleRemovalEvents( expressionExperiments );
+        return readService.getSampleRemovalEvents( expressionExperiments );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.getSubSets( expressionExperiment );
+        return subSetReadService.getSubSetsWithBioAssays( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> getSubSetsWithBioAssays( Collection<ExpressionExperiment> expressionExperiments ) {
+        return subSetReadService.getSubSetsWithBioAssays( expressionExperiments );
+    }
+
+    @Override
     public Collection<ExpressionExperimentSubSet> getSubSetsWithCharacteristics( ExpressionExperiment ee ) {
-        Collection<ExpressionExperimentSubSet> result = this.expressionExperimentDao.getSubSets( ee );
-        for ( ExpressionExperimentSubSet subSet : result ) {
-            Hibernate.initialize( subSet.getCharacteristics() );
-        }
-        return result;
+        return subSetReadService.getSubSetsWithCharacteristics( ee );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment ) {
-        return expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
+        return subSetReadService.getSubSetsByDimension( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimensionWithBioAssays( ExpressionExperiment expressionExperiment ) {
-        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> result = expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
-        for ( Set<ExpressionExperimentSubSet> subSets : result.values() ) {
-            for ( ExpressionExperimentSubSet s : subSets ) {
-                for ( BioAssay ba : s.getBioAssays() ) {
-                    Hibernate.initialize( ba.getSampleUsed() );
-                    Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
-                }
-            }
-        }
-        return result;
+        return subSetReadService.getSubSetsByDimensionWithBioAssays( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
-        return expressionExperimentDao.getSubSets( expressionExperiment, dimension );
+        return subSetReadService.getSubSets( expressionExperiment, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
-        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentDao.getSubSets( expressionExperiment, dimension );
-        for ( ExpressionExperimentSubSet s : subSets ) {
-            for ( BioAssay ba : s.getSourceExperiment().getBioAssays() ) {
-                Hibernate.initialize( ba.getSampleUsed() );
-                Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
-            }
-            for ( BioAssay ba : s.getBioAssays() ) {
-                Hibernate.initialize( ba.getSampleUsed() );
-                Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
-            }
-        }
-        return subSets;
+        return subSetReadService.getSubSetsWithBioAssays( expressionExperiment, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
-        return getSubSetsByFactorValueInternal( getSubSetsWithBioAssays( expressionExperiment, dimension ) );
+        return subSetReadService.getSubSetsByFactorValue( expressionExperiment, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
-        // TODO: could this be made more efficient for a single factor?
-        return getSubSetsByFactorValueInternal( getSubSetsWithBioAssays( expressionExperiment, dimension ) )
-                .get( experimentalFactor );
+        return subSetReadService.getSubSetsByFactorValue( expressionExperiment, experimentalFactor, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValueWithCharacteristicsAndBioAssays( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
-        Map<FactorValue, ExpressionExperimentSubSet> result;
-        result = getSubSetsByFactorValue( expressionExperiment, experimentalFactor, dimension );
-        if ( result != null ) {
-            for ( ExpressionExperimentSubSet subSet : result.values() ) {
-                Hibernate.initialize( subSet.getCharacteristics() );
-                for ( BioAssay ba : subSet.getBioAssays() ) {
-                    Thaws.thawBioAssay( ba );
-                }
-            }
-        }
-        return result;
-    }
-
-    private Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValueInternal( Collection<ExpressionExperimentSubSet> subSets ) {
-        Map<ExperimentalFactor, Map<FactorValue, Set<ExpressionExperimentSubSet>>> result = new HashMap<>();
-        for ( ExpressionExperimentSubSet subSet : subSets ) {
-            for ( BioAssay ba : subSet.getBioAssays() ) {
-                for ( FactorValue fv : ba.getSampleUsed().getAllFactorValues() ) {
-                    result.computeIfAbsent( fv.getExperimentalFactor(), k -> new HashMap<>() )
-                            .computeIfAbsent( fv, k -> new HashSet<>() )
-                            .add( subSet );
-                }
-            }
-        }
-        return result.entrySet().stream()
-                // only retain FVs that fully separates subsets
-                // if there are as many FVs than subsets, we know there is exactly one subset per FV
-                .filter( e -> e.getValue().size() == subSets.size() )
-                .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().entrySet().stream().collect( Collectors.toMap( Map.Entry::getKey, e2 -> e2.getValue().iterator().next() ) ) ) );
+        return subSetReadService.getSubSetsByFactorValueWithCharacteristicsAndBioAssays( expressionExperiment, experimentalFactor, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperimentSubSet getSubSetByIdWithCharacteristics( ExpressionExperiment ee, Long subSetId ) {
-        ExpressionExperimentSubSet result = expressionExperimentDao.getSubSetById( ee, subSetId );
-        if ( result != null ) {
-            Hibernate.initialize( result.getCharacteristics() );
-        }
-        return result;
+        return subSetReadService.getSubSetByIdWithCharacteristics( ee, subSetId );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperimentSubSet getSubSetByIdWithCharacteristicsAndBioAssays( ExpressionExperiment ee, Long subSetId ) {
-        ExpressionExperimentSubSet result = expressionExperimentDao.getSubSetById( ee, subSetId );
-        if ( result != null ) {
-            result.getSourceExperiment().getBioAssays().forEach( Thaws::thawBioAssay );
-            result.getBioAssays().forEach( Thaws::thawBioAssay );
-        }
-        return result;
+        return subSetReadService.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
     }
 
     @Override
@@ -2545,14 +2429,20 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Taxon getTaxon( final ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getTaxon( ee );
+        return readService.getTaxon( ee );
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean isSingleCell( ExpressionExperiment ee ) {
+        // Reads the lazy characteristics collection and then hits the DAO, so it needs a session of its
+        // own when called from outside one (the REST layer does). isRNASeq below is already annotated.
+        // 🛑 @Transactional alone is NOT enough: a caller outside a transaction hands us a DETACHED
+        // instance from a transaction that has already closed, and opening a new one does not re-attach
+        // it — ee.getCharacteristics() still throws LazyInitializationException. Re-attach explicitly.
+        // Caught live on GET /datasets/3937/sample-correlation, 2026-08-31.
+        ee = ensureInSession( ee );
         return ( ee.getCharacteristics().stream()
                 .anyMatch( c -> hasCategory( c, Categories.ASSAY ) && hasAnyValue( c,
                         Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY,
@@ -2620,132 +2510,1044 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
-        return this.expressionExperimentDao.loadDetailsValueObjects( ids, taxon, sort, offset, limit );
+        return readService.loadDetailsValueObjects( ids, taxon, sort, offset, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsWithCache( Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit ) {
-        return this.expressionExperimentDao.loadDetailsValueObjectsByIdsWithCache( ids, taxon, sort, offset, limit );
+        return readService.loadDetailsValueObjectsWithCache( ids, taxon, sort, offset, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIds( Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadDetailsValueObjectsByIds( ids );
+        return readService.loadDetailsValueObjectsByIds( ids );
     }
 
-    @Transactional(readOnly = true)
+    @Override
     public List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids ) {
-        return this.expressionExperimentDao.loadDetailsValueObjectsByIdsWithCache( ids );
+        return readService.loadDetailsValueObjectsByIdsWithCache( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        return expressionExperimentDao.loadBlacklistedValueObjects( filters, sort, offset, limit );
+        return readService.loadBlacklistedValueObjects( filters, sort, offset, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public CursorPage<ExpressionExperimentValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        return readService.loadBlacklistedValueObjectsByCursor( filters, sort, cursor, limit );
+    }
+
+    @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
-        return this.expressionExperimentDao.loadLackingFactors();
+        return readService.loadLackingFactors();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadLackingTags() {
-        return this.expressionExperimentDao.loadLackingTags();
+        return readService.loadLackingTags();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsByIdsWithRelationsAndCache( List<Long> ids ) {
-        List<ExpressionExperiment> results = expressionExperimentDao.loadWithRelationsAndCache( ids );
-        Map<Long, Integer> id2position = ListUtils.indexOfElements( ids );
-        return expressionExperimentDao.loadValueObjects( results ).stream()
-                .sorted( Comparator.comparing( vo -> id2position.get( vo.getId() ) ) )
-                .collect( Collectors.toList() );
+        return readService.loadValueObjectsByIdsWithRelationsAndCache( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsByIds( final List<Long> ids,
             boolean maintainOrder ) {
-        List<ExpressionExperimentValueObject> results = this.expressionExperimentDao.loadValueObjectsByIds( ids );
+        return readService.loadValueObjectsByIds( ids, maintainOrder );
+    }
 
-        // sort results according to ids
-        if ( maintainOrder ) {
-            Map<Long, Integer> id2position = ListUtils.indexOfElements( ids );
-            return results.stream()
-                    .sorted( Comparator.comparing( vo -> id2position.get( vo.getId() ) ) )
-                    .collect( Collectors.toList() );
-        }
+    @Override
+    public void addCharacteristic( ExpressionExperiment ee, Characteristic vc ) {
+        writeService.addCharacteristic( ee, vc );
+    }
 
-        return results;
+    @Override
+    public void removeCharacteristics( ExpressionExperiment ee, Collection<Characteristic> characteristicsToRemove ) {
+        writeService.removeCharacteristics( ee, characteristicsToRemove );
     }
 
     /**
-     * Will add the characteristic to the expression experiment and persist the changes.
-     *
-     * @param ee the experiment to add the characteristics to.
-     * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * Idempotent set-replace for an EE's direct characteristic set. See the interface javadoc.
+     * <p>
+     * Implementation: diff current vs desired by (category, categoryUri, value, valueUri) using
+     * {@link ubic.gemma.model.common.description.CharacteristicUtils#equals(String, String, String, String)};
+     * preserved characteristics retain their identity (no churn for unchanged tags), drops go through
+     * {@code characteristicService.remove}, adds get an {@code IC} evidence code by default. Emits a
+     * single {@link ManualAnnotationEvent} when the desired set differs from the current set.
      */
     @Override
     @Transactional
-    public void addCharacteristic( ExpressionExperiment ee, Characteristic vc ) {
-        Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
-        Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
+    @AuditedConditional( value = ManualAnnotationEvent.class,
+            when = "#result > 0",
+            messageSpel = "'Replaced annotations via API (' + #result + ' change(s))'" )
+    public int updateAnnotations( ExpressionExperiment ee, Collection<Characteristic> desired ) {
+        Assert.notNull( desired, "Desired characteristic set must not be null (use an empty collection to clear)." );
+        for ( Characteristic vc : desired ) {
+            Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Each desired characteristic must have a non-blank category." );
+            Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Each desired characteristic must have a non-blank value." );
+        }
 
         ee = ensureInSession( ee );
 
-        if ( vc.getEvidenceCode() == null ) {
-            log.debug( String.format( "No evidence code set for %s, defaulting to %s.", vc, GOEvidenceCode.IC ) );
-            vc.setEvidenceCode( GOEvidenceCode.IC ); // assume: manually added characteristic
+        // Same normalization as addAnnotation: the desired set is what gets written, so it lands as
+        // statements. Existing rows are left as they are — sameTag matches on content, so a plain
+        // stored tag and a bare desired statement still pair up and neither is churned.
+        desired = desired.stream().map( CharacteristicUtils::asStatement ).collect( Collectors.toList() );
+
+        Collection<Characteristic> current = ee.getCharacteristics();
+        List<Characteristic> toRemove = new ArrayList<>();
+        List<Characteristic> toAdd = new ArrayList<>();
+
+        // anything in current not represented in desired -> remove
+        for ( Characteristic c : current ) {
+            boolean keep = false;
+            for ( Characteristic d : desired ) {
+                if ( sameTag( c, d ) ) {
+                    keep = true;
+                    break;
+                }
+            }
+            if ( !keep ) {
+                toRemove.add( c );
+            }
+        }
+        // anything in desired not already present -> add; a matched-but-present tag that arrives with
+        // new supporting evidence -> refresh the evidence in place (identity by sameTag is unchanged).
+        int evidenceUpdates = 0;
+        for ( Characteristic d : desired ) {
+            Characteristic match = null;
+            for ( Characteristic c : current ) {
+                if ( sameTag( c, d ) ) {
+                    match = c;
+                    break;
+                }
+            }
+            if ( match == null ) {
+                Characteristic fresh;
+                if ( d instanceof Statement ) {
+                    // Preserve the Statement discriminator + predicate / object pair on add. Plain
+                    // Characteristic.Factory.newInstance() would silently downgrade the row to a
+                    // non-Statement Characteristic and drop the S-P-O semantics.
+                    Statement ds = ( Statement ) d;
+                    Statement fs = Statement.Factory.newInstance();
+                    fs.setCategory( ds.getCategory() );
+                    fs.setCategoryUri( ds.getCategoryUri() );
+                    fs.setSubject( ds.getSubject() );
+                    if ( ds.getSubjectUri() != null ) {
+                        fs.setSubjectUri( ds.getSubjectUri() );
+                    }
+                    fs.setPredicate( ds.getPredicate() );
+                    fs.setPredicateUri( ds.getPredicateUri() );
+                    fs.setObject( ds.getObject() );
+                    fs.setObjectUri( ds.getObjectUri() );
+                    fs.setSecondPredicate( ds.getSecondPredicate() );
+                    fs.setSecondPredicateUri( ds.getSecondPredicateUri() );
+                    fs.setSecondObject( ds.getSecondObject() );
+                    fs.setSecondObjectUri( ds.getSecondObjectUri() );
+                    fresh = fs;
+                } else {
+                    fresh = Characteristic.Factory.newInstance();
+                    fresh.setCategory( d.getCategory() );
+                    fresh.setCategoryUri( d.getCategoryUri() );
+                    fresh.setValue( d.getValue() );
+                    fresh.setValueUri( d.getValueUri() );
+                }
+                fresh.setEvidenceCode( d.getEvidenceCode() != null ? d.getEvidenceCode() : GOEvidenceCode.IC );
+                fresh.setSupportingEvidence( d.getSupportingEvidence() );
+                toAdd.add( fresh );
+            } else if ( d.getSupportingEvidence() != null
+                    && !Objects.equals( d.getSupportingEvidence(), match.getSupportingEvidence() ) ) {
+                // Refresh provenance on an existing tag without disturbing its identity. A desired tag
+                // arriving without evidence (null) leaves any stored evidence intact.
+                match.setSupportingEvidence( d.getSupportingEvidence() );
+                evidenceUpdates++;
+            }
         }
 
-        ExpressionExperimentServiceImpl.log
-                .info( "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId()
-                        + ") : " + vc );
+        if ( toRemove.isEmpty() && toAdd.isEmpty() && evidenceUpdates == 0 ) {
+            log.debug( "updateAnnotations: no change for " + ee.getShortName() + " (ID=" + ee.getId() + ")" );
+            return 0;
+        }
 
-        ee.getCharacteristics().add( vc );
-        this.update( ee );
+        if ( !toRemove.isEmpty() ) {
+            Assert.isTrue( toRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics to remove must be persistent." );
+            current.removeAll( toRemove );
+        }
+        if ( !toAdd.isEmpty() ) {
+            current.addAll( toAdd );
+        }
+        update( ee );
+        if ( !toRemove.isEmpty() ) {
+            characteristicService.remove( toRemove );
+        }
+
+        log.info( "updateAnnotations: " + ee.getShortName() + " (ID=" + ee.getId() + ") added=" + toAdd.size()
+                + " removed=" + toRemove.size() + " evidenceUpdates=" + evidenceUpdates );
+        // Audit event written by @AuditedConditional via AuditedAspect; the
+        // SpEL guard `#result > 0` keeps the no-change early-return branch
+        // (return 0) from emitting a spurious row. Return value carries the
+        // total change count so the note text matches the prior behaviour as
+        // closely as possible (the added/removed breakdown is now in the log
+        // line above; AUDIT_EVENT.NOTE records the aggregate).
+        return toAdd.size() + toRemove.size() + evidenceUpdates;
+    }
+
+    /**
+     * Replace an EE's primary + other-relevant publications, recording every one as a bare curator
+     * assertion. See the interface javadoc.
+     */
+    @Override
+    @Transactional
+    public void updatePublications( ExpressionExperiment ee, BibliographicReference primaryPublication,
+            Collection<BibliographicReference> otherRelevantPublications ) {
+        Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
+        List<PublicationAssertion> other = new ArrayList<>( otherRelevantPublications.size() );
+        for ( BibliographicReference ref : otherRelevantPublications ) {
+            other.add( new PublicationAssertion( ref, PublicationAssociationSource.CURATOR ) );
+        }
+        // null, not emptyList: this form has no rejection argument, so it is not in a position to say
+        // anything about them and must not clear the ones on record.
+        updatePublications( ee,
+                primaryPublication != null ? new PublicationAssertion( primaryPublication, PublicationAssociationSource.CURATOR ) : null,
+                other, null );
+    }
+
+    /**
+     * Replace an EE's publications and the evidence behind them. See the interface javadoc.
+     * <p>
+     * Set-replace: the other-relevant set is cleared and repopulated from {@code otherRelevantPublications}
+     * (skipping any entry that equals the incoming primary, so the primary never doubles as an other-relevant
+     * row), and the primary is set to {@code primaryPublication} (or cleared when null). Persisted through the
+     * inherited {@code update(ee)}, which carries the audit event — matching the legacy
+     * {@code setPrimaryPublication(...) + update(ee)} flow the gemma-web controller and the CLI used.
+     * <p>
+     * The assertions are reconciled first, on purpose. It is the step that can refuse — a publication
+     * standing rejected by an authority the caller does not outrank throws — and doing it before the
+     * links are touched means the refusal happens with the experiment unmodified rather than relying
+     * on the transaction to undo a half-applied change.
+     */
+    @Override
+    @Transactional
+    public void updatePublications( ExpressionExperiment ee, @Nullable PublicationAssertion primaryPublication,
+            Collection<PublicationAssertion> otherRelevantPublications,
+            @Nullable Collection<PublicationAssertion> rejectedPublications ) {
+        Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
+
+        ee = ensureInSession( ee );
+
+        BibliographicReference primaryRef = primaryPublication != null ? primaryPublication.getPublication() : null;
+
+        Set<BibliographicReference> desiredOther = new HashSet<>();
+        List<PublicationAssertion> otherAssertions = new ArrayList<>();
+        for ( PublicationAssertion a : otherRelevantPublications ) {
+            if ( primaryRef != null && Objects.equals( a.getPublication().getId(), primaryRef.getId() ) ) {
+                continue;
+            }
+            if ( desiredOther.add( a.getPublication() ) ) {
+                otherAssertions.add( a );
+            }
+        }
+
+        publicationAssociationService.reconcile( ee, primaryPublication, otherAssertions, rejectedPublications );
+
+        ee.setPrimaryPublication( primaryRef );
+        ee.getOtherRelevantPublications().clear();
+        ee.getOtherRelevantPublications().addAll( desiredOther );
+
+        update( ee );
+        log.info( "updatePublications: " + ee.getShortName() + " (ID=" + ee.getId() + ") primary="
+                + ( primaryRef != null ? primaryRef.getId() : "none" )
+                + " otherRelevant=" + desiredOther.size()
+                + " rejected=" + ( rejectedPublications != null ? String.valueOf( rejectedPublications.size() ) : "untouched" ) );
     }
 
     @Override
     @Transactional
-    public void removeCharacteristics( ExpressionExperiment ee, Collection<Characteristic> characteristicsToRemove ) {
-        Assert.isTrue( characteristicsToRemove.stream().allMatch( c -> c.getId() != null ), "All characteristics must be persistent." );
-        Assert.isTrue( ee.getCharacteristics().containsAll( characteristicsToRemove ) );
-        ee.getCharacteristics().removeAll( characteristicsToRemove );
-        update( ee );
-        characteristicService.remove( characteristicsToRemove );
+    public boolean updateNameAndDescription( ExpressionExperiment ee, @Nullable String name, @Nullable String description ) {
+        // Word pastes Symbol-font Greek as private-use codepoints that no font can render. This is the
+        // route a curator's paste takes, so repair here rather than trusting the caller. See SymbolFontPua.
+        name = SymbolFontPua.repair( name );
+        description = SymbolFontPua.repair( description );
+        Assert.isTrue( name != null || description != null, "Provide a name and/or a description to update." );
+        Assert.isTrue( name == null || StringUtils.isNotBlank( name ), "The name must not be blank when provided." );
+
+        ee = ensureInSession( ee );
+
+        boolean changed = false;
+        if ( name != null && !name.equals( ee.getName() ) ) {
+            ee.setName( name );
+            changed = true;
+        }
+        if ( description != null && !description.equals( ee.getDescription() ) ) {
+            ee.setDescription( description );
+            changed = true;
+        }
+        if ( changed ) {
+            update( ee );
+            log.info( "updateNameAndDescription: " + ee.getShortName() + " (ID=" + ee.getId() + ")" );
+        }
+        return changed;
+    }
+
+    /**
+     * The text this commit appends to each annotation audit note: the disposition key and the prose, or
+     * whichever of the two was supplied. Composed once here so every annotation the commit touches
+     * carries the same sentence, and so the key leads — that is the part a later query can group on.
+     */
+    @Nullable
+    private static String auditReason( CurationCommitRequest request ) {
+        String code = StringUtils.trimToNull( request.getReasonCode() );
+        String prose = StringUtils.trimToNull( request.getReason() );
+        if ( code == null ) {
+            return prose;
+        }
+        return prose == null ? code : code + ": " + prose;
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
+    public CurationCommitResult commitCuration( ExpressionExperiment ee, CurationCommitRequest request, boolean dryRun ) {
+        ee = ensureInSession( ee );
+
+        // Optimistic concurrency: reject if the dataset moved since the draft's baseline.
+        Date expected = request.getExpectedLastUpdated();
+        if ( expected != null && ee.getCurationDetails() != null && ee.getCurationDetails().getLastUpdated() != null ) {
+            Date current = ee.getCurationDetails().getLastUpdated();
+            if ( current.getTime() != expected.getTime() ) {
+                throw new OptimisticLockingFailureException( "Dataset " + ee.getShortName()
+                        + " changed since the draft baseline (expected lastUpdated " + expected + ", found " + current + ")." );
+            }
+        }
+
+        CurationCommitResult result = new CurationCommitResult();
+        boolean anyChange = false;
+
+        // ── basics ──
+        if ( request.isBasicsPresent() ) {
+            boolean basicsChanged = false;
+            if ( request.getShortName() != null ) {
+                String sn = request.getShortName().trim();
+                if ( !sn.equals( ee.getShortName() ) ) {
+                    if ( !request.isShortNameChangeAllowed() ) {
+                        throw new AccessDeniedException( "Changing the short name requires administrator rights." );
+                    }
+                    if ( existsByShortName( sn ) ) {
+                        throw new IllegalArgumentException( "short_name '" + sn + "' is already in use." );
+                    }
+                    if ( !dryRun ) {
+                        ee.setShortName( sn );
+                    }
+                    basicsChanged = true;
+                }
+            }
+            // Same repair as updateNameAndDescription: a commit carries curator-typed prose too.
+            String requestedName = SymbolFontPua.repair( request.getName() );
+            String requestedDescription = SymbolFontPua.repair( request.getDescription() );
+            if ( requestedName != null && !requestedName.equals( ee.getName() ) ) {
+                if ( !dryRun ) {
+                    ee.setName( requestedName );
+                }
+                basicsChanged = true;
+            }
+            if ( requestedDescription != null && !requestedDescription.equals( ee.getDescription() ) ) {
+                if ( !dryRun ) {
+                    ee.setDescription( requestedDescription );
+                }
+                basicsChanged = true;
+            }
+            result.setBasicsChanged( basicsChanged );
+            anyChange = anyChange || basicsChanged;
+        }
+
+        // ── publications (set-replace, diffed by id) ──
+        if ( request.isPublicationsPresent() ) {
+            PublicationAssertion primary = request.getPrimaryPublication();
+            Long primaryId = primary != null ? primary.getPublication().getId() : null;
+            List<PublicationAssertion> desiredOther = new ArrayList<>();
+            for ( PublicationAssertion a : request.getOtherRelevantPublications() ) {
+                if ( Objects.equals( a.getPublication().getId(), primaryId ) ) {
+                    continue;
+                }
+                desiredOther.add( a );
+            }
+            Set<Long> currentIds = new HashSet<>();
+            if ( ee.getPrimaryPublication() != null ) {
+                currentIds.add( ee.getPrimaryPublication().getId() );
+            }
+            for ( BibliographicReference r : ee.getOtherRelevantPublications() ) {
+                currentIds.add( r.getId() );
+            }
+            Set<Long> desiredIds = new HashSet<>();
+            if ( primaryId != null ) {
+                desiredIds.add( primaryId );
+            }
+            for ( PublicationAssertion a : desiredOther ) {
+                desiredIds.add( a.getPublication().getId() );
+            }
+            int created = 0, deleted = 0, unchanged = 0;
+            for ( Long id : desiredIds ) {
+                if ( currentIds.contains( id ) ) {
+                    unchanged++;
+                } else {
+                    created++;
+                }
+            }
+            for ( Long id : currentIds ) {
+                if ( !desiredIds.contains( id ) ) {
+                    deleted++;
+                }
+            }
+            result.setPublicationsCreated( created );
+            result.setPublicationsDeleted( deleted );
+            result.setPublicationsUnchanged( unchanged );
+            if ( !dryRun && ( created > 0 || deleted > 0 ) ) {
+                // Through the same reconcile the standalone write path uses, so a commit cannot leave
+                // an ACCEPTED assertion pointing at a link it has just removed. The caller's basis rides
+                // with each assertion (defaulting to a bare curator claim when none was given), so a
+                // publication this commit adds records why -- and a snapshot replayed as a restore puts a
+                // paper back with the basis it had, instead of as an unexplained curator claim. A kept
+                // publication is untouched unless the incoming source outranks the recorded one.
+                //
+                // Rejections are passed as null -- untouched, not cleared. CurationPublications has no
+                // rejection field, so this section cannot express one, and a section that cannot say a
+                // thing must not be read as denying it. Committing an unrelated edit to a dataset is
+                // not a curator withdrawing a ruling about which paper is not theirs.
+                publicationAssociationService.reconcile( ee, primary, desiredOther, null );
+                ee.setPrimaryPublication( primary != null ? primary.getPublication() : null );
+                ee.getOtherRelevantPublications().clear();
+                for ( PublicationAssertion a : desiredOther ) {
+                    ee.getOtherRelevantPublications().add( a.getPublication() );
+                }
+            }
+            anyChange = anyChange || ( created > 0 || deleted > 0 );
+        }
+
+        // ── design (factors → factor-values → statements) ──
+        // The web layer already mapped CAB's declared-delete DesignCommit onto a COMPLETE
+        // ExperimentalDesignValueObject (carry-forward untouched + delta) and gated blockers (400) / force (409),
+        // so here we just apply through the shipped replace-by-absence path. Two passes handle sample assignments
+        // to brand-new factor values, whose ids don't exist until the first pass creates them.
+        if ( request.isDesignPresent() && request.getProposedDesign() != null ) {
+            ExperimentalDesignValueObject edvo1 = request.getProposedDesign();
+            if ( dryRun ) {
+                DesignPreflightReport.Summary s = previewDesignChange( ee, edvo1, request.getDesignPlan() ).getSummary();
+                result.setDesignCreated( s.getFactorsToCreate() + s.getFactorValuesToCreate() );
+                result.setDesignDeleted( s.getFactorsToDelete() + s.getFactorValuesToDelete() );
+                // `updated` is every kind of in-place change: samples moved between factor values, and the
+                // relabels — a statement re-termed, evidence attached, a baseline flipped, a measurement
+                // retimed, a factor renamed or re-categorized. Assignments used to be the only one counted,
+                // so a term-only edit reported `unchanged: 1` and read as "nothing to do" for an edit the
+                // commit would in fact apply (cab, GSE49354.1, 2026-08-27).
+                result.setDesignUpdated( s.getBiomaterialsWithChangedAssignments()
+                        + s.getFactorsToUpdate() + s.getFactorValuesToUpdate() );
+                // Symmetry with basics/publications: a clean no-op keep reports unchanged=1, not all-zero.
+                result.setDesignUnchanged( result.getDesignCreated() + result.getDesignDeleted() + result.getDesignUpdated() == 0 ? 1 : 0 );
+                anyChange = anyChange || result.getDesignCreated() > 0 || result.getDesignDeleted() > 0
+                        || result.getDesignUpdated() > 0;
+            } else {
+                // Assignments are counted ONCE, up front, from the same plan-aware preflight the dry run above
+                // reports -- so a dry run predicts what the commit reports instead of approximating it.
+                //
+                // Summing the two passes instead double-counts a replace, because both touch the SAME
+                // biomaterials: pass 1 strips the old factor values, pass 2 attaches the new ones. GSE19804 was
+                // reported as 240 changed biomaterials against 120 samples (cab, 2026-09-10).
+                int assignmentsChanged = previewDesignChange( ee, edvo1, request.getDesignPlan() )
+                        .getSummary().getBiomaterialsWithChangedAssignments();
+                // Pass 1 — through the proxy so the DesignChangeEvent audit aspect fires.
+                DesignApplyOutcome outcome1 = self.applyDesignChange( ee, edvo1 );
+                DesignPreflightReport.Summary s1 = outcome1.getPreflightAtApply().getSummary();
+                int created = s1.getFactorsToCreate() + s1.getFactorValuesToCreate();
+                int deleted = s1.getFactorsToDelete() + s1.getFactorValuesToDelete();
+                int updated = assignmentsChanged + s1.getFactorsToUpdate() + s1.getFactorValuesToUpdate();
+
+                List<Long> auditIds = new ArrayList<>();
+                collectDesignChangeEventId( ee, outcome1, auditIds );
+
+                Map<String, Long> idMap = new LinkedHashMap<>();
+                DesignCommitPlan plan = request.getDesignPlan();
+                if ( plan != null ) {
+                    correlateNewDesignIds( outcome1.getDesign(), plan, idMap );
+                    if ( !plan.getPendingAssignments().isEmpty() ) {
+                        ExperimentalDesignValueObject edvo2 = buildAssignmentPass( outcome1.getDesign(), plan, idMap );
+                        if ( edvo2 != null ) {
+                            DesignApplyOutcome outcome2 = self.applyDesignChange( ee, edvo2 );
+                            // Pass 2 exists only to attach samples to factor values pass 1 created. Its counters
+                            // are not added: assignmentsChanged above already covers these bindings, and the
+                            // in-place counters would restate pass 1's edits. Only its audit event is new.
+                            collectDesignChangeEventId( ee, outcome2, auditIds );
+                        }
+                    }
+                }
+                result.setDesignCreated( created );
+                result.setDesignDeleted( deleted );
+                result.setDesignUpdated( updated );
+                result.setDesignUnchanged( created + deleted + updated == 0 ? 1 : 0 );
+                result.setDesignIdMap( idMap );
+                result.setDesignAuditEventIds( auditIds );
+                anyChange = anyChange || outcome1.isApplied();
+            }
+        }
+
+        // ── experiment-level tags (id-based: remove deletedIds, add clientRef items; gemmaId items are kept) ──
+        // addAnnotation returns the persisted tag with its id, so clientRef → id is direct (no correlation pass).
+        // Through the proxy (self) so the @Audited TagAdded/TagRemoved events fire.
+        if ( request.isTagsPresent() ) {
+            Map<String, Long> idMap = new LinkedHashMap<>();
+            int created = 0, deleted = 0;
+            if ( dryRun ) {
+                created = request.getTagsToAdd().size();
+                deleted = request.getTagsToDelete().size();
+            } else {
+                for ( Long id : request.getTagsToDelete() ) {
+                    if ( self.removeAnnotation( ee, id, auditReason( request ) ) != null ) {
+                        deleted++;
+                    }
+                }
+                List<CurationCommitRequest.TagAdd> adds = request.getTagsToAdd();
+                for ( CurationCommitRequest.TagAdd add : adds ) {
+                    self.addAnnotation( ee, add.getCharacteristic(), auditReason( request ) );
+                    created++;
+                }
+                if ( created > 0 ) {
+                    // addAnnotation persists via merge, so the passed-in characteristic stays transient — resolve each
+                    // new id by content (the same sameTag equality addAnnotation uses to reject duplicates, so the
+                    // match is unambiguous) from a fresh read after the flush.
+                    sessionFactory.getCurrentSession().flush();
+                    Collection<Characteristic> persisted = load( ee.getId() ).getCharacteristics();
+                    for ( CurationCommitRequest.TagAdd add : adds ) {
+                        idMap.put( add.getClientRef(), matchCharacteristicId( persisted, add.getCharacteristic() ) );
+                    }
+                }
+            }
+            result.setTagsCreated( created );
+            result.setTagsDeleted( deleted );
+            result.setTagsUnchanged( request.getTagsUnchanged() );
+            result.setTagsIdMap( idMap );
+            anyChange = anyChange || created > 0 || deleted > 0;
+        }
+
+        // ── per-sample characteristics (id-based, resolved to a biomaterial thawed from the experiment) ──
+        if ( request.isSampleCharsPresent() ) {
+            Map<String, Long> idMap = new LinkedHashMap<>();
+            int created = 0, deleted = 0;
+            if ( dryRun ) {
+                created = request.getSampleCharsToAdd().size();
+                deleted = request.getSampleCharsToDelete().size();
+            } else {
+                ExpressionExperiment thawed = thawBioAssays( ee );
+                Map<Long, BioMaterial> bmById = new HashMap<>();
+                Map<Long, BioMaterial> charIdToBm = new HashMap<>();
+                for ( BioAssay ba : thawed.getBioAssays() ) {
+                    BioMaterial bm = ba.getSampleUsed();
+                    if ( bm == null || bm.getId() == null ) {
+                        continue;
+                    }
+                    bmById.putIfAbsent( bm.getId(), bm );
+                    for ( Characteristic c : bm.getCharacteristics() ) {
+                        if ( c.getId() != null ) {
+                            charIdToBm.put( c.getId(), bm );
+                        }
+                    }
+                }
+                for ( Long id : request.getSampleCharsToDelete() ) {
+                    BioMaterial bm = charIdToBm.get( id );
+                    if ( bm != null && bioMaterialService.removeAnnotation( ee, bm, id, auditReason( request ) ) != null ) {
+                        deleted++;
+                    }
+                }
+                List<CurationCommitRequest.SampleCharacteristicAdd> adds = request.getSampleCharsToAdd();
+                for ( CurationCommitRequest.SampleCharacteristicAdd add : adds ) {
+                    BioMaterial bm = bmById.get( add.getBioMaterialId() );
+                    if ( bm == null ) {
+                        throw new IllegalArgumentException( "sampleCharacteristics references biomaterial "
+                                + add.getBioMaterialId() + " which is not part of " + ee.getShortName() + "." );
+                    }
+                    bioMaterialService.addAnnotation( ee, bm, add.getCharacteristic(), auditReason( request ) );
+                    created++;
+                }
+                if ( created > 0 ) {
+                    // Same merge-persist caveat as tags — resolve the new id by content from a fresh read of the sample.
+                    sessionFactory.getCurrentSession().flush();
+                    Map<Long, Collection<Characteristic>> freshByBm = new HashMap<>();
+                    for ( CurationCommitRequest.SampleCharacteristicAdd add : adds ) {
+                        Collection<Characteristic> persisted = freshByBm.computeIfAbsent( add.getBioMaterialId(),
+                                bmId -> bioMaterialService.thaw( bioMaterialService.load( bmId ) ).getCharacteristics() );
+                        idMap.put( add.getClientRef(), matchCharacteristicId( persisted, add.getCharacteristic() ) );
+                    }
+                }
+            }
+            result.setSampleCharsCreated( created );
+            result.setSampleCharsDeleted( deleted );
+            result.setSampleCharsUnchanged( request.getSampleCharsUnchanged() );
+            result.setSampleCharsIdMap( idMap );
+            anyChange = anyChange || created > 0 || deleted > 0;
+        }
+
+        // ── curationDetails: only the free-text note commits here (troubled/needsAttention go through tickets) ──
+        if ( request.isCurationDetailsPresent() && request.getCurationDetailsNote() != null ) {
+            String desired = request.getCurationDetailsNote();
+            String current = ee.getCurationDetails() != null ? ee.getCurationDetails().getCurationNote() : null;
+            if ( !desired.equals( current ) ) {
+                if ( !dryRun ) {
+                    // The CurationNoteUpdateEvent hook copies the note onto CurationDetails.
+                    auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class, desired );
+                }
+                result.setCurationNoteChanged( true );
+                anyChange = true;
+            }
+        }
+
+        // ── split advice (stopgap: recorded in the free-text curation note; no structured home yet) ──
+        if ( request.getSplitOnFactorId() != null || request.getSplitRationale() != null ) {
+            if ( !dryRun ) {
+                applySplitAdviceNote( ee, request.getSplitOnFactorId(), request.getSplitRationale() );
+            }
+            anyChange = true;
+        }
+
+        if ( !dryRun && anyChange ) {
+            update( ee );
+            // Advance the curation lastUpdated concurrency token on every change. Sections that emit an audit event
+            // (design/tags/sampleCharacteristics/curationNote) already bump it via the curatable audit hook, but a
+            // basics- or publications-only change emits none — so bump it here (set + merge, same as that hook) so a
+            // stale baseline is always detectable on the next commit.
+            if ( ee.getCurationDetails() != null ) {
+                ee.getCurationDetails().setLastUpdated( new Date() );
+                ee.setCurationDetails( ( CurationDetails ) sessionFactory.getCurrentSession().merge( ee.getCurationDetails() ) );
+            }
+            log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") applied" );
+        }
+        // ── auto-snapshot: keep the curation this commit displaced ──
+        // The payload was read before anything applied, so the row holds the pre-commit state and the ordinary
+        // restore path puts it back. Minted inside the commit's transaction: a rollback must not leave a snapshot
+        // claiming a state that was never displaced. Only when something actually changed — a no-op commit
+        // displaces nothing, and a row per retry buries the restore points that matter. SNAPSHOT emits no audit
+        // event (AnnotationSetServiceImpl#ATTACH_AUDIT_WHEN excludes it), so this does not touch lastUpdated.
+        if ( !dryRun && anyChange && StringUtils.isNotBlank( request.getSnapshotPayloadJson() ) ) {
+            AnnotationSetService.AttachedAnnotationSet snapshot = annotationSetService.attach( ee,
+                    AnnotationSetRole.SNAPSHOT,
+                    // Gemma read this payload out of itself, so source can only say which kind of actor's commit
+                    // displaced it: a named run means an agent applied it, anything else a curator.
+                    StringUtils.isNotBlank( request.getRunId() ) ? AnnotationSetSource.AGENT : AnnotationSetSource.CURATOR,
+                    null, AnnotationSetService.PRE_COMMIT_SNAPSHOT_RUN_ID_PREFIX + UUID.randomUUID(),
+                    request.getSnapshotCreatedBy(), null, request.getSnapshotPayloadJson(), null );
+            result.setSnapshotAnnotationSetId( snapshot.getAnnotationSet().getId() );
+            log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") displaced curation kept as"
+                    + " AnnotationSet#" + snapshot.getAnnotationSet().getId() );
+        }
+
+        // ── run provenance: record WHICH agent run applied this, if the caller named one ──
+        // Minted here rather than in the web layer so it shares the commit's transaction: if the commit rolls back
+        // there must be no row claiming the run applied anything. Sparse by design — a curator commit names no run
+        // and mints nothing. A no-op commit that DID name a run still mints, so that an absent row means "no run
+        // was named" and never "the run did nothing"; those are different facts and identical bytes otherwise.
+        // The event is deliberately suppressed for COMMIT (see AnnotationSetServiceImpl#ATTACH_AUDIT_WHEN) — the
+        // sections above already emitted the trail entries and already moved lastUpdated.
+        if ( !dryRun && StringUtils.isNotBlank( request.getRunId() ) ) {
+            AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach( ee,
+                    AnnotationSetRole.COMMIT, AnnotationSetSource.AGENT, null,
+                    request.getRunId(), null, request.getRunProvenance(), null, request.getRunParentProposal() );
+            result.setCommitAnnotationSetId( attached.getAnnotationSet().getId() );
+            log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") stamped with run "
+                    + request.getRunId() + " as AnnotationSet#" + attached.getAnnotationSet().getId()
+                    + ( attached.isCreated() ? "" : " (already recorded — this run has committed here before)" ) );
+        }
+
+        // ── close the curation ticket this commit fulfilled ──
+        // In the commit's own transaction (Paul, 2026-08-29): if the commit rolls back, the ticket does
+        // not advance. Restore and preflight leave the flag false, so a revert never closes the ticket.
+        if ( !dryRun && request.isAdvanceLinkedTickets() ) {
+            advanceLinkedCurationTickets( ee );
+        }
+
+        // ── denormalized annotation table ──
+        if ( !dryRun ) {
+            refreshEe2c( ee, result );
+        }
+
+        result.setNewLastUpdated( ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null );
+        return result;
+    }
+
+    /**
+     * Bring {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} up to date for the one experiment this commit
+     * touched, in the commit's own transaction.
+     * <p>
+     * The table is denormalized and was refreshed only by the nightly Quartz job, which made a correct
+     * write read as a lost one: {@code EE2C_CHARACTERISTIC_FKC} is {@code ON DELETE CASCADE}, so a deleted
+     * annotation left EE2C immediately while an added one waited for the night. cab's first write-back
+     * (GSE197199, 2026-08-30) saw exactly that — one tag added and one removed in a single all-or-none
+     * commit, and only the removal visible in EE2C, which reads as a partial write of the one endpoint that
+     * guarantees it cannot happen. The nightly job stays; it remains the backstop for every other writer
+     * (GEO import, the CLI, direct SQL, single-cell assignments) and the repair path if this leg fails.
+     * <p>
+     * Three constraints shape what is called here.
+     * <p>
+     * <b>A narrowed level, never {@code null}.</b> The all-levels refresh unions five queries, two of which
+     * ({@code CellTypeAssignment}, {@code CellLevelCharacteristics}) no curation section can affect. On
+     * production's largest single-cell experiment (eid 42860, 1,681,672 EE2C rows) that union measured
+     * 159 s, of which 150 s was the cell-level branch; the three levels a commit can actually move measured
+     * 13-28 ms on that same experiment. Passing {@code null} would put a two-and-a-half-minute write
+     * transaction on a curator's save.
+     * <p>
+     * <b>Only when something changed.</b> A no-op or preflight commit pays nothing.
+     * {@code designUpdated} lumps sample-assignment moves (which do not reach EE2C) in with statement
+     * re-terms (which do), so an assignment-only design change does buy one upsert that changes no rows —
+     * ~13-30 ms, and separating the two would mean splitting a tally the wire format already publishes.
+     * <p>
+     * <b>Flush first.</b> The refresh is a native query that declares only the EE2C query space, so
+     * Hibernate's auto-flush will not notice pending {@code CHARACTERISTIC} inserts and the rebuild would
+     * read the pre-commit state — the very staleness this closes. The tag and sample-characteristic
+     * sections already flush after their adds; the design section does not, and neither flushes after a
+     * delete.
+     */
+    private void refreshEe2c( ExpressionExperiment ee, CurationCommitResult result ) {
+        List<Class<?>> levels = new ArrayList<>( 3 );
+        if ( result.getTagsCreated() > 0 || result.getTagsDeleted() > 0 ) {
+            levels.add( ExpressionExperiment.class );
+        }
+        if ( result.getSampleCharsCreated() > 0 || result.getSampleCharsDeleted() > 0 ) {
+            levels.add( BioMaterial.class );
+        }
+        if ( result.getDesignCreated() > 0 || result.getDesignDeleted() > 0 || result.getDesignUpdated() > 0 ) {
+            levels.add( ExperimentalDesign.class );
+        }
+        if ( levels.isEmpty() ) {
+            return;
+        }
+        sessionFactory.getCurrentSession().flush();
+        for ( Class<?> level : levels ) {
+            tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, level );
+        }
+    }
+
+    /**
+     * After a successful curation commit, walk the open CURATION / SCREENING tickets that target this
+     * dataset: mark each not-yet-DONE target for this EE as DONE, and RESOLVE a ticket whose last open
+     * target this closes. A multi-dataset ticket keeps its other datasets' targets. Called inside
+     * {@link #commitCuration}'s transaction so the advance shares the commit's fate.
+     */
+    private void advanceLinkedCurationTickets( ExpressionExperiment ee ) {
+        User actor = userManager.getCurrentUser();
+        if ( actor == null ) {
+            // No principal to attribute the advance to; leave the ticket for a manual touch rather than
+            // writing an unattributed event.
+            return;
+        }
+        for ( Ticket ticket : ticketService.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() ) ) {
+            if ( ticket.getType() != TicketType.CURATION && ticket.getType() != TicketType.SCREENING ) {
+                continue;
+            }
+            Ticket current = ticket;
+            // 🛑 UNDERWAY, not DONE. A commit is evidence that someone STARTED the ask, never that they
+            // finished it: the edit may be unrelated to what the ticket asked, partial, or -- as on 657 on
+            // 2026-09-05 -- a test commit and its revert, which between them moved a target to DONE and left
+            // it there, because a revert deliberately never closes a ticket.
+            //
+            // Paul, 2026-09-05, ruling on exactly that: DONE means "whatever was asked was
+            // done/decided/finished", and "I would have a 'started' flag if there was something done -- to
+            // proposals, audits, direct editing". Activity marks a target started; only a person marks it
+            // finished.
+            //
+            // Already UNDERWAY or DONE is left alone, so a later commit never drags a target a curator
+            // genuinely finished back to in-progress.
+            List<Long> toAdvance = new ArrayList<>();
+            for ( TicketTarget t : current.getTargets() ) {
+                if ( t.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT
+                        && ee.getId().equals( t.getTargetId() )
+                        && t.getStatus() == TicketTargetStatus.NOT_DONE ) {
+                    toAdvance.add( t.getId() );
+                }
+            }
+            for ( Long rowId : toAdvance ) {
+                current = ticketService.updateTargetStatus( current, rowId, TicketTargetStatus.UNDERWAY, actor );
+            }
+            // Kept, and now nearly unreachable from here by design: this path no longer sets DONE, so every
+            // target must already have been marked finished by a person for it to fire. That is the one case
+            // where resolving on a commit is not the service asserting something it cannot know.
+            boolean allDone = current.getTargets().stream()
+                    .allMatch( t -> t.getStatus() == TicketTargetStatus.DONE );
+            if ( allDone && current.getState() != TicketState.RESOLVED ) {
+                ticketService.transition( current, TicketState.RESOLVED, actor, "curation committed" );
+            }
+        }
+    }
+
+    /**
+     * Resolve each new design entity's {@code clientRef} to the id it was assigned, reading the rebuilt design
+     * after apply. Correlation is order-based: the rebuilt design sorts factors/values by ascending id and ids are
+     * monotonic in creation order, so the k-th newly-created entity (id absent from the pre-commit id sets) matches
+     * the k-th recorded clientRef — deterministic even when two new values share a label.
+     * <p>
+     * Package-private so the order-based correlation can be unit-tested directly.
+     */
+    void correlateNewDesignIds( ExperimentalDesignValueObject rebuilt, DesignCommitPlan plan, Map<String, Long> idMap ) {
+        if ( rebuilt == null || rebuilt.getExperimentalFactors() == null ) {
+            return;
+        }
+        Set<Long> preFactorIds = plan.getPreExistingFactorIds() != null ? plan.getPreExistingFactorIds() : Collections.emptySet();
+        Set<Long> preFvIds = plan.getPreExistingFactorValueIds() != null ? plan.getPreExistingFactorValueIds() : Collections.emptySet();
+
+        List<ExperimentalDesignValueObject.ExperimentalFactorEntry> factors = new ArrayList<>( rebuilt.getExperimentalFactors() );
+        factors.sort( Comparator.comparingLong( f -> f.getId() == null ? Long.MAX_VALUE : f.getId() ) );
+
+        // New factors, in id order, ↔ recorded new-factor clientRefs, in emission order.
+        List<String> factorRefs = plan.getNewFactorClientRefs();
+        Map<Long, String> newFactorIdToRef = new HashMap<>();
+        int fi = 0;
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : factors ) {
+            if ( f.getId() != null && !preFactorIds.contains( f.getId() ) && fi < factorRefs.size() ) {
+                String ref = factorRefs.get( fi++ );
+                idMap.put( ref, f.getId() );
+                newFactorIdToRef.put( f.getId(), ref );
+            }
+        }
+
+        // New factor values, per parent factor, in id order ↔ recorded clientRefs in emission order.
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry f : factors ) {
+            if ( f.getId() == null ) {
+                continue;
+            }
+            String parentKey;
+            if ( preFactorIds.contains( f.getId() ) ) {
+                parentKey = DesignCommitPlan.existingFactorKey( f.getId() );
+            } else if ( newFactorIdToRef.containsKey( f.getId() ) ) {
+                parentKey = DesignCommitPlan.newFactorKey( newFactorIdToRef.get( f.getId() ) );
+            } else {
+                continue;
+            }
+            List<String> fvRefs = plan.getNewFactorValueClientRefsByParentKey().get( parentKey );
+            if ( fvRefs == null || fvRefs.isEmpty() || f.getValues() == null ) {
+                continue;
+            }
+            List<FactorValueBasicValueObject> values = new ArrayList<>( f.getValues() );
+            values.sort( Comparator.comparingLong( v -> v.getId() == null ? Long.MAX_VALUE : v.getId() ) );
+            int vi = 0;
+            for ( FactorValueBasicValueObject v : values ) {
+                if ( v.getId() != null && !preFvIds.contains( v.getId() ) && vi < fvRefs.size() ) {
+                    idMap.put( fvRefs.get( vi++ ), v.getId() );
+                }
+            }
+        }
+    }
+
+    /**
+     * Build the second-pass design: the rebuilt design (all real ids, existing assignments) with each deferred
+     * new-factor-value assignment added to its biomaterials. Returns {@code null} when nothing needs wiring (so the
+     * caller skips a redundant apply). Because it re-submits the whole design, the replace-by-absence path keeps
+     * every untouched entity.
+     */
+    // package-private for direct unit testing
+    @Nullable
+    ExperimentalDesignValueObject buildAssignmentPass( ExperimentalDesignValueObject rebuilt, DesignCommitPlan plan, Map<String, Long> idMap ) {
+        Map<Long, ExperimentalDesignValueObject.BioMaterialFactorValueAssignment> byBm = new LinkedHashMap<>();
+        if ( rebuilt.getBioMaterialAssignments() != null ) {
+            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : rebuilt.getBioMaterialAssignments() ) {
+                byBm.put( a.getBioMaterialId(), a );
+            }
+        }
+        boolean any = false;
+        for ( DesignCommitPlan.PendingAssignment pa : plan.getPendingAssignments() ) {
+            Long fvId = idMap.get( pa.getFactorValueClientRef() );
+            if ( fvId == null ) {
+                continue;
+            }
+            for ( Long bmId : pa.getBioMaterialIds() ) {
+                ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a = byBm.get( bmId );
+                if ( a == null ) {
+                    continue;
+                }
+                if ( a.getFactorValueIds() == null ) {
+                    a.setFactorValueIds( new ArrayList<>() );
+                }
+                if ( !a.getFactorValueIds().contains( fvId ) ) {
+                    a.getFactorValueIds().add( fvId );
+                    any = true;
+                }
+            }
+        }
+        return any ? rebuilt : null;
+    }
+
+    /**
+     * Best-effort capture of the {@code DesignChangeEvent} id emitted by a proxied {@link #applyDesignChange}.
+     * The audit row is written by the aspect only when the apply changed something; an unresolved id is skipped
+     * (auditEventIds is advisory).
+     */
+    private void collectDesignChangeEventId( ExpressionExperiment ee, DesignApplyOutcome outcome, List<Long> auditIds ) {
+        if ( !outcome.isApplied() ) {
+            return;
+        }
+        AuditEvent ev = auditEventService.getLastEvent( ee, DesignChangeEvent.class );
+        if ( ev != null && ev.getId() != null && !auditIds.contains( ev.getId() ) ) {
+            auditIds.add( ev.getId() );
+        }
+    }
+
+    /**
+     * Stopgap home for the curator's split advice: a single delimited line in the free-text curation note, upserted
+     * so a re-commit replaces rather than stacks. There is no structured persistence for split decisions yet.
+     * {@code factorId == -1} is the "do not split" sentinel.
+     */
+    private void applySplitAdviceNote( ExpressionExperiment ee, @Nullable Long factorId, @Nullable String rationale ) {
+        final String marker = "[split-advice]";
+        CurationDetails cd = ee.getCurationDetails();
+        String existing = cd != null ? cd.getCurationNote() : null;
+        StringBuilder line = new StringBuilder( marker ).append( ' ' );
+        if ( factorId != null && factorId == -1L ) {
+            line.append( "do not split" );
+        } else if ( factorId != null ) {
+            line.append( "split on factor " ).append( factorId );
+        } else {
+            line.append( "(no factor specified)" );
+        }
+        if ( StringUtils.isNotBlank( rationale ) ) {
+            line.append( " — " ).append( rationale.trim() );
+        }
+        String cleaned = existing == null ? "" : Arrays.stream( existing.split( "\n" ) )
+                .filter( l -> !l.startsWith( marker ) )
+                .collect( Collectors.joining( "\n" ) );
+        String updated = cleaned.isEmpty() ? line.toString() : cleaned + "\n" + line;
+        // The CurationNoteUpdateEvent hook copies the note onto CurationDetails — mirrors updateDatasetCurationDetails.
+        auditTrailService.addUpdateEvent( ee, CurationNoteUpdateEvent.class, updated );
+    }
+
+    /**
+     * Resolve the id of a just-added characteristic by content-matching it against a fresh (persisted) collection,
+     * using the same {@code sameTag} equality {@code addAnnotation} uses to reject duplicates — so within one owner
+     * the match is unambiguous. Needed because tag / sample-characteristic adds persist via merge, leaving the
+     * passed-in characteristic transient (no id) so it can't be echoed directly.
+     */
+    @Nullable
+    private static Long matchCharacteristicId( Collection<Characteristic> persisted, Characteristic target ) {
+        for ( Characteristic c : persisted ) {
+            if ( c.getId() != null && sameTag( c, target ) ) {
+                return c.getId();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Per-tag REST-write counterpart to {@link #addCharacteristic(ExpressionExperiment, Characteristic)}.
+     * <p>
+     * Emits one {@link TagAddedEvent} per call via the {@code @Audited} aspect; rejects duplicates by
+     * {@code (categoryUri, valueUri)} so the {@code POST /annotations/datasets/{id}/annotations}
+     * handler can surface a {@code 409 Conflict}. Delegates the actual persistence to
+     * {@link ExpressionExperimentWriteService#addCharacteristic(ExpressionExperiment, Characteristic)}
+     * (which does the {@code IC}-evidence-code defaulting and the Hibernate session attach).
+     */
+    @Override
+    @Transactional
+    @Audited(value = TagAddedEvent.class,
+            messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value")
+    public Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc ) {
+        return doAddAnnotation( ee, vc );
+    }
+
+    /**
+     * Reason-carrying overload. Separate method rather than a parameter on the one above so that every
+     * existing caller and its tests keep the signature they have; the two differ only in the audit note
+     * the aspect writes.
+     * <p>
+     * 🛑 Both are audited and both delegate to the same private body. The delegation is a plain
+     * {@code this} call, so the inner method is NOT re-advised and one call still writes one event.
+     */
+    @Override
+    @Transactional
+    @Audited(value = TagAddedEvent.class,
+            messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value + (#reason != null ? ' \u2014 ' + #reason : '')")
+    public Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc, @Nullable String reason ) {
+        return doAddAnnotation( ee, vc );
+    }
+
+    private Characteristic doAddAnnotation( ExpressionExperiment ee, Characteristic vc ) {
+        Assert.notNull( vc, "Characteristic must not be null." );
+        Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
+        Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
+        // Experiment tags are statements; a bare one is a statement with no predicate or object. Doing
+        // this here rather than at each caller means every write path lands the same shape, including
+        // ones added later. sameTag compares content, so this changes no comparison.
+        vc = CharacteristicUtils.asStatement( vc );
+        ee = ensureInSession( ee );
+        for ( Characteristic existing : ee.getCharacteristics() ) {
+            if ( sameTag( existing, vc ) ) {
+                throw new IllegalArgumentException( "An annotation with the same (category, value) already exists on "
+                        + ee.getShortName() + " (existing id=" + existing.getId() + ")." );
+            }
+        }
+        writeService.addCharacteristic( ee, vc );
+        // writeService.addCharacteristic attaches vc via ee.getCharacteristics().add(vc) and
+        // cascades the insert through ee update; vc.getId() is set after the flush.
+        return vc;
+    }
+
+    /**
+     * Per-tag REST-write counterpart to {@link #removeCharacteristics(ExpressionExperiment, Collection)}.
+     * Returns {@code null} when the id is not in {@code ee}'s characteristic set so the REST handler
+     * can surface a {@code 404}.
+     */
+    @Override
+    @Transactional
+    @AuditedConditional(value = TagRemovedEvent.class,
+            when = "#result != null",
+            messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value")
+    @Nullable
+    public Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId ) {
+        return doRemoveAnnotation( ee, annotationId );
+    }
+
+    /** Reason-carrying overload; see {@link #addAnnotation(ExpressionExperiment, Characteristic, String)}. */
+    @Override
+    @Transactional
+    @AuditedConditional(value = TagRemovedEvent.class,
+            when = "#result != null",
+            messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value + (#reason != null ? ' \u2014 ' + #reason : '')")
+    @Nullable
+    public Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId, @Nullable String reason ) {
+        return doRemoveAnnotation( ee, annotationId );
+    }
+
+    @Nullable
+    private Characteristic doRemoveAnnotation( ExpressionExperiment ee, Long annotationId ) {
+        Assert.notNull( annotationId, "Annotation id must not be null." );
+        ee = ensureInSession( ee );
+        Characteristic target = null;
+        for ( Characteristic c : ee.getCharacteristics() ) {
+            if ( annotationId.equals( c.getId() ) ) {
+                target = c;
+                break;
+            }
+        }
+        if ( target == null ) {
+            return null;
+        }
+        writeService.removeCharacteristics( ee, Collections.singleton( target ) );
+        return target;
+    }
+
+    @Override
     public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thaw( result );
-        return result;
+        return readService.thaw( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawLite( result );
-        return result;
+        return readService.thawLite( expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawLiter( result );
-        return result;
+        return readService.thawLiter( expressionExperiment );
+    }
+
+    @Override
+    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
+        return readService.thawBioAssays( expressionExperiment );
     }
 
     /**
@@ -2754,71 +3556,13 @@ public class ExpressionExperimentServiceImpl
      * will not be deleted automatically).
      */
     @Override
-    @Transactional
     public void remove( ExpressionExperiment ee ) {
-        ee = ensureInSession( ee );
-
-        if ( !securityService.isEditableByCurrentUser( ee ) ) {
-            throw new SecurityException(
-                    "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
-                            + " You do not have permission to edit this experiment." );
-        }
-
-        // check if a dataset has coexpression links
-        if ( this.coexpressionService.hasLinks( ee ) ) {
-            throw new IllegalStateException( ee + " has coexpression links, those must be removed first with 'gemma-cli coexpAnalyze -delete'." );
-        }
-
-        // Remove subsets
-        Collection<ExpressionExperimentSubSet> subsets = this.getSubSetsWithBioAssays( ee );
-        for ( ExpressionExperimentSubSet subset : subsets ) {
-            expressionExperimentSubSetService.remove( subset );
-        }
-
-        // Remove differential expression analyses
-        this.differentialExpressionAnalysisService.removeForExperiment( ee, true );
-
-        // Remove any sample coexpression matrices
-        this.sampleCoexpressionAnalysisService.removeForExperiment( ee );
-
-        // Remove PCA
-        this.principalComponentAnalysisService.removeForExperiment( ee );
-
-        // Remove coexpression analyses
-        this.coexpressionAnalysisService.removeForExperimentAnalyzed( ee );
-
-        /*
-         * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
-         * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
-         * analyses!
-         */
-        this.expressionExperimentSetService.removeFromSets( ee );
-
-        super.remove( ee );
+        writeService.remove( ee );
     }
 
     @Override
-    @Transactional
     public void remove( Collection<ExpressionExperiment> entities ) {
-        entities.forEach( this::remove );
-    }
-
-    /**
-     * @param ees  experiments
-     * @param type event type
-     * @return a map of the expression experiment ids to the last audit event for the given audit event type the
-     * map
-     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
-     */
-    private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
-
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
-        AuditEvent last;
-        for ( ExpressionExperiment experiment : ees ) {
-            last = this.auditEventService.getLastEvent( experiment, type.getClass() );
-            lastEventMap.put( experiment.getId(), last );
-        }
-        return lastEventMap;
+        writeService.remove( entities );
     }
 
     /*
@@ -2842,93 +3586,22 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
-        return this.expressionExperimentDao.getExperimentsLackingPublications();
+    public Collection<ExpressionExperiment> getExperimentsLackingPublications( int maxResults ) {
+        return this.expressionExperimentDao.getExperimentsLackingPublications( maxResults );
     }
 
     @Override
-    @Transactional
     public void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt, @Nullable QuantitationType previousPreferredQt ) {
-        Assert.notNull( ee.getId(), "The experiment must be persistent." );
-        Assert.notNull( qt.getId(), "The quantitation type must be persistent." );
-        // FIXME: hashing depends on properties that might have been altered that would in turn affect hashCode(), so we
-        //        cannot use contains
-        Assert.isTrue( ee.getQuantitationTypes().stream().anyMatch( qt::equals ),
-                "The quantitation type does not belong to " + ee + "." );
-
-        Class<? extends DataVector> vectorType = quantitationTypeService.getDataVectorType( qt );
-
-        if ( vectorType != null ) {
-            if ( qt.isPreferred( vectorType ) ) {
-                // set all other QTs to non-preferred (regardless of their type)
-                for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
-                    if ( otherQt.isPreferred( vectorType ) && !otherQt.equals( qt ) ) {
-                        log.info( "Marking " + otherQt + " as non-preferred for " + vectorType + "." );
-                        otherQt.setIsPreferred( false, vectorType );
-                        quantitationTypeService.update( otherQt );
-                    }
-                }
-                if ( !qt.equals( previousPreferredQt ) ) {
-                    Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
-                    String message = String.format( "The preferred quantitation type for %s changed%s to %s.",
-                            vectorType.getSimpleName(), previousPreferredQt != null ? " from " + previousPreferredQt : "", qt );
-                    if ( eventType != null ) {
-                        auditTrailService.addUpdateEvent( ee, eventType, message );
-                    } else {
-                        log.warn( message + " There is no audit event type for this change." );
-                    }
-                }
-            } else if ( previousPreferredQt != null && previousPreferredQt.isPreferred( vectorType ) && qt.equals( previousPreferredQt ) ) {
-                Class<? extends PreferredDataChangedEvent> eventType = getPreferredDataChangedEventForVectorType( vectorType );
-                String message = String.format( "The preferred quantitation type for %s was cleared (previously %s).",
-                        vectorType.getSimpleName(), previousPreferredQt );
-                if ( eventType != null ) {
-                    auditTrailService.addUpdateEvent( ee, eventType, message );
-                } else {
-                    log.warn( message + " There is no audit event type for this change." );
-                }
-            }
-        } else {
-            log.warn( qt + " does not have a vector type, likely cause is the absence of data vectors." );
-        }
-
-        quantitationTypeService.update( qt );
-    }
-
-    @Nullable
-    private Class<? extends PreferredDataChangedEvent> getPreferredDataChangedEventForVectorType( Class<? extends DataVector> vectorType ) {
-        if ( SingleCellExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-            return PreferredSingleCellDataChangedEvent.class;
-        } else if ( RawExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-            return PreferredRawDataChangedEvent.class;
-        } else {
-            // there is no event for a change of processed data because we don't allow more than one set of processed
-            return null;
-        }
+        writeService.updateQuantitationType( ee, qt, previousPreferredQt );
     }
 
     @Override
-    @Transactional
     public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
-        return expressionExperimentDao.updateMeanVarianceRelation( ee, mvr );
+        return writeService.updateMeanVarianceRelation( ee, mvr );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long countBioMaterials( @Nullable Filters filters ) {
-        return expressionExperimentDao.countBioMaterials( filters );
-    }
-
-    /**
-     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String property ) {
-        if ( property.equals( "geeq.publicSuitabilityScore" ) ) {
-            return SecurityConfig.createList( "GROUP_ADMIN" );
-        } else {
-            return null;
-        }
+        return readService.countBioMaterials( filters );
     }
 }

@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
-import org.hibernate.Criteria;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,16 +74,12 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
 
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
-
-        BusinessKey.addRestrictions( queryObject, bioMaterial );
-
         // This part is involved in a weird race condition that I could not get to a bottom of, so this is a hack-fix for now - tesarst, 2018-May-2
         BioMaterial result = null;
         int rep = 0;
         while ( result == null && rep < BioMaterialDaoImpl.MAX_REPS ) {
             try {
-                result = ( BioMaterial ) queryObject.uniqueResult();
+                result = BusinessKey.find( this.getSessionFactory().getCurrentSession(), bioMaterial );
                 rep++;
             } catch ( ObjectNotFoundException e ) {
                 log.warn( "BioMaterial query list threw: " + e.getMessage() );
@@ -163,6 +158,63 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
+    public void thawBioMaterialsForBioAssays( Collection<BioAssay> bas ) {
+        if ( bas.isEmpty() ) {
+            return;
+        }
+        // Seed with the directly-attached sample BMs (BA.sampleUsed is eager-fetched per the HBM).
+        Set<Long> allBmIds = new HashSet<>();
+        for ( BioAssay ba : bas ) {
+            BioMaterial bm = ba.getSampleUsed();
+            if ( bm != null && bm.getId() != null ) {
+                allBmIds.add( bm.getId() );
+            }
+        }
+        if ( allBmIds.isEmpty() ) {
+            return;
+        }
+        // Breadth-first walk of the sourceBioMaterial chain via ID-only HQL, one query per
+        // level. The HBM caps no depth so this loop adapts to whatever prod actually has;
+        // a safety bound prevents accidental runaway in a circular-graph scenario (the
+        // create-time validator in BioMaterialDaoImpl#validate already rejects cycles, but
+        // be defensive here against data that pre-dates the validator).
+        Set<Long> frontier = new HashSet<>( allBmIds );
+        int safetyBound = 16;
+        while ( !frontier.isEmpty() && safetyBound-- > 0 ) {
+            //noinspection unchecked
+            List<Long> nextLevel = getSessionFactory().getCurrentSession()
+                    .createQuery( "select bm.sourceBioMaterial.id from BioMaterial bm "
+                            + "where bm.id in :ids and bm.sourceBioMaterial is not null" )
+                    .setParameterList( "ids", frontier )
+                    .list();
+            frontier = new HashSet<>( nextLevel );
+            frontier.removeAll( allBmIds );
+            allBmIds.addAll( frontier );
+        }
+        // One query: thaw treatments (lazy collection) and sourceTaxon (lazy proxy) for the
+        // whole chain. Distinct keyword is required because Hibernate's join-fetch otherwise
+        // duplicates the parent row per joined-collection element.
+        getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bm from BioMaterial bm "
+                        + "left join fetch bm.sourceTaxon "
+                        + "left join fetch bm.treatments "
+                        + "where bm.id in :ids" )
+                .setParameterList( "ids", allBmIds )
+                .list();
+        // Separate query: thaw factorValues.experimentalFactor (lazy proxy per FV) for the
+        // whole chain. Split from the treatments fetch to keep each result-set linear in BM
+        // count rather than treatments&times;factorValues per BM (Cartesian explosion when
+        // both collections are non-trivial).
+        getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bm from BioMaterial bm "
+                        + "left join fetch bm.factorValues fv "
+                        + "left join fetch fv.experimentalFactor "
+                        + "where bm.id in :ids" )
+                .setParameterList( "ids", allBmIds )
+                .list();
+    }
+
+    @Override
     public Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm ) {
         Set<BioMaterial> bms = new HashSet<>();
         visitBioMaterials( bm, bms::add );
@@ -200,13 +252,13 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
         Set<Long> seenExperimentalFactorIds = new HashSet<>();
         for ( FactorValue fv : bm.getFactorValues() ) {
             // already assumed since
-            Assert.notNull( fv.getExperimentalFactor().getId() );
+            Assert.notNull( fv.getExperimentalFactor().getId() , "must not be null");
             if ( !seenExperimentalFactorIds.add( fv.getExperimentalFactor().getId() ) ) {
                 String affectedFvs = bm.getFactorValues().stream().
                         filter( fv2 -> fv2.getExperimentalFactor().getId().equals( fv.getExperimentalFactor().getId() ) )
                         .map( FactorValue::toString )
                         .collect( Collectors.joining( "\n\t" ) );
-                throw new IllegalArgumentException( String.format( "%s has more than one factor values for %s:\n\t%s",
+                throw new IllegalArgumentException( String.format( "%s has more than one factor values for %s:%n\t%s",
                         bm,
                         IdentifiableUtils.toString( fv.getExperimentalFactor(), ExperimentalFactor.class ),
                         affectedFvs ) );

@@ -6,8 +6,8 @@ import no.uib.cipr.matrix.io.MatrixVectorReader;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.file.PathUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.util.concurrent.Executors;
@@ -40,7 +40,7 @@ public class MexMatrixWriterTest {
     private int numCellsPerBioAssay;
     private int nnz;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         writer = new MexMatrixWriter();
         numDesignElements = 100;

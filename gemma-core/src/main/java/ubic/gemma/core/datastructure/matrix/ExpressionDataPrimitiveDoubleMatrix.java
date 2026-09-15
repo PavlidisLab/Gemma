@@ -2,7 +2,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface for matrices that can provide unboxed doubles.

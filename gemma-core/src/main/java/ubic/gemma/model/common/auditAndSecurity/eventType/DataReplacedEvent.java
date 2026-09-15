@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Signifies that the data for the experiment was replaced (or filled in) after the experiment was loaded into the
  * system.
@@ -27,6 +31,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * @see RawDataReplacedEvent
  * @see SingleCellDataReplacedEvent
  */
+@Entity
+@DiscriminatorValue("DataReplacedEvent")
 public class DataReplacedEvent extends ExpressionExperimentAnalysisEvent {
 
 }

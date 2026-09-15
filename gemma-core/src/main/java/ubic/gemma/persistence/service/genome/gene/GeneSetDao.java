@@ -24,7 +24,7 @@ import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -57,6 +57,7 @@ public interface GeneSetDao extends BaseVoEnabledDao<GeneSet, DatabaseBackedGene
      */
     List<Taxon> getTaxa( GeneSet geneSet );
 
+    @Nullable
     DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id );
 
     List<DatabaseBackedGeneSetValueObject> loadValueObjectsByIdsLite( Collection<Long> geneSetIds );

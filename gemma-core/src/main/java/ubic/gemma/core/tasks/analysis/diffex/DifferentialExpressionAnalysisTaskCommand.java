@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
@@ -33,6 +35,8 @@ import java.util.Collection;
  * @author keshav
  */
 @SuppressWarnings("unused") // Possible external use
+@Getter
+@Setter
 public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
@@ -89,89 +93,8 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.expressionExperiment = expressionExperiment;
     }
 
-    public AnalysisType getAnalysisType() {
-        return analysisType;
-    }
-
-    public void setAnalysisType( AnalysisType analysisType ) {
-        this.analysisType = analysisType;
-    }
-
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    public Collection<ExperimentalFactor> getFactors() {
-        return factors;
-    }
-
-    public void setFactors( Collection<ExperimentalFactor> factors ) {
-        this.factors = factors;
-    }
-
-    /**
-     * @return the subsetFactor
-     */
-    public ExperimentalFactor getSubsetFactor() {
-        return subsetFactor;
-    }
-
-    /**
-     * @param subsetFactor the subsetFactor to set
-     */
-    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
-        this.subsetFactor = subsetFactor;
-    }
-
     @Override
     public Class<? extends Task<? extends TaskCommand>> getTaskClass() {
         return DifferentialExpressionAnalysisTask.class;
-    }
-
-    public DifferentialExpressionAnalysis getToRedo() {
-        return toRedo;
-    }
-
-    public void setToRedo( DifferentialExpressionAnalysis toRedo ) {
-        this.toRedo = toRedo;
-    }
-
-    public boolean isForceAnalysis() {
-        return forceAnalysis;
-    }
-
-    public void setForceAnalysis( boolean forceAnalysis ) {
-        this.forceAnalysis = forceAnalysis;
-    }
-
-    public boolean isIncludeInteractions() {
-        return includeInteractions;
-    }
-
-    /**
-     * @param includeInteractions Sets preference for interactions to be included.
-     */
-    public void setIncludeInteractions( boolean includeInteractions ) {
-        this.includeInteractions = includeInteractions;
-    }
-
-    public boolean isModerateStatistics() {
-        return moderateStatistics;
-    }
-
-    public void setModerateStatistics( boolean moderateStatistics ) {
-        this.moderateStatistics = moderateStatistics;
-    }
-
-    public boolean isUseWeights() {
-        return useWeights;
-    }
-
-    public void setUseWeights( boolean useWeights ) {
-        this.useWeights = useWeights;
     }
 }

@@ -1,8 +1,8 @@
 package ubic.gemma.apps;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
-import org.junit.After;
-import org.junit.Test;
+import ubic.gemma.core.security.authentication.ManualAuthenticationService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +15,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.core.util.GemmaRestApiClient;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -29,8 +29,9 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class ArrayDesignMergeCliTest extends BaseCliTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class ArrayDesignMergeCliTest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
@@ -94,7 +95,7 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
     @Autowired
     private EntityLocator entityLocator;
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( entityLocator, arrayDesignService );
     }

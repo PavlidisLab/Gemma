@@ -2,18 +2,19 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.extern.apachecommons.CommonsLog;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.Assertions;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,8 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author poirigui
  */
-@CommonsLog
-public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
+@Slf4j
+public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -34,13 +35,13 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
     /* fixture */
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUpMocks() {
         ee = ExpressionExperiment.Factory.newInstance();
         ee = expressionExperimentService.create( ee );
     }
 
-    @After
+    @AfterEach
     public void removeFixtures() {
         expressionExperimentService.remove( ee );
     }
@@ -73,9 +74,17 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
         assertThat( response.getHeaderString( "Content-Type" ) ).isEqualTo( MediaType.APPLICATION_JSON );
     }
 
+    /**
+     * The spec is ~600 kB, so it is gzipped — but only when the client asks. {@code OpenApiWebService} sets
+     * {@code Content-Encoding} from the request's {@code Accept-Encoding}, which is what triggers Jersey's
+     * {@code GZipEncoder}; the decorator it replaced used to set that header unconditionally. This test was left
+     * behind by that change: it never advertised gzip, so it asserted a header the server was right not to send.
+     */
     @Test
     public void testOpenApiEndpoint() {
-        Response response = target( "/openapi.json" ).request().get();
+        Response response = target( "/openapi.json" ).request()
+                .header( HttpHeaders.ACCEPT_ENCODING, "gzip" )
+                .get();
         Assertions.assertThat( response )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -85,6 +94,16 @@ public class AnalysisResultSetsJerseyTest extends BaseJerseyIntegrationTest {
                     OpenAPI openAPI = Json.mapper().readValue( payload, OpenAPI.class );
                     assertThat( openAPI.getInfo().getTitle() ).isEqualTo( "Gemma RESTful API" );
                 } );
+    }
+
+    /** The other half of the contract: a client that does not advertise gzip is not sent a gzipped body. */
+    @Test
+    public void testOpenApiEndpointIsNotCompressedWhenTheClientDoesNotAskForIt() throws Exception {
+        Response response = target( "/openapi.json" ).request().get();
+        assertThat( response.getStatus() ).isEqualTo( 200 );
+        assertThat( response.getHeaderString( HttpHeaders.CONTENT_ENCODING ) ).isNull();
+        OpenAPI openAPI = Json.mapper().readValue( response.readEntity( String.class ), OpenAPI.class );
+        assertThat( openAPI.getInfo().getTitle() ).isEqualTo( "Gemma RESTful API" );
     }
 
     @Test

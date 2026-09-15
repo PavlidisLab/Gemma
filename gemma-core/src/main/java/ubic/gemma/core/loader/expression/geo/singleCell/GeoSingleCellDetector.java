@@ -1,7 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.SneakyThrows;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
@@ -32,9 +31,8 @@ import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,7 +50,7 @@ import static ubic.gemma.core.loader.expression.geo.singleCell.MexDetector.*;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSingleCellDetector, SeriesAwareSingleCellDetector, AutoCloseable {
 
 
@@ -402,23 +400,33 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         return downloadSamplesInParallel( series, SingleCellDataType.MEX );
     }
 
-    // this exception cannot be raised since we're downloading a specific file
-    @SneakyThrows(NoSingleCellDataFoundException.class)
+    /**
+     * Download a specific supplementary file for the given data type.
+     * <p>
+     * Because a specific file is named, the underlying detectors should never raise
+     * {@link NoSingleCellDataFoundException}; if one does anyway it indicates a programming error
+     * (the named file truly did not exist) and is surfaced as an {@link IllegalStateException}.
+     */
     public void downloadSingleCellData( GeoSeries series, SingleCellDataType dataType, String supplementaryFile ) throws IOException {
-        switch ( dataType ) {
-            case ANNDATA:
-                download( () -> annDataDetector.downloadSingleCellData( series, supplementaryFile ) );
-                break;
-            case SEURAT_DISK:
-                download( () -> seuratDiskDetector.downloadSingleCellData( series, supplementaryFile ) );
-                break;
-            case LOOM:
-                download( () -> loomDetector.downloadSingleCellData( series, supplementaryFile ) );
-                break;
-            case MEX:
-                throw new UnsupportedOperationException( "Downloading a specific supplementary file for " + dataType + " is not supported." );
-            default:
-                throw new IllegalArgumentException( "Unknown single-cell data type " + dataType );
+        try {
+            switch ( dataType ) {
+                case ANNDATA:
+                    download( () -> annDataDetector.downloadSingleCellData( series, supplementaryFile ) );
+                    break;
+                case SEURAT_DISK:
+                    download( () -> seuratDiskDetector.downloadSingleCellData( series, supplementaryFile ) );
+                    break;
+                case LOOM:
+                    download( () -> loomDetector.downloadSingleCellData( series, supplementaryFile ) );
+                    break;
+                case MEX:
+                    throw new UnsupportedOperationException( "Downloading a specific supplementary file for " + dataType + " is not supported." );
+                default:
+                    throw new IllegalArgumentException( "Unknown single-cell data type " + dataType );
+            }
+        } catch ( NoSingleCellDataFoundException e ) {
+            // Should not happen: a specific supplementary file was named.
+            throw new IllegalStateException( "Named supplementary file was not found for " + dataType + ": " + supplementaryFile, e );
         }
     }
 
@@ -495,7 +503,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     private Path downloadSamplesInParallel( GeoSeries series, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
-        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
         Assert.notNull( downloadDirectory, "A download directory must be set." );
         Assert.isTrue( dataType.equals( SingleCellDataType.MEX ), "Only MEX data can be downloaded at the sample-level." );
         ExecutorCompletionService<Boolean> completionService = new ExecutorCompletionService<>( getExecutor() );
@@ -592,8 +600,8 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     private synchronized ExecutorService getExecutor() {
         if ( executor == null ) {
-            log.info( "Created executor with " + numberOfFetchThreads + " threads" );
-            executor = Executors.newFixedThreadPool( numberOfFetchThreads, new SimpleThreadFactory( "gemma-geo-single-cell-fetch-thread-" ) );
+            log.info( "Created executor via VT-aware factory (numberOfFetchThreads=" + numberOfFetchThreads + " is no longer a hard cap; underlying HTTP/FTP client connection pool now governs concurrency)" );
+            executor = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
         }
         return executor;
     }
@@ -735,15 +743,16 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     private boolean hasSingleCellDataInSra( GeoData geoData,
             @Nullable Collection<String> sraAccessions, @Nullable Collection<String> sraAccessionsWithOtherDataTypes ) {
-        Assert.notNull( sraFetcher, "An SraFetcher must be set to retrieve metadata from SRA." );
+        SraFetcher fetcher = this.sraFetcher;
+        Assert.notNull( fetcher, "An SraFetcher must be set to retrieve metadata from SRA." );
         try {
             SraExperimentPackageSet sraMeta;
             String accession;
             if ( ( accession = getSraAccession( geoData ) ) != null ) {
-                sraMeta = sraFetcher.fetch( accession );
+                sraMeta = fetcher.fetch( accession );
             } else if ( geoData.getGeoAccession() != null ) {
                 accession = geoData.getGeoAccession();
-                sraMeta = sraFetcher.fetchByGeoAccession( accession );
+                sraMeta = fetcher.fetchByGeoAccession( accession );
             } else {
                 log.warn( geoData + " does not have a GEO accession, cannot check if it has single-cell data in SRA." );
                 return false;
@@ -797,6 +806,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     private static final String SRA_URL_PREFIX = "https://www.ncbi.nlm.nih.gov/sra?term=";
 
+    @Nullable
     private String getSraAccession( GeoData sample ) {
         if ( !sample.getRelations().containsKey( "SRA" ) ) {
             return null;
@@ -829,7 +839,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public boolean hasSingleCellDataInCellXGene( GeoSeries geoSeries ) throws IOException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         try {
             return cellXGeneFetcher.fetchAllCollectionMetadata().stream()
                     .map( cm1 -> {
@@ -857,7 +867,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public boolean hasSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId ) throws IOException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         CollectionMetadata cm;
         try {
             cm = fetchCollectionMetadata( collectionId );
@@ -876,7 +886,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries );
         String datasetId = datasetMetadata.getId();
         DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
@@ -885,7 +895,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     public Map<String, Path> downloadAllSingleCellDataInCellXGene( GeoSeries geoSeries ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         CollectionMetadata cm = getCollectionMetadata( geoSeries );
         assert cm.getDatasets() != null;
         Map<String, Path> result = new HashMap<>();
@@ -904,7 +914,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId );
         String datasetId = datasetMetadata.getId();
         DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
@@ -913,7 +923,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     public Map<String, Path> downloadAllSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         CollectionMetadata cm = getCollectionMetadata( geoSeries, collectionId );
         assert cm.getDatasets() != null;
         Map<String, Path> result = new HashMap<>();
@@ -933,7 +943,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId, String datasetId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId, datasetId );
         DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
         return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, asset.getId(), true );
@@ -947,7 +957,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId, String datasetId, String assetId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         CollectionMetadata cm;
         try {
             cm = fetchCollectionMetadata( collectionId );
@@ -965,7 +975,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId, datasetId );
         if ( datasetMetadata.getAssay().stream().noneMatch( this::isGeneExpressionAssay ) ) {
             throw new IllegalArgumentException( String.format( "Dataset %s in collection %s is not a single-cell dataset. Only the following assay types are supported: %s.",
-                    datasetId, collectionId, Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS )
+                    datasetId, collectionId, CellXGeneUtils.GENE_EXPRESSION_ASSAYS.stream()
                             .map( ot -> ot.getLabel() + "(" + ot.getOntologyTermId() + ")" )
                             .collect( Collectors.joining( ", " ) ) ) );
         }
@@ -1042,7 +1052,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     private CollectionMetadata getCollectionMetadata( GeoSeries geoSeries ) throws IOException, NoSingleCellDataFoundException {
-        Assert.notNull( cellXGeneFetcher );
+        Assert.notNull( cellXGeneFetcher , "must not be null");
         List<CollectionMetadata> matchingCollectionMetadata;
         try {
             matchingCollectionMetadata = cellXGeneFetcher.fetchAllCollectionMetadata().stream()
@@ -1088,7 +1098,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         Assert.notNull( cm.getDatasets(), "Cannot select a dataset from a shallow collection metadata." );
         List<DatasetMetadata> matchedDatasets = cm.getDatasets().stream().filter( this::hasSingleCellData ).collect( Collectors.toList() );
         if ( matchedDatasets.size() > 1 ) {
-            throw new IllegalArgumentException( String.format( "More than one single-cell dataset found %s in CELLxGENE collection %s. Choose one among:\n\t%s",
+            throw new IllegalArgumentException( String.format( "More than one single-cell dataset found %s in CELLxGENE collection %s. Choose one among:%n\t%s",
                     geoSeries, cm.getId(), matchedDatasets.stream()
                             .map( dm -> String.format( "%s: %s (%s)",
                                     dm.getId(), dm.getName(),
@@ -1110,7 +1120,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
                 .filter( CellXGeneUtils::isAnnData )
                 .collect( Collectors.toList() );
         if ( annDataAssets.size() > 1 ) {
-            throw new IllegalArgumentException( String.format( "More than one asset found for CELLxGENE dataset %s. Choose one among:\t\n%s",
+            throw new IllegalArgumentException( String.format( "More than one asset found for CELLxGENE dataset %s. Choose one among:\t%n%s",
                     datasetMetadata.getId(), annDataAssets.stream().map( DatasetAsset::getId ).collect( Collectors.joining( "\t\n" ) ) ) );
         } else if ( annDataAssets.size() == 1 ) {
             DatasetAsset asset = annDataAssets.iterator().next();
@@ -1123,7 +1133,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     private boolean hasSingleCellData( CollectionMetadata cm ) {
-        Assert.notNull( cm.getDatasets() );
+        Assert.notNull( cm.getDatasets() , "must not be null");
         return cm.getDatasets().stream()
                 .anyMatch( this::hasSingleCellData );
     }
@@ -1140,7 +1150,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     }
 
     private CollectionMetadata fetchCollectionMetadata( String collectionId ) throws IOException {
-        Assert.notNull( cellXGeneFetcher );
+        Assert.notNull( cellXGeneFetcher , "must not be null");
         if ( cachedCollectionMetadata.isEmpty() ) {
             log.warn( "Caching CELLxGENE collection metadata, this might take a while..." );
         }
@@ -1171,7 +1181,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     private Path downloadSingleCellDataInCellXGeneInternal( GeoSeries geoSeries, String datasetId, String assetId, boolean createSymlink ) throws
             IOException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
-        Assert.notNull( geoSeries.getGeoAccession() );
+        Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         Path path = cellXGeneFetcher.downloadDatasetAsset( datasetId, assetId, FileType.H5AD );
         if ( createSymlink ) {
             Path linkPath = downloadDirectory.resolve( geoSeries.getGeoAccession() + ".h5ad" );

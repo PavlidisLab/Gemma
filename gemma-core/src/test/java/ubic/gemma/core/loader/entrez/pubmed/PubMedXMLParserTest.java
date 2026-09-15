@@ -18,13 +18,14 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Keyword;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
@@ -37,18 +38,16 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
 @NetworkAvailable
+@ExtendWith(NetworkAvailableExtension.class)
 public class PubMedXMLParserTest {
 
     private static final Log log = LogFactory.getLog( PubMedXMLParserTest.class.getName() );
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     @Test
     public void testParse() throws Exception {
@@ -175,6 +174,29 @@ public class PubMedXMLParserTest {
             assertEquals( expectedNumberofKeywords, actualNumberofKeywords );
             assertEquals( expectedNumberofCompounds, actualNumberofCompounds );
 
+        }
+    }
+
+    /**
+     * PMID 37094356 carries a publisher-supplied {@code KeywordList Owner="NOTNLM"} whose first entry is a
+     * 1417-character abbreviations glossary. It used to abort the insert against a VARCHAR(255) TERM column;
+     * BIB_REF_ANNOTATION.TERM is now {@code text}, so the keyword must survive parsing in full rather than
+     * being truncated to fit.
+     */
+    @Test
+    public void testParseKeepsOverlongKeywordIntact() throws Exception {
+        try ( InputStream testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-37094356-longkeyword.xml" ) ) {
+            Collection<BibliographicReference> brl = PubMedXMLParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+            assertEquals( "37094356", br.getPubAccession().getAccession() );
+            assertEquals( 5, br.getKeywords().size() );
+            Keyword glossary = br.getKeywords().stream()
+                    .filter( k -> k.getTerm().startsWith( "BACH1 Abbreviations:" ) )
+                    .findFirst()
+                    .orElseThrow( () -> new AssertionError( "the abbreviations keyword was dropped" ) );
+            assertEquals( 1417, glossary.getTerm().length() );
+            assertTrue( glossary.getTerm().endsWith( "fluoromethylketone" ),
+                    "keyword was truncated: ends with " + StringUtils.right( glossary.getTerm(), 40 ) );
         }
     }
 

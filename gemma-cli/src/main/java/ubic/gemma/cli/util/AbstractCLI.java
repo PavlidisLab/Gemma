@@ -24,7 +24,6 @@ import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
@@ -33,12 +32,13 @@ import ubic.gemma.core.metrics.binder.GenericExecutorMetrics;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -126,6 +126,16 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      */
     private volatile BatchTaskExecutorService executorService = null;
 
+    /**
+     * Pipeline-job progress reporter. Resolved from the process environment on
+     * each {@code executeCommand} entry and pushed to the Gemma pipeline framework
+     * when {@code GEMMA_JOB_ID} is set. {@link ubic.gemma.cli.pipeline.PipelineJobReporter#NOOP}
+     * outside a pipeline context; subclasses call {@link #getPipelineJobReporter()}
+     * to emit per-stage progress without conditionals.
+     */
+    private volatile ubic.gemma.cli.pipeline.PipelineJobReporter pipelineJobReporter =
+            ubic.gemma.cli.pipeline.PipelineJobReporter.NOOP;
+
     @Override
     public String getCommandName() {
         return null;
@@ -133,7 +143,6 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
 
     @Override
     public List<String> getCommandAliases() {
-        //noinspection unchecked
         return Collections.emptyList();
     }
 
@@ -211,31 +220,60 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             cliContext.setExitStatus( FAILURE, e );
             return;
         }
+        // Resolve the pipeline reporter — NOOP unless GEMMA_JOB_ID env var is set.
+        this.pipelineJobReporter = ubic.gemma.cli.pipeline.PipelineJobReporter.fromEnv();
+        if ( this.pipelineJobReporter.isActive() ) {
+            this.pipelineJobReporter.stage( getActualCommandName() );
+        }
         try ( BatchTaskExecutorService executorService = createBatchTaskExecutor() ) {
             this.executorService = executorService;
             doWork();
             executorService.shutdownAndAwaitTermination();
             if ( executorService.getProgressReporter().hasErrorObjects() ) {
                 cliContext.setExitStatus( FAILURE_FROM_ERROR_OBJECTS, null );
+                this.pipelineJobReporter.error( new RuntimeException( "completed with error objects" ) );
+            } else {
+                this.pipelineJobReporter.completed();
             }
         } catch ( Exception e ) {
             if ( e instanceof InterruptedException ) {
                 Thread.currentThread().interrupt();
             }
-            List<Runnable> stillRunning = executorService.shutdownNow();
-            if ( !stillRunning.isEmpty() ) {
-                log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
+            // createBatchTaskExecutor() itself can throw -- it opens -batchOutputFile, which
+            // fails on an unwritable directory -- and that lands here before the field is
+            // assigned. Calling shutdownNow() on it then raised an NPE that REPLACED the real
+            // cause, so the run reported "executorService is null" and never named the file it
+            // could not open.
+            if ( executorService != null ) {
+                List<Runnable> stillRunning = executorService.shutdownNow();
+                if ( !stillRunning.isEmpty() ) {
+                    log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
+                }
             }
             if ( e instanceof WorkAbortedException ) {
                 log.warn( "Operation was aborted by the current user." );
                 cliContext.setExitStatus( ABORTED, e );
+                this.pipelineJobReporter.killed( e.getMessage() );
             } else {
                 log.error( getActualCommandName() + " failed:", e );
                 cliContext.setExitStatus( FAILURE, e );
+                this.pipelineJobReporter.error( e );
             }
         } finally {
             this.executorService = null;
         }
+    }
+
+    /**
+     * Obtain the pipeline-job progress reporter for this run.
+     * <p>
+     * Returns {@link ubic.gemma.cli.pipeline.PipelineJobReporter#NOOP} when the
+     * CLI was launched outside a pipeline context (i.e. {@code GEMMA_JOB_ID}
+     * env var unset), so subclasses can call
+     * {@code getPipelineJobReporter().stage("phase")} unconditionally.
+     */
+    protected final ubic.gemma.cli.pipeline.PipelineJobReporter getPipelineJobReporter() {
+        return pipelineJobReporter;
     }
 
     /**

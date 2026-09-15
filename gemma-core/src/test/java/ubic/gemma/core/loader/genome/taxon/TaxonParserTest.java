@@ -18,35 +18,38 @@
  */
 package ubic.gemma.core.loader.genome.taxon;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.Taxon;
 
 import java.io.InputStream;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * @author pavlidis
  */
-public class TaxonParserTest extends TestCase {
+public class TaxonParserTest {
 
     private InputStream is;
 
+    @Test
     public void testParseInputStream() throws Exception {
         TaxonParser tp = new TaxonParser();
         tp.parse( is );
         Collection<Taxon> results = tp.getResults();
-        TestCase.assertEquals( 75, results.size() );
+        assertEquals( 75, results.size() );
     }
 
-    @Override
+    @BeforeEach
     protected void setUp() throws Exception {
-        super.setUp();
         is = this.getClass().getResourceAsStream( "/data/loader/genome/taxon.names.dmp.sample.txt" );
     }
 
-    @Override
+    @AfterEach
     protected void tearDown() throws Exception {
-        super.tearDown();
         is.close();
     }
 

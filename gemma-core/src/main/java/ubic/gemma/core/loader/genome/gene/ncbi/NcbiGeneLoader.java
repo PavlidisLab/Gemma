@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
@@ -46,7 +46,7 @@ public class NcbiGeneLoader {
     private final AtomicBoolean generatorDone;
     private final AtomicBoolean converterDone;
     private final AtomicBoolean loaderDone;
-    private Persister persisterHelper;
+    private GeneWriteService geneWriteService;
     private int loadedGeneCount = 0;
     private TaxonService taxonService;
 
@@ -58,11 +58,6 @@ public class NcbiGeneLoader {
         generatorDone = new AtomicBoolean( false );
         converterDone = new AtomicBoolean( false );
         loaderDone = new AtomicBoolean( false );
-    }
-
-    public NcbiGeneLoader( Persister persisterHelper ) {
-        this();
-        this.setPersisterHelper( persisterHelper );
     }
 
     /**
@@ -119,10 +114,11 @@ public class NcbiGeneLoader {
     }
 
     /**
-     * @param persisterHelper the persisterHelper to set
+     * @param geneWriteService the gene write service used by the loader thread
+     *        to upsert each converted Gene. Required for {@link #load} calls.
      */
-    public void setPersisterHelper( Persister persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    public void setGeneWriteService( GeneWriteService geneWriteService ) {
+        this.geneWriteService = geneWriteService;
     }
 
     public void setTaxonService( TaxonService bean ) {
@@ -188,7 +184,12 @@ public class NcbiGeneLoader {
                     continue;
                 }
 
-                persisterHelper.persistOrUpdate( gene );
+                // Phase 3 Chunk 5.4: strangler-fig cutover from
+                // persisterHelper.persistOrUpdate(gene) to GeneWriteService.upsert(gene).
+                // The old persister method (GenomePersister.updateGene) is now deprecated
+                // and remains on disk only to support not-yet-migrated polymorphic callers
+                // (Chunk 5.5).
+                geneWriteService.upsert( gene );
 
                 if ( ++loadedGeneCount % 1000 == 0 || timer.getTime() > 30 * 1000 ) {
                     NcbiGeneLoader.log.info( "Processed " + loadedGeneCount + " genes. Queue has " + geneQueue.size()

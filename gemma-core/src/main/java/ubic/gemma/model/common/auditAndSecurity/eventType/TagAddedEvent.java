@@ -18,13 +18,23 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
- * Read-compatibility marker for audit rows written by Gemma 2.0.
+ * Emitted when a single experiment-level annotation (tag) is added to an
+ * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} via the
+ * REST annotation write endpoints.
  * <p>
- * Gemma 2.0 emits this {@link AuditEventType} subclass; the 1.x line shares the audit trail, so it
- * must be able to load a row with this discriminator without a Hibernate {@code WrongClassException}.
- * The 1.x code never writes it and it carries no behaviour of its own — it exists only so the read
- * resolves. (In 2.0 it extends a richer hierarchy; here it is flattened onto an existing parent.)
+ * Distinct from {@link ManualAnnotationEvent}, which is emitted by the bulk
+ * {@code updateAnnotations} flow on a per-call basis (one event per call, not
+ * per tag). {@code TagAddedEvent} fires per added tag so the per-row audit
+ * trail required by {@code HANDOFF_DATASETS_ANNOTATIONS_WRITE.md} answers
+ * "what was the state of this EE's tags at time T?" correctly.
  */
+@Entity
+@DiscriminatorValue("TagAddedEvent")
 public class TagAddedEvent extends AnnotationEvent {
+
 }

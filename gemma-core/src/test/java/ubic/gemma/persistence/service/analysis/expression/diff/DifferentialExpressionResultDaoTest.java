@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -31,8 +31,9 @@ import static org.mockito.Mockito.mock;
 import static ubic.gemma.model.analysis.expression.diff.RandomDifferentialExpressionAnalysisUtils.randomAnalysis;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -67,10 +68,11 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
         ad.getCompositeSequences().add( cs );
         cs.setArrayDesign( ad );
         sessionFactory.getCurrentSession().persist( ad );
-        sessionFactory.getCurrentSession().createSQLQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
-                .setParameter( 0, gene.getId() )
-                .setParameter( 1, cs.getId() )
-                .setParameter( 2, ad.getId() )
+        // Hibernate 5: JPA-style positional parameters are 1-based (were 0-based in Hibernate 4).
+        sessionFactory.getCurrentSession().createNativeQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
+                .setParameter( 1, gene.getId() )
+                .setParameter( 2, cs.getId() )
+                .setParameter( 3, ad.getId() )
                 .executeUpdate();
         differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.0, true, false, true );
         differentialExpressionResultDao.findByGeneAndExperimentAnalyzed( gene, Collections.singleton( 1L ), true, null, null, null, 1.0, true, false, true );
@@ -203,11 +205,11 @@ public class DifferentialExpressionResultDaoTest extends BaseDatabaseTest {
     }
 
     private void createProbeLink( Gene gene, CompositeSequence cs ) {
-        // manually insert an entry in the GENE2CS table
-        sessionFactory.getCurrentSession().createSQLQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
-                .setParameter( 0, gene.getId() )
-                .setParameter( 1, cs.getId() )
-                .setParameter( 2, cs.getArrayDesign().getId() )
+        // manually insert an entry in the GENE2CS table. Hibernate 5: 1-based positional parameters.
+        sessionFactory.getCurrentSession().createNativeQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
+                .setParameter( 1, gene.getId() )
+                .setParameter( 2, cs.getId() )
+                .setParameter( 3, cs.getArrayDesign().getId() )
                 .executeUpdate();
     }
 }

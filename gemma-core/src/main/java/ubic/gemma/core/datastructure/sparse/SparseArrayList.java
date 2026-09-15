@@ -1,5 +1,7 @@
 package ubic.gemma.core.datastructure.sparse;
 
+import org.springframework.lang.Nullable;
+
 import java.util.*;
 
 import static ubic.gemma.core.datastructure.sparse.SparseListUtils.getSparseArrayElement;
@@ -18,9 +20,10 @@ public class SparseArrayList<T> extends AbstractList<T> implements SparseList<T>
     private final ArrayList<T> array;
     private final int[] indices;
     private final int numberOfElements;
+    @Nullable
     private final T defaultValue;
 
-    public SparseArrayList( Collection<T> collection, T defaultValue ) {
+    public SparseArrayList( Collection<T> collection, @Nullable T defaultValue ) {
         ArrayList<T> array = new ArrayList<>();
         ArrayList<Integer> indices = new ArrayList<>();
         int i = 0;
@@ -48,7 +51,7 @@ public class SparseArrayList<T> extends AbstractList<T> implements SparseList<T>
         this( collection, null );
     }
 
-    public SparseArrayList( List<T> array, int[] indices, int numberOfElements, T defaultValue ) {
+    public SparseArrayList( List<T> array, int[] indices, int numberOfElements, @Nullable T defaultValue ) {
         validateSparseArray( array, indices, numberOfElements, defaultValue );
         this.array = new ArrayList<>( array );
         this.indices = Arrays.copyOf( indices, indices.length );

@@ -1,6 +1,6 @@
 package ubic.gemma.cli.completion;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
@@ -12,7 +12,7 @@ import ubic.gemma.cli.main.GemmaCLI;
 import ubic.gemma.cli.util.EnumeratedByCommandConverter;
 import ubic.gemma.cli.util.EnumeratedConverter;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Locale;
@@ -26,7 +26,7 @@ import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
  * Generates fish completion script.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class FishCompletionGenerator implements CompletionGenerator {
 
     private final String executableName;

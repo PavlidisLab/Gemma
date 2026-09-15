@@ -18,29 +18,16 @@
  */
 package ubic.gemma.core.job.notification;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /**
  * author: anton date: 10/02/13
  */
+@Getter
+@RequiredArgsConstructor
 public class EmailNotificationContext {
     private final String taskId;
     private final String submitter;
     private final String taskName;
-
-    public EmailNotificationContext( String taskId, String submitter, String taskName ) {
-        this.taskId = taskId;
-        this.submitter = submitter;
-        this.taskName = taskName;
-    }
-
-    public String getSubmitter() {
-        return submitter;
-    }
-
-    public String getTaskId() {
-        return taskId;
-    }
-
-    public String getTaskName() {
-        return taskName;
-    }
 }

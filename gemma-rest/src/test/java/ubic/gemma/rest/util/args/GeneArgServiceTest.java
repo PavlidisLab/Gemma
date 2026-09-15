@@ -1,14 +1,13 @@
 package ubic.gemma.rest.util.args;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -19,7 +18,7 @@ import java.util.Collections;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class GeneArgServiceTest extends BaseTest {
+public class GeneArgServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -42,7 +41,7 @@ public class GeneArgServiceTest extends BaseTest {
     @Autowired
     private GeneService geneService;
 
-    @Before
+    @BeforeEach
     public void setupMocks() {
         when( geneService.findByNCBIId( any() ) ).thenReturn( new Gene() );
         when( geneService.findByEnsemblId( any() ) ).thenReturn( new Gene() );
@@ -50,7 +49,7 @@ public class GeneArgServiceTest extends BaseTest {
         when( geneService.findByOfficialSymbol( any(), any() ) ).thenReturn( new Gene() );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( geneService );
     }

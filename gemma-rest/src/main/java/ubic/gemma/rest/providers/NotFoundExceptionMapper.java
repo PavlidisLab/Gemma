@@ -11,9 +11,9 @@ import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.WellComposedError;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.Provider;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.expression;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.job.Task;
 import ubic.gemma.core.job.TaskCommand;
 
@@ -25,6 +27,8 @@ import ubic.gemma.core.job.TaskCommand;
  * @author paul
  */
 @SuppressWarnings("unused") // Possible external use
+@Getter
+@Setter
 public class UpdateEEDetailsCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
@@ -35,73 +39,6 @@ public class UpdateEEDetailsCommand extends TaskCommand {
     private String description;
     private String pubMedId;
     private boolean removePrimaryPublication;
-
-    public Long getEntityId() {
-        return entityId;
-    }
-
-    public void setEntityId( Long entityId ) {
-        this.entityId = entityId;
-    }
-
-    /**
-     * @return the description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * @param description the description to set
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @param name the name to set
-     */
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    /**
-     * @return the shortName
-     */
-    public String getShortName() {
-        return shortName;
-    }
-
-    /**
-     * @param shortName the shortName to set
-     */
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
-    }
-
-    public String getPubMedId() {
-        return pubMedId;
-    }
-
-    public void setPubMedId( String pubMedId ) {
-        this.pubMedId = pubMedId;
-    }
-
-    public boolean isRemovePrimaryPublication() {
-        return removePrimaryPublication;
-    }
-
-    @SuppressWarnings("unused") // Possible frontend use
-    public void setRemovePrimaryPublication( boolean removePrimaryPublication ) {
-        this.removePrimaryPublication = removePrimaryPublication;
-    }
 
     @Override
     public Class<? extends Task<? extends TaskCommand>> getTaskClass() {

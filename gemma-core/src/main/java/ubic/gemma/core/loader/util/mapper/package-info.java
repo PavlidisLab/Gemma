@@ -2,7 +2,7 @@
  * Utilities for mapping {@link ubic.gemma.model.common.Identifiable} entities to external identifiers.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.loader.util.mapper;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

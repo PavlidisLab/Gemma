@@ -18,6 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -26,15 +35,39 @@ import java.util.Set;
 /**
  * A user of the software system, who is authenticated.
  */
-public class User extends Person implements gemma.gsec.model.User {
+@Entity
+@DiscriminatorValue("User")
+public class User extends Person implements ubic.gemma.core.security.model.User {
 
+    @Column(name = "USER_NAME", unique = true, updatable = false, columnDefinition = "VARCHAR(255)")
     private String userName;
+
+    @Column(name = "PASSWORD", columnDefinition = "VARCHAR(255)")
     private String password;
+
+    @Column(name = "PASSWORD_HINT", columnDefinition = "VARCHAR(255)")
     private String passwordHint;
+
+    @Column(name = "ENABLED", columnDefinition = "TINYINT")
     private boolean enabled;
+
+    @Column(name = "SIGNUP_TOKEN", columnDefinition = "VARCHAR(255)")
     private String signupToken;
+
+    @Column(name = "SIGNUP_TOKEN_DATESTAMP", columnDefinition = "DATETIME(3)")
     private java.util.Date signupTokenDatestamp;
+
+    @Column(name = "DELETED_AT", columnDefinition = "DATETIME(3)")
+    private java.util.Date deletedAt;
+
+    @Column(name = "DELETED_BY", columnDefinition = "VARCHAR(255)")
+    private String deletedBy;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<JobInfo> jobs = new java.util.HashSet<>();
+
+    @ManyToMany(mappedBy = "groupMembers", fetch = FetchType.LAZY)
     private Set<UserGroup> groups = new HashSet<>();
 
     public boolean isEnabled() {
@@ -96,6 +129,31 @@ public class User extends Person implements gemma.gsec.model.User {
 
     public void setSignupTokenDatestamp( java.util.Date signupTokenDatestamp ) {
         this.signupTokenDatestamp = signupTokenDatestamp;
+    }
+
+    /**
+     * Timestamp of the admin soft-delete; null when the account is active.
+     * Hard-deleting users is forbidden — ACL sids, audit-event authors, and
+     * other references would dangle. See {@code V16__user_soft_delete.sql}.
+     */
+    public java.util.Date getDeletedAt() {
+        return this.deletedAt;
+    }
+
+    public void setDeletedAt( java.util.Date deletedAt ) {
+        this.deletedAt = deletedAt;
+    }
+
+    /**
+     * Username of the admin who soft-deleted this account; null when active.
+     * Free-form string (not an FK) so admin churn doesn't cascade.
+     */
+    public String getDeletedBy() {
+        return this.deletedBy;
+    }
+
+    public void setDeletedBy( String deletedBy ) {
+        this.deletedBy = deletedBy;
     }
 
     @Override

@@ -18,13 +18,19 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
- * Read-compatibility marker for audit rows written by Gemma 2.0.
- * <p>
- * Gemma 2.0 emits this {@link AuditEventType} subclass; the 1.x line shares the audit trail, so it
- * must be able to load a row with this discriminator without a Hibernate {@code WrongClassException}.
- * The 1.x code never writes it and it carries no behaviour of its own — it exists only so the read
- * resolves. (In 2.0 it extends a richer hierarchy; here it is flattened onto an existing parent.)
+ * Emitted when a single experiment-level annotation (tag) is removed from an
+ * {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} via the
+ * REST annotation write endpoints. Paired with {@link TagAddedEvent}; see
+ * its javadoc for the rationale (per-tag granularity over the per-call
+ * granularity provided by {@link ManualAnnotationEvent}).
  */
+@Entity
+@DiscriminatorValue("TagRemovedEvent")
 public class TagRemovedEvent extends AnnotationEvent {
+
 }

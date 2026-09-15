@@ -1,19 +1,33 @@
 package ubic.gemma.persistence.util;
 
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.QueryParameterException;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.IntegerType;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.util.Assert;
+import jakarta.persistence.criteria.CommonAbstractCriteria;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import org.hibernate.Session;
+import ubic.gemma.core.security.acl.domain.AclEntry;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclPrincipalSid;
+import ubic.gemma.core.security.acl.domain.AclSid;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utilities for integrating ACL into {@link Query}.
@@ -21,20 +35,48 @@ import java.util.Arrays;
  * To build a query, sequentially proceed as follows:
  * <ol>
  * <li>form your select clause and your jointures</li>
- * <li>concatenate {@link #formAclRestrictionClause(String)} or {@link #formNativeAclJoinClause(String)} in the jointure section</li>
+ * <li>concatenate {@link #formAclRestrictionClause(String)} in the jointure section</li>
  * <li>form where clause and add your constraints</li>
- * <li>concatenate {@link #formNativeAclRestrictionClause(SessionFactoryImplementor)} in the clause section (only for native queries)</li>
+ * <li>concatenate {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String)} in the clause section (only for native queries)</li>
  * <li>bind all your parameters</li>
  * <li>bind ACL-specific parameters with {@link #addAclParameters(Query, Class)} to the query object</li>
  * </ol>
+ *
+ * <h2>EXISTS rewrite (Session 2 of the ACL EXISTS refactor)</h2>
+ * <p>
+ * {@link #formAclRestrictionClause(String, Permission)} historically emitted a Cartesian
+ * {@code , AclObjectIdentity as aoi join aoi.ownerSid sid [left join aoi.entries ace] where (...)}
+ * fragment that multiplied result rows whenever an AOI had more than one matching ACE. Callers
+ * worked around the row multiplication by sprinkling {@code distinct} and {@code group by}.
+ * <p>
+ * The emitted clause is now a correlated {@code EXISTS} sub-query against
+ * {@link ubic.gemma.core.security.acl.domain.AclObjectIdentity}. Semantics are identical
+ * (anonymous role check, group-grant check, owner-principal check, admin bypass) but no
+ * row multiplication can occur, so the {@code distinct} / {@code group by} compensations have
+ * been removed (Session 3 cleanup). The {@code aoi} / {@code sid} HQL aliases that the old
+ * clause exposed in scope are <strong>no longer visible</strong> to the surrounding query —
+ * callers that need the ACL info (only {@code ExpressionExperimentDaoImpl.getFilteringQuery})
+ * must post-fetch via {@link #loadAclInfoFor(org.hibernate.Session, java.util.Collection, Class)}.
+ *
+ * <h2>Native callers: explicit id column (HQL_SQL_AUDIT C5)</h2>
+ * <p>
+ * Native callers previously had to invoke a {@code formNativeAclJoinClause(String)} shim before
+ * {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String)} so the id column
+ * could be threaded across via a {@link ThreadLocal}. That coupling is gone: the restriction
+ * clause now takes the {@code aoiIdColumn} as an explicit parameter, and the join shim has
+ * been removed.
  *
  * @author poirigui
  */
 public class AclQueryUtils {
 
     /**
-     * Alias used by {@link #formAclRestrictionClause(String, Permission)} and {@link #formNativeAclJoinClause(String)} for the
-     * object identity {@link gemma.gsec.acl.domain.AclObjectIdentity} and the owner identity {@link gemma.gsec.acl.domain.AclSid}.
+     * Alias used for the object identity {@link ubic.gemma.core.security.acl.domain.AclObjectIdentity}
+     * and the owner identity {@link ubic.gemma.core.security.acl.domain.AclSid} inside the EXISTS body.
+     * <p>
+     * Note: after the EXISTS rewrite, {@link #formAclRestrictionClause(String, Permission)} no
+     * longer leaves these aliases in the outer query's scope (the sub-query has its own scope).
+     * Native callers still rely on the aliases for the {@code on}-clause shape.
      */
     public static final String
             AOI_ALIAS = "aoi",
@@ -50,8 +92,20 @@ public class AclQueryUtils {
      */
     private static final String PARAM_PREFIX = "aclQueryUtils_";
     private static final String
-            AOI_TYPE_PARAM = PARAM_PREFIX + "aoiType";
+            AOI_TYPE_PARAM = PARAM_PREFIX + "aoiType",
+    // HQL-only: the resolved acl_class.id, used in place of the formula-backed
+    // `aoi.type = :aoiType` so MySQL doesn't emit a correlated subquery per
+    // outer row. See the formAclRestrictionClause comment.
+            AOI_CLASS_ID_PARAM = PARAM_PREFIX + "aoiClassId";
     static final String USER_NAME_PARAM = PARAM_PREFIX + "userName";
+
+    /**
+     * Cache of {@code acl_class.id} keyed by {@link Class#getCanonicalName()}.
+     * Stable across JVM lifetime (acl_class rows are insert-once on first
+     * Securable registration). Lookup is via a one-shot native query the first
+     * time a given class name is bound.
+     */
+    private static final ConcurrentHashMap<String, Long> ACL_CLASS_ID_CACHE = new ConcurrentHashMap<>();
 
     /**
      * Select all the SIDs that belong to a given user (specified by a :userName parameter).
@@ -67,35 +121,53 @@ public class AclQueryUtils {
 
     /**
      * Native SQL version of {@link #CURRENT_USER_SIDS_HQL}.
+     * <p>
+     * Targets Spring Security 6's canonical {@code acl_sid} schema where {@code principal}
+     * is a 0/1 discriminator (0 = GrantedAuthoritySid, 1 = PrincipalSid) and the SID name
+     * lives in the {@code sid} column.
      */
     //language=SQL
     static final String CURRENT_USER_SIDS_SQL =
-            "select sid.ID from USER_GROUP as UG "
+            "select sid.id from USER_GROUP as UG "
                     + "join GROUP_AUTHORITY GA on UG.ID = GA.GROUP_FK "
-                    + "join ACLSID sid on sid.GRANTED_AUTHORITY = CONCAT('GROUP_', GA.AUTHORITY) "
+                    + "join acl_sid sid on (sid.principal = 0 and sid.sid = CONCAT('GROUP_', GA.AUTHORITY)) "
                     + "join GROUP_MEMBERS GM on UG.ID = GM.USER_GROUPS_FK "
                     + "join CONTACT C on GM.GROUP_MEMBERS_FK = C.ID "
                     + "where C.USER_NAME = :" + USER_NAME_PARAM;
 
     //language=SQL
-    static final String ANONYMOUS_SID_SQL = "select sid.ID from ACLSID sid where sid.GRANTED_AUTHORITY = 'IS_AUTHENTICATED_ANONYMOUSLY'";
+    static final String ANONYMOUS_SID_SQL = "select sid.id from acl_sid sid where sid.principal = 0 and sid.sid = 'IS_AUTHENTICATED_ANONYMOUSLY'";
 
     /**
-     * Indicate if the ACL query requires a {@code count(distinct ...)} clause.
+     * An HQL boolean expression that is true when the object is readable by an anonymous caller —
+     * that is, when it is PUBLIC.
      * <p>
-     * FIXME: remove the need for a distinct altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
-     */
-    public static boolean requiresCountDistinct() {
-        return !SecurityUtil.isUserAdmin();
-    }
-
-    /**
-     * Indicate if the ACL query requires a {@code group by} clause.
+     * Public is not a stored flag anywhere: it is an ACE granting READ to the anonymous SID, which
+     * is exactly what the anonymous branch of {@link #formAclRestrictionClause(String, Permission)}
+     * tests. This is that same test, shaped as an expression so a filter can compare it like an
+     * ordinary boolean property.
      * <p>
-     * FIXME: remove the need for a count distinct altogether by using a sub-query to apply ACLs (see <a href="https://github.com/PavlidisLab/Gemma/issues/784">#784</a>)
+     * 🛑 It matches on {@code aoi.objectIdClass}, the mapped BIGINT, and never on {@code aoi.type},
+     * which is a formula resolving to a correlated subquery on {@code acl_class}. With the formula
+     * the planner re-ran that lookup per outer row and {@code /datasets/count} never finished
+     * against production cardinalities.
+     * <p>
+     * The parameter it declares is this class's own, so a caller that already runs
+     * {@link #addAclParameters(Query, Class)} binds it for free; that method binds only parameters
+     * the query actually declares.
+     *
+     * @param idColumn the outer query's id column, e.g. {@code ee.id}
      */
-    public static boolean requiresGroupBy() {
-        return !SecurityUtil.isUserAdmin();
+    public static String formIsPubliclyReadableExpression( String idColumn ) {
+        Assert.isTrue( StringUtils.isNotBlank( idColumn ), "The id column cannot be empty." );
+        //language=HQL
+        return "(case when exists ("
+                + "select 1 from AclObjectIdentity paoi join paoi.entries pace "
+                + "where paoi.identifier = " + idColumn + " "
+                + "and paoi.objectIdClass = :" + AOI_CLASS_ID_PARAM + " "
+                + "and bitand(pace.mask, " + BasePermission.READ.getMask() + ") <> 0 "
+                + "and pace.sid in (" + ANONYMOUS_SID_HQL + ")"
+                + ") then true else false end)";
     }
 
     /**
@@ -107,17 +179,32 @@ public class AclQueryUtils {
     }
 
     /**
-     * Create an HQL join clause for {@link gemma.gsec.acl.domain.AclObjectIdentity}, {@link gemma.gsec.acl.domain.AclGrantedAuthoritySid}
-     * and a restriction clause to limit the result only to objects the current user can access.
+     * Create an HQL restriction clause that limits the result only to objects the current user can access.
      * <p>
-     * Ensure that you use {@link #addAclParameters(Query, Class)} afterward to bind the query parameters.
+     * The clause is a correlated {@code EXISTS} sub-query against
+     * {@link ubic.gemma.core.security.acl.domain.AclObjectIdentity} that preserves the
+     * pre-refactor security semantics (anonymous role check, group-grant check,
+     * owner-principal check, admin bypass) but does <strong>not</strong> multiply rows the
+     * way the old Cartesian join did. As a consequence:
+     * <ul>
+     *     <li>Callers no longer need {@code distinct} / {@code group by} compensations; the
+     *     historical {@code requiresCountDistinct()} / {@code requiresGroupBy()} helpers have
+     *     been removed (Session 3 cleanup).</li>
+     *     <li>The {@code aoi} / {@code sid} HQL aliases are <strong>no longer in scope</strong>
+     *     in the surrounding query (the sub-query has its own scope). Callers that need to
+     *     project ACL info must post-fetch via
+     *     {@link #loadAclInfoFor(org.hibernate.Session, java.util.Collection, Class)}.</li>
+     * </ul>
      * <p>
-     * <b>Important note:</b> when using this, ensure that you have a {@code group by} clause in your query, otherwise
-     * entities with multiple ACL entries will be duplicated in the results. You can use {@link #requiresGroupBy()} to
-     * tell if a {@code group by} clause is required and {@link #requiresCountDistinct()} when counting results.
-     * <p>
-     * FIXME: this ACL jointure is really annoying because it is one-to-many, maybe handling everything in a sub-query
-     *        would be preferable?
+     * The emission shape is {@code " where (exists (...))"} (or empty for admin), so callers
+     * can continue to concatenate {@code " and ..."} after it the same way they did with
+     * the old JOIN clause. Empty for admin because no filtering is needed; callers that need
+     * a {@code where} clause for their own predicates must therefore introduce one themselves
+     * — but in practice the existing pattern is {@code "from X x " + formAclRestrictionClause(...) + " and ..."}
+     * which short-circuits in the admin case to {@code "from X x  and ..."} which is invalid.
+     * The {@link #formAclRestrictionClause(String, Permission)} contract therefore now always
+     * emits at least a {@code " where (1=1)"} placeholder when the caller has no other WHERE,
+     * preserving the {@code " and ..."} concatenation idiom for all three principal classes.
      *
      * @param aoiIdColumn column name to match against the ACL object identity, the object class is passed via
      *                    {@link #addAclParameters(Query, Class)} afterward
@@ -129,104 +216,280 @@ public class AclQueryUtils {
             throw new IllegalArgumentException( "Object identity column cannot be empty." );
         }
         Assert.isTrue( permission.getMask() > 0, "The mask must have at least one bit set." );
+
+        // Admin bypass: no ACL filter, but we still must emit a `where` so callers can append
+        // ` and X`. The 1=1 placeholder is the cheapest way to keep the caller-side
+        // concatenation idiom honest.
+        if ( SecurityUtil.isUserAdmin() ) {
+            //language=HQL
+            return " where (1=1)";
+        }
+
+        // Build the EXISTS body: select 1 from AclObjectIdentity aoi [join sid] [left join aoi.entries ace]
+        //   where aoi.identifier = <aoiIdCol> and aoi.objectIdClass = :aoiClassId
+        //         and (<acl predicates>)
+        //
+        // Filtering on aoi.objectIdClass (the mapped BIGINT column) instead of
+        // aoi.type (a formula property that resolves to a correlated subquery on
+        // acl_class) lets MySQL fold the AOI class lookup to a const. With
+        // aoi.type the planner re-ran acl_class per outer row and the
+        // /datasets/count query never finished against prod cardinalities.
         //language=HQL
-        String q = ", AclObjectIdentity as " + AOI_ALIAS + " join " + AOI_ALIAS + ".ownerSid " + SID_ALIAS;
-        // for non-admin, we have to include aoi.entries
-        // if aoi.entries is empty, the user might still be the owner, so we use a left join
-        if ( !SecurityUtil.isUserAdmin() ) {
-            q += " left join " + AOI_ALIAS + ".entries " + ACE_ALIAS;
+        StringBuilder exists = new StringBuilder( 256 );
+        exists.append( "exists (select 1 from AclObjectIdentity " ).append( AOI_ALIAS )
+                .append( " join " ).append( AOI_ALIAS ).append( ".ownerSid " ).append( SID_ALIAS );
+
+        if ( SecurityUtil.isUserAnonymous() ) {
+            // Anonymous: only the ACE check is in play; SID isn't used in the predicate but
+            // joining keeps the shape consistent with the authenticated branch.
+            exists.append( " join " ).append( AOI_ALIAS ).append( ".entries " ).append( ACE_ALIAS )
+                    .append( " where " ).append( AOI_ALIAS ).append( ".identifier = " ).append( aoiIdColumn )
+                    .append( " and " ).append( AOI_ALIAS ).append( ".objectIdClass = :" ).append( AOI_CLASS_ID_PARAM )
+                    .append( " and bitand(" ).append( ACE_ALIAS ).append( ".mask, " ).append( permission.getMask() )
+                    .append( ") <> 0 and " ).append( ACE_ALIAS ).append( ".sid in (" ).append( ANONYMOUS_SID_HQL ).append( "))" );
+        } else {
+            // Authenticated non-admin: owner-or-grant predicate. The original code left-joined
+            // aoi.entries so that owner-without-ACE rows still matched; we model the disjunction
+            // explicitly with two EXISTS variants OR'd together.
+            exists.append( " left join " ).append( AOI_ALIAS ).append( ".entries " ).append( ACE_ALIAS )
+                    .append( " where " ).append( AOI_ALIAS ).append( ".identifier = " ).append( aoiIdColumn )
+                    .append( " and " ).append( AOI_ALIAS ).append( ".objectIdClass = :" ).append( AOI_CLASS_ID_PARAM )
+                    .append( " and (" )
+                    // user owns the object
+                    .append( SID_ALIAS ).append( ".principal = :" ).append( USER_NAME_PARAM ).append( " " )
+                    // specific rights to the object
+                    .append( "or (" ).append( ACE_ALIAS ).append( ".sid in (" ).append( CURRENT_USER_SIDS_HQL )
+                    .append( ") and bitand(" ).append( ACE_ALIAS ).append( ".mask, " ).append( permission.getMask() ).append( ") <> 0) " )
+                    // publicly available
+                    .append( "or (" ).append( ACE_ALIAS ).append( ".sid in (" ).append( ANONYMOUS_SID_HQL )
+                    .append( ") and bitand(" ).append( ACE_ALIAS ).append( ".mask, " ).append( permission.getMask() ).append( ") <> 0)" )
+                    .append( "))" );
         }
-        q += " where (" + AOI_ALIAS + ".identifier = " + aoiIdColumn + " and " + AOI_ALIAS + ".type = :" + AOI_TYPE_PARAM + ")";
-        // add ACL restrictions
-        if ( !SecurityUtil.isUserAdmin() ) {
-            if ( SecurityUtil.isUserAnonymous() ) {
-                //language=HQL
-                q += " and (bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0 and " + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + "))";
-            } else {
-                q += " and ("
-                        // user own the object
-                        + SID_ALIAS + ".principal = :" + USER_NAME_PARAM + " "
-                        // specific rights to the object
-                        + "or (" + ACE_ALIAS + ".sid in (" + CURRENT_USER_SIDS_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0) "
-                        // publicly available
-                        + "or (" + ACE_ALIAS + ".sid in (" + ANONYMOUS_SID_HQL + ") and bitwise_and(" + ACE_ALIAS + ".mask, " + permission.getMask() + ") <> 0)"
-                        + ")";
-            }
-        }
-        return q;
+
+        return " where (" + exists + ")";
     }
 
     /**
-     * Native SQL flavour of the ACL jointure.
-     * <p>
-     * Note: unlike the HQL version, this query uses {@code on} to restrict the jointure, so you can define the
-     * {@code where} clause yourself.
-     * <p>
-     * <b>Important note:</b> when using this, ensure that you have a {@code group by} clause in your query, otherwise
-     * entities with multiple ACL entries will be duplicated in the results.
-     * @param aoiIdColumn column name to match against the ACL object identity, the object class is passed via
-     *                    {@link #addAclParameters(Query, Class)} afterward
+     * JPA Criteria counterpart of {@link #formAclRestrictionClause(String, Permission)}, for DAOs that
+     * build their queries with {@link CriteriaBuilder} rather than HQL strings.
      *
-     * @see #formAclRestrictionClause(String)
+     * <h4>Why a third emitter</h4>
+     *
+     * <p>This class already carries two renderings of one set of semantics — HQL
+     * ({@link #formAclRestrictionClause(String, Permission)}) and native SQL
+     * ({@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)}) — because a
+     * caller cannot concatenate an HQL fragment into a query built by another dialect.
+     * {@link ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetDaoImpl}
+     * is Criteria-built (its filters go through {@link FilterJpaUtils}), so it could reach neither, and
+     * {@code GET /resultSets} therefore ran with no ACL restriction at all. Converting that DAO to HQL
+     * would mean replacing its whole filter machinery to fix a missing WHERE clause.</p>
+     *
+     * <p>🛑 <b>Only the EXISTS shape is transcribed here.</b> The part that is subtle — which SIDs the
+     * current principal owns, via group membership — is NOT reimplemented: {@link #CURRENT_USER_SIDS_HQL}
+     * and {@link #ANONYMOUS_SID_HQL} are executed as-is and their results bound as an id set. So a change
+     * to how a user's SIDs are derived reaches this emitter for free, and the thing that could silently
+     * diverge is limited to a four-line boolean.</p>
+     *
+     * <h4>🛑 Pass the id of the object that OWNS the ACEs, not of a SecuredChild</h4>
+     *
+     * <p>The EXISTS body tests the object identity's <em>own</em> entries and does not walk
+     * {@code parentAcl}. A {@link SecuredChild} inherits rather than carrying entries, so restricting on
+     * one matches nothing — which is why this rejects them exactly as
+     * {@link #addAclParameters(Query, Class)} does. For a result set, whose chain is result set →
+     * analysis → experiment, the id to pass is the experiment's.</p>
+     *
+     * @param session          session used to resolve the current principal's SIDs
+     * @param query            the enclosing query or subquery, needed to create the correlated subquery
+     * @param aoiIdExpression  path to the id of the securable being restricted
+     * @param aoiType          the securable's class, resolved to {@code acl_class.id}
+     * @param permission       requested permission(s)
+     * @return a predicate to AND into the caller's restrictions; an always-true conjunction for admins
      */
-    public static String formNativeAclJoinClause( String aoiIdColumn ) {
-        if ( StringUtils.isBlank( aoiIdColumn ) ) {
-            throw new IllegalArgumentException( "Object identity column cannot be empty." );
+    public static Predicate formAclRestrictionPredicate( Session session, CriteriaBuilder cb,
+            CommonAbstractCriteria query, Expression<Long> aoiIdExpression,
+            Class<? extends Securable> aoiType, Permission permission ) {
+        Assert.isTrue( permission.getMask() > 0, "The mask must have at least one bit set." );
+        if ( SecuredChild.class.isAssignableFrom( aoiType ) ) {
+            throw new IllegalArgumentException( "ACL filtering cannot be done on a SecuredChild; instead identify the owner and apply ACLs on it." );
         }
-        //language=SQL
-        String q = " join ACLOBJECTIDENTITY " + AOI_ALIAS + " on (" + AOI_ALIAS + ".OBJECT_CLASS = :" + AOI_TYPE_PARAM + " and " + AOI_ALIAS + ".OBJECT_ID = " + aoiIdColumn + ") "
-                + "join ACLSID " + SID_ALIAS + " on (" + SID_ALIAS + ".ID = " + AOI_ALIAS + ".OWNER_SID_FK)";
+        // Admin bypass, matching the HQL emitter's ` where (1=1)`.
+        if ( SecurityUtil.isUserAdmin() ) {
+            return cb.conjunction();
+        }
 
-        // for non-admin, we have to include aoi.entries
-        // if aoi.entries is empty, the user might still be the owner, so we use a left join
-        if ( !SecurityUtil.isUserAdmin() ) {
-            q += " left join ACLENTRY " + ACE_ALIAS + " on (" + AOI_ALIAS + ".ID = " + ACE_ALIAS + ".OBJECTIDENTITY_FK)";
+        Subquery<Long> sq = query.subquery( Long.class );
+        Root<AclObjectIdentity> aoi = sq.from( AclObjectIdentity.class );
+        sq.select( cb.literal( 1L ) );
+
+        List<Predicate> where = new ArrayList<>();
+        where.add( cb.equal( aoi.get( "identifier" ), aoiIdExpression ) );
+        // objectIdClass (the mapped BIGINT) rather than the formula-backed `type`, for the planner
+        // reason spelled out on formAclRestrictionClause.
+        where.add( cb.equal( aoi.get( "objectIdClass" ), resolveAclClassId( aoiType.getCanonicalName() ) ) );
+
+        if ( SecurityUtil.isUserAnonymous() ) {
+            // Anonymous: the ACE check is the whole predicate, so an inner join is right — an identity
+            // with no entries cannot match.
+            Join<AclObjectIdentity, AclEntry> ace = aoi.join( "entries", JoinType.INNER );
+            where.add( grantsTo( cb, ace, sidsIn( session, ANONYMOUS_SID_HQL, false ), permission ) );
+        } else {
+            // Authenticated non-admin: owner-or-grant. Left join so an owner with no ACE still matches,
+            // mirroring the HQL emitter.
+            Join<AclObjectIdentity, AclEntry> ace = aoi.join( "entries", JoinType.LEFT );
+            Join<AclObjectIdentity, AclSid> owner = aoi.join( "ownerSid", JoinType.INNER );
+            where.add( cb.or(
+                    // owns it — `principal` lives on the AclPrincipalSid branch of the single-table
+                    // hierarchy, hence the treat()
+                    cb.equal( cb.treat( owner, AclPrincipalSid.class ).get( "principal" ),
+                            SecurityUtil.getCurrentUsername() ),
+                    // granted to one of the principal's SIDs
+                    grantsTo( cb, ace, sidsIn( session, CURRENT_USER_SIDS_HQL, true ), permission ),
+                    // or publicly readable
+                    grantsTo( cb, ace, sidsIn( session, ANONYMOUS_SID_HQL, false ), permission ) ) );
         }
-        return q;
+
+        sq.where( cb.and( where.toArray( new Predicate[0] ) ) );
+        return cb.exists( sq );
+    }
+
+    /**
+     * {@code ace.sid in (:sids) and bitand(ace.mask, <mask>) <> 0}, or an always-false predicate when
+     * the SID set is empty — a user who belongs to no group is granted nothing, and an empty
+     * {@code in ()} is not something to hand the dialect.
+     */
+    private static Predicate grantsTo( CriteriaBuilder cb, Join<AclObjectIdentity, AclEntry> ace,
+            List<AclSid> sids, Permission permission ) {
+        if ( sids.isEmpty() ) {
+            return cb.disjunction();
+        }
+        return cb.and(
+                ace.get( "sid" ).in( sids ),
+                cb.notEqual( cb.function( "bitand", Integer.class, ace.get( "mask" ),
+                        cb.literal( permission.getMask() ) ), 0 ) );
+    }
+
+    /** Run one of the SID-resolving HQL constants, so their logic is reused rather than transcribed. */
+    private static List<AclSid> sidsIn( Session session, String hql, boolean boundToUser ) {
+        org.hibernate.query.Query<AclSid> q = session.createQuery( hql, AclSid.class );
+        if ( boundToUser ) {
+            q.setParameter( USER_NAME_PARAM, SecurityUtil.getCurrentUsername() );
+        }
+        return q.list();
+    }
+
+    /**
+     * Batched post-fetch of ACL info (object identity + owner SID) for a set of entity ids
+     * of a given {@link Securable} type. Replaces the {@code select ee, aoi, sid} projection
+     * that the old JOIN-form ACL clause supported — the EXISTS-form clause can no longer
+     * propagate {@code aoi}/{@code sid} into the outer projection.
+     *
+     * @param session    Hibernate session to run the query on
+     * @param ids        the entity ids whose ACL info to fetch; empty input returns empty map
+     * @param aoiType    the AOI type (the entity class) — used to scope the lookup
+     * @return a map keyed by entity id, value is a {@link org.apache.commons.lang3.tuple.Pair}
+     *         of (AclObjectIdentity, AclSid). Ids without ACL rows are absent.
+     */
+    public static java.util.Map<Long, org.apache.commons.lang3.tuple.Pair<ubic.gemma.core.security.acl.domain.AclObjectIdentity, ubic.gemma.core.security.acl.domain.AclSid>>
+    loadAclInfoFor( org.hibernate.Session session, java.util.Collection<Long> ids, Class<? extends Securable> aoiType ) {
+        if ( ids == null || ids.isEmpty() ) {
+            return java.util.Collections.emptyMap();
+        }
+        //language=HQL
+        // Filter on aoi.objectIdClass (indexed BIGINT) rather than aoi.type (formula
+        // resolving to a correlated subquery on acl_class) — see the formAclRestrictionClause
+        // comment. The IN list here is the
+        // post-fetch batch (usually ≤ 128 ids) so the formula form wasn't catastrophic, but
+        // applying the same shape keeps the surface consistent.
+        Long aoiClassId = resolveAclClassId( aoiType.getCanonicalName() );
+        @SuppressWarnings("unchecked")
+        java.util.List<Object[]> rows = session
+                .createQuery( "select aoi.identifier, aoi, aoi.ownerSid from AclObjectIdentity aoi "
+                        + "where aoi.identifier in :ids and aoi.objectIdClass = :aoiClassId" )
+                .setParameterList( "ids", ids )
+                .setParameter( "aoiClassId", aoiClassId )
+                .list();
+        java.util.Map<Long, org.apache.commons.lang3.tuple.Pair<ubic.gemma.core.security.acl.domain.AclObjectIdentity, ubic.gemma.core.security.acl.domain.AclSid>> out
+                = new java.util.HashMap<>( rows.size() * 2 );
+        for ( Object[] row : rows ) {
+            Long id = ( Long ) row[0];
+            ubic.gemma.core.security.acl.domain.AclObjectIdentity aoi = ( ubic.gemma.core.security.acl.domain.AclObjectIdentity ) row[1];
+            ubic.gemma.core.security.acl.domain.AclSid sid = ( ubic.gemma.core.security.acl.domain.AclSid ) row[2];
+            out.put( id, org.apache.commons.lang3.tuple.Pair.of( aoi, sid ) );
+        }
+        return out;
     }
 
     /**
      * Native flavour of the ACL restriction clause with a {@link BasePermission#READ} permission.
-     * @see #formNativeAclRestrictionClause(SessionFactoryImplementor, Permission)
+     * @see #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)
      */
-    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor ) {
-        return formNativeAclRestrictionClause( sessionFactoryImplementor, BasePermission.READ );
+    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String aoiIdColumn ) {
+        return formNativeAclRestrictionClause( sessionFactoryImplementor, aoiIdColumn, BasePermission.READ );
     }
 
     /**
      * Native flavour of the ACL restriction clause.
-     * @param sessionFactoryImplementor a session factory implementor that will be used to adjust the SQL generated
-     *                                  based on the dialect
+     * <p>
+     * Emits a self-contained {@code " and exists (...)"} clause that correlates back to the
+     * outer query via the supplied {@code aoiIdColumn}.
+     *
+     * @param sessionFactoryImplementor session factory implementor used to dialect-render the
+     *                                  bitwise-AND fragment
+     * @param aoiIdColumn               outer-query column to correlate against
+     *                                  {@code acl_object_identity.object_id_identity}; must be
+     *                                  non-blank (must be a SQL column reference, never user input)
      * @param permission                requested permission(s)
      * @see #formAclRestrictionClause(String, Permission)
      */
-    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, Permission permission ) {
-        SQLFunction bitwiseAnd = sessionFactoryImplementor.getSqlFunctionRegistry().findSQLFunction( "bitwise_and" );
-        String renderedMask = bitwiseAnd.render( new IntegerType(), Arrays.asList( ACE_ALIAS + ".MASK", permission.getMask() ), sessionFactoryImplementor );
-        //language=SQL
-        if ( SecurityUtil.isUserAnonymous() ) {
-            return " and (" + renderedMask + " <> 0 and " + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + "))";
-        } else if ( !SecurityUtil.isUserAdmin() ) {
-            return " and ("
-                    // user owns the object
-                    + SID_ALIAS + ".PRINCIPAL = :" + USER_NAME_PARAM + " "
-                    // specific rights to the object
-                    + "or (" + ACE_ALIAS + ".SID_FK in (" + CURRENT_USER_SIDS_SQL + ") and " + renderedMask + " <> 0) "
-                    // publicly available
-                    + "or (" + ACE_ALIAS + ".SID_FK in (" + ANONYMOUS_SID_SQL + ") and " + renderedMask + " <> 0)"
-                    + ")";
-        } else {
-            // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
+    public static String formNativeAclRestrictionClause( SessionFactoryImplementor sessionFactoryImplementor, String aoiIdColumn, Permission permission ) {
+        if ( StringUtils.isBlank( aoiIdColumn ) ) {
+            throw new IllegalArgumentException( "Object identity column cannot be empty." );
+        }
+        if ( SecurityUtil.isUserAdmin() ) {
             return "";
         }
+        // Dialect-aware bitwise AND (MySQL emits "(a & b)", H2 emits "BITAND(a, b)").
+        String renderedMask = BitwiseUtils.bitand( sessionFactoryImplementor.getJdbcServices().getDialect(),
+                ACE_ALIAS + ".mask", String.valueOf( permission.getMask() ) );
+        //language=SQL
+        StringBuilder sb = new StringBuilder( 384 );
+        sb.append( " and exists (select 1 from acl_object_identity " ).append( AOI_ALIAS )
+                .append( " join acl_class " ).append( AOI_ALIAS ).append( "_cls on (" )
+                .append( AOI_ALIAS ).append( "_cls.id = " ).append( AOI_ALIAS ).append( ".object_id_class)" )
+                .append( " join acl_sid " ).append( SID_ALIAS ).append( " on (" )
+                .append( SID_ALIAS ).append( ".id = " ).append( AOI_ALIAS ).append( ".owner_sid)" );
+        if ( SecurityUtil.isUserAnonymous() ) {
+            sb.append( " join acl_entry " ).append( ACE_ALIAS )
+                    .append( " on (" ).append( AOI_ALIAS ).append( ".id = " ).append( ACE_ALIAS ).append( ".acl_object_identity)" )
+                    .append( " where " ).append( AOI_ALIAS ).append( ".object_id_identity = " ).append( aoiIdColumn )
+                    .append( " and " ).append( AOI_ALIAS ).append( "_cls.class = :" ).append( AOI_TYPE_PARAM )
+                    .append( " and " ).append( renderedMask ).append( " <> 0" )
+                    .append( " and " ).append( ACE_ALIAS ).append( ".sid in (" ).append( ANONYMOUS_SID_SQL ).append( "))" );
+        } else {
+            sb.append( " left join acl_entry " ).append( ACE_ALIAS )
+                    .append( " on (" ).append( AOI_ALIAS ).append( ".id = " ).append( ACE_ALIAS ).append( ".acl_object_identity)" )
+                    .append( " where " ).append( AOI_ALIAS ).append( ".object_id_identity = " ).append( aoiIdColumn )
+                    .append( " and " ).append( AOI_ALIAS ).append( "_cls.class = :" ).append( AOI_TYPE_PARAM )
+                    .append( " and (" )
+                    // user owns the object
+                    .append( "(" ).append( SID_ALIAS ).append( ".principal = 1 and " ).append( SID_ALIAS ).append( ".sid = :" ).append( USER_NAME_PARAM ).append( ") " )
+                    // specific rights to the object
+                    .append( "or (" ).append( ACE_ALIAS ).append( ".sid in (" ).append( CURRENT_USER_SIDS_SQL )
+                    .append( ") and " ).append( renderedMask ).append( " <> 0) " )
+                    // publicly available
+                    .append( "or (" ).append( ACE_ALIAS ).append( ".sid in (" ).append( ANONYMOUS_SID_SQL )
+                    .append( ") and " ).append( renderedMask ).append( " <> 0)" )
+                    .append( "))" );
+        }
+        return sb.toString();
     }
 
     /**
      * Bind {@link Query} parameters to a join clause generated with {@link #formAclRestrictionClause(String)} and add ACL
      * restriction parameters defined in {@link #formAclRestrictionClause(String)}.
      * <p>
-     * This method also work for native queries formed with {@link #formNativeAclJoinClause(String)} and
-     * {@link #formNativeAclRestrictionClause(SessionFactoryImplementor)}.
+     * This method also work for native queries formed with
+     * {@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String)}.
      *
      * @param query   a {@link Query} object that contains the join and restriction clauses
      * @param aoiType the AOI type to be bound in the query
@@ -238,13 +501,79 @@ public class AclQueryUtils {
         if ( SecuredChild.class.isAssignableFrom( aoiType ) ) {
             throw new IllegalArgumentException( "ACL filtering cannot be done on a SecuredChild; instead identify the owner and apply ACLs on it." );
         }
-        query.setParameter( AOI_TYPE_PARAM, aoiType.getCanonicalName() );
-        if ( SecurityUtil.isUserAnonymous() ) {
-            // a constant is used directly in ANONYMOUS_SID_SQL, so no binding is necessary
-        } else if ( !SecurityUtil.isUserAdmin() ) {
-            query.setParameter( USER_NAME_PARAM, SecurityUtil.getCurrentUsername() );
-        } else {
-            // For administrators, no filtering is needed, so the ACE is completely skipped from the where clause.
+        // HQL formAclRestrictionClause uses :aoiClassId (the resolved acl_class.id);
+        // native formNativeAclRestrictionClause + loadAclInfoFor use :aoiType (the string).
+        // Each call site exposes exactly one of the two parameter names, so bind both
+        // conditionally rather than requiring the caller to know which form it built.
+        //
+        // These run BEFORE the admin bypass because the restriction clause is not the only
+        // thing that declares them: formIsPubliclyReadableExpression backs the `isPublic`
+        // filter and emits :aoiClassId for every caller, admin included. Binding is guarded
+        // on the query actually declaring the parameter, so an admin whose query carries only
+        // the ` where (1=1)` placeholder still binds nothing.
+        String className = aoiType.getCanonicalName();
+        setParameterIfPresent( query, AOI_TYPE_PARAM, className );
+        if ( hasNamedParameter( query, AOI_CLASS_ID_PARAM ) ) {
+            query.setParameter( AOI_CLASS_ID_PARAM, resolveAclClassId( className ) );
         }
+        if ( SecurityUtil.isUserAdmin() ) {
+            // For administrators, no ACL restriction clause is emitted, so there is no
+            // user-name parameter to bind.
+            return;
+        }
+        if ( SecurityUtil.isUserAnonymous() ) {
+            // a constant is used directly in ANONYMOUS_SID_HQL/ANONYMOUS_SID_SQL, so no binding is necessary
+        } else {
+            query.setParameter( USER_NAME_PARAM, SecurityUtil.getCurrentUsername() );
+        }
+    }
+
+    private static boolean hasNamedParameter( Query query, String name ) {
+        return query.getParameterMetadata().getNamedParameterNames().contains( name );
+    }
+
+    private static void setParameterIfPresent( Query query, String name, Object value ) {
+        if ( hasNamedParameter( query, name ) ) {
+            query.setParameter( name, value );
+        }
+    }
+
+    /**
+     * Stashed by {@link AclClassIdInitializer} (in `gemma-core/src/main/java/.../AclClassIdInitializer.java`)
+     * at Spring context init so the static {@link #resolveAclClassId} doesn't need a
+     * Hibernate-internal unwrap on every query. One factory per JVM; thread-safe via final + volatile.
+     */
+    static volatile SessionFactoryImplementor sessionFactory;
+
+    /**
+     * Resolve {@code acl_class.id} for a Securable class name, caching the result for
+     * the JVM lifetime. The acl_class table is insert-once on first registration of
+     * each Securable subclass, so the id is stable.
+     */
+    private static Long resolveAclClassId( String className ) {
+        Long cached = ACL_CLASS_ID_CACHE.get( className );
+        if ( cached != null ) {
+            return cached;
+        }
+        SessionFactoryImplementor sf = sessionFactory;
+        if ( sf == null ) {
+            throw new IllegalStateException( "AclQueryUtils.sessionFactory not set; AclClassIdInitializer must run before any ACL-filtered query." );
+        }
+        // Open a stateless session for the lookup so we don't piggyback on the
+        // caller's Hibernate session (which may be mid-flush or carrying state
+        // we don't want to interleave with).
+        Long resolved;
+        try ( org.hibernate.StatelessSession ss = sf.openStatelessSession() ) {
+            // Don't pass a result class: Hibernate 6 requires it to be concrete with
+            // a single-arg constructor (Number is abstract; Long has no Long(Number)
+            // ctor). The MySQL bigint comes back as java.lang.Long anyway.
+            Number id = (Number) ss.createNativeQuery(
+                            "select id from acl_class where class = :c" )
+                    .setParameter( "c", className )
+                    .getSingleResult();
+            resolved = id.longValue();
+        }
+        ACL_CLASS_ID_CACHE.put( className, resolved );
+        return resolved;
     }
 }

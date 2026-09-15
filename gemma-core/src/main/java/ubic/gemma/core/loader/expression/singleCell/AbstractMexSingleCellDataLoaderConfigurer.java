@@ -11,7 +11,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCell10xMexFilter;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -319,10 +319,20 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
 
     /**
      * Remove filtered MEX data.
+     * <p>
+     * The {@code filteredSampleDirs} list may be a {@link Collections#synchronizedList synchronized list} that is still
+     * being mutated by parallel worker threads when this method is called from the catch handler in
+     * {@link #createFiltered10xMexLoader(List, List, SingleCellDataLoaderConfig)}. Snapshot it under explicit
+     * synchronization (per {@link Collections#synchronizedList} javadoc) before iterating to avoid
+     * {@link java.util.ConcurrentModificationException}.
      */
     private void cleanupFiltered10xMexData( List<Path> filteredSampleDirs ) throws IOException {
+        List<Path> snapshot;
+        synchronized ( filteredSampleDirs ) {
+            snapshot = new ArrayList<>( filteredSampleDirs );
+        }
         IOException firstException = null;
-        for ( Path filteredSampleDir : filteredSampleDirs ) {
+        for ( Path filteredSampleDir : snapshot ) {
             try {
                 PathUtils.delete( filteredSampleDir );
             } catch ( IOException e ) {

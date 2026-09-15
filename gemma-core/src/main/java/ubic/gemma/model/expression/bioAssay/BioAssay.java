@@ -18,7 +18,30 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import org.hibernate.search.annotations.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -27,15 +50,24 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
-import javax.persistence.Transient;
 import java.util.Date;
 
 /**
  * Represents the bringing together of a biomaterial with an assay of some sort (typically an expression assay). We
  * don't distinguish between "physical" and "computational" BioAssays, so this is a concrete class. This has several
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
+ * <p>
+ * Hibernate Search 7 mapping: indexed root and embedded contributor via
+ * {@link ExpressionExperiment#getBioAssays()}. Carries shortName, name, description, accession, and
+ * the {@link BioMaterial sampleUsed} subgraph (whose characteristics feed dataset free-text search).
  */
+@Entity
+@Table(name = "BIO_ASSAY",
+        indexes = {
+                @Index(name = "BIO_ASSAY_SHORT_NAME", columnList = "SHORT_NAME"),
+                @Index(name = "BIO_ASSAY_NAME", columnList = "NAME")
+        })
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class BioAssay extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
@@ -49,28 +81,38 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * It is null for now, but in the future, it will become non-null.
      */
     @Nullable
+    @Column(name = "SHORT_NAME", unique = true, columnDefinition = "VARCHAR(255)")
     private String shortName;
 
     /**
      * Platform used in this assay.
      */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ARRAY_DESIGN_USED_FK", nullable = false, columnDefinition = "BIGINT")
     private ArrayDesign arrayDesignUsed;
 
     /**
      * If the assay data was switched to another platform, this is what it was originally.
      */
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ORIGINAL_PLATFORM_FK", columnDefinition = "BIGINT")
     private ArrayDesign originalPlatform;
 
     /**
      * Sample used in this assay.
      */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "SAMPLE_USED_FK", nullable = false, columnDefinition = "BIGINT")
     private BioMaterial sampleUsed;
 
     /**
      * Accession for this assay.
      */
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
+    @JoinColumn(name = "ACCESSION_FK", unique = true, columnDefinition = "BIGINT")
     private DatabaseEntry accession;
 
     /**
@@ -79,6 +121,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * The audit trail for the owning {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} tracks when
      * this was done.
      */
+    @Column(name = "IS_OUTLIER", nullable = false, columnDefinition = "TINYINT")
     private boolean isOutlier = false;
 
     /**
@@ -86,19 +129,60 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * experimental design.
      */
     @Nullable
+    @Column(name = "PROCESSING_DATE", columnDefinition = "DATETIME(3)")
     private Date processingDate;
 
     /**
      * Free-form additional metadata.
      */
     @Nullable
+    @Lob
+    @Column(name = "METADATA", columnDefinition = "text")
     private String metadata;
 
     /**
      * For sequence-read based data, the total number of reads in the assay, computed from the data as the total of the
      * values for the elements assayed.
      */
+    /**
+     * What was extracted from the sample and assayed, from GEO's {@code !Sample_molecule_chN}.
+     * {@code null} when the source did not say, or for data that did not come from GEO.
+     *
+     * @see ExtractedMolecule for why this is on the assay rather than the biomaterial
+     */
     @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "EXTRACTED_MOLECULE", columnDefinition = "VARCHAR(32)")
+    private ExtractedMolecule extractedMolecule;
+
+    /**
+     * How the library was selected — GEO's {@code library_selection}: {@code polyA}, {@code cDNA},
+     * {@code RANDOM}, {@code size fractionation} and so on.
+     * <p>
+     * The submitter's raw string, not an enum, matching how the GEO parser already keeps it: the
+     * vocabulary is open and a value nobody anticipated is worth more verbatim than coerced to
+     * {@code other}.
+     * <p>
+     * 🛑 Read it beside {@link #extractedMolecule} rather than instead of it. They routinely disagree,
+     * and the disagreement is the point — Paul, 2026-08-31: "total RNA … is potentially misleading
+     * because there's often still a poly-A selection step". The molecule says what went in, this says
+     * what was kept.
+     */
+    @Nullable
+    @Column(name = "LIBRARY_SELECTION", columnDefinition = "VARCHAR(255)")
+    private String librarySelection;
+
+    /**
+     * What kind of library it was — GEO's {@code library_strategy}: {@code RNA-Seq}, {@code scRNA-seq},
+     * {@code ATAC-seq} and so on. GEO's own spelling, not the Java constant name; null when unstated
+     * or non-GEO.
+     */
+    @Nullable
+    @Column(name = "LIBRARY_STRATEGY", columnDefinition = "VARCHAR(255)")
+    private String libraryStrategy;
+
+    @Nullable
+    @Column(name = "SEQUENCE_READ_COUNT", columnDefinition = "BIGINT")
     private Long sequenceReadCount;
     /**
      * For sequencing-based data, the length of the reads. If it was paired reads, this is understood to be the length
@@ -106,18 +190,22 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * representing the mean read length.
      */
     @Nullable
+    @Column(name = "SEQUENCE_READ_LENGTH", columnDefinition = "INTEGER")
     private Integer sequenceReadLength;
     /**
      * For sequence-based data, this should be set to true if the sequencing was paired-end reads and false otherwise.
      * It should be left as null if it isn't known.
      */
     @Nullable
+    @Column(name = "SEQUENCE_PAIRED_READS", columnDefinition = "TINYINT")
     private Boolean sequencePairedReads;
     /**
      * For RNA-seq representation of representative headers from the FASTQ file(s). If there is more than on FASTQ file,
      * this string will contain multiple newline-delimited headers.
      */
     @Nullable
+    @Lob
+    @Column(name = "FASTQ_HEADERS", columnDefinition = "text")
     private String fastqHeaders;
 
     /**
@@ -130,6 +218,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * Masked cells are not counted toward this total.
      */
     @Nullable
+    @Column(name = "NUMBER_OF_CELLS", columnDefinition = "INTEGER")
     private Integer numberOfCells;
     /**
      * Number of design elements in the assay with at least one cell expressing it.
@@ -141,6 +230,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * Masked cells are not counted toward this total.
      */
     @Nullable
+    @Column(name = "NUMBER_OF_DESIGN_ELEMENTS", columnDefinition = "INTEGER")
     private Integer numberOfDesignElements;
     /**
      * Number of cell-gene pairs with non-zero expression values.
@@ -152,9 +242,11 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * Masked cells are not counted toward this total.
      */
     @Nullable
+    @Column(name = "NUMBER_OF_CELLS_BY_DESIGN_ELEMENTS", columnDefinition = "INTEGER")
     private Integer numberOfCellsByDesignElements;
 
     @Nullable
+    @Transient
     private ExpressionExperiment securityOwner;
 
     @Override
@@ -182,7 +274,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Nullable
-    @Field
+    @FullTextField
     public String getShortName() {
         return shortName;
     }
@@ -192,18 +284,19 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Override
-    @Field
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
     @Nullable
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return this.accession;
@@ -238,6 +331,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
         this.processingDate = processingDate;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public BioMaterial getSampleUsed() {
         return this.sampleUsed;
@@ -248,7 +342,6 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Nullable
-    @Transient
     @Override
     public ExpressionExperiment getSecurityOwner() {
         return this.securityOwner;
@@ -269,6 +362,32 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Nullable
+    public ExtractedMolecule getExtractedMolecule() {
+        return this.extractedMolecule;
+    }
+
+    public void setExtractedMolecule( @Nullable ExtractedMolecule extractedMolecule ) {
+        this.extractedMolecule = extractedMolecule;
+    }
+
+    @Nullable
+    public String getLibrarySelection() {
+        return this.librarySelection;
+    }
+
+    public void setLibrarySelection( @Nullable String librarySelection ) {
+        this.librarySelection = librarySelection;
+    }
+
+    @Nullable
+    public String getLibraryStrategy() {
+        return this.libraryStrategy;
+    }
+
+    public void setLibraryStrategy( @Nullable String libraryStrategy ) {
+        this.libraryStrategy = libraryStrategy;
+    }
+
     public Long getSequenceReadCount() {
         return this.sequenceReadCount;
     }

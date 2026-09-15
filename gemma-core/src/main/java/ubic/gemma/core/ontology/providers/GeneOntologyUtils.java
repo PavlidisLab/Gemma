@@ -1,10 +1,10 @@
 package ubic.gemma.core.ontology.providers;
 
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.description.Characteristic;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 import static ubic.gemma.core.util.StringUtils.urlEncode;
 

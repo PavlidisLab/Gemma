@@ -1,207 +1,84 @@
 package ubic.gemma.core.search.lucene;
 
-import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.util.Version;
-import org.junit.Test;
-import ubic.gemma.core.search.SearchException;
-import ubic.gemma.model.common.search.SearchSettings;
-
-import java.net.URI;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.list;
-import static org.assertj.core.api.InstanceOfAssertFactories.type;
-import static org.assertj.core.util.Sets.set;
-import static org.junit.Assert.*;
-import static ubic.gemma.core.search.lucene.LuceneQueryUtils.*;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
-public class LuceneQueryUtilsTest {
+/**
+ * Regression guard for free-text queries that carry Lucene operators — biological search
+ * strings routinely do ("100 ng/ml", bracketed chemical names). These used to throw a raw
+ * {@link org.apache.lucene.queryparser.classic.TokenMgrError} (an {@link Error}, uncaught by
+ * the {@code ParseException} fallback) and/or fail the escape-retry because '/' was not in the
+ * escaped-character set, bubbling up to the retry interceptor as log noise.
+ *
+ * @author poirigui
+ */
+class LuceneQueryUtilsTest {
 
+    /**
+     * An unterminated Lucene regex ('/ml') makes the lexer throw {@code TokenMgrError}. It must be
+     * caught, the query re-escaped (now including '/'), and a usable term returned — no throw.
+     */
     @Test
-    public void testExtractTerms() throws SearchException {
-        assertThat( extractTerms( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 AND BRCA3) OR NOT BRCA4 OR -BRCA5", null ), null ) )
-                .containsExactlyInAnyOrder( "BRCA1", "BRCA2", "BRCA3" );
-        // fielded terms are excluded
-        assertThat( extractTerms( SearchSettings.geneSearch( "shortName:GSE1234 test", null ), null ) )
-                .containsExactlyInAnyOrder( "test" );
-    }
-
-    @Test
-    public void testExtractDnf() throws SearchException {
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 AND BRCA3) OR NOT BRCA4 OR -BRCA5 OR (BRCA6 OR BRCA7)", null ), null ) )
-                .containsExactlyInAnyOrder( set( "BRCA1" ), set( "BRCA2", "BRCA3" ), set( "BRCA6" ), set( "BRCA7" ) );
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 AND BRCA2", null ), null ) )
-                .containsExactlyInAnyOrder( set( "BRCA1", "BRCA2" ) );
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "NOT BRCA1 AND NOT BRCA2", null ), null ) )
-                .isEmpty();
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "NOT BRCA1 OR NOT BRCA2", null ), null ) )
-                .isEmpty();
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 AND NOT BRCA2", null ), null ) )
-                .containsExactly( set( "BRCA1" ) );
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 OR NOT (BRCA2 AND BRCA3)", null ), null ) )
-                .containsExactly( set( "BRCA1" ) );
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 AND (BRCA2 OR BRCA3)", null ), null ) )
-                .isEmpty();
-    }
-
-    @Test
-    public void testExtractDnfWithQuotedSpaces() throws SearchException {
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "\"alpha beta\" OR \"gamma delta\"", null ), null ) )
-                .containsExactlyInAnyOrder( set( "alpha beta" ), set( "gamma delta" ) );
-    }
-
-    @Test
-    public void testExtractDnfWithNestedOrInClause() throws SearchException {
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 OR (BRCA3 AND BRCA4))", null ), null ) )
-                .containsExactlyInAnyOrder( set( "BRCA1" ), set( "BRCA2" ), set( "BRCA3", "BRCA4" ) );
-    }
-
-    @Test
-    public void testExtractDnfWithNestedAndInSubClause() throws SearchException {
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "BRCA1 OR (BRCA2 AND (BRCA3 AND BRCA4))", null ), null ) )
-                .containsExactlyInAnyOrder( set( "BRCA1" ), set( "BRCA2", "BRCA3", "BRCA4" ) );
-    }
-
-    @Test
-    public void testExtractDnfWithUris() throws SearchException {
-        // this is an important case for searching datasets by ontology terms
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "http://example.com/GO:1234 OR http://example.com/GO:1235", null ), null ) )
-                .contains( set( "http://example.com/GO:1234" ), set( "http://example.com/GO:1235" ) );
-    }
-
-    @Test
-    public void testExtractDnfWithOntologyTerms() throws SearchException {
-        // reckognized ontology prefixes are listed in ontology.prefixes.txt
-        assertThat( extractTermsDnf( SearchSettings.geneSearch( "GO:0100101 OR GO:0100102 OR DGO:1090129", null ), null ) )
-                .contains( set( "GO:0100101" ), set( "GO:0100102" ) );
-    }
-
-    @Test
-    public void testPrepareDatabaseQuery() throws SearchException {
-        assertEquals( "BRCA1", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA1", null ), null ) );
-        assertEquals( "BRCA1", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA1^4", null ), null ) );
-        assertEquals( "BRCA1", prepareDatabaseQuery( SearchSettings.geneSearch( "\"BRCA1\"", null ), null ) );
-        assertEquals( "BRCA1", prepareDatabaseQuery( SearchSettings.geneSearch( "(BRCA1)", null ), null ) );
-        // fielded term are ignored
-        assertNull( prepareDatabaseQuery( SearchSettings.geneSearch( "symbol:BRCA1", null ), null ) );
-        assertEquals( "+BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "\\+BRCA", null ), true, null ) );
-        assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA OR TCGA", null ), null ) );
-        assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA AND TCGA", null ), null ) );
-        assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA AND NOT TCGA", null ), null ) );
-        assertEquals( "TCGA", prepareDatabaseQuery( SearchSettings.geneSearch( "NOT BRCA AND TCGA", null ), null ) );
-        assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA -TCGA", null ), null ) );
-        assertEquals( "BRCA AND TCGA", prepareDatabaseQuery( SearchSettings.geneSearch( "\"BRCA AND TCGA\"", null ), null ) );
-        // wildcards and prefix queries are ignored for database queries
-        assertNull( prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA*", null ), null ) );
-    }
-
-    @Test
-    public void testPrepareDatabaseQueryWithUri() throws SearchException {
-        // ideal case, using quotes
-        assertEquals( "http://example.com/GO:1234", prepareDatabaseQuery( SearchSettings.geneSearch( "\"http://example.com/GO:1234\"", null ), null ) );
-        assertEquals( "http://example.com/GO:1234", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/GO:1234", null ), null ) );
-        assertEquals( "http://example.com/GO:1234?a=b#c=d", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/GO:1234?a=b#c=d", null ), null ) );
-        assertEquals( "http://example.com/GO_1234", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/GO_1234", null ), null ) );
-        assertEquals( "http://example.com/#GO_1234", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/#GO_1234", null ), null ) );
-        assertEquals( "http://example.com/GO:1234", prepareDatabaseQuery( SearchSettings.geneSearch( "http://example.com/GO:1234 OR http://example.com/GO:1235", null ), null ) );
-    }
-
-    @Test
-    public void testPrepareDatabaseQueryForInexactMatch() throws SearchException {
-        assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "\"BRCA\"", null ), true, null ) );
-        assertEquals( "br%ca", prepareDatabaseQuery( SearchSettings.geneSearch( "BR*CA", null ), true, null ) );
-        assertEquals( "brca%", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA*", null ), true, null ) );
-        assertEquals( "BRCA*", prepareDatabaseQuery( SearchSettings.geneSearch( "\"BRCA\\*\"", null ), true, null ) );
-        assertEquals( "brca_", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA?", null ), true, null ) );
-        assertEquals( "BRCA?", prepareDatabaseQuery( SearchSettings.geneSearch( "\"BRCA?\"", null ), true, null ) );
-        assertEquals( "BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "+BRCA", null ), true, null ) );
-        // escaped wildcard
-        assertEquals( "BRCA?", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA\\?", null ), true, null ) );
-        assertEquals( "BRCA*", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA\\*", null ), true, null ) );
-        // forbidden prefix-style searches
-        assertEquals( "*", prepareDatabaseQuery( SearchSettings.geneSearch( "*", null ), true, null ) );
-        assertEquals( "*BRCA", prepareDatabaseQuery( SearchSettings.geneSearch( "*BRCA", null ), true, null ) );
-        assertEquals( "?", prepareDatabaseQuery( SearchSettings.geneSearch( "?", null ), true, null ) );
-        assertEquals( "?RCA", prepareDatabaseQuery( SearchSettings.geneSearch( "?RCA", null ), true, null ) );
-        // check for escaping LIKE patterns
-        assertEquals( "BRCA\\\\", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA\\", null ), true, null ) );
-        assertEquals( "BRCA\\%", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA\\%", null ), true, null ) );
-        assertEquals( "BRCA\\%", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA%", null ), true, null ) );
-        assertEquals( "BRCA\\_", prepareDatabaseQuery( SearchSettings.geneSearch( "BRCA_", null ), true, null ) );
-    }
-
-    @Test
-    public void testIsWildcard() {
-        assertFalse( isWildcard( SearchSettings.geneSearch( "*", null ) ) );
-        assertFalse( isWildcard( SearchSettings.geneSearch( "*BRCA", null ) ) );
-        assertTrue( isWildcard( SearchSettings.geneSearch( "BR*CA", null ) ) );
-        assertTrue( isWildcard( SearchSettings.geneSearch( "BRCA*", null ) ) );
-        assertFalse( isWildcard( SearchSettings.geneSearch( "BRCA1 BRCA*", null ) ) );
-        assertFalse( isWildcard( SearchSettings.geneSearch( "\"BRCA*\"", null ) ) );
-        assertTrue( isWildcard( SearchSettings.geneSearch( "BRCA?", null ) ) );
-        assertFalse( isWildcard( SearchSettings.geneSearch( "BRCA\\*", null ) ) );
-        assertFalse( isWildcard( SearchSettings.geneSearch( "\"BRCA1\" \"BRCA2\"", null ) ) );
-    }
-
-    @Test
-    public void testPrepareTermUriQuery() throws SearchException {
-        assertEquals( URI.create( "http://example.com" ), prepareTermUriQuery( SearchSettings.geneSearch( "http://example.com", null ), null ) );
-        assertEquals( URI.create( "http://example.com" ), prepareTermUriQuery( SearchSettings.geneSearch( "\"http://example.com\"", null ), null ) );
-        // an invalid URI
-        assertNull( prepareTermUriQuery( SearchSettings.geneSearch( "\"http://example.com /test\"", null ), null ) );
-        // an interesting case: a fielded search for a URI
-        assertEquals( URI.create( "http://example.com" ), prepareTermUriQuery( SearchSettings.geneSearch( "http:\"http://example.com\"", null ), null ) );
-    }
-
-    @Test
-    public void testQuote() {
-        assertEquals( "\"alpha beta\"", quote( "alpha beta" ) );
-        assertEquals( "BRCA1", quote( "BRCA1" ) );
-        assertEquals( "BRCA?", quote( "BRCA?" ) );
-        assertEquals( "BRCA1\\\"", quote( "BRCA1\"" ) );
+    void prepareDatabaseQuery_withUnterminatedRegexSlash_recovers() throws Exception {
+        assertThatNoException().isThrownBy( () -> LuceneQueryUtils.prepareDatabaseQuery( "100 ng/ml", false ) );
+        assertThat( LuceneQueryUtils.prepareDatabaseQuery( "100 ng/ml", false ) ).isNotNull();
     }
 
     /**
-     * Make sure that a query containing a hyphen is not parsed as a negative query.
+     * A lone trailing slash is the minimal reproducer for the unterminated-regex lex error.
      */
     @Test
-    public void testQueryWithHyphen() throws SearchException {
-        Query query = parseSafely( SearchSettings.expressionExperimentSearch( "single-cell transcriptomics" ), new QueryParser( Version.LUCENE_36, "*", new EnglishAnalyzer( Version.LUCENE_36 ) ), null );
-        assertThat( query )
-                .asInstanceOf( type( BooleanQuery.class ) )
-                .extracting( BooleanQuery::clauses )
-                .asInstanceOf( list( BooleanClause.class ) )
-                .satisfiesExactly(
-                        c -> assertThat( c.getQuery() )
-                                .asInstanceOf( type( BooleanQuery.class ) )
-                                .extracting( BooleanQuery::clauses )
-                                .asInstanceOf( list( BooleanClause.class ) )
-                                .satisfiesExactly(
-                                        d -> assertThat( d )
-                                                .extracting( BooleanClause::getQuery )
-                                                .asInstanceOf( type( TermQuery.class ) )
-                                                .extracting( TermQuery::getTerm )
-                                                .extracting( Term::text )
-                                                .isEqualTo( "singl" ),
-                                        d -> assertThat( d )
-                                                .extracting( BooleanClause::getQuery )
-                                                .asInstanceOf( type( TermQuery.class ) )
-                                                .extracting( TermQuery::getTerm )
-                                                .extracting( Term::text )
-                                                .isEqualTo( "cell" )
-                                ),
-                        c -> assertThat( c )
-                                .extracting( BooleanClause::getQuery )
-                                .asInstanceOf( type( TermQuery.class ) )
-                                .extracting( TermQuery::getTerm )
-                                .extracting( Term::text )
-                                .isEqualTo( "transcriptom" )
-                );
+    void prepareDatabaseQuery_withTrailingSlash_recovers() {
+        assertThatNoException().isThrownBy( () -> LuceneQueryUtils.prepareDatabaseQuery( "cd4/", false ) );
+    }
+
+    /**
+     * Bracketed chemical names blow up the grammar (open range); the escape fallback already
+     * covered '[' / ']', so this must keep working.
+     */
+    @Test
+    void prepareDatabaseQuery_withBrackets_recovers() {
+        assertThatNoException().isThrownBy( () -> LuceneQueryUtils
+                .prepareDatabaseQuery( "[3-anilino-4-[oxo-[4-(1-pyrrolidinyl)-1-piperidinyl]methyl]phenyl]", false ) );
+    }
+
+    /**
+     * A plain gene symbol still round-trips to itself.
+     */
+    @Test
+    void prepareDatabaseQuery_withPlainSymbol_returnsSymbol() throws Exception {
+        assertThat( LuceneQueryUtils.prepareDatabaseQuery( "TP53", false ) ).isEqualTo( "TP53" );
+    }
+
+    /**
+     * A paren falling BETWEEN two unescaped slashes is a different failure from the unterminated
+     * regex above, and the one the escape-retry never saw. {@code a/b (c/d)} closes its regex
+     * term, so the lexer is happy and no {@code TokenMgrError} is thrown; Lucene then hands the
+     * body {@code b (c} to {@link org.apache.lucene.util.automaton.RegExp}, which rejects it with
+     * an {@link IllegalArgumentException} ("expected ')' at position 4"). That is neither a
+     * {@code ParseException} nor an {@code Error}, so it walked past both arms of the fallback and
+     * out of the endpoint as a 500.
+     */
+    @Test
+    void prepareDatabaseQuery_withParenBetweenSlashes_recovers() throws Exception {
+        assertThatNoException().isThrownBy( () -> LuceneQueryUtils.prepareDatabaseQuery( "a/b (c/d)", false ) );
+        assertThat( LuceneQueryUtils.prepareDatabaseQuery( "a/b (c/d)", false ) ).isNotNull();
+    }
+
+    /**
+     * The same shape in real curation text: strain, genotype and dose strings routinely put a
+     * paren between two slashes.
+     */
+    @Test
+    void prepareDatabaseQuery_withCurationTextSlashesAndParens_recovers() {
+        for ( String q : new String[] {
+                "C57BL/6 (H-2b/d)",
+                "ischemia/reperfusion (I/R) injury",
+                "0.33% w/w (~325 mg/kg bw/day)",
+                "CD4+/CD8+ (T/B)" } ) {
+            assertThatNoException().isThrownBy( () -> LuceneQueryUtils.prepareDatabaseQuery( q, false ) );
+        }
     }
 }

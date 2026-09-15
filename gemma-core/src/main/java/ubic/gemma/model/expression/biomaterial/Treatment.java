@@ -19,14 +19,23 @@
 
 package ubic.gemma.model.expression.biomaterial;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import ubic.gemma.model.common.AbstractDescribable;
 
 /**
  * @author Paul
  */
+@Entity
+@Table(name = "TREATMENT")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class Treatment extends AbstractDescribable {
 
+    @Column(name = "ORDER_APPLIED", nullable = false, columnDefinition = "INTEGER")
     private Integer orderApplied = 1;
 
     /**

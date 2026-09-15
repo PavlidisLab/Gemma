@@ -21,19 +21,18 @@ package ubic.gemma.persistence.service.genome.gene;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.GeneSetSearch;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
@@ -46,12 +45,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author klc
  */
-public class GeneSetServiceTest extends BaseSpringContextTest {
+public class GeneSetServiceTest extends BaseSpringContextTest5 {
 
     static private final String GOTERM_INDB = "GO_0000310";
     static private final String GOTERM_QUERY = "GO:0000310";
@@ -72,13 +71,13 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     @Autowired
     private SessionFactory sessionFactory;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         g = this.getTestPersistentGene();
         g3 = this.getTestPersistentGene();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         geneSetService.removeAll();
         gene2GoService.removeAll();
@@ -130,8 +129,16 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         assertTrue( foundSets.size() > 0 );
     }
 
+    /**
+     * No @DirtiesContext, deliberately. This loads a test ontology into the shared
+     * GeneOntologyService singleton, and rebuilding the context afterwards cost ~29.5 s — the
+     * single largest item in the integration suite, in which all 95 classes otherwise share one
+     * context. Nothing can observe the dirtied singleton: the only other test using the shared
+     * bean is GeneMultifunctionalityPopulationServiceTest, which calls initialize() itself before
+     * reading it and already dirties the context after its own class. Every other GO test either
+     * mocks the service or builds its own GeneOntologyServiceImpl in a local context.
+     */
     @Test
-    @DirtiesContext
     public void testFindByGoId() throws IOException {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );
@@ -266,6 +273,9 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadValueObject() {
+        // capture baseline so the assertion is robust against gene sets created (and not yet
+        // removed) by other tests in the same mvn run — failsafe ITs share the schema.
+        int baselineCount = geneSetService.loadAllValueObjects().size();
         GeneSet gset = GeneSet.Factory.newInstance();
         gset.getMembers().add( GeneSetMember.Factory.newInstance( 1.0, g ) );
         gset = geneSetService.create( gset );
@@ -276,7 +286,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         assertNotNull( vo.getGeneIds() );
         assertEquals( 1, vo.getGeneIds().size() );
         assertNotNull( geneSetService.loadValueObjectById( gset.getId() ) );
-        assertEquals( 1, geneSetService.loadAllValueObjects().size() );
+        assertEquals( baselineCount + 1, geneSetService.loadAllValueObjects().size() );
     }
 
     @Test

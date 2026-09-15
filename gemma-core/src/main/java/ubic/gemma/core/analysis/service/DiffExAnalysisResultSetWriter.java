@@ -1,9 +1,10 @@
 package ubic.gemma.core.analysis.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import org.springframework.util.Assert;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
@@ -17,7 +18,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.util.DifferentialExpressionAnalysisResultComparator;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -38,7 +39,7 @@ import static ubic.gemma.core.util.TsvUtils.formatComment;
  * @author paul
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class DiffExAnalysisResultSetWriter {
 
     private final EntityUrlBuilder entityUrlBuilder;
@@ -476,6 +477,10 @@ public class DiffExAnalysisResultSetWriter {
     }
 
     private ExpressionExperiment experimentForBioAssaySet( BioAssaySet bas ) {
+        // Both callers read analysis.getExperimentAnalyzed(), which is mapped against the abstract
+        // BioAssaySet and so arrives as a BioAssaySet proxy: instance of neither subclass, hence the
+        // else branch and a ClassCastException while writing the diffex header.
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
         ExpressionExperiment ee;
         if ( bas instanceof ExpressionExperimentSubSet ) {
             ee = ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();

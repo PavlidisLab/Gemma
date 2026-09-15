@@ -1,10 +1,10 @@
 package ubic.gemma.core.ontology.providers;
 
-import org.junit.Test;
-import ubic.basecode.ontology.providers.OntologyService;
+import org.junit.jupiter.api.Test;
+import ubic.gemma.core.ontology.providers.OntologyService;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OntologyServiceFactoryTest {
 

@@ -1,22 +1,26 @@
 package ubic.gemma.rest;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
+import java.util.Map;
 import java.util.Random;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
-public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
+public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private TaxonService taxonService;
@@ -27,8 +31,9 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
     /* fixtures */
     private Taxon taxon;
     private Gene gene, gene2;
+    private String geneAlias;
 
-    @Before
+    @BeforeEach
     public void createFixtures() {
         Random random = new Random( 123L );
         taxon = new Taxon();
@@ -42,10 +47,12 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
         gene.setNcbiGeneId( random.nextInt() );
         gene.setEnsemblId( "ensembl_id_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         gene.setOfficialSymbol( "official_symbol_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        geneAlias = "alias_" + RandomStringUtils.insecure().nextAlphabetic( 10 );
+        gene.getAliases().add( GeneAlias.Factory.newInstance( geneAlias ) );
         gene = geneService.create( gene );
     }
 
-    @After
+    @AfterEach
     public void removeFixtures() {
         geneService.remove( gene );
         if ( gene2 != null ) {
@@ -67,8 +74,31 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
+    public void testGenesByIdsIncludesAliases() {
+        // Aliases are a LAZY collection; the endpoint batch-loads them via populateAliases so the VO
+        // carries them. Pins that the alias persisted on the fixture surfaces on the wire.
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .singleElement()
+                .satisfies( m -> assertThat( m.get( "aliases" ) ).asInstanceOf( list( String.class ) ).containsExactly( geneAlias ) );
+    }
+
+    @Test
     public void testGeneProbes() {
         assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/probes" ).request().get() )
+                .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    public void testGeneProbesSummary() {
+        // Fixture gene has no composite sequences mapped, so the page is empty either way; this
+        // asserts the summary=true branch wires + serializes cleanly (the enrichment loop is a
+        // no-op for an empty page, surfaced as a 200 with an empty list payload).
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/probes" )
+                .queryParam( "summary", "true" )
+                .request().get() )
                 .hasStatus( Response.Status.OK );
     }
 
@@ -93,5 +123,29 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest {
     public void testGeneLocations() {
         assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/locations" ).request().get() )
                 .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    public void testGeneDifferentialExpression() {
+        // Happy path: no DEA results exist for the fixture gene, so the underlying service returns
+        // an empty map; the endpoint surfaces that as a 200 with an empty list payload.
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/differentialExpression" ).request().get() )
+                .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    public void testGeneDifferentialExpressionWithThreshold() {
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/differentialExpression" )
+                .queryParam( "threshold", "0.05" )
+                .request().get() )
+                .hasStatus( Response.Status.OK );
+    }
+
+    @Test
+    public void testGeneDifferentialExpressionRejectsOutOfRangeThreshold() {
+        assertThat( target( "/genes/" + gene.getOfficialSymbol() + "/differentialExpression" )
+                .queryParam( "threshold", "2.0" )
+                .request().get() )
+                .hasStatus( Response.Status.BAD_REQUEST );
     }
 }

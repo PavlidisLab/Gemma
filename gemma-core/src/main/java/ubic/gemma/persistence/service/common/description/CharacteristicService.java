@@ -28,7 +28,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +65,11 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
 
     /**
+     * @see CharacteristicDao#countExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, Collection)
+     */
+    Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds );
+
+    /**
      * Find characteristics that have a particular parent class or lack thereof.
      *
      * @throws IllegalArgumentException if parentClasses is
@@ -81,6 +86,14 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
      */
     @Nullable
     Characteristic findBestByUri( String uri );
+
+    /**
+     * For each value URI, return one representative ACL-visible usage (or omit it when none is accessible), so
+     * a search hit can be shown in the context it has actually been applied.
+     *
+     * @see CharacteristicDao#findRepresentativeUsageByValueUris(Collection)
+     */
+    Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
 
     /**
      * Returns a collection of characteristics that have a value starting with the given string.
@@ -108,6 +121,26 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
+     * @see CharacteristicDao#findEeCountsByUriGroupedByCategory(Collection)
+     */
+    Map<String, Map<String, Long>> findEeCountsByUriGroupedByCategory( Collection<String> uris );
+
+    /**
+     * @see CharacteristicDao#findEeCountsByUriForOriginalValue(Collection, String)
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue );
+
+    /**
+     * @see CharacteristicDao#findEeCountsByUriForOriginalValue(Collection, String, Collection)
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue, Collection<Long> excludedExperimentIds );
+
+    /**
+     * @see CharacteristicDao#findPriorCurationByOriginalValue(String, int, Collection)
+     */
+    List<CharacteristicDao.PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults, Collection<Long> excludedExperimentIds );
+
+    /**
      * @see CharacteristicDao#findValueGroupedByValueUri(Collection, boolean, boolean, boolean, int)
      */
     Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults );
@@ -118,7 +151,8 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
      */
     @Secured({ "GROUP_ADMIN" })
     // FIXME: this is too slow when large number of results are returned
-    //        @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    //        @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    //        @PostFilter("hasPermission(filterObject.value, 'READ') or hasPermission(filterObject.value, 'ADMINISTRATION')")
     Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents );
 
     //    /**

@@ -18,18 +18,18 @@
  */
 package ubic.gemma.persistence.persister;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author pavlidis
  */
-public class PersisterTest extends BaseSpringContextTest {
+public class PersisterTest extends BaseSpringContextTest5 {
 
 
     @Test

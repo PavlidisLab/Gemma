@@ -1,7 +1,7 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -22,7 +22,7 @@ public class TabularMatrixWriterTest {
 
     private TabularMatrixWriter writer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         EntityUrlBuilder entityUrlBuilder = new EntityUrlBuilder( "https://gemma.msl.ubc.ca" );
         writer = new TabularMatrixWriter( entityUrlBuilder, BuildInfo.fromManifest() );

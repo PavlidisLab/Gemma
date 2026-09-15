@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.util.IdentifiableUtils;
@@ -30,8 +35,12 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
  * information is available; annotations are unavailable (e.g., non-model organisms); or sequences are too short to
  * align using our usual methods (e.g., miRNAs).
  */
+@Entity
+@DiscriminatorValue("AnnotationAssociation")
 public class AnnotationAssociation extends BioSequence2GeneProduct {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SOURCE_FK", columnDefinition = "BIGINT")
     private ExternalDatabase source;
 
     /**

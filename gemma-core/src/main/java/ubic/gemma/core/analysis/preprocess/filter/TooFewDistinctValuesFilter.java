@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
 import org.springframework.util.Assert;
-import ubic.basecode.math.Constants;
+import ubic.gemma.core.util.math.Constants;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 
 /**

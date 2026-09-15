@@ -69,6 +69,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        getPipelineJobReporter().stage( "platform-switch:" + expressionExperiment.getShortName() );
         expressionExperiment = this.eeService.thawLite( expressionExperiment );
         ArrayDesign ad;
         if ( this.arrayDesignName != null ) {

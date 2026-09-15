@@ -121,7 +121,7 @@ public class RandomSingleCellDataUtils {
     public static SingleCellExpressionDataVector randomSingleCellVector( ExpressionExperiment ee, CompositeSequence compositeSequence, QuantitationType qt, SingleCellDimension dimension, double sparsity ) {
         Assert.isTrue( qt.getGeneralType() == GeneralType.QUANTITATIVE,
                 "Can only generate quantitative data." );
-        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT || qt.getType() == StandardQuantitationType.AMOUNT );
+        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT || qt.getType() == StandardQuantitationType.AMOUNT , "expected true");
         Assert.isTrue( qt.getScale() == ScaleType.COUNT || qt.getScale() == ScaleType.LINEAR
                         || qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LOG1P
                         || qt.getScale() == ScaleType.PERCENT || qt.getScale() == ScaleType.PERCENT1,

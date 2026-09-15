@@ -16,12 +16,17 @@
 
 package ubic.gemma.core.job.progress;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.Serializable;
 
 /**
  * @author klc
  */
 @SuppressWarnings("unused") // Possible external use
+@Getter
+@Setter
 public class ProgressData implements Serializable {
 
     private static final long serialVersionUID = -4303625064082352461L;
@@ -53,68 +58,4 @@ public class ProgressData implements Serializable {
         this.description = description;
         done = finished;
     }
-
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * @param description string a description of the progress
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
-     * @return the forwardingURL
-     */
-    public String getForwardingURL() {
-        return forwardingURL;
-    }
-
-    /**
-     * @param forwardingURL the forwardingURL to set
-     */
-    public void setForwardingURL( String forwardingURL ) {
-        this.forwardingURL = forwardingURL;
-    }
-
-    public int getPercent() {
-        return percent;
-    }
-
-    public void setPercent( int percent ) {
-        this.percent = percent;
-    }
-
-    /**
-     * @return the taskId
-     */
-    public String getTaskId() {
-        return this.taskId;
-    }
-
-    /**
-     * @param taskId the taskId to set
-     */
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
-    public boolean isDone() {
-        return done;
-    }
-
-    public void setDone( boolean done ) {
-        this.done = done;
-    }
-
-    public boolean isFailed() {
-        return failed;
-    }
-
-    public void setFailed( boolean failed ) {
-        this.failed = failed;
-    }
-
 }

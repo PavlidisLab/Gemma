@@ -21,16 +21,17 @@ package ubic.gemma.model.genome.gene;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import gemma.gsec.model.SecureValueObject;
+import ubic.gemma.core.security.model.SecureValueObject;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 
 /**
@@ -86,12 +87,14 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
         this.size = size;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened; taxon already serializes")
     public Long getTaxonId() {
         return this.taxon != null ? this.taxon.getId() : null;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened; taxon already serializes")
     public String getTaxonName() {
         return this.taxon != null ? this.taxon.getCommonName() : null;
     }
@@ -115,7 +118,8 @@ public class GeneSetValueObject extends IdentifiableValueObject<GeneSet> impleme
         this.size = size;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.CALLER_IDENTITY,
+            comment = "per-principal ownership")
     public boolean getCurrentUserIsOwner() {
         return userOwned;
     }

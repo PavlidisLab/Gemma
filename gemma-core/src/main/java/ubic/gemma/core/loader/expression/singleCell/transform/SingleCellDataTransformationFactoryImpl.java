@@ -1,10 +1,10 @@
 package ubic.gemma.core.loader.expression.singleCell.transform;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class SingleCellDataTransformationFactoryImpl implements SingleCellDataTransformationFactory {
 
     private final BeanFactory beanFactory;

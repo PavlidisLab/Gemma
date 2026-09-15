@@ -4,7 +4,7 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -12,11 +12,13 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,16 +36,18 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithAnalysis( Long id ) {
-        ExpressionAnalysisResultSet rs = load( id );
-        if ( rs != null ) {
-            Hibernate.initialize( rs.getAnalysis() );
-        }
-        return rs;
+        // Delegates to the DAO's single-query fetch-join, which materializes analysis +
+        // experimentAnalyzed in one round-trip. Over a high-latency DB link this is the
+        // dominant cost on the /datasets/{id}/expressions/differential endpoint, where the
+        // prior implementation issued load + lazy-init + lazy-hop sequentially.
+        return voDao.loadWithAnalysisAndExperimentAnalyzed( id );
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value ) {
         ExpressionAnalysisResultSet result = voDao.loadWithResultsAndContrasts( value );
@@ -51,6 +55,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, int offset, int limit ) {
         ExpressionAnalysisResultSet result = voDao.loadWithResultsAndContrasts( value, offset, limit );
@@ -58,6 +63,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, double threshold, int offset, int limit ) {
         ExpressionAnalysisResultSet result = voDao.loadWithResultsAndContrasts( value, threshold, offset, limit );
@@ -85,6 +91,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     }
 
     @Override
+    @Nullable
     @Transactional(readOnly = true)
     public ExpressionAnalysisResultSet loadWithExperimentAnalyzed( Long id ) {
         ExpressionAnalysisResultSet ears = voDao.load( id );
@@ -118,6 +125,17 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
+    public CursorPage<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInByCursor(
+            @Nullable Collection<BioAssaySet> bioAssaySets,
+            @Nullable Collection<DatabaseEntry> externalIds,
+            @Nullable Filters filters,
+            @Nullable Cursor cursor,
+            int limit ) {
+        return voDao.findByBioAssaySetInAndDatabaseEntryInByCursor( bioAssaySets, externalIds, filters, cursor, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Baseline getBaseline( ExpressionAnalysisResultSet ears ) {
         return voDao.getBaseline( ears );
     }
@@ -139,4 +157,5 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     public Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
         return voDao.loadPvalueDistribution( resultSet );
     }
+
 }

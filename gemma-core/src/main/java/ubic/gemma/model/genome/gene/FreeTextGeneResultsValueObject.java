@@ -37,6 +37,8 @@
 
 package ubic.gemma.model.genome.gene;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.genome.TaxonValueObject;
 
 import java.util.Collection;
@@ -46,6 +48,8 @@ import java.util.Collection;
  *
  * @author tvrossum
  */
+@Getter
+@Setter
 public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObject {
 
     private static final long serialVersionUID = 3557304710219740029L;
@@ -80,20 +84,6 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
         this.setId( Long.valueOf( -1 ) );
         this.setModified( false );
         this.setQueryString( queryString );
-    }
-
-    /**
-     * @return the queryString
-     */
-    public String getQueryString() {
-        return queryString;
-    }
-
-    /**
-     * @param queryString the queryString to set
-     */
-    public void setQueryString( String queryString ) {
-        this.queryString = queryString;
     }
 
 }

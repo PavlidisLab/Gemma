@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 import ubic.gemma.model.common.AbstractDescribable;
 
 /**
@@ -25,8 +30,11 @@ import ubic.gemma.model.common.AbstractDescribable;
  *
  * @author Paul
  */
+@MappedSuperclass
 public abstract class AbstractAuditable extends AbstractDescribable implements Auditable {
 
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "AUDIT_TRAIL_FK", nullable = false, unique = true, columnDefinition = "BIGINT")
     private AuditTrail auditTrail = new AuditTrail();
 
     @Override

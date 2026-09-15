@@ -1,11 +1,11 @@
 package ubic.gemma.model.expression.bioAssayData;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -23,17 +23,17 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ContextConfiguration
-public class RawExpressionDataVectorTest extends BaseDatabaseTest {
+public class RawExpressionDataVectorTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
-    static class RawExpressionDataVectorTestContextConfiguration extends BaseDatabaseTest.BaseDatabaseTestContextConfiguration {
+    static class RawExpressionDataVectorTestContextConfiguration extends BaseDatabaseTest5.BaseDatabaseTestContextConfiguration {
 
     }
 
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );

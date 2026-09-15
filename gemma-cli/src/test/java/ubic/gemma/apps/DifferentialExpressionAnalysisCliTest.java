@@ -1,8 +1,8 @@
 package ubic.gemma.apps;
 
 import org.assertj.core.util.Sets;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,22 +10,26 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.cli.util.EntityLocator;
-import ubic.gemma.cli.util.test.BaseCliTest;
 import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.GemmaRestApiClient;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
+import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -37,6 +41,7 @@ import ubic.gemma.persistence.util.EntityUrlBuilder;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,15 +52,17 @@ import static ubic.gemma.cli.util.test.Assertions.assertThat;
 @WithMockUser("bob")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class DifferentialExpressionAnalysisCliTest extends BaseTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
 
     @Autowired
     private GemmaRestApiClient gemmaRestApiClient;
 
     @Configuration
     @TestComponent
-    static class DifferentialExpressionAnalysisCliTestConfiguration extends BaseCliTest {
+    @ActiveProfiles("cli")
+    static class DifferentialExpressionAnalysisCliTestConfiguration {
 
         @Bean
         @Scope("prototype")
@@ -143,7 +150,13 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest {
 
     private ExperimentalFactor a, b, c, d, e;
 
-    @Before
+    /**
+     * The DE_Include/DE_Exclude marker factor, as GSE13367 carries it: a "collection of material" factor whose two
+     * values select which samples take part in the analysis.
+     */
+    private ExperimentalFactor deMarker;
+
+    @BeforeEach
     public void setUp() throws IOException {
         ee = new ExpressionExperiment();
         ee.setId( 1L );
@@ -157,6 +170,17 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest {
         d.setId( 4L );
         e = ExperimentalFactor.Factory.newInstance( "age", FactorType.CONTINUOUS );
         e.setId( 5L );
+        deMarker = ExperimentalFactor.Factory.newInstance( "collection of material", FactorType.CATEGORICAL );
+        deMarker.setId( 6L );
+        deMarker.getFactorValues().add( deMarkerValue( deMarker, 61L, "DE_Include", FactorValueUtils.DE_INCLUDE_URI ) );
+        deMarker.getFactorValues().add( deMarkerValue( deMarker, 62L, "DE_Exclude", FactorValueUtils.DE_EXCLUDE_URI ) );
+        // The CLI refuses to report an experiment that produced no analysis as a success, so the analyzer has to
+        // be stubbed to return something. Mockito's default for a Collection is an EMPTY one, which is what every
+        // assertion below used to run against — each of them asserted success on a run that performed nothing.
+        when( differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( any(), any() ) )
+                .thenReturn( Collections.singleton( new DifferentialExpressionAnalysis() ) );
+        when( differentialExpressionAnalyzerService.redoAnalyses( any(), any(), any(), anyBoolean() ) )
+                .thenReturn( Collections.singleton( new DifferentialExpressionAnalysis() ) );
         when( entityLocator.locateExpressionExperiment( eq( "1" ), anyBoolean() ) ).thenReturn( ee );
         when( eeService.thawLite( ee ) ).thenReturn( ee );
         when( gemmaRestApiClient.perform( eq( "/datasets/1/refresh" ), eq( "refreshVectors" ), anyBoolean(),
@@ -201,6 +225,77 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest {
         verify( gemmaRestApiClient ).perform( "/datasets/1/refresh",
                 "refreshVectors", false,
                 "refreshReports", true );
+    }
+
+    /**
+     * The DE_Include/DE_Exclude marker is not a biological factor. Counting it took a two-factor design over the
+     * automatic selector's limit of two and refused the run outright.
+     */
+    @Test
+    public void testAnalysisWithAutomaticallySelectedFactorsWhenDeExcludeFactorIsPresent() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( deMarker );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    /**
+     * GSE13367's shape: two real factors, the DE_Include/DE_Exclude marker and a batch factor.
+     */
+    @Test
+    public void testAnalysisWithAutomaticallySelectedFactorsWhenDeExcludeAndBatchFactorsArePresent() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ed.getExperimentalFactors().add( deMarker );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    /**
+     * The marker is still selectable by ID, so a curator can inspect that design deliberately.
+     */
+    @Test
+    public void testDeExcludeFactorCanStillBeRequestedExplicitly() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( deMarker );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "6" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactly( deMarker );
+        } ) );
+    }
+
+    private static FactorValue deMarkerValue( ExperimentalFactor ef, long id, String value, String valueUri ) {
+        Characteristic ch = Characteristic.Factory.newInstance();
+        ch.setCategory( "collection of material" );
+        ch.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0005066" );
+        ch.setValue( value );
+        ch.setValueUri( valueUri );
+        FactorValue fv = FactorValue.Factory.newInstance( ef );
+        fv.setId( id );
+        fv.getCharacteristics().add( Statement.Factory.newInstance( ch ) );
+        return fv;
     }
 
     @Test
@@ -465,6 +560,50 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest {
             assertThat( config.getFactorsToInclude() ).isEmpty();
             assertThat( config.getInteractionsToInclude() ).isEmpty();
         } ), eq( false ) );
+    }
+
+    /**
+     * An experiment that produced no analysis is not a success. GSE74400 (eid 12822) had both its subsets skipped
+     * as "design is not valid", printed "Performed 0 differential expression analyses." and exited 0, and a batch
+     * runner testing the exit status counted it as done for hours.
+     */
+    @Test
+    public void testAnExperimentThatProducedNoAnalysisFails() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        when( differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( any(), any() ) )
+                .thenReturn( Collections.emptySet() );
+
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .fails()
+                .exitCause().hasMessageContaining( "No differential expression analysis was performed" );
+        // nothing was produced, so nothing is written or refreshed either
+        verifyNoInteractions( gemmaRestApiClient );
+    }
+
+    /**
+     * Same for a redo: the CLI reports what came back, and nothing coming back is not something to report as done.
+     */
+    @Test
+    public void testARedoThatProducedNoAnalysisFails() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+
+        Collection<DifferentialExpressionAnalysis> deas = new HashSet<>();
+        deas.add( new DifferentialExpressionAnalysis() );
+        when( differentialExpressionAnalysisService.findByExperiment( ee, true ) ).thenReturn( deas );
+        when( differentialExpressionAnalyzerService.redoAnalyses( any(), any(), any(), anyBoolean() ) )
+                .thenReturn( Collections.emptySet() );
+
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-redo" )
+                .fails()
+                .exitCause().hasMessageContaining( "No differential expression analysis was performed" );
     }
 
     @Test

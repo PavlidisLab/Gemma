@@ -1,8 +1,8 @@
 package ubic.gemma.core.mail;
 
 import org.apache.velocity.exception.VelocityException;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
@@ -14,7 +14,7 @@ import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 
 import java.util.HashMap;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class MailEngineImplTest extends BaseTest {
+public class MailEngineImplTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -57,7 +57,7 @@ public class MailEngineImplTest extends BaseTest {
     @Autowired
     private MailSender mailSender;
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( mailSender );
     }

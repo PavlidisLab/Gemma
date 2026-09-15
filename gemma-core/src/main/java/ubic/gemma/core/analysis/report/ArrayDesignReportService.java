@@ -32,6 +32,17 @@ public interface ArrayDesignReportService {
     /**
      * Report summarizing _all_ array designs.
      */
+    /**
+     * Absolute directory the cached platform reports are read from and written to.
+     * <p>
+     * Exposed so callers can say where their output went. The path is derived from
+     * {@code gemma.appdata.home}, which differs between the CLI (running on the host) and
+     * gemma-rest (running in a container against a mounted volume) — a report written to the wrong
+     * one is invisible to the other with no error anywhere, which has already cost a debugging
+     * session.
+     */
+    String getReportDir();
+
     void generateAllArrayDesignReport();
 
     /**

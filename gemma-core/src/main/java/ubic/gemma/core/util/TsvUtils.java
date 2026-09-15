@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.RoundingMode;
@@ -229,23 +229,21 @@ public class TsvUtils {
         if ( d == null ) {
             return NA;
         }
-        return dateFormat.format( d );
+        // StdDateFormat is not thread-safe; synchronize on the shared static instance.
+        synchronized ( dateFormat ) {
+            return dateFormat.format( d );
+        }
     }
 
     public static String format( @Nullable Object object ) {
-        if ( object instanceof Double ) {
-            return format( ( Double ) object );
-        } else if ( object instanceof Integer ) {
-            return format( ( Integer ) object );
-        } else if ( object instanceof Long ) {
-            return format( ( Long ) object );
-        } else if ( object instanceof Date ) {
-            return format( ( Date ) object );
-        } else if ( object != null ) {
-            return format( object.toString() );
-        } else {
-            return NA;
-        }
+        return switch ( object ) {
+            case null -> NA;
+            case Double d -> format( d );
+            case Integer i -> format( i );
+            case Long l -> format( l );
+            case Date d -> format( d );
+            default -> format( object.toString() );
+        };
     }
 
     /**

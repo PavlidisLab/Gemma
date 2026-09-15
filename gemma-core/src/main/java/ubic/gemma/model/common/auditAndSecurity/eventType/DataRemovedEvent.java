@@ -1,5 +1,9 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicates that a data type (for a specific QuantitationType, possibly new) was removed.
  * <p>
@@ -9,5 +13,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * @see RawDataRemovedEvent
  * @see SingleCellDataRemovedEvent
  */
+@Entity
+@DiscriminatorValue("DataRemovedEvent")
 public class DataRemovedEvent extends ExpressionExperimentAnalysisEvent {
 }

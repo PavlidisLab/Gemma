@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Signifies a mapping based on sequence alignment performed by the system.
  */
+@Entity
+@DiscriminatorValue("AlignmentBasedGeneMappingEvent")
 public class AlignmentBasedGeneMappingEvent extends ArrayDesignGeneMappingEvent {
 
 }

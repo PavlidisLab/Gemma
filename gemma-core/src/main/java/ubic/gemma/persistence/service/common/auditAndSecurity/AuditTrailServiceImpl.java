@@ -39,7 +39,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
@@ -71,19 +71,19 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
-        return doAddUpdateEvent( auditable, null, note, null, new Date(), true );
+        return doAddUpdateEvent( auditable, null, note, null, null, new Date(), true );
     }
 
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note ) {
-        return doAddUpdateEvent( auditable, type, note, null, new Date(), true );
+        return doAddUpdateEvent( auditable, type, note, null, null, new Date(), true );
     }
 
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, String detail ) {
-        return doAddUpdateEvent( auditable, type, note, detail, new Date(), true );
+        return doAddUpdateEvent( auditable, type, note, detail, null, new Date(), true );
     }
 
     /**
@@ -101,31 +101,50 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         Long id = auditable.getId();
         auditable = ( Auditable ) sessionFactory.getCurrentSession().get( entityClass, id );
         if ( auditable == null ) {
-            log.error( String.format( "Failed to retrieve an auditable entity with class %s and ID %d in order to add an audit event with an exception.\n\tEvent Type: %s%s",
+            log.error( String.format( "Failed to retrieve an auditable entity with class %s and ID %d in order to add an audit event with an exception.%n\tEvent Type: %s%s",
                     entityClass.getName(), id, type.getName(), note != null ? "\n\tNote: " + note : "" ), throwable );
             return createAuditEvent( type, note, ExceptionUtils.getStackTrace( throwable ), new Date() );
         }
-        return doAddUpdateEvent( auditable, type, note, ExceptionUtils.getStackTrace( throwable ), new Date(), false );
+        return doAddUpdateEvent( auditable, type, note, ExceptionUtils.getStackTrace( throwable ), null, new Date(), false );
     }
 
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail, Date performedDate ) {
-        return doAddUpdateEvent( auditable, type, note, detail, performedDate, true );
+        return doAddUpdateEvent( auditable, type, note, detail, null, performedDate, true );
     }
 
-    private AuditEvent doAddUpdateEvent( Auditable auditable, @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, Date performedDate, boolean updateCurationDetails ) {
+    @Override
+    @Transactional
+    public AuditEvent addUpdateEventWithPayload( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String payloadJson ) {
+        return doAddUpdateEvent( auditable, type, note, null, payloadJson, new Date(), true );
+    }
+
+    private AuditEvent doAddUpdateEvent( Auditable auditable, @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, @Nullable String payloadJson, Date performedDate, boolean updateCurationDetails ) {
         if ( auditable.getId() == null ) {
             throw new IllegalArgumentException( "Cannot add an update event on a transient entity." );
         }
         AuditTrail trail = ensureInSession( auditable.getAuditTrail() );
         auditable.setAuditTrail( trail );
-        AuditEvent auditEvent = createAuditEvent( auditEventType, note, detail, performedDate );
-        // If object is curatable, update curation details
-        if ( ( auditable instanceof Curatable ) && updateCurationDetails ) {
-            curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
+        AuditEvent auditEvent = createAuditEvent( auditEventType, note, detail, payloadJson, performedDate );
+        // If object is curatable, update curation details.
+        // Unproxy first: Curatable is introduced at ExpressionExperiment, below Investigation and
+        // BioAssaySet, so a proxy typed to either supertype does NOT satisfy this test even once
+        // initialized -- the proxy class is generated from the DECLARED type and never gains a
+        // subclass's interfaces. @AuditedConditional methods declaring an Investigation parameter
+        // (AnnotationSetServiceImpl.attach, WorkflowServiceImpl.advance) reach here with exactly
+        // that, so the audit row was written while curation details were silently left stale.
+        Auditable target = ( Auditable ) Hibernate.unproxy( auditable );
+        if ( ( target instanceof Curatable ) && updateCurationDetails ) {
+            curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) target, auditEvent );
         }
-        trail.getEvents().add( auditEvent );
+        // AuditTrail.addEvent appends to the bag AND repoints the denormalised
+        // AuditTrail.lastEvent pointer under (date desc, id desc) ordering —
+        // see the entity-level docs + V6 migration. Whole-corpus "last event of
+        // type T" queries (dashboard report services on the ExpressionExperiment
+        // and ArrayDesign corpora) JOIN through this FK to skip a 1.5 M-row scan
+        // of AUDIT_EVENT.
+        trail.addEvent( auditEvent );
         // event will be created in cascade
         auditTrailDao.update( trail );
         auditLogger.log( auditable, auditEvent );
@@ -133,18 +152,30 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     }
 
     private AuditEvent createAuditEvent( @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, Date performedDate ) {
+        return createAuditEvent( auditEventType, note, detail, null, performedDate );
+    }
+
+    private AuditEvent createAuditEvent( @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, @Nullable String payloadJson, Date performedDate ) {
         Assert.isTrue( !performedDate.after( new Date() ), "Cannot create an audit event for something that has not yet occurred." );
+        // The performer is the CREDENTIAL that wrote the row and stays that way; onBehalfOf names the
+        // curator it was written for, when a relay named one. Recording only the credential answers "which
+        // key was used" and not "who decided this", and recording only the curator loses the first — so
+        // both are kept, in two columns. Null for the ordinary case, where they are the same person.
         return AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE,
                 abbreviateInBytes( note, "…", AuditEvent.MAX_NOTE_LENGTH, true, StandardCharsets.UTF_8 ),
                 abbreviateInBytes( detail, "…", AuditEvent.MAX_DETAIL_LENGTH, true, StandardCharsets.UTF_8 ),
-                userManager.getCurrentUser(), auditEventType != null ? getAuditEventType( auditEventType ) : null );
+                userManager.getCurrentUser(), auditEventType != null ? getAuditEventType( auditEventType ) : null,
+                payloadJson, ubic.gemma.core.security.util.ActingIdentity.get() );
     }
 
     private AuditEventType getAuditEventType( Class<? extends AuditEventType> type ) {
-        ClassMetadata classMetadata = sessionFactory.getClassMetadata( type );
-        if ( classMetadata == null ) {
-            throw new IllegalArgumentException( String.format( "%s is not mapped by Hibernate.", type.getName() ) );
+        // Hibernate 6: ClassMetadata is gone. The audit event types are concrete classes with
+        // a no-arg constructor (CamelCase enum-like classes generated by AndroMDA), so just
+        // instantiate via reflection.
+        try {
+            return type.getDeclaredConstructor().newInstance();
+        } catch ( ReflectiveOperationException e ) {
+            throw new IllegalArgumentException( String.format( "Cannot instantiate %s.", type.getName() ), e );
         }
-        return ( AuditEventType ) classMetadata.instantiate( null, ( SessionImplementor ) sessionFactory.getCurrentSession() );
     }
 }

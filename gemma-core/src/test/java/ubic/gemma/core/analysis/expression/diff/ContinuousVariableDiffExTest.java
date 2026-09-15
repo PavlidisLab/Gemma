@@ -14,24 +14,23 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -44,17 +43,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 /**
  * @author Paul
  */
-public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private DiffExAnalyzer analyzer;
@@ -80,7 +77,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     private ExpressionExperiment ee;
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void test() {
         AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
@@ -115,14 +112,14 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
         // checkResults( analysis );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             expressionExperimentService.remove( ee );
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         /*

@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.32.8</version>
+        <version>2.0.0-alpha-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-cli</artifactId>
@@ -43,9 +43,57 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
+              Logging fix: prettytime-nlp is an uber-jar that bundles a shaded SLF4J 1.x
+              org.slf4j.LoggerFactory. In the flat appassembler classpath it shadows
+              slf4j-api 2.x, so SLF4J binds to a NOP logger and ALL CLI log output
+              (commons-logging -> jcl-over-slf4j -> SLF4J) is silently dropped. A Maven
+              <exclusion> can't help — the class is packaged inside prettytime-nlp itself.
+              The launcher prepends contrib/* to the classpath (endorsedDir=contrib above),
+              so seeding slf4j-api there makes the 2.x LoggerFactory win. Declared AFTER
+              appassembler so it runs after 'assemble' in the package phase.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>seed-slf4j-api-into-contrib</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>slf4j-api</artifactId>
+                                    <version>${slf4j.version}</version>
+                                    <outputDirectory>${project.build.directory}/appassembler/contrib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
+        <!--
+          MUST stay first. prettytime-nlp bundles a shaded SLF4J 1.x org.slf4j.LoggerFactory
+          (see the appassembler note above). Maven orders the classpath as direct dependencies
+          in declaration order, then transitives, so without this entry prettytime-nlp precedes
+          slf4j-api (a transitive of gemma-core) and the 1.x LoggerFactory wins: it looks for
+          org.slf4j.impl.StaticLoggerBinder, doesn't find it (the binding is log4j-slf4j2-impl),
+          and installs a NOP logger. Every log.info/log.error in Gemma is then discarded —
+          including the CLI's own failure stack traces. The contrib/ seeding below only fixes
+          the packaged launcher; declaring slf4j-api first fixes IDE runs and exec:java too.
+        -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
         <dependency>
             <groupId>gemma</groupId>
             <artifactId>gemma-core</artifactId>
@@ -56,6 +104,14 @@
             <artifactId>gemma-core</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <!-- Phase 2: spring-security-test for @WithMockUser etc. (was inherited via gemma-core's
+             unpack-and-recompile of spring-security-test 4.0 sources, which is gone now). -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <version>${spring.security.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

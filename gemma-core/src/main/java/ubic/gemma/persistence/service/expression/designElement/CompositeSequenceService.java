@@ -26,15 +26,20 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author paul
@@ -96,6 +101,20 @@ public interface CompositeSequenceService
 
     Slice<CompositeSequenceValueObject> loadValueObjectsForGene( Gene gene, int start, int limit, boolean useGene2Cs );
 
+    /**
+     * Cursor-mode counterpart to {@link #loadValueObjectsForGene(Gene, int, int, boolean)}
+     * &mdash; see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1m. Always sorts by ascending
+     * {@code cs.id} (the primary key, indexed and unique); the cursor DAO restricts cursors
+     * to single-component id sorts until the index audit lands.
+     * <p>
+     * Same value-object shape as the offset variant: the per-row {@link CompositeSequenceValueObject}
+     * carries the {@link ArrayDesign} VO populated via a single {@code loadValueObjects}
+     * call over the platforms touched by the page (matching the offset implementation).
+     *
+     * @see CompositeSequenceDao#findByGeneByCursor(Gene, Cursor, int, boolean)
+     */
+    CursorPage<CompositeSequenceValueObject> loadValueObjectsForGeneByCursor( Gene gene, @Nullable Cursor cursor, int limit, boolean useGene2Cs );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_COLLECTION_READ" })
     Collection<CompositeSequence> findByName( String name );
 
@@ -111,6 +130,17 @@ public interface CompositeSequenceService
     Collection<Gene> getGenes( CompositeSequence compositeSequence, boolean useGene2Cs );
 
     Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs );
+
+    /**
+     * Cursor-mode counterpart to {@link #getGenes(CompositeSequence, int, int, boolean)}
+     * — see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1l. Always sorts by ascending
+     * {@code gene.id} (the primary key, indexed and unique); the cursor DAO restricts
+     * cursors to single-component id sorts until the index audit lands.
+     *
+     * @see CompositeSequenceDao#getGenesByCursor(CompositeSequence, Cursor, int, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COMPOSITE_SEQUENCE_READ" })
+    CursorPage<Gene> getGenesByCursor( CompositeSequence compositeSequence, @Nullable Cursor cursor, int limit, boolean useGene2Cs );
 
     /**
      * @param compositeSequences sequences
@@ -131,4 +161,19 @@ public interface CompositeSequenceService
 
     @CheckReturnValue
     CompositeSequence thaw( CompositeSequence compositeSequence );
+
+    /**
+     * @see CompositeSequenceDao#getSequenceData(Collection)
+     */
+    Map<Long, CompositeSequenceDao.BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds );
+
+    /**
+     * @see CompositeSequenceDao#getGeneData(Collection)
+     */
+    Map<Long, List<GeneReferenceValueObject>> getGeneData( Collection<Long> compositeSequenceIds );
+
+    /**
+     * @see CompositeSequenceDao#findIdsByGeneIds(Collection, Long)
+     */
+    Set<Long> findIdsByGeneIds( Collection<Long> geneIds, Long arrayDesignId );
 }

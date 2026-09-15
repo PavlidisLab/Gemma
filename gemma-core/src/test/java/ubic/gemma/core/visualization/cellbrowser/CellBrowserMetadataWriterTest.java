@@ -1,7 +1,7 @@
 package ubic.gemma.core.visualization.cellbrowser;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -28,7 +28,7 @@ public class CellBrowserMetadataWriterTest {
     private ExpressionExperiment ee;
     private SingleCellDimension scd;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         random.setSeed( 123L );
 

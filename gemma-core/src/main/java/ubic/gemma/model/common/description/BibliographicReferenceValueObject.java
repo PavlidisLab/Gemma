@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.description;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.biomaterial.Compound;
@@ -31,6 +34,8 @@ import java.util.*;
  *
  * @author pavlidis
  */
+@Getter
+@Setter
 @SuppressWarnings("unused") // Possibly used in front end
 public class BibliographicReferenceValueObject extends IdentifiableValueObject<BibliographicReference> {
 
@@ -46,7 +51,9 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
     private String publisher;
     private String title;
     private String volume;
+    @Setter(AccessLevel.NONE)
     private Collection<String> meshTerms;
+    @Setter(AccessLevel.NONE)
     private Collection<String> chemicalsTerms;
     private boolean retracted = false;
 
@@ -134,197 +141,6 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
         }
 
         return results;
-    }
-
-    /**
-     * @return the abstractText
-     */
-    public String getAbstractText() {
-        return abstractText;
-    }
-
-    /**
-     * @param abstractText the abstractText to set
-     */
-    public void setAbstractText( String abstractText ) {
-        this.abstractText = abstractText;
-    }
-
-    /**
-     * @return the authorList
-     */
-    public String getAuthorList() {
-        return authorList;
-    }
-
-    /**
-     * @param authorList the authorList to set
-     */
-    public void setAuthorList( String authorList ) {
-        this.authorList = authorList;
-    }
-
-
-    /**
-     * @return the chemicalsTerms
-     */
-    public Collection<String> getChemicalsTerms() {
-        return chemicalsTerms;
-    }
-
-    /**
-     * @return the citation
-     */
-    public CitationValueObject getCitation() {
-        return citation;
-    }
-
-    /**
-     * @param citation the citation to set
-     */
-    public void setCitation( CitationValueObject citation ) {
-        this.citation = citation;
-    }
-
-    /**
-     * @return the experiments
-     */
-    public Collection<ExpressionExperimentValueObject> getExperiments() {
-        return experiments;
-    }
-
-    /**
-     * @param experiments the experiments to set
-     */
-    public void setExperiments( Collection<ExpressionExperimentValueObject> experiments ) {
-        this.experiments = experiments;
-    }
-
-    /**
-     * @return the issue
-     */
-    public String getIssue() {
-        return issue;
-    }
-
-    /**
-     * @param issue the issue to set
-     */
-    public void setIssue( String issue ) {
-        this.issue = issue;
-    }
-
-    /**
-     * @return the meshTerms
-     */
-    public Collection<String> getMeshTerms() {
-        return meshTerms;
-    }
-
-    /**
-     * @return the pages
-     */
-    public String getPages() {
-        return pages;
-    }
-
-    /**
-     * @param pages the pages to set
-     */
-    public void setPages( String pages ) {
-        this.pages = pages;
-    }
-
-    /**
-     * @return the pubAccession
-     */
-    public String getPubAccession() {
-        return pubAccession;
-    }
-
-    /**
-     * @param pubAccession the pubAccession to set
-     */
-    public void setPubAccession( String pubAccession ) {
-        this.pubAccession = pubAccession;
-    }
-
-    /**
-     * @return the publication
-     */
-    public String getPublication() {
-        return publication;
-    }
-
-    /**
-     * @param publication the publication to set
-     */
-    public void setPublication( String publication ) {
-        this.publication = publication;
-    }
-
-    /**
-     * @return the publicationDate
-     */
-    public java.util.Date getPublicationDate() {
-        return publicationDate;
-    }
-
-    /**
-     * @param publicationDate the publicationDate to set
-     */
-    public void setPublicationDate( java.util.Date publicationDate ) {
-        this.publicationDate = publicationDate;
-    }
-
-    /**
-     * @return the publisher
-     */
-    public String getPublisher() {
-        return publisher;
-    }
-
-    /**
-     * @param publisher the publisher to set
-     */
-    public void setPublisher( String publisher ) {
-        this.publisher = publisher;
-    }
-
-    /**
-     * @return the title
-     */
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * @param title the title to set
-     */
-    public void setTitle( String title ) {
-        this.title = title;
-    }
-
-    /**
-     * @return the volume
-     */
-    public String getVolume() {
-        return volume;
-    }
-
-    /**
-     * @param volume the volume to set
-     */
-    public void setVolume( String volume ) {
-        this.volume = volume;
-    }
-
-    public boolean isRetracted() {
-        return retracted;
-    }
-
-    public void setRetracted( boolean retracted ) {
-        this.retracted = retracted;
     }
 
     /**

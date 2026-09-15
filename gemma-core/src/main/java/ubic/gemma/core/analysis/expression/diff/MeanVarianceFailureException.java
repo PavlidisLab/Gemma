@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 /**
- * Exception raised when {@link ubic.basecode.math.linearmodels.MeanVarianceEstimator} fails.
+ * Exception raised when {@link ubic.gemma.core.util.math.linearmodels.MeanVarianceEstimator} fails.
  *
  * @author poirigui
  */

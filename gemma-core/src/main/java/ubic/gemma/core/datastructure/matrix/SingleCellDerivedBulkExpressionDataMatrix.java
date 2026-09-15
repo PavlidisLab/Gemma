@@ -3,7 +3,7 @@ package ubic.gemma.core.datastructure.matrix;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * A {@link BulkExpressionDataMatrix} that was derived from a {@link SingleCellExpressionDataMatrix}.

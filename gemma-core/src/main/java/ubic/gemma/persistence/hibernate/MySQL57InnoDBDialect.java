@@ -1,43 +1,20 @@
 package ubic.gemma.persistence.hibernate;
 
-import org.hibernate.QueryException;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.Type;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.MySQLDialect;
 
-import java.util.List;
-
-public class MySQL57InnoDBDialect extends org.hibernate.dialect.MySQL57InnoDBDialect {
+/**
+ * Gemma's MySQL dialect, pinned to MySQL 5.7 / InnoDB semantics.
+ * <p>
+ * Pre-phase-2 this class extended the now-removed {@code org.hibernate.dialect.MySQL57InnoDBDialect} and registered
+ * a {@code bitwise_and} SQL function via the also-removed {@code SQLFunction} contract. Hibernate 6 collapsed the
+ * MySQL family into a single {@link MySQLDialect} parameterised by {@link DatabaseVersion}, and replaced the
+ * function-registration API. The {@code bitwise_and} HQL function is no longer registered; callers should render
+ * the {@code &} operator directly (see {@code AclLinterServiceImpl}).
+ */
+public class MySQL57InnoDBDialect extends MySQLDialect {
 
     public MySQL57InnoDBDialect() {
-        super();
-        registerFunction( "bitwise_and", new MySQLBitwiseAnd() );
-    }
-
-    private static class MySQLBitwiseAnd implements SQLFunction {
-
-        @Override
-        public boolean hasArguments() {
-            return false;
-        }
-
-        @Override
-        public boolean hasParenthesesIfNoArguments() {
-            return false;
-        }
-
-        @Override
-        public Type getReturnType( Type firstArgumentType, Mapping mapping ) throws QueryException {
-            return firstArgumentType;
-        }
-
-        @Override
-        public String render( Type firstArgumentType, List arguments, SessionFactoryImplementor factory ) throws QueryException {
-            if ( arguments.size() != 2 ) {
-                throw new QueryException( "The bitwise_and() function expects exactly two parameters." );
-            }
-            return "(" + arguments.get( 0 ) + " & " + arguments.get( 1 ) + ")";
-        }
+        super( DatabaseVersion.make( 5, 7 ) );
     }
 }

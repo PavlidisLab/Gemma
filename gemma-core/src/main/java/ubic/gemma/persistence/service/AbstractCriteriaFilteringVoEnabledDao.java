@@ -1,325 +1,229 @@
 package ubic.gemma.persistence.service;
 
-import lombok.Value;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Criteria;
-import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
-import org.hibernate.internal.CriteriaImpl;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.Query;
+import org.hibernate.query.criteria.JpaOrder;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
-import ubic.gemma.persistence.util.FilterCriteriaUtils;
+import ubic.gemma.persistence.util.FilterJpaUtils;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
-import java.util.*;
+import org.springframework.lang.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-
-import static ubic.gemma.persistence.util.PropertyMappingUtils.formProperty;
 
 /**
- * Partial implementation of {@link FilteringVoEnabledDao} based on the Hibernate {@link Criteria} API.
+ * Partial implementation of {@link FilteringVoEnabledDao} based on the JPA Criteria API.
+ * <p>
+ * Pre-Phase-2 this class was built on Hibernate's {@code org.hibernate.Criteria}, which was removed
+ * entirely in Hibernate 6. Phase 2 Step 3 left a stub that threw
+ * {@link UnsupportedOperationException} from every method. This is the Phase 2 Step 7 port back to
+ * a functional implementation, this time on {@code jakarta.persistence.criteria}.
+ * <p>
+ * What's currently supported:
+ * <ul>
+ *   <li>Filtering: eq / notEq (incl. null), like / notLike, lessThan / greaterThan,
+ *       lessOrEq / greaterOrEq, in / notIn — see {@link FilterJpaUtils}.</li>
+ *   <li>Sorting: dot-walked property paths, ASC/DESC, plus null-precedence
+ *       (FIRST/LAST/DEFAULT) via Hibernate 6's {@link org.hibernate.query.criteria.JpaOrder}
+ *       vendor extension on the JPA {@code Order}.</li>
+ *   <li>Counting: {@code count(distinct id)} via the JPA Criteria.</li>
+ *   <li>{@code .size}-suffix filters via {@link jakarta.persistence.criteria.CriteriaBuilder#size}.</li>
+ *   <li>Subquery filters (inSubquery / notInSubquery) via {@link jakarta.persistence.criteria.Subquery}.</li>
+ * </ul>
+ * <p>
+ * The pre-Phase-2 {@code FilterablePropertyCriteriaAlias} introspection of the underlying
+ * {@code CriteriaImpl.Subcriteria} is gone — JPA Criteria joins are explicit, so subclasses that
+ * need alias resolution should register them via the
+ * {@link FilterablePropertiesConfigurer#registerObjectAlias(String, String, Class, String, int)}
+ * path on construction. The fragile reflection on Hibernate internals is not re-introduced.
  *
- * @author poirigui
- * @see FilterCriteriaUtils to obtain {@link org.hibernate.criterion.DetachedCriteria}
- * from a {@link Filters}.
- * @see ubic.gemma.persistence.util.AclCriteriaUtils for utilities to include ACL constraints on the VOs at the
- * database-level.
+ * @author poirigui (Phase 2 port)
  */
-public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractFilteringVoEnabledDao<O, VO> {
-
-    @Autowired
-    private PlatformTransactionManager platformTransactionManager;
-
-    /**
-     * List of aliases used in the criteria query from {@link #getFilteringCriteria(Filters)}.
-     * <p>
-     * This is used to resolve properties to specific aliases.
-     */
-    private List<FilterablePropertyCriteriaAlias> filterablePropertyCriteriaAliases;
+public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>>
+        extends AbstractFilteringVoEnabledDao<O, VO> {
 
     protected AbstractCriteriaFilteringVoEnabledDao( Class<? extends O> elementClass, SessionFactory sessionFactory ) {
-        // This is a good default objet alias for Hibernate Criteria since null is used to refer to the root entity.
+        // null objectAlias matches the pre-Phase-2 default: legacy Hibernate Criteria used null to refer to
+        // the root entity. With JPA Criteria the alias is irrelevant since we resolve everything off Root.
         super( null, elementClass, sessionFactory );
     }
 
-    @Override
-    public void afterPropertiesSet() {
-        this.filterablePropertyCriteriaAliases = getFilterablePropertyCriteriaAliases();
-        super.afterPropertiesSet();
+    /**
+     * Holder for the JPA Criteria primitives needed to assemble a filtering query. Returned by
+     * {@link #getFilteringCriteria(CriteriaBuilder, Class, Filters)} so that subclasses can build
+     * select/order on top of the same root + restriction predicate.
+     */
+    protected static final class CriteriaContext<T, R> {
+        public final CriteriaQuery<T> query;
+        public final Root<R> root;
+
+        public CriteriaContext( CriteriaQuery<T> query, Root<R> root ) {
+            this.query = query;
+            this.root = root;
+        }
     }
 
     /**
-     * Obtain a {@link Criteria} for loading VOs.
-     *
-     * @see FilterCriteriaUtils#formRestrictionClause(Filters) to obtain a {@link org.hibernate.criterion.DetachedCriteria}
-     * from a set of filter clauses.
+     * Build a {@link CriteriaQuery} of the given result type rooted at the element class and apply
+     * the filter restriction. Override in subclasses if you need to add joins, fetches, or extra
+     * predicates (e.g. for ACL constraints).
      */
-    protected Criteria getFilteringCriteria( @Nullable Filters filters ) {
-        return this.getSessionFactory().getCurrentSession()
-                .createCriteria( getElementClass() )
-                .add( FilterCriteriaUtils.formRestrictionClause( filters ) );
+    protected <T> CriteriaContext<T, O> getFilteringCriteria( CriteriaBuilder cb, Class<T> resultType, @Nullable Filters filters ) {
+        CriteriaQuery<T> q = cb.createQuery( resultType );
+        @SuppressWarnings("unchecked")
+        Root<O> root = q.from( (Class<O>) getElementClass() );
+        q.where( FilterJpaUtils.formRestrictionClause( cb, q, root, filters, getFilterablePropertyObjectAliases() ) );
+        return new CriteriaContext<>( q, root );
     }
 
     @Override
     public List<Long> loadIds( @Nullable Filters filters, @Nullable Sort sort ) {
-        StopWatch stopWatch = StopWatch.createStarted();
-
-        Criteria criteria = getFilteringCriteria( filters )
-                .setProjection( Projections.distinct( Projections.id() ) );
-
+        StopWatch sw = StopWatch.createStarted();
+        CriteriaBuilder cb = getSessionFactory().getCurrentSession().getCriteriaBuilder();
+        CriteriaContext<Long, O> ctx = getFilteringCriteria( cb, Long.class, filters );
+        ctx.query.select( ctx.root.get( getIdentifierPropertyName() ).as( Long.class ) ).distinct( true );
         if ( sort != null ) {
-            addOrder( criteria, sort );
+            ctx.query.orderBy( buildOrders( cb, ctx.root, sort ) );
         }
-
-        //noinspection unchecked
-        List<Long> result = criteria.list();
-
-        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading %d IDs for %s took %d ms.",
-                    result.size(), getElementClass().getName(),
-                    stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
-        }
-
+        List<Long> result = getSessionFactory().getCurrentSession().createQuery( ctx.query ).getResultList();
+        reportSlow( sw, "Loading " + result.size() + " IDs" );
         return result;
     }
 
     @Override
     public List<O> load( @Nullable Filters filters, @Nullable Sort sort ) {
-        StopWatch stopWatch = StopWatch.createStarted();
-
-        Criteria criteria = getFilteringCriteria( filters );
-
+        StopWatch sw = StopWatch.createStarted();
+        CriteriaBuilder cb = getSessionFactory().getCurrentSession().getCriteriaBuilder();
+        @SuppressWarnings("unchecked")
+        CriteriaContext<O, O> ctx = getFilteringCriteria( cb, (Class<O>) getElementClass(), filters );
+        ctx.query.select( ctx.root ).distinct( true );
         if ( sort != null ) {
-            addOrder( criteria, sort );
+            ctx.query.orderBy( buildOrders( cb, ctx.root, sort ) );
         }
-
-        criteria.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
-
-        //noinspection unchecked
-        List<O> result = criteria.list();
-
-        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading %d entities for %s took %d ms.",
-                    result.size(), getElementClass().getName(),
-                    stopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
-        }
-
+        List<O> result = getSessionFactory().getCurrentSession().createQuery( ctx.query ).getResultList();
+        reportSlow( sw, "Loading " + result.size() + " entities" );
         return result;
     }
 
     @Override
     public Slice<O> load( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        StopWatch stopWatch = StopWatch.createStarted();
-        StopWatch queryStopWatch = StopWatch.create();
-        StopWatch countingStopWatch = StopWatch.create();
-
-        Criteria criteria = getFilteringCriteria( filters );
-        Criteria totalElementsQuery = getFilteringCriteria( filters );
-
-        // setup sorting
+        StopWatch sw = StopWatch.createStarted();
+        CriteriaBuilder cb = getSessionFactory().getCurrentSession().getCriteriaBuilder();
+        @SuppressWarnings("unchecked")
+        CriteriaContext<O, O> ctx = getFilteringCriteria( cb, (Class<O>) getElementClass(), filters );
+        ctx.query.select( ctx.root ).distinct( true );
         if ( sort != null ) {
-            addOrder( criteria, sort );
+            ctx.query.orderBy( buildOrders( cb, ctx.root, sort ) );
         }
-
-        // setup offset/limit
-        if ( offset > 0 )
-            criteria.setFirstResult( offset );
-        if ( limit > 0 )
-            criteria.setMaxResults( limit );
-
-        queryStopWatch.start();
-        //noinspection unchecked
-        List<O> results = criteria
-                .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
-                .list();
-        queryStopWatch.stop();
-
-        countingStopWatch.start();
-        Long totalElements;
-        if ( limit > 0 && ( results.isEmpty() || results.size() == limit ) ) {
-            totalElements = ( Long ) totalElementsQuery.setProjection( Projections.countDistinct( getIdentifierPropertyName() ) ).uniqueResult();
-        } else {
-            totalElements = offset + ( long ) results.size();
-        }
-        countingStopWatch.stop();
-
-        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading and counting %d entities for %s took %d ms (querying: %d, counting: %d).",
-                    totalElements, getElementClass().getName(),
-                    stopWatch.getTime( TimeUnit.MILLISECONDS ), queryStopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    countingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
-        }
-
+        Query<O> q = getSessionFactory().getCurrentSession().createQuery( ctx.query );
+        if ( offset > 0 ) q.setFirstResult( offset );
+        if ( limit > 0 ) q.setMaxResults( limit );
+        List<O> results = q.getResultList();
+        Long totalElements = ( limit > 0 && ( results.isEmpty() || results.size() == limit ) )
+                ? count( filters )
+                : offset + ( long ) results.size();
+        reportSlow( sw, "Loading and counting " + totalElements + " entities" );
         return new Slice<>( results, sort, offset, limit, totalElements );
     }
 
     @Override
     public Slice<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit ) {
-        StopWatch stopWatch = StopWatch.createStarted();
-        StopWatch countingStopWatch = StopWatch.create();
-        StopWatch postProcessingStopWatch = StopWatch.create();
-
-        Criteria query = getFilteringCriteria( filters );
-        Criteria totalElementsQuery = getFilteringCriteria( filters );
-
-        // setup sorting
+        StopWatch sw = StopWatch.createStarted();
+        CriteriaBuilder cb = getSessionFactory().getCurrentSession().getCriteriaBuilder();
+        @SuppressWarnings("unchecked")
+        CriteriaContext<O, O> ctx = getFilteringCriteria( cb, (Class<O>) getElementClass(), filters );
+        ctx.query.select( ctx.root ).distinct( true );
         if ( sort != null ) {
-            addOrder( query, sort );
+            ctx.query.orderBy( buildOrders( cb, ctx.root, sort ) );
         }
-
-        // setup offset/limit
-        if ( offset > 0 )
-            query.setFirstResult( offset );
-        if ( limit > 0 )
-            query.setMaxResults( limit );
-
-        // setup transformer
-        query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
-
-        postProcessingStopWatch.start();
-        //noinspection unchecked
-        List<VO> results = doLoadValueObjects( query.list() );
-        postProcessingStopWatch.stop();
-
-        countingStopWatch.start();
-        Long totalElements;
-        if ( limit >= 0 && results.size() >= limit ) {
-            totalElements = ( Long ) totalElementsQuery
-                    .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
-                    .uniqueResult();
-        } else {
-            totalElements = ( long ) results.size();
-        }
-        countingStopWatch.stop();
-
-        stopWatch.stop();
-
-        if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading and counting %d VOs for %s took %d ms (querying: %d, counting: %d, post-processing: %d).",
-                    totalElements, getElementClass().getName(),
-                    stopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) - countingStopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    countingStopWatch.getTime( TimeUnit.MILLISECONDS ), postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
-        }
-
+        Query<O> q = getSessionFactory().getCurrentSession().createQuery( ctx.query );
+        if ( offset > 0 ) q.setFirstResult( offset );
+        if ( limit > 0 ) q.setMaxResults( limit );
+        List<VO> results = doLoadValueObjects( q.getResultList() );
+        Long totalElements = ( limit >= 0 && results.size() >= limit )
+                ? count( filters )
+                : ( long ) results.size();
+        reportSlow( sw, "Loading and counting " + totalElements + " VOs" );
         return new Slice<>( results, sort, offset, limit, totalElements );
     }
 
     @Override
     public List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
-        StopWatch stopWatch = StopWatch.createStarted();
-        StopWatch postProcessingStopWatch = StopWatch.create();
-
-        Criteria query = getFilteringCriteria( filters );
-
+        StopWatch sw = StopWatch.createStarted();
+        CriteriaBuilder cb = getSessionFactory().getCurrentSession().getCriteriaBuilder();
+        @SuppressWarnings("unchecked")
+        CriteriaContext<O, O> ctx = getFilteringCriteria( cb, (Class<O>) getElementClass(), filters );
+        ctx.query.select( ctx.root ).distinct( true );
         if ( sort != null ) {
-            addOrder( query, sort );
+            ctx.query.orderBy( buildOrders( cb, ctx.root, sort ) );
         }
-
-        // setup transformer
-        query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
-
-        postProcessingStopWatch.start();
-        //noinspection unchecked
-        List<VO> results = doLoadValueObjects( query.list() );
-        postProcessingStopWatch.stop();
-
-        stopWatch.stop();
-
-        if ( stopWatch.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading %d VOs for %s took %d ms (querying: %d ms, post-processing: %d ms).",
-                    results.size(), getElementClass().getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
-                    postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
-        }
-
+        List<O> entities = getSessionFactory().getCurrentSession().createQuery( ctx.query ).getResultList();
+        List<VO> results = doLoadValueObjects( entities );
+        reportSlow( sw, "Loading " + results.size() + " VOs" );
         return results;
     }
 
     @Override
     public long count( @Nullable Filters filters ) {
-        StopWatch timer = StopWatch.createStarted();
-        Long ret = ( Long ) getFilteringCriteria( filters )
-                .setProjection( Projections.countDistinct( getIdentifierPropertyName() ) )
-                .uniqueResult();
-        timer.stop();
-        if ( timer.getTime() > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Counting %d entities for %s took %d ms.",
-                    ret, getElementClass().getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
-        }
-        return ret;
+        StopWatch sw = StopWatch.createStarted();
+        CriteriaBuilder cb = getSessionFactory().getCurrentSession().getCriteriaBuilder();
+        CriteriaContext<Long, O> ctx = getFilteringCriteria( cb, Long.class, filters );
+        ctx.query.select( cb.countDistinct( ctx.root.get( getIdentifierPropertyName() ) ) );
+        Long result = getSessionFactory().getCurrentSession().createQuery( ctx.query ).getSingleResult();
+        reportSlow( sw, "Counting " + result + " entities" );
+        return result == null ? 0L : result;
     }
 
-    @Override
-    protected FilterablePropertyMeta.FilterablePropertyMetaBuilder resolveFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
-        FilterablePropertyMeta.FilterablePropertyMetaBuilder meta = super.resolveFilterablePropertyMeta( propertyName );
-        // the .size is not actually part of the property name, so don't account for it when substituting aliases
-        String propNameWithoutSize = propertyName.replaceFirst( "\\.size$", "" );
-        for ( FilterablePropertyCriteriaAlias alias : filterablePropertyCriteriaAliases ) {
-            if ( propNameWithoutSize.startsWith( alias.propertyName + "." ) ) {
-                propertyName = propertyName.replaceFirst( "^" + Pattern.quote( alias.propertyName + "." ), "" );
-                return meta
-                        .objectAlias( alias.alias )
-                        .propertyName( propertyName );
-            }
-        }
-        return meta;
-    }
-
-    @Value
-    private static class FilterablePropertyCriteriaAlias {
-        String propertyName;
-        String alias;
-    }
-
-    private List<FilterablePropertyCriteriaAlias> getFilterablePropertyCriteriaAliases() {
-        // FIXME: unfortunately, this requires a session...
-        Criteria criteria = new TransactionTemplate( platformTransactionManager ).execute( ( ts ) -> getFilteringCriteria( Filters.empty() ) );
-        if ( criteria instanceof CriteriaImpl ) {
-            //noinspection unchecked
-            Iterator<CriteriaImpl.Subcriteria> it = ( ( CriteriaImpl ) criteria ).iterateSubcriteria();
-            List<FilterablePropertyCriteriaAlias> result = new ArrayList<>();
-            while ( it.hasNext() ) {
-                CriteriaImpl.Subcriteria sc = it.next();
-                result.add( new FilterablePropertyCriteriaAlias( sc.getPath(), sc.getAlias() ) );
-            }
-            // substitute longest paths first
-            result.sort( Comparator.comparing( a -> a.propertyName.length(), Comparator.reverseOrder() ) );
-            return result;
-        }
-        return Collections.emptyList();
-    }
-
-    private static void addOrder( Criteria query, Sort sort ) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private List<Order> buildOrders( CriteriaBuilder cb, Root<O> root, Sort sort ) {
+        List<Order> orders = new ArrayList<>();
+        Map<String, String> aliasPrefixes = getFilterablePropertyObjectAliases();
         for ( ; sort != null; sort = sort.getAndThen() ) {
-            String property = formProperty( sort );
-            // handle .size ordering
-            if ( property.endsWith( ".size" ) ) {
-                // FIXME: find a workaround for sorting by collection size (see https://github.com/PavlidisLab/Gemma/issues/520)
-                throw new UnsupportedOperationException( "Ordering by collection size is not supported for the Criteria API." );
+            String propertyName = sort.getPropertyName();
+            String objectAlias = sort.getObjectAlias();
+            jakarta.persistence.criteria.Expression<?> expr;
+            if ( propertyName.endsWith( ".size" ) ) {
+                String collectionPath = propertyName.substring( 0, propertyName.length() - ".size".length() );
+                expr = cb.size( ( jakarta.persistence.criteria.Expression ) FilterJpaUtils.resolvePathWithAlias( root, objectAlias, collectionPath, aliasPrefixes ) );
+            } else {
+                expr = FilterJpaUtils.resolvePathWithAlias( root, objectAlias, propertyName, aliasPrefixes );
             }
-            Order order = sort.getDirection() == Sort.Direction.DESC ? Order.desc( property ) : Order.asc( property );
-            switch ( sort.getNullMode() ) {
-                case DEFAULT:
-                    order.nulls( NullPrecedence.NONE );
-                    break;
-                case FIRST:
-                    order.nulls( NullPrecedence.FIRST );
-                    break;
-                case LAST:
-                    order.nulls( NullPrecedence.LAST );
-                    break;
+            Order order = sort.getDirection() == Sort.Direction.DESC ? cb.desc( expr ) : cb.asc( expr );
+            // JPA's Order has no null-precedence accessor, but in Hibernate 6 the Order returned by
+            // CriteriaBuilder.asc/desc is actually a JpaOrder, which exposes nullPrecedence(...).
+            if ( sort.getNullMode() != null && sort.getNullMode() != Sort.NullMode.DEFAULT && order instanceof JpaOrder ) {
+                switch ( sort.getNullMode() ) {
+                    case FIRST:
+                        order = ( ( JpaOrder ) order ).nullPrecedence( NullPrecedence.FIRST );
+                        break;
+                    case LAST:
+                        order = ( ( JpaOrder ) order ).nullPrecedence( NullPrecedence.LAST );
+                        break;
+                    default:
+                        // DEFAULT handled above; nothing to do.
+                        break;
+                }
             }
-            query.addOrder( order );
+            orders.add( order );
+        }
+        return orders;
+    }
+
+    private void reportSlow( StopWatch sw, String what ) {
+        if ( sw.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
+            log.warn( String.format( "%s for %s took %d ms.", what, getElementClass().getName(), sw.getTime( TimeUnit.MILLISECONDS ) ) );
         }
     }
 }

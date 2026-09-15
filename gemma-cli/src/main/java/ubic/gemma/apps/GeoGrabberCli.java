@@ -40,7 +40,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -339,7 +339,12 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         log.info( "Fetched " + allGEOPlatforms.size() + " records" );
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             for ( GeoRecord geoRecord : allGEOPlatforms ) {
-                os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
+                String releaseDateStr;
+                // SimpleDateFormat is not thread-safe; synchronize on the shared static instance.
+                synchronized ( dateFormat ) {
+                    releaseDateStr = dateFormat.format( geoRecord.getReleaseDate() );
+                }
+                os.printRecord( geoRecord.getGeoAccession(), releaseDateStr,
                         StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getTitle(),
                         geoRecord.getSummary(), geoRecord.getSeriesType() );
                 os.flush();
@@ -641,7 +646,12 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     }
 
     private void writeDataset( GeoRecord geoRecord, boolean allPlatformsInGemma, boolean isAffymetrix, CSVPrinter os ) throws IOException {
-        os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
+        String releaseDateStr;
+        // SimpleDateFormat is not thread-safe; synchronize on the shared static instance.
+        synchronized ( dateFormat ) {
+            releaseDateStr = dateFormat.format( geoRecord.getReleaseDate() );
+        }
+        os.printRecord( geoRecord.getGeoAccession(), releaseDateStr,
                 StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getPlatform(), allPlatformsInGemma,
                 isAffymetrix, geoRecord.getNumSamples(), geoRecord.getSeriesType(), geoRecord.isSuperSeries(),
                 geoRecord.getSubSeriesOf(), StringUtils.join( geoRecord.getPubMedIds(), "," ), geoRecord.getTitle(), geoRecord.getSummary(),

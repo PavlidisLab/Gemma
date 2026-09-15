@@ -20,12 +20,22 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
 
 /**
  * Event indicating that a curation note has added.
  *
  * @author Paul
+ * @deprecated curation notes will be migrated to ticket comments via
+ * {@link ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService#addComment}
+ * once the curation-note &harr; ticket mapping lands (see {@code CURATION_DETAILS_RETIREMENT.md}).
+ * Until then this event is still emitted by {@code DatasetsWebService.updateDatasetCurationDetails}
+ * so the legacy {@code curationNote} field on {@link CurationDetails} stays populated.
  */
+@Deprecated
+@Entity
+@DiscriminatorValue("CurationNoteUpdateEvent")
 public class CurationNoteUpdateEvent extends CurationDetailsEvent {
 
     /**

@@ -20,11 +20,12 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
+import ubic.gemma.core.util.test.fixture.ExperimentFactory;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -35,18 +36,20 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author tesarst
  */
-public class CuratableValueObjectTest extends BaseSpringContextTest {
+public class CuratableValueObjectTest extends BaseSpringContextTest5 {
 
     private ArrayDesign arrayDesign;
     private ExpressionExperiment expressionExperiment;
@@ -60,40 +63,51 @@ public class CuratableValueObjectTest extends BaseSpringContextTest {
     @Autowired
     private AuditTrailService auditTrailService;
 
-    @Before
+    @Autowired
+    private ExperimentFactory experimentFactory;
+
+    @Autowired
+    private GenomePersister genomePersister;
+
+    @Autowired
+    private EeWriteService eeWriteService;
+
+    @BeforeEach
     public void setUp() throws Exception {
 
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "testing audit " + RandomStringUtils.insecure().nextAlphanumeric( 32 ) );
         arrayDesign.setShortName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
         arrayDesign.setPrimaryTaxon( this.getTaxon( "human" ) );
-        arrayDesign = ( ArrayDesign ) this.persisterHelper.persist( arrayDesign );
+        arrayDesign = this.arrayDesignPersister.persistArrayDesign( arrayDesign );
 
         assertTrue( arrayDesign.getAuditTrail() != null );
 
         Taxon taxon = Taxon.Factory
                 .newInstance( "text taxon scientific name " + RandomStringUtils.insecure().nextAlphanumeric( 8 ), "ttxn", 0,
                         true );
-        this.persisterHelper.persist( taxon );
+        this.genomePersister.persistTaxon( taxon );
 
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
         bm.setSourceTaxon( taxon );
-        this.persisterHelper.persist( bm );
+        this.eeWriteService.persistBioMaterial( bm );
 
         BioAssay bioAssay = BioAssay.Factory.newInstance();
         bioAssay.setArrayDesignUsed( arrayDesign );
         bioAssay.setSampleUsed( bm );
-        this.persisterHelper.persist( bioAssay );
+        this.eeWriteService.persistBioAssay( bioAssay );
 
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         ed.setName( RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
 
-        expressionExperiment = super.getTestPersistentBasicExpressionExperiment();
+        // Phase 3: migrated from PersistentDummyObjectHelper.getTestPersistentBasicExpressionExperiment()
+        // to ExperimentFactory; the supplied AD is passed in so the BAs reference the AD this test asserts on.
+        expressionExperiment = experimentFactory.bulkRna().withArrayDesign( arrayDesign ).build();
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
 
     }

@@ -24,12 +24,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.TDistribution;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -54,16 +54,22 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.persister.ArrayDesignPersister;
 import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
-import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
 import ubic.gemma.persistence.service.expression.experiment.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -92,13 +98,33 @@ public class PersistentDummyObjectHelper {
     private ExternalDatabase geo;
     private ExternalDatabase pubmed;
     private Taxon testTaxon;
+    /** Cached "XXX" chromosome per taxon id; see {@link #getTestPersistentChromosome(Taxon)}. */
+    private final Map<Long, Chromosome> testChromosomes = new HashMap<>();
     private int testElementCollectionSize = PersistentDummyObjectHelper.DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
     @Autowired
-    private PersisterHelper persisterHelper;
+    private EeWriteService eeWriteService;
+
+    @Autowired
+    private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+
+    @Autowired
+    private GenomePersister genomePersister;
+
+    @Autowired
+    private ArrayDesignPersister arrayDesignPersister;
+
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
+
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
+
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao contactDao;
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -114,6 +140,10 @@ public class PersistentDummyObjectHelper {
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+
+    /** Used only to run the raw-JDBC fixture-row checks; see {@link #fixtureRowExists(String, Long)}. */
+    @Autowired
+    private SessionFactory sessionFactory;
 
     // setting seed globally does not guarantee reproducibliity always as methods could access
     // different parts of the sequence if called in different orders, so callers should reset it using resetSeed()
@@ -205,19 +235,7 @@ public class PersistentDummyObjectHelper {
 
     public Collection<Analysis> addTestAnalyses( ExpressionExperiment ee ) {
         Collection<Analysis> analyses = new ArrayList<>();
-        /*
-         * Add analyses
-         */
-        CoexpressionAnalysis pca = CoexpressionAnalysis.Factory.newInstance();
-        pca.setName( RandomStringUtils.insecure().nextNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
-
-        pca.setExperimentAnalyzed( ee );
-
-        analyses.add( persisterHelper.persist( pca ) );
-
-        /*
-         * Diff
-         */
+        // Phase 2: CoexpressionAnalysis test artifact dropped along with the rest of the coex subsystem.
         DifferentialExpressionAnalysis expressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
         Protocol protocol = Protocol.Factory.newInstance();
         protocol.setName( "Differential expression analysis settings" );
@@ -225,7 +243,7 @@ public class PersistentDummyObjectHelper {
         expressionAnalysis.setProtocol( protocol );
         expressionAnalysis.setExperimentAnalyzed( ee );
 
-        analyses.add( persisterHelper.persist( expressionAnalysis ) );
+        analyses.add( differentialExpressionAnalysisService.create( expressionAnalysis ) );
 
         return analyses;
     }
@@ -316,8 +334,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService.prepare( ee );
+        ee = eeWriteService.create( ee, c );
 
         return ee;
     }
@@ -369,8 +387,8 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService.prepare( ee );
+        ee = eeWriteService.create( ee, c );
 
         return ee;
     }
@@ -454,7 +472,7 @@ public class PersistentDummyObjectHelper {
 
         ExpressionAnalysisResultSet dears = new ExpressionAnalysisResultSet();
         dears.setAnalysis( dea );
-        dears.setExperimentalFactors( Collections.singleton( ef ) );
+        dears.setExperimentalFactors( new HashSet<>( Collections.singleton( ef ) ) );
 
         // draw log2fc from an over-dispersed normal distribution
         RealDistribution log2fcDistribution = new NormalDistribution( 0, 2 );
@@ -478,14 +496,14 @@ public class PersistentDummyObjectHelper {
             dear.setPvalue( pvalue );
             dear.setCorrectedPvalue( dear.getPvalue() / ad.getCompositeSequences().size() );
             dear.setProbe( probe );
-            dear.setContrasts( Collections.singleton( cr ) );
+            dear.setContrasts( new HashSet<>( Collections.singleton( cr ) ) );
 
             results.add( dear );
         }
 
         dears.setResults( results );
 
-        dea.setResultSets( Collections.singleton( dears ) );
+        dea.setResultSets( new HashSet<>( Collections.singleton( dears ) ) );
 
         // create everything at once
         differentialExpressionAnalysisService.create( dea );
@@ -518,7 +536,7 @@ public class PersistentDummyObjectHelper {
         gp.setGene( gene );
         gp.setName( RandomStringUtils.insecure().nextNumeric( 5 ) + "_test" );
         gene.getProducts().add( gp );
-        return persisterHelper.persist( gene );
+        return genomePersister.persistGene( gene );
     }
 
     /**
@@ -572,7 +590,7 @@ public class PersistentDummyObjectHelper {
         }
         assert ( ad.getCompositeSequences().size() == numCompositeSequences );
 
-        return persisterHelper.persist( ad );
+        return arrayDesignPersister.persistArrayDesign( ad );
     }
 
     public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
@@ -624,18 +642,15 @@ public class PersistentDummyObjectHelper {
             ee.setQuantitationTypes( this.getRawQuantitationTypes() );
         }
 
-        ee = persisterHelper.persist( ee );
+        ee = eeWriteService.create( ee );
 
         return ee;
     }
 
     public BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         BibliographicReference br = BibliographicReference.Factory.newInstance();
-        if ( pubmed == null ) {
-            pubmed = externalDatabaseService.findByName( ExternalDatabases.PUBMED );
-        }
-        br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, pubmed ) );
-        return persisterHelper.persist( br );
+        br.setPubAccession( this.getTestPersistentDatabaseEntry( accession, pubmed() ) );
+        return bibliographicReferenceService.findOrCreate( br );
     }
 
     public BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
@@ -655,49 +670,47 @@ public class PersistentDummyObjectHelper {
             throw new IllegalArgumentException();
         }
         BioAssay ba = this.getTestNonPersistentBioAssay( ad, bm );
-        return persisterHelper.persist( ba );
+        return eeWriteService.persistBioAssay( ba );
     }
 
     public BioMaterial getTestPersistentBioMaterial() {
         BioMaterial bm = this.getTestNonPersistentBioMaterial();
-        return persisterHelper.persist( bm );
+        return eeWriteService.persistBioMaterial( bm );
     }
 
     public BioMaterial getTestPersistentBioMaterial( Taxon tax ) {
         BioMaterial bm = this.getTestNonPersistentBioMaterial( tax );
-        return persisterHelper.persist( bm );
+        return eeWriteService.persistBioMaterial( bm );
     }
 
     public BioSequence getTestPersistentBioSequence() {
         BioSequence bs = getTestNonPersistentBioSequence( null );
 
-        return persisterHelper.persist( bs );
+        return genomePersister.persistBioSequence( bs );
     }
 
     public BioSequence getTestPersistentBioSequence( Taxon taxon ) {
         BioSequence bs = getTestNonPersistentBioSequence( taxon );
 
-        return persisterHelper.persist( bs );
+        return genomePersister.persistBioSequence( bs );
     }
 
     /**
      * @param bioSequence bio sequence
      * @return bio sequence to gene products
      */
-    @SuppressWarnings("unchecked")
     public Set<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
-        Collection<BioSequence2GeneProduct> b2gCol = new HashSet<>();
+        Set<BioSequence2GeneProduct> b2gCol = new HashSet<>();
 
         BlatAssociation b2g = BlatAssociation.Factory.newInstance();
         b2g.setScore( this.randomizer.nextDouble() );
         b2g.setBioSequence( bioSequence );
         b2g.setGeneProduct( this.getTestPersistentGeneProduct( this.getTestPersistentGene() ) );
         b2g.setBlatResult( this.getTestPersistentBlatResult( bioSequence, null ) );
-        b2gCol.add( b2g );
+        b2gCol.add( genomePersister.persistBlatAssociation( b2g ) );
 
-        //noinspection unchecked
-        return new HashSet<>( persisterHelper.persist( b2gCol ) );
+        return b2gCol;
     }
 
     public BlatResult getTestPersistentBlatResult( BioSequence querySequence, Taxon taxon ) {
@@ -706,13 +719,7 @@ public class PersistentDummyObjectHelper {
         if ( taxon == null ) {
             taxon = this.getTestPersistentTaxon();
         }
-        Chromosome chromosome = Chromosome.Factory.newInstance( "XXX", null, this.getTestPersistentBioSequence( taxon ), taxon );
-        assert chromosome.getSequence() != null;
-        chromosome = persisterHelper.persist( chromosome );
-        assert chromosome != null;
-        assert chromosome.getSequence() != null;
-        br.setTargetChromosome( chromosome );
-        assert br.getTargetChromosome().getSequence() != null;
+        br.setTargetChromosome( this.getTestPersistentChromosome( taxon ) );
         br.setQuerySequence( querySequence );
         br.setTargetStart( 1L );
         br.setTargetEnd( 1000L );
@@ -721,7 +728,37 @@ public class PersistentDummyObjectHelper {
         targetAlignedRegion.setNucleotide( 10000010L );
         targetAlignedRegion.setNucleotideLength( 1001 );
         targetAlignedRegion.setStrand( "-" );
-        return persisterHelper.persist( br );
+        return genomePersister.persistBlatResults( Collections.singleton( br ) ).iterator().next();
+    }
+
+    /**
+     * Resolve the single "XXX" chromosome used by every test BLAT result for a taxon, caching it.
+     * <p>
+     * {@link GenomePersister#persistChromosome(Chromosome)} de-duplicates on (name, taxon) and only
+     * persists the chromosome's sequence on a miss, so building a fresh {@link BioSequence} for the
+     * chromosome on every call left one orphaned sequence + GenBank {@link DatabaseEntry} row behind
+     * per composite sequence — 12 of them for every experiment from
+     * {@link #getTestExpressionExperimentWithAllDependencies(boolean)}.
+     */
+    private Chromosome getTestPersistentChromosome( Taxon taxon ) {
+        Long taxonId = taxon.getId();
+        if ( taxonId != null && testChromosomes.containsKey( taxonId ) ) {
+            Chromosome cached = testChromosomes.get( taxonId );
+            if ( fixtureRowExists( "CHROMOSOME", cached.getId() ) ) {
+                return cached;
+            }
+            reportVanishedFixtureRow( "CHROMOSOME", cached.getId() );
+            testChromosomes.remove( taxonId );
+        }
+        Chromosome chromosome = Chromosome.Factory.newInstance( "XXX", null,
+                this.getTestPersistentBioSequence( taxon ), taxon );
+        assert chromosome.getSequence() != null;
+        chromosome = genomePersister.persistChromosome( chromosome );
+        assert chromosome != null;
+        if ( taxonId != null ) {
+            testChromosomes.put( taxonId, chromosome );
+        }
+        return chromosome;
     }
 
     /**
@@ -734,7 +771,8 @@ public class PersistentDummyObjectHelper {
         c.setName(
                 RandomStringUtils.insecure().nextNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testcontact" );
         c.setEmail( c.getName() + "@foo.org" );
-        c = persisterHelper.persist( c );
+        Contact existing = contactDao.find( c );
+        c = existing != null ? existing : contactDao.create( c );
         return c;
     }
 
@@ -758,6 +796,39 @@ public class PersistentDummyObjectHelper {
      * @param accession accession
      * @return db entry
      */
+    /**
+     * Resolve the seeded GEO {@link ExternalDatabase}, caching it.
+     * <p>
+     * Use this rather than reading the {@code geo} field directly. The field is initialized lazily by
+     * whichever fixture method happens to run first, so reading it bare yields {@code null} until then —
+     * and a {@code null} database silently makes
+     * {@link #getTestPersistentDatabaseEntry(String, ExternalDatabase)} invent a randomly-named
+     * {@code _testdb} instead, which is only noticed by a test that looks the entry up by database name.
+     */
+    private ExternalDatabase geo() {
+        if ( geo == null ) {
+            geo = externalDatabaseService.findByName( ExternalDatabases.GEO );
+            if ( geo == null ) {
+                throw new IllegalStateException( "No '" + ExternalDatabases.GEO + "' external database in the test database; check the seed data." );
+            }
+        }
+        return geo;
+    }
+
+    /**
+     * Resolve the seeded PubMed {@link ExternalDatabase}, caching it. See {@link #geo()} for why the field
+     * must not be read directly.
+     */
+    private ExternalDatabase pubmed() {
+        if ( pubmed == null ) {
+            pubmed = externalDatabaseService.findByName( ExternalDatabases.PUBMED );
+            if ( pubmed == null ) {
+                throw new IllegalStateException( "No '" + ExternalDatabases.PUBMED + "' external database in the test database; check the seed data." );
+            }
+        }
+        return pubmed;
+    }
+
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, ExternalDatabase ed ) {
         DatabaseEntry result = DatabaseEntry.Factory.newInstance();
 
@@ -772,7 +843,7 @@ public class PersistentDummyObjectHelper {
             ed = ExternalDatabase.Factory.newInstance();
             ed.setName(
                     RandomStringUtils.insecure().nextNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) + "_testdb" );
-            ed = persisterHelper.persist( ed );
+            ed = externalDatabaseService.findOrCreate( ed );
         }
 
         result.setExternalDatabase( ed );
@@ -787,13 +858,13 @@ public class PersistentDummyObjectHelper {
     public DatabaseEntry getTestPersistentDatabaseEntry( String accession, String databaseName ) {
         switch ( databaseName ) {
             case ExternalDatabases.GEO:
-                return this.getTestPersistentDatabaseEntry( accession, geo );
+                return this.getTestPersistentDatabaseEntry( accession, geo() );
             case ExternalDatabases.PUBMED:
-                return this.getTestPersistentDatabaseEntry( accession, pubmed );
+                return this.getTestPersistentDatabaseEntry( accession, pubmed() );
             default:
                 ExternalDatabase edp = ExternalDatabase.Factory.newInstance();
                 edp.setName( databaseName );
-                edp = persisterHelper.persist( edp );
+                edp = externalDatabaseService.findOrCreate( edp );
                 return this.getTestPersistentDatabaseEntry( accession, edp );
         }
     }
@@ -810,7 +881,7 @@ public class PersistentDummyObjectHelper {
         ee.setShortName( shortName );
         ee.setName( shortName );
         ee.setTaxon( this.getTestPersistentTaxon() );
-        ee = persisterHelper.persist( ee );
+        ee = eeWriteService.create( ee );
         return ee;
     }
 
@@ -828,7 +899,10 @@ public class PersistentDummyObjectHelper {
         ArrayDesign ad;
 
         bm = this.getTestPersistentBioMaterial( taxon );
-        ad = this.getTestPersistentArrayDesign( 4, true, true );
+        // no sequences: neither caller (ExpressionExperimentSetServiceTest,
+        // ExpressionExperimentSetValueObjectHelperTest) reads the platform's probes, and filling them
+        // in cost a BioSequence + Gene + GeneProduct + BLAT result graph per probe.
+        ad = this.getTestPersistentArrayDesign( 4, true, false );
         ba = this.getTestPersistentBioAssay( ad, bm );
         Set<BioAssay> bas1 = new HashSet<>();
         bas1.add( ba );
@@ -857,13 +931,13 @@ public class PersistentDummyObjectHelper {
         ee.setTaxon( taxon );
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        return persisterHelper.persist( ee, c );
+        ArrayDesignsForExperimentCache c = expressionExperimentPrePersistService.prepare( ee );
+        return eeWriteService.create( ee, c );
     }
 
     public GeneProduct getTestPersistentGeneProduct( Gene gene ) {
         GeneProduct gp = getTestNonPersistentGeneProduct( gene );
-        return persisterHelper.persist( gp );
+        return genomePersister.persistGeneProduct( gp );
     }
 
     /**
@@ -874,22 +948,126 @@ public class PersistentDummyObjectHelper {
      */
     public QuantitationType getTestPersistentQuantitationType() {
         QuantitationType qt = getTestNonPersistentQuantitationType();
-        return persisterHelper.persist( qt );
+        return quantitationTypeService.create( qt );
     }
 
+    /**
+     * Provide the shared "elephant" taxon that fills non-nullable taxon associations throughout the
+     * fixture, caching it for the life of this (context-scoped singleton) bean.
+     * <h4>Why the cached entity is re-validated</h4>
+     * The cached instance is detached and Hibernate never re-checks its id, so if the row goes away
+     * mid-run then every later fixture insert referencing it fails on a foreign key. On Jenkins
+     * 2026-09-11 a single lost row produced 87-90 identical {@code ARRAY_DESIGN.PRIMARY_TAXON_FK} /
+     * {@code BIO_SEQUENCE.TAXON_FK} errors, each stack trace naming the victim rather than the
+     * cause, and the same suite was green locally on the same commit. We therefore confirm the row
+     * is still present before handing the entity out, say so loudly when it is not, and rebuild it.
+     */
     public Taxon getTestPersistentTaxon() {
+        if ( testTaxon != null && !fixtureRowExists( "TAXON", testTaxon.getId() ) ) {
+            reportVanishedFixtureRow( "TAXON", testTaxon.getId() );
+            testTaxon = null;
+            // chromosomes are keyed by taxon id and reference it, so they are dangling too
+            testChromosomes.clear();
+        }
         if ( testTaxon == null ) {
             testTaxon = Taxon.Factory.newInstance();
             testTaxon.setCommonName( "elephant" );
             testTaxon.setScientificName( "Loxodonta" );
             testTaxon.setNcbiId( 1245 );
             testTaxon.setIsGenesUsable( true );
-            testTaxon = persisterHelper
-                    .persist( testTaxon );
+            testTaxon = genomePersister.persistTaxon( testTaxon );
             assert testTaxon != null
                     && testTaxon.getId() != null;
         }
         return testTaxon;
+    }
+
+    /**
+     * Check straight against the database whether a fixture row is still there.
+     * <p>
+     * Deliberately raw JDBC on the current session's connection: a Hibernate {@code load} can be
+     * answered out of the session or the second-level cache and would cheerfully hand back the very
+     * entity whose row has gone.
+     *
+     * @param table one of this class's own hard-coded table names, never caller input
+     * @param id    row id; a {@code null} id counts as absent
+     * @return whether the row is present -- and {@code true} as well if the check could not be run,
+     * since a diagnostic must never be the thing that fails a test
+     */
+    private boolean fixtureRowExists( String table, @Nullable Long id ) {
+        if ( id == null ) {
+            return false;
+        }
+        boolean[] present = { true };
+        try {
+            sessionFactory.getCurrentSession().doWork( connection -> {
+                try ( PreparedStatement ps = connection
+                        .prepareStatement( "select count(*) from " + table + " where ID = ?" ) ) {
+                    ps.setLong( 1, id );
+                    try ( ResultSet rs = ps.executeQuery() ) {
+                        present[0] = rs.next() && rs.getLong( 1 ) > 0;
+                    }
+                }
+            } );
+        } catch ( Exception e ) {
+            log.warn( "Could not verify that " + table + " row " + id + " still exists; assuming it does.", e );
+            return true;
+        }
+        return present[0];
+    }
+
+    /**
+     * Report a fixture row that this JVM committed earlier and that has since disappeared.
+     * <p>
+     * Nothing in the integration suite deletes taxa -- audited 2026-09-11: the only
+     * {@code taxonService.remove} call sites are scoped to taxa the caller created itself, and none
+     * of {@code ArrayDesign.primaryTaxon}, {@code ExpressionExperiment.taxon} or
+     * {@code BioSequence.taxon} cascades a delete -- so this indicates another connection wrote to
+     * the test database while the suite was running. The process list is what identifies it.
+     * <p>
+     * {@code information_schema.PROCESSLIST} shows every thread belonging to our own account
+     * without any extra privilege, so a second build connecting as the same test user -- the most
+     * likely writer -- appears here unaided. Threads owned by *other* accounts are only listed to
+     * a connection holding the PROCESS privilege; grant it on the CI database
+     * ({@code GRANT PROCESS ON *.* TO 'gemmatest'@'%'}) if the dump ever looks implausibly quiet.
+     */
+    private void reportVanishedFixtureRow( String table, @Nullable Long id ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "Fixture row " ).append( table ).append( '#' ).append( id )
+                .append( " was committed earlier in this JVM and is now gone, noticed at " )
+                .append( Instant.now() )
+                .append( ". Re-creating it. Something outside this test JVM wrote to the test database." );
+        try {
+            sessionFactory.getCurrentSession().doWork( connection -> {
+                // fully qualified: ubic.gemma.model.expression.experiment.Statement is in scope here
+                try ( java.sql.Statement st = connection.createStatement() ) {
+                    try ( ResultSet rs = st.executeQuery( "select database(), connection_id(), (select count(*) from TAXON)" ) ) {
+                        if ( rs.next() ) {
+                            sb.append( "\n  database      = " ).append( rs.getString( 1 ) );
+                            sb.append( "\n  connection_id = " ).append( rs.getLong( 2 ) );
+                            sb.append( "\n  TAXON rows    = " ).append( rs.getLong( 3 ) );
+                        }
+                    }
+                    sb.append( "\n  process list (needs the PROCESS privilege to show other sessions):" );
+                    try ( ResultSet rs = st.executeQuery( "select ID, USER, HOST, DB, COMMAND, TIME, STATE,"
+                            + " left(INFO, 200) as INFO from information_schema.PROCESSLIST order by TIME desc" ) ) {
+                        while ( rs.next() ) {
+                            sb.append( "\n    id=" ).append( rs.getLong( 1 ) )
+                                    .append( " user=" ).append( rs.getString( 2 ) )
+                                    .append( " host=" ).append( rs.getString( 3 ) )
+                                    .append( " db=" ).append( rs.getString( 4 ) )
+                                    .append( " command=" ).append( rs.getString( 5 ) )
+                                    .append( " time=" ).append( rs.getLong( 6 ) )
+                                    .append( " state=" ).append( rs.getString( 7 ) )
+                                    .append( " info=" ).append( rs.getString( 8 ) );
+                        }
+                    }
+                }
+            } );
+        } catch ( Exception e ) {
+            sb.append( "\n  (could not collect the database snapshot: " ).append( e.getMessage() ).append( ")" );
+        }
+        log.error( sb.toString() );
     }
 
     public void resetTestElementCollectionSize() {
@@ -925,7 +1103,7 @@ public class PersistentDummyObjectHelper {
             fv.setValue( "Factor value " + RandomStringUtils.insecure()
                     .nextNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
             fv.setExperimentalFactor( ef );
-            fv.setCharacteristics( Collections.singleton( getTestStatement( "name" + RandomStringUtils.insecure().nextNumeric( RANDOM_STRING_LENGTH ), fv.getValue() ) ) );
+            fv.setCharacteristics( new HashSet<>( Collections.singleton( getTestStatement( "name" + RandomStringUtils.insecure().nextNumeric( RANDOM_STRING_LENGTH ), fv.getValue() ) ) ) );
             fvCol.add( fv );
         }
 

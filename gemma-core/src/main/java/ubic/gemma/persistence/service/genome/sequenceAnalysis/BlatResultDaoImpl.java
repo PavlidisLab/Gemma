@@ -18,8 +18,12 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import org.hibernate.Criteria;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -30,6 +34,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -82,28 +87,30 @@ public class BlatResultDaoImpl extends AbstractVoEnabledDao<BlatResult, BlatResu
                 .list();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<BlatResult> findByBioSequence( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BlatResult.class );
+        Session session = this.getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<BlatResult> cq = cb.createQuery( BlatResult.class );
+        Root<BlatResult> root = cq.from( BlatResult.class );
+        List<Predicate> preds = new ArrayList<>();
+        BusinessKey.attachBioSequence( cb, root, "querySequence", bioSequence, preds );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        List<BlatResult> results = session.createQuery( cq ).list();
 
-        BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
-
-        List<?> results = queryObject.list();
-
-        if ( results != null ) {
-            for ( Object object : results ) {
-                BlatResult br = ( BlatResult ) object;
-                if ( br.getTargetChromosome() != null ) {
-                    Hibernate.initialize( br.getTargetChromosome() );
-                }
-                Hibernate.initialize( br.getQuerySequence() );
+        for ( BlatResult br : results ) {
+            if ( br.getTargetChromosome() != null ) {
+                Hibernate.initialize( br.getTargetChromosome() );
             }
+            Hibernate.initialize( br.getQuerySequence() );
         }
 
-        return ( Collection<BlatResult> ) results;
+        return results;
     }
 
     @Override

@@ -18,9 +18,13 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+
 /**
  * An event involving an ExpressionExperiment
  */
+@Entity
 public abstract class ExpressionExperimentAnalysisEvent extends AuditEventType {
 
 }

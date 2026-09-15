@@ -27,8 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.basecode.math.Rank;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.Rank;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
@@ -45,7 +45,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -148,6 +148,12 @@ class ProcessedExpressionDataVectorHelperServiceImpl
     @Override
     @Transactional
     public void updateRanks( ExpressionExperiment ee ) {
+        // The caller may pass a detached EE whose processedExpressionDataVectors snapshot pre-dates
+        // the freshly persisted vectors (this is the path used by createProcessedDataVectors, which
+        // re-fetches a managed EE inside the DAO via ensureEeInSession and adds vectors to it -- but
+        // never propagates that managed instance back to the caller). Reload here so we read the
+        // collection from the session-managed entity rather than from the stale detached snapshot.
+        ee = eeService.reload( ee );
         Set<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
         StopWatch timer = new StopWatch();
         timer.start();
@@ -170,6 +176,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
      *
      * @return ExpressionDataDoubleMatrix
      */
+    @Nullable
     private ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );

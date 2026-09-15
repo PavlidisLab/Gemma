@@ -25,14 +25,23 @@ import ubic.gemma.core.job.Task;
 import ubic.gemma.core.job.TaskCommand;
 
 /**
+ * Command for the asynchronous mass-indexer task; one boolean per indexable entity root.
+ * <p>
+ * Mirrors the pre-strip {@code IndexerTaskCommand} (HS 5 era). The field names are
+ * deliberately kept in their modern form (e.g. {@code indexDatasets} not {@code indexEE})
+ * to match what the HS 5 codebase landed on right before the Phase-2 strip.
+ *
  * @author klc
  */
-
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class IndexerTaskCommand extends TaskCommand {
 
-    private static final int INDEXER_MAX_RUNTIME_MINUTES = 300; // Minutes
+    /**
+     * Mass indexing can take a long time on a full Gemma dataset (millions of rows
+     * across the indexed roots); give the task runner up to 5 hours before it gives up.
+     */
+    private static final int INDEXER_MAX_RUNTIME_MINUTES = 300;
 
     private boolean indexPlatforms;
     private boolean indexPublications;
@@ -44,7 +53,7 @@ public class IndexerTaskCommand extends TaskCommand {
     private boolean indexDesignElements;
 
     public IndexerTaskCommand() {
-        this.setMaxRuntimeMillis( IndexerTaskCommand.INDEXER_MAX_RUNTIME_MINUTES );
+        this.setMaxRuntimeMillis( IndexerTaskCommand.INDEXER_MAX_RUNTIME_MINUTES * 60L * 1000L );
     }
 
     @Override

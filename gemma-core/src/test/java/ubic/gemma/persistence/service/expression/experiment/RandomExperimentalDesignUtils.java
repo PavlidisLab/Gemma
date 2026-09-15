@@ -63,7 +63,7 @@ public class RandomExperimentalDesignUtils {
      * @see #randomCategoricalFactor(ExperimentalDesign, Collection, String, int)
      */
     public static ExperimentalFactor randomCategoricalFactor( ExpressionExperiment ee, String name, int numValues ) {
-        Assert.notNull( ee.getExperimentalDesign() );
+        Assert.notNull( ee.getExperimentalDesign() , "must not be null");
         return randomCategoricalFactor( ee.getExperimentalDesign(), getSampleUsed( ee ),
                 name, numValues );
     }
@@ -94,7 +94,7 @@ public class RandomExperimentalDesignUtils {
      * Create and assign a continuous factor to all the samples of an experiment.
      */
     public static ExperimentalFactor randomContinuousFactor( ExpressionExperiment ee, String name ) {
-        Assert.notNull( ee.getExperimentalDesign() );
+        Assert.notNull( ee.getExperimentalDesign() , "must not be null");
         return randomContinuousFactor( ee.getExperimentalDesign(), getSampleUsed( ee ), name );
     }
 

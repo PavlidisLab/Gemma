@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.cache;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import ubic.gemma.core.util.concurrent.Executors;
@@ -11,7 +11,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class StaticCacheKeyLockTest {
 

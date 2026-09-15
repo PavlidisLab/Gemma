@@ -1,7 +1,5 @@
 package ubic.gemma.persistence.util;
 
-import ubic.basecode.io.ByteArrayConverter;
-
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 

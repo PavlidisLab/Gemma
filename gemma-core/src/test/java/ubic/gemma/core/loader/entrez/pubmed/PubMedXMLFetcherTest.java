@@ -18,30 +18,27 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.PubMedTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
-@Category({ PubMedTest.class, SlowTest.class })
+@Tag("pubmed")
+@Tag("slow")
+@ExtendWith(NetworkAvailableExtension.class)
 public class PubMedXMLFetcherTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private final PubMedSearch pmf = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
 

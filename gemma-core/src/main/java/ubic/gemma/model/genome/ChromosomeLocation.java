@@ -18,10 +18,17 @@
  */
 package ubic.gemma.model.genome;
 
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
+@MappedSuperclass
 public abstract class ChromosomeLocation extends AbstractIdentifiable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CHROMOSOME_FK", nullable = false, columnDefinition = "BIGINT")
     private Chromosome chromosome;
 
     public Chromosome getChromosome() {

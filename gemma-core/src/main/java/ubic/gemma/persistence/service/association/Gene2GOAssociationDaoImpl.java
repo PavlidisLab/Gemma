@@ -19,8 +19,7 @@
 package ubic.gemma.persistence.service.association;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Criteria;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -34,7 +33,7 @@ import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
@@ -52,15 +51,12 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     @Autowired
     protected Gene2GOAssociationDaoImpl( SessionFactory sessionFactory ) {
         super( Gene2GOAssociation.class, sessionFactory );
-        this.geneBatchSize = HibernateUtils.getBatchSize( sessionFactory.getClassMetadata( Gene.class ), sessionFactory );
+        this.geneBatchSize = HibernateUtils.getBatchSize( Gene.class, sessionFactory );
     }
 
     @Override
     public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation ) {
-        BusinessKey.checkValidKey( gene2GOAssociation );
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Gene2GOAssociation.class );
-        BusinessKey.addRestrictions( queryObject, gene2GOAssociation );
-        return ( Gene2GOAssociation ) queryObject.uniqueResult();
+        return BusinessKey.find( this.getSessionFactory().getCurrentSession(), gene2GOAssociation );
     }
 
     @Override
@@ -138,6 +134,49 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
                         + "where geneAss.ontologyEntry.valueUri in (:uris) and gene.taxon = :tax "
                         + "group by gene" )
                 .setParameter( "tax", taxon ), "uris", uris, 2048 );
+    }
+
+    @Override
+    public long countByGoTermUris( Collection<String> uris ) {
+        return distinctGeneIdsByGoUris( uris, null ).size();
+    }
+
+    @Override
+    public long countByGoTermUris( Collection<String> uris, Taxon taxon ) {
+        return distinctGeneIdsByGoUris( uris, taxon ).size();
+    }
+
+    /**
+     * Resolve {@code uris} to a deduplicated set of gene ids, optionally taxon-scoped. Used by
+     * both {@link #countByGoTermUris(Collection)} overloads. Returns IDs (not COUNT) so we can
+     * union-dedup correctly when this layer needs it. Cheap over the wire: one Long per
+     * gene-id, no entity hydration, no associations.
+     * <p>
+     * Single un-batched IN-list by design. An earlier version batched at 2048 URIs to keep
+     * each fragment small, but EXPLAIN against prod showed that small IN-lists (2-4k entries)
+     * push MySQL into a {@code CHARACTERISTIC.VALUE_URI} range scan that walks hundreds of
+     * thousands of non-G2G characteristic rows; once the IN-list passes ~8k entries, the
+     * planner switches to a full scan of {@code GENE2GO_ASSOCIATION} (~1.1M rows) and the
+     * query drops from 5-8 s to ~2 s. Batching at 2048 was therefore pinning us in the
+     * worst-plan zone of the optimizer. {@code max_allowed_packet} on prod is 256 MB; the
+     * largest realistic IN-list (biological_process = ~24k URIs) is ~1 MB of SQL text.
+     */
+    private Set<Long> distinctGeneIdsByGoUris( Collection<String> uris, @Nullable Taxon taxon ) {
+        if ( uris == null || uris.isEmpty() ) {
+            return Collections.emptySet();
+        }
+        String hql = taxon != null
+                ? "select distinct gene.id from Gene2GOAssociation as geneAss join geneAss.gene as gene "
+                        + "where geneAss.ontologyEntry.valueUri in (:uris) and gene.taxon = :tax"
+                : "select distinct gene.id from Gene2GOAssociation as geneAss join geneAss.gene as gene "
+                        + "where geneAss.ontologyEntry.valueUri in (:uris)";
+        org.hibernate.query.Query<Long> q = getSessionFactory().getCurrentSession()
+                .createQuery( hql, Long.class )
+                .setParameterList( "uris", uris );
+        if ( taxon != null ) {
+            q.setParameter( "tax", taxon );
+        }
+        return new HashSet<>( q.list() );
     }
 
     @Override

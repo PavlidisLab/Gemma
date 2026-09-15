@@ -1,20 +1,20 @@
 package ubic.gemma.persistence.retry;
 
 import org.hibernate.StaleStateException;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.internal.verification.VerificationModeFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
-public class RetryTest extends BaseSpringContextTest implements InitializingBean {
+public class RetryTest extends BaseSpringContextTest5 implements InitializingBean {
 
     public interface TestRetryDao {
 
@@ -61,7 +61,7 @@ public class RetryTest extends BaseSpringContextTest implements InitializingBean
         retryPolicy.setMaxAttempts( 3 );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( testRetryDao );
     }

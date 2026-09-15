@@ -2,15 +2,16 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -20,12 +21,12 @@ import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
+public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -56,7 +57,7 @@ public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest
     @Autowired
     private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( rawExpressionDataVectorDao, processedExpressionDataVectorDao );
     }
@@ -81,13 +82,24 @@ public class RawAndProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest
         session.persist( cs );
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
         session.persist( bad );
+        // A quantitation type is required on both vector types; see the note in
+        // BulkExpressionDataVector.quantitationType.
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "test" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LINEAR );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        session.persist( qt );
         RawExpressionDataVector ev = new RawExpressionDataVector();
         ev.setDesignElement( cs );
         ev.setBioAssayDimension( bad );
+        ev.setQuantitationType( qt );
         ev.setData( new byte[0] );
         ProcessedExpressionDataVector pv = new ProcessedExpressionDataVector();
         pv.setDesignElement( cs );
         pv.setBioAssayDimension( bad );
+        pv.setQuantitationType( qt );
         pv.setData( new byte[0] );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ev.setExpressionExperiment( ee );

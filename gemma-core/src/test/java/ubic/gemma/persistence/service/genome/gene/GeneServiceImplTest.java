@@ -18,9 +18,9 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
@@ -50,11 +50,11 @@ public class GeneServiceImplTest {
     private Gene g3 = null;
     private GeneDao geneDaoMock;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         geneDaoMock = mock( GeneDao.class );
-        svc = new GeneServiceImpl( geneDaoMock );
+        svc = new GeneServiceImpl( geneDaoMock, new GeneReadServiceImpl( geneDaoMock ) );
 
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "moose" );
@@ -162,7 +162,7 @@ public class GeneServiceImplTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( geneDaoMock );
         justRab.clear();

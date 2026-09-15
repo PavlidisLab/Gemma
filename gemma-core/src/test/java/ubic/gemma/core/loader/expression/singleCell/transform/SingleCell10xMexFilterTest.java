@@ -1,11 +1,11 @@
 package ubic.gemma.core.loader.expression.singleCell.transform;
 
 import org.apache.commons.io.file.PathUtils;
-import org.junit.Assume;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -24,11 +24,9 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.FileUtils;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,10 +41,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 @ContextConfiguration
-public class SingleCell10xMexFilterTest extends BaseTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class SingleCell10xMexFilterTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -65,11 +61,12 @@ public class SingleCell10xMexFilterTest extends BaseTest {
     private Path downloadDir;
 
     @Test
-    @Category({ GeoTest.class, SlowTest.class })
+    @Tag("geo")
+    @Tag("slow")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSM8316309() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
-        Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
         assumeThat( filter.getCellRangerExecutable() ).exists();
         assumeThat( filter.getPythonExecutable() ).exists();
         Path dataPath;
@@ -106,11 +103,12 @@ public class SingleCell10xMexFilterTest extends BaseTest {
      * This example uses 3 GEMs.
      */
     @Test
-    @Category({ GeoTest.class, SlowTest.class })
+    @Tag("geo")
+    @Tag("slow")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSM4871780() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
-        Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
         assumeThat( filter.getCellRangerExecutable() ).exists();
         assumeThat( filter.getPythonExecutable() ).exists();
         Path dataPath;
@@ -144,11 +142,12 @@ public class SingleCell10xMexFilterTest extends BaseTest {
     }
 
     @Test
-    @Category({ GeoTest.class, SlowTest.class })
+    @Tag("geo")
+    @Tag("slow")
     @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSM3559978() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
-        Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
         assumeThat( filter.getCellRangerExecutable() ).exists();
         assumeThat( filter.getPythonExecutable() ).exists();
         Path dataPath;
@@ -182,10 +181,10 @@ public class SingleCell10xMexFilterTest extends BaseTest {
     }
 
     @Test
-    @Ignore("Filtering old 10x datasets without GEMs is not supported.")
+    @Disabled("Filtering old 10x datasets without GEMs is not supported.")
     public void testGSM6925121() throws IOException, NoSingleCellDataFoundException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
-        Assume.assumeTrue( "The current CPU does not support AVX instructions.", filter.isCpuSupported() );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
         assumeThat( filter.getCellRangerExecutable() ).exists();
         assumeThat( filter.getPythonExecutable() ).exists();
         Path dataPath;

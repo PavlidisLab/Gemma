@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -449,9 +449,9 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
 
         // populated from BADs
         columnBioMaterials = new ArrayList<>( bioMaterialMap.size() );
-        columnBioMaterialMap = new HashMap<>( bioMaterialMap.size() );
+        columnBioMaterialMap = HashMap.newHashMap( bioMaterialMap.size() );
         columnBioAssays = new ArrayList<>( bioMaterialMap.size() );
-        columnAssayMap = new HashMap<>( bioMaterialMap.size() );
+        columnAssayMap = HashMap.newHashMap( bioMaterialMap.size() );
 
         if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() )
             AbstractMultiAssayExpressionDataMatrix.log.debug( bioMaterialMap.size() + " biomaterialGroups (correspond to columns)" );
@@ -480,8 +480,8 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
         }
 
         if ( AbstractMultiAssayExpressionDataMatrix.log.isDebugEnabled() ) {
-            for ( BioAssay o : this.columnAssayMap.keySet() ) {
-                AbstractMultiAssayExpressionDataMatrix.log.debug( o + " " + this.columnAssayMap.get( o ) );
+            for ( Map.Entry<BioAssay, Integer> camEntry : this.columnAssayMap.entrySet() ) {
+                AbstractMultiAssayExpressionDataMatrix.log.debug( camEntry.getKey() + " " + camEntry.getValue() );
             }
         }
 

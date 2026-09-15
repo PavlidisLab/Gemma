@@ -1,6 +1,6 @@
 package ubic.gemma.cli.logging.log4j;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Implementation of {@link LoggingConfigurer} for Log4j.
  */
-@CommonsLog
+@Slf4j
 public class Log4jConfigurer implements LoggingConfigurer {
 
     private final LoggerContext loggerContext;

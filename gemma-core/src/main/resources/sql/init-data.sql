@@ -1,9 +1,11 @@
 -- Initialize the database with some scraps of data. See also init-entities.sql and init-acls.sql
 
 -- all of these are used.
-insert into AUDIT_TRAIL VALUES (1);
-insert into AUDIT_TRAIL VALUES (2);
-insert into AUDIT_TRAIL VALUES (3);
+-- Explicit column list (the AuditTrail.lastEvent denormalisation added LAST_EVENT_FK; column-less insert is no longer single-column).
+insert into AUDIT_TRAIL (ID) VALUES (1);
+insert into AUDIT_TRAIL (ID) VALUES (2);
+insert into AUDIT_TRAIL (ID) VALUES (3);
+insert into AUDIT_TRAIL (ID) VALUES (4);
 
 set @n:=now();
 
@@ -14,18 +16,22 @@ insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, E
 insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, EMAIL, PASSWORD_HINT) values (1, 'User', 'administrator',  '', 'administrator', 'b7338dcc17d6b6c199a75540aab6d0506567b980', 1, 'pavlab-support@msl.ubc.ca', 'hint');
 
 -- initialize the audit trails
-insert into AUDIT_EVENT VALUES (1, @n, 'C', 'From init script', '', 1, NULL, 1);
-insert into AUDIT_EVENT VALUES (2, @n, 'C', 'From init script', '', 1, NULL, 2);
-insert into AUDIT_EVENT VALUES (3, @n, 'C', 'From init script', '', 1, NULL, 3);
+-- name columns explicitly: Hibernate 6 doesn't preserve hbm.xml column order when generating the
+-- schema, so positional INSERTs that worked under Hibernate 5 now mis-bind (e.g. 'C' → EVENT_TYPE_FK).
+insert into AUDIT_EVENT (ID, DATE, ACTION, NOTE, DETAIL, PERFORMER_FK, EVENT_TYPE_FK, AUDIT_TRAIL_FK) VALUES (1, @n, 'C', 'From init script', '', 1, NULL, 1);
+insert into AUDIT_EVENT (ID, DATE, ACTION, NOTE, DETAIL, PERFORMER_FK, EVENT_TYPE_FK, AUDIT_TRAIL_FK) VALUES (2, @n, 'C', 'From init script', '', 1, NULL, 2);
+insert into AUDIT_EVENT (ID, DATE, ACTION, NOTE, DETAIL, PERFORMER_FK, EVENT_TYPE_FK, AUDIT_TRAIL_FK) VALUES (3, @n, 'C', 'From init script', '', 1, NULL, 3);
 
 
 -- Note that 'Administrators' is a constant set in AuthorityConstants. The names of these groups are defined in UserGroupDao.
 insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (1, 'Administrators', 'Users with administrative rights', 1);
 insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (2, 'Users', 'Default group for all authenticated users', 2);
 insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (3, 'Agents', 'For \'autonomous\' agents that run within the server context, such as scheduled tasks.', 3);
+insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (4, 'Curators', 'Curators: full authority over dataset content and visibility, none over user accounts or server operations.', 4);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (1, 'ADMIN', 1);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (2, 'USER', 2);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (3, 'AGENT', 3);
+insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (4, 'CURATOR', 4);
 
 -- make admin in the admin group
 insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (1, 1);
@@ -90,6 +96,8 @@ call add_external_database('go', NULL, NULL, 'https://ftp.ncbi.nih.gov/gene/DATA
 call add_external_database('multifunctionality', NULL, NULL, NULL, 'OTHER');
 call add_external_database('gene2cs', NULL, NULL, NULL, 'OTHER');
 call add_external_database('CELLxGENE', NULL, NULL, NULL, 'EXPRESSION');
+call add_external_database('Cellosaurus', 'Cellosaurus - knowledge resource on cell lines; used for cell-line name resolution (backup for the Cell Line Ontology).', 'https://www.cellosaurus.org/', 'https://ftp.expasy.org/databases/cellosaurus/', 'ONTOLOGY');
+call add_external_database('MGI', 'Mouse Genome Informatics - mouse strains, alleles and genotypes; used for strain and genotype resolution.', 'https://www.informatics.jax.org/', 'https://www.informatics.jax.org/downloads/reports/', 'ONTOLOGY');
 
 drop procedure add_external_database;
 

@@ -27,10 +27,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @see Gene
@@ -75,6 +76,16 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
     Gene findByOfficialSymbol( String symbol, Taxon taxon );
 
     Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
+
+    /**
+     * Taxon-scoped variant of {@link #findByOfficialSymbolInexact(String)}. Use when the
+     * caller has a taxon constraint — pushing the predicate into the SQL lets MySQL prune
+     * by the indexed taxon FK before the case-insensitive LIKE prefix scan, dropping the
+     * cost from a ~2s full-table scan to ms-range. Without the taxon prefilter the
+     * underlying {@code lower(official_symbol) LIKE} expression can't use the standard
+     * official_symbol index.
+     */
+    Collection<Gene> findByOfficialSymbolInexact( String officialSymbol, Taxon taxon );
 
     /**
      * Quickly load exact matches.
@@ -152,9 +163,16 @@ public interface GeneDao extends FilteringVoEnabledDao<Gene, GeneValueObject> {
 
     Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
+    @Nullable
     Gene thaw( Gene gene );
 
     Gene thawAliases( Gene gene );
+
+    /**
+     * Batch-load the aliases for a set of genes by ID without thawing the entities. Returns a map from gene
+     * ID to its (sorted) alias symbols; genes that have no aliases are simply absent from the map.
+     */
+    Map<Long, Set<String>> getAliasesByGeneId( Collection<Long> ids );
 
     Collection<Gene> thawLite( Collection<Gene> genes );
 

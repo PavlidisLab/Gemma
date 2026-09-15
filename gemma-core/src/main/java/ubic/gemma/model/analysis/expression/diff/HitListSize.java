@@ -18,6 +18,15 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
@@ -27,11 +36,24 @@ import java.util.Objects;
  * The number of probes meeting a given q-value threshold in the result set.
  * </p>
  */
+@Entity
+@Table(name = "HIT_LIST_SIZE",
+        indexes = @Index(name = "direction", columnList = "DIRECTION"))
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class HitListSize extends AbstractIdentifiable {
 
+    @Column(name = "THRESHOLD_QVALUE", nullable = false, columnDefinition = "DOUBLE")
     private Double thresholdQvalue;
+
+    @Column(name = "NUMBER_OF_PROBES", nullable = false, columnDefinition = "INTEGER")
     private Integer numberOfProbes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "DIRECTION", nullable = false, columnDefinition = "VARCHAR(255)")
     private Direction direction;
+
+    @Column(name = "NUMBER_OF_GENES", columnDefinition = "INTEGER")
     private Integer numberOfGenes;
 
     public Direction getDirection() {

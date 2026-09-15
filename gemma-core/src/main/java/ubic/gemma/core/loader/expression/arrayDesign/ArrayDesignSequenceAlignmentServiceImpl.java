@@ -23,13 +23,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.StringUtil;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.core.analysis.sequence.ShellDelegatingBlat;
 import ubic.gemma.core.goldenpath.GoldenPathQuery;
+import ubic.gemma.core.goldenpath.GoldenPathQueryFactory;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -37,7 +38,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
@@ -61,15 +62,18 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     private final ArrayDesignReportService arrayDesignReportService;
     private final ArrayDesignService arrayDesignService;
     private final BioSequenceService bioSequenceService;
-    private final Persister persisterHelper;
+    private final GenomePersister genomePersister;
+    private final GoldenPathQueryFactory goldenPathQueryFactory;
 
     @Autowired
     public ArrayDesignSequenceAlignmentServiceImpl( ArrayDesignReportService arrayDesignReportService,
-            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService, Persister persisterHelper ) {
+            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService,
+            GenomePersister genomePersister, GoldenPathQueryFactory goldenPathQueryFactory ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.arrayDesignService = arrayDesignService;
         this.bioSequenceService = bioSequenceService;
-        this.persisterHelper = persisterHelper;
+        this.genomePersister = genomePersister;
+        this.goldenPathQueryFactory = goldenPathQueryFactory;
     }
 
     /**
@@ -214,8 +218,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         Map<BioSequence, Collection<BlatResult>> goldenPathAlignments = new HashMap<>();
         this.getGoldenPathAlignments( sequencesToBlat, taxon, goldenPathAlignments );
-        for ( BioSequence sequence : goldenPathAlignments.keySet() ) {
-            rawBlatResults.addAll( goldenPathAlignments.get( sequence ) );
+        for ( Collection<BlatResult> alignments : goldenPathAlignments.values() ) {
+            rawBlatResults.addAll( alignments );
         }
 
         Collection<BlatResult> results = this.persistBlatResults( rawBlatResults );
@@ -230,11 +234,11 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         if ( taxon == null ) {
             Collection<Taxon> taxaOnArray = arrayDesignService.getTaxaFromBioSequences( arrayDesign );
-            if ( taxaOnArray != null && taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
+            if ( taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();
             }
             throw new IllegalArgumentException(
-                    ( taxaOnArray == null ? "?" : taxaOnArray.size() ) + " taxon found for " + arrayDesign
+                    taxaOnArray.size() + " taxon found for " + arrayDesign
                             + " specify which taxon to run" );
 
         }
@@ -304,7 +308,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     private Collection<BioSequence> getGoldenPathAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon,
             Map<BioSequence, Collection<BlatResult>> results ) {
 
-        try ( GoldenPathQuery gpq = new GoldenPathQuery( taxon ) ) {
+        try ( GoldenPathQuery gpq = goldenPathQueryFactory.create( taxon ) ) {
             Collection<BioSequence> needBlat = new HashSet<>();
             int count = 0;
             int totalFound = 0;
@@ -389,7 +393,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             ArrayDesignSequenceAlignmentServiceImpl.log.info( duplicates + " duplicate BLAT hits skipped" );
         }
 
-        return ( Collection<BlatResult> ) persisterHelper.persist( brs );
+        return genomePersister.persistBlatResults( brs );
     }
 
     private Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive, Blat blat ) {

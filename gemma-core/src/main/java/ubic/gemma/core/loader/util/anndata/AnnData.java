@@ -1,10 +1,10 @@
 package ubic.gemma.core.loader.util.anndata;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.H5File;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -14,7 +14,7 @@ import java.util.Objects;
 
 import static ubic.gemma.core.loader.util.anndata.Utils.checkEncoding;
 
-@CommonsLog
+@Slf4j
 public class AnnData implements Closeable {
 
     public static AnnData open( Path path ) throws IOException {
@@ -67,8 +67,8 @@ public class AnnData implements Closeable {
      */
     public List<String> getLayers() {
         if ( h5File.exists( "layers" ) ) {
-            Assert.isTrue( Objects.equals( h5File.getStringAttribute( "layers", "encoding-type" ), "dict" ) );
-            Assert.isTrue( h5File.hasAttribute( "layers", "encoding-type" ) );
+            Assert.isTrue( Objects.equals( h5File.getStringAttribute( "layers", "encoding-type" ), "dict" ) , "expected true");
+            Assert.isTrue( h5File.hasAttribute( "layers", "encoding-type" ) , "expected true");
             return h5File.getChildren( "layers" );
         } else {
             return Collections.emptyList();
@@ -79,8 +79,8 @@ public class AnnData implements Closeable {
      * Obtain a layer by name.
      */
     public Layer getLayer( String layerName ) {
-        Assert.isTrue( Objects.equals( h5File.getStringAttribute( "layers", "encoding-type" ), "dict" ) );
-        Assert.isTrue( h5File.hasAttribute( "layers", "encoding-type" ) );
+        Assert.isTrue( Objects.equals( h5File.getStringAttribute( "layers", "encoding-type" ), "dict" ) , "expected true");
+        Assert.isTrue( h5File.hasAttribute( "layers", "encoding-type" ) , "expected true");
         return new Layer( h5File, "layers/" + layerName );
     }
 

@@ -1,10 +1,10 @@
 package ubic.gemma.persistence.service.blacklist;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -12,9 +12,9 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class BlacklistedEntityServiceTest extends BaseSpringContextTest {
+public class BlacklistedEntityServiceTest extends BaseSpringContextTest5 {
 
 
     @Autowired
@@ -28,7 +28,7 @@ public class BlacklistedEntityServiceTest extends BaseSpringContextTest {
     private ArrayDesign ad;
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null )
             expressionExperimentService.remove( ee );

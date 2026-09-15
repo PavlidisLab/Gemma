@@ -4,14 +4,14 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix1D;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix1D;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
 
 import java.util.Arrays;
 
 /**
- * Extends {@link ubic.basecode.math.MatrixStats}.
+ * Extends {@link ubic.gemma.core.util.math.MatrixStats}.
  * <p>
  * TODO: move those methods to baseCode.
  */

@@ -2,8 +2,8 @@ package ubic.gemma.cli.util;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.cli.completion.BashCompletionGenerator;
 import ubic.gemma.cli.completion.CompletionGenerator;
 import ubic.gemma.cli.completion.FishCompletionGenerator;
@@ -18,7 +18,7 @@ import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.Assume.assumeNoException;
 import static org.mockito.Mockito.mock;
 
@@ -31,11 +31,12 @@ public class CompletionGeneratorTest {
             writeCompletionScript( new BashCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ) ), writer );
         }
         String error = IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 );
-        assertEquals( error, 0, process.waitFor() );
+        assertEquals( 0, process.waitFor(), error );
     }
 
     @Test
     public void testBashCompletions() throws IOException, InterruptedException {
+        assumeBashSupportsMapfile();
         assertThat( getBashCompletions( "-" ) )
                 .isEqualTo( "-h\n" );
         // FIXME: I don't know how to make this work with compgen...
@@ -58,11 +59,11 @@ public class CompletionGeneratorTest {
             writeCompletionScript( new FishCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ), mock(), Locale.getDefault() ), writer );
         }
         String error = IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 );
-        assertEquals( error, 0, process.waitFor() );
+        assertEquals( 0, process.waitFor(), error );
     }
 
     @Test
-    @Ignore("This test simple does't work on the CI.")
+    @Disabled("This test simple does't work on the CI.")
     public void testFishCompletions() throws IOException, InterruptedException {
         Process process;
         try {
@@ -82,6 +83,29 @@ public class CompletionGeneratorTest {
                 .isEqualTo( "-h\tShow help\n" );
         assertThat( getFishCompletions( "a -" ) )
                 .isEqualTo( "-h\tShow help\n-multiline\tMultiline\\ndescription\n" );
+    }
+
+    /**
+     * Skip when the local {@code bash} predates the {@code mapfile} builtin.
+     * <p>
+     * The generated completion script uses {@code mapfile}, which arrived in bash 4. macOS still
+     * ships 3.2.57 (the last GPLv2 release), so on a stock Mac this test cannot pass: the script
+     * dies with {@code mapfile: command not found} before any completion is produced, which surfaces
+     * as an error about the shell rather than anything about the code under test. CI runs a modern
+     * bash and is unaffected.
+     * <p>
+     * Capability-probed rather than {@code @DisabledOnOs(MAC)} so that a Mac with a current bash
+     * first on {@code PATH} (Homebrew installs one) still gets the coverage, and so a Linux box with
+     * an ancient shell skips instead of failing. Same idea as the {@code fish} guards above, one
+     * level down: there the shell is missing, here it is present but too old.
+     */
+    private void assumeBashSupportsMapfile() throws IOException, InterruptedException {
+        Process process = Runtime.getRuntime()
+                .exec( new String[] { "bash", "-c", "type mapfile" }, new String[] { "LANG=C" } );
+        process.getOutputStream().close();
+        assumeThat( process.waitFor() )
+                .as( "bash provides the mapfile builtin (bash 4+; stock macOS ships 3.2)" )
+                .isZero();
     }
 
     private String getBashCompletions( String words ) throws IOException, InterruptedException {

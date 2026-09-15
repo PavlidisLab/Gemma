@@ -38,7 +38,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
@@ -61,7 +61,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
     @Autowired
     private BlacklistedEntityService blacklistedEntityService;
     @Autowired
-    private ExternalDatabaseService externalDatabaseService;
+    private ExternalDatabaseReadService externalDatabaseService;
     @Autowired
     ExpressionExperimentService expressionExperimentService;
     @Value("${entrez.efetch.apikey}")

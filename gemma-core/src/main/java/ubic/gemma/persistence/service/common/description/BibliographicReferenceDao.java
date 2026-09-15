@@ -28,6 +28,7 @@ import ubic.gemma.persistence.service.BrowsingDao;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -37,6 +38,12 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
         BaseVoEnabledDao<BibliographicReference, BibliographicReferenceValueObject> {
 
     BibliographicReference findByExternalId( String id, String databaseName );
+
+    /**
+     * Find ALL references sharing an external id, ordered by id ascending. Normally there is at most one,
+     * but prod has duplicate rows for some accessions; this exposes the whole set for de-duplication.
+     */
+    List<BibliographicReference> findAllByExternalId( String id, String databaseName );
 
     /**
      * Find by the external database id, such as for PubMed

@@ -19,6 +19,8 @@
 package ubic.gemma.persistence.service.expression.bioAssay;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -26,14 +28,18 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -63,29 +69,34 @@ public interface BioAssayService extends SecurableBaseService<BioAssay>, Securab
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     BioAssay findByShortName( String shortName );
 
     /**
      * @param accession eg GSM12345.
      * @return BioAssays that match based on the plain accession (unconstrained by ExternalDatabase).
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssay> findByAccession( String accession );
 
     /**
      * @see BioMaterialService#findSubBioMaterials(BioMaterial, boolean)
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssay> findSubBioAssays( BioAssay bioAssay, boolean direct );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssay> findSiblings( BioAssay bioAssay );
 
     /**
      * Obtain all the {@link BioAssaySet} that contain the given {@link BioAssay}.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay );
 
     /**
@@ -102,11 +113,38 @@ public interface BioAssayService extends SecurableBaseService<BioAssay>, Securab
     BioAssay thaw( BioAssay bioAssay );
 
     @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
     /**
      * @see BioAssayDao#loadValueObjects(Collection, Map, Map, boolean, boolean)
      */
     List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap, boolean basic, boolean allFactorValues );
+
+    /**
+     * Cursor-mode counterpart to the legacy unpaginated {@code BioAssayDao} EE-scoped
+     * sample listing — see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1k. Always sorts
+     * by ascending {@code id} (primary key, indexed and unique); the cursor DAO restricts
+     * cursors to single-component id sorts until the index audit lands.
+     *
+     * @see BioAssayDao#loadValueObjectsByCursorForExpressionExperiment(ExpressionExperiment, Cursor, int)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CursorPage<BioAssayValueObject> loadValueObjectsByCursorForExpressionExperiment(
+            ExpressionExperiment ee, @Nullable Cursor cursor, int limit );
+
+    /**
+     * Cursor-mode counterpart to the legacy unpaginated subset-scoped sample listing —
+     * see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1u. Always sorts by ascending
+     * {@code id} (primary key, indexed and unique). The service layer is responsible
+     * for populating any {@code assay2sourceAssayMap} the caller wants surfaced on the
+     * returned {@link BioAssayValueObject}s after this call returns (the DAO does not
+     * build it).
+     *
+     * @see BioAssayDao#loadValueObjectsByCursorForSubSet(ExpressionExperimentSubSet, Cursor, int)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CursorPage<BioAssayValueObject> loadValueObjectsByCursorForSubSet(
+            ExpressionExperimentSubSet subset, @Nullable Cursor cursor, int limit );
 }

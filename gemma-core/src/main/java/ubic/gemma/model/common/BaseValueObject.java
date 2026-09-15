@@ -19,12 +19,15 @@
 
 package ubic.gemma.model.common;
 
+import lombok.Data;
+
 import java.io.Serializable;
 
 /**
  * @author frances
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Data
 public class BaseValueObject implements Serializable {
 
     /**
@@ -39,44 +42,4 @@ public class BaseValueObject implements Serializable {
     private boolean accessDenied;
     private boolean userNotLoggedIn;
     private boolean objectAlreadyRemoved;
-
-    public Serializable getValueObject() {
-        return this.valueObject;
-    }
-
-    public void setValueObject( Serializable valueObject ) {
-        this.valueObject = valueObject;
-    }
-
-    public boolean isAccessDenied() {
-        return this.accessDenied;
-    }
-
-    public void setAccessDenied( boolean accessDenied ) {
-        this.accessDenied = accessDenied;
-    }
-
-    public boolean isErrorFound() {
-        return this.errorFound;
-    }
-
-    public void setErrorFound( boolean errorFound ) {
-        this.errorFound = errorFound;
-    }
-
-    public boolean isObjectAlreadyRemoved() {
-        return this.objectAlreadyRemoved;
-    }
-
-    public void setObjectAlreadyRemoved( boolean objectAlreadyRemoved ) {
-        this.objectAlreadyRemoved = objectAlreadyRemoved;
-    }
-
-    public boolean isUserNotLoggedIn() {
-        return this.userNotLoggedIn;
-    }
-
-    public void setUserNotLoggedIn( boolean userNotLoggedIn ) {
-        this.userNotLoggedIn = userNotLoggedIn;
-    }
 }

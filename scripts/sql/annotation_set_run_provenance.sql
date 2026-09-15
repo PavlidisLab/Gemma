@@ -1,0 +1,31 @@
+-- Record which agent run produced a curation write.
+--
+-- APPLIED TO PRODUCTION 2026-08-16 by hand. This file is the record of what was run, not
+-- a migration -- schema changes here are applied manually, so nothing replays it. Test and
+-- dev databases get these columns from the Hibernate mapping on AnnotationSet instead
+-- (`-Dgemma.hibernate.hbm2ddl.auto=create` rebuilds gemdtest from the entities), which is
+-- why no db/migration entry accompanies it. An environment provisioned from SQL alone
+-- would need this run against it.
+--
+-- ANNOTATION_SET (V20) already carried RUN_ID, MODEL, AGENT_VERSION and RAN_AT. These two
+-- close the remaining gap in "which agent, when, and was it reviewed by a human?".
+--
+-- RUN_SHA -- the producing repository's git head sha for the run. NOT redundant with
+-- MODEL: the curation side has measured behaviour differences between shas at one model,
+-- so the model alone does not identify the build that wrote an annotation. Deliberately
+-- not folded into AGENT_VERSION, which names a release rather than a commit.
+--
+-- AGENT_NAME -- which specialist produced it (cell_type, disease, strain, ...). "The
+-- agent" is a fleet, and the useful answer to "which agent proposed this?" names the
+-- member rather than the fleet. The producer emits it blank today, so the column landed
+-- ahead of its data on purpose.
+--
+-- Both nullable with no default: every pre-existing row predates run provenance and stays
+-- NULL, so this needed no backfill. NULL means "not recorded", never "none".
+--
+-- VARCHAR(255) matches the sibling provenance columns on this table rather than sizing to
+-- the content (a sha is 40 characters, an agent name a short slug) -- consistency with the
+-- neighbours beats right-sizing two columns nobody filters on.
+ALTER TABLE ANNOTATION_SET
+    ADD COLUMN RUN_SHA VARCHAR(255) NULL,
+    ADD COLUMN AGENT_NAME VARCHAR(255) NULL;

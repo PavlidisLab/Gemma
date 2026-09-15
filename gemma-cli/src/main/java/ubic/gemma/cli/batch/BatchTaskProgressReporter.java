@@ -1,11 +1,11 @@
 package ubic.gemma.cli.batch;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AnsiEscapeCodes;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Console;
 import java.io.IOException;
 import java.io.Serializable;
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Report progress on batch tasks.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class BatchTaskProgressReporter implements AutoCloseable {
 
     private final BatchTaskSummaryWriter summaryWriter;
@@ -186,7 +186,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     }
 
     private void reportProgress( int completedTasks ) {
-        Assert.state( completedTasks >= lastCompletedTasks );
+        Assert.state( completedTasks >= lastCompletedTasks , "illegal state");
         if ( completedTasks > lastCompletedTasks ) {
             if ( timer.getTime() > reportFrequencyMillis ) {
                 reportProgressToLogger( completedTasks );

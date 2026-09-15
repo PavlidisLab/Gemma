@@ -18,19 +18,18 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 /**
  * Tests of GeoPlatformService
  *
  * @author pavlidis
  */
-public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
+public class GeoPlatformServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     GeoService geoService;
@@ -39,7 +38,7 @@ public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
      * Test method for 'ubic.gemma.core.loader.expression.geo.GeoPlatformService.fetchAndLoad(String)'
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testFetchAndLoadGPL101Short() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(

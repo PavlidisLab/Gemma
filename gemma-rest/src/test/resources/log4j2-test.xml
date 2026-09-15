@@ -17,7 +17,7 @@
         <Root level="WARN">
             <AppenderRef ref="console"/>
         </Root>
-        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
+        <Logger name="org.springframework.orm.jpa.JpaTransactionManager" level="WARN"/>
         <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="WARN"/>
         <Logger name="net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy"
                 level="ERROR"/>

@@ -1,10 +1,11 @@
 package ubic.gemma.core.util;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.profiling.StopWatchUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class StopWatchUtilsTest {
 
@@ -30,29 +31,30 @@ public class StopWatchUtilsTest {
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testMeasuredRegionWithInnerRegion() {
         StopWatch sw = StopWatch.create();
-        try ( StopWatchUtils.StopWatchRegion region = StopWatchUtils.measuredRegion( sw ) ) {
-            // nom nom
-            assertThat( region.getStopWatch() ).isSameAs( sw );
-            try ( StopWatchUtils.StopWatchRegion innerRegion = StopWatchUtils.measuredRegion( sw ) ) {
+        assertThrows( IllegalStateException.class, () -> {
+            try ( StopWatchUtils.StopWatchRegion region = StopWatchUtils.measuredRegion( sw ) ) {
                 // nom nom
+                assertThat( region.getStopWatch() ).isSameAs( sw );
+                try ( StopWatchUtils.StopWatchRegion innerRegion = StopWatchUtils.measuredRegion( sw ) ) {
+                    // nom nom
+                }
             }
-        }
-        assertThat( sw.isSuspended() ).isTrue();
+        } );
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testMeasuredRegionWhhenStopWatchIsAlreadyStarted() {
         StopWatch sw = StopWatch.createStarted();
-        StopWatchUtils.measuredRegion( sw );
+        assertThrows( IllegalStateException.class, () -> StopWatchUtils.measuredRegion( sw ) );
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testMeasuredRegionWhhenStopWatchIsStopped() {
         StopWatch sw = StopWatch.createStarted();
         sw.stop();
-        StopWatchUtils.measuredRegion( sw );
+        assertThrows( IllegalStateException.class, () -> StopWatchUtils.measuredRegion( sw ) );
     }
 }

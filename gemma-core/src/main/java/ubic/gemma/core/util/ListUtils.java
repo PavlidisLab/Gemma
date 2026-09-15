@@ -21,14 +21,14 @@ public class ListUtils {
      * I couldn't find this algorithm in Guava nor Apache Collections, but if you do, let me know!
      */
     public static <T> Map<T, Integer> indexOfElements( List<T> list ) {
-        Map<T, Integer> element2position = new HashMap<>( list.size() );
+        Map<T, Integer> element2position = HashMap.newHashMap( list.size() );
         fillMap( element2position, list );
         return element2position;
     }
 
     public static <T> Map<T, int[]> indexOfAllElements( List<T> list ) {
         int size = list.size();
-        Map<T, List<Integer>> element2positions = new HashMap<>( size );
+        Map<T, List<Integer>> element2positions = HashMap.newHashMap( size );
         for ( int i = 0; i < size; i++ ) {
             T element = list.get( i );
             element2positions.computeIfAbsent( element, k -> new ArrayList<>() ).add( i );

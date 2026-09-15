@@ -14,15 +14,16 @@
  */
 package ubic.gemma.core.ontology;
 
-import ubic.basecode.ontology.model.OntologyProperty;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.model.OntologyProperty;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -45,17 +46,39 @@ public interface OntologyService {
     Map<OntologyTerm, Long> findObsoleteTermUsage( long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
+     * Report the obsolete terms Gemma's annotations still use, with the replacement each owning ontology asserts.
+     * <p>
+     * Same question as {@link #findObsoleteTermUsage(long, TimeUnit)} asked a cheaper way. Obsolescence is a property
+     * of the URI, not of the row, so this groups CHARACTERISTIC by URI and checks each distinct URI once instead of
+     * walking every characteristic in the corpus. That is what makes it callable from a running application rather
+     * than only from an overnight CLI — the ontologies are already in memory, so the remaining work is one grouped
+     * query plus a hash lookup per URI.
+     * <p>
+     * Gene Ontology annotations are skipped, matching {@code findObsoleteTermUsage}: those are gene annotations and
+     * their obsolescence is a separate problem.
+     *
+     * @param timeout  budget for resolving terms against the loaded ontologies
+     * @return one entry per obsolete term in use, ordered by descending experiment count so the biggest problems
+     *         read first
+     */
+    List<ObsoleteTermUsage> findObsoleteTermsInUse( long timeout, TimeUnit timeUnit ) throws TimeoutException;
+
+    /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
      * of possible choices
      *
      * @param searchQuery           search query
      * @param useNeuroCartaOntology use neurocarta ontology
+     * @param forceGeneOntology     always consult the Gene Ontology, even when other ontologies already
+     *                              returned hits. GO is otherwise a fallback (searched only when nothing
+     *                              else matched); set this when the caller explicitly wants GO terms
+     *                              (e.g. an annotation search filtered to the {@code GO_} URI prefix).
      * @return characteristic vos
      * @throws ubic.gemma.core.search.SearchTimeoutException if the search times out
      */
     @Deprecated
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
-            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException;
+            boolean useNeuroCartaOntology, boolean forceGeneOntology, long timeout, TimeUnit timeUnit ) throws SearchException;
 
     /**
      * Given a search string will look through the loaded ontologies for terms that match the search term. If the query
@@ -119,6 +142,16 @@ public interface OntologyService {
     OntologyTerm getTerm( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
+     * Obtain the version (release) of the ontology that owns the given term URI.
+     * <p>
+     * Resolves the owning ontology the same way {@link #getTerm(String, long, TimeUnit)} does and returns
+     * its {@code owl:versionInfo} (falling back to {@code owl:versionIRI}). Returns {@code null} when no
+     * ontology owns the URI or the owning ontology declares no version.
+     */
+    @Nullable
+    String getVersion( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException;
+
+    /**
      * Return all the terms matching the given URIs.
      * @throws TimeoutException if the timeout is exceeded
      */
@@ -135,6 +168,17 @@ public interface OntologyService {
      * admin-only.
      */
     void reinitializeAndReindexAllOntologies();
+
+    /**
+     * Drop every {@link OntologyCache} entry tied to the given ontology service.
+     * <p>
+     * Call this after a per-ontology refresh (e.g. {@code POST /admin/ontologies/{name}/refresh}) so that
+     * {@code findTerm}, {@code getParents}, and {@code getChildren} results computed against the previous
+     * model are not served to callers from cache. Reloading the Jena model + Lucene index alone is not
+     * sufficient — the in-process search/parents/children caches retain results keyed by
+     * {@code (OntologyService, query, ...)} and would otherwise serve stale lookups until the next bounce.
+     */
+    void clearCachesForOntology( ubic.gemma.core.ontology.providers.OntologyService serv );
 
     /**
      * Check all system uses of ontology terms for the correct label and fix any mismatches based on the ontology OWL files.

@@ -2,7 +2,7 @@ package ubic.gemma.core.util;
 
 import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -85,6 +85,7 @@ public class StringUtils {
     /**
      * Borrowed from <a href="https://stackoverflow.com/questions/119328/how-do-i-truncate-a-java-string-to-fit-in-a-given-number-of-bytes-once-utf-8-en">How do I truncate a java string to fit in a given number of bytes, once UTF-8 encoded? on Stackoverflow</a>.
      */
+    @Nullable
     private static String truncateWhenUTF8( @Nullable String s, int maxBytes ) {
         if ( s == null || s.isEmpty() ) {
             return s;
@@ -159,7 +160,7 @@ public class StringUtils {
      * If the string already ends with the delimiter, the suffix is appended directly.
      */
     public static String appendWithDelimiter( @Nullable String s, String suffix, String delimiter ) {
-        Assert.notNull( suffix );
+        Assert.notNull( suffix , "must not be null");
         if ( s == null || s.isEmpty() ) {
             return suffix;
         } else if ( s.endsWith( delimiter ) ) {
@@ -174,6 +175,7 @@ public class StringUtils {
      * <p>
      * The charset encoding is UTF-8.
      */
+    @Nullable
     public static String urlEncode( @Nullable String s ) {
         if ( s == null || s.isEmpty() ) {
             return s;

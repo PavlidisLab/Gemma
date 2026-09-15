@@ -2,16 +2,16 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -33,11 +33,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -48,23 +44,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVector;
 
 /**
  * Tests for the streaming overload of
  * {@link SingleCellExpressionExperimentService#addSingleCellDataVectors(ExpressionExperiment, QuantitationType, SingleCellDimension, Stream, String, boolean, boolean)}.
- *
- * Mirrors the in-memory-H2 setup used by {@link SingleCellExpressionExperimentServiceTest}. These tests exercise the
- * single-pass streaming path introduced to address out-of-memory failures in {@code addCELLxGENEData}.
+ * <p>
+ * Mirrors the in-memory-H2 harness of {@link SingleCellExpressionExperimentServiceTest}, including its
+ * mock beans for the read/write service split. These exercise the single-pass path added to stop
+ * single-cell imports from materialising every vector before writing any of them.
+ * <p>
+ * The audit event is not asserted here. This context wires the impl directly with no AOP proxy, so the
+ * {@code @Audited} advice never fires; aspect coverage lives in {@code AuditedAspectTest}.
  */
 @ContextConfiguration
-public class SingleCellStreamingAddTest extends BaseDatabaseTest {
+public class SingleCellStreamingAddTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
-    static class Config extends BaseDatabaseTestContextConfiguration {
+    static class SingleCellStreamingAddTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
 
         @Bean
         public SingleCellExpressionExperimentService singleCellExpressionExperimentService() {
@@ -74,6 +72,18 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
         @Bean
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
             return new ExpressionExperimentDaoImpl( sessionFactory );
+        }
+
+        // EE DAO field-injects ArrayDesignDao for batched platform loads.
+        @Bean
+        public ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl( sessionFactory );
+        }
+
+        // SCEESI + EE DAO field-inject SingleCellDimensionExperimentDao.
+        @Bean
+        public SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new SingleCellDimensionExperimentDaoImpl( sessionFactory );
         }
 
         @Bean
@@ -97,7 +107,22 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
         }
 
         @Bean
+        public ExperimentalDesignReadService experimentalDesignReadService() {
+            return mock( ExperimentalDesignReadService.class );
+        }
+
+        @Bean
+        public ExperimentalFactorReadService experimentalFactorReadService() {
+            return mock( ExperimentalFactorReadService.class );
+        }
+
+        @Bean
         public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public SingleCellExperimentDesignAuditService singleCellExperimentDesignAuditService() {
             return mock();
         }
 
@@ -122,12 +147,15 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
     private AuditTrailService auditTrailService;
 
     @Autowired
-    private QuantitationTypeService quantitationTypeService;
+    private SingleCellExperimentDesignAuditService singleCellExperimentDesignAuditService;
+
+    @Autowired
+    private SessionFactory sessionFactory;
 
     private ArrayDesign ad;
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
@@ -151,9 +179,10 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
         ee = expressionExperimentDao.create( ee );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( auditTrailService );
+        reset( singleCellExperimentDesignAuditService );
     }
 
     @Test
@@ -186,7 +215,6 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
         service.addSingleCellDataVectors( ee, collection.qt, collection.vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
 
-        // Both variants persisted the same number of vectors with identical wiring.
         long streamingVecs = ee.getSingleCellExpressionDataVectors().stream()
                 .filter( v -> v.getQuantitationType().equals( streaming.qt ) ).count();
         long collectionVecs = ee.getSingleCellExpressionDataVectors().stream()
@@ -202,15 +230,14 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
         service.addSingleCellDataVectors( ee, f.qt, f.scd, f.vectors.stream(), null, true, false );
         sessionFactory.getCurrentSession().flush();
 
-        // 100 cells total across 4 BAs (25 each). With 90% sparsity, every BA should have at least one expressed cell;
-        // the exact number is data-dependent but must be non-null and within [0, 25].
+        // 100 cells across 4 BAs (25 each). With 90% sparsity the exact counts are data-dependent, but
+        // they must be populated and internally consistent.
         assertThat( ee.getNumberOfCells() ).isNotNull().isPositive();
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertThat( ba.getNumberOfCells() ).isNotNull().isBetween( 0, 25 );
             assertThat( ba.getNumberOfDesignElements() ).isNotNull().isPositive();
             assertThat( ba.getNumberOfCellsByDesignElements() ).isNotNull().isNotNegative();
         }
-        // The per-BA counts must sum to the experiment-level count.
         int sum = ee.getBioAssays().stream().mapToInt( BioAssay::getNumberOfCells ).sum();
         assertThat( ee.getNumberOfCells() ).isEqualTo( sum );
     }
@@ -221,7 +248,6 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
         service.addSingleCellDataVectors( ee, f.qt, f.scd, f.vectors.stream(), null, true, false );
         sessionFactory.getCurrentSession().flush();
 
-        // Sparsity metrics are only computed for the preferred QT.
         assertThat( ee.getNumberOfCells() ).isNull();
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertThat( ba.getNumberOfCells() ).isNull();
@@ -239,22 +265,9 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testStreamingAddEmitsAuditEvent() {
-        Fixture f = newFixture( "counts", true );
-        service.addSingleCellDataVectors( ee, f.qt, f.scd, f.vectors.stream(), "loaded from fixture", true, false );
-        sessionFactory.getCurrentSession().flush();
-        verify( auditTrailService ).addUpdateEvent(
-                org.mockito.ArgumentMatchers.eq( ee ),
-                org.mockito.ArgumentMatchers.eq( ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent.class ),
-                org.mockito.ArgumentMatchers.contains( "Added " + f.vectors.size() + " vectors" ),
-                org.mockito.ArgumentMatchers.eq( "loaded from fixture" ) );
-    }
-
-    @Test
     public void testStreamingAddRejectsEmptyStream() {
         Fixture f = newFixture( "counts", true );
-        // We still need a valid SCD, but the stream itself is empty.
-        // The implementation must reject an empty stream after consuming it (no vectors → assertion failure).
+        // A valid SCD, but nothing in the stream: the count assertion must fire once it is drained.
         assertThatThrownBy( () -> service.addSingleCellDataVectors( ee, f.qt, f.scd, Stream.empty(), null, true, false ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
@@ -264,7 +277,7 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
         Fixture f = newFixture( "counts", true );
         QuantitationType other = buildQt( "other", false );
         sessionFactory.getCurrentSession().persist( other );
-        // Vectors reference f.qt, but we pass `other` as the target QT — validator should reject.
+        // Vectors reference f.qt, but `other` is passed as the target QT.
         assertThatThrownBy( () -> service.addSingleCellDataVectors( ee, other, f.scd, f.vectors.stream(), null, true, false ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
@@ -273,7 +286,7 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
     public void testStreamingAddRejectsWrongSingleCellDimension() {
         Fixture f = newFixture( "counts", true );
         SingleCellDimension foreignScd = newDimension();
-        // Vectors reference f.scd, but we pass a different SCD instance — validator should reject.
+        // Vectors reference f.scd, but a different SCD instance is passed.
         assertThatThrownBy( () -> service.addSingleCellDataVectors( ee, f.qt, foreignScd, f.vectors.stream(), null, true, false ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
@@ -291,30 +304,28 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
     }
 
     /**
-     * The streaming overload is the OOM fix's load-bearing contract: it must consume the source stream
-     * exactly once. If it materialises the stream (e.g. via {@code toList()}) somewhere internally, this
-     * test will fail because the underlying iterator records each {@code next()} call.
+     * Single-pass consumption is the whole point of the streaming overload: if the implementation ever
+     * materialises the source internally (a {@code toList()} slipped into the path, say), the memory
+     * saving evaporates silently and only this test notices. The counting iterator records every pull.
      */
     @Test
     public void testStreamingAddConsumesSourceExactlyOnce() {
         Fixture f = newFixture( "counts", true );
         CountingIterator<SingleCellExpressionDataVector> counter = new CountingIterator<>( f.vectors.iterator() );
         Stream<SingleCellExpressionDataVector> stream = StreamSupport.stream(
-                java.util.Spliterators.spliteratorUnknownSize( counter, 0 ), false );
+                Spliterators.spliteratorUnknownSize( counter, 0 ), false );
 
         service.addSingleCellDataVectors( ee, f.qt, f.scd, stream, null, true, false );
 
-        // Single-pass invariant: each vector is pulled exactly once. hasNext() is allowed to be called
-        // somewhat more than next() (iterator-protocol overhead and an end-of-stream check), but the upper
-        // bound must stay close to size — a re-iteration would roughly double both counts.
+        // hasNext() may be called somewhat more often than next() -- iterator-protocol overhead plus an
+        // end-of-stream check -- but a re-iteration would roughly double both counts.
         assertThat( counter.elementsPulled() ).isEqualTo( f.vectors.size() );
         assertThat( counter.hasNextCalls() ).isBetween( f.vectors.size(), f.vectors.size() + 3 );
     }
 
     /**
-     * Uses a persistent SCD (already attached to the experiment via a prior add) to verify the
-     * "scdJustCreated" branch in the streaming validator: re-adding vectors against an SCD that is
-     * already wired up to existing vectors must be allowed.
+     * Covers the {@code scdJustCreated} branch of the streaming validator: re-adding vectors against a
+     * dimension that is already wired to existing vectors must be allowed.
      */
     @Test
     public void testStreamingAddAcceptsPersistentDimensionFromPriorAdd() {
@@ -322,7 +333,7 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
         service.addSingleCellDataVectors( ee, first.qt, first.scd, first.vectors.stream(), null, true, false );
         sessionFactory.getCurrentSession().flush();
 
-        // Second QT, but reuse the persisted dimension. The impl skips quantitationTypeService.create()
+        // Second QT, reusing the persisted dimension. The impl skips quantitationTypeService.create()
         // when the QT already has an id, so persist it here to side-step the mocked service.
         QuantitationType qt2 = buildQt( "counts2", false );
         sessionFactory.getCurrentSession().persist( qt2 );
@@ -398,7 +409,7 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest {
         return scd;
     }
 
-    /** Records iterator usage so we can prove the streaming path consumes the source exactly once. */
+    /** Records iterator usage so the single-pass invariant can be asserted rather than assumed. */
     private static class CountingIterator<T> implements Iterator<T> {
         private final Iterator<T> delegate;
         private final AtomicInteger pulled = new AtomicInteger();

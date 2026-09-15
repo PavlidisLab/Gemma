@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
@@ -12,8 +12,7 @@ import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTran
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -32,7 +31,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreaterOrEqualTo;
 
-public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationTest {
+public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationTest5 {
 
     @Autowired
     private FTPClientFactory ftpClientFactory;
@@ -47,7 +46,7 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
      * This test requires a fairly large input file which must be located in the download directory.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE225158() throws IOException {
         Path p = downloadAndTransposeGSE225158();
         AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( p );

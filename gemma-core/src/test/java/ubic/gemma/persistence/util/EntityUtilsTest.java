@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.Identifiable;
 
 import java.util.ArrayList;

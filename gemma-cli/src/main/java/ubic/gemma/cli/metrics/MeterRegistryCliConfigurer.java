@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import ubic.gemma.cli.authentication.CLIAuthenticationAware;
+import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.metrics.AbstractMeterRegistryConfigurer;
 
 /**
@@ -16,7 +17,7 @@ import ubic.gemma.core.metrics.AbstractMeterRegistryConfigurer;
  */
 @Component
 @Lazy(false)
-@Profile("metrics")
+@Profile(EnvironmentProfiles.METRICS)
 public class MeterRegistryCliConfigurer extends AbstractMeterRegistryConfigurer implements CLIAuthenticationAware {
 
     private final MeterRegistry registry;

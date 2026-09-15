@@ -2,7 +2,7 @@ package ubic.gemma.persistence.util;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 /**
@@ -39,10 +39,14 @@ public class FiltersUtils {
 
     /**
      * Unnest a filter from a subquery.
+     * <p>
+     * A subquery carrying a conjunction unnests to its FIRST conjunct. The only caller validates the
+     * right-hand side of a collection operator, and the quantified-conjunction syntax puts the
+     * collection operator on the first predicate; there is no single filter to return otherwise.
      */
     public static Filter unnestSubquery( Filter f ) {
-        while ( f.getRequiredValue() instanceof Subquery ) {
-            f = ( ( Subquery ) f.getRequiredValue() ).getFilter();
+        while ( f.getRequiredValue() instanceof Subquery sq ) {
+            f = sq.getFilters().get( 0 );
         }
         return f;
     }

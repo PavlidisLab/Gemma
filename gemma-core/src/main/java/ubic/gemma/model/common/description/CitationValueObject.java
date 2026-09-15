@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedUtils;
 
@@ -33,6 +35,8 @@ import java.util.*;
  * @see BibliographicReferenceValueObject for a more comprehensive alternative representation of BibliographicReference
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
+@Getter
+@Setter
 public class CitationValueObject implements Comparable<CitationValueObject>, Serializable {
 
     /**
@@ -139,38 +143,6 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
         return -1;
     }
 
-    public String getCitation() {
-        return citation;
-    }
-
-    public void setCitation( String citation ) {
-        this.citation = citation;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public String getPubmedAccession() {
-        return pubmedAccession;
-    }
-
-    public void setPubmedAccession( String pubmedID ) {
-        this.pubmedAccession = pubmedID;
-    }
-
-    public String getPubmedURL() {
-        return pubmedURL;
-    }
-
-    public void setPubmedURL( String pubmedURL ) {
-        this.pubmedURL = pubmedURL;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -193,13 +165,4 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
         }
         return pubmedAccession.equals( other.pubmedAccession );
     }
-
-    public boolean isRetracted() {
-        return retracted;
-    }
-
-    public void setRetracted( boolean retracted ) {
-        this.retracted = retracted;
-    }
-
 }

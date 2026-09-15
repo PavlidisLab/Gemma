@@ -1,0 +1,29 @@
+-- ANNOTATION_RELATION.STATUS -- so a source can say that a relation does NOT hold.
+--
+-- Every row in this table has so far meant "somebody asserts this". MGI publishes the other
+-- kind: MGI_Geno_NotDiseaseDO.rpt is 1,211 rows of "this genotype does NOT model this
+-- disease", curated and cited, and disconfirmation is rare enough that throwing it away is
+-- the expensive option. There is no way to hold it without this column -- an EXTERNAL row
+-- carrying DOID:0110949 with no status reads as the exact opposite of what MGI said.
+--
+-- PUBLICATION_ASSOCIATION reached the same conclusion in V25 for the same reason, and its
+-- lesson carries: a REJECTED row parked somewhere that predates the concept of rejection is
+-- read as an ordinary assertion by everything that predates it. There the risk was Gemma
+-- 1.32.x reading a rejected link as a relevant publication. Here the analogous risk is our
+-- OWN readers, since 1.32.x does not know this table exists -- so the default is ASSERTED
+-- and the reads filter to it unless a caller asks otherwise.
+--
+-- NOT NULL with a default rather than nullable: "no status" is not a third state. Every
+-- existing row is an assertion and says so after this runs, and a writer that forgets the
+-- column produces an assertion rather than something unclassifiable.
+--
+-- Deliberately NOT an index. The column is near-constant -- 1,211 refutations against ~70k
+-- rows and climbing -- so it selects nothing on its own; the reads that filter on it are
+-- already anchored on SUBJECT_VALUE_URI or OBJECT_VALUE_URI, which are indexed.
+--
+-- 🛑 NO `AFTER BASIS`. Column position carries no meaning, and asking for one costs a full
+-- table rebuild on MySQL 5.7 where appending need not. It also made the two dialects disagree
+-- for no reason, since the H2 mirror cannot express it. Applied to production 2026-08-18 in
+-- the appended form.
+ALTER TABLE ANNOTATION_RELATION
+    ADD COLUMN STATUS VARCHAR(16) NOT NULL DEFAULT 'ASSERTED';

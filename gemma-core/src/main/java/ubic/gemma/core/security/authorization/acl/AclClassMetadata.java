@@ -1,11 +1,9 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
 import org.hibernate.SessionFactory;
-import org.hibernate.metadata.ClassMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -75,15 +73,24 @@ public class AclClassMetadata {
                 "select ee.id from ExpressionExperiment ee join ee.bioAssays ba where ba.sampleUsed.id = :identifier group by ee",
                 //language=HQL
                 "select eess.sourceExperiment.id from ExpressionExperimentSubSet eess join eess.bioAssays ba where ba.sampleUsed.id = :identifier group by eess.sourceExperiment" );
+        // These three carried the ExpressionAnalysisResultSet query below rather than their own —
+        // one copy-paste that propagated down three consecutive registrations. Each now resolves
+        // through its actual association: a subset names its source experiment, while the design
+        // and the mean-variance relation are named BY the experiment.
+        //
+        // The wrong queries did not deny anyone anything: these are consistency checks read only by
+        // AclLinterServiceImpl, and a query returning no row counts as agreement rather than as a
+        // mismatch. Against an unrelated table they returned nothing for every input, so the linter
+        // reported all three clean without ever checking them.
         addSecuredChildToParent( ExpressionExperimentSubSet.class, ExpressionExperiment.class,
                 //language=HQL
-                "select ears.analysis.id from ExpressionAnalysisResultSet ears where ears.id = :identifier" );
+                "select eess.sourceExperiment.id from ExpressionExperimentSubSet eess where eess.id = :identifier" );
         addSecuredChildToParent( MeanVarianceRelation.class, ExpressionExperiment.class,
                 //language=HQL
-                "select ears.analysis.id from ExpressionAnalysisResultSet ears where ears.id = :identifier" );
+                "select ee.id from ExpressionExperiment ee where ee.meanVarianceRelation.id = :identifier" );
         addSecuredChildToParent( ExperimentalDesign.class, ExpressionExperiment.class,
                 //language=HQL
-                "select ears.analysis.id from ExpressionAnalysisResultSet ears where ears.id = :identifier" );
+                "select ee.id from ExpressionExperiment ee where ee.experimentalDesign.id = :identifier" );
         addSecuredChildToParent( ExperimentalFactor.class, ExpressionExperiment.class,
                 //language=HQL
                 "select ee.id from ExpressionExperiment ee join ee.experimentalDesign ed join ed.experimentalFactors ef where ef.id = :identifier group by ee" );
@@ -100,9 +107,6 @@ public class AclClassMetadata {
         addSecuredChildToParent( SampleCoexpressionAnalysis.class, ExpressionExperiment.class,
                 //language=HQL
                 "select coalesce(ea.sourceExperiment.id, ea.id) from SampleCoexpressionAnalysis sca join sca.experimentAnalyzed ea where sca.id = :identifier" );
-        addSecuredChildToParent( CoexpressionAnalysis.class, ExpressionExperiment.class,
-                //language=HQL
-                "select coalesce(ea.sourceExperiment.id, ea.id) from CoexpressionAnalysis ca join ca.experimentAnalyzed ea where ca.id = :identifier" );
         addSecuredChildToParent( PrincipalComponentAnalysis.class, ExpressionExperiment.class,
                 //language=HQL
                 "select coalesce(ea.sourceExperiment.id, ea.id) from PrincipalComponentAnalysis pca join pca.experimentAnalyzed ea where pca.id = :identifier" );
@@ -113,13 +117,15 @@ public class AclClassMetadata {
         // validate that all SecuredChild are registered
         // TODO: this should be part of the Hibernate class metadata, either via annotation of cutom XML entries if that
         //       is allowed
-        for ( ClassMetadata cm : sessionFactory.getAllClassMetadata().values() ) {
-            if ( SecuredChild.class.isAssignableFrom( cm.getMappedClass() ) ) {
-                if ( Modifier.isAbstract( cm.getMappedClass().getModifiers() ) ) {
+        // Hibernate 5: getAllClassMetadata() throws UnsupportedOperationException; use the JPA metamodel.
+        for ( jakarta.persistence.metamodel.EntityType<?> et : sessionFactory.getMetamodel().getEntities() ) {
+            Class<?> mappedClass = et.getJavaType();
+            if ( SecuredChild.class.isAssignableFrom( mappedClass ) ) {
+                if ( Modifier.isAbstract( mappedClass.getModifiers() ) ) {
                     continue;
                 }
                 //noinspection unchecked
-                Class<? extends SecuredChild<?>> scc = cm.getMappedClass();
+                Class<? extends SecuredChild<?>> scc = ( Class<? extends SecuredChild<?>> ) mappedClass;
                 if ( !securedChildToParentTypeMap.containsKey( scc ) ) {
                     throw new IllegalStateException( scc.getName() + " is not configured in the AclClassMetadata, it must have an entry indicating its parent type and query(ies) for resolving its parent ID." );
                 }

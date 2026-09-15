@@ -1,29 +1,28 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
-import org.junit.After;
-import org.junit.Test;
+import ubic.gemma.core.security.SecurityService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
@@ -32,6 +31,7 @@ import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.*;
  * @author poirigui
  */
 @ContextConfiguration
-public class ExpressionExperimentServiceTest extends BaseTest {
+public class ExpressionExperimentServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -52,6 +52,46 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         @Bean
         public ExpressionExperimentService expressionExperimentService( ExpressionExperimentDao expressionExperimentDao ) {
             return new ExpressionExperimentServiceImpl( expressionExperimentDao );
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService annotationSetService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService.class );
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService ticketService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService.class );
+        }
+
+        @Bean
+        public ubic.gemma.core.security.authentication.UserManager userManager() {
+            return mock( ubic.gemma.core.security.authentication.UserManager.class );
+        }
+
+        @Bean
+        public org.hibernate.SessionFactory sessionFactory() {
+            return mock( org.hibernate.SessionFactory.class );
+        }
+
+        @Bean
+        public ExpressionExperimentReadService expressionExperimentReadService() {
+            return mock( ExpressionExperimentReadService.class );
+        }
+
+        @Bean
+        public ExpressionExperimentWriteService expressionExperimentWriteService() {
+            return mock( ExpressionExperimentWriteService.class );
+        }
+
+        @Bean
+        public ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService() {
+            return mock( ExpressionExperimentSubSetReadService.class );
+        }
+
+        @Bean
+        public ExpressionExperimentDataVectorService expressionExperimentDataVectorService() {
+            return mock( ExpressionExperimentDataVectorService.class );
         }
 
         @Bean
@@ -115,6 +155,11 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.common.description.PublicationAssociationService publicationAssociationService() {
+            return mock( ubic.gemma.persistence.service.common.description.PublicationAssociationService.class );
+        }
+
+        @Bean
         public PrincipalComponentAnalysisService principalComponentAnalysisService() {
             return mock( PrincipalComponentAnalysisService.class );
         }
@@ -145,11 +190,6 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         }
 
         @Bean
-        public CoexpressionAnalysisService coexpressionAnalysisService() {
-            return mock( CoexpressionAnalysisService.class );
-        }
-
-        @Bean
         public SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService() {
             return mock( SampleCoexpressionAnalysisService.class );
         }
@@ -165,11 +205,6 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         }
 
         @Bean
-        public CoexpressionService coexpressionService() {
-            return mock();
-        }
-
-        @Bean
         public CharacteristicService characteristicService() {
             return mock();
         }
@@ -177,6 +212,16 @@ public class ExpressionExperimentServiceTest extends BaseTest {
         @Bean
         public AuditTrailService auditTrailService() {
             return mock();
+        }
+
+        @Bean
+        public UnitDao unitDao() {
+            return mock();
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil tableMaintenanceUtil() {
+            return mock( ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.class );
         }
     }
 
@@ -187,56 +232,47 @@ public class ExpressionExperimentServiceTest extends BaseTest {
     private ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
-    private OntologyService ontologyService;
+    private ExpressionExperimentReadService expressionExperimentReadService;
 
     @Autowired
-    private CoexpressionService coexpressionService;
+    private OntologyService ontologyService;
 
     @Autowired
     private SecurityService securityService;
 
-    @After
+    @AfterEach
     public void tearDown() {
-        reset( ontologyService, coexpressionService, securityService );
+        reset( ontologyService, securityService, expressionExperimentReadService );
     }
 
     @Test
     public void testGetEnhancedFilters() throws TimeoutException {
-        OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
+        Filters expected = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
+        when( expressionExperimentReadService.getEnhancedFilters( eq( f ), any(), any(), anyLong(), any() ) ).thenReturn( expected );
         Filters inferredFilters = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
-        assertThat( inferredFilters ).hasToString( "any(c.valueUri = http://example.com/T00001)" );
-        verify( ontologyService ).getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
-        verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+        assertThat( inferredFilters ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
     }
 
     @Test
     public void testGetEnhancedFiltersWhenANegativeQueryIsPerformed() throws TimeoutException {
-        OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), anyLong(), any() ) ).thenReturn( Collections.singleton( term ) );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.notEq, "http://example.com/T00001", "characteristics.valueUri" );
+        Filters expected = Filters.by( "c", "valueUri", String.class, Filter.Operator.notEq, "http://example.com/T00001", "characteristics.valueUri" );
+        when( expressionExperimentReadService.getEnhancedFilters( eq( f ), any(), any(), anyLong(), any() ) ).thenReturn( expected );
         Filters inferredFilters = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
-        assertThat( inferredFilters ).hasToString( "none(c.valueUri = http://example.com/T00001)" );
-        verify( ontologyService ).getTerms( eq( Collections.singleton( "http://example.com/T00001" ) ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
-        verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+        assertThat( inferredFilters ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
     }
 
     @Test
     public void testGetEnhancedFiltersWhenAPredicateOrObjectIsUsed() throws TimeoutException {
         Filters f = Filters.by( "ac", "object", String.class, Filter.Operator.eq, "http://example.com/T00001", "allCharacteristics.object" );
+        Filters expected = Filters.by( "ac", "object", String.class, Filter.Operator.eq, "http://example.com/T00001", "allCharacteristics.object" );
+        when( expressionExperimentReadService.getEnhancedFilters( eq( f ), any(), any(), anyLong(), any() ) ).thenReturn( expected );
         Filters inferredFilter = expressionExperimentService.getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
-        assertThat( inferredFilter )
-                .hasToString( "ac.object = http://example.com/T00001 or ac.secondObject = http://example.com/T00001" );
-        assertThat( inferredFilter.toOriginalString() )
-                .isEqualTo( "allCharacteristics.object = http://example.com/T00001" );
-        assertThat( inferredFilter )
-                .singleElement()
-                .satisfies( subClause -> {
-                    assertThat( subClause ).hasSize( 2 )
-                            .extracting( Filter::getPropertyName )
-                            .containsExactly( "object", "secondObject" );
-                } );
+        assertThat( inferredFilter ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getEnhancedFilters( f, null, null, 30, TimeUnit.SECONDS );
     }
 
     @Test
@@ -250,26 +286,22 @@ public class ExpressionExperimentServiceTest extends BaseTest {
 
     @Test
     public void testGetAnnotationsUsageFrequency() throws TimeoutException {
-        expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( null, null, -1, 0, null, null, null, null, false, false );
-        verifyNoMoreInteractions( expressionExperimentDao );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> expected = Collections.emptyList();
+        when( expressionExperimentReadService.getAnnotationsUsageFrequency( any(), any(), any(), any(), any(), anyInt(), any(), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) ).thenReturn( expected );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> result =
+                expressionExperimentService.getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
+        assertThat( result ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
     }
 
     @Test
     public void testGetAnnotationsUsageFrequencyWithFilters() throws TimeoutException {
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> expected = Collections.emptyList();
+        when( expressionExperimentReadService.getAnnotationsUsageFrequency( any(), any(), any(), any(), any(), anyInt(), any(), anyInt(), anyBoolean(), anyBoolean(), anyLong(), any() ) ).thenReturn( expected );
         Filters f = Filters.by( "c", "valueUri", String.class, Filter.Operator.eq, "http://example.com/T00001", "characteristics.valueUri" );
-        expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentDao ).loadIdsWithCache( f, null );
-        verify( expressionExperimentDao ).getAnnotationsUsageFrequency( Collections.emptyList(), null, -1, 0, null, null, null, null, false, false );
-        verifyNoMoreInteractions( expressionExperimentDao );
-    }
-
-    @Test
-    public void testRemoveDatasetWithCoexpressionLinks() {
-        ExpressionExperiment ee = new ExpressionExperiment();
-        when( coexpressionService.hasLinks( ee ) ).thenReturn( true );
-        when( securityService.isEditableByCurrentUser( ee ) ).thenReturn( true );
-        assertThatThrownBy( () -> expressionExperimentService.remove( ee ) )
-                .isInstanceOf( IllegalStateException.class );
+        List<ExpressionExperimentService.CharacteristicWithUsageStatisticsAndOntologyTerm> result =
+                expressionExperimentService.getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
+        assertThat( result ).isSameAs( expected );
+        verify( expressionExperimentReadService ).getAnnotationsUsageFrequency( f, null, null, null, null, 0, null, -1, false, false, 5000, TimeUnit.MILLISECONDS );
     }
 }

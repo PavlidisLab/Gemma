@@ -7,9 +7,9 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.OntologyService;
-import ubic.basecode.ontology.providers.UberonOntologyService;
+import ubic.gemma.core.ontology.providers.ExperimentalFactorOntologyService;
+import ubic.gemma.core.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.providers.UberonOntologyService;
 import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.completion.CompletionUtils;
 import ubic.gemma.cli.util.AbstractCLI;
@@ -26,7 +26,7 @@ import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -86,7 +86,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
                 .desc( "Limit to selected taxa. Defaults to all taxa declared in Gemma." ).get() );
         options.addOption( Option.builder( "assays" ).longOpt( "assays" ).hasArgs()
                 .valueSeparator( ',' )
-                .converter( EnumeratedStringConverter.of( Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS ).collect( Collectors.toMap( OntologyTerm::getOntologyTermId, ot -> new DefaultMessageSourceResolvable( null, ot.getLabel() ) ) ) ) )
+                .converter( EnumeratedStringConverter.of( CellXGeneUtils.GENE_EXPRESSION_ASSAYS.stream().collect( Collectors.toMap( OntologyTerm::getOntologyTermId, ot -> new DefaultMessageSourceResolvable( null, ot.getLabel() ) ) ) ) )
                 .argName( "URI, term ID or label" )
                 .desc( "Limit results to selected assays. URIs and term IDs from EFO can be used. Defaults to a predefined set of gene expression assays." )
                 .get() );
@@ -137,7 +137,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
             }
         } else {
             // no ontology inference needed, we have a predefined set of assays that should be exhaustive
-            allowedAssays = Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS )
+            allowedAssays = CellXGeneUtils.GENE_EXPRESSION_ASSAYS.stream()
                     .flatMap( ot -> Stream.of( ot.getOntologyTermId(), ot.getLabel(), OntologyUtils.termIdToUri( ot.getOntologyTermId() ) ) )
                     .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
         }
@@ -198,7 +198,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
      */
     private Collection<String> expandKeywords( OntologyService ontologyService, Collection<String> keywords ) {
         Set<String> result = new HashSet<>();
-        Set<ubic.basecode.ontology.model.OntologyTerm> terms = new HashSet<>();
+        Set<ubic.gemma.core.ontology.model.OntologyTerm> terms = new HashSet<>();
         for ( String t : keywords ) {
             result.add( t );
             if ( OntologyUtils.isTermUri( t ) ) {
@@ -208,7 +208,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
             } else {
                 continue;
             }
-            ubic.basecode.ontology.model.OntologyTerm ot = ontologyService.getTerm( t );
+            ubic.gemma.core.ontology.model.OntologyTerm ot = ontologyService.getTerm( t );
             if ( ot != null ) {
                 terms.add( ot );
             } else {
@@ -216,7 +216,7 @@ public class CellXGeneGrabberCli extends AbstractCLI {
             }
         }
         terms.addAll( ontologyService.getChildren( terms, false, true ) );
-        for ( ubic.basecode.ontology.model.OntologyTerm t : terms ) {
+        for ( ubic.gemma.core.ontology.model.OntologyTerm t : terms ) {
             String termId = OntologyUtils.getTermId( t );
             if ( termId != null ) {
                 result.add( termId );

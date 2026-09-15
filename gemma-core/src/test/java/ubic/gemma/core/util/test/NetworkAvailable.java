@@ -7,7 +7,7 @@ import java.net.UnknownHostException;
  * Test annotation to indicate that a test requires network access or access to a specific resource.
  *
  * @author poirigui
- * @see NetworkAvailableRule
+ * @see NetworkAvailableExtension
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

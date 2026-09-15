@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -33,7 +34,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,20 @@ public interface ProcessedExpressionDataVectorService
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
+
+    /**
+     * Rebuild the processed data matrix from raw WITHOUT masking assays flagged as outliers, persisting nothing.
+     * <p>
+     * 🛑 This is not the dataset's processed data. Everything in Gemma -- differential expression, SVD,
+     * visualization, export -- reads the stored vectors, in which outliers ARE masked, and that stays true. The one
+     * consumer of this is the sample-correlation matrix, which is the evidence a curator reviews an outlier call
+     * against; masking wrote the flagged sample's correlations out of it, so the call could not be reviewed after
+     * the fact.
+     * <p>
+     * The mask is applied before quantile normalization, so the values are not recoverable from what is stored --
+     * rebuilding from raw is the only route to them.
+     */
+    ExpressionDataDoubleMatrix computeUnmaskedProcessedDataMatrix( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
 
     /**
      * Replace the processed vectors of a EE with the given vectors.
@@ -195,6 +210,16 @@ public interface ProcessedExpressionDataVectorService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences );
+
+    /**
+     * Retrieve the processed vectors for a set of design elements within a given (processed) quantitation type.
+     * Unlike {@code getProcessedDataArraysByProbe(...)} these are raw entities whose data has NOT had read-time
+     * outlier masking applied, so the caller can recover un-masked values for those probes.
+     *
+     * @see ProcessedExpressionDataVectorDao#find(Collection, QuantitationType)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
+    Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
 
     /**
      * @see ProcessedExpressionDataVectorDao#getProcessedVectors(ExpressionExperiment)

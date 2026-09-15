@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.genome.gene;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -34,7 +34,7 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -96,6 +96,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
+    @Nullable
     public DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id ) {
         Object[] row = ( Object[] ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select g, t, count(m) from GeneSet g "
@@ -237,11 +238,11 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                 .executeUpdate();
         // FIXME: use HQL delete from Characteristic
         int removedCharacteristics = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from CHARACTERISTIC where GENE_SET_FK is not null" )
+                .createNativeQuery( "delete from CHARACTERISTIC where GENE_SET_FK is not null" )
                 .executeUpdate();
         //noinspection SqlWithoutWhere
         int removedLiteratureSourcesAssociations = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from GENE_SETS2LITERATURE_SOURCES" )
+                .createNativeQuery( "delete from GENE_SETS2LITERATURE_SOURCES" )
                 .executeUpdate();
         int removedGeneSet = getSessionFactory().getCurrentSession().createQuery( "delete from GeneSet" )
                 .executeUpdate();

@@ -18,30 +18,30 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 
 import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author pavlidis
  */
-public class BlatResultServiceTest extends BaseSpringContextTest {
+public class BlatResultServiceTest extends BaseSpringContextTest5 {
 
     private BioSequence bs;
 
     @Autowired
     BlatResultService blatResultService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         for ( int i = 0; i < 20; i++ ) {
@@ -55,7 +55,7 @@ public class BlatResultServiceTest extends BaseSpringContextTest {
     public final void testFindBlatResultByBioSequence() {
 
         Collection<BlatResult> res = this.blatResultService.findByBioSequence( bs );
-        assertEquals( "Failed to find blat result for sequence: " + bs, 1, res.size() );
+        assertEquals( 1, res.size(), "Failed to find blat result for sequence: " + bs );
     }
 
 }

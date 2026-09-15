@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.preprocess.filter;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -17,7 +17,7 @@ public class MinimumCellsFilterTest {
 
     private ExpressionDataDoubleMatrix matrix;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Taxon taxon = new Taxon();
         ArrayDesign ad = new ArrayDesign();

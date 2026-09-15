@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
-import ubic.gemma.core.security.audit.IgnoreAudit;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
@@ -27,14 +26,15 @@ public interface CuratableDao<C extends Curatable> {
      * <p>
      * Only use this method directly if you do not want the event to show up in the curatable objects audit trail.
      * <p>
-     * This is marked as ignored for audit purposes since we don't want to audit the curation details update when it
-     * originated from an audit event.
+     * Historically this method was marked {@code @IgnoreAudit} to opt out of the generic
+     * auto-UPDATE aspect that fired on every {@code update*} DAO method. That aspect was
+     * retired in Audit Phase C (terminal step); the annotation is no longer needed because
+     * there is no longer a blanket DAO-method audit aspect to opt out of.
      *
      * @param curatable  curatable
      * @param auditEvent the event containing information about the update. Method only accepts audit events whose type
      *                   is one of {@link CurationDetailsEvent} extensions.
      * @see CuratableDao#updateCurationDetailsFromAuditEvent(Curatable, AuditEvent)
      */
-    @IgnoreAudit
     void updateCurationDetailsFromAuditEvent( C curatable, AuditEvent auditEvent );
 }

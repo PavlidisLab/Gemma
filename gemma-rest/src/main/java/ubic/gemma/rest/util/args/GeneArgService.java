@@ -11,14 +11,17 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nonnull;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +43,7 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
      *
      * @throws BadRequestException if more than one gene match the supplied gene argument
      */
-    @Nonnull
+    @NonNull
     @Override
     public Gene getEntity( AbstractEntityArg<?, Gene, GeneService> entityArg ) throws NotFoundException, BadRequestException {
         List<Gene> matchedGenes = getEntities( entityArg );
@@ -58,7 +61,7 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
      *
      * @throws BadRequestException if more than one gene match the supplied gene argumen in the given taxon
      */
-    @Nonnull
+    @NonNull
     public Gene getEntityWithTaxon( GeneArg<?> entityArg, Taxon taxon ) {
         List<Gene> matchedGenes = getEntitiesWithTaxon( entityArg, taxon );
         if ( matchedGenes.isEmpty() ) {
@@ -93,8 +96,31 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
         return service.loadValueObjects( null, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), offset, limit );
     }
 
+    /**
+     * Cursor-mode counterpart to {@link #getGenes(int, int)}: keyset pagination over genes,
+     * always sorted by ascending {@code id} (the primary key, indexed and unique).
+     */
+    public CursorPage<GeneValueObject> getGenesByCursor( @Nullable Cursor cursor, int limit ) {
+        return service.loadValueObjectsByCursor( null, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
+    }
+
     public Slice<GeneValueObject> getGenesInTaxon( Taxon taxon, int offset, int limit ) {
         return service.loadValueObjects( Filters.by( service.getFilter( "taxon.id", Long.class, Filter.Operator.eq, taxon.getId() ) ), service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), offset, limit );
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link #getGenesInTaxon(Taxon, int, int)}: keyset pagination
+     * over the genes belonging to a single taxon, always sorted by ascending {@code id} (the
+     * primary key, indexed and unique) — see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1g.
+     * The path-derived {@code taxon.id = ?} constraint is preserved (composed into the
+     * {@link Filters} before the DAO call) so the cursor-mode result is restricted to the same
+     * taxon that the offset-mode result would be. The cursor DAO currently restricts cursors to
+     * single-component id sorts (recce sec. 3.4 — to be lifted in phase B once the index audit
+     * is complete).
+     */
+    public CursorPage<GeneValueObject> getGenesInTaxonByCursor( Taxon taxon, @Nullable Cursor cursor, int limit ) {
+        Filters filters = Filters.by( service.getFilter( "taxon.id", Long.class, Filter.Operator.eq, taxon.getId() ) );
+        return service.loadValueObjectsByCursor( filters, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), cursor, limit );
     }
 
     /**
@@ -150,9 +176,46 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
     }
 
     /**
+     * Cursor-mode counterpart to {@link #getGeneProbes(GeneArg, int, int)}: keyset
+     * pagination over the probes (composite sequences) mapped to a single gene across
+     * all platforms &mdash; see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1m. Always
+     * sorted by ascending {@code cs.id} (the primary key, indexed and unique) because
+     * the cursor DAO restricts cursors to single-component id sorts until the index
+     * audit lands.
+     * <p>
+     * Resolves the gene from the {@link GeneArg} (matching the offset call
+     * {@code getEntity(geneArg)} in {@link #getGeneProbes(GeneArg, int, int)}) before
+     * delegating to the service. {@code useGene2Cs} is held at {@code true} to match
+     * the offset variant.
+     */
+    public CursorPage<CompositeSequenceValueObject> getGeneProbesByCursor( GeneArg<?> geneArg, @Nullable Cursor cursor, int limit ) {
+        return compositeSequenceService.loadValueObjectsForGeneByCursor( getEntity( geneArg ), cursor, limit, true );
+    }
+
+    /**
      * Obtain probes for the gene in the given taxon across all platforms.
      */
     public Slice<CompositeSequenceValueObject> getGeneProbesInTaxon( GeneArg<?> geneArg, Taxon taxon, int offset, int limit ) {
         return compositeSequenceService.loadValueObjectsForGene( getEntityWithTaxon( geneArg, taxon ), offset, limit, true );
+    }
+
+    /**
+     * Cursor-mode counterpart to {@link #getGeneProbesInTaxon(GeneArg, Taxon, int, int)}:
+     * keyset pagination over the probes (composite sequences) mapped to a single gene in
+     * the given taxon across all platforms &mdash; see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1n. Always sorted by ascending
+     * {@code cs.id} (the primary key, indexed and unique) because the cursor DAO restricts
+     * cursors to single-component id sorts until the index audit lands.
+     * <p>
+     * Resolves the gene via {@link #getEntityWithTaxon(GeneArg, Taxon)} (matching the
+     * offset call in {@link #getGeneProbesInTaxon(GeneArg, Taxon, int, int)}) so the
+     * path-derived taxon scope is enforced at gene-resolution time &mdash; identical scope
+     * to the offset variant. The resolved {@link Gene} is then passed to
+     * {@link CompositeSequenceService#loadValueObjectsForGeneByCursor(Gene, Cursor, int, boolean)}
+     * which performs the actual keyset walk over the gene&rarr;probe join (step 1m DAO).
+     * {@code useGene2Cs} is held at {@code true} to match the offset variant.
+     */
+    public CursorPage<CompositeSequenceValueObject> getGeneProbesInTaxonByCursor( GeneArg<?> geneArg, Taxon taxon, @Nullable Cursor cursor, int limit ) {
+        return compositeSequenceService.loadValueObjectsForGeneByCursor( getEntityWithTaxon( geneArg, taxon ), cursor, limit, true );
     }
 }

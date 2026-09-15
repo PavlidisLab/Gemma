@@ -1,0 +1,20 @@
+-- Normalize ANNOTATION_SET.STATUS to the lowercase wire spelling.
+--
+-- V47's backfill wrote 'PENDING'. Every other curation vocabulary crosses the wire in the
+-- snake_case lowercase form its getDbValue() produces -- accepted, needs_more_info, wont_fix --
+-- so an uppercase column would have been the one value a caller had to case-fold before it could
+-- compare a stored status with one it had just sent.
+--
+-- A separate migration rather than a correction to V47, because V47 has already been applied to
+-- production; editing an applied migration changes its checksum and Flyway then refuses to start
+-- against the database it already migrated.
+--
+-- LOWER() over the whole column rather than a literal swap, so this is idempotent and does not
+-- depend on which spelling any given deployment received.
+--
+-- 🛑 The column stays a free string. Paul, 2026-09-04: "don't lock us into any kind of enums. if
+-- we settle down on this we might formalize it." Nothing here constrains the value set, and a
+-- status outside pending | needs_changes | accepted | rejected must round-trip rather than fail.
+-- This normalizes CASE only, which is a spelling of one value, not a restriction on which values
+-- are allowed.
+UPDATE ANNOTATION_SET SET STATUS = LOWER(STATUS) WHERE STATUS IS NOT NULL;

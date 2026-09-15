@@ -18,19 +18,20 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.basecode.math.distribution.Histogram;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.security.audit.AuditedOnError;
+import ubic.gemma.core.security.audit.payload.DifferentialExpressionAnalysisPayload;
+import ubic.gemma.core.util.math.distribution.Histogram;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -40,13 +41,13 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpr
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultCache;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * Differential expression service to run the differential expression analysis (and persist the results using the
@@ -64,7 +65,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Autowired
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
     @Autowired
-    private AuditTrailService auditTrailService = null;
+    private DifferentialExpressionAnalyzerAuditService differentialExpressionAnalyzerAuditService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
     @Autowired
@@ -75,6 +76,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    private DifferentialExpressionResultCache differentialExpressionResultCache;
 
     @Override
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
@@ -93,10 +96,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             DifferentialExpressionAnalyzerServiceImpl.log
                     .info( "Deleting old differential expression analysis for experiment " + expressionExperiment
                             .getShortName() + ": Analysis ID=" + de.getId() );
+            // Capture result-set ids while the entity is still attached so we can clean their
+            // per-result-set TSV caches after the DB delete commits.
+            List<Long> resultSetIds = collectResultSetIds( de );
             differentialExpressionAnalysisService.remove( de );
 
             this.deleteStatistics( expressionExperiment, de );
             this.deleteAnalysisFiles( de );
+            deleteResultSetTsvCaches( resultSetIds );
             result++;
         }
 
@@ -113,16 +120,28 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         return deleted;
     }
 
+    /**
+     * {@code SUPPORTS} overrides the class-level {@code NEVER} so a caller that is already in a transaction --
+     * {@link ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#applyDesignChange}
+     * cascading invalidated analyses -- can route through here instead of calling
+     * {@code differentialExpressionAnalysisService.remove}, which is database-only and leaves the archive and
+     * result-set TSV caches on the deployment volume. Callers outside a transaction are unaffected.
+     */
     @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
     public void deleteAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis existingAnalysis ) {
         DifferentialExpressionAnalyzerServiceImpl.log
                 .info( "Deleting old differential expression analysis for experiment " + expressionExperiment
                         .getShortName() + " Analysis ID=" + existingAnalysis.getId() );
+        // Capture result-set ids while the entity is still attached so we can clean their
+        // per-result-set TSV caches after the DB delete commits.
+        List<Long> resultSetIds = collectResultSetIds( existingAnalysis );
         differentialExpressionAnalysisService.remove( existingAnalysis );
 
         this.deleteStatistics( expressionExperiment, existingAnalysis );
         expressionDataFileService.deleteDiffExArchiveFile( existingAnalysis );
+        deleteResultSetTsvCaches( resultSetIds );
     }
 
     @Override
@@ -203,33 +222,30 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    @AuditedOnError(FailedDifferentialExpressionAnalysisEvent.class)
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
-        try {
-            // This might be redundant in some cases.
-            boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
-            config.setUseWeights( rnaSeq );
+        // Failure audit event written by @AuditedOnError on this method (REQUIRES_NEW
+        // via the 4-arg Throwable overload of AuditTrailService.addUpdateEvent; the
+        // full stack trace lands in AUDIT_EVENT.DETAIL, and the exception's short
+        // message in AUDIT_EVENT.NOTE via the default messageSpel="#exception.message".
+        // Previously the stack trace was crammed into NOTE via the 3-arg form and
+        // truncated to MAX_NOTE_LENGTH; DETAIL is the correct column for it).
+        //
+        // This might be redundant in some cases.
+        boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
+        config.setUseWeights( rnaSeq );
 
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
-                    .analyze( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
+                .analyze( expressionExperiment, config );
 
-            if ( config.isPersist() ) {
-                diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
-            } else {
-                DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
-            }
-
-            return diffExpressionAnalyses;
-        } catch ( Exception e ) {
-            try {
-                auditTrailService.addUpdateEvent( expressionExperiment,
-                        FailedDifferentialExpressionAnalysisEvent.class,
-                        ExceptionUtils.getStackTrace( e ) );
-            } catch ( Exception e2 ) {
-                DifferentialExpressionAnalyzerServiceImpl.log.error( "Could not attach failure audit event", e2 );
-            }
-            throw e;
+        if ( config.isPersist() ) {
+            diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
+        } else {
+            DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
         }
+
+        return diffExpressionAnalyses;
     }
 
     /**
@@ -261,22 +277,40 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         DifferentialExpressionAnalyzerServiceImpl.log.info( "Saving results" );
         analysis = helperService.persistStub( analysis );
 
-        log.info( "Done persisting, creating archive file" );
+        log.info( "Done persisting, scheduling archive file write" );
 
         // we do this here because now we have IDs for everything.
+        // Best-effort async write via the service-level Async ingress: the DEA task slot is
+        // freed 5-20s sooner; the archive gets rebuilt next time someone calls
+        // writeOrLocateDiffExAnalysisArchiveFile (the only downstream ingress) if this
+        // submission fails or the executor queue is saturated. helperService.persistStub
+        // above committed in its own @Transactional(REQUIRED) — outer class is
+        // Propagation.NEVER — so the freshly-persisted analysis is visible to the async
+        // task with no extra synchronization required.
         if ( config.isMakeArchiveFile() ) {
-            try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, true ) ) {
-                log.info( "Create archive file at " + lockedPath.getPath() );
-            } catch ( IOException e ) {
+            final DifferentialExpressionAnalysis analysisRef = analysis;
+            try {
+                expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFileAsync( analysisRef, true );
+            } catch ( RejectedExecutionException e ) {
                 DifferentialExpressionAnalyzerServiceImpl.log
-                        .error( "Unable to save the data to a file: " + e.getMessage() );
+                        .warn( "expressionDataFileTaskExecutor rejected archive-write for analysis " + analysisRef.getId()
+                                + " (queue full); archive will be rebuilt on next read: " + e.getMessage() );
             }
         }
 
-        // final transaction: audit.
+        // final transaction: audit. Phase C bucket 2f -- typed payload via the
+        // AuditedAspect (the @Audited annotation on
+        // DifferentialExpressionAnalyzerAuditService#recordAnalysisPersisted
+        // writes the audit row; the co-bean hop is required because this class
+        // is Propagation.NEVER and Spring AOP can't intercept self-invocations).
+        // Defensive try/catch is retained so a transient audit failure does not
+        // poison the persisted analysis -- this is best-effort post-persist
+        // bookkeeping.
         try {
-            auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.class,
-                    analysis.toString(), analysis.getDescription() );
+            DifferentialExpressionAnalysisPayload payload = new DifferentialExpressionAnalysisPayload(
+                    analysis.getDescription() );
+            differentialExpressionAnalyzerAuditService.recordAnalysisPersisted(
+                    expressionExperiment, analysis.toString(), payload );
         } catch ( Exception e ) {
             DifferentialExpressionAnalyzerServiceImpl.log
                     .error( "Error while trying to add audit event: " + e.getMessage(), e );
@@ -378,6 +412,36 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      */
     private void deleteAnalysisFiles( DifferentialExpressionAnalysis analysis ) {
         expressionDataFileService.deleteDiffExArchiveFile( analysis );
+    }
+
+    /**
+     * Collect the result-set ids associated with an analysis so its per-result-set TSV caches can be cleaned
+     * up after the entity is removed. Thaws the analysis first because callers may pass a lazy graph and this
+     * service runs at {@code Propagation.NEVER}, so the lazy {@code resultSets} collection cannot be
+     * initialized on demand from here.
+     */
+    private List<Long> collectResultSetIds( DifferentialExpressionAnalysis analysis ) {
+        DifferentialExpressionAnalysis thawed = differentialExpressionAnalysisService.thaw( analysis );
+        List<Long> ids = new ArrayList<>( thawed.getResultSets().size() );
+        for ( ExpressionAnalysisResultSet rs : thawed.getResultSets() ) {
+            if ( rs.getId() != null ) {
+                ids.add( rs.getId() );
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * Clear the per-result-set TSV caches under {@code <dataDir>/resultSets/} AND the in-memory
+     * counts snapshot used by {@code /datasets/{id}/analyses/differential} enrichment.
+     * Best-effort; cache misses are silent and any IO failure is logged downstream by
+     * {@code ExpressionDataFileService}.
+     */
+    private void deleteResultSetTsvCaches( List<Long> resultSetIds ) {
+        for ( Long rsId : resultSetIds ) {
+            expressionDataFileService.deleteDifferentialExpressionResultSetTsvFile( rsId );
+            differentialExpressionResultCache.clearResultSetCountsCache( rsId );
+        }
     }
 
     private void deleteOldAnalyses( ExpressionExperiment expressionExperiment,
@@ -527,7 +591,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
 
-        BioAssaySet experimentAnalyzed = copyMe.getExperimentAnalyzed();
+        // unproxy before the tests below: a subset reached through getExperimentAnalyzed() arrives as a
+        // BioAssaySet proxy, matches neither ee nor `instanceof ExpressionExperimentSubSet`, and lands in
+        // the else -- so redoing a subset analysis reports "Cannot redo an analysis for one experiment
+        // if the analysis is for another" about its own subset.
+        BioAssaySet experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( copyMe.getExperimentAnalyzed() );
         assert experimentAnalyzed != null;
         if ( experimentAnalyzed.equals( ee ) ) {
             results = analysisSelectionAndExecutionService.analyze( ee, config );

@@ -1,15 +1,14 @@
 package ubic.gemma.core.loader.expression.sra;
 
 import org.assertj.core.data.Offset;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.sra.model.*;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -18,6 +17,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
 public class SraFetcherTest {
 
@@ -36,9 +36,6 @@ public class SraFetcherTest {
         EXPECTED_RUNS.put( "SRR15720455", new long[] { 64162444L, 1796548432L, 541304976L } );
         EXPECTED_RUNS.put( "SRR15720456", new long[] { 64162444L, 5838782404L, 1816352222L } );
     }
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private final SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), null );
 
@@ -150,7 +147,7 @@ public class SraFetcherTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE230440() throws IOException {
         SraExperimentPackageSet result = sraFetcher.fetchByGeoAccession( "GSE231774" );
         assertThat( result.getExperimentPackages() )
@@ -165,7 +162,7 @@ public class SraFetcherTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE165635() throws IOException {
         SraExperimentPackageSet result = sraFetcher.fetchByGeoAccession( "GSE165635" );
         assertThat( result.getExperimentPackages() ).hasSize( 3 );

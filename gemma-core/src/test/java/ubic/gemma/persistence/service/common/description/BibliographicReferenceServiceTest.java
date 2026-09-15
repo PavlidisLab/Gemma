@@ -18,10 +18,10 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -29,7 +29,7 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * This class tests the bibliographic reference data access object. It is also used to test some of the Hibernate
@@ -38,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
  * @author pavlidis
  *
  */
-public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
+public class BibliographicReferenceServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
@@ -48,7 +48,7 @@ public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
     /*
      * Call to create should persist the BibliographicReference and DatabaseEntry (cascade=all).
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         testBibRef = BibliographicReference.Factory.newInstance();
@@ -74,6 +74,24 @@ public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
     public final void testFindByExternalIdentString() {
         testBibRef = bibliographicReferenceService.findByExternalId( de );
         assertNotNull( testBibRef );
+    }
+
+    /**
+     * Prod has duplicate BibliographicReference rows for the same PubMed accession; the external-id
+     * lookups must return one (the lowest-id) rather than throwing {@code NonUniqueResultException} (which
+     * surfaced as a 500 on {@code PUT /datasets/{id}/publications}), and {@code find} must too so
+     * {@code findOrCreate} doesn't add yet another duplicate.
+     */
+    @Test
+    public final void testFindByExternalIdToleratesDuplicates() {
+        String accession = de.getAccession();
+        BibliographicReference dupRef = BibliographicReference.Factory.newInstance();
+        dupRef.setPubAccession( DatabaseEntry.Factory.newInstance( accession, de.getExternalDatabase() ) );
+        bibliographicReferenceService.create( dupRef );
+
+        assertNotNull( bibliographicReferenceService.findByExternalId( accession, ExternalDatabases.PUBMED ) );
+        assertNotNull( bibliographicReferenceService.findByExternalId( de ) );
+        assertNotNull( bibliographicReferenceService.find( testBibRef ) );
     }
 
     @Test

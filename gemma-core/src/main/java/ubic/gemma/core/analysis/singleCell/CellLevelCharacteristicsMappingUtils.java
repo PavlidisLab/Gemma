@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
@@ -34,7 +34,7 @@ import static org.apache.commons.lang3.StringUtils.rightPad;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class CellLevelCharacteristicsMappingUtils {
 
     private static final CSVFormat CTA_MAPPING_FORMAT = CSVFormat.TDF.builder().setHeader( "cell_type_id", "factor_value_id" ).setCommentMarker( '#' ).build();

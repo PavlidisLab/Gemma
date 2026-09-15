@@ -1,9 +1,14 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * A data vector storing bulk expression data.
@@ -12,12 +17,28 @@ import javax.annotation.Nullable;
  */
 @Getter
 @Setter
+@MappedSuperclass
 public abstract class BulkExpressionDataVector extends DesignElementDataVector {
 
     /**
      * A dimension of {@link ubic.gemma.model.expression.bioAssay.BioAssay} the elements of this vector apply to.
      */
+    // Flipped to LAZY in the hbm (lazy="proxy") to dodge an N+1 on bulk vector loads. Hot loaders
+    // (RawExpressionDataVectorDaoImpl, ProcessedExpressionDataVectorDaoImpl) JOIN FETCH the BAD
+    // where the caller needs it.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BIO_ASSAY_DIMENSION_FK", nullable = false, columnDefinition = "BIGINT")
     private BioAssayDimension bioAssayDimension;
+
+    // Bulk hbm flipped QT to LAZY ("lazy=proxy") to dodge the same N+1 — hot DAOs JOIN FETCH it.
+    // nullable = false since 2026-08-30: production has zero raw, processed or single-cell vectors
+    // with a null quantitation type, and SingleCellExpressionDataVector already declared it. The
+    // mapping permitting null is what let ProcessedExpressionDataVectorDaoTest persist 100 vectors
+    // without one, which an inner join fetch on the type then silently filtered out -- fixed at the
+    // time with a left join fetch, reverted now that the schema agrees.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "QUANTITATION_TYPE_FK", nullable = false, columnDefinition = "BIGINT")
+    private QuantitationType quantitationType;
 
     /**
      * Obtain the number of cells that were used to compute each value in this data vector, or {@code null} if now

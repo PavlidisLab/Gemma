@@ -18,14 +18,14 @@
  */
 package ubic.gemma.core.security.authorization;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.SecurityService;
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
-import gemma.gsec.acl.domain.AclPrincipalSid;
-import gemma.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.SecurityService;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import org.springframework.security.acls.domain.PrincipalSid;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.domain.BasePermission;
@@ -36,23 +36,26 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests the SecurityService: making objects public or private and testing the permissions.
  *
  * @author keshav
  */
-public class SecurityServiceTest extends BaseSpringContextTest {
+public class SecurityServiceTest extends BaseSpringContextTest5 {
 
     private static final String compositeSequenceName1 = "Design Element Bar1";
     private static final String compositeSequenceName2 = "Design Element Bar2";
@@ -69,7 +72,10 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     @Autowired
     private AclTestUtils aclTestUtils;
 
-    @Before
+    @Autowired
+    private AuditEventService auditEventService;
+
+    @BeforeEach
     public void setUp() throws Exception {
         this.arrayDesignName = "AD_" + RandomStringUtils.insecure().nextAlphabetic( 5 );
 
@@ -215,23 +221,23 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         for ( int i = 0; i < 5; i++ ) {
             this.securityService.makePrivate( ee );
 
-            assertTrue( "ExpressionExperiment not private, acl was: " + aclTestUtils.getAcl( ee ),
-                    this.securityService.isPrivate( ee ) );
+            assertTrue( this.securityService.isPrivate( ee ),
+                    "ExpressionExperiment not private, acl was: " + aclTestUtils.getAcl( ee ) );
 
             for ( BioAssay ba : ee.getBioAssays() ) {
-                assertTrue(
+                assertTrue( this.securityService.isPrivate( ba ),
                         "BioAssay not private, acl of ee was: " + aclTestUtils.getAcl( ee ) + "\nacl of bioassay was: "
-                                + aclTestUtils.getAcl( ba ), this.securityService.isPrivate( ba ) );
+                                + aclTestUtils.getAcl( ba ) );
             }
 
             this.securityService.makePublic( ee );
 
-            assertTrue( "ExpressionExperiment still private, acl was: " + aclTestUtils.getAcl( ee ),
-                    this.securityService.isPublic( ee ) );
+            assertTrue( this.securityService.isPublic( ee ),
+                    "ExpressionExperiment still private, acl was: " + aclTestUtils.getAcl( ee ) );
 
             for ( BioAssay ba : ee.getBioAssays() ) {
-                assertTrue( "BioAssay not public, acl of ee was: " + aclTestUtils.getAcl( ee ),
-                        this.securityService.isPublic( ba ) );
+                assertTrue( this.securityService.isPublic( ba ),
+                        "BioAssay not public, acl of ee was: " + aclTestUtils.getAcl( ee ) );
             }
         }
     }
@@ -288,7 +294,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         List<GrantedAuthority> groupAuthorities = this.userManager.findGroupAuthorities( groupName );
         GrantedAuthority ga = groupAuthorities.get( 0 );
         aclAfterReadableAdded.insertAce( aclAfterReadableAdded.getEntries().size(), BasePermission.READ,
-                new AclGrantedAuthoritySid( AuthorityConstants.ROLE_PREFIX + ga ), true );
+                new GrantedAuthoritySid( AuthorityConstants.ROLE_PREFIX + ga ), true );
         this.aclTestUtils.update( aclAfterReadableAdded );
         MutableAcl aclAfterReadableAddedDuplicate = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces + 1, aclAfterReadableAddedDuplicate.getEntries().size() );
@@ -300,18 +306,31 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         List<AccessControlEntry> entriesAfterDelete = aclAfterReadableAddedDuplicateRemoval.getEntries();
         assertEquals( numberOfAces, entriesAfterDelete.size() );
 
-        // also check that the right ACE check the principals
-        Collection<String> principals = new ArrayList<>();
-        principals.add( "AclGrantedAuthoritySid[GROUP_ADMIN]" );
-        principals.add( "AclGrantedAuthoritySid[GROUP_AGENT]" );
-        principals.add( "AclPrincipalSid[salmonid]" );
-        principals.add( "AclPrincipalSid[salmonid]" );
+        // also check that the right ACE check the principals. Phase 2 migration: ACE sids come back
+        // as Spring Security's PrincipalSid / GrantedAuthoritySid (loaded by BasicLookupStrategy),
+        // not gsec's AclPrincipalSid / AclGrantedAuthoritySid. Compare on the name carried by the
+        // sid via gsec.acl.domain.Sids rather than on toString() of the implementation class.
+        java.util.List<String> expectedNames = new ArrayList<>();
+        expectedNames.add( "G:GROUP_ADMIN" );
+        // Curators administer data, so setupBaseAces grants them an ADMINISTRATION ace on every
+        // object that is not a User or a UserGroup -- an ExpressionExperiment is one.
+        expectedNames.add( "G:GROUP_CURATOR" );
+        expectedNames.add( "G:GROUP_AGENT" );
+        expectedNames.add( "P:salmonid" );
+        expectedNames.add( "P:salmonid" );
 
         for ( AccessControlEntry accessControl : entriesAfterDelete ) {
             Sid sid = accessControl.getSid();
-            assertTrue( principals.contains( sid.toString() ) );
-            // remove it once in case found in case of duplicates
-            principals.remove( sid.toString() );
+            String key;
+            String p = ubic.gemma.core.security.acl.domain.Sids.principalName( sid );
+            if ( p != null ) {
+                key = "P:" + p;
+            } else {
+                key = "G:" + ubic.gemma.core.security.acl.domain.Sids.grantedAuthority( sid );
+            }
+            assertTrue( expectedNames.contains( key ),
+                    "Unexpected sid " + sid + " (key " + key + "), remaining expected: " + expectedNames );
+            expectedNames.remove( key );
         }
         // clean up the groups
         this.userManager.deleteGroup( groupName );
@@ -329,8 +348,9 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         this.securityService.setOwner( ee, username );
 
         Sid owner = this.securityService.getOwner( ee );
-        assertTrue( owner instanceof AclPrincipalSid );
-        assertEquals( username, ( ( AclPrincipalSid ) owner ).getPrincipal() );
+        String ownerName = ubic.gemma.core.security.acl.domain.Sids.principalName( owner );
+        assertNotNull( ownerName, "Owner sid was " + owner + " (not a principal sid)" );
+        assertEquals( username, ownerName );
 
     }
 
@@ -386,5 +406,50 @@ public class SecurityServiceTest extends BaseSpringContextTest {
             this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
                     RandomStringUtils.insecure().nextAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
+    }
+
+    /**
+     * The date a dataset FIRST became public has to come from somewhere, and until now nothing recorded it:
+     * only two REST endpoints emitted {@link MakePublicEvent}, so anything made public by the CLI or a bulk
+     * job left no trace. Production carried 0 occurrences across a 200-dataset sample.
+     * <p>
+     * Emitting from {@code SecurityServiceImpl.makePublic} covers every path. This pins the two properties
+     * that make "first" answerable: the event is written on the transition, and a repeat call — which
+     * returns early because the object is already public — writes nothing. Without the second property the
+     * earliest event would still be right, but the trail would gain a row per redundant call.
+     */
+    @Test
+    public void makePublicRecordsTheTransitionOnceAndNotAgain() {
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
+        assertFalse( securityService.isPublic( ee ), "fixture should start private" );
+        assertEquals( 0, countMakePublicEvents( ee ), "nothing should be recorded before the flip" );
+
+        securityService.makePublic( ee );
+
+        assertTrue( securityService.isPublic( ee ) );
+        assertEquals( 1, countMakePublicEvents( ee ), "the transition should be recorded exactly once" );
+        AuditEvent first = firstMakePublicEvent( ee );
+        assertNotNull( first );
+        assertNotNull( first.getDate(), "the date is the whole point of the event" );
+
+        // Already public: makePublic returns early, so nothing further is recorded and the earliest event
+        // -- the answer to "when did this first become public" -- does not move.
+        securityService.makePublic( ee );
+
+        assertEquals( 1, countMakePublicEvents( ee ), "a redundant call must not add a row" );
+        assertEquals( first.getDate(), firstMakePublicEvent( ee ).getDate() );
+    }
+
+    private long countMakePublicEvents( ExpressionExperiment ee ) {
+        return auditEventService.getEvents( ee ).stream()
+                .filter( e -> e.getEventType() instanceof MakePublicEvent )
+                .count();
+    }
+
+    private AuditEvent firstMakePublicEvent( ExpressionExperiment ee ) {
+        return auditEventService.getEvents( ee ).stream()
+                .filter( e -> e.getEventType() instanceof MakePublicEvent )
+                .min( Comparator.comparing( AuditEvent::getDate ) )
+                .orElse( null );
     }
 }

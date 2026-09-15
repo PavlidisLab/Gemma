@@ -19,6 +19,8 @@
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
+import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -31,12 +33,14 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -49,17 +53,20 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     /**
      * Load *generic* gene-based platforms.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ArrayDesign> loadAllGenericGenePlatforms();
 
     @Nullable
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     ArrayDesign loadAndThaw( Long id );
 
     /**
      * Load a platform by ID and thaw it with {@link #thawLite(ArrayDesign)}
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     <T extends Exception> ArrayDesign loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T;
 
     @Nullable
@@ -87,20 +94,24 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void deleteGeneProductAssociations( ArrayDesign arrayDesign );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ArrayDesign> findByAlternateName( String queryString );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ArrayDesign findOneByAlternateName( String name );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ArrayDesign> findByManufacturer( String searchString );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ArrayDesign> findByName( String name );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ArrayDesign> findByCompositeSequenceName( String name );
 
     @Nullable
@@ -117,7 +128,8 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @param taxon taxon
      * @return ADs
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ArrayDesign> findByTaxon( Taxon taxon );
 
     /**
@@ -130,7 +142,8 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<BioAssay> getAllAssociatedBioAssays( ArrayDesign arrayDesign );
 
     /**
@@ -167,7 +180,8 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long countCompositeSequences( ArrayDesign arrayDesign );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -210,7 +224,8 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @param id id of the platform
      * @return collection of EE ids
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> getSwitchedExperiments( ArrayDesign id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -246,6 +261,18 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @return AD VOs
      */
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
+
+    /**
+     * Load the platforms a dataset was ORIGINALLY submitted on, before any platform switch.
+     * <p>
+     * A dataset can have more than one — its assays need not have come from a single submitted platform. A
+     * platform recorded as an original that is ALSO the one in use is a no-op switch and is left out, so an
+     * unswitched dataset answers with an empty list rather than echoing its current platform. That is the same
+     * rule the details VO applies, kept identical so the two cannot drift into disagreeing.
+     *
+     * @see #loadValueObjectsForEE(Long)
+     */
+    List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( Long eeId );
 
     /**
      * Function to return a count of all compositeSequences with bioSequence associations
@@ -311,6 +338,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
 
+
     /**
      * Remove all associations that this array design has with BioSequences. This is needed for cases where the original
      * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual
@@ -338,7 +366,8 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @see ArrayDesignDao#thaw(ArrayDesign)
      */
     @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas );
 
     /**
@@ -351,7 +380,8 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     ArrayDesign thawCompositeSequences( ArrayDesign arrayDesign );
 
     @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ArrayDesign> thawCompositeSequences( Collection<ArrayDesign> ads );
 
     /**
@@ -365,7 +395,8 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     ArrayDesign thawLite( ArrayDesign arrayDesign );
 
     @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     /**
@@ -392,6 +423,16 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      */
     @Secured("GROUP_ADMIN")
     Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * Cursor-mode counterpart to {@link #loadBlacklistedValueObjects(Filters, Sort, int, int)} —
+     * see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1h. No need for
+     * {@code ACL_VALUE_OBJECT_COLLECTION_READ} because the filtering is done in the query.
+     *
+     * @see ArrayDesignDao#loadBlacklistedValueObjectsByCursor(Filters, Sort, Cursor, int)
+     */
+    @Secured("GROUP_ADMIN")
+    CursorPage<ArrayDesignValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit );
 
     @Secured("IS_AUTHENTICATED_ANONYMOUSLY")
     Collection<ArrayDesignValueObject> loadValueObjectsWithCache( @Nullable Filters filters, @Nullable Sort sort );

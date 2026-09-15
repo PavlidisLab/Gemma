@@ -1,14 +1,14 @@
 package ubic.gemma.core.security.authentication;
 
-import gemma.gsec.authentication.GroupManager;
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserDetailsManager;
+import ubic.gemma.core.security.authentication.GroupManager;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.authentication.UserDetailsManager;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.model.common.auditAndSecurity.User;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 
 /**
@@ -73,6 +73,17 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     @Secured("GROUP_ADMIN")
     void deleteUser( String username );
 
+    /**
+     * Mark the named user as deleted without removing the row. Sets
+     * {@code deletedAt} = now, {@code deletedBy} = the supplied admin username,
+     * and {@code enabled} = false. ACL sids, audit-event authorship FKs, and
+     * other references to the row are preserved. Hard delete remains available
+     * via {@link #deleteUser(String)} for the rare cases where the row truly
+     * has no dependents.
+     */
+    @Secured("GROUP_ADMIN")
+    void softDeleteUser( String username, String deletedByUsername );
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     String changePasswordForUser( String email, String username, String newPassword );
@@ -80,6 +91,16 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     @Override
     @Secured("GROUP_USER")
     void changePassword( String oldPassword, String newPassword );
+
+    /**
+     * Administrative password reset: set a new password for the named user without
+     * requiring their current password. Distinct from {@link #changePasswordForUser(String, String, String)}
+     * (the email-confirmation reset flow, which disables the account and issues a
+     * signup token) — this leaves the account enabled and immediately usable. The
+     * new password is encoded before storage.
+     */
+    @Secured("GROUP_ADMIN")
+    void adminChangePassword( String username, String newPassword );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })

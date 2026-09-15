@@ -69,6 +69,15 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
+     * Set the local directory where fetched files will be written. Callers (typically Spring-managed
+     * CLIs or services) source this from {@code @Value("${gemma.download.path}")} or an equivalent
+     * injection so the fetcher itself doesn't depend on a static configuration class.
+     */
+    public void setLocalBasePath( String localBasePath ) {
+        this.localBasePath = localBasePath;
+    }
+
+    /**
      * @return the force
      */
     public boolean isForce() {

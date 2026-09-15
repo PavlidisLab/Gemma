@@ -18,14 +18,25 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
+@Entity
+@Table(name = "MULTIFUNCTIONALITY")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Multifunctionality extends AbstractIdentifiable {
 
+    @Column(name = "SCORE", nullable = false, columnDefinition = "DOUBLE")
     private Double score;
+    @Column(name = "RANK", nullable = false, columnDefinition = "DOUBLE")
     private Double rank;
+    @Column(name = "NUM_GO_TERMS", nullable = false, columnDefinition = "INTEGER")
     private Integer numGoTerms;
 
     /**

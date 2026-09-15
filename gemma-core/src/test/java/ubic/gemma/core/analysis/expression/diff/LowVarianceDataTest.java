@@ -14,23 +14,22 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -44,7 +43,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 /**
@@ -52,10 +51,8 @@ import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.deter
  *
  * @author paul
  */
-public class LowVarianceDataTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class LowVarianceDataTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private DiffExAnalyzer analyzer;
@@ -119,7 +116,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
         assertTrue( found1 );
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
@@ -137,7 +134,11 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         experimentalFactorService.remove( toremove );
-        ee.getExperimentalDesign().getExperimentalFactors().clear();
+
+        // HB6: a stale in-memory EE still references the deleted EFs; reload before update so
+        // the merge doesn't try to refetch the now-gone ExperimentalFactor rows.
+        ee = expressionExperimentService.loadAndThaw( ee.getId() );
+        assertNotNull( ee );
 
         expressionExperimentService.update( ee );
 
@@ -151,7 +152,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void test() {
         ee = expressionExperimentService.thaw( ee );

@@ -1,7 +1,7 @@
 package ubic.gemma.apps;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
-import org.junit.Test;
+import ubic.gemma.core.security.authentication.ManualAuthenticationService;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +12,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.cli.util.TestCLIContext;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.GemmaRestApiClient;
@@ -21,13 +21,14 @@ import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class FindObsoleteTermsCliTest extends BaseCliTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class FindObsoleteTermsCliTest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
@@ -54,7 +55,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest {
         }
 
         @Bean
-        public ubic.basecode.ontology.providers.OntologyService ontology1() {
+        public ubic.gemma.core.ontology.providers.OntologyService ontology1() {
             return mock();
         }
 
@@ -76,7 +77,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest {
     private OntologyService ontologyService;
 
     @Autowired
-    private ubic.basecode.ontology.providers.OntologyService ontology1;
+    private ubic.gemma.core.ontology.providers.OntologyService ontology1;
 
     @Test
     @WithMockUser
@@ -85,7 +86,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest {
         findObsoleteTermsCli.executeCommand( cliContext );
         assertEquals( 0, cliContext.getExitStatus() );
         verify( ontology1 ).setSearchEnabled( false );
-        verify( ontology1 ).setInferenceMode( ubic.basecode.ontology.providers.OntologyService.InferenceMode.NONE );
+        verify( ontology1 ).setInferenceMode( ubic.gemma.core.ontology.providers.OntologyService.InferenceMode.NONE );
         verify( ontology1 ).initialize( true, false );
         verify( ontologyService ).findObsoleteTermUsage( 4, TimeUnit.HOURS );
     }

@@ -32,14 +32,14 @@ import org.jfree.chart.*;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.MatrixUtil;
-import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
-import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.basecode.math.distribution.Histogram;
-import ubic.basecode.math.linearmodels.DesignMatrix;
-import ubic.basecode.math.linearmodels.LeastSquaresFit;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.MatrixUtil;
+import ubic.gemma.core.util.matrix.ObjectMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrixImpl;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.distribution.Histogram;
+import ubic.gemma.core.util.math.linearmodels.DesignMatrix;
+import ubic.gemma.core.util.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.util.concurrent.Executors;
 
 import java.io.IOException;
@@ -300,8 +300,8 @@ class ComBat<R, C> {
 
         int batchIndex = 0;
         DoubleMatrix2D bba = new DenseDoubleMatrix2D( 1, numBatches );
-        for ( String batchId : batches.keySet() ) {
-            bba.set( 0, batchIndex++, ( double ) batches.get( batchId ).size() / numSamples );
+        for ( Collection<C> batchMembers : batches.values() ) {
+            bba.set( 0, batchIndex++, ( double ) batchMembers.size() / numSamples );
         }
 
         /*
@@ -662,8 +662,8 @@ class ComBat<R, C> {
         /*
          * Make sure all batches have at least 2 samples, or else this won't work.
          */
-        for ( String batchId : batches.keySet() ) {
-            if ( batches.get( batchId ).size() < 2 ) {
+        for ( Collection<C> batchMembers : batches.values() ) {
+            if ( batchMembers.size() < 2 ) {
                 throw new IllegalArgumentException( "Batch correction not possible with less than 2 samples in any batch. Consider combining batches." );
             }
         }

@@ -23,5 +23,12 @@ public final class ExternalDatabases {
             GENBANK = "GenBank",
             UCSC_CELL_BROWSER = "UCSC Cell Browser",
             SYNAPSE = "Synapse",
-            ZENODO = "Zenodo";
+            ZENODO = "Zenodo",
+            // Cell-line name resolution (backup for the Cell Line Ontology) and mouse strain/genotype resolution.
+            CELLOSAURUS = "Cellosaurus",
+            MGI = "MGI",
+            // Generic DOI namespace — the external database under which DOI-identified references are
+            // stored (e.g. CrossRef-resolved preprints/articles not indexed by PubMed). Using one
+            // deterministic name keeps DOI lookups idempotent regardless of the underlying source.
+            DOI = "DOI";
 }

@@ -1,13 +1,13 @@
 package ubic.gemma.core.util.concurrent;
 
 import org.apache.logging.log4j.ThreadContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ThreadUtilsTest {
 

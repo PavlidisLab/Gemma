@@ -1,7 +1,8 @@
 package ubic.gemma.core.security.authentication;
 
-import gemma.gsec.authentication.UserExistsException;
+import ubic.gemma.core.security.authentication.UserExistsException;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 
@@ -11,7 +12,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
  * Avoid using this service directly, use {@link UserManager} instead.
  * @author poirigui
  */
-public interface UserService extends gemma.gsec.authentication.UserService {
+public interface UserService extends ubic.gemma.core.security.authentication.BaseUserService {
 
     @Override
     User load( Long id );
@@ -20,18 +21,20 @@ public interface UserService extends gemma.gsec.authentication.UserService {
     User findByUserName( String s );
 
     @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     User findByEmail( String s );
 
     @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
     UserGroup findGroupByName( String s );
 
     @Override
     @Secured({ "GROUP_ADMIN" })
-    User create( gemma.gsec.model.User user ) throws UserExistsException;
+    User create( ubic.gemma.core.security.model.User user ) throws UserExistsException;
 
     @Override
     @Secured({ "GROUP_USER" })
-    UserGroup create( gemma.gsec.model.UserGroup userGroup );
+    UserGroup create( ubic.gemma.core.security.model.UserGroup userGroup );
 }

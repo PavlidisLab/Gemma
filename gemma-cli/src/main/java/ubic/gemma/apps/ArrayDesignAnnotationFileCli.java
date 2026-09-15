@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -65,7 +65,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     @Autowired
     private GeneOntologyService goService;
     @Autowired
-    private TaxonService taxonService;
+    private TaxonReadService taxonReadService;
     @Autowired
     private GeneService geneService;
 
@@ -242,7 +242,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         Taxon taxon;
         if ( this.taxonName != null ) {
-            taxon = taxonService.findByCommonName( taxonName );
+            taxon = taxonReadService.findByCommonName( taxonName );
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
             }

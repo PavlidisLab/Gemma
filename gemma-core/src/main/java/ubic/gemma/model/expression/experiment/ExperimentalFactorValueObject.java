@@ -24,10 +24,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -51,6 +52,29 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
     private String category;
     private String categoryUri;
+
+    /**
+     * Curator/agent hint about baseline relevance. Mirrors the curation-ui {@code Factor.baseline_relevance}
+     * field. {@code "required"}, {@code "not_applicable"} and {@code "uncertain"} are the values in use;
+     * {@code null} when the curation pipeline has not set it.
+     * <p>
+     * The list is documented and not enforced. It used to be a closed {@code allowableValues} set, which a
+     * generated client turns into an enum that fails to deserialize the first response carrying a word the
+     * vocabulary has since gained — and this one has moved once already. The write side
+     * ({@code DatasetsWebService.FactorCommit.baselineRelevance}) accepts an unfamiliar value rather than
+     * 400ing it, so advertising a closed set here would promise a constraint the server does not keep.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Curator/agent baseline-relevance hint: \"required\" | \"not_applicable\" | \"uncertain\" are the values in use, not the values permitted; null when unset.")
+    private String baselineRelevance;
+
+    /**
+     * Free-text rationale paired with {@link #baselineRelevance}. {@code null} when unset.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String baselineRelevanceReason;
 
     @Nullable
     @Deprecated
@@ -89,6 +113,9 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
             this.category = factor.getCategory().getCategory();
             this.categoryUri = factor.getCategory().getCategoryUri();
         }
+
+        this.baselineRelevance = factor.getBaselineRelevance();
+        this.baselineRelevanceReason = factor.getBaselineRelevanceReason();
 
         if ( factor.getType() != null ) {
             this.type = factor.getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
@@ -141,7 +168,8 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     /**
      * Number of factor values.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "derivable from values, which already serializes")
     public int getNumValues() {
         return this.values == null ? 0 : this.values.size();
     }

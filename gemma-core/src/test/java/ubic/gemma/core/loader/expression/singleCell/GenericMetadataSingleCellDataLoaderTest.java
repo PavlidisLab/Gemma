@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.loader.expression.singleCell.metadata.GenericMetadataSingleCellDataLoader;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.model.common.description.Characteristic;

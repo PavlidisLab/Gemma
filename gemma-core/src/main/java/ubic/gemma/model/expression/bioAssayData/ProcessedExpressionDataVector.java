@@ -18,12 +18,20 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 
 /**
@@ -33,6 +41,8 @@ import java.util.Objects;
  */
 @Getter
 @Setter
+@Entity
+@Table(name = "PROCESSED_EXPRESSION_DATA_VECTOR")
 public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
 
     /**
@@ -45,6 +55,7 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
      * this vector.
      */
     @Nullable
+    @Column(name = "RANK_BY_MEAN", columnDefinition = "DOUBLE")
     private Double rankByMean;
 
     /**
@@ -58,6 +69,7 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
      * this vector.
      */
     @Nullable
+    @Column(name = "RANK_BY_MAX", columnDefinition = "DOUBLE")
     private Double rankByMax;
 
     /**
@@ -66,7 +78,12 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
      * @see ExpressionExperiment#getNumberOfCells()
      * @see BioAssay#getNumberOfCells()
      */
+    // hbm: lazy="false" fetch="join" — restore outer-join semantics so bulk-vector loads don't
+    // issue one follow-up SELECT against NUMBER_OF_CELLS per vector (the default Hibernate fetch
+    // for a mappedBy 1:1 is SECONDARY SELECT, not JOIN).
     @Nullable
+    @OneToOne(fetch = FetchType.EAGER, mappedBy = "vector", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.JOIN)
     private ProcessedExpressionDataVectorNumberOfCells numberOfCellsObject;
 
     @Nullable

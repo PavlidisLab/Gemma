@@ -1,7 +1,7 @@
 /**
  * This package contains data structures for representing matrices of gene expression.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.datastructure.matrix;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

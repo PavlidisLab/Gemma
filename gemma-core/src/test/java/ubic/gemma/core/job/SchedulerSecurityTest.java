@@ -19,28 +19,31 @@
 package ubic.gemma.core.job;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.analysis.report.WhatsNewService;
+import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.scheduler.SecureMethodInvokingJobDetailFactoryBean;
 import ubic.gemma.core.scheduler.SecureQuartzJobBean;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import java.lang.reflect.InvocationTargetException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
@@ -48,20 +51,41 @@ import static org.mockito.Mockito.*;
  *
  * @author keshav
  */
-public class SchedulerSecurityTest extends BaseIntegrationTest {
+public class SchedulerSecurityTest extends BaseIntegrationTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private WhatsNewService whatsNewService;
+    private ArrayDesignReportService arrayDesignReportService;
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
 
+    /*
+     * Lazy proxy so the underlying factory bean's createInstance() (which authenticates
+     * against UserManagerImpl.updatePassword) is NOT triggered during test-instance
+     * autowiring (before @BeforeEach setUpAuthentication runs admin). The proxy resolves
+     * on first method invocation, by which point the admin authentication is in place.
+     */
     @Autowired
     @Qualifier("groupAgentSecurityContext")
+    @Lazy
     private SecurityContext securityContext;
+
+    /*
+     * Force the lazy SecurityContext proxy to resolve WHILE admin auth is in
+     * SecurityContextHolder. Otherwise the first proxy dereference happens inside
+     * DelegatingSecurityContextCallable, by which point the holder's context IS the
+     * lazy proxy itself — a method-security check inside the FactoryBean's
+     * createInstance() (UserManagerImpl.updatePassword → @Secured update → method
+     * interceptor reads current authentication) re-enters the same proxy that's still
+     * being created, throwing BeanCurrentlyInCreationException.
+     */
+    @BeforeEach
+    public void resolveSecurityContextProxy() {
+        securityContext.getAuthentication();
+    }
 
     /*
      * Tests whether we can run a secured method that has been granted to GROUP_AGENT
@@ -73,8 +97,8 @@ public class SchedulerSecurityTest extends BaseIntegrationTest {
         String jobName = "job_" + RandomStringUtils.insecure().nextAlphabetic( 10 );
 
         SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean( this.securityContext );
-        jobDetail.setTargetMethod( "generateWeeklyReport" );
-        jobDetail.setTargetObject( whatsNewService ); // access should be ok for GROUP_AGENT.
+        jobDetail.setTargetMethod( "generateArrayDesignReport" );
+        jobDetail.setTargetObject( arrayDesignReportService ); // access should be ok for GROUP_AGENT.
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.
@@ -108,7 +132,7 @@ public class SchedulerSecurityTest extends BaseIntegrationTest {
      * Confirm that we can't run methods that GROUP_AGENT doesn't have access to, namely deleting experiments.
      *
      */
-    @Test(expected = InvocationTargetException.class)
+    @Test
     public void runUnauthorizedMethodOnSchedule() throws Exception {
 
         String jobName = "testJobDetail";
@@ -123,7 +147,7 @@ public class SchedulerSecurityTest extends BaseIntegrationTest {
         jobDetail.setConcurrent( false );
         jobDetail.setBeanName( jobName );
         jobDetail.afterPropertiesSet(); // needed when we do this programatically.
-        jobDetail.invoke();
+        assertThrows( InvocationTargetException.class, jobDetail::invoke );
 
     }
 

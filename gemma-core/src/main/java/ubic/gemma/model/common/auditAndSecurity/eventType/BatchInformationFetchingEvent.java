@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicates that batch information was successfully obtained.
  * <p>
@@ -27,6 +31,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Use {@link BatchInformationMissingEvent} for missing batch information.
  * @author poirigui
  */
+@Entity
+@DiscriminatorValue("BatchInformationFetchingEvent")
 public class BatchInformationFetchingEvent extends BatchInformationEvent {
 
 }

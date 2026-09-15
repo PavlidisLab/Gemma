@@ -2,7 +2,7 @@ package ubic.gemma.core.search;
 
 import lombok.Value;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.function.Consumer;
 
 @Value

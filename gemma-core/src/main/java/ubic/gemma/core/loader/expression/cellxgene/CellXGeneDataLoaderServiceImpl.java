@@ -29,7 +29,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -62,7 +62,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
             Persister persister, ArrayDesignService arrayDesignService,
             ExpressionExperimentService expressionExperimentService,
             SingleCellExpressionExperimentService singleCellExpressionExperimentService,
-            ExternalDatabaseService externalDatabaseService, TaxonService taxonService,
+            ExternalDatabaseService externalDatabaseService, TaxonReadService taxonReadService,
             SingleCellDataTransformationFactory singleCellDataTransformationFactory,
             PlatformTransactionManager transactionManager,
             @Value("${cellxgene.local.singleCellData.basepath}") Path cellXGeneDownloadPath,
@@ -71,7 +71,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
     ) {
         this.cellXGeneFetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 3 ), cellXGeneDownloadPath );
         this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
-        this.cellXGeneConverter = new CellXGeneConverter( externalDatabaseService, taxonService, new PubMedSearch( ncbiApiKey ) );
+        this.cellXGeneConverter = new CellXGeneConverter( externalDatabaseService, taxonReadService, new PubMedSearch( ncbiApiKey ) );
         this.persister = persister;
         this.arrayDesignService = arrayDesignService;
         this.expressionExperimentService = expressionExperimentService;

@@ -3,7 +3,7 @@
  * <p>
  * For third-party applications, use {@link ubic.gemma.contrib.apps} instead.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.apps;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

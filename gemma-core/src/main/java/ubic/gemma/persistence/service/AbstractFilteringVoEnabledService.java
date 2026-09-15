@@ -11,7 +11,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -91,6 +91,12 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     @Transactional(readOnly = true)
     public List<VO> loadValueObjects( @Nullable Filters filters, @Nullable Sort sort ) {
         return voDao.loadValueObjects( filters, sort );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CursorPage<VO> loadValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        return voDao.loadValueObjectsByCursor( filters, sort, cursor, limit );
     }
 
     @Override
@@ -181,6 +187,11 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     public Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode ) throws IllegalArgumentException {
         checkIfPropertyIsAccessible( property );
         return voDao.getFilter( property, operator, value, subqueryMode );
+    }
+
+    @Override
+    public Filter getFilter( List<FilteringDao.ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) throws IllegalArgumentException {
+        return voDao.getFilter( conjuncts, subqueryMode );
     }
 
     @Override

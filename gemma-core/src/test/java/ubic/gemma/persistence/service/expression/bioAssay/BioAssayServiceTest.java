@@ -18,29 +18,29 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
-public class BioAssayServiceTest extends BaseSpringContextTest {
+public class BioAssayServiceTest extends BaseSpringContextTest5 {
 
     private BioAssay ba;
 
     @Autowired
     private BioAssayService bioAssayService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );

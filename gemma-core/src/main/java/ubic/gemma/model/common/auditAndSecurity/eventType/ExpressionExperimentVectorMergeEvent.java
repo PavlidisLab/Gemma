@@ -18,11 +18,17 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * <p>
  * Indicates that the "Vector merging" has been done on the associated experiment.
  * </p>
  */
+@Entity
+@DiscriminatorValue("ExpressionExperimentVectorMergeEvent")
 public class ExpressionExperimentVectorMergeEvent extends ExpressionExperimentAnalysisEvent {
 
 }

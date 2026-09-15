@@ -1,6 +1,6 @@
 package ubic.gemma.cli.util;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.util.LoggingProgressReporter;
 import ubic.gemma.core.util.ProgressReporter;
 import ubic.gemma.core.util.ProgressReporterFactory;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class ConsoleProgressReporterFactory implements ProgressReporterFactory {
 
     private final Console console;

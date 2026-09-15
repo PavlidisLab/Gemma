@@ -1,0 +1,5 @@
+-- H2 mirror of mysql/V28__annotation_relation_evidence.sql; see that file for the reasoning.
+ALTER TABLE ANNOTATION_RELATION
+    ADD COLUMN EVIDENCE VARCHAR(255) DEFAULT NULL;
+ALTER TABLE ANNOTATION_RELATION
+    ADD COLUMN SUPPORTING_EVIDENCE TEXT NULL;

@@ -19,10 +19,11 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -31,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.CommonQueries;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 import static ubic.gemma.persistence.util.QueryUtils.*;
@@ -52,9 +53,22 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     @Override
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee ) {
         StopWatch timer = StopWatch.createStarted();
+        // join fetch designElement + its arrayDesign + biologicalCharacteristic to avoid an N+1
+        // storm: arrayDesign is mapped lazy="false" fetch="select" (one extra SELECT per row),
+        // and biologicalCharacteristic is a lazy proxy that the matrix-builder filter
+        // (RowsWithSequencesFilter) triggers per row via a null check.
+        // See PERF_PROBE_REPORT_ROUND3 Category A1.
+        // bioAssayDimension + quantitationType are now lazy=proxy in the hbm (was eager+select
+        // which produced one follow-up SELECT per vector); join fetch them here since the
+        // Cached*Service VO builders read both per vector.
         //noinspection unchecked
         List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "left join fetch cs.biologicalCharacteristic "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -64,14 +78,42 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     @Override
     public List<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit ) {
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch QT so
+        // downstream VO builders don't trigger one SELECT per vector. (dimension is already
+        // pinned by the parameter; still join-fetch for consistency.)
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
                                 + "where dedv.expressionExperiment = :ee and dedv.bioAssayDimension = :dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "dimension", dimension )
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
+                .list();
+    }
+
+    @Override
+    public Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
+        if ( designElements == null || designElements.isEmpty() ) {
+            return new HashSet<>();
+        }
+        // Mirror getProcessedVectors(ee): join fetch designElement + arrayDesign + bioAssayDimension +
+        // quantitationType so the downstream consumers don't fall back to per-row lazy initialization.
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
+                                + "where dedv.designElement in (:des) and dedv.quantitationType = :qt" )
+                .setParameterList( "des", optimizeIdentifiableParameterList( designElements ) )
+                .setParameter( "qt", quantitationType )
                 .list();
     }
 
@@ -83,10 +125,17 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         StopWatch timer = StopWatch.createStarted();
 
-        // Do not do in clause for experiments, as it can't use the indices
+        // Do not do in clause for experiments, as it can't use the indices.
+        // join fetch designElement + arrayDesign: see getProcessedVectors(ee) for the N+1 rationale.
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch both since
+        // the Cached*Service VO builders read them per vector.
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
-                                + "where dedv.designElement.id in ( :cs )"
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
+                                + "where cs.id in ( :cs )"
                                 + ( ees != null ? " and dedv.expressionExperiment in :ees" : "" ) )
                 .setParameterList( "cs", optimizeParameterList( cs2gene.keySet() ) );
         List<ProcessedExpressionDataVector> results;
@@ -137,23 +186,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             // cannot fix this here, because we're read-only.
         }
 
-        //noinspection unchecked
-        List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession()
-                .createQuery( " from ProcessedExpressionDataVector dedv "
-                        + "where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5 order by RAND()" ) // order by rand() works?
-                .setParameter( "ee", ee )
-                .setMaxResults( limit )
-                .list();
+        // HQL_SQL_AUDIT P2: replace `order by RAND()` (forces a full sort of every matching
+        // vector with a random key per row -- O(N log N) on millions of vectors per EE) with
+        // a two-step pattern: (1) cheap id-only index scan, (2) shuffle in Java + pick N,
+        // (3) fetch only the chosen vectors by id (with the same fetch joins as before).
+        List<ProcessedExpressionDataVector> result = sampleVectorsByRank( ee, limit, true );
 
         // maybe ranks are not set for some reason; can happen e.g. GeneSpring mangled data.
         if ( result.isEmpty() ) {
-            //noinspection unchecked
-            result = this.getSessionFactory().getCurrentSession()
-                    .createQuery( " from ProcessedExpressionDataVector dedv "
-                            + "where dedv.expressionExperiment = :ee order by RAND()" )
-                    .setParameter( "ee", ee )
-                    .setMaxResults( limit )
-                    .list();
+            result = sampleVectorsByRank( ee, limit, false );
         }
 
         thaw( result ); // needed?
@@ -169,6 +210,43 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return result;
     }
 
+    /**
+     * Sample {@code limit} processed vectors for the given experiment, optionally restricted
+     * to {@code rankByMean > 0.5}.
+     * <p>
+     * Implementation: (1) cheap id-only query returning candidate ids, (2) shuffle the id
+     * list in Java and pick the first {@code limit}, (3) fetch only those vectors by id with
+     * the same designElement / arrayDesign join fetches as the bulk loader.
+     * <p>
+     * Replaces a `ORDER BY RAND()` over the full set, which forced the DB to compute a
+     * random key per row and sort the entire result. See HQL_SQL_AUDIT P2.
+     */
+    private List<ProcessedExpressionDataVector> sampleVectorsByRank( ExpressionExperiment ee, int limit, boolean rankFilter ) {
+        String idQuery = rankFilter
+                ? "select dedv.id from ProcessedExpressionDataVector dedv where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5"
+                : "select dedv.id from ProcessedExpressionDataVector dedv where dedv.expressionExperiment = :ee";
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession()
+                .createQuery( idQuery )
+                .setParameter( "ee", ee )
+                .list();
+        if ( ids.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Collections.shuffle( ids );
+        List<Long> picked = ids.size() > limit ? ids.subList( 0, limit ) : ids;
+        //noinspection unchecked
+        return ( List<ProcessedExpressionDataVector> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select dedv from ProcessedExpressionDataVector dedv "
+                        + "join fetch dedv.designElement cs "
+                        + "join fetch cs.arrayDesign "
+                        + "join fetch dedv.bioAssayDimension "
+                        + "join fetch dedv.quantitationType "
+                        + "where dedv.id in (:ids)" )
+                .setParameterList( "ids", picked )
+                .list();
+    }
+
     @Override
     public List<CompositeSequence> getProcessedVectorsDesignElements( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit ) {
         //noinspection unchecked
@@ -178,7 +256,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 .setParameter( "ee", ee )
                 .setParameter( "dimension", dimension )
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list();
     }
 
@@ -274,7 +353,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         Map<Long, Collection<Long>> cs2gene = CommonQueries
                 .getCs2GeneMapForProbes( probes, this.getSessionFactory().getCurrentSession() );
 
-        Map<ProcessedExpressionDataVector, Collection<Long>> vector2gene = new HashMap<>( cs2gene.size() );
+        Map<ProcessedExpressionDataVector, Collection<Long>> vector2gene = HashMap.newHashMap( cs2gene.size() );
         for ( ProcessedExpressionDataVector pedv : vectors ) {
             vector2gene.put( pedv, cs2gene.getOrDefault( pedv.getDesignElement().getId(), Collections.emptySet() ) );
         }

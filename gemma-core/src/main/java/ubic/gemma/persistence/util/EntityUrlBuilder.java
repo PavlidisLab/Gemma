@@ -25,7 +25,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.Collection;
@@ -269,7 +269,7 @@ public class EntityUrlBuilder {
         }
 
         public ExpressionExperimentWebUrl byShortName() {
-            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) );
+            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) , "expected true");
             return new ExpressionExperimentWebUrl( baseUrl, entity, entityPath, true, additionalQuery );
         }
 
@@ -530,7 +530,7 @@ public class EntityUrlBuilder {
         }
 
         public ArrayDesignWebUrl byShortName() {
-            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) );
+            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) , "expected true");
             this.byShortName = true;
             return this;
         }

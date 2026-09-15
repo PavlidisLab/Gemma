@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  *
- * Copyright (c) 2026 University of British Columbia
+ * Copyright (c) 2006-2012 University of British Columbia
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
- * Read-compatibility marker for audit rows written by Gemma 2.0.
- * <p>
- * Gemma 2.0 emits this {@link AuditEventType} subclass; the 1.x line shares the audit trail, so it
- * must be able to load a row with this discriminator without a Hibernate {@code WrongClassException}.
- * The 1.x code never writes it and it carries no behaviour of its own — it exists only so the read
- * resolves. (In 2.0 it extends a richer hierarchy; here it is flattened onto an existing parent.)
+ * Processed expression data vectors were reordered to align with the experimental design layout.
  */
+@Entity
+@DiscriminatorValue("VectorsReorderedEvent")
 public class VectorsReorderedEvent extends ProcessedVectorComputationEvent {
+
 }

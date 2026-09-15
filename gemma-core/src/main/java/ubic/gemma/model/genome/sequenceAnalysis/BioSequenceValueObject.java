@@ -1,5 +1,7 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -8,6 +10,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import java.util.ArrayList;
 import java.util.Collection;
 
+@Getter
+@Setter
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence> {
 
@@ -90,70 +94,6 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
             return other.type == null;
         } else
             return type.equals( other.type );
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public Double getFractionRepeats() {
-        return this.fractionRepeats;
-    }
-
-    public void setFractionRepeats( Double fractionRepeats ) {
-        this.fractionRepeats = fractionRepeats;
-    }
-
-    public Long getLength() {
-        return this.length;
-    }
-
-    public void setLength( Long length ) {
-        this.length = length;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public String getSequence() {
-        return this.sequence;
-    }
-
-    public void setSequence( String sequence ) {
-        this.sequence = sequence;
-    }
-
-    public DatabaseEntryValueObject getSequenceDatabaseEntry() {
-        return this.sequenceDatabaseEntry;
-    }
-
-    public void setSequenceDatabaseEntry( DatabaseEntryValueObject sequenceDatabaseEntry ) {
-        this.sequenceDatabaseEntry = sequenceDatabaseEntry;
-    }
-
-    public TaxonValueObject getTaxon() {
-        return this.taxon;
-    }
-
-    public void setTaxon( TaxonValueObject taxon ) {
-        this.taxon = taxon;
-    }
-
-    public SequenceTypeValueObject getType() {
-        return this.type;
-    }
-
-    public void setType( SequenceTypeValueObject type ) {
-        this.type = type;
     }
 
     @Override

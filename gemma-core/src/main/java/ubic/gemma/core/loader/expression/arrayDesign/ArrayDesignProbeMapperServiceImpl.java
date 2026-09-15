@@ -33,6 +33,7 @@ import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysisFactory;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -47,19 +48,20 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultReadService;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -84,12 +86,13 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private final ArrayDesignReportService arrayDesignReportService;
     private final ArrayDesignService arrayDesignService;
     private final BioSequenceService bioSequenceService;
-    private final BlatResultService blatResultService;
+    private final BlatResultReadService blatResultService;
     private final CompositeSequenceService compositeSequenceService;
     private final ExpressionDataFileService expressionDataFileService;
     private final GeneProductService geneProductService;
     private final GeneService geneService;
-    private final Persister persisterHelper;
+    private final GenomePersister genomePersister;
+    private final GoldenPathSequenceAnalysisFactory goldenPathSequenceAnalysisFactory;
     private final ProbeMapper probeMapper;
     private final TaskExecutor taskExecutor;
 
@@ -97,9 +100,10 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     public ArrayDesignProbeMapperServiceImpl( AnnotationAssociationService annotationAssociationService,
             ArrayDesignAnnotationService arrayDesignAnnotationService,
             ArrayDesignReportService arrayDesignReportService, ArrayDesignService arrayDesignService,
-            ProbeMapper probeMapper, BioSequenceService bioSequenceService, BlatResultService blatResultService,
+            ProbeMapper probeMapper, BioSequenceService bioSequenceService, BlatResultReadService blatResultService,
             CompositeSequenceService compositeSequenceService, ExpressionDataFileService expressionDataFileService,
-            GeneProductService geneProductService, GeneService geneService, Persister persisterHelper, TaskExecutor taskExecutor ) {
+            GeneProductService geneProductService, GeneService geneService, GenomePersister genomePersister,
+            GoldenPathSequenceAnalysisFactory goldenPathSequenceAnalysisFactory, TaskExecutor taskExecutor ) {
         this.annotationAssociationService = annotationAssociationService;
         this.arrayDesignAnnotationService = arrayDesignAnnotationService;
         this.arrayDesignReportService = arrayDesignReportService;
@@ -111,7 +115,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         this.expressionDataFileService = expressionDataFileService;
         this.geneProductService = geneProductService;
         this.geneService = geneService;
-        this.persisterHelper = persisterHelper;
+        this.genomePersister = genomePersister;
+        this.goldenPathSequenceAnalysisFactory = goldenPathSequenceAnalysisFactory;
         this.taskExecutor = taskExecutor;
     }
 
@@ -164,7 +169,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         int numWithNoResults = 0;
         ArrayDesignProbeMapperServiceImpl.log
                 .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
-        try ( GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon ) ) {
+        try ( GoldenPathSequenceAnalysis goldenPathDb = goldenPathSequenceAnalysisFactory.create( taxon ) ) {
             for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
                 Map<String, Collection<BlatAssociation>> results = this
@@ -231,7 +236,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     "Do not use this service to process platforms that do not use an probe-based technology." );
         }
 
-        try ( BufferedReader b = new BufferedReader( new FileReader( source ) ) ) {
+        try ( BufferedReader b = Files.newBufferedReader( source.toPath(), StandardCharsets.UTF_8 ) ) {
             String line;
             int numSkipped = 0;
 
@@ -442,7 +447,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 if ( persist ) {
-                    persisterHelper.persist( bacs.ba );
+                    genomePersister.persistBlatAssociation( bacs.ba );
 
                     if ( ++loadedAssociationCount % 1000 == 0 ) {
                         ArrayDesignProbeMapperServiceImpl.log

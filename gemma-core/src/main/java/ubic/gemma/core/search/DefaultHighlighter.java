@@ -1,32 +1,32 @@
 package ubic.gemma.core.search;
 
-import lombok.extern.apachecommons.CommonsLog;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Fieldable;
-import org.apache.lucene.search.highlight.Formatter;
-import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
-import ubic.gemma.core.search.lucene.LuceneHighlighter;
-import ubic.gemma.core.search.lucene.SimpleHTMLFormatter;
+import org.springframework.lang.Nullable;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
-@CommonsLog
-public class DefaultHighlighter implements LuceneHighlighter, OntologyHighlighter {
-
-    private final Formatter formatter;
-
-    public DefaultHighlighter() {
-        this( new SimpleHTMLFormatter() );
-    }
-
-    public DefaultHighlighter( Formatter formatter ) {
-        this.formatter = formatter;
-    }
+/**
+ * Default {@link Highlighter} implementation that returns the matched value verbatim under its
+ * field name. Restored as part of HS-7 search restoration Step 5 (see SEARCH_RECCE.md).
+ *
+ * <p>This is the pragmatic Step-5 replacement for the pre-strip {@code DefaultHighlighter} which
+ * leaned on Lucene 5's {@code org.apache.lucene.search.highlight.Highlighter} for span-aware
+ * snippet generation. With Hibernate Search 7 the highlight projection lives in the engine DSL
+ * ({@code f.highlight(field).asArray()}), but using it requires marking each field with
+ * {@code highlightable = Highlightable.ANY} in the entity mapping. We have not done that pass yet
+ * (it is paired with the reindex in Step 6), so the Step-5 path is "post-hoc highlighting": the
+ * search source projects the projectable text fields out of the index, and routes each value
+ * through {@link #highlight(String, String)}. The default behaviour is to return the value
+ * verbatim, which is exactly what a no-op highlighter does &mdash; preserving the
+ * "highlighter requested" intent without span tagging.</p>
+ *
+ * <p>The hook also implements {@link OntologyHighlighter} so the ontology source (when it lands)
+ * can produce per-term snippets through the same interface.</p>
+ *
+ * @author paul
+ * @author poirigui
+ */
+public class DefaultHighlighter implements Highlighter, OntologyHighlighter {
 
     @Override
     public Map<String, String> highlight( String value, String field ) {
@@ -36,29 +36,5 @@ public class DefaultHighlighter implements LuceneHighlighter, OntologyHighlighte
     @Override
     public Map<String, String> highlightTerm( @Nullable String termUri, String termLabel, String field ) {
         return Collections.singletonMap( field, termLabel );
-    }
-
-    @Override
-    public Formatter getFormatter() {
-        return formatter;
-    }
-
-    @Override
-    public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
-        Map<String, String> highlights = new HashMap<>();
-        for ( Fieldable field : document.getFields() ) {
-            if ( !field.isTokenized() || field.isBinary() ) {
-                continue;
-            }
-            try {
-                String bestFragment = highlighter.getBestFragment( analyzer, field.name(), field.stringValue() );
-                if ( bestFragment != null ) {
-                    highlights.put( field.name(), bestFragment );
-                }
-            } catch ( IOException | InvalidTokenOffsetsException e ) {
-                log.warn( String.format( "Failed to highlight field %s.", field.name() ) );
-            }
-        }
-        return highlights;
     }
 }

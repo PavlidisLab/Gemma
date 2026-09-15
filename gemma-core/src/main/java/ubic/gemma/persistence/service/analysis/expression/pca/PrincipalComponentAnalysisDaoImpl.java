@@ -41,9 +41,18 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
 
     @Override
     public Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee ) {
+        // Join-fetch the BAD assays + per-assay sampleUsed proxy to close the cold-path N+1 in
+        // SVDResult.samplesFromPca (line 132, BioAssay::getSampleUsed). BAD itself is already
+        // join-fetched via PCA's eager mapping; eigenValues/eigenVectors stay on their separate
+        // read-only L2 cached selects so no MultipleBagFetchException risk. distinct collapses
+        // the N-row cartesian (1 PCA × #BAs) back to one PCA. See RECCE_PCA_SVD_NPLUS1.md #3.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select p from PrincipalComponentAnalysis as p where p.experimentAnalyzed = :ee" )
+                "select distinct p from PrincipalComponentAnalysis as p "
+                        + "join fetch p.bioAssayDimension bad "
+                        + "left join fetch bad.bioAssays b "
+                        + "left join fetch b.sampleUsed "
+                        + "where p.experimentAnalyzed = :ee" )
                 .setParameter( "ee", ee ).list();
     }
 
@@ -60,10 +69,17 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
         if ( ee == null || ee.getId() == null )
             return Collections.emptyList();
 
+        // join fetch the probe (CompositeSequence) — ProbeLoading.probe is lazy=false
+        // fetch=select, so without this each row triggers a follow-up SELECT. 1:1 so no
+        // cartesian; setMaxResults still applies in SQL since this isn't a collection fetch.
+        // See RECCE_PCA_SVD_NPLUS1.md #2 (sub-pattern: per-probe lazy CompositeSequence).
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( "select pr from PrincipalComponentAnalysis p join p.probeLoadings pr"
+                + " join fetch pr.probe"
                 + " where p.experimentAnalyzed = :ee and pr.componentNumber = :cmp order by pr.loadingRank " )
-                .setParameter( "ee", ee ).setParameter( "cmp", component ).setMaxResults( count ).list();
+                .setParameter( "ee", ee ).setParameter( "cmp", component )
+                // HB6 rejects setMaxResults(<0); treat <=0 as "no limit".
+                .setMaxResults( count > 0 ? count : Integer.MAX_VALUE ).list();
     }
 
     @Override
@@ -77,19 +93,19 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
         getSessionFactory().getCurrentSession().evict( entity );
 
         getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete ev from EIGENVALUE ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .createNativeQuery( "delete ev from EIGENVALUE ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
                 .setParameter( "id", entity.getId() )
                 .executeUpdate();
         entity.setEigenValues( new HashSet<>() );
 
         getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete ev from EIGENVECTOR ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .createNativeQuery( "delete ev from EIGENVECTOR ev where ev.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
                 .setParameter( "id", entity.getId() )
                 .executeUpdate();
         entity.setEigenVectors( new HashSet<>() );
 
         getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete pl from PROBE_LOADING pl where pl.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
+                .createNativeQuery( "delete pl from PROBE_LOADING pl where pl.PRINCIPAL_COMPONENT_ANALYSIS_FK = :id" )
                 .setParameter( "id", entity.getId() )
                 .executeUpdate();
         entity.setProbeLoadings( new HashSet<>() );

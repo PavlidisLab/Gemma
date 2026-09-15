@@ -20,21 +20,20 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -48,6 +47,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -58,16 +58,16 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNoException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author Paul
  */
-public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedDataVectorService;
@@ -85,12 +85,14 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
     private TwoChannelMissingValues tcmv;
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
+    @Autowired
+    private GenomePersister genomePersister;
 
     /* fixtures */
     private final Collection<ExpressionExperiment> ees = new ArrayList<>();
     private final Collection<ArrayDesign> ads = new ArrayList<>();
 
-    @After
+    @AfterEach
     public void after() {
         for ( ExpressionExperiment ee : ees ) {
             expressionExperimentService.remove( ee );
@@ -135,9 +137,13 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         }
         expressionExperimentService.update( ee );
         processedDataVectorService.createProcessedDataVectors( ee, false );
+        // createProcessedDataVectors mutates the managed instance (re-fetched via
+        // ensureEeInSession), not this method's `ee` reference. With L2 cache disabled
+        // (BaseDatabaseTest5) the local reference doesn't see the new processed vectors,
+        // so reload before asserting.
+        ee = expressionExperimentService.thaw( expressionExperimentService.load( ee.getId() ) );
         Set<ProcessedExpressionDataVector> createdVectors = ee.getProcessedExpressionDataVectors();
         assertThat( createdVectors ).hasSize( 10 );
-        ee = expressionExperimentService.thaw( ee );
         assertThat( ee.getNumberOfDataVectors() )
                 .isEqualTo( 10 );
         assertThat( ee.getProcessedExpressionDataVectors() )
@@ -167,7 +173,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
      * .
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGetProcessedDataMatrices() throws Exception {
         ExpressionExperiment ee;
@@ -175,7 +181,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             ee = this.getDataset();
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
-                assumeNoException( "Test skipped because of failure to fetch data.", e );
+                assumeTrue( false, "Test skipped because of failure to fetch data: " + e.getMessage() );
                 return;
             } else {
                 throw e;
@@ -192,7 +198,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
         assertEquals( 100, genes.size() );
         v = processedDataVectorService.getProcessedDataArrays( Collections.singleton( ee ), IdentifiableUtils.getIds( genes ) );
-        assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
+        assertTrue( 40 <= v.size(), "got " + v.size() + ", expected at least 40" );
     }
 
     private ExpressionExperiment getDataset() throws Exception {
@@ -238,7 +244,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                 BioSequence bs = BioSequence.Factory.newInstance();
                 bs.setName( RandomStringUtils.insecure().next( 10 ) );
                 bs.setTaxon( taxon );
-                bs = ( BioSequence ) persisterHelper.persist( bs );
+                bs = genomePersister.persistBioSequence( bs );
 
                 assertNotNull( bs );
 
@@ -254,7 +260,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
                 br.setQuerySequence( bs );
                 blata.setBlatResult( br );
                 blata.setBioSequence( bs );
-                persisterHelper.persist( blata );
+                genomePersister.persistBlatAssociation( blata );
                 genes.add( g );
             }
 

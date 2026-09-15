@@ -7,7 +7,7 @@
  * @author poirigui
  * @see ubic.gemma.core.util.runtime.ExtendedRuntime
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.util.runtime;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

@@ -14,13 +14,13 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.SecurityService;
-import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
-import gemma.gsec.acl.domain.AclService;
-import gemma.gsec.authentication.UserExistsException;
-import gemma.gsec.util.SecurityUtil;
-import lombok.extern.apachecommons.CommonsLog;
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.acl.domain.AclService;
+import org.springframework.security.acls.domain.GrantedAuthoritySid;
+import ubic.gemma.core.security.authentication.UserExistsException;
+import ubic.gemma.core.security.util.SecurityUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.BeansException;
@@ -46,7 +46,7 @@ import static java.util.Objects.requireNonNull;
  * @author pavlidis
  */
 @Service
-@CommonsLog
+@Slf4j
 public class UserServiceImpl implements UserService, ApplicationContextAware {
 
     private static final String ADMINISTRATOR_USER_NAME = "administrator";
@@ -60,6 +60,9 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
     @Autowired
     private AclService aclService;
 
+    @Autowired
+    private UserReadService userReadService;
+
     // FIXME: remove SecurityService from here, it depends on UserService, we're using afterPropertiesSet() as a
     //        workaround to prevent circular dependency
     private ApplicationContext applicationContext;
@@ -71,9 +74,9 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
 
     @Override
     @Transactional
-    public void addGroupAuthority( gemma.gsec.model.UserGroup group, String authority ) {
+    public void addGroupAuthority( ubic.gemma.core.security.model.UserGroup group, String authority ) {
         group = requireNonNull( userGroupDao.load( group.getId() ) );
-        for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
+        for ( ubic.gemma.core.security.model.GroupAuthority ga : group.getAuthorities() ) {
             if ( ga.getAuthority().equals( authority ) ) {
                 log.warn( "Group already has authority '" + authority + "', ignoring." );
                 return;
@@ -86,7 +89,7 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
 
     @Override
     @Transactional
-    public void addUserToGroup( gemma.gsec.model.UserGroup group, gemma.gsec.model.User user ) {
+    public void addUserToGroup( ubic.gemma.core.security.model.UserGroup group, ubic.gemma.core.security.model.User user ) {
         group = requireNonNull( userGroupDao.load( group.getId() ) );
         user = requireNonNull( userDao.load( user.getId() ) );
         // add user to list of members
@@ -95,7 +98,7 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
 
     @Override
     @Transactional
-    public User create( final gemma.gsec.model.User user ) throws UserExistsException {
+    public User create( final ubic.gemma.core.security.model.User user ) throws UserExistsException {
         if ( StringUtils.isBlank( user.getUserName() ) ) {
             throw new IllegalArgumentException( "Username cannot be blank" );
         }
@@ -117,13 +120,13 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
 
     @Override
     @Transactional
-    public UserGroup create( gemma.gsec.model.UserGroup group ) {
+    public UserGroup create( ubic.gemma.core.security.model.UserGroup group ) {
         return this.userGroupDao.create( ( UserGroup ) group );
     }
 
     @Override
     @Transactional
-    public void delete( gemma.gsec.model.User user ) {
+    public void delete( ubic.gemma.core.security.model.User user ) {
         user = requireNonNull( userDao.load( user.getId() ), "No user with ID: " + user.getId() );
         for ( UserGroup group : this.userDao.loadGroups( ( User ) user ) ) {
             group.getGroupMembers().remove( user );
@@ -133,7 +136,7 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
 
     @Override
     @Transactional
-    public void delete( gemma.gsec.model.UserGroup group ) {
+    public void delete( ubic.gemma.core.security.model.UserGroup group ) {
         group = requireNonNull( userGroupDao.load( group.getId() ), "No group with that name: " + group.getName() );
 
         String groupName = group.getName();
@@ -162,75 +165,65 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
          * clean up acls that use this group...do that last!
          */
         for ( String a : authority ) {
-            aclService.deleteSid( new AclGrantedAuthoritySid( a ) );
+            aclService.deleteSid( new GrantedAuthoritySid( a ) );
         }
     }
 
     @Override
-    @Transactional(readOnly = true)
     public User findByEmail( final String email ) {
-        return this.userDao.findByEmail( email );
-
+        return userReadService.findByEmail( email );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ubic.gemma.model.common.auditAndSecurity.User findByUserName( final String userName ) {
-        return this.userDao.findByUserName( userName );
+        return userReadService.findByUserName( userName );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public UserGroup findGroupByName( String name ) {
-        return this.userGroupDao.findByName( name );
+        return userReadService.findGroupByName( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean groupExists( String name ) {
-        return this.userGroupDao.findByName( name ) != null;
+        return userReadService.groupExists( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<gemma.gsec.model.UserGroup> findGroupsForUser( gemma.gsec.model.User user ) {
-        return new ArrayList<>( this.userGroupDao.findGroupsForUser( ( User ) user ) );
+    public Collection<ubic.gemma.core.security.model.UserGroup> findGroupsForUser( ubic.gemma.core.security.model.User user ) {
+        return new ArrayList<>( userReadService.findGroupsForUser( ( User ) user ) );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<gemma.gsec.model.UserGroup> listAvailableGroups() {
-        return new ArrayList<>( this.userGroupDao.loadAll() );
+    public Collection<ubic.gemma.core.security.model.UserGroup> listAvailableGroups() {
+        return new ArrayList<>( userReadService.listAvailableGroups() );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public User load( final Long id ) {
-        return this.userDao.load( id );
+        return userReadService.load( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<gemma.gsec.model.User> loadAll() {
-        return new ArrayList<>( this.userDao.loadAll() );
+    public Collection<ubic.gemma.core.security.model.User> loadAll() {
+        return new ArrayList<>( userReadService.loadAll() );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<gemma.gsec.model.GroupAuthority> loadGroupAuthorities( gemma.gsec.model.User user ) {
-        return new ArrayList<>( this.userDao.loadGroupAuthorities( ( User ) user ) );
+    public Collection<ubic.gemma.core.security.model.GroupAuthority> loadGroupAuthorities( ubic.gemma.core.security.model.User user ) {
+        return new ArrayList<>( userReadService.loadGroupAuthorities( ( User ) user ) );
     }
 
     @Override
     @Transactional
-    public void removeGroupAuthority( gemma.gsec.model.UserGroup group, String authority ) {
+    public void removeGroupAuthority( ubic.gemma.core.security.model.UserGroup group, String authority ) {
         group = requireNonNull( userGroupDao.load( group.getId() ) );
         group.getAuthorities().removeIf( ga -> ga.getAuthority().equals( authority ) );
     }
 
     @Override
     @Transactional
-    public void removeUserFromGroup( gemma.gsec.model.User user, gemma.gsec.model.UserGroup group ) {
+    public void removeUserFromGroup( ubic.gemma.core.security.model.User user, ubic.gemma.core.security.model.UserGroup group ) {
         group = requireNonNull( userGroupDao.load( group.getId() ) );
         user = requireNonNull( userDao.load( user.getId() ) );
 
@@ -254,13 +247,13 @@ public class UserServiceImpl implements UserService, ApplicationContextAware {
 
     @Override
     @Transactional
-    public void update( final gemma.gsec.model.User user ) {
+    public void update( final ubic.gemma.core.security.model.User user ) {
         this.userDao.update( ( User ) user );
     }
 
     @Override
     @Transactional
-    public void update( gemma.gsec.model.UserGroup group ) {
+    public void update( ubic.gemma.core.security.model.UserGroup group ) {
         this.userGroupDao.update( ( UserGroup ) group );
     }
 }

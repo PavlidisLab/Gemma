@@ -20,7 +20,7 @@ package ubic.gemma.core.analysis.sequence;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit;
  * @author pavlidis
  */
 @Getter
-@CommonsLog
+@Slf4j
 public class ShellDelegatingBlat implements Blat {
 
     /**
@@ -74,6 +74,15 @@ public class ShellDelegatingBlat implements Blat {
     private static final int POLY_AT_THRESHOLD = 5;
 
     private static final int STEPSIZE = 7;
+
+    /**
+     * Max time to wait for {@code gfServer} to become reachable after launch (millis).
+     */
+    private static final long SERVER_STARTUP_TIMEOUT_MS = 60_000L;
+    /**
+     * Backoff between reachability probes while waiting for {@code gfServer} startup (millis).
+     */
+    private static final long SERVER_STARTUP_POLL_MS = 200L;
 
     // typical values.
     private final String gfClientExe;
@@ -264,7 +273,7 @@ public class ShellDelegatingBlat implements Blat {
      * @throws IOException when there are IO problems.
      */
     public synchronized void startServer( BlattableGenome genome, boolean sensitive, boolean waitForFullInitialization ) throws IOException {
-        Assert.state( serverProcess == null || !serverProcess.isAlive() );
+        Assert.state( serverProcess == null || !serverProcess.isAlive() , "illegal state");
         if ( sensitive ) {
             // TODO: implement sensitive searches
             throw new UnsupportedOperationException( "Sensitive BLAT searches are not supported by this implementation." );
@@ -300,12 +309,20 @@ public class ShellDelegatingBlat implements Blat {
 
         if ( waitForFullInitialization ) {
             log.info( "Waiting for gfServer to be fully initialized on " + serverHost + ":" + serverPort + "..." );
-            while ( true ) {
-                if ( isServerReachable( serverHost, serverPort ) ) {
-                    log.info( "gfServer is listening on " + serverHost + ":" + serverPort + "." );
-                    break;
+            long deadlineNanos = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos( SERVER_STARTUP_TIMEOUT_MS );
+            while ( !isServerReachable( serverHost, serverPort ) ) {
+                if ( System.nanoTime() > deadlineNanos ) {
+                    throw new IOException( "gfServer did not become reachable on " + serverHost + ":" + serverPort
+                            + " within " + SERVER_STARTUP_TIMEOUT_MS + " ms." );
+                }
+                try {
+                    Thread.sleep( SERVER_STARTUP_POLL_MS );
+                } catch ( InterruptedException e ) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException( e );
                 }
             }
+            log.info( "gfServer is listening on " + serverHost + ":" + serverPort + "." );
         }
     }
 

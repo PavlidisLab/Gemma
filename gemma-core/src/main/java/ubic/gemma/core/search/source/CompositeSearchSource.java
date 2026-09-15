@@ -32,14 +32,9 @@ import java.util.stream.IntStream;
 /**
  * A search source constituted of multiple other sources.
  * <p>
- * Sources are used in the order they are passed to the {@link #CompositeSearchSource(List)} constructor.
- * <p>
- * This source checks if the {@link SearchSource} are accepted by each individual source with
- * {@link SearchSource#accepts(SearchSettings)} and subsequently delegate the operation.
- * <p>
- * It also supports logging of the time spent by each source and the number of results found. This is done at the DEBUG
- * level unless the value set by {@link #setWarningThresholdMills(int)} or {@link #setFastWarningThresholdMillis(int)}
- * is exceeded in which case WARNING is used.
+ * Sources are used in the order they are passed to the {@link #CompositeSearchSource(List)} constructor. This source
+ * checks each child source via {@link SearchSource#accepts(SearchSettings)} and only delegates to the ones that accept
+ * the settings.
  *
  * @author poirigui
  */
@@ -55,23 +50,13 @@ public class CompositeSearchSource implements SearchSource {
         this.sources = sources;
     }
 
-    /**
-     * Threshold in milliseconds for a warning to be logged when searching with {@link ubic.gemma.model.common.search.SearchSettings.SearchMode#FAST}.
-     * <p>
-     * The default is 100 ms.
-     */
     public void setFastWarningThresholdMillis( int fastWarningThresholdMillis ) {
-        Assert.isTrue( fastWarningThresholdMillis >= 0 );
+        Assert.isTrue( fastWarningThresholdMillis >= 0, "fastWarningThresholdMillis must be non-negative" );
         this.fastWarningThresholdMillis = fastWarningThresholdMillis;
     }
 
-    /**
-     * Threshold in milliseconds for a warning to be logged.
-     * <p>
-     * The default is 1000 ms.
-     */
     public void setWarningThresholdMills( int warningThresholdMills ) {
-        Assert.isTrue( warningThresholdMills >= 0 );
+        Assert.isTrue( warningThresholdMills >= 0, "warningThresholdMills must be non-negative" );
         this.warningThresholdMills = warningThresholdMills;
     }
 
@@ -82,28 +67,27 @@ public class CompositeSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchArrayDesign( settings1, context ), ArrayDesign.class );
+        return searchWith( settings, ( s, st ) -> s.searchArrayDesign( st, context ), ArrayDesign.class );
     }
 
     @Override
     public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchBibliographicReference( settings1, context ), BibliographicReference.class );
+        return searchWith( settings, ( s, st ) -> s.searchBibliographicReference( st, context ), BibliographicReference.class );
     }
 
     @Override
     public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchExperimentSet( settings1, context ), ExpressionExperimentSet.class );
+        return searchWith( settings, ( s, st ) -> s.searchExperimentSet( st, context ), ExpressionExperimentSet.class );
     }
 
     @Override
     public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchBioSequence( settings1, context ), BioSequence.class );
+        return searchWith( settings, ( s, st ) -> s.searchBioSequence( st, context ), BioSequence.class );
     }
 
     @Override
     @Deprecated
     public Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings, SearchContext context, @Nullable Collection<SearchResult<Gene>> previousGeneSearchResults ) throws SearchException {
-        // FIXME: use searchWith
         Set<SearchResult<?>> results = new HashSet<>();
         for ( SearchSource source : sources ) {
             results.addAll( source.searchBioSequenceAndGene( settings, context, previousGeneSearchResults ) );
@@ -113,13 +97,12 @@ public class CompositeSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchCompositeSequence( settings1, context ), CompositeSequence.class );
+        return searchWith( settings, ( s, st ) -> s.searchCompositeSequence( st, context ), CompositeSequence.class );
     }
 
     @Override
     @Deprecated
     public Collection<SearchResult<?>> searchCompositeSequenceAndGene( SearchSettings settings, SearchContext context ) throws SearchException {
-        // FIXME: use searchWith
         Set<SearchResult<?>> results = new HashSet<>();
         for ( SearchSource source : sources ) {
             results.addAll( source.searchCompositeSequenceAndGene( settings, context ) );
@@ -129,22 +112,22 @@ public class CompositeSearchSource implements SearchSource {
 
     @Override
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchExpressionExperiment( settings1, context ), ExpressionExperiment.class );
+        return searchWith( settings, ( s, st ) -> s.searchExpressionExperiment( st, context ), ExpressionExperiment.class );
     }
 
     @Override
     public Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchGene( settings1, context ), Gene.class );
+        return searchWith( settings, ( s, st ) -> s.searchGene( st, context ), Gene.class );
     }
 
     @Override
     public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchGeneSet( settings1, context ), GeneSet.class );
+        return searchWith( settings, ( s, st ) -> s.searchGeneSet( st, context ), GeneSet.class );
     }
 
     @Override
     public Collection<SearchResult<BlacklistedEntity>> searchBlacklistedEntities( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchWith( settings, ( searchSource, settings1 ) -> searchSource.searchBlacklistedEntities( settings1, context ), BlacklistedEntity.class );
+        return searchWith( settings, ( s, st ) -> s.searchBlacklistedEntities( st, context ), BlacklistedEntity.class );
     }
 
     private interface SearchFunction<T extends Identifiable> {
@@ -157,6 +140,7 @@ public class CompositeSearchSource implements SearchSource {
         long[] timeSpentBySource = new long[sources.size()];
         int[] foundItemsBySource = new int[sources.size()];
         int[] newItemsBySource = new int[sources.size()];
+        boolean shortCircuited = false;
         for ( int i = 0; i < sources.size(); i++ ) {
             long timeBefore = timer.getTime( TimeUnit.MILLISECONDS );
             SearchSource source = sources.get( i );
@@ -166,11 +150,19 @@ public class CompositeSearchSource implements SearchSource {
                 results.addAll( r );
                 foundItemsBySource[i] = r.size();
                 newItemsBySource[i] = results.size() - sizeBefore;
-            } else {
-                foundItemsBySource[i] = 0;
-                newItemsBySource[i] = 0;
             }
             timeSpentBySource[i] = timer.getTime( TimeUnit.MILLISECONDS ) - timeBefore;
+            // Stop as soon as ANY source returns an exact-identifier hit (numeric id, short name,
+            // accession, NCBI id). DatabaseSearchSource is wired first via HIGHEST_PRECEDENCE so
+            // it gets first crack; once it pins a canonical entity by identifier, running the
+            // Lucene full-text leg and the ontology fan-out is wasted latency that also pollutes
+            // the result with lower-scored fuzzy matches. Earlier behaviour ran every source
+            // unconditionally, so a "GSE12345" / "alizadeh-lymphoma" lookup paid for a full
+            // Lucene fan-out even though the DB had already returned THE answer.
+            if ( results.stream().anyMatch( SearchResult::isExactIdentifierMatch ) ) {
+                shortCircuited = true;
+                break;
+            }
         }
         timer.stop();
         boolean shouldWarn;
@@ -190,8 +182,10 @@ public class CompositeSearchSource implements SearchSource {
                     .mapToObj( i -> String.format( "source: %s, found items: %d, found items (novel): %d, time spent: %d ms",
                             sources.get( i ).getClass().getSimpleName(), foundItemsBySource[i], newItemsBySource[i], timeSpentBySource[i] ) )
                     .collect( Collectors.joining( "; " ) );
-            String message = String.format( "Found %d %s results in %d ms (%s)", results.size(), clazz.getSimpleName(),
-                    timer.getTime( TimeUnit.MILLISECONDS ), breakdownBySource );
+            String message = String.format( "Found %d %s results in %d ms%s (%s)", results.size(), clazz.getSimpleName(),
+                    timer.getTime( TimeUnit.MILLISECONDS ),
+                    shortCircuited ? " [identifier-match short-circuit]" : "",
+                    breakdownBySource );
             if ( shouldWarn ) {
                 log.warn( message );
             } else {

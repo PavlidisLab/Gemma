@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +11,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -40,8 +40,9 @@ import static org.mockito.Mockito.mock;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkDataUtils.randomBulkVectors;
 
 @ContextConfiguration
-@TestExecutionListeners({ WithSecurityContextTestExecutionListener.class })
-public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabaseTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -58,6 +59,18 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         @Bean
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
             return new ExpressionExperimentDaoImpl( sessionFactory );
+        }
+
+        // EE DAO now field-injects ArrayDesignDao for batched platform loads (round-2 probe #8).
+        @Bean
+        public ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl( sessionFactory );
+        }
+
+        // PERF_PROBE_REPORT_ROUND4 B1: EE DAO field-injects SingleCellDimensionExperimentDao.
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDaoImpl( sessionFactory );
         }
 
         @Bean
@@ -88,6 +101,11 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         @Bean
         public QuantitationTypeDao quantitationTypeDao( SessionFactory sessionFactory ) {
             return new QuantitationTypeDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao bioMaterialDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl( sessionFactory );
         }
     }
 

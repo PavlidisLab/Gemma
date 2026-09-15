@@ -51,6 +51,9 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
     private final GeneProductDao geneProductDao;
 
     @Autowired
+    private GeneProductReadService geneProductReadService;
+
+    @Autowired
     public GeneProductServiceImpl( AnnotationAssociationDao annotationAssociationDao, BioSequenceDao bioSequenceDao,
             BlatAssociationDao blatAssociationDao, GeneProductDao geneProductDao ) {
         super( geneProductDao );
@@ -61,27 +64,23 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<Gene> getGenesByName( String search ) {
-        return this.geneProductDao.getGenesByName( search );
+        return geneProductReadService.getGenesByName( search );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<Gene> getGenesByNcbiId( String search ) {
-        return this.geneProductDao.getGenesByNcbiId( search );
+        return geneProductReadService.getGenesByNcbiId( search );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
-        return this.geneProductDao.findByName( name, taxon );
+        return geneProductReadService.findByName( name, taxon );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public GeneProduct thaw( GeneProduct existing ) {
-        return this.geneProductDao.thaw( existing );
+        return geneProductReadService.thaw( existing );
     }
 
     @Override
@@ -113,7 +112,7 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
 
         // remove associations to database entries that are still associated with sequences.
         for ( GeneProduct gp : toRemove ) {
-            gp = this.thaw( gp );
+            gp = this.geneProductDao.thaw( gp );
             Collection<DatabaseEntry> accessions = gp.getAccessions();
             Collection<DatabaseEntry> toRelease = new HashSet<>();
             for ( DatabaseEntry de : accessions ) {
@@ -122,6 +121,14 @@ public class GeneProductServiceImpl extends AbstractVoEnabledService<GeneProduct
                 }
             }
             gp.getAccessions().removeAll( toRelease );
+            // detach from the parent Gene's products collection. Gene.products is mapped
+            // cascade="all" so HB6 merge() on a detached Gene later in the same transaction
+            // will otherwise cascade through the snapshot of this collection and throw
+            // EntityNotFoundException on the just-deleted GeneProduct row.
+            Gene parent = gp.getGene();
+            if ( parent != null ) {
+                parent.getProducts().remove( gp );
+            }
             this.geneProductDao.remove( gp );
 
         }

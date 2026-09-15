@@ -18,29 +18,35 @@
  */
 package ubic.gemma.core.loader.genome.taxon;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
+import ubic.gemma.persistence.persister.GenomePersister;
 
 import java.io.InputStream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author pavlidis
  *
  */
-public class TaxonLoaderTest extends BaseSpringContextTest {
+public class TaxonLoaderTest extends BaseSpringContextTest5 {
+
+    @Autowired
+    private GenomePersister genomePersister;
+
     private InputStream is;
 
-    @After
+    @AfterEach
     public void onTearDownInTransaction() throws Exception {
         is.close();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         is = this.getClass().getResourceAsStream( "/data/loader/genome/taxon.names.dmp.sample.txt" );
     }
@@ -48,7 +54,7 @@ public class TaxonLoaderTest extends BaseSpringContextTest {
     @Test
     public void testLoadInputStream() throws Exception {
         TaxonLoader tl = new TaxonLoader();
-        tl.setPersisterHelper( persisterHelper );
+        tl.setGenomePersister( genomePersister );
         int actualValue = tl.load( is );
         assertEquals( 75, actualValue );
     }

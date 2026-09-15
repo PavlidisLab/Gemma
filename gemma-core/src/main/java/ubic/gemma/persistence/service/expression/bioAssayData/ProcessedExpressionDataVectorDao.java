@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -55,6 +56,18 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      * @return map of vectors to genes.
      */
     Map<ProcessedExpressionDataVector, Collection<Long>> getProcessedVectorsAndGenes( Collection<ExpressionExperiment> ees, Map<Long, Collection<Long>> cs2gene );
+
+    /**
+     * Retrieve the processed vectors for a set of design elements within a given quantitation type. Symmetric with
+     * {@link RawExpressionDataVectorDao#find(Collection, QuantitationType)}. Returns the stored entities, whose data
+     * has NOT had read-time outlier masking applied — used to recover un-masked values for a previously selected set
+     * of probes.
+     *
+     * @param designElements   probes to retrieve; empty collection yields an empty result.
+     * @param quantitationType the (processed) quantitation type; scopes the result to a single experiment.
+     * @return the matching processed vectors, thawed for the bioAssayDimension / quantitationType / designElement.
+     */
+    Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
 
     Collection<ProcessedExpressionDataVector> getRandomProcessedVectors( ExpressionExperiment ee, int limit );
 

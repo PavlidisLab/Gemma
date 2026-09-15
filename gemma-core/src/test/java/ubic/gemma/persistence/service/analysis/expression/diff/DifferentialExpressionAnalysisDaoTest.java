@@ -1,13 +1,13 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -19,10 +19,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ContextConfiguration
-public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
+public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -78,7 +78,7 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
         assertNull( analysis );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testCreateInvalidAnalysis() {
         DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
         List<CompositeSequence> probes = createPlatform( 100 );
@@ -101,7 +101,7 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
             analysis.getResultSets().add( resultSet );
         }
         //noinspection ResultOfMethodCallIgnored
-        differentialExpressionAnalysisDao.create( analysis );
+        assertThrows( IllegalArgumentException.class, () -> differentialExpressionAnalysisDao.create( analysis ) );
     }
 
     @Test

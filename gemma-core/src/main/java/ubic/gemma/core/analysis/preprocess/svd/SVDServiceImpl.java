@@ -22,10 +22,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.CorrelationStats;
-import ubic.basecode.math.Distance;
-import ubic.basecode.math.KruskalWallis;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.math.CorrelationStats;
+import ubic.gemma.core.util.math.Distance;
+import ubic.gemma.core.util.math.KruskalWallis;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -40,8 +40,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -76,9 +76,6 @@ public class SVDServiceImpl implements SVDService {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
@@ -134,13 +131,17 @@ public class SVDServiceImpl implements SVDService {
         try {
             return new SVDResult( pca );
         } catch ( Exception e ) {
-            SVDServiceImpl.log.error( e.getLocalizedMessage() );
+            // Pass the throwable so the stack lands in the log. The previous form
+            // (message-only) silently hid the SVDResult-ctor ClassCastException that
+            // surfaced /svd as 404 and /svd/loadings as 500.
+            SVDServiceImpl.log.error( "Failed to build SVDResult for " + ee + ": " + e.getMessage(), e );
             return null;
         }
     }
 
     @Override
     @Transactional
+    @Audited(value = PCAAnalysisEvent.class, message = "SVD computation")
     public SVDResult svd( ExpressionExperiment ee ) throws SVDException {
         assert ee != null;
 
@@ -268,10 +269,12 @@ public class SVDServiceImpl implements SVDService {
             return importantFactors;
         }
         Map<Integer, Map<ExperimentalFactor, Double>> factorPVals = svdFactorAnalysis.getFactorPVals();
-        for ( Integer cmp : factorPVals.keySet() ) {
-            Map<ExperimentalFactor, Double> factorPv = factorPVals.get( cmp );
-            for ( ExperimentalFactor ef : factorPv.keySet() ) {
-                Double pvalue = factorPv.get( ef );
+        for ( Map.Entry<Integer, Map<ExperimentalFactor, Double>> cmpEntry : factorPVals.entrySet() ) {
+            Integer cmp = cmpEntry.getKey();
+            Map<ExperimentalFactor, Double> factorPv = cmpEntry.getValue();
+            for ( Map.Entry<ExperimentalFactor, Double> efEntry : factorPv.entrySet() ) {
+                ExperimentalFactor ef = efEntry.getKey();
+                Double pvalue = efEntry.getValue();
 
                 if ( pvalue < importanceThreshold ) {
                     SVDServiceImpl.log
@@ -354,8 +357,8 @@ public class SVDServiceImpl implements SVDService {
         // since we use rank correlation/anova, we just use the casted ids (two-groups) or dates as the covariate
 
         int numWithDates = 0;
-        for ( BioMaterial bm : bioMaterialDates.keySet() ) {
-            if ( bioMaterialDates.get( bm ) != null ) {
+        for ( Date d : bioMaterialDates.values() ) {
+            if ( d != null ) {
                 numWithDates++;
             }
         }
@@ -413,8 +416,9 @@ public class SVDServiceImpl implements SVDService {
          * Compare each factor (including batch information that is somewhat redundant with the dates) to the
          * eigen-genes. Using rank statistics.
          */
-        for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-            Map<BioMaterial, Number> bmToFv = bioMaterialFactorMap.get( ef );
+        for ( Map.Entry<ExperimentalFactor, Map<BioMaterial, Number>> efEntry : bioMaterialFactorMap.entrySet() ) {
+            ExperimentalFactor ef = efEntry.getKey();
+            Map<BioMaterial, Number> bmToFv = efEntry.getValue();
 
             double[] fvs = new double[svdBioMaterials.size()];
             assert fvs.length > 0;
@@ -533,8 +537,10 @@ public class SVDServiceImpl implements SVDService {
             List<BioMaterial> svdBioMaterials ) {
 
         for ( BioMaterial bm : svdBioMaterials ) {
-            for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-                if ( !bioMaterialFactorMap.get( ef ).containsKey( bm ) ) {
+            for ( Map.Entry<ExperimentalFactor, Map<BioMaterial, Number>> efEntry : bioMaterialFactorMap.entrySet() ) {
+                ExperimentalFactor ef = efEntry.getKey();
+                Map<BioMaterial, Number> bmMap = efEntry.getValue();
+                if ( !bmMap.containsKey( bm ) ) {
                     /*
                      * Missing values in factors, not fatal but not great either.
                      */
@@ -542,7 +548,7 @@ public class SVDServiceImpl implements SVDService {
                         SVDServiceImpl.log
                                 .debug( "Incomplete factorvalue information for " + ef + " (" + bm
                                         + " missing a value)" );
-                    bioMaterialFactorMap.get( ef ).put( bm, Double.NaN );
+                    bmMap.put( bm, Double.NaN );
                 }
             }
         }
@@ -585,8 +591,8 @@ public class SVDServiceImpl implements SVDService {
                 .create( ee, svd.getU(), svd.getEigenvalues(), v, b, SVDServiceImpl.MAX_NUM_COMPONENTS_TO_PERSIST,
                         SVDServiceImpl.MAX_LOADINGS_TO_PERSIST );
 
-        ee = expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
-        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation" );
+        expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
+        // Audit event written by @Audited on svd() via AuditedAspect.
         return pca;
     }
 }

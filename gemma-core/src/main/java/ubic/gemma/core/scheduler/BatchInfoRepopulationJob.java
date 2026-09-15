@@ -1,7 +1,7 @@
 package ubic.gemma.core.scheduler;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
 import org.quartz.StatefulJob;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * @author poirigui
  */
 @Setter
-@CommonsLog
+@Slf4j
 public class BatchInfoRepopulationJob extends SecureQuartzJobBean implements StatefulJob {
 
     private ExpressionExperimentService expressionExperimentService;

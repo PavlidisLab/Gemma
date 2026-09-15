@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 
 /**
@@ -60,8 +60,14 @@ public class ExpressionExperimentMetadataChangelogEntryAdderCli extends Expressi
             } else {
                 buf = readChangelogEntryFromConsole( expressionExperiment, null );
             }
+            // Name the file. gemma.appdata.home differs between the CLI (host) and gemma-rest
+            // (mounted volume), and a changelog written to the wrong tree is unrecoverable —
+            // nothing reconstructs it and the reader looks elsewhere.
+            java.nio.file.Path changelogFile =
+                    expressionMetadataChangelogFileService.getChangelogFilePath( expressionExperiment );
+            log.info( String.format( "Output will be written to: %s", changelogFile ) );
             expressionMetadataChangelogFileService.addChangelogEntry( expressionExperiment, buf );
-            addSuccessObject( expressionExperiment, "Added entry to the changelog." );
+            addSuccessObject( expressionExperiment, String.format( "Added entry to the changelog at %s", changelogFile ) );
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );

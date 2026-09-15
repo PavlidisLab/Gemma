@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
+import ubic.gemma.core.util.SymbolFontPua;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,8 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixFactory;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.simple.model.*;
@@ -48,12 +49,13 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,7 +75,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
-    private PersisterHelper persisterHelper;
+    private EeWriteService eeWriteService;
+    @Autowired
+    private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
     @Autowired
     private PreprocessorService preprocessorService;
     @Autowired
@@ -94,7 +98,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     @Override
     public ExpressionExperiment create( SimpleExpressionExperimentMetadata metaData, @Nullable DoubleMatrix<String, String> matrix ) {
         ExpressionExperiment experiment = this.convert( metaData, matrix );
-        experiment = persisterHelper.persist( experiment, persisterHelper.prepare( experiment ) );
+        experiment = eeWriteService.create( experiment, expressionExperimentPrePersistService.prepare( experiment ) );
         if ( matrix != null && metaData.getQuantitationType() != null && metaData.getQuantitationType().getIsPreferred() ) {
             log.info( experiment + " has preferred raw data vectors, preprocessing it..." );
             preprocessorService.process( experiment, true, true );
@@ -104,7 +108,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
     @Override
     public ExpressionExperiment convert( SimpleExpressionExperimentMetadata metaData, @Nullable DoubleMatrix<String, String> matrix ) {
-        Assert.notNull( metaData );
+        Assert.notNull( metaData , "must not be null");
 
         ExpressionExperiment experiment = ExpressionExperiment.Factory.newInstance();
 
@@ -112,7 +116,8 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         experiment.setName( requireNonNull( metaData.getName(), "No name set." ) );
         experiment.setShortName( requireNonNull( metaData.getShortName(), "No short name set." ) );
-        experiment.setDescription( metaData.getDescription() );
+        // user-supplied metadata, so the same Word-paste risk as a curator's edit
+        experiment.setDescription( SymbolFontPua.repair( metaData.getDescription() ) );
         experiment.setTaxon( taxon );
 
         experiment.setSource( "Import via matrix flat file." + ( StringUtils.isBlank( metaData.getSource() ) ?
@@ -355,6 +360,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
                 .collect( Collectors.toSet() );
     }
 
+    @Nullable
     private DoubleMatrix<String, String> getSubMatrixForArrayDesign( DoubleMatrix<String, String> matrix,
             Collection<Object> usedDesignElements, ArrayDesign design ) {
         List<String> designElements = new ArrayList<>();

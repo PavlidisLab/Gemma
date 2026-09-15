@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
@@ -9,13 +9,13 @@ import ubic.gemma.core.loader.expression.singleCell.AbstractMexSingleCellDataLoa
 import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 
-@CommonsLog
+@Slf4j
 public class GeoMexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellDataLoaderConfigurer {
 
     private final GeoSeries series;
@@ -30,7 +30,7 @@ public class GeoMexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellD
         sampleNames = new ArrayList<>();
         sampleDirs = new ArrayList<>();
         for ( GeoSample sample : series.getSamples() ) {
-            Assert.notNull( sample.getGeoAccession() );
+            Assert.notNull( sample.getGeoAccession() , "must not be null");
             Path sampleDir = mexDir.resolve( sample.getGeoAccession() );
             sampleNames.add( sample.getGeoAccession() );
             sampleDirs.add( sampleDir );

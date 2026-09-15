@@ -107,7 +107,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     protected Date parseISO8601( String string ) {
         try {
             Calendar f;
-            f = javax.xml.bind.DatatypeConverter.parseDateTime( string );
+            f = jakarta.xml.bind.DatatypeConverter.parseDateTime( string );
             return f.getTime();
         } catch ( Exception e ) {
             return null;

@@ -19,11 +19,17 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Represents a failed data replace.
  *
  * @author paul
  */
+@Entity
+@DiscriminatorValue("FailedDataReplacedEvent")
 public class FailedDataReplacedEvent extends DataReplacedEvent {
 
 }

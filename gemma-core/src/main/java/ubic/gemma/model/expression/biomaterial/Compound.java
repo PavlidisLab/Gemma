@@ -18,15 +18,30 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.AbstractDescribable;
 
+/**
+ * Hibernate Search 7 mapping: chemicals attached to {@link ubic.gemma.model.common.description.BibliographicReference}
+ * via {@code @IndexedEmbedded}; {@code name} is tokenized, {@code registryNumber} is keyword (CAS).
+ */
+@Entity
+@Table(name = "COMPOUND")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Indexed
 public class Compound extends AbstractDescribable {
 
+    @Column(name = "REGISTRY_NUMBER", columnDefinition = "VARCHAR(255)")
     private String registryNumber;
 
     @Override
@@ -36,7 +51,7 @@ public class Compound extends AbstractDescribable {
     }
 
     @Override
-    @Field
+    @FullTextField
     public String getName() {
         return super.getName();
     }
@@ -44,7 +59,7 @@ public class Compound extends AbstractDescribable {
     /**
      * @return CAS registry number (see http://www.cas.org/)
      */
-    @Field(analyze = Analyze.NO)
+    @KeywordField
     public String getRegistryNumber() {
         return this.registryNumber;
     }

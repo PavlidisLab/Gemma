@@ -1,12 +1,12 @@
 package ubic.gemma.core.util.test;
 
-import gemma.gsec.acl.AclAuthorizationStrategyImpl;
-import gemma.gsec.acl.AclSidRetrievalStrategyImpl;
-import gemma.gsec.acl.ObjectIdentityRetrievalStrategyImpl;
-import gemma.gsec.acl.domain.AclDao;
-import gemma.gsec.acl.domain.AclDaoImpl;
-import gemma.gsec.acl.domain.AclService;
-import gemma.gsec.acl.domain.AclServiceImpl;
+import ubic.gemma.core.security.acl.AclAuthorizationStrategyImpl;
+import ubic.gemma.core.security.acl.AclSidRetrievalStrategyImpl;
+import ubic.gemma.core.security.acl.ObjectIdentityRetrievalStrategyImpl;
+import ubic.gemma.core.security.acl.domain.AclDao;
+import ubic.gemma.core.security.acl.domain.AclDaoImpl;
+import ubic.gemma.core.security.acl.domain.AclService;
+import ubic.gemma.core.security.acl.domain.AclServiceImpl;
 import org.hibernate.SessionFactory;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +24,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import ubic.gemma.core.context.TestComponent;
 
 /**
- * Configuration for enabling ACLs in a {@link BaseDatabaseTest}.
+ * Configuration for enabling ACLs in a {@link BaseDatabaseTest5}.
  *
  * @author poirigui
  */
@@ -34,8 +34,12 @@ public class BaseDatabaseAclConfig {
 
     @Bean
     public AclDao aclDao( SessionFactory sessionFactory, SidRetrievalStrategy sidRetrievalStrategy ) {
+        // The required-authority must match what test users actually carry. Gemma tests use
+        // @WithMockUser(authorities="GROUP_ADMIN") or runAsAdmin() which grants GROUP_ADMIN — the
+        // prior "ADMIN" wiring was a stale relic and made gsec's AclAuthorizationStrategyImpl
+        // reject every ACL modification because no one ever has the literal "ADMIN" authority.
         AclAuthorizationStrategy aclAuthorizationStrategy = new AclAuthorizationStrategyImpl(
-                new GrantedAuthority[] { new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ), new SimpleGrantedAuthority( "ADMIN" ) },
+                new GrantedAuthority[] { new SimpleGrantedAuthority( "GROUP_ADMIN" ), new SimpleGrantedAuthority( "GROUP_ADMIN" ), new SimpleGrantedAuthority( "GROUP_ADMIN" ) },
                 sidRetrievalStrategy );
         return new AclDaoImpl( sessionFactory,
                 aclAuthorizationStrategy,

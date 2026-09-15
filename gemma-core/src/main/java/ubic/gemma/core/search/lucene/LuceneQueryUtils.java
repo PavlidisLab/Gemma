@@ -2,12 +2,17 @@ package ubic.gemma.core.search.lucene;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.*;
-import org.apache.lucene.util.Version;
-import org.hibernate.search.util.impl.PassThroughAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.TokenMgrError;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.PrefixQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.WildcardQuery;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -24,16 +29,28 @@ import java.util.regex.Pattern;
 
 /**
  * Utilities for parsing search queries using Lucene.
+ * <p>
+ * Restored for HS-7 search restoration Step 3 (see SEARCH_RECCE.md). This is a
+ * subset of the pre-strip {@code LuceneQueryUtils}: we keep {@link #parseSafely},
+ * {@link #escape}, {@link #extractTerms}, {@link #prepareDatabaseQuery}, and
+ * {@link #isWildcard} — the surface that {@code DatabaseSearchSource} and
+ * {@code HibernateSearchSource} actually call. DNF extraction (used by ontology
+ * search) is deferred along with the ontology source.
  *
  * @author poirigui
  */
 @CommonsLog
 public class LuceneQueryUtils {
 
-    private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
+    // Mirrors Lucene's own QueryParserBase.escape() set, including '/' — an unescaped
+    // '/' opens a regex term and an unterminated one ("100 ng/ml") makes the lexer throw.
+    private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\/]" );
 
     private static QueryParser createQueryParser() {
-        return new QueryParser( Version.LUCENE_36, "", new PassThroughAnalyzer( Version.LUCENE_36 ) );
+        // KeywordAnalyzer emits the input as a single token — equivalent to HS 5's
+        // PassThroughAnalyzer.INSTANCE but freshly instantiated, so we avoid the
+        // shared-state shutdown issues that bit the pre-strip code.
+        return new QueryParser( "", new KeywordAnalyzer() );
     }
 
     /**
@@ -52,19 +69,21 @@ public class LuceneQueryUtils {
      */
     public static Query parseSafely( String query, QueryParser queryParser, @Nullable Consumer<Throwable> report ) throws SearchException {
         try {
-            return queryParser.parse( query );
+            return parse( queryParser, query );
         } catch ( ParseException e ) {
             String strippedQuery = escape( query );
+            // Free-text queries routinely carry Lucene operators — a '/' in "100 ng/ml",
+            // brackets in a chemical name. A first-pass parse failure that recovers by
+            // escaping is the expected path, not a fault, so keep it at debug; the reporter
+            // (when present) is how a caller opts in to surfacing it.
             String m = String.format( "Failed to parse '%s': %s, it will be reattempted stripped from Lucene special characters as '%s'.",
                     query, ExceptionUtils.getRootCauseMessage( e ), strippedQuery );
+            log.debug( m, e );
             if ( report != null ) {
-                log.debug( m, e ); // no need to warn if it is consumed
                 report.accept( e );
-            } else {
-                log.warn( m, e );
             }
             try {
-                return queryParser.parse( strippedQuery );
+                return parse( queryParser, strippedQuery );
             } catch ( ParseException e2 ) {
                 throw new LuceneParseSearchException(
                         strippedQuery,
@@ -76,6 +95,34 @@ public class LuceneQueryUtils {
     }
 
     /**
+     * Parse a query, normalizing the parser's two non-{@link ParseException} failure modes into
+     * a {@link ParseException}.
+     * <p>
+     * The lexer throws {@link TokenMgrError} — an {@link Error}, not an exception — for some
+     * malformed inputs (an unterminated regex from a stray '/', an open range from '['). It is
+     * usually wrapped into a {@link ParseException} by {@link QueryParser#parse}, but can escape
+     * unwrapped during grammar lookahead, in which case it would slip past a plain
+     * {@code catch (ParseException)} and bubble up to the retry interceptor.
+     * <p>
+     * A CLOSED regex whose body is not a valid regex fails differently again: the lexer is
+     * satisfied, and {@code RegExp} rejects the body with an {@link IllegalArgumentException}.
+     * That is the {@code a/b (c/d)} shape — the '(' falls between the two slashes, so the body is
+     * {@code b (c} — and it answered 500 on every endpoint reachable through
+     * {@link #prepareDatabaseQuery(SearchSettings, Consumer)} until it was normalized here.
+     * <p>
+     * Normalize both so the escape-and-retry fallback always runs.
+     */
+    private static Query parse( QueryParser queryParser, String query ) throws ParseException {
+        try {
+            return queryParser.parse( query );
+        } catch ( TokenMgrError | IllegalArgumentException e ) {
+            ParseException pe = new ParseException( "Cannot parse '" + query + "': " + e.getMessage() );
+            pe.initCause( e );
+            throw pe;
+        }
+    }
+
+    /**
      * Escape all reserved Lucene characters in the given query.
      */
     public static String escape( String query ) {
@@ -83,9 +130,7 @@ public class LuceneQueryUtils {
     }
 
     /**
-     * Extract terms, regardless of their logical organization.
-     * <p>
-     * Prohibited terms are excluded.
+     * Extract terms, regardless of their logical organization. Prohibited terms are excluded.
      */
     public static Set<String> extractTerms( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
         Set<String> terms = new LinkedHashSet<>();
@@ -113,32 +158,28 @@ public class LuceneQueryUtils {
      * Extract a DNF (Disjunctive Normal Form) from the terms of a query.
      * <p>
      * Clauses can be nested (i.e. {@code a OR (d OR (c AND (d AND e))}) as long as {@code OR} and {@code AND} are not
-     * interleaved.
-     * <p>
-     * Prohibited clauses are ignored unless they break the DNF structure, in which case this will return an empty set.
+     * interleaved. Prohibited clauses are ignored unless they break the DNF structure, in which case this returns an
+     * empty set.
      *
      * @param allowWildcards allow {@link PrefixQuery} and {@link WildcardQuery} clauses
      */
     public static Set<Set<String>> extractTermsDnf( SearchSettings settings, boolean allowWildcards, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
         Query q = parseSafely( settings, createQueryParser(), issueReporter );
-        Set<Set<String>> result;
         if ( q instanceof BooleanQuery ) {
             Set<Set<String>> ds = new LinkedHashSet<>();
             if ( extractNestedDisjunctions( ( BooleanQuery ) q, ds, allowWildcards ) ) {
-                result = ds;
-            } else {
-                result = Collections.emptySet();
+                return ds;
             }
+            return Collections.emptySet();
         } else if ( allowWildcards && q instanceof PrefixQuery && isTermGlobal( ( ( PrefixQuery ) q ).getPrefix() ) ) {
-            result = Collections.singleton( Collections.singleton( termToString( ( ( PrefixQuery ) q ).getPrefix() ) + "*" ) );
+            return Collections.singleton( Collections.singleton( termToString( ( ( PrefixQuery ) q ).getPrefix() ) + "*" ) );
         } else if ( allowWildcards && q instanceof WildcardQuery && isTermGlobal( ( ( WildcardQuery ) q ).getTerm() ) ) {
-            result = Collections.singleton( Collections.singleton( termToString( ( ( WildcardQuery ) q ).getTerm() ) ) );
+            return Collections.singleton( Collections.singleton( termToString( ( ( WildcardQuery ) q ).getTerm() ) ) );
         } else if ( q instanceof TermQuery && isTermGlobal( ( ( TermQuery ) q ).getTerm() ) ) {
-            result = Collections.singleton( Collections.singleton( termToString( ( ( TermQuery ) q ).getTerm() ) ) );
+            return Collections.singleton( Collections.singleton( termToString( ( ( TermQuery ) q ).getTerm() ) ) );
         } else {
-            result = Collections.emptySet();
+            return Collections.emptySet();
         }
-        return result;
     }
 
     private static boolean extractNestedDisjunctions( BooleanQuery query, Set<Set<String>> terms, boolean allowWildcards ) {
@@ -152,7 +193,6 @@ public class LuceneQueryUtils {
             if ( clause.isProhibited() ) {
                 continue;
             }
-            assert !clause.isRequired();
             Query q = clause.getQuery();
             if ( q instanceof BooleanQuery ) {
                 if ( !extractNestedDisjunctions( ( BooleanQuery ) q, terms, allowWildcards ) ) {
@@ -162,8 +202,8 @@ public class LuceneQueryUtils {
                 terms.add( Collections.singleton( termToString( ( ( PrefixQuery ) q ).getPrefix() ) + "*" ) );
             } else if ( allowWildcards && q instanceof WildcardQuery && isTermGlobal( ( ( WildcardQuery ) q ).getTerm() ) ) {
                 terms.add( Collections.singleton( termToString( ( ( WildcardQuery ) q ).getTerm() ) ) );
-            } else if ( clause.getQuery() instanceof TermQuery && isTermGlobal( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) {
-                terms.add( Collections.singleton( termToString( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) );
+            } else if ( q instanceof TermQuery && isTermGlobal( ( ( TermQuery ) q ).getTerm() ) ) {
+                terms.add( Collections.singleton( termToString( ( ( TermQuery ) q ).getTerm() ) ) );
             }
         }
         return true;
@@ -176,28 +216,25 @@ public class LuceneQueryUtils {
      */
     private static boolean extractNestedConjunctions( BooleanQuery query, Set<String> terms ) {
         if ( !query.clauses().stream().allMatch( c -> c.isRequired() || c.isProhibited() ) ) {
-            // found a disjunction, this is not a valid nested conjunction
             return false;
         }
-        // at this point, all the clauses are required
         for ( BooleanClause clause : query.clauses() ) {
             if ( clause.isProhibited() ) {
                 continue;
             }
-            if ( clause.getQuery() instanceof BooleanQuery ) {
-                if ( !extractNestedConjunctions( ( BooleanQuery ) clause.getQuery(), terms ) ) {
+            Query q = clause.getQuery();
+            if ( q instanceof BooleanQuery ) {
+                if ( !extractNestedConjunctions( ( BooleanQuery ) q, terms ) ) {
                     return false;
                 }
-            } else if ( clause.getQuery() instanceof TermQuery && isTermGlobal( ( ( TermQuery ) clause.getQuery() ).getTerm() ) ) {
-                terms.add( termToString( ( ( TermQuery ) clause.getQuery() ).getTerm() ) );
+            } else if ( q instanceof TermQuery && isTermGlobal( ( ( TermQuery ) q ).getTerm() ) ) {
+                terms.add( termToString( ( ( TermQuery ) q ).getTerm() ) );
             }
         }
         return true;
     }
 
     /**
-     * Escape the query for a database match.
-     *
      * @see #prepareDatabaseQuery(SearchSettings, boolean, Consumer)
      */
     @Nullable
@@ -208,15 +245,8 @@ public class LuceneQueryUtils {
     /**
      * Obtain a query suitable for a database match.
      * <p>
-     * This method will return the first global term in the query that is not prohibited. If {@code allowWildcards} is
-     * set to true, prefix and wildcard terms will be considered as well.
-     * <p>
-     * The resulting string is free from character that would usually be used for a free-text match unless
-     * {@code allowWildcards} is set to true.
-     *
-     * @param allowWildcards if true, wildcards are supported (i.e. '*' and '?') and translated to their corresponding
-     *                       LIKE SQL syntax (i.e. '%' and '_'), all other special characters are escaped.
-     * @return the first suitable term in the query, or null if none of them are applicable for a database query
+     * This method returns the first global term in the query that is not prohibited. If {@code allowWildcards} is set
+     * to true, prefix and wildcard terms will be considered as well and translated to SQL LIKE syntax.
      */
     @Nullable
     public static String prepareDatabaseQuery( SearchSettings settings, boolean allowWildcards, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
@@ -231,7 +261,6 @@ public class LuceneQueryUtils {
     @Nullable
     private static String prepareDatabaseQueryInternal( Query query, boolean allowWildcards ) {
         if ( query instanceof BooleanQuery ) {
-            // pick the first, non-prohibited term
             for ( BooleanClause c : ( BooleanQuery ) query ) {
                 if ( !c.isProhibited() ) {
                     return prepareDatabaseQueryInternal( c.getQuery(), allowWildcards );
@@ -256,31 +285,50 @@ public class LuceneQueryUtils {
         return null;
     }
 
-    @Nullable
-    public static URI prepareTermUriQuery( String s ) throws SearchException {
-        Query query = parseSafely( s, createQueryParser(), null );
-        if ( query instanceof TermQuery ) {
-            Term term = ( ( TermQuery ) query ).getTerm();
-            return tryParseUri( term );
+    /**
+     * Check if the query is a wildcard query.
+     */
+    public static boolean isWildcard( SearchSettings settings ) {
+        try {
+            return isWildcard( parse( createQueryParser(), settings.getQuery() ) );
+        } catch ( ParseException e ) {
+            return false;
         }
-        return null;
+    }
+
+    private static boolean isWildcard( Query query ) {
+        if ( query instanceof BooleanQuery ) {
+            for ( BooleanClause clause : ( ( BooleanQuery ) query ) ) {
+                if ( !clause.isProhibited() ) {
+                    return isWildcard( clause.getQuery() );
+                }
+            }
+        }
+        return query instanceof WildcardQuery || query instanceof PrefixQuery;
+    }
+
+    /**
+     * Quote the given Lucene query to be used for an exact match.
+     */
+    public static String quote( String query ) {
+        query = query.replaceAll( "\"", "\\\\\"" );
+        if ( query.contains( " " ) ) {
+            query = "\"" + query + "\"";
+        }
+        return query;
     }
 
     @Nullable
     public static URI prepareTermUriQuery( SearchSettings settings, @Nullable Consumer<Throwable> issueReporter ) throws SearchException {
         Query query = parseSafely( settings, createQueryParser(), issueReporter );
         if ( query instanceof TermQuery ) {
-            Term term = ( ( TermQuery ) query ).getTerm();
-            return tryParseUri( term );
+            return tryParseUri( ( ( TermQuery ) query ).getTerm() );
         }
         return null;
     }
 
     /**
-     * Check if a given term is global (i.e. not fielded).
-     * <p>
-     * This includes the corner case when a term is a URI and would be parsed as a fielded term or an ontology term
-     * using ':' as a delimiter.
+     * Check if a given term is global (not field-qualified). Includes URI and ontology-term corner cases.
      */
     private static boolean isTermGlobal( Term term ) {
         return term.field().isEmpty() || isOntologyTerm( term ) || tryParseUri( term ) != null;
@@ -300,11 +348,6 @@ public class LuceneQueryUtils {
         }
     }
 
-    /**
-     * Detect certain ontology terms that use ':' as a delimiter (i.e. GO:0001234).
-     * <p>
-     * We want to check for known prefixes, because otherwise we could mistake a fielded term for an ontology term.
-     */
     private static boolean isOntologyTerm( Term term ) {
         return OntologyUtils.isTermId( term.field() + ":" + term.text(), true );
     }
@@ -315,50 +358,15 @@ public class LuceneQueryUtils {
             try {
                 return new URI( term.text() );
             } catch ( URISyntaxException e ) {
-                // ignore, it will be treated as a term term
+                // ignore — treated as a plain term
             }
         } else if ( ( term.field().equals( "http" ) || term.field().equals( "https" ) ) && term.text().startsWith( "//" ) ) {
             try {
                 return new URI( term.field() + ":" + term.text() );
             } catch ( URISyntaxException e ) {
-                // ignore, it will be treated as a fielded term
+                // ignore — treated as a fielded term
             }
         }
         return null;
-    }
-
-    /**
-     * Check if the query is a wildcard query.
-     */
-    public static boolean isWildcard( SearchSettings settings ) {
-        try {
-            return isWildcard( createQueryParser().parse( settings.getQuery() ) );
-        } catch ( ParseException e ) {
-            return false;
-        }
-    }
-
-    private static boolean isWildcard( Query query ) {
-        if ( query instanceof BooleanQuery ) {
-            for ( BooleanClause clause : ( ( BooleanQuery ) query ) ) {
-                // prohibited clauses are not used for database search
-                if ( !clause.isProhibited() ) {
-                    return isWildcard( clause.getQuery() );
-                }
-            }
-        }
-        return query instanceof WildcardQuery || query instanceof PrefixQuery;
-    }
-
-    /**
-     * Quote the given Lucene query to be used for an exact match.
-     */
-    public static String quote( String query ) {
-        query = query.replaceAll( "\"", "\\\\\"" );
-        // spaces should be quoted
-        if ( query.contains( " " ) ) {
-            query = "\"" + query + "\"";
-        }
-        return query;
     }
 }

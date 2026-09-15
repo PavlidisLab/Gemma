@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.quantitationtype;
 
-import org.hibernate.NonUniqueResultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +26,13 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author keshav
@@ -44,130 +45,108 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
     private final QuantitationTypeDao quantitationTypeDao;
 
     @Autowired
+    private QuantitationTypeReadService readService;
+
+    @Autowired
     public QuantitationTypeServiceImpl( QuantitationTypeDao quantitationTypeDao ) {
         super( quantitationTypeDao );
         this.quantitationTypeDao = quantitationTypeDao;
     }
 
+    // =====================================================================
+    // Read methods -- delegate to QuantitationTypeReadService.
+    // ACL @Secured annotations live on the QuantitationTypeService interface
+    // and apply at the facade proxy boundary.
+    // =====================================================================
+
     @Override
-    // does not need to a transaction
     public Collection<Class<? extends DataVector>> getVectorTypes() {
-        return this.quantitationTypeDao.getVectorTypes();
+        return readService.getVectorTypes();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Class<? extends DataVector>, Set<QuantitationType>> findByExpressionExperiment( ExpressionExperiment ee ) {
-        return quantitationTypeDao.findByExpressionExperiment( ee );
+        return readService.findByExpressionExperiment( ee );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends DataVector> Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends T> dataVectorType ) {
-        return quantitationTypeDao.findByExpressionExperiment( ee, dataVectorType );
+        return readService.findByExpressionExperiment( ee, dataVectorType );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends DataVector> Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Collection<Class<? extends T>> vectorTypes ) {
-        Collection<QuantitationType> results = new HashSet<>();
-        for ( Class<? extends DataVector> vectorType : vectorTypes ) {
-            results.addAll( findByExpressionExperiment( ee, vectorType ) );
-        }
-        return results;
+        return readService.findByExpressionExperiment( ee, vectorTypes );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
-        return quantitationTypeDao.findByExpressionExperimentAndDimension( expressionExperiment, dimension );
+        return readService.findByExpressionExperimentAndDimension( expressionExperiment, dimension );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<Class<? extends BulkExpressionDataVector>> vectorTypes ) {
-        return quantitationTypeDao.findByExpressionExperimentAndDimension( expressionExperiment, dimension, vectorTypes );
+        return readService.findByExpressionExperimentAndDimension( expressionExperiment, dimension, vectorTypes );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment ) {
-        return this.quantitationTypeDao.loadValueObjectsWithExpressionExperiment( qts, expressionExperiment );
+        return readService.loadValueObjectsWithExpressionExperiment( qts, expressionExperiment );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Class<? extends DataVector> getDataVectorType( QuantitationType qt ) {
-        return quantitationTypeDao.getDataVectorType( qt );
+        return readService.getDataVectorType( qt );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<QuantitationType, Class<? extends DataVector>> getDataVectorTypes( Collection<QuantitationType> qts ) {
-        Map<QuantitationType, Class<? extends DataVector>> vectorTypes = new HashMap<>();
-        for ( QuantitationType qt : qts ) {
-            if ( !vectorTypes.containsKey( qt ) ) {
-                vectorTypes.put( qt, getDataVectorType( qt ) );
-            }
-        }
-        return vectorTypes;
+        return readService.getDataVectorTypes( qts );
     }
 
     @Override
-    // no need for a transaction
     public <T extends DataVector> Collection<Class<? extends T>> getMappedDataVectorType( Class<T> vectorType ) {
-        return quantitationTypeDao.getMappedDataVectorTypes( vectorType );
+        return readService.getMappedDataVectorType( vectorType );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public QuantitationType loadById( Long id, ExpressionExperiment ee ) {
-        return quantitationTypeDao.loadById( id, ee );
+        return readService.loadById( id, ee );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
-        return quantitationTypeDao.loadByIdAndVectorType( id, ee, dataVectorType );
+        return readService.loadByIdAndVectorType( id, ee, dataVectorType );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public QuantitationType reload( QuantitationType quantitationType ) {
-        return quantitationTypeDao.reload( quantitationType );
+        return readService.reload( quantitationType );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType, Class<? extends DataVector> dataVectorTypes ) {
-        return this.quantitationTypeDao.find( ee, quantitationType, Collections.singleton( dataVectorTypes ) );
+        return readService.find( ee, quantitationType, dataVectorTypes );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public QuantitationType findByName( ExpressionExperiment ee, String name ) throws NonUniqueQuantitationTypeByNameException {
-        try {
-            return quantitationTypeDao.findByNameAndVectorType( ee, name, RawExpressionDataVector.class );
-        } catch ( NonUniqueResultException e ) {
-            throw new NonUniqueQuantitationTypeByNameException( String.format( "More than one QuantitationType uses %s as name.", name ), e );
-        }
+        return readService.findByName( ee, name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) throws NonUniqueQuantitationTypeByNameException {
-        try {
-            return this.quantitationTypeDao.findByNameAndVectorType( ee, name, dataVectorType );
-        } catch ( NonUniqueResultException e ) {
-            throw new NonUniqueQuantitationTypeByNameException( String.format( "More than one QuantitationType uses %s as name in %s for vectors of type %s.", name, ee, dataVectorType ), e );
-        }
+        return readService.findByNameAndVectorType( ee, name, dataVectorType );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public <T extends DataVector> Collection<QuantitationType> findAllByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends T> vectorType ) {
-        return quantitationTypeDao.findAllByNameAndVectorType( ee, name, vectorType );
+        return readService.findAllByNameAndVectorType( ee, name, vectorType );
     }
+
+    // =====================================================================
+    // Write methods stay on the facade.
+    // =====================================================================
 
     @Override
     @Transactional

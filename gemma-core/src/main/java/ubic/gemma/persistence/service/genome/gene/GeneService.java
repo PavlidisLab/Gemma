@@ -33,7 +33,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AdminEditableBaseService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +100,12 @@ public interface GeneService extends AdminEditableBaseService<Gene>, FilteringVo
     Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
 
     /**
+     * Taxon-pruned variant of {@link #findByOfficialSymbolInexact(String)}. Use when
+     * the caller has a taxon constraint — see {@link ubic.gemma.persistence.service.genome.GeneDao#findByOfficialSymbolInexact(String, Taxon)}.
+     */
+    Collection<Gene> findByOfficialSymbolInexact( String officialSymbol, Taxon taxon );
+
+    /**
      * Quickly load exact matches.
      *
      * @param query   query
@@ -161,6 +167,14 @@ public interface GeneService extends AdminEditableBaseService<Gene>, FilteringVo
      * of VOs and calling this once rather than per-VO.
      */
     void populateAssociatedExperimentCount( @Nullable Collection<GeneValueObject> vos );
+
+    /**
+     * Populate {@link GeneValueObject#getAliases()} for each VO in the given collection. Aliases are a LAZY
+     * collection on {@link Gene}, so VOs built from un-thawed entities (e.g. search hits, paginated loads)
+     * come back with no aliases; this fills them in. The lookup is batched into a single query keyed by gene
+     * ID, so callers should assemble a full page or list of VOs and call this once rather than per-VO.
+     */
+    void populateAliases( @Nullable Collection<GeneValueObject> vos );
 
     /**
      * Returns a detailVO for a geneDd This method may be unnecessary now that we have put all the logic into the

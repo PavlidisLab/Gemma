@@ -20,7 +20,12 @@
                 pattern="%d %highlight{%p} %style{%pid}{magenta} [%t] %style{%C{1.}.%M(%L)}{cyan} | %m%n%xEx{filters(${gemma.log.filter})}"/>
         </Console>
         <RollingFile name="file" fileName="${gemma.log.dir}/gemma.log" filePattern="${gemma.log.dir}/gemma.log.%i">
-            <PatternLayout pattern="${gemma.log.pattern}"/>
+            <!-- Phase 3 logging A: JSON-line output for cloud log aggregation. Console stays
+                 PatternLayout (humans read it); other rolling-file appenders (warningFile,
+                 errorFile, auditFile, annotationsFile) keep PatternLayout to preserve their
+                 format contracts. Dev console + tests are also unchanged. See
+                 LOGGING_MODERNIZATION_RECCE.md §3 Phase 1. -->
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2-json-template.json"/>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10000KB"/>
             </Policies>
@@ -101,6 +106,10 @@
         <Logger name="org.apache.jena.riot.RDFLanguages" level="ERROR"/>
 
         <Logger name="org.hibernate" level="WARN"/>
+        <!-- HHH000511: MySQL57InnoDBDialect reports version 5.7, below HB6's 8.0 floor.
+             Prod still runs MySQL 5.7, so the dialect can't be bumped until the prod
+             upgrade lands. Mute the deprecation chatter on the Dialect logger until then. -->
+        <Logger name="org.hibernate.dialect.Dialect" level="ERROR"/>
         <Logger name="org.hibernate.cache.ReadWriteCache" level="ERROR"/>
         <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
                 level="ERROR"/>
@@ -109,6 +118,12 @@
         <Logger name="org.hibernate.stat" level="WARN"/>
 
         <Logger name="org.springframework" level="WARN"/>
+        <!-- taskExecutorThreadContextInheritPostProcessor is a BeanPostProcessor whose mere
+             registration forces the dataSource + ACL/method-security chain to instantiate
+             before all BPPs are wired. That early order is deliberate (see ComponentScanConfig
+             and GemmaAclConfiguration), so the "not eligible for all BeanPostProcessors"
+             checker warnings are expected noise, not a defect. -->
+        <Logger name="org.springframework.context.support.PostProcessorRegistrationDelegate$BeanPostProcessorChecker" level="ERROR"/>
         <Logger name="org.springframework.beans.GenericTypeAwarePropertyDescriptor" level="FATAL"/>
         <Logger name="org.springframework.security.access.event.LoggerListener" level="INFO"/>
         <Logger name="org.springframework.security.authentication.event.LoggerListener" level="ERROR"/>
@@ -132,7 +147,7 @@
         <Logger name="ubic.gemma.core.ontology.OntologyService" level="INFO">
             <AppenderRef ref="annotationsFile"/>
         </Logger>
-        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
+        <Logger name="org.springframework.orm.jpa.JpaTransactionManager" level="WARN"/>
         <Logger name="ubic.gemma.web.controller.common.CharacteristicBrowserController" level="INFO">
             <AppenderRef ref="annotationsFile"/>
         </Logger>

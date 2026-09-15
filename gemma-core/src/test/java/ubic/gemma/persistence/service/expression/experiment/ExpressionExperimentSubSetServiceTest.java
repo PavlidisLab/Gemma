@@ -14,20 +14,20 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author paul
  */
-public class ExpressionExperimentSubSetServiceTest extends BaseSpringContextTest {
+public class ExpressionExperimentSubSetServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;

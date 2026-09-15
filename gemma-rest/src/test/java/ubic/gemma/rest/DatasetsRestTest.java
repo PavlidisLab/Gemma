@@ -1,23 +1,22 @@
 package ubic.gemma.rest;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,8 +29,9 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 /**
  * @author tesarst
  */
-@Category(SlowTest.class)
-public class DatasetsRestTest extends BaseJerseyIntegrationTest {
+@Tag("integration")
+@Tag("slow")
+public class DatasetsRestTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private DatasetsWebService datasetsWebService;
@@ -48,7 +48,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     /* fixtures */
     private final ArrayList<ExpressionExperiment> ees = new ArrayList<>( 10 );
 
-    @Before
+    @BeforeEach
     public void setUpMocks() {
         for ( int i = 0; i < 10; i++ ) {
             testHelper.resetSeed();
@@ -56,7 +56,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         }
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         expressionExperimentService.remove( ees );
     }
@@ -78,10 +78,15 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testSomeByShortName() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
-                        ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 )
-                                .getShortName() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
+        // The endpoint return type widened to Object in step 1w to support cursor mode; pass
+        // null for the new ?cursor= arg so we still get the offset-mode response shape (a
+        // FilteredAndInferredAndPaginatedResponseDataObject, a ResponseDataObject<List<...>>).
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response =
+                ( ResponseDataObject<List<ExpressionExperimentValueObject>> ) datasetsWebService.getDatasetsByIds(
+                        DatasetArrayArg.valueOf( ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 ).getShortName() ),
+                        FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
+                        LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), null );
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( ee ).isNotNull();
         assertThat( ee.getAccession() ).isNotNull();
@@ -93,10 +98,12 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testSomeById() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
-                        ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 )
-                                .getId() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response =
+                ( ResponseDataObject<List<ExpressionExperimentValueObject>> ) datasetsWebService.getDatasetsByIds(
+                        DatasetArrayArg.valueOf( ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 ).getId() ),
+                        FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
+                        LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), null );
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( ee ).isNotNull();
         assertThat( ee.getAccession() ).isNotNull();
@@ -291,7 +298,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         // Body: {"troubled": true, "note": "integration-test"}
         String body = "{\"troubled\":true,\"note\":\"integration-test\"}";
         assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request()
-                .put( javax.ws.rs.client.Entity.json( body ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( body ) ) )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .hasFieldOrPropertyWithValue( "data.troubled", true );
@@ -307,7 +314,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     public void testUpdateDatasetCurationDetailsWithEmptyBodyIs400() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request()
-                .put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( "null" ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
     }
 
@@ -316,13 +323,13 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         ExpressionExperiment ee = ees.get( 0 );
 
         assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
-                .put( javax.ws.rs.client.Entity.json( "{\"isPublic\":true}" ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( "{\"isPublic\":true}" ) ) )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .hasFieldOrPropertyWithValue( "data.isPublic", true );
 
         assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
-                .put( javax.ws.rs.client.Entity.json( "{\"isPublic\":false}" ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( "{\"isPublic\":false}" ) ) )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .hasFieldOrPropertyWithValue( "data.isPublic", false );
@@ -332,7 +339,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     public void testUpdateDatasetPermissionsReturnsStateWhenIsPublicOmitted() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
-                .put( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( "{}" ) ) )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .hasFieldOrProperty( "data.isPublic" )
@@ -343,14 +350,14 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     public void testUpdateDatasetPermissionsWithEmptyBodyIs400() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
-                .put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( "null" ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
     }
 
     @Test
     public void testUpdateDatasetPermissionsWithUnknownDatasetIs404() {
         assertThat( target( "/datasets/9999999/permissions" ).request()
-                .put( javax.ws.rs.client.Entity.json( "{\"isPublic\":true}" ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( "{\"isPublic\":true}" ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
@@ -388,35 +395,35 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     @Test
     public void testRecomputeDatasetGeeqWithUnknownDatasetIs404() {
         assertThat( target( "/datasets/9999999/geeq" ).request()
-                .put( javax.ws.rs.client.Entity.json( "" ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( "" ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
     @Test
     public void testRunDatasetPreprocessWithUnknownDatasetIs404() {
         assertThat( target( "/datasets/9999999/tasks/preprocess" ).request()
-                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .post( jakarta.ws.rs.client.Entity.json( "" ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
     @Test
     public void testRunDatasetDiagnosticsWithUnknownDatasetIs404() {
         assertThat( target( "/datasets/9999999/tasks/diagnostics" ).request()
-                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .post( jakarta.ws.rs.client.Entity.json( "" ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
     @Test
     public void testRunDatasetBatchInformationFetchWithUnknownDatasetIs404() {
         assertThat( target( "/datasets/9999999/tasks/batchInfo" ).request()
-                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .post( jakarta.ws.rs.client.Entity.json( "" ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
     @Test
     public void testRunDatasetDifferentialAnalysisWithUnknownDatasetIs404() {
         assertThat( target( "/datasets/9999999/tasks/differential" ).request()
-                .post( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .post( jakarta.ws.rs.client.Entity.json( "{}" ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
@@ -424,7 +431,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     public void testRedoDatasetDifferentialAnalysisWithUnknownAnalysisIs404() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/tasks/redo/9999999" ).request()
-                .post( javax.ws.rs.client.Entity.json( "" ) ) )
+                .post( jakarta.ws.rs.client.Entity.json( "" ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
@@ -471,14 +478,14 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     public void testReplaceDatasetDesignWithEmptyBodyIs400() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/design" ).request()
-                .put( javax.ws.rs.client.Entity.json( "null" ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( "null" ) ) )
                 .hasStatus( Response.Status.BAD_REQUEST );
     }
 
     @Test
     public void testReplaceDatasetDesignWithUnknownDatasetIs404() {
         assertThat( target( "/datasets/9999999/design" ).request()
-                .put( javax.ws.rs.client.Entity.json( "{}" ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( "{}" ) ) )
                 .hasStatus( Response.Status.NOT_FOUND );
     }
 
@@ -496,7 +503,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         String designJson = body.substring( dataStart + "\"data\":".length(), body.lastIndexOf( '}' ) );
 
         assertThat( target( "/datasets/" + ee.getId() + "/design" ).request()
-                .put( javax.ws.rs.client.Entity.json( designJson ) ) )
+                .put( jakarta.ws.rs.client.Entity.json( designJson ) ) )
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .hasFieldOrProperty( "data" );

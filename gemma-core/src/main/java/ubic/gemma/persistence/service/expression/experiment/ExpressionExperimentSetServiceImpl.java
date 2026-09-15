@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -48,13 +49,18 @@ public class ExpressionExperimentSetServiceImpl
     private static final String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
 
     private final ExpressionExperimentSetDao expressionExperimentSetDao;
-    private final ExpressionExperimentService expressionExperimentService;
+    /**
+     * Inject the thin read service rather than the facade {@link ExpressionExperimentService}
+     * to break the dependency cycle (this service is itself injected by EESI via the facade
+     * autowire on the writer side).
+     */
+    private final ExpressionExperimentReadService expressionExperimentReadService;
 
     @Autowired
-    public ExpressionExperimentSetServiceImpl( ExpressionExperimentSetDao expressionExperimentSetDao, ExpressionExperimentService expressionExperimentService ) {
+    public ExpressionExperimentSetServiceImpl( ExpressionExperimentSetDao expressionExperimentSetDao, ExpressionExperimentReadService expressionExperimentReadService ) {
         super( expressionExperimentSetDao );
         this.expressionExperimentSetDao = expressionExperimentSetDao;
-        this.expressionExperimentService = expressionExperimentService;
+        this.expressionExperimentReadService = expressionExperimentReadService;
     }
 
     @Override
@@ -189,11 +195,14 @@ public class ExpressionExperimentSetServiceImpl
             throw new IllegalArgumentException( "You must provide a name" );
         }
 
-        // make sure potentially new experiment members are of the right taxon
+        // A taxon on the set is a CONSTRAINT the set opted into, not a requirement: when it has
+        // one, every member must match it, and when it has none the set may span taxa. Enforcing it
+        // unconditionally is what made a mixed curation cohort impossible to express.
         Taxon groupTaxon = expressionExperimentSet.getTaxon();
         Taxon eeTaxon;
-        for ( ExpressionExperiment ee : expressionExperimentSet.getExperiments() ) {
-            eeTaxon = expressionExperimentService.getTaxon( ee );
+        for ( ExpressionExperiment ee : groupTaxon == null ? Collections.<ExpressionExperiment>emptySet()
+                : expressionExperimentSet.getExperiments() ) {
+            eeTaxon = expressionExperimentReadService.getTaxon( ee );
 
             if ( eeTaxon == null ) {
                 // this can happen if there are 0 samples

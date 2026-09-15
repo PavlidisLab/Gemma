@@ -19,10 +19,10 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -31,12 +31,12 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author kelsey
  */
-public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
+public class ExpressionExperimentDeleteTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExpressionExperimentService svc;

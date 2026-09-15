@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostAuthorize;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -17,20 +18,26 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Stream;
 
 public interface SingleCellExpressionExperimentService {
 
     /**
-     * Load an experiment with its single-cell data vectors initialized.
+     * Load an experiment for the single-cell data loader path.
      * <p>
-     * The rest of the experiment is also initialized as per {@link ExpressionExperimentDao#thawLite(ExpressionExperiment)}.
+     * The experiment is initialized via {@link ExpressionExperimentDao#thawLite(ExpressionExperiment)}
+     * (quantitation types, bioassays, experimental design, etc.). The single-cell vector collection
+     * is intentionally NOT eagerly initialized; the calling transaction lazy-loads only what it
+     * touches. This replaces the prior {@code loadWithSingleCellVectors} entry point which forced
+     * a full SCEDV load even when the loader was about to write fresh vectors. See
+     * PERF_PROBE_REPORT_ROUND4 finding C3.
      */
     @Nullable
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    ExpressionExperiment loadWithSingleCellVectors( Long id );
+    @Secured({ "GROUP_USER" })
+    @PostAuthorize("returnObject == null or hasPermission(returnObject, 'READ') or hasPermission(returnObject, 'ADMINISTRATION')")
+    ExpressionExperiment loadAndInitializeSingleCellDimensions( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
@@ -78,9 +85,11 @@ public interface SingleCellExpressionExperimentService {
      * Obtain single-cell vectors for a particular sample.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Nullable
     Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Nullable
     Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, SingleCellVectorInitializationConfig config );
 
     /**
@@ -143,15 +152,15 @@ public interface SingleCellExpressionExperimentService {
             Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean recrateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor );
 
     /**
-     * Add single-cell data vectors, use streaming to load SingleCellExpressionDataVectors ( {@link #addSingleCellDataVectors} )
-     * Streaming variant of {@link #addSingleCellDataVectors} that avoids materializing all vectors in memory.
+     * Streaming variant of {@link #addSingleCellDataVectors(ExpressionExperiment, QuantitationType, Collection, String, boolean, boolean)}
+     * that avoids materializing all vectors in memory.
+     * <p>
+     * The {@code scd} must be supplied explicitly because the stream cannot be peeked at to retrieve it.
      *
-     * The {@code scd} must be supplied explicitly because we cannot peek at the stream to retrieve it.
-     *
-     * @param scd the single-cell dimension shared by all vectors in the stream
-     * @param vectors Streamed SingleCellExpressionDataVectors. Each vector must have its QT and design element set
+     * @param scd                              the single-cell dimension shared by all vectors in the stream
+     * @param vectors                          streamed vectors; each must have its QT and design element set
      * @param recrateCellTypeFactorIfNecessary re-create the cell type factor if necessary (i.e. a new set of preferred single-cell vectors are added)
-     * @param ignoreCompatibleFactor ignore an existing compatible cell type factor and re-create it anyway
+     * @param ignoreCompatibleFactor           ignore an existing compatible cell type factor and re-create it anyway
      * @return the number of vectors that were added
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

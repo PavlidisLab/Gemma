@@ -1,11 +1,12 @@
 package ubic.gemma.persistence.service.maintenance;
 
-import org.hibernate.SQLQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,12 +16,14 @@ import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.mail.MailEngine;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
 import java.io.IOException;
@@ -34,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class TableMaintenanceUtilTest extends BaseTest {
+public class TableMaintenanceUtilTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -73,7 +76,8 @@ public class TableMaintenanceUtilTest extends BaseTest {
 
         @Bean
         public SessionFactory sessionFactory() {
-            return mock( SessionFactory.class );
+            // the implementor sub-interface, so the EE2C tests can hand the impl a dialect to render against
+            return mock( SessionFactoryImplementor.class );
         }
 
         @Bean
@@ -83,7 +87,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
     }
 
     @Autowired
-    private SessionFactory sessionFactory;
+    private SessionFactoryImplementor sessionFactory;
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
@@ -101,18 +105,26 @@ public class TableMaintenanceUtilTest extends BaseTest {
 
     private Session session;
 
-    private SQLQuery query;
+    private NativeQuery query;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         when( externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE2CS ) ).thenReturn( gene2csDatabaseEntry );
-        query = mock( SQLQuery.class, RETURNS_SELF );
+        query = mock( NativeQuery.class, RETURNS_SELF );
         session = mock( Session.class );
-        when( session.createSQLQuery( any() ) ).thenReturn( query );
+        when( session.createNativeQuery( any() ) ).thenReturn( query );
         when( sessionFactory.getCurrentSession() ).thenReturn( session );
+        withDialect( new org.hibernate.dialect.MySQLDialect() );
     }
 
-    @After
+    /** Point the impl's dialect lookup at {@code dialect}, which decides whether index hints are rendered. */
+    private void withDialect( org.hibernate.dialect.Dialect dialect ) {
+        org.hibernate.engine.jdbc.spi.JdbcServices jdbcServices = mock( org.hibernate.engine.jdbc.spi.JdbcServices.class );
+        when( jdbcServices.getDialect() ).thenReturn( dialect );
+        when( sessionFactory.getJdbcServices() ).thenReturn( jdbcServices );
+    }
+
+    @AfterEach
     public void tearDown() throws IOException {
         reset( externalDatabaseService, sessionFactory, session, query );
         Path f = gene2csInfoPath;
@@ -127,7 +139,7 @@ public class TableMaintenanceUtilTest extends BaseTest {
         tableMaintenanceUtil.updateGene2CsEntries();
         // verify write to disk
         assertThat( gene2csInfoPath ).exists();
-        verify( session ).createSQLQuery( startsWith( "insert into GENE2CS" ) );
+        verify( session ).createNativeQuery( startsWith( "insert into GENE2CS" ) );
         verify( query ).addSynchronizedQuerySpace( "GENE2CS" );
         verify( query ).executeUpdate();
         verify( externalDatabaseService ).findByNameWithAuditTrail( ExternalDatabases.GENE2CS );
@@ -146,5 +158,33 @@ public class TableMaintenanceUtilTest extends BaseTest {
         verifyNoInteractions( session );
         verifyNoInteractions( externalDatabaseService );
         verifyNoInteractions( mailEngine );
+    }
+
+    /**
+     * The deprecated factor-annotations branch joins {@code CHARACTERISTIC} on a column that is NULL on all
+     * 10.8M production rows, so its index reports cardinality 1 and MySQL costs the ref lookup at the whole
+     * table — it full-scans instead, which measured 12.1 s per experiment regardless of size. The hint is
+     * what makes a per-experiment refresh cheap enough to run inside a curation commit.
+     */
+    @Test
+    public void testEe2cDesignLevelPinsTheFactorAnnotationsIndexOnMysql() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, ExperimentalDesign.class );
+        verify( session ).createNativeQuery( contains( "FORCE INDEX (CHARACTERISTIC_EXPERIMENTAL_FACTOR_FKC)" ) );
+    }
+
+    /**
+     * H2 — what the unit tests run on, MODE=MYSQL and all — rejects {@code FORCE INDEX} with a syntax error,
+     * and the constraint name it does carry is not an index name anyway. Emitting the hint unconditionally
+     * turns every H2 test that rebuilds EE2C red.
+     */
+    @Test
+    public void testEe2cDesignLevelOmitsTheIndexHintOnH2() {
+        withDialect( new ubic.gemma.persistence.hibernate.H2Dialect() );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, ExperimentalDesign.class );
+        verify( session ).createNativeQuery( argThat( sql -> !sql.contains( "FORCE INDEX" ) ) );
     }
 }

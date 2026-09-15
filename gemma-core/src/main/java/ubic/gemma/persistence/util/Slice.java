@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.util;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.function.Function;
@@ -51,7 +51,7 @@ public class Slice<O> extends AbstractList<O> implements List<O> {
 
     /**
      * Unfortunately, we need to implement this because gsec explicitly remove items that are not accessible by the
-     * current user in {@link gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationValueObjectCollectionFilteringProvider}.
+     * current user in {@link ubic.gemma.core.security.acl.afterinvocation.AclEntryAfterInvocationValueObjectCollectionFilteringProvider}.
      */
     @Override
     @Deprecated

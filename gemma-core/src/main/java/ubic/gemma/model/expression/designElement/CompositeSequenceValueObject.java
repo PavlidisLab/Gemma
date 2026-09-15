@@ -18,17 +18,23 @@
  */
 package ubic.gemma.model.expression.designElement;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import ubic.gemma.model.analysis.sequence.GeneMappingSummary;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.lang.Nullable;
+import ubic.gemma.model.analysis.sequence.GeneMappingSummaryValueObject;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * @author anton
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Getter
+@Setter
 public class CompositeSequenceValueObject extends IdentifiableValueObject<CompositeSequence> {
 
     private static final long serialVersionUID = 4915680501039784666L;
@@ -36,8 +42,57 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     private String name;
     private String description;
     private ArrayDesignValueObject arrayDesign;
-    @JsonIgnore
-    private Collection<GeneMappingSummary> geneMappingSummaries;
+    /**
+     * Per-alignment gene mappings for this element, or null when the caller did not ask for them
+     * (only {@code GET /platforms/{platform}/elements/{probe}/mappingSummary} populates this).
+     * <p>
+     * An EMPTY list means the probe has no gene mappings — a real answer, distinct from the field
+     * being absent. Until 2026-08-22 this field was {@code @JsonIgnore}d while the endpoint
+     * computed it, so the mappingSummary response silently omitted the key altogether and a client
+     * could not tell a missing feature from a probe with no alignments.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<GeneMappingSummaryValueObject> geneMappingSummaries;
+    /**
+     * Raw probe sequence from the associated {@code BioSequence.sequence}.
+     * Populated only when the caller opts in via {@code ?withSequence=true}
+     * on the platform-elements endpoint (otherwise null and elided from the
+     * wire by {@code @JsonInclude(NON_NULL)}). Kept out of the default
+     * response because sequences are 25-300bp per probe and would inflate
+     * a 22k-element platform listing by ~1 MB.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String sequence;
+    /**
+     * Pre-computed length from {@code BioSequence.length}, exposed alongside
+     * {@code sequence}. Independent so a caller can request length without
+     * paying the full-string cost (future-proofing; for now both come together
+     * with {@code ?withSequence=true}).
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long sequenceLength;
+
+    /**
+     * Compact identities of the genes this element maps to, via the denormalized
+     * {@code GENE2CS} table.
+     * <p>
+     * Populated only when the caller opts in via {@code ?withGenes=true} on the
+     * platform-elements endpoints (otherwise null and elided from the wire by
+     * {@code @JsonInclude(NON_NULL)}). Off by default for the same reason as
+     * {@link #sequence}: the mapping is a second query per page, and most callers
+     * paging a 22k-element platform listing never render the column.
+     * <p>
+     * An empty list means "this element maps to no gene" &mdash; distinct from null,
+     * which means "not requested". A probe with no gene mapping still gets {@code []}
+     * when {@code withGenes=true}, so a client can tell a real negative from an
+     * unpopulated field.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<GeneReferenceValueObject> genes;
 
     /**
      * Required when using the class as a spring bean.
@@ -86,37 +141,5 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
         return result;
-    }
-
-    public ArrayDesignValueObject getArrayDesign() {
-        return arrayDesign;
-    }
-
-    public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
-        this.arrayDesign = arrayDesign;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public Collection<GeneMappingSummary> getGeneMappingSummaries() {
-        return geneMappingSummaries;
-    }
-
-    public void setGeneMappingSummaries( Collection<GeneMappingSummary> geneMappingSummaries ) {
-        this.geneMappingSummaries = geneMappingSummaries;
     }
 }

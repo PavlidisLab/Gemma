@@ -18,11 +18,13 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import jakarta.persistence.Entity;
 import ubic.gemma.model.analysis.Analysis;
 
 /**
  * An analysis of one or more ExpressionExperiments
  */
+@Entity
 public abstract class ExpressionAnalysis extends Analysis {
 
 }

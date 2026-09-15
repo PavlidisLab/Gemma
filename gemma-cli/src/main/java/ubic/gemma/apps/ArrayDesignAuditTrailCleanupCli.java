@@ -69,12 +69,12 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
                 }
             }
 
-            for ( Object k : eventsByType.keySet() ) {
+            for ( Map.Entry<Object, List<AuditEvent>> e : eventsByType.entrySet() ) {
 
-                List<AuditEvent> evs = eventsByType.get( k );
+                List<AuditEvent> evs = e.getValue();
 
                 getCliContext().getErrorStream().println( "------------------------" );
-                getCliContext().getErrorStream().println( k );
+                getCliContext().getErrorStream().println( e.getKey() );
                 for ( AuditEvent ae : evs ) {
                     getCliContext().getErrorStream().println( ae.getDate() + " " + ae.getNote() );
                 }

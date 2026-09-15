@@ -4,7 +4,7 @@ import lombok.Getter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 @Getter
 public class QueriedAndFilteredAndPaginatedResponseDataObject<T> extends FilteredAndPaginatedResponseDataObject<T> {

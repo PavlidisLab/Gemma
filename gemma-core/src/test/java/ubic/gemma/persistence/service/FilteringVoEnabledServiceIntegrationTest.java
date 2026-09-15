@@ -1,14 +1,12 @@
 package ubic.gemma.persistence.service;
 
-import lombok.extern.apachecommons.CommonsLog;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
-import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.persistence.util.*;
 
 import java.net.URL;
@@ -24,9 +22,9 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
  * Test all possible filterable properties for filtering and sorting results.
  * @author poirigui
  */
-@CommonsLog
-@Category(SlowTest.class)
-public class FilteringVoEnabledServiceIntegrationTest extends BaseIntegrationTest {
+@Slf4j
+@Tag("slow")
+public class FilteringVoEnabledServiceIntegrationTest extends BaseIntegrationTest5 {
 
     @Autowired
     private Map<String, FilteringVoEnabledService<?, ?>> filteringServices;
@@ -81,13 +79,14 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseIntegrationTes
 
     @Test
     public void testSortingByAllFilterableProperties() {
+        // Note: the historical skip for `.size` sort on ExpressionAnalysisResultSetService was needed
+        // when EARS DAO used the legacy Hibernate Criteria API (fix #520). Phase 2 migrated EARS to
+        // JPA Criteria with explicit cb.size(...) sort support (see
+        // ExpressionAnalysisResultSetDaoImpl#buildOrders and AbstractCriteriaFilteringVoEnabledDao
+        // #buildOrders), so the skip is no longer required.
         for ( Map.Entry<String, FilteringVoEnabledService<?, ?>> entry : filteringServices.entrySet() ) {
             FilteringVoEnabledService<?, ?> filteringService = entry.getValue();
             for ( String property : filteringService.getFilterableProperties() ) {
-                if ( filteringService instanceof ExpressionAnalysisResultSetService && property.endsWith( ".size" ) ) {
-                    log.warn( "Skipping collection size test with the Criteria API." );
-                    continue;
-                }
                 Sort sort = filteringService.getSort( property, Sort.Direction.ASC, Sort.NullMode.LAST );
                 log.info( String.format( "%s.loadValueObjects(null, %s, 0, 1)", entry.getKey(), sort ) );
                 filteringService.loadValueObjects( null, sort, 0, 1 );

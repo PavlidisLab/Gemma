@@ -37,15 +37,15 @@
 
 package ubic.gemma.model.genome.gene;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @author tvrossum
  */
-@CommonsLog
+@Slf4j
 public class DatabaseBackedGeneSetValueObject extends GeneSetValueObject {
 
     private static final long serialVersionUID = -1360523793656012770L;

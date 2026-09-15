@@ -25,6 +25,7 @@ public class SingleCellCellTypeFactorCreatorCli extends ExpressionExperimentMani
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        getPipelineJobReporter().stage( "sc-celltype-factor:" + expressionExperiment.getShortName() );
         singleCellExpressionExperimentService.createCellTypeFactor( expressionExperiment, true, isForce() );
         refreshExpressionExperimentFromGemmaWebSilently( expressionExperiment, false, false );
     }

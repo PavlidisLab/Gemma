@@ -40,6 +40,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -155,10 +156,10 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             aliases.add( newAlias );
         }
 
-        for ( String dbname : info.getDbXrefs().keySet() ) {
-            if ( !dbname.equalsIgnoreCase( "Ensembl" ) )
+        for ( Map.Entry<String, String> dbEntry : info.getDbXrefs().entrySet() ) {
+            if ( !dbEntry.getKey().equalsIgnoreCase( "Ensembl" ) )
                 continue;
-            String identifier = info.getDbXrefs().get( dbname );
+            String identifier = dbEntry.getValue();
             DatabaseEntry crossref = DatabaseEntry.Factory.newInstance();
             crossref.setAccession( identifier );
             crossref.setExternalDatabase( NcbiGeneConverter.getEnsembl() );

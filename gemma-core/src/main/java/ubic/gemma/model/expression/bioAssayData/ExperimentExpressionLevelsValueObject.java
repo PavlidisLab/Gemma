@@ -1,17 +1,23 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AccessLevel;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.util.RoundingUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("unused") // Used in rest api
+@Getter
 public class ExperimentExpressionLevelsValueObject implements Serializable {
     public static final String OPT_PICK_MAX = "pickmax";
     public static final String OPT_PICK_VAR = "pickvar";
@@ -29,33 +35,115 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
     public ExperimentExpressionLevelsValueObject( long datasetId,
             Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene, boolean keepGeneNonSpecific,
             @Nullable String conslidationMode ) {
+        this( datasetId, vectorsPerGene, keepGeneNonSpecific, conslidationMode, Collections.emptyMap() );
+    }
+
+    /**
+     * Variant that carries per-gene differential-expression statistics for the contrast represented by the
+     * result-set used to build the response. See {@code geneOfficialName} accessors on
+     * {@link GeneElementExpressionsValueObject} for the exposed fields.
+     */
+    public ExperimentExpressionLevelsValueObject( long datasetId,
+            Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene, boolean keepGeneNonSpecific,
+            @Nullable String conslidationMode, Map<Gene, GeneDiffExStats> diffExStatsPerGene ) {
         this.datasetId = datasetId;
 
-        for ( Gene g : vectorsPerGene.keySet() ) {
+        for ( Map.Entry<Gene, List<DoubleVectorValueObject>> vpgEntry : vectorsPerGene.entrySet() ) {
+            Gene g = vpgEntry.getKey();
             if ( g != null ) {
+                GeneDiffExStats stats = diffExStatsPerGene.get( g );
                 this.geneExpressionLevels
-                        .add( new GeneElementExpressionsValueObject( g.getOfficialSymbol(), g.getNcbiGeneId(),
-                                vectorsPerGene.get( g ), keepGeneNonSpecific, conslidationMode ) );
+                        .add( new GeneElementExpressionsValueObject( g.getOfficialSymbol(), g.getOfficialName(),
+                                g.getNcbiGeneId(), g.getEnsemblId(),
+                                stats != null ? stats.correctedPvalue : null,
+                                stats != null ? stats.pvalue : null,
+                                stats != null ? stats.log2FoldChange : null,
+                                vpgEntry.getValue(), keepGeneNonSpecific, conslidationMode ) );
             }
         }
     }
 
-    public long getDatasetId() {
-        return datasetId;
+    /**
+     * Round every expression value and per-gene statistic in this response to
+     * {@link RoundingUtils#JSON_SIGNIFICANT_DIGITS} significant digits.
+     * <p>
+     * Gemma's expression data descends from 16-bit measurements and these values are plotted rather than
+     * recomputed from; the digits this drops are also incompressible, so they cost the most on the largest
+     * responses. The REST layer applies this unless the caller asks for {@code precise=true}.
+     * <p>
+     * Mutates in place. That is safe here and only here: the producer builds a fresh value object per
+     * request, and {@code VectorElementValueObject} copies each vector's values into its own map, so the
+     * cached {@link DoubleVectorValueObject} arrays are never reached.
+     */
+    public void roundValuesForJson() {
+        for ( GeneElementExpressionsValueObject gene : geneExpressionLevels ) {
+            gene.roundValuesForJson();
+        }
     }
 
-    public LinkedList<GeneElementExpressionsValueObject> getGeneExpressionLevels() {
-        return geneExpressionLevels;
+    /**
+     * Per-gene differential-expression statistics carried alongside expression levels for the
+     * {@code /datasets/{dataset}/expressions/differential} endpoint.
+     * <p>
+     * When a gene maps to multiple probes in the result set, the producer should pick the row with the most
+     * significant (smallest) corrected p-value — consistent with how the endpoint ranks its top-N.
+     */
+    public static class GeneDiffExStats {
+        @Nullable
+        public final Double correctedPvalue;
+        @Nullable
+        public final Double pvalue;
+        @Nullable
+        public final Double log2FoldChange;
+
+        public GeneDiffExStats( @Nullable Double correctedPvalue, @Nullable Double pvalue, @Nullable Double log2FoldChange ) {
+            this.correctedPvalue = correctedPvalue;
+            this.pvalue = pvalue;
+            this.log2FoldChange = log2FoldChange;
+        }
     }
 
     // Used in rest api
     @SuppressWarnings("unused")
+    @Getter
     public static class GeneElementExpressionsValueObject implements Serializable {
         private static final String AVG_PREFIX = "Averaged from";
         private static final String MSG_ERR_VECS_MAX = "Can not compute max from null or 1 element vector collection";
         private static final String MSG_ERR_VECS_VAR = "Can not compute var from null or 1 element vector collection";
         private String geneOfficialSymbol;
+        @Nullable
+        @Schema(description = "Long descriptive gene name. May be null if unknown.")
+        private String geneOfficialName;
         private Integer geneNcbiId;
+        @Nullable
+        @Schema(description = "Ensembl accession for the gene. May be null if the gene has no Ensembl mapping.")
+        private String geneEnsemblId;
+        /**
+         * FDR-corrected p-value for the contrast represented by the result-set used to populate this VO.
+         * Only set for the {@code /datasets/{id}/expressions/differential} endpoint; null otherwise.
+         */
+        @Nullable
+        @Schema(description = "FDR-corrected p-value for the contrast represented by the result-set. Only set for the differential-expression endpoint.")
+        private Double correctedPvalue;
+        /**
+         * Uncorrected p-value for the contrast represented by the result-set used to populate this VO.
+         * Only set for the {@code /datasets/{id}/expressions/differential} endpoint; null otherwise.
+         */
+        @Nullable
+        @Schema(description = "Uncorrected p-value for the contrast represented by the result-set. Only set for the differential-expression endpoint.")
+        private Double pvalue;
+        /**
+         * Log2 fold change for the primary contrast of the represented result-set. For multi-contrast result
+         * sets the producer picks the contrast on the gene's most-significant row (smallest corrected p-value).
+         * Only set for the {@code /datasets/{id}/expressions/differential} endpoint; null otherwise.
+         */
+        @Nullable
+        @Schema(description = "Log2 fold change for the primary contrast on the gene's most-significant probe row. Only set for the differential-expression endpoint.")
+        private Double log2FoldChange;
+        /**
+         * Exposed via {@link #getVectors()} (legacy getter name).
+         */
+        @Getter(AccessLevel.NONE)
         private List<VectorElementValueObject> elements = new LinkedList<>();
 
         public GeneElementExpressionsValueObject() {
@@ -64,8 +152,20 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
 
         public GeneElementExpressionsValueObject( String geneOfficialSymbol, Integer geneNcbiId,
                 List<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific, @Nullable String mode ) {
+            this( geneOfficialSymbol, null, geneNcbiId, null, null, null, null, vectors, keepGeneNonSpecific, mode );
+        }
+
+        public GeneElementExpressionsValueObject( String geneOfficialSymbol, @Nullable String geneOfficialName,
+                Integer geneNcbiId, @Nullable String geneEnsemblId,
+                @Nullable Double correctedPvalue, @Nullable Double pvalue, @Nullable Double log2FoldChange,
+                List<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific, @Nullable String mode ) {
             this.geneOfficialSymbol = geneOfficialSymbol;
+            this.geneOfficialName = geneOfficialName;
             this.geneNcbiId = geneNcbiId;
+            this.geneEnsemblId = geneEnsemblId;
+            this.correctedPvalue = correctedPvalue;
+            this.pvalue = pvalue;
+            this.log2FoldChange = log2FoldChange;
 
             if ( vectors == null ) {
                 return;
@@ -100,16 +200,17 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
             }
         }
 
-        public String getGeneOfficialSymbol() {
-            return geneOfficialSymbol;
-        }
-
-        public Integer getGeneNcbiId() {
-            return geneNcbiId;
-        }
-
         public List<VectorElementValueObject> getVectors() {
             return elements;
+        }
+
+        void roundValuesForJson() {
+            this.correctedPvalue = RoundingUtils.round( this.correctedPvalue );
+            this.pvalue = RoundingUtils.round( this.pvalue );
+            this.log2FoldChange = RoundingUtils.round( this.log2FoldChange );
+            for ( VectorElementValueObject element : elements ) {
+                element.roundValuesForJson();
+            }
         }
 
         private VectorElementValueObject pickMax( List<DoubleVectorValueObject> vectors ) {
@@ -195,6 +296,7 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
 
     @SuppressWarnings("unused")
     // Used in rest api
+    @Getter
     public static class VectorElementValueObject implements Serializable {
         private String designElementName;
         private Map<String, Double> bioAssayExpressionLevels = new HashMap<>();
@@ -215,12 +317,8 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
             }
         }
 
-        public String getDesignElementName() {
-            return designElementName;
-        }
-
-        public Map<String, Double> getBioAssayExpressionLevels() {
-            return bioAssayExpressionLevels;
+        void roundValuesForJson() {
+            bioAssayExpressionLevels.replaceAll( ( bioAssayName, level ) -> RoundingUtils.round( level ) );
         }
 
         private void extractProbeLevels( DoubleVectorValueObject vector ) {

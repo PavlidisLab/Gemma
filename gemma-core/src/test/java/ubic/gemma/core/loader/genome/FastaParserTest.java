@@ -18,31 +18,37 @@
  */
 package ubic.gemma.core.loader.genome;
 
-import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.io.InputStream;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author pavlidis
  */
-public class FastaParserTest extends TestCase {
+public class FastaParserTest {
 
     private static final Log log = LogFactory.getLog( FastaParserTest.class.getName() );
     private InputStream f;
     private InputStream g;
 
+    @Test
     public void testParsecodelink() throws Exception {
         try (InputStream n = FastaParserTest.class
                 .getResourceAsStream( "/data/loader/genome/codelink.testsequence.txt" )) {
             FastaParser p = new FastaParser();
             p.parse( n );
             Collection<BioSequence> actualResult = p.getResults();
-            TestCase.assertNotNull( actualResult );
-            TestCase.assertEquals( 22, actualResult.size() );
+            assertNotNull( actualResult );
+            assertEquals( 22, actualResult.size() );
             for ( Object object : actualResult ) {
                 BioSequence b = ( BioSequence ) object;
                 FastaParserTest.log
@@ -51,18 +57,20 @@ public class FastaParserTest extends TestCase {
         }
     }
 
+    @Test
     public void testParseDoubleHeader() throws Exception {
         try (InputStream n = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/fastaDoubleHeader.txt" )) {
             this.testParser( n );
         }
     }
 
+    @Test
     public void testParseInputStream() throws Exception {
         FastaParser p = new FastaParser();
         p.parse( f );
         Collection<BioSequence> actualResult = p.getResults();
-        TestCase.assertNotNull( actualResult );
-        TestCase.assertEquals( 172, actualResult.size() );
+        assertNotNull( actualResult );
+        assertEquals( 172, actualResult.size() );
         for ( Object object : actualResult ) {
             BioSequence b = ( BioSequence ) object;
             FastaParserTest.log
@@ -70,16 +78,17 @@ public class FastaParserTest extends TestCase {
         }
     }
 
+    @Test
     public void testParseInputStreamAffyTarget() throws Exception {
         FastaParser p = new FastaParser();
         p.parse( g );
         Collection<BioSequence> actualResult = p.getResults();
-        TestCase.assertNotNull( actualResult );
-        TestCase.assertEquals( 172, actualResult.size() );
+        assertNotNull( actualResult );
+        assertEquals( 172, actualResult.size() );
         for ( Object object : actualResult ) {
             BioSequence b = ( BioSequence ) object;
 
-            TestCase.assertTrue(
+            assertTrue(
                     b.getSequenceDatabaseEntry() != null && b.getSequenceDatabaseEntry().getExternalDatabase() != null
                             && b.getSequenceDatabaseEntry().getExternalDatabase().getName()
                             .equalsIgnoreCase( "genbank" ) );
@@ -92,13 +101,14 @@ public class FastaParserTest extends TestCase {
         }
     }
 
+    @Test
     public void testParseMasked() throws Exception {
         try (InputStream n = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/maskedSeq.fa" )) {
             FastaParser p = new FastaParser();
             p.parse( n );
             Collection<BioSequence> actualResult = p.getResults();
-            TestCase.assertNotNull( actualResult );
-            TestCase.assertEquals( 7, actualResult.size() );
+            assertNotNull( actualResult );
+            assertEquals( 7, actualResult.size() );
             for ( Object object : actualResult ) {
                 BioSequence b = ( BioSequence ) object;
                 FastaParserTest.log
@@ -107,15 +117,15 @@ public class FastaParserTest extends TestCase {
         }
     }
 
+    @Test
     public void testParseNIA() throws Exception {
         try (InputStream n = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/nia15k.sample.fa" )) {
             this.testParser( n );
         }
     }
 
-    @Override
+    @BeforeEach
     protected void setUp() throws Exception {
-        super.setUp();
         f = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/testsequence.fa" );
         g = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/testsequence.fa" );
     }
@@ -124,8 +134,8 @@ public class FastaParserTest extends TestCase {
         FastaParser p = new FastaParser();
         p.parse( n );
         Collection<BioSequence> actualResult = p.getResults();
-        TestCase.assertNotNull( actualResult );
-        TestCase.assertEquals( 2, actualResult.size() );
+        assertNotNull( actualResult );
+        assertEquals( 2, actualResult.size() );
         for ( Object object : actualResult ) {
             BioSequence b = ( BioSequence ) object;
             FastaParserTest.log

@@ -18,7 +18,21 @@
  */
 package ubic.gemma.model.expression.designElement;
 
-import org.hibernate.search.annotations.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -28,11 +42,21 @@ import java.util.Objects;
 /**
  * A "Probe set" (Affymetrix) or a "Probe" (other types of arrays). The sequence referred to is a "target sequence"
  * (Affymetrix), oligo (oligo arrays) or cDNA clone/EST (cDNA arrays)
+ * <p>
+ * Hibernate Search 7 indexed root.
  */
+@Entity
+@Table(name = "COMPOSITE_SEQUENCE",
+        indexes = @Index(name = "COMPOSITE_SEQUENCE_NAME", columnList = "NAME"))
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Indexed
 public class CompositeSequence extends AbstractDescribable {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BIOLOGICAL_CHARACTERISTIC_FK", columnDefinition = "BIGINT")
     private BioSequence biologicalCharacteristic;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ARRAY_DESIGN_FK", nullable = false, columnDefinition = "BIGINT")
     private ArrayDesign arrayDesign;
 
     @Override
@@ -42,13 +66,13 @@ public class CompositeSequence extends AbstractDescribable {
     }
 
     @Override
-    @Field
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
@@ -64,6 +88,7 @@ public class CompositeSequence extends AbstractDescribable {
     /**
      * @return The sequence for this composite sequence.
      */
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public BioSequence getBiologicalCharacteristic() {
         return this.biologicalCharacteristic;

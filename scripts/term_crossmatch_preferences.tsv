@@ -1,0 +1,27 @@
+# Favoured-ontology order, per annotation category. Data, not code: a curator extends this
+# file without touching the assembler. Lower rank wins.
+#
+# Paul, 2026-08-18: "it's annoying showing terms which are equivalent via xrefs, if we have
+# a favoured ontology (which we do)." This file is what "which we do" means, written down.
+#
+# 🛑 This is a TIE-BREAK, not the rule. It is consulted only after an ontology-declared
+# obsolescence (R1) and the catalogue-class override (R2) have had their say -- see
+# build_term_crossmatch.py. A preference here can never promote an obsolete term.
+#
+# category	namespace	rank	note
+cell line	CLO	1	the modelled cell-line ontology; Cellosaurus is a name source, not a term source
+cell line	EFO	2	EFO carries some lines, usually coarser than CLO's
+cell line	Cellosaurus	3	CVCL accessions reconcile identity but are not ontology classes
+disease	MONDO	1	EFO_0000408 disease is obsolete in favour of MONDO_0000001
+disease	EFO	2
+disease	DOID	3	not loaded; present only if an annotation predates the policy
+organism part	UBERON	1
+organism part	EFO	2
+cell type	CL	1
+cell type	EFO	2
+treatment	CHEBI	1
+genotype	GENO	1
+genotype	TGEMO	2
+phenotype	PATO	1
+phenotype	MP	2
+phenotype	HP	3

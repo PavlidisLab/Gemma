@@ -15,33 +15,64 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
+import org.springframework.lang.Nullable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
-import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
+import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
+import ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.SearchTimeoutException;
+import ubic.gemma.core.search.ParseSearchException;
+import ubic.gemma.core.util.math.StringDistance;
+import ubic.gemma.model.common.search.SearchMatchType;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
+import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.PhysicalLocationValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
+import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.paginateByCursor;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -59,19 +90,47 @@ public class GeneWebService {
     @Autowired
     private GeneService geneService;
     @Autowired
-    private GeneCoexpressionSearchService geneCoexpressionSearchService;
-    @Autowired
     private GeneArgService geneArgService;
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private ArrayDesignMapResultService arrayDesignMapResultService;
+    @Autowired
+    private SearchService searchService;
+    @Autowired
+    private TaxonArgService taxonArgService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all genes")
-    public PaginatedResponseDataObject<GeneValueObject> getGenes(
+    @Operation(summary = "Retrieve all genes",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing both yields a 400. "
+                    + "In cursor mode `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getGenes(
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
+        if ( cursorArg != null ) {
+            // mutual exclusion: an explicit, user-supplied offset is incompatible with cursor mode.
+            // The default offset=0 from @DefaultValue is not considered "user-supplied" — clients
+            // commonly leave offset unset when switching to cursor mode, and that should not 400.
+            CursorPage<GeneValueObject> page = geneArgService.getGenesByCursor( cursorArg.getValue(), limitArg.getValue() );
+            geneService.populateAssociatedExperimentCount( page );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
         Slice<GeneValueObject> slice = geneArgService.getGenes( offsetArg.getValue(), limitArg.getValue() );
         geneService.populateAssociatedExperimentCount( slice );
         return paginate( slice, new String[] { "id" } );
@@ -87,6 +146,257 @@ public class GeneWebService {
      *              Do not combine different identifiers in one query.
      *              </p>
      */
+    /**
+     * Free-text typeahead for genes. Shim over {@link SearchService} so the
+     * curation-UI can keep calling {@code GET /genes/search?query=...} instead
+     * of the canonical {@code GET /search?query=...&resultTypes=...Gene}.
+     * <p>
+     * Path is declared before {@link #getGenesByIds(GeneArrayArg)} (which owns
+     * {@code GET /genes/{genes}}) so JAX-RS resolves the literal {@code "search"}
+     * segment before falling through to the template variable.
+     *
+     * @param query     non-empty free-text query (symbol, alias, NCBI id, …).
+     * @param taxonArg  optional — when supplied, results are scoped to that taxon.
+     * @param limit     1..{@value #SEARCH_MAX_LIMIT}; default 20.
+     */
+    @GET
+    @Path("/search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Free-text gene search (typeahead)",
+            description = "Delegates to the search service with `resultTypes=Gene`. "
+                    + "Returns gene value-objects ordered by search score. Hard-cap on `limit` is "
+                    + SEARCH_MAX_LIMIT_STR + "; default is " + SEARCH_DEFAULT_LIMIT_STR + ".",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "Empty / invalid query, or `limit` out of range.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "The search timed out.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<List<GeneValueObject>> searchGenes(
+            @QueryParam("query") String query,
+            @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit
+    ) {
+        if ( query == null || query.trim().isEmpty() ) {
+            throw new BadRequestException( "Search query cannot be empty." );
+        }
+        if ( limit < 1 || limit > SEARCH_MAX_LIMIT ) {
+            throw new BadRequestException( "'limit' must be between 1 and " + SEARCH_MAX_LIMIT
+                    + " (got " + limit + ")." );
+        }
+        ubic.gemma.model.genome.Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
+        SearchSettings settings = SearchSettings.builder()
+                .query( query.trim() )
+                .taxonConstraint( taxon )
+                .resultTypes( Collections.singleton( Gene.class ) )
+                // Ask for a wide candidate window, NOT the caller's limit. Both passes below —
+                // the score re-rank and the taxon backstop — only reorder / discard what search
+                // already returned, so cutting to `limit` up here decides the answer before
+                // either runs. ?query=Myc&taxon=mouse&limit=1 returned an EMPTY list that way:
+                // search handed back one arbitrary Myc ortholog (rat), and the mouse backstop
+                // dropped it. It also made ranking depend on limit — limit=1 gave rat, limit=3
+                // put mouse first. Cut to `limit` after filtering instead. Same reasoning as
+                // AnnotationsWebService.UPSTREAM_LIMIT.
+                .maxResults( SEARCH_CANDIDATE_LIMIT )
+                .fillResults( true )
+                .build();
+        List<SearchResult<?>> raw;
+        try {
+            raw = new ArrayList<>( searchService.search( settings, new SearchContext( null, null ) ).toList() );
+        } catch ( ParseSearchException e ) {
+            throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
+        } catch ( SearchTimeoutException e ) {
+            throw new ServiceUnavailableException( e.getMessage(), 30L, e.getCause() );
+        } catch ( SearchException e ) {
+            throw new InternalServerErrorException( e );
+        }
+        // Secondary sort within score bands: SearchResultSet collapses to a score-DESC order, but
+        // ties (multiple alias-band hits at 0.9, multiple inexact-symbol hits at 0.9, etc.) fall to
+        // HashMap-bucket-arbitrary. For a query like ?query=tp53&taxon=mouse there is no exact
+        // symbol match (TP53 is human; mouse uses Trp53), so every hit lands in the alias / inexact
+        // band and the "right" gene gets buried behind unrelated alias-list members (Hipk2, Muc1,
+        // Bcl3). Re-rank within each score by symbol-shape tier then edit-distance-to-query so
+        // Trp53 surfaces for tp53. Mirrors the AnnotationsWebService.getTerms tierFn pattern.
+        final String qLc = query.trim().toLowerCase( Locale.ROOT );
+        raw.sort( searchRankingComparator( qLc ) );
+        List<GeneValueObject> vos = new ArrayList<>( raw.size() );
+        // Endpoint-level taxon filter: SearchService aggregates from multiple sources and not all
+        // honour SearchSettings.taxonConstraint (HibernateSearchSource and the GO source historically
+        // bypassed it). Backstop here so /genes/search never leaks cross-taxa hits.
+        Long wantTaxonId = taxon != null ? taxon.getId() : null;
+        for ( SearchResult<?> sr : raw ) {
+            Object o = sr.getResultObject();
+            GeneValueObject vo;
+            if ( o instanceof GeneValueObject ) {
+                vo = ( GeneValueObject ) o;
+            } else if ( o instanceof Gene ) {
+                vo = new GeneValueObject( ( Gene ) o );
+            } else {
+                // SearchResults with null resultObject (see #417) are dropped silently.
+                continue;
+            }
+            if ( wantTaxonId != null
+                    && ( vo.getTaxon() == null || !wantTaxonId.equals( vo.getTaxon().getId() ) ) ) {
+                continue;
+            }
+            // Surface how the hit matched so callers can distinguish a safe alias/symbol hit from
+            // a low-trust prefix look-alike (ANKA -> Ankar) without re-deriving it from the symbol.
+            if ( sr.getMatchKind() != null ) {
+                vo.setMatchType( sr.getMatchKind().getWireName() );
+            }
+            vos.add( vo );
+            if ( vos.size() == limit ) {
+                // The caller's cut, applied last — after ranking and the taxon backstop have had
+                // the full candidate window to work with.
+                break;
+            }
+        }
+        // Search hits are built from un-thawed entities, so the aliases (a LAZY collection) come back
+        // empty on the VO. Batch-load them in one query keyed by gene ID. Runs on the truncated list,
+        // so widening the candidate window above doesn't widen this query.
+        geneService.populateAliases( vos );
+        return respond( vos );
+    }
+
+    /** Default {@code limit} for {@link #searchGenes}; sized for typeahead. */
+    static final int SEARCH_DEFAULT_LIMIT = 20;
+    private static final String SEARCH_DEFAULT_LIMIT_STR = "20";
+    /** Upper bound on {@code limit}; requests above this are 400. */
+    static final int SEARCH_MAX_LIMIT = 50;
+    private static final String SEARCH_MAX_LIMIT_STR = "50";
+    /**
+     * Candidate window requested from the search service, before local ranking and the taxon
+     * backstop narrow it down to the caller's {@code limit}. Sized so a taxon-scoped query still
+     * has room after the other taxa's orthologs are discarded — a symbol like {@code Myc} matches
+     * across every taxon Gemma carries, and prefix hits ({@code Mycbp}, {@code Mycbpap}, …)
+     * multiply that further. Only ids/scores are materialized at this width; the VO and alias
+     * loads happen after truncation.
+     */
+    private static final int SEARCH_CANDIDATE_LIMIT = 500;
+
+    /**
+     * Extract a lowercased official symbol from a search result that may hold either a
+     * {@link Gene} entity or a {@link GeneValueObject}. {@code null} when neither carries one.
+     */
+    @Nullable
+    private static String symbolOf( SearchResult<?> sr ) {
+        Object o = sr.getResultObject();
+        String s = null;
+        if ( o instanceof GeneValueObject ) {
+            s = ( ( GeneValueObject ) o ).getOfficialSymbol();
+        } else if ( o instanceof Gene ) {
+            s = ( ( Gene ) o ).getOfficialSymbol();
+        }
+        return s != null ? s.toLowerCase( Locale.ROOT ) : null;
+    }
+
+    /**
+     * Trust ordering by the authoritative match kind, applied within a score band before the
+     * symbol-shape tier: trusted hits (exact symbol / alias / official name / canonical id) rank
+     * first (0), unclassified full-text hits next (1), and low-trust inexact prefix look-alikes
+     * last (2). This is the option-2 demotion: a bare prefix of a longer symbol ({@code ANKA} →
+     * {@code Ankar}) must never outrank a real alias/symbol hit sharing its score — which it would
+     * under {@link #symbolTier} alone, since a prefix scores tier 1 (startsWith) while a genuine
+     * alias hit scores tier 4 (no symbol overlap). We demote rather than drop, because a prefix
+     * hit is still useful for typeahead and the caller can gate on {@code matchType}. Falls back to
+     * "unclassified" (1) when the producing source did not set a kind.
+     */
+    static int matchTrust( SearchResult<?> sr ) {
+        SearchMatchType kind = sr.getMatchKind();
+        if ( kind == null ) {
+            return 1;
+        }
+        switch ( kind ) {
+            case EXACT_IDENTIFIER:
+            case EXACT_SYMBOL:
+            case ALIAS:
+            case OFFICIAL_NAME:
+                return 0;
+            case SYMBOL_PREFIX:
+            case OFFICIAL_NAME_PREFIX:
+                return 2;
+            default:
+                return 1;
+        }
+    }
+
+    /**
+     * Rank a candidate's official symbol against the lowercased query by shape:
+     * 0 = exact match, 1 = startsWith, 2 = endsWith, 3 = contains, 4 = symbol present
+     * but no overlap (alias / name match only), 5 = no symbol available.
+     */
+    static int symbolTier( @Nullable String symLc, String qLc ) {
+        if ( symLc == null ) return 5;
+        if ( symLc.equals( qLc ) ) return 0;
+        if ( symLc.startsWith( qLc ) ) return 1;
+        if ( symLc.endsWith( qLc ) ) return 2;
+        if ( symLc.contains( qLc ) ) return 3;
+        return 4;
+    }
+
+    /** Levenshtein distance to the query, or {@link Integer#MAX_VALUE} when the symbol is null. */
+    static int editDistanceOrMax( @Nullable String symLc, String qLc ) {
+        return symLc == null ? Integer.MAX_VALUE : StringDistance.editDistance( symLc, qLc );
+    }
+
+    /**
+     * Cap on the {@link #editDistanceOrMax} signal used during ranking. Distances ≤ 2 carry real
+     * signal (single-typo / one-letter-variation territory, e.g. {@code tp53}↔{@code trp53} at
+     * distance 1). Distances ≥ 3 are essentially "no structural similarity" — any one such
+     * symbol is no closer to the query than another, and using raw Levenshtein at that depth
+     * rewards coincidental letter overlap (e.g. {@code cx43} vs {@code gja3} = 3 because the
+     * trailing {@code 3} accidentally matches — yet {@code gja3} is Cx46, not Cx43). Clamping
+     * collapses the tier-4 noise into a single bucket so downstream tiebreakers (popularity,
+     * symbol length, alphabetical) decide.
+     */
+    static final int EDIT_DISTANCE_CAP = 2;
+
+    /**
+     * {@link #editDistanceOrMax} clamped at {@link #EDIT_DISTANCE_CAP}. See the cap javadoc for
+     * why raw distance ≥ 3 is treated as noise.
+     */
+    static int editDistanceClamped( @Nullable String symLc, String qLc ) {
+        return Math.min( editDistanceOrMax( symLc, qLc ), EDIT_DISTANCE_CAP );
+    }
+
+    /**
+     * Popularity tiebreaker key. Returns the negated {@code associatedExperimentCount} from the
+     * underlying {@link GeneValueObject} so that a higher count sorts first under natural
+     * ascending order. Returns {@code 0} for {@link Gene}-only search results (the count isn't
+     * carried on the entity) or when the count is null — those compete on the downstream
+     * length / alphabetical steps instead.
+     *
+     * <p>This breaks the {@code Cx43} family of alias-collision cases: when two genes both carry
+     * an exact alias match for the query, the one with more corpus EE associations wins (Gja1
+     * with count 10 outranks Gja3 with count 0; Gja3 is Cx46 and only carries {@code Cx43} as a
+     * stale NCBI alias).</p>
+     */
+    static int popularityKey( SearchResult<?> sr ) {
+        Object o = sr.getResultObject();
+        if ( o instanceof GeneValueObject ) {
+            Integer c = ( ( GeneValueObject ) o ).getAssociatedExperimentCount();
+            return c != null ? -c : 0;
+        }
+        return 0;
+    }
+
+    /**
+     * Tiebreaker comparator applied within score bands on {@code /genes/search} results. See the
+     * comment block at the call site (in {@link #searchGenes}) for the motivating cases (tp53 →
+     * Trp53 alias band; Cx43 → Gja1 alias collision).
+     */
+    static Comparator<SearchResult<?>> searchRankingComparator( String qLc ) {
+        return Comparator
+                .<SearchResult<?>>comparingDouble( sr -> -sr.getScore() )
+                .thenComparingInt( GeneWebService::matchTrust )
+                .thenComparingInt( sr -> symbolTier( symbolOf( sr ), qLc ) )
+                .thenComparingInt( sr -> editDistanceClamped( symbolOf( sr ), qLc ) )
+                .thenComparingInt( GeneWebService::popularityKey )
+                .thenComparingInt( sr -> symbolOf( sr ) == null ? Integer.MAX_VALUE : symbolOf( sr ).length() )
+                .thenComparing( sr -> symbolOf( sr ), Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) );
+    }
+
     @GET
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -99,6 +409,7 @@ public class GeneWebService {
         filters.and( geneArgService.getFilters( genes ) );
         Slice<GeneValueObject> slice = geneService.loadValueObjects( filters, geneArgService.getSort( sort ), 0, -1 );
         geneService.populateAssociatedExperimentCount( slice );
+        geneService.populateAliases( slice );
         return respond( slice );
     }
 
@@ -127,13 +438,94 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the probes associated to a genes across all platforms")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> getGeneProbes( // Params:
+    @Operation(summary = "Retrieve the probes associated to a genes across all platforms",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes — a single gene can map to many probes across multi-platform inventories): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `cs.id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
+                    + "the path-derived `{gene}` constraint is preserved; `totalElements` is `null` by default (no count query per request). "
+                    + "Pass `summary=true` to receive an enriched per-row VO with the gene-list this probe maps to and the BLAT-hit count (replaces the legacy `getGeneCsSummaries` DWR call); "
+                    + "the page shape is unchanged but each element is a `CompositeSequenceSummaryValueObject` instead of the thin `CompositeSequenceValueObject`.",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getGeneProbes( // Params:
             @PathParam("gene") GeneArg<?> geneArg, // Required
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit // Optional, default 20
+            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
+            @Parameter(description = "When true, each element is enriched with the gene-list this probe maps to and the BLAT-hit count (the legacy `getGeneCsSummaries` shape).")
+            @QueryParam("summary") @DefaultValue("false") boolean summary
     ) {
-        return paginate( geneArgService.getGeneProbes( geneArg, offset.getValue(), limit.getValue() ), new String[] { "id" } );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms/{platform}/elements/{probe}/genes step 1l).
+            // In cursor mode we currently force a +id sort (GeneArgService.getGeneProbesByCursor)
+            // — the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived gene.id constraint is preserved by the DAO query (the keyset HQL walks
+            // the same gene→probe join structure as the offset variant, scoped to the resolved Gene).
+            CursorPage<CompositeSequenceValueObject> page = geneArgService.getGeneProbesByCursor( geneArg, cursorArg.getValue(), limit.getValue() );
+            if ( summary ) {
+                Map<Long, CompositeSequenceMapValueObject> enrichment = loadProbeSummaries( page );
+                CursorPage<CompositeSequenceSummaryValueObject> enriched = page.map( probe -> toSummaryVo( probe, enrichment.get( probe.getId() ) ) );
+                return paginateByCursor( enriched, new String[] { "id" } );
+            }
+            return paginateByCursor( page, new String[] { "id" } );
+        }
+        Slice<CompositeSequenceValueObject> slice = geneArgService.getGeneProbes( geneArg, offset.getValue(), limit.getValue() );
+        if ( summary ) {
+            Map<Long, CompositeSequenceMapValueObject> enrichment = loadProbeSummaries( slice );
+            Slice<CompositeSequenceSummaryValueObject> enriched = slice.map( probe -> toSummaryVo( probe, enrichment.get( probe.getId() ) ) );
+            return paginate( enriched, new String[] { "id" } );
+        }
+        return paginate( slice, new String[] { "id" } );
+    }
+
+    /**
+     * Build the per-probe enrichment map for the given page of probe VOs &mdash; one
+     * {@code getRawSummary} hit over the page's probe IDs, fanned into a
+     * {@link CompositeSequenceMapValueObject} per probe via the existing
+     * {@link ArrayDesignMapResultService} aggregator. Returned map is keyed by
+     * {@code compositeSequence.id} for O(1) lookup during slice mapping; probes with no
+     * sequence-analysis rows (no BLAT hits, no gene-product mappings) are absent from
+     * the map and surface as a summary VO with an empty gene list and {@code numBlatHits=null}.
+     */
+    private Map<Long, CompositeSequenceMapValueObject> loadProbeSummaries( List<CompositeSequenceValueObject> probes ) {
+        if ( probes.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        List<Long> ids = probes.stream().map( CompositeSequenceValueObject::getId ).collect( Collectors.toList() );
+        Collection<CompositeSequence> entities = compositeSequenceService.load( ids );
+        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( entities );
+        if ( rawSummaries == null || rawSummaries.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+        Map<Long, CompositeSequenceMapValueObject> byId = new HashMap<>( summaries.size() );
+        for ( CompositeSequenceMapValueObject s : summaries ) {
+            if ( s.getCompositeSequenceId() != null ) {
+                byId.put( Long.parseLong( s.getCompositeSequenceId() ), s );
+            }
+        }
+        return byId;
+    }
+
+    private static CompositeSequenceSummaryValueObject toSummaryVo( CompositeSequenceValueObject probe, @org.springframework.lang.Nullable CompositeSequenceMapValueObject mapVo ) {
+        List<GeneValueObject> genes;
+        Integer numBlatHits;
+        if ( mapVo != null ) {
+            genes = new ArrayList<>( mapVo.getGenes().values() );
+            numBlatHits = mapVo.getNumBlatHits();
+        } else {
+            genes = Collections.emptyList();
+            numBlatHits = null;
+        }
+        return new CompositeSequenceSummaryValueObject( probe, genes, genes.size(), numBlatHits );
     }
 
     /**
@@ -141,7 +533,7 @@ public class GeneWebService {
      */
     @GET
     @Path("/probes/refresh")
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Refresh gene-to-probe associations.",
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
@@ -173,26 +565,151 @@ public class GeneWebService {
     }
 
     /**
-     * Retrieves the coexpression of two given genes.
+     * Retrieves a fully-populated overview of the given gene, suitable for rendering
+     * the gene-page header in gemma-curation-ui. Replaces the legacy
+     * {@code GeneController.loadGeneDetails(Long)} DWR call.
      *
-     * @param geneArg    can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
-     *                   guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
-     * @param with       the gene to calculate the coexpression with. Same formatting rules as with the 'geneArg' apply.
-     * @param stringency optional parameter controlling the stringency of coexpression search. Defaults to 1.
+     * <p>The returned VO carries: aliases, multifunctionality rank, composite-sequence
+     * count, platform count, gene-set memberships, homologues, GO-term count, and the
+     * associated-experiment count (filled in by {@code populateAssociatedExperimentCount}).</p>
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
      */
     @GET
-    @Path("/{gene}/coexpression")
+    @Path("/{gene}/overview")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the coexpression of two given genes", hidden = true)
-    public ResponseDataObject<List<CoexpressionValueObjectExt>> getGeneGeneCoexpression( // Params:
-            @PathParam("gene") final GeneArg<?> geneArg, // Required
-            @QueryParam("with") final GeneArg<?> with, // Required
-            @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("stringency") @DefaultValue("1") Integer stringency // Optional, default 1
+    @Operation(summary = "Retrieve a fully-populated overview of a gene",
+            description = "Returns the gene VO populated with aliases, multifunctionality rank, composite-sequence count, platform count, gene-set memberships, homologues, GO-term count, and associated-experiment count. Replaces the legacy `loadGeneDetails` DWR call used by the gemma-web gene page.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "Gene not found",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<GeneValueObject> getGeneOverview( // Params:
+            @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
-        return respond( geneCoexpressionSearchService.coexpressionSearchQuick( null, new ArrayList<Long>( 2 ) {{
-            this.add( geneArgService.getEntity( geneArg ).getId() );
-            this.add( geneArgService.getEntity( with ).getId() );
-        }}, 1, limit.getValueNoMaximum(), false ).getResults() );
+        Gene gene = geneArgService.getEntity( geneArg );
+        GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( gene.getId() );
+        if ( gvo == null ) {
+            // getEntity already throws 404 on missing, but guard against a race where the
+            // gene is removed between the resolve and the fat-loader call.
+            throw new NotFoundException( "No gene found with id=" + gene.getId() );
+        }
+        gvo.setNumGoTerms( geneService.findGOTerms( gene.getId() ).size() );
+        return respond( gvo );
+    }
+
+    /**
+     * Retrieves the homologues of the given gene. Single-purpose subset of
+     * {@link #getGeneOverview} for callers that only need the homologue list.
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     */
+    @GET
+    @Path("/{gene}/homologues")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve the homologues of a gene",
+            description = "Returns the gene's homologues across all taxa (via the homologene service). The legacy gemma-web gene page surfaces this in the Overview tab.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "Gene not found",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<Collection<GeneValueObject>> getGeneHomologues( // Params:
+            @PathParam("gene") GeneArg<?> geneArg // Required
+    ) {
+        Gene gene = geneArgService.getEntity( geneArg );
+        GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( gene.getId() );
+        if ( gvo == null ) {
+            throw new NotFoundException( "No gene found with id=" + gene.getId() );
+        }
+        Collection<GeneValueObject> homologues = gvo.getHomologues();
+        return respond( homologues != null ? homologues : Collections.<GeneValueObject>emptyList() );
+    }
+
+    /**
+     * Retrieves the differential expression results for the given gene across all experiments
+     * the caller has access to (ACL-filtered downstream).
+     *
+     * <p>Wraps {@link DifferentialExpressionResultService#findByGene(Gene, boolean, boolean, double, int)}
+     * with {@code useGene2Cs=true} and {@code keepNonSpecificProbes=false} — matches the
+     * convention used by the dataset-scoped DEA endpoint in {@code DatasetsWebService}.</p>
+     *
+     * <p>The cold-cache latency on this path (~4s for high-traffic genes like TP53) is mitigated by
+     * {@code DiffExGeneWarmupService} which periodically re-runs the underlying call for a seed gene
+     * list. See {@code PERF_PROBE_REPORT_ROUND3.md} §C1.</p>
+     *
+     * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
+     *                guaranteed to be unique). Official symbol returns a gene homologue on a random taxon.
+     * @param threshold optional q/p-value threshold. Defaults to 1.0 (no filtering).
+     * @param limit optional cap on results returned per experiment grouping. -1 means no cap.
+     */
+    @GET
+    @Path("/{gene}/differentialExpression")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve differential expression results for a gene across all accessible experiments",
+            description = "Returns a flat list of per-experiment groupings, each with the experiment VO and the list of probe-level DEA results for the given gene. "
+                    + "Results are scoped to experiments the caller has read access to (ACL-filtered). "
+                    + "Cold-cache latency is mitigated by a scheduled warm-up of a seed gene list (`gemma.diffex.warmup.*`).",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "Gene not found",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<List<GeneDifferentialExpressionGroupValueObject>> getGeneDifferentialExpression( // Params:
+            @PathParam("gene") GeneArg<?> geneArg, // Required
+            @Parameter(description = "Maximum threshold on the corrected P-value to retain a result (inclusive). Default 1.0 returns all.",
+                    schema = @Schema(minimum = "0.0", maximum = "1.0"))
+            @QueryParam("threshold") @DefaultValue("1.0") double threshold,
+            @Parameter(description = "Cap on results returned per experiment grouping; -1 (default) means no cap.")
+            @QueryParam("limit") @DefaultValue("-1") int limit
+    ) {
+        if ( threshold < 0 || threshold > 1 ) {
+            throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
+        }
+        Gene gene = geneArgService.getEntity( geneArg );
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> grouped =
+                differentialExpressionResultService.findByGene( gene, true, false, threshold, limit );
+        List<GeneDifferentialExpressionGroupValueObject> payload = new ArrayList<>( grouped.size() );
+        for ( Map.Entry<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> e : grouped.entrySet() ) {
+            payload.add( new GeneDifferentialExpressionGroupValueObject( e.getKey(), e.getValue() ) );
+        }
+        return respond( payload );
+    }
+
+    /**
+     * One experiment's DEA results for the requested gene. The outer list returned by
+     * {@link #getGeneDifferentialExpression} is a flat sequence of these — a JSON-friendly
+     * rendering of the {@code Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>>}
+     * the underlying service hands back (maps don't serialize cleanly when the key is a complex VO).
+     */
+    @Data
+    public static class GeneDifferentialExpressionGroupValueObject {
+        private final BioAssaySetValueObject experiment;
+        private final List<DifferentialExpressionValueObject> results;
+    }
+
+    /**
+     * Enriched per-probe row returned by {@link #getGeneProbes} when {@code summary=true}.
+     * Replaces the legacy DWR {@code CompositeSequenceController.getGeneCsSummaries} shape:
+     * for each probe (composite sequence) on the page, carries the thin probe VO plus the
+     * list of genes this probe maps to and the distinct-BLAT-hit count.
+     * <p>
+     * {@code numGenes} duplicates {@code genes.size()} as a UI convenience (avoids forcing
+     * the client to count when only the cardinality matters). {@code numBlatHits} is the
+     * count of distinct sequence-similarity hits (chrom + target-start + target-end + target-starts
+     * + query-sequence), aggregated by {@code ArrayDesignMapResultService}; null when the probe
+     * has no sequence-analysis rows.
+     */
+    @Data
+    public static class CompositeSequenceSummaryValueObject implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private final CompositeSequenceValueObject probe;
+        private final List<GeneValueObject> genes;
+        private final int numGenes;
+        @org.springframework.lang.Nullable
+        private final Integer numBlatHits;
     }
 }

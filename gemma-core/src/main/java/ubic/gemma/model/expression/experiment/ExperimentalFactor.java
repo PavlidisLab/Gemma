@@ -19,15 +19,37 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import org.hibernate.search.annotations.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.search.engine.backend.types.Projectable;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 
-import javax.annotation.Nullable;
-import javax.persistence.Transient;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Objects;
@@ -35,24 +57,118 @@ import java.util.Set;
 
 /**
  * ExperimentFactors are the dependent variables of an experiment (e.g., genotype, time, glucose concentration).
+ * <p>
+ * Hibernate Search 7 mapping: indexed root and embedded contributor via
+ * {@code ExperimentalDesign.experimentalFactors}; pulls its {@link #getCategory()} characteristic
+ * and the deep {@link #getFactorValues()} chain into the EE document.
  *
  * @author Paul
  */
+@Entity
+@Table(name = "EXPERIMENTAL_FACTOR")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class ExperimentalFactor extends AbstractDescribable implements SecuredChild<ExpressionExperiment> {
 
-    public static Comparator<ExperimentalFactor> COMPARATOR = Comparator.comparing( ExperimentalFactor::getName )
+    public static final Comparator<ExperimentalFactor> COMPARATOR = Comparator.comparing( ExperimentalFactor::getName )
             .thenComparing( ExperimentalFactor::getCategory, Comparator.nullsLast( Comparator.naturalOrder() ) )
             .thenComparing( ExperimentalFactor::getId, Comparator.nullsLast( Comparator.naturalOrder() ) );
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TYPE", nullable = false, columnDefinition = "VARCHAR(255)")
     private FactorType type;
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
+    @JoinColumn(name = "CATEGORY_FK", unique = true, columnDefinition = "BIGINT")
     private Characteristic category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EXPERIMENTAL_DESIGN_FK", nullable = false, columnDefinition = "BIGINT")
     private ExperimentalDesign experimentalDesign;
+    @OneToMany(mappedBy = "experimentalFactor", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<FactorValue> factorValues = new HashSet<>();
     @Deprecated
+    // LAZY is deliberate and performance-critical. This collection joins on CHARACTERISTIC.EXPERIMENTAL_FACTOR_FK,
+    // whose index is degenerate: every one of the ~11.8M CHARACTERISTIC rows has a NULL EXPERIMENTAL_FACTOR_FK
+    // (zero non-null), so its cardinality is 1 and the optimizer estimates ~11.8M rows for any access to it.
+    // Loading it eagerly is pathological on MySQL 5.7: as a FetchMode.JOIN it both forms a Cartesian product
+    // with the sibling eager factorValues collection AND drives an oversized internal temp table; as a
+    // FetchMode.SUBSELECT it becomes "... where EXPERIMENTAL_FACTOR_FK in (<subquery>)", which the optimizer
+    // satisfies with a full scan of CHARACTERISTIC. Either way it turned initializing
+    // ExperimentalDesign.experimentalFactors (for /datasets/{id}/design) into a ~15s first-contact scan, flat
+    // regardless of dataset size. annotations is deprecated and effectively always empty, so it must not be
+    // eagerly loaded at all. The few callers that read it (SplitExperimentServiceImpl, EeWriteServiceImpl) do
+    // so inside a session; a lazy load there is a single-value "EXPERIMENTAL_FACTOR_FK = ?" lookup, which the
+    // index resolves to zero rows immediately (only the IN-subquery form full-scans).
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "EXPERIMENTAL_FACTOR_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "CHARACTERISTIC_EXPERIMENTAL_FACTOR_FKC"))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Characteristic> annotations = new HashSet<>();
+    @Transient
     private ExpressionExperiment securityOwner;
+
+    /**
+     * Curator/agent hint about whether this factor warrants picking a baseline factor value. Mirrors the
+     * curation-ui {@code Factor.baseline_relevance} field. Allowed values: {@code "required"},
+     * {@code "not_applicable"}, {@code "uncertain"}. {@code null} when not set (legacy data,
+     * factors not yet visited by the proposer pipeline).
+     */
+    @Nullable
+    @Column(name = "BASELINE_RELEVANCE", columnDefinition = "VARCHAR(32)")
+    private String baselineRelevance;
+
+    /**
+     * Free-text rationale for the baselineRelevance value. {@code null} when not set.
+     */
+    @Nullable
+    @Lob
+    @Column(name = "BASELINE_RELEVANCE_REASON", columnDefinition = "text")
+    private String baselineRelevanceReason;
+
+    /**
+     * Curator/agent hint about whether a differential expression analysis should SUBSET by this
+     * factor. Allowed values: {@code "recommended"}, {@code "not_applicable"}, {@code "uncertain"}.
+     * {@code null} when not set (legacy factors, factors not yet visited by the proposer pipeline).
+     * <p>
+     * 🛑 Advice, not a record of what happened. What an analysis actually subsetted by is
+     * {@link ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis#getSubsetFactorValue()};
+     * this says what someone thought beforehand, and the two are allowed to disagree — an unacted-on
+     * recommendation is the normal state of a factor between curation and the next analysis run.
+     * <p>
+     * Open vocabulary like {@link #baselineRelevance}: an unfamiliar value is stored and served back
+     * rather than rejected, so the agents repo can add one (e.g. {@code "covariate"} — do not subset,
+     * model it) without a Gemma schema change.
+     * <p>
+     * Replaces the experiment-level {@code TGEMO_00022 SUBSET} tag as the place this is written. That
+     * tag names an experiment and not a factor, so it could not say WHICH axis to subset by.
+     */
+    @Nullable
+    @Column(name = "SUBSET_RELEVANCE", columnDefinition = "VARCHAR(32)")
+    private String subsetRelevance;
+
+    /**
+     * Free-text rationale for the subsetRelevance value. {@code null} when not set.
+     */
+    @Nullable
+    @Lob
+    @Column(name = "SUBSET_RELEVANCE_REASON", columnDefinition = "text")
+    private String subsetRelevanceReason;
+
+    /**
+     * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
+     * backing this factor as a curated claim — the same verbatim provenance
+     * {@link ubic.gemma.model.common.description.Characteristic#getSupportingEvidence()} carries for a tag or a
+     * statement. Stored as-is; Gemma does not parse or query it, so the agents repo owns the evidence schema.
+     * <p>
+     * A factor is not a {@link ubic.gemma.model.common.description.Characteristic}, so it has no evidence slot to
+     * inherit. Its {@link #getCategory() category} is one, but a category is nullable and gets replaced during
+     * curation, which would drop the factor's justification as a side effect of an unrelated edit. Hence a column
+     * of its own. Null on factors with no recorded evidence.
+     */
+    @Nullable
+    @Column(name = "SUPPORTING_EVIDENCE", columnDefinition = "TEXT")
+    private String supportingEvidence;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -67,18 +183,17 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     }
 
     @Override
-    @Field
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
     @Override
-    @Field(store = Store.YES)
+    @FullTextField(projectable = Projectable.YES)
     public String getDescription() {
         return super.getDescription();
     }
 
-    @Transient
     @Override
     public ExpressionExperiment getSecurityOwner() {
         return this.securityOwner;
@@ -107,6 +222,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
      * @return the category or null if annotated automatically from GEO or used as a dummy.
      */
     @Nullable
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Characteristic getCategory() {
         return this.category;
@@ -127,6 +243,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     /**
      * @return The pairing of BioAssay FactorValues with the ExperimentDesign ExperimentFactor.
      */
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<FactorValue> getFactorValues() {
         return this.factorValues;
@@ -144,6 +261,51 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     @Deprecated
     public void setAnnotations( Set<Characteristic> annotations ) {
         this.annotations = annotations;
+    }
+
+    @Nullable
+    public String getBaselineRelevance() {
+        return baselineRelevance;
+    }
+
+    public void setBaselineRelevance( @Nullable String baselineRelevance ) {
+        this.baselineRelevance = baselineRelevance;
+    }
+
+    @Nullable
+    public String getBaselineRelevanceReason() {
+        return baselineRelevanceReason;
+    }
+
+    public void setBaselineRelevanceReason( @Nullable String baselineRelevanceReason ) {
+        this.baselineRelevanceReason = baselineRelevanceReason;
+    }
+
+    @Nullable
+    public String getSubsetRelevance() {
+        return subsetRelevance;
+    }
+
+    public void setSubsetRelevance( @Nullable String subsetRelevance ) {
+        this.subsetRelevance = subsetRelevance;
+    }
+
+    @Nullable
+    public String getSubsetRelevanceReason() {
+        return subsetRelevanceReason;
+    }
+
+    public void setSubsetRelevanceReason( @Nullable String subsetRelevanceReason ) {
+        this.subsetRelevanceReason = subsetRelevanceReason;
+    }
+
+    @Nullable
+    public String getSupportingEvidence() {
+        return supportingEvidence;
+    }
+
+    public void setSupportingEvidence( @Nullable String supportingEvidence ) {
+        this.supportingEvidence = supportingEvidence;
     }
 
     @Override

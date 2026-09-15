@@ -13,12 +13,12 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.experiment.PreboardedExperiment;
 
@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * (ClassCastException on the assertion, or WrongClassException at load time).
  */
 @ContextConfiguration
-public class PreboardedExperimentMappingTest extends BaseDatabaseTest {
+public class PreboardedExperimentMappingTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -59,9 +59,11 @@ public class PreboardedExperimentMappingTest extends BaseDatabaseTest {
 
     @Test
     public void preboardedRoundTripsThroughHibernate() {
-        PreboardedExperiment pb = PreboardedExperiment.Factory.newInstance( "GEO", "GSE12345" );
+        PreboardedExperiment pb = new PreboardedExperiment();
         pb.setName( "GSE12345 (preboarded)" );
-        pb.setIdentifyingMetadata( "{\"title\":\"test\",\"pubmed\":\"1\"}" );
+        pb.setAccession( "GSE12345" );
+        pb.setSource( "GEO" );
+        pb.setSourceMetadata( "{\"title\":\"test\",\"pubmed\":\"1\"}" );
 
         Session session = sessionFactory.getCurrentSession();
         session.persist( pb );
@@ -83,15 +85,6 @@ public class PreboardedExperimentMappingTest extends BaseDatabaseTest {
         PreboardedExperiment rt = ( PreboardedExperiment ) reloaded;
         assertThat( rt.getAccession() ).isEqualTo( "GSE12345" );
         assertThat( rt.getSource() ).isEqualTo( "GEO" );
-        // identifyingMetadata is deliberately unmapped on this branch, so it must NOT
-        // survive the round trip. Mapping it would name PREBOARDED_IDENTIFYING_METADATA
-        // in every polymorphic Investigation query, and phase2 renames that column to
-        // SOURCE_METADATA in the database both versions share — this build would then
-        // fail on an unknown column regardless of whether any preboarded row exists.
-        // If this assertion starts failing, someone re-added the mapping: read the
-        // comment in Investigation.hbm.xml before "fixing" it.
-        assertThat( rt.getIdentifyingMetadata() )
-                .as( "identifyingMetadata must not be persisted; the column is renamed by phase2" )
-                .isNull();
+        assertThat( rt.getSourceMetadata() ).isEqualTo( "{\"title\":\"test\",\"pubmed\":\"1\"}" );
     }
 }

@@ -22,13 +22,13 @@ import cern.colt.list.DoubleArrayList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
-import ubic.basecode.math.Constants;
-import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.basecode.math.Stats;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.Stats;
+import ubic.gemma.core.util.math.Constants;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -188,7 +188,7 @@ class RowLevelFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix>
      * @param highCut the threshold, inclusive
      */
     public void setHighCutAsFraction( double highCut ) {
-        Assert.isTrue( Stats.isValidFraction( highCut ) );
+        Assert.isTrue( Stats.isValidFraction( highCut ) , "expected true");
         this.highCut = highCut;
         this.useHighAsFraction = true;
     }
@@ -205,7 +205,7 @@ class RowLevelFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix>
      * @param lowCut the threshold, inclusive
      */
     public void setLowCutAsFraction( double lowCut ) {
-        Assert.isTrue( Stats.isValidFraction( lowCut ) );
+        Assert.isTrue( Stats.isValidFraction( lowCut ) , "expected true");
         this.lowCut = lowCut;
         this.useLowAsFraction = true;
     }

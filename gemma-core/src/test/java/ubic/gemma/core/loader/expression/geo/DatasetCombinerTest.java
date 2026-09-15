@@ -18,42 +18,43 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import lombok.extern.apachecommons.CommonsLog;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author pavlidis
  */
-@CommonsLog
-@Category(SlowTest.class)
+@Slf4j
+@Tag("slow")
+@Tag("network")
+@ExtendWith(NetworkAvailableExtension.class)
 public class DatasetCombinerTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
 
     private Collection<GeoDataset> gds;
 
     @Test
+    @Timeout(value = 120, unit = TimeUnit.SECONDS)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFindGDSGrouping() {
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674", Settings.getString( "ncbi.efetch.apikey" ) );
@@ -62,6 +63,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Timeout(value = 120, unit = TimeUnit.SECONDS)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFindGSEForGDS() {
         Collection<String> result = DatasetCombiner.findGSEforGDS( "GDS472", Settings.getString( "ncbi.efetch.apikey" ) );
@@ -95,7 +97,7 @@ public class DatasetCombinerTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -112,6 +114,7 @@ public class DatasetCombinerTest {
     }
 
     @Test
+    @Timeout(value = 120, unit = TimeUnit.SECONDS)
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testFindGSE267() throws Exception {
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267", Settings.getString( "ncbi.efetch.apikey" ) );
@@ -138,7 +141,7 @@ public class DatasetCombinerTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gse );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -175,7 +178,7 @@ public class DatasetCombinerTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -215,7 +218,7 @@ public class DatasetCombinerTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -272,7 +275,7 @@ public class DatasetCombinerTest {
         }
         assertEquals( 4, numBioMaterials );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
     }
 
     @Test
@@ -299,7 +302,7 @@ public class DatasetCombinerTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -338,7 +341,7 @@ public class DatasetCombinerTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -379,7 +382,7 @@ public class DatasetCombinerTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
         assertEquals( 15, result.size() );
 
         // these are just all the sample names.
@@ -389,8 +392,8 @@ public class DatasetCombinerTest {
                 "GSM10381", "GSM10382", "GSM10383", "GSM10384", "GSM10385", "GSM10386", "GSM10387", "GSM10388" };
 
         for ( String string : keys ) {
-            assertEquals( "Wrong result for " + string + ", expected 2", 2,
-                    result.getCorrespondingSamples( string ).size() );
+            assertEquals( 2, result.getCorrespondingSamples( string ).size(),
+                    "Wrong result for " + string + ", expected 2" );
         }
         assertTrue( result.getCorrespondingSamples( "GSM10354" ).contains( "GSM10374" ) );
         assertTrue( result.getCorrespondingSamples( "GSM10374" ).contains( "GSM10354" ) );
@@ -423,7 +426,7 @@ public class DatasetCombinerTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
@@ -484,14 +487,14 @@ public class DatasetCombinerTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
 
-        DatasetCombinerTest.log.debug( result );
+        DatasetCombinerTest.log.debug( String.valueOf( result ) );
 
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
         while ( it.hasNext() ) {
             Collection<String> c = it.next();
-            assertTrue( "Unexpected group size: " + c.size(),
-                    c.size() == 1 || c.size() == 2 || c.size() == 6 || c.size() == 5 );
+            assertTrue( c.size() == 1 || c.size() == 2 || c.size() == 6 || c.size() == 5,
+                    "Unexpected group size: " + c.size() );
             numBioMaterials++;
         }
         assertEquals( 30, numBioMaterials );

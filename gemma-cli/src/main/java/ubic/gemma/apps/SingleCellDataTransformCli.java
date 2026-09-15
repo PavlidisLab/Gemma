@@ -14,8 +14,8 @@ import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.expression.singleCell.transform.*;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -124,7 +124,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
         }
     }
 
-    @Nonnull
+    @NonNull
     private SingleCellDataTransformation parseNextTransformation( LinkedList<String> positionalArguments ) throws ParseException {
         operation = positionalArguments.removeFirst();
         Class<? extends SingleCellDataTransformation> transformationClass = transformationsByName.get( operation );
@@ -204,7 +204,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
     }
 
     private void transform() throws IOException {
-        Assert.notNull( transformation );
+        Assert.notNull( transformation , "must not be null");
         transformation.perform();
     }
 
@@ -258,7 +258,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
     }
 
     private SingleCellDataType detectInputDataType( Path inputFile ) {
-        Assert.notNull( transformation );
+        Assert.notNull( transformation , "must not be null");
         if ( transformation instanceof SingleCell10xMexFilter ) {
             return SingleCellDataType.MEX;
         } else if ( transformation instanceof AbstractPythonScriptBasedAnnDataTransformation ) {
@@ -269,7 +269,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
     }
 
     private SingleCellDataType detectOutputDataType( Path outputFile ) {
-        Assert.notNull( transformation );
+        Assert.notNull( transformation , "must not be null");
         if ( transformation instanceof SingleCell10xMexFilter ) {
             return SingleCellDataType.MEX;
         } else if ( transformation instanceof AbstractPythonScriptBasedAnnDataTransformation ) {

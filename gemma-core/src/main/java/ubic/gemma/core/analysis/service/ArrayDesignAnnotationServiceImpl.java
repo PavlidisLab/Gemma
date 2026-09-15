@@ -26,8 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyUtils;
 import ubic.gemma.core.util.BuildInfo;
@@ -38,12 +38,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -90,7 +91,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
+    private Gene2GOAssociationReadService gene2GOAssociationService;
 
     @Autowired
     private GeneOntologyService goService;
@@ -153,7 +154,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         }
 
         try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.toAbsolutePath().toString() );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+                BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) ) ) {
             ArrayDesignAnnotationServiceImpl.log.info( "Reading annotations from: " + f );
 
             String line;
@@ -216,13 +217,10 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         String shortFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
-        Path sf = getFileName( shortFileBaseName );
         String bioFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        Path bf = getFileName( bioFileBaseName );
         String allParFileBaseName = ArrayDesignAnnotationServiceImpl.mungeFileName( ad.getShortName() )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
-        Path af = getFileName( allParFileBaseName );
 
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         log.info( "Starting getting probe specificity" );
@@ -233,8 +231,8 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         log.info( "Done getting probe specificity" );
 
         boolean hasAtLeastOneGene = false;
-        for ( CompositeSequence c : genesWithSpecificity.keySet() ) {
-            if ( genesWithSpecificity.get( c ).isEmpty() ) {
+        for ( Collection<BioSequence2GeneProduct> gs : genesWithSpecificity.values() ) {
+            if ( gs.isEmpty() ) {
                 continue;
             }
             hasAtLeastOneGene = true;
@@ -331,10 +329,11 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             goMappings = gene2GOAssociationService.findByGenes( genes );
         }
 
+        Set<String> unresolvedUris = new HashSet<>();
         for ( Gene gene : genes ) {
             Collection<OntologyTerm> ontologyTerms = new ArrayList<>();
             if ( useGO ) {
-                ontologyTerms = this.getGoTerms( goMappings.get( gene ), OutputType.SHORT );
+                ontologyTerms = this.getGoTerms( goMappings.get( gene ), OutputType.SHORT, unresolvedUris );
             }
 
             Integer ncbiId = gene.getNcbiGeneId();
@@ -371,12 +370,14 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         Set<String> geneIds = new LinkedHashSet<>();
         Set<String> ncbiIds = new LinkedHashSet<>();
         Set<String> ensembleIds = new LinkedHashSet<>();
+        Set<String> unresolvedUris = new HashSet<>();
 
         Map<Gene, Collection<Characteristic>> goMappings = this.getGOMappings( genesWithSpecificity );
 
-        for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
+        for ( Map.Entry<CompositeSequence, Collection<BioSequence2GeneProduct>> gwsEntry : genesWithSpecificity.entrySet() ) {
+            CompositeSequence cs = gwsEntry.getKey();
 
-            Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
+            Collection<BioSequence2GeneProduct> geneclusters = gwsEntry.getValue();
 
             if ( ++compositeSequencesProcessed % 10000 == 0 && ArrayDesignAnnotationServiceImpl.log.isInfoEnabled() ) {
                 ArrayDesignAnnotationServiceImpl.log
@@ -397,7 +398,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 Gene g = b2g.getGeneProduct().getGene();
 
                 if ( useGO ) {
-                    goTerms = this.getGoTerms( goMappings.get( g ), ty );
+                    goTerms = this.getGoTerms( goMappings.get( g ), ty, unresolvedUris );
                 }
                 String gemmaId = g.getId() == null ? "" : g.getId().toString();
                 String ncbiId = g.getNcbiGeneId() == null ? "" : g.getNcbiGeneId().toString();
@@ -421,7 +422,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
                 Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
 
-                if ( genes.contains( g ) ) continue;
+                if ( genes.contains( g.getOfficialSymbol() ) ) continue;
 
                 genes.add( g.getOfficialSymbol() );
                 geneDescriptions.add( g.getOfficialName() );
@@ -436,7 +437,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 }
 
                 if ( useGO )
-                    goTerms.addAll( this.getGoTerms( goMappings.get( g ), ty ) );
+                    goTerms.addAll( this.getGoTerms( goMappings.get( g ), ty, unresolvedUris ) );
             }
 
             String geneString = StringUtils.join( genes, "|" );
@@ -467,9 +468,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity ) {
         ArrayDesignAnnotationServiceImpl.log.info( "Fetching GO mappings" );
         Collection<Gene> allGenes = new HashSet<>();
-        for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
-
-            Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
+        for ( Collection<BioSequence2GeneProduct> geneclusters : genesWithSpecificity.values() ) {
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
 
                 Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
@@ -486,7 +485,12 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      *            only.
      * @return the goTerms for a given gene, as configured
      */
-    private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty ) {
+    /**
+     * @param unresolvedUris collects the URIs the loaded GO could not resolve, so each one is reported once per
+     *                       file rather than once per element.
+     */
+    private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty,
+            Set<String> unresolvedUris ) {
 
         Collection<OntologyTerm> results = new HashSet<>();
         if ( ontologyTerms == null || ontologyTerms.isEmpty() )
@@ -494,7 +498,21 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         for ( Characteristic vc : ontologyTerms ) {
             if ( vc.getValueUri() != null ) {
-                results.add( goService.getTerm( vc.getValueUri() ) );
+                OntologyTerm term = goService.getTerm( vc.getValueUri() );
+                if ( term == null ) {
+                    // the association points at a term the loaded GO doesn't have (obsoleted, merged into an
+                    // alt_id, or simply not a GO URI). A null here reaches getAllParents() and
+                    // writeAnnotationLine(), both of which dereference every element, so drop it. Warn rather
+                    // than skip quietly: a GENE2GO row that stopped resolving means the gene lost that
+                    // annotation, and nothing else in the pipeline would say so.
+                    if ( unresolvedUris.add( vc.getValueUri() ) ) {
+                        ArrayDesignAnnotationServiceImpl.log.warn( "The loaded GO has no term for "
+                                + vc.getValueUri() + "; it will be omitted from the annotations"
+                                + " (further occurrences of this URI are not reported)" );
+                    }
+                    continue;
+                }
+                results.add( term );
             }
         }
 
@@ -528,7 +546,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         Writer writer;
         if ( StringUtils.isBlank( fileBaseName ) ) {
             ArrayDesignAnnotationServiceImpl.log.info( "Output to stdout" );
-            writer = new PrintWriter( System.out );
+            writer = new PrintWriter( new OutputStreamWriter( System.out, StandardCharsets.UTF_8 ) );
         } else {
 
             Path f = getFileName( fileBaseName );
@@ -542,7 +560,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             // ensure the parent directory exists
             PathUtils.createParentDirectories( f );
 
-            writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ) );
+            writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ), StandardCharsets.UTF_8 );
         }
         appendBaseHeader( "Platform annotations", buildInfo, new Date(), writer );
         writer.append( "#" ).append( "\n" );

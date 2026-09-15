@@ -18,13 +18,12 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.SecurityService;
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclPrincipalSid;
-import gemma.gsec.acl.domain.AclService;
-import gemma.gsec.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
@@ -34,14 +33,17 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisCo
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.security.authentication.UserService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import org.springframework.security.access.AccessDeniedException;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.persister.RelationshipPersister;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -49,8 +51,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests of ACL management: adding and removing from objects during CRUD operations. (AclAdvice)
@@ -58,7 +61,7 @@ import static org.junit.Assert.*;
  * @author keshav
  * @author paul
  */
-public class AclAdviceTest extends BaseSpringContextTest {
+public class AclAdviceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private AclService aclService;
@@ -82,6 +85,12 @@ public class AclAdviceTest extends BaseSpringContextTest {
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
     @Autowired
+    private ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService experimentalFactorService;
+
+    @Autowired
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+
+    @Autowired
     private UserManager userManager;
 
     @Autowired
@@ -89,6 +98,9 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     @Autowired
     private SecurityService securityService;
+
+    @Autowired
+    private RelationshipPersister relationshipPersister;
 
     @Test
     public void testSecuredNotChild() {
@@ -113,7 +125,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkHasAces( ad );
 
         Sid owner = securityService.getOwner( ad );
-        assertEquals( "administrator", ( ( AclPrincipalSid ) owner ).getPrincipal() );
+        assertEquals( "administrator", ubic.gemma.core.security.acl.domain.Sids.principalName( owner ) );
 
         arrayDesignService.remove( ad );
 
@@ -145,10 +157,10 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkHasAces( ad );
 
         Sid owner = securityService.getOwner( ad );
-        assertEquals( userName, ( ( AclPrincipalSid ) owner ).getPrincipal() );
+        assertEquals( userName, ubic.gemma.core.security.acl.domain.Sids.principalName( owner ) );
 
         arrayDesignService.update( ad );
-        assertEquals( userName, ( ( AclPrincipalSid ) owner ).getPrincipal() );
+        assertEquals( userName, ubic.gemma.core.security.acl.domain.Sids.principalName( owner ) );
 
         arrayDesignService.remove( ad );
 
@@ -160,7 +172,8 @@ public class AclAdviceTest extends BaseSpringContextTest {
     public void testNumExperiments() {
 
         this.runAsAdmin();
-        ArrayDesign ad = super.getTestPersistentArrayDesign( 10, true );
+        // no probe sequences: the test counts experiments per platform and never reads a probe
+        ArrayDesign ad = super.getTestPersistentArrayDesign( 10, true, false, false );
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment( ad );
 
         securityService.makePrivate( ee );
@@ -234,7 +247,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     @Test
     public void testExpressionExperimentAcls() {
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
 
         aclTestUtils.checkEEAcls( ee );
 
@@ -270,7 +283,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         ees.getExperiments().add( ee );
         ees.setName( this.randomName() );
 
-        ees = ( ExpressionExperimentSet ) persisterHelper.persist( ees );
+        ees = relationshipPersister.persistExpressionExperimentSet( ees, new HashMap<>() );
 
         // make sure the ACL for objects are there (throws an exception if not).
 
@@ -300,7 +313,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
          * Create an analysis, add a result set, persist. Problem is: what if we do things in a funny order. Must call
          * update on the Analysis.
          */
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis diffExpressionAnalysis = DifferentialExpressionAnalysis.Factory.newInstance();
@@ -326,6 +339,72 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     }
 
+    /**
+     * A result set of a private experiment must not be readable anonymously.
+     * <p>
+     * {@code GET /resultSets/{id}} used to serve the whole thing -- design, factor values, per-probe results with
+     * genes -- to anonymous callers for experiments {@code GET /datasets/{id}} correctly hid, because
+     * {@link ExpressionAnalysisResultSetService}'s loaders carried no ACL annotations at all while
+     * {@code DifferentialExpressionAnalysisService}'s always had them.
+     */
+    @Test
+    public void testResultSetOfPrivateExperimentIsNotReadableAnonymously() {
+        ExpressionExperiment ee = newCompleteExperiment();
+        DifferentialExpressionAnalysis analysis = persistOneAnalysis( ee );
+        Long resultSetId = analysis.getResultSets().iterator().next().getId();
+        assertNotNull( resultSetId );
+
+        securityService.makePrivate( ee );
+        assertTrue( securityService.isPrivate( ee ) );
+
+        // the owner can still read it
+        assertNotNull( expressionAnalysisResultSetService.loadWithResultsAndContrasts( resultSetId ) );
+
+        super.runAsAnonymous();
+        try {
+            ExpressionAnalysisResultSet leaked = expressionAnalysisResultSetService.loadWithResultsAndContrasts( resultSetId );
+            assertNull( leaked, "An anonymous user must not receive the result set of a private experiment." );
+        } catch ( AccessDeniedException expected ) {
+            // also acceptable: denied outright rather than filtered to null
+        }
+    }
+
+    /**
+     * Re-running an analysis deletes the old one and persists a new one in the same call. Prod lost the ACL for
+     * every analysis created from 2026-08-23 onward -- 376 of them, along with every one of their result sets --
+     * and every affected run was a re-run, so pin the second-analysis path specifically.
+     */
+    @Test
+    public void testAnalysisAclOnReanalysis() {
+        ExpressionExperiment ee = newCompleteExperiment();
+
+        DifferentialExpressionAnalysis first = persistOneAnalysis( ee );
+        aclTestUtils.checkHasAcl( first );
+        aclTestUtils.checkHasAclParent( first, ee );
+
+        // second pass: persistAnalysis deletes the old analysis before saving this one
+        DifferentialExpressionAnalysis second = persistOneAnalysis( ee );
+
+        aclTestUtils.checkHasAcl( second );
+        aclTestUtils.checkHasAclParent( second, ee );
+        for ( ExpressionAnalysisResultSet rs : second.getResultSets() ) {
+            aclTestUtils.checkHasAcl( rs );
+        }
+    }
+
+    private DifferentialExpressionAnalysis persistOneAnalysis( ExpressionExperiment ee ) {
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.addFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
+        DifferentialExpressionAnalysis analysis = DifferentialExpressionAnalysis.Factory.newInstance();
+        analysis.setProtocol( DiffExAnalyzerUtils.createProtocolForConfig( config, Collections.emptyMap() ) );
+        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance();
+        resultSet.setAnalysis( analysis );
+        resultSet.getExperimentalFactors().addAll( ee.getExperimentalDesign().getExperimentalFactors() );
+        analysis.getResultSets().add( resultSet );
+        analysis.setExperimentAnalyzed( ee );
+        return differentialExpressionAnalyzerService.persistAnalysis( ee, analysis, config );
+    }
+
     /*
      * Test that when a new associated object is persisted by a cascade, it gets the correct permissions of the parent
      * object
@@ -333,7 +412,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     @Test
     public void testUpdateAcl() {
 
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
 
         aclTestUtils.checkEEAcls( ee );
 
@@ -363,9 +442,26 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         aclTestUtils.checkEEAcls( ee );
 
+        // Renovations Phase 2: checkDeleteEEAcls walks lazy children (experimentalDesign,
+        // experimentalFactors, bioAssays, etc.); after remove() the EE is detached with no
+        // session so those proxies can't initialize. Thaw before deletion to materialize the
+        // graph in test-scope references.
+        ee = expressionExperimentService.thaw( ee );
+
         expressionExperimentService.remove( ee );
 
         aclTestUtils.checkDeleteEEAcls( ee );
+    }
+
+    /**
+     * A complete experiment with no probe sequences. Every ACL walk here
+     * ({@link AclTestUtils#checkEEAcls}, {@link AclTestUtils#checkDeleteEEAcls}) covers the
+     * experiment, its design, factors, factor values, assays, samples and platforms — never a
+     * probe's biological characteristic — so the per-probe BioSequence + Gene + GeneProduct +
+     * BLAT result graph was paid for nothing.
+     */
+    private ExpressionExperiment newCompleteExperiment() {
+        return testHelper.getTestExpressionExperimentWithAllDependencies( false );
     }
 
     private void makeUser( String username ) {
@@ -377,4 +473,44 @@ public class AclAdviceTest extends BaseSpringContextTest {
         }
     }
 
+
+    /**
+     * 🛑 Persisting an analysis must NOT re-parent the EXPERIMENT's factors onto the ANALYSIS, and deleting that
+     * analysis must not take their ACLs with it.
+     * <p>
+     * {@link ExpressionAnalysisResultSet}'s security owner is its analysis, so a result set's insert seeds the
+     * parent-stash walk with the analysis's OID. The walk descends {@code resultSet.experimentalFactors} and,
+     * before the {@code isIntermediateAncestor} guard, force-flattened each of the experiment's factors onto the
+     * analysis. {@code AclDaoImpl.delete} then recurses {@code findChildren} with {@code deleteChildren=true}, so
+     * deleting the analysis DELETED THE FACTORS' ACL ROWS. Every later ACL check on such a factor is a
+     * NotFoundException surfacing as "Access is denied" — to an administrator, because the row is gone rather
+     * than a permission refused.
+     * <p>
+     * Measured on production 2026-09-10 before the fix: 436 ExperimentalFactor ACL rows parented to a
+     * DifferentialExpressionAnalysis over 281 designs, 8 factors already with no ACL row. GSE19804's factor 74321
+     * was parented to DEA 432031, the analysis its retype deletes — which is why three fixes aimed at the
+     * factor-removal path never reached the cause.
+     * <p>
+     * Both halves are asserted deliberately. The parentage is the DEFECT; the surviving removal is the SYMPTOM
+     * that was chased three times. A test on the symptom alone would pass again the next time something re-homes
+     * a factor for a different reason.
+     */
+    @Test
+    public void testPersistingAnAnalysisDoesNotStealTheExperimentsFactors() {
+        ExpressionExperiment ee = newCompleteExperiment();
+        DifferentialExpressionAnalysis analysis = persistOneAnalysis( ee );
+        assertNotNull( analysis.getId() );
+
+        ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
+        assertNotNull( ef.getId() );
+
+        // the defect: the factor's ACL must still belong to the experiment, not to the analysis
+        aclTestUtils.checkHasAcl( ef );
+        aclTestUtils.checkHasAclParent( ef, ee );
+
+        // and the symptom: deleting the analysis must leave the factor removable
+        differentialExpressionAnalyzerService.deleteAnalysis( ee, analysis );
+        aclTestUtils.checkHasAcl( ef );
+        experimentalFactorService.remove( ef );
+    }
 }

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -37,12 +37,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,7 +58,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
     private final ExpressionExperimentSetService expressionExperimentSetService;
-    private final CoexpressionAnalysisService coexpressionAnalysisService;
     private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private final SecurityService securityService;
     private final SearchService searchService;
@@ -68,12 +66,10 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     @Autowired
     public ExpressionExperimentSearchServiceImpl( ExpressionExperimentSetService expressionExperimentSetService,
-            CoexpressionAnalysisService coexpressionAnalysisService,
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService,
             SecurityService securityService, SearchService searchService, TaxonService taxonService,
             ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentSetService = expressionExperimentSetService;
-        this.coexpressionAnalysisService = coexpressionAnalysisService;
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
         this.securityService = securityService;
         this.searchService = searchService;
@@ -96,7 +92,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         ExpressionExperimentSearchServiceImpl.log
                 .info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
-        List<Long> eeIds = experimentSearchResults.stream().map( SearchResult::getResultId ).collect( Collectors.toList() );
         Collection<ExpressionExperimentValueObject> experimentValueObjects = expressionExperimentService
                 .loadValueObjectsByIds( experimentSearchResults.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), true );
         ExpressionExperimentSearchServiceImpl.log
@@ -204,10 +199,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
                 assert numWithDifferentialExpressionAnalysis <= entry.getValue().size();
 
-                int numWithCoexpressionAnalysis = coexpressionAnalysisService
-                        .getExperimentsWithAnalysis( entry.getValue() ).size();
-
-                ftvo.setNumWithCoexpressionAnalysis( numWithCoexpressionAnalysis );
                 ftvo.setNumWithDifferentialExpressionAnalysis( numWithDifferentialExpressionAnalysis );
                 displayResults.add( new SearchResultDisplayObject( ftvo ) );
             }
@@ -359,7 +350,9 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         for ( ExpressionExperimentSetValueObject evo : evos ) {
 
-            if ( taxonLimited && !evo.getTaxonId().equals( taxonId ) ) {
+            // taxonId first: a set that spans taxa carries none, and this listing now sees such
+            // sets. A taxon-limited browse excludes them rather than throwing.
+            if ( taxonLimited && !taxonId.equals( evo.getTaxonId() ) ) {
                 continue;
             }
 

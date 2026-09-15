@@ -13,7 +13,7 @@ import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -48,7 +48,7 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  * @author poirigui
  */
 @Component
-@CommonsLog
+@Slf4j
 @ParametersAreNonnullByDefault
 public class CustomModelResolver extends ModelResolver {
 
@@ -105,7 +105,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     /**
-     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(QueryArg, DatasetArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}
+     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search}
      * resultTypes argument.
      * <p>
      * This ensures that the OpenAPI specification exposes all supported search result types in the {@link SearchService} as

@@ -26,7 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,6 +61,12 @@ public class AuditEventServiceImpl implements AuditEventService {
 
     @Override
     @Transactional(readOnly = true)
+    public CursorPage<AuditEvent> getEventsByCursor( Auditable auditable, @Nullable Cursor cursor, int limit ) {
+        return this.auditEventDao.getEventsByCursor( auditable, cursor, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public <T extends Auditable> Map<T, AuditEvent> getCreateEvents( Collection<T> auditables ) {
         return this.auditEventDao.getCreateEvents( auditables );
     }
@@ -84,6 +93,18 @@ public class AuditEventServiceImpl implements AuditEventService {
     @Transactional(readOnly = true)
     public <T extends Auditable> Map<T, AuditEvent> getLastEvents( Class<T> auditableClass, Class<? extends AuditEventType> type ) {
         return auditEventDao.getLastEvents( auditableClass, type );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Auditable> Set<Long> getIdsHavingEvent( Class<T> auditableClass, Collection<Class<? extends AuditEventType>> types ) {
+        return auditEventDao.getIdsHavingEvent( auditableClass, types );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Auditable> Map<T, AuditEvent> getLastEvents( Collection<T> auditables ) {
+        return auditEventDao.getLastEvents( auditables );
     }
 
     @Override

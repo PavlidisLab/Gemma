@@ -1,8 +1,9 @@
 package ubic.gemma.core.analysis.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.description.Characteristic;
@@ -11,7 +12,7 @@ import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.util.UninitializedList;
 import ubic.gemma.model.util.UninitializedSet;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.beans.PropertyDescriptor;
 import java.util.*;
 import java.util.function.Function;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
  * @author poirigui
  * @see ubic.gemma.core.analysis.preprocess.slice.BulkDataSlicerUtils
  */
-@CommonsLog
+@Slf4j
 public class SingleCellSlicerUtils {
 
     /**
@@ -109,6 +110,7 @@ public class SingleCellSlicerUtils {
         return newVector;
     }
 
+    @Nullable
     private static byte[] sliceData( SingleCellExpressionDataVector vec, List<BioAssay> assays, int[] starts, int[] ends, int nnz ) {
         if ( vec.getData() == null ) {
             return null;
@@ -127,6 +129,7 @@ public class SingleCellSlicerUtils {
         return data;
     }
 
+    @Nullable
     private static int[] sliceIndices( SingleCellExpressionDataVector vec, List<BioAssay> assays, int[] bioAssayOffsetInNewVec, int[] sampleIndicesInVec, int[] starts, int[] ends, int nnz ) {
         if ( vec.getDataIndices() == null ) {
             return null;

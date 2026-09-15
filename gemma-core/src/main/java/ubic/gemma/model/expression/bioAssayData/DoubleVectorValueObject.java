@@ -21,7 +21,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import cern.colt.list.DoubleArrayList;
 import lombok.Data;
 import org.springframework.util.Assert;
-import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 /**

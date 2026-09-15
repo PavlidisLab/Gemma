@@ -1,21 +1,22 @@
 package ubic.gemma.core.ontology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
-import ubic.basecode.ontology.model.AnnotationProperty;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.AnnotationProperty;
+import ubic.gemma.core.ontology.model.OntologyResource;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.util.StringUtils.urlEncode;
@@ -24,7 +25,7 @@ import static ubic.gemma.core.util.StringUtils.urlEncode;
  * Provides external links for ontology resources based on their URIs and other metadata.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class OntologyExternalLinks {
 
     /**
@@ -69,7 +70,7 @@ public class OntologyExternalLinks {
     }
 
     public String getExternalLink( OntologyResource resource ) {
-        Assert.notNull( resource.getUri() );
+        Assert.notNull( resource.getUri() , "must not be null");
         if ( autoReload ) {
             try {
                 reload();
@@ -80,10 +81,10 @@ public class OntologyExternalLinks {
         String prefix = null;
         String pattern = null;
         synchronized ( externalLinks ) {
-            for ( String ontologyPrefix : externalLinks.keySet() ) {
-                if ( resource.getUri().startsWith( ontologyPrefix ) ) {
-                    prefix = ontologyPrefix;
-                    pattern = externalLinks.get( ontologyPrefix );
+            for ( Map.Entry<String, String> elEntry : externalLinks.entrySet() ) {
+                if ( resource.getUri().startsWith( elEntry.getKey() ) ) {
+                    prefix = elEntry.getKey();
+                    pattern = elEntry.getValue();
                     break;
                 }
             }

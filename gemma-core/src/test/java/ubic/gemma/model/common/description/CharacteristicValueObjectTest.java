@@ -19,129 +19,188 @@
 
 package ubic.gemma.model.common.description;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author mjacobson
  */
-public class CharacteristicValueObjectTest extends TestCase {
+public class CharacteristicValueObjectTest {
 
     private CharacteristicValueObject a;
     private CharacteristicValueObject b;
 
-    @Override
+    @BeforeEach
     protected void setUp() throws Exception {
-        super.setUp();
         a = new CharacteristicValueObject();
         b = new CharacteristicValueObject();
     }
 
+    @Test
     public void testEqualsA() {
-        TestCase.assertTrue( a.equals( b ) );
+        assertTrue( a.equals( b ) );
     }
 
+    @Test
     public void testEqualsB() {
         a.setValueUri( "foo" );
         b.setValueUri( "bar" );
-        TestCase.assertFalse( a.equals( b ) );
+        assertFalse( a.equals( b ) );
     }
 
+    @Test
     public void testEqualsC() {
         a.setValueUri( "foo" );
         b.setValueUri( "foo" );
-        TestCase.assertTrue( a.equals( b ) );
+        assertTrue( a.equals( b ) );
     }
 
+    @Test
     public void testEqualsD() {
         a.setValue( "foo" );
         b.setValue( "bar" );
-        TestCase.assertFalse( a.equals( b ) );
+        assertFalse( a.equals( b ) );
     }
 
+    @Test
     public void testEqualsE() {
         a.setValue( "foo" );
         b.setValue( "foo" );
-        TestCase.assertTrue( a.equals( b ) );
+        assertTrue( a.equals( b ) );
     }
 
+    @Test
     public void testEqualsF() {
         a.setValueUri( "foo" );
         b.setValueUri( "bar" );
         a.setValue( "foo" );
         b.setValue( "foo" );
-        TestCase.assertFalse( a.equals( b ) );
+        assertFalse( a.equals( b ) );
     }
 
+    @Test
     public void testEqualsG() {
         a.setValueUri( "foo" );
         b.setValueUri( "foo" );
         a.setValue( "foo" );
         b.setValue( "bar" );
-        TestCase.assertTrue( a.equals( b ) );
+        assertTrue( a.equals( b ) );
     }
 
+    /**
+     * The {@code SUPPORTING_EVIDENCE} column has always existed on every characteristic; this value object
+     * simply never surfaced it, which left the design read path unable to answer "where did this come from"
+     * even for rows that recorded it. An {@link ubic.gemma.model.expression.experiment.ExperimentalFactor}'s
+     * category is a characteristic like any other, so this is the factor-level trace.
+     */
+    @Test
+    public void testSupportingEvidenceIsReadBackFromTheCharacteristic() {
+        Characteristic c = Characteristic.Factory.newInstance( "cell line", "http://x/EFO_0000322", "H510", null );
+        c.setSupportingEvidence( "[{\"quote\":\"primary tracheobronchial epithelial cultures\","
+                + "\"source\":\"paper\",\"location\":\"PMID 18156441\"}]" );
+
+        CharacteristicValueObject vo = new CharacteristicValueObject( c );
+
+        assertTrue( vo.getSupportingEvidence().isArray() );
+        assertEquals( "paper", vo.getSupportingEvidence().get( 0 ).get( "source" ).asText() );
+    }
+
+    /** Nothing recorded is the expected reading for most rows, and must arrive as null rather than as an error. */
+    @Test
+    public void testAbsentSupportingEvidenceIsNull() {
+        Characteristic c = Characteristic.Factory.newInstance( "cell line", "http://x/EFO_0000322", "H510", null );
+        assertNull( new CharacteristicValueObject( c ).getSupportingEvidence() );
+    }
+
+    /**
+     * Evidence is provenance, not identity. Two value objects for the same term, one carrying recorded
+     * evidence and one not, must stay equal — the search paths de-duplicate on this equality, so including
+     * the field would silently split a term into two.
+     */
+    @Test
+    public void testSupportingEvidenceDoesNotAffectEquality() {
+        a.setValueUri( "http://x/EFO_0000322" );
+        b.setValueUri( "http://x/EFO_0000322" );
+        a.setSupportingEvidence( CharacteristicUtils.parseSupportingEvidence( "[{\"quote\":\"q\"}]" ) );
+
+        assertTrue( a.equals( b ) );
+        assertEquals( a.hashCode(), b.hashCode() );
+    }
+
+    @Test
     public void testCompareToNull() {
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertEquals( 0, a.compareTo( b ) );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertEquals( 0, a.compareTo( b ) );
     }
 
+    @Test
     public void testCompareToCategory() {
         a.setCategory( "aaa" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) < 0 );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertTrue( a.compareTo( b ) < 0 );
 
         b.setCategory( "aaa" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertEquals( 0, a.compareTo( b ) );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertEquals( 0, a.compareTo( b ) );
 
         b.setCategory( "zzz" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) < 0 );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertTrue( a.compareTo( b ) < 0 );
     }
 
+    @Test
     public void testCompareToTaxon() {
         a.setTaxon( "aaa" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) > 0 );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertTrue( a.compareTo( b ) > 0 );
 
         b.setTaxon( "aaa" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertEquals( 0, a.compareTo( b ) );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertEquals( 0, a.compareTo( b ) );
 
         b.setTaxon( "zzz" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) < 0 );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertTrue( a.compareTo( b ) < 0 );
     }
 
+    @Test
     public void testCompareToValue() {
         a.setValue( "aaa" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) < 0 );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertTrue( a.compareTo( b ) < 0 );
 
         b.setValue( "aaa" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertEquals( 0, a.compareTo( b ) );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertEquals( 0, a.compareTo( b ) );
 
         b.setValue( "zzz" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) < 0 );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertTrue( a.compareTo( b ) < 0 );
     }
 
+    @Test
     public void testCompareToValueUri() {
         a.setValueUri( "aaa" );
         b.setValueUri( "aaa" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertEquals( 0, a.compareTo( b ) );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertEquals( 0, a.compareTo( b ) );
 
         b.setValueUri( "zzz" );
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) < 0 );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertTrue( a.compareTo( b ) < 0 );
     }
 
+    @Test
     public void testCompareToOrdering() {
         // Order is category, taxon, value, valueUri
         CharacteristicValueObject c = new CharacteristicValueObject( 3L );
@@ -167,24 +226,24 @@ public class CharacteristicValueObjectTest extends TestCase {
         e.setValueUri( "zzz" );
 
         // order should be a, b, c, d, e
-        TestCase.assertEquals( b.compareTo( a ), -a.compareTo( b ) );
-        TestCase.assertTrue( a.compareTo( b ) < 0 );
+        assertEquals( b.compareTo( a ), -a.compareTo( b ) );
+        assertTrue( a.compareTo( b ) < 0 );
 
-        TestCase.assertEquals( b.compareTo( c ), -c.compareTo( b ) );
-        TestCase.assertTrue( b.compareTo( c ) < 0 );
+        assertEquals( b.compareTo( c ), -c.compareTo( b ) );
+        assertTrue( b.compareTo( c ) < 0 );
 
-        TestCase.assertEquals( d.compareTo( c ), -c.compareTo( d ) );
-        TestCase.assertTrue( c.compareTo( d ) < 0 );
+        assertEquals( d.compareTo( c ), -c.compareTo( d ) );
+        assertTrue( c.compareTo( d ) < 0 );
 
-        TestCase.assertEquals( d.compareTo( e ), -e.compareTo( d ) );
-        TestCase.assertTrue( d.compareTo( e ) < 0 );
+        assertEquals( d.compareTo( e ), -e.compareTo( d ) );
+        assertTrue( d.compareTo( e ) < 0 );
 
         // sorting
         List<CharacteristicValueObject> toSort = Arrays.asList( e, d, c, b, a );
         List<CharacteristicValueObject> expectedOrder = Arrays.asList( a, b, c, d, e );
         Collections.sort( toSort );
         for ( int i = 0; i < toSort.size(); i++ ) {
-            TestCase.assertSame( expectedOrder.get( i ), toSort.get( i ) );
+            assertSame( expectedOrder.get( i ), toSort.get( i ) );
         }
     }
 }

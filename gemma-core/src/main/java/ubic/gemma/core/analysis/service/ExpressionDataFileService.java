@@ -25,7 +25,7 @@ import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Console;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -327,6 +327,37 @@ public interface ExpressionDataFileService {
     int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean excludeSampleIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
 
     /**
+     * Stream the processed expression data to the writer while populating the cache file in the same pass.
+     * <p>
+     * One matrix build feeds both consumers. This replaces the cold-path pattern of racing a fire-and-forget
+     * cache build against an in-band stream of the same data, which fetched the vectors, thawed the platforms
+     * and read the annotations twice per cold request. The two sides fail independently: a caller that goes
+     * away mid-stream does not abort the cache build, and a cache-file write error does not abort the stream.
+     * When another writer already holds the cache file, this degrades to a plain stream, exactly like
+     * {@link #writeProcessedExpressionData(ExpressionExperiment, boolean, ScaleType, boolean, boolean, boolean, Writer, boolean)};
+     * when the cache file turns out to be fresh by the time the lock is acquired, its content is streamed
+     * instead of being rebuilt.
+     *
+     * @param forceWrite rebuild the cache file even if it exists and is up to date
+     */
+    void streamAndWriteProcessedExpressionData( ExpressionExperiment ee, boolean filtered, boolean forceWrite, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
+
+    /**
+     * Raw sibling of
+     * {@link #streamAndWriteProcessedExpressionData(ExpressionExperiment, boolean, boolean, Writer, boolean)}.
+     */
+    void streamAndWriteRawExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, Writer writer, boolean autoFlush ) throws IOException;
+
+    /**
+     * Tabular single-cell sibling of
+     * {@link #streamAndWriteProcessedExpressionData(ExpressionExperiment, boolean, boolean, Writer, boolean)} —
+     * the payloads here are the largest in the system, so the duplicated cold build this replaces was at
+     * its most expensive on this path: two concurrent full scans of the single-cell vectors per cold
+     * request.
+     */
+    void streamAndWriteTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Writer writer, boolean autoFlush ) throws IOException;
+
+    /**
      * Writes out the experimental design for the given experiment.
      * <p>
      * The bioassays (col 0) matches the header row of the data matrix printed out by the {@link MatrixWriter}.
@@ -339,15 +370,6 @@ public interface ExpressionDataFileService {
      * Writes out the experimental design for the given experiment and quantitation type.
      */
     void writeDesignMatrix( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType, Writer writer, boolean autoFlush ) throws IOException;
-
-    /**
-     * Write or located the coexpression data file for a given experiment
-     *
-     * @param ee         the experiment
-     * @param forceWrite whether to force write
-     * @return file
-     */
-    LockedPath writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 
     /**
      * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
@@ -365,6 +387,15 @@ public interface ExpressionDataFileService {
     Optional<LockedPath> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException;
 
     /**
+     * Build the processed-expression data file off the request thread via the {@code expressionDataFileTaskExecutor}.
+     * Wraps {@link #writeOrLocateProcessedDataFile(ExpressionExperiment, boolean, boolean)} so cold-cache HTTP
+     * callers can return immediately and stream the data while the cached file materializes for the next caller.
+     *
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     */
+    Future<Path> writeOrLocateProcessedDataFileAsync( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) throws RejectedExecutionException;
+
+    /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
      * can be located from its own file.
      *
@@ -375,6 +406,15 @@ public interface ExpressionDataFileService {
     LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
     LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+
+    /**
+     * Build the raw-expression data file off the request thread via the {@code expressionDataFileTaskExecutor}. Wraps
+     * {@link #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)} so cold-cache HTTP
+     * callers can return immediately and stream the data while the cached file materializes for the next caller.
+     *
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     */
+    Future<Path> writeOrLocateRawExpressionDataFileAsync( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite ) throws RejectedExecutionException;
 
     /**
      * Locate or create an experimental design file for a given experiment.
@@ -402,6 +442,43 @@ public interface ExpressionDataFileService {
      * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
      */
     LockedPath writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
+
+    /**
+     * Locate or create a cached TSV for a single differential-expression result set.
+     * <p>
+     * Result sets are immutable post-creation, so the on-disk cache is effectively permanent.
+     * <p>
+     * On a cache hit, returns the existing path with a shared lock (no DB hit). On a cache miss, materializes
+     * the result set + contrasts + factor values + result-to-genes map via
+     * {@code ExpressionAnalysisResultSetService}, writes the TSV via {@code ExpressionAnalysisResultSetFileService},
+     * stores it gzipped under {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz}, and returns the locked path.
+     * The {@code /resultSets/{id}} REST endpoint sends those bytes verbatim via sendfile under
+     * {@code @GZIP(alreadyCompressed = true)} — it cannot compress on the fly, because sendfile bypasses the
+     * encoder's stream entirely.
+     *
+     * @param resultSetId  the result-set ID to materialize
+     * @param forceWrite   ignore any existing cached file
+     * @return a locked path to the TSV file, which must be released after use
+     * @throws java.util.NoSuchElementException if the result set cannot be found
+     */
+    LockedPath writeOrLocateDifferentialExpressionResultSetTsvFile( Long resultSetId, boolean forceWrite ) throws IOException;
+
+    /**
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     * @see #writeOrLocateDifferentialExpressionResultSetTsvFile(Long, boolean)
+     */
+    Future<Path> writeOrLocateDifferentialExpressionResultSetTsvFileAsync( Long resultSetId, boolean forceWrite ) throws RejectedExecutionException;
+
+    /**
+     * Delete the cached TSV (if any) for a single differential-expression result set.
+     * <p>
+     * Intended to be called by the DEA-deletion path so the per-result-set TSV cache does not outlive the
+     * underlying entity. Idempotent; returns {@code true} only when a cached file was actually removed.
+     *
+     * @param resultSetId the result-set ID whose cached TSV should be deleted
+     * @return {@code true} if a cached file was deleted, {@code false} if none existed
+     */
+    boolean deleteDifferentialExpressionResultSetTsvFile( Long resultSetId );
 
     /**
      * Locate or create the differential expression archive file(s) for a given experiment.
@@ -432,6 +509,18 @@ public interface ExpressionDataFileService {
      * @return a locked path to the archive file, which must be released after use
      */
     LockedPath writeOrLocateDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceWrite ) throws IOException;
+
+    /**
+     * Build the differential expression analysis archive file off the request thread via the
+     * {@code expressionDataFileTaskExecutor}. The returned {@link Future} resolves to the archive
+     * path once the write completes; callers that only need fire-and-forget semantics may ignore
+     * the result. The shared lock acquired by the underlying sync write is released before the
+     * future resolves.
+     *
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     * @see #writeOrLocateDiffExAnalysisArchiveFile(DifferentialExpressionAnalysis, boolean)
+     */
+    Future<Path> writeOrLocateDiffExAnalysisArchiveFileAsync( DifferentialExpressionAnalysis analysis, boolean forceWrite ) throws RejectedExecutionException;
 
     /**
      * Write all the differential expression data files for a given experiment to a particular directory.

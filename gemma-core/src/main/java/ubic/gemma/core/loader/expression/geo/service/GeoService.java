@@ -15,6 +15,7 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import lombok.Builder;
+import org.springframework.lang.Nullable;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -45,6 +46,7 @@ public interface GeoService {
      * @param splitIncompatiblePlatforms split incompatible platforms
      * @return collection
      */
+    @Nullable
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms );
 
@@ -57,6 +59,7 @@ public interface GeoService {
      * @param splitIncompatiblePlatforms split incompatible platforms
      * @return collection
      */
+    @Nullable
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 
@@ -74,10 +77,20 @@ public interface GeoService {
     void updateFromGEO( ExpressionExperiment expressionExperiment, GeoUpdateConfig geoUpdateConfig );
 
     @Builder
+    @lombok.Getter
     class GeoUpdateConfig {
         boolean experimentTags;
         boolean sampleCharacteristics;
         boolean publications;
+        /**
+         * Rebuild {@code Investigation.sourceMetadata} from the series this refetch parsed.
+         * <p>
+         * Separate from the three above because it is the only one that writes nothing of GEO's
+         * opinion into Gemma's own curated fields: the document is a record of what GEO said, stored
+         * beside the experiment rather than merged into it. That is what makes it safe to run over
+         * the whole corpus, and why the backfill CLI sets this flag and none of the others.
+         */
+        boolean sourceMetadata;
     }
 
     /**

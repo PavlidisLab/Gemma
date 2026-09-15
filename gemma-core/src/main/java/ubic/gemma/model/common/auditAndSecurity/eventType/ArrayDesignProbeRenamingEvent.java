@@ -18,11 +18,17 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Signifies that the probes were renamed from their original values.
  * <p>
  * This is sometimes done if the original data input had very generic identifiers (such as consecutive integers).
  */
+@Entity
+@DiscriminatorValue("ArrayDesignProbeRenamingEvent")
 public class ArrayDesignProbeRenamingEvent extends ArrayDesignAnalysisEvent {
 
 }

@@ -14,7 +14,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +26,7 @@ import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -49,88 +48,74 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
 
     private final FactorValueDao factorValueDao;
     private final StatementDao statementDao;
+    private final FactorValueReadService factorValueReadService;
 
     @Autowired
-    public FactorValueServiceImpl( FactorValueDao factorValueDao, StatementDao statementDao ) {
+    public FactorValueServiceImpl( FactorValueDao factorValueDao, StatementDao statementDao,
+            FactorValueReadService factorValueReadService ) {
         super( factorValueDao );
         this.factorValueDao = factorValueDao;
         this.statementDao = statementDao;
+        this.factorValueReadService = factorValueReadService;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public FactorValue loadWithExperimentalFactor( Long id ) {
-        FactorValue fv = load( id );
-        if ( fv != null ) {
-            Hibernate.initialize( fv.getExperimentalFactor() );
-        }
-        return fv;
+        return factorValueReadService.loadWithExperimentalFactor( id );
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    @Transactional(readOnly = true)
     public <T extends Exception> FactorValue loadWithExperimentalFactorOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
-        FactorValue fv = loadOrFail( id, exceptionSupplier );
-        Hibernate.initialize( fv.getExperimentalFactor() );
-        return fv;
+        return factorValueReadService.loadWithExperimentalFactorOrFail( id, exceptionSupplier );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<FactorValue, Characteristic> getExperimentalFactorCategoriesIgnoreAcls( Collection<FactorValue> factorValues ) {
-        return factorValueDao.getExperimentalFactorCategories( factorValues );
+        return factorValueReadService.getExperimentalFactorCategoriesIgnoreAcls( factorValues );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<FactorValue, ExpressionExperiment> getExpressionExperimentsIgnoreAcls( Collection<FactorValue> factorValues ) {
-        return factorValueDao.getExpressionExperimentsIgnoreAcls( factorValues );
+        return factorValueReadService.getExpressionExperimentsIgnoreAcls( factorValues );
     }
 
     @Override
     @Deprecated
-    @Transactional(readOnly = true)
     public FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly ) {
-        return factorValueDao.loadWithOldStyleCharacteristics( id, readOnly );
+        return factorValueReadService.loadWithOldStyleCharacteristics( id, readOnly );
     }
 
     @Override
     @Deprecated
-    @Transactional(readOnly = true)
     public Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds ) {
-        return factorValueDao.loadIdsWithNumberOfOldStyleCharacteristics( excludedIds );
+        return factorValueReadService.loadIdsWithNumberOfOldStyleCharacteristics( excludedIds );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<FactorValue> loadIgnoreAcls( Set<Long> ids ) {
-        return factorValueDao.load( ids );
+        return factorValueReadService.loadIgnoreAcls( ids );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Slice<FactorValue> loadAll( int offset, int limit ) {
-        return factorValueDao.loadAll( offset, limit );
+        return factorValueReadService.loadAll( offset, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<Long> loadAllIds() {
-        return factorValueDao.loadAllIds();
+        return factorValueReadService.loadAllIds();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Slice<Long> loadAllIds( int offset, int limit ) {
-        return factorValueDao.loadAllIds( offset, limit );
+        return factorValueReadService.loadAllIds( offset, limit );
     }
 
     @Override
     @Deprecated
-    @Transactional(readOnly = true)
     public Collection<FactorValue> findByValueStartingWith( String valuePrefix, int maxResults ) {
-        return this.factorValueDao.findByValueStartingWith( valuePrefix, maxResults );
+        return factorValueReadService.findByValueStartingWith( valuePrefix, maxResults );
     }
 
     @Override
@@ -190,8 +175,15 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
             throw new IllegalArgumentException( String.format( "%s is not associated with %s", statement, fv ) );
         }
         this.factorValueDao.update( fv );
-        // now we can safely delete it
-        this.statementDao.remove( statement );
+        // Hibernate 6: factorValueDao.update is now merge() (not the legacy reattach-via-update),
+        // which cascades into a fresh managed copy of the Statement. Calling statementDao.remove
+        // with the caller-provided detached reference would throw EntityExistsException because a
+        // different managed instance with the same id is already in the session. Re-resolve the
+        // managed Statement from its id and remove that.
+        Statement managed = statementDao.load( statement.getId() );
+        if ( managed != null ) {
+            this.statementDao.remove( managed );
+        }
     }
 
     @Override

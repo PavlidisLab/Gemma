@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -206,7 +206,7 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( CELLXGENE_DATASET_ID ).longOpt( "cellxgene-dataset-id" ).desc( "CELLxGENE dataset identifier" ).hasArg().get() );
         options.addOption( Option.builder( CELLXGENE_ASSET_ID ).longOpt( "cellxgene-asset-id" ).desc( "CELLxGENE asset identifier" ).hasArg().get() );
         options.addOption( Option.builder( CELLXGENE_ASSAYS ).longOpt( "cellxgene-assays" ).hasArgs().valueSeparator( ',' )
-                .converter( EnumeratedStringConverter.of( Arrays.stream( CellXGeneUtils.GENE_EXPRESSION_ASSAYS )
+                .converter( EnumeratedStringConverter.of( CellXGeneUtils.GENE_EXPRESSION_ASSAYS.stream()
                         .collect( Collectors.toMap( OntologyTerm::getOntologyTermId, ot -> new DefaultMessageSourceResolvable( null, ot.getLabel() ) ) ) ) )
                 .desc( "CELLxGENE assay identifiers to use to look for. Defaults to a predefined list of single-cell gene expression assays." ).get() );
         addBatchOption( options );
@@ -425,7 +425,11 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
                 detector.setProgressReporterFactory( prc );
                 cellXGeneFetcher.setProgressReporterFactory( prc );
             }
-            log.info( "Downloading single-cell data to " + singleCellDataBasePath + "..." );
+            // All three destinations, not just the single-cell one: a run can write SOFT/supplementary
+            // files and CELLxGENE assets to two other trees, and naming only one of them is how a
+            // wrong-tree write stays invisible.
+            log.info( String.format( "Output will be written to: single-cell=%s, GEO series=%s, CELLxGENE=%s",
+                    singleCellDataBasePath, geoSeriesDownloadPath, cellXGeneDownloadPath ) );
             for ( String geoAccession : accessions ) {
                 getBatchTaskExecutor().submit( () -> {
                     String detectedDataType = UNKNOWN_INDICATOR;

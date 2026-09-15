@@ -7,7 +7,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.NonUniqueQuantitationTypeByNameException;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 
 @Schema(type = "string", description = "A quantitation type name.")
 public class QuantitationTypeByNameArg extends QuantitationTypeArg<String> {

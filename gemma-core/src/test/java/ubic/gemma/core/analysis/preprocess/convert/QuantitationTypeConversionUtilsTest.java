@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -25,7 +25,7 @@ public class QuantitationTypeConversionUtilsTest {
     private QuantitationType qt;
     private ExpressionDataDoubleMatrix matrix;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         RawExpressionDataVector ev = new RawExpressionDataVector();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();

@@ -6,8 +6,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysisFactory;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
@@ -65,6 +67,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ExternalDatabaseService eds;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private GoldenPathSequenceAnalysisFactory goldenPathSequenceAnalysisFactory;
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     @Value("${gemma.goldenpath.db.rat}")
     private String goldenPathRatDbName;
@@ -481,7 +487,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     private void audit( ArrayDesign arrayDesign, String note, Class<? extends ArrayDesignGeneMappingEvent> eventType ) {
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+        if ( AnnotationBasedGeneMappingEvent.class.equals( eventType ) ) {
+            cliArrayDesignAuditService.recordAnnotationBasedGeneMapping( arrayDesign, note );
+        } else if ( AlignmentBasedGeneMappingEvent.class.equals( eventType ) ) {
+            cliArrayDesignAuditService.recordAlignmentBasedGeneMapping( arrayDesign, note );
+        } else {
+            throw new IllegalArgumentException( "Unsupported ArrayDesignGeneMappingEvent subtype for CLI audit: " + eventType );
+        }
     }
 
     private void batchRun( final Date skipIfLastRunLaterThan ) {
@@ -637,7 +649,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             probe = compositeSequenceService.thaw( probe );
 
             Map<String, Collection<BlatAssociation>> results;
-            try ( GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon ) ) {
+            try ( GoldenPathSequenceAnalysis goldenPathDb = goldenPathSequenceAnalysisFactory.create( taxon ) ) {
                 results = this.arrayDesignProbeMapperService
                         .processCompositeSequence( this.config, taxon, goldenPathDb, probe );
             }

@@ -43,4 +43,10 @@ public class RawExpressionDataVectorServiceImpl extends AbstractBulkExpressionDa
     public Collection<RawExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
         return mainDao.find( designElements, quantitationType );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<RawExpressionDataVector> getRandomRawVectors( QuantitationType quantitationType, int limit ) {
+        return mainDao.getRandomRawVectors( quantitationType, limit );
+    }
 }

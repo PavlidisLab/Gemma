@@ -15,18 +15,17 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -46,14 +45,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests loading, platform switch, vector merge, and complex deletion (in teardown)
  *
  * @author paul
  */
-public class VectorMergingServiceTest extends AbstractGeoServiceTest {
+public class VectorMergingServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private ArrayDesignMergeService arrayDesignMergeService;
@@ -86,8 +85,8 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private PreprocessorService preprocessorService;
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void tearDown() {
         try {
             ee = eeService.findByShortName( "GSE3443" );
@@ -127,8 +126,8 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Disabled
+    @Tag("slow")
     final public void test() throws Exception {
         /*
          * Need a persistent experiment that uses multiple array designs. Then merge the designs, switch the vectors,

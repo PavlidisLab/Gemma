@@ -11,67 +11,61 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import ubic.gemma.model.analysis.Investigation;
-
-import java.util.Objects;
 
 /**
  * Subclass of {@link Investigation} representing a proposed-but-not-yet-loaded
  * dataset.
  *
- * <p>This is a read-side compatibility port from {@code phase2-acl-migrate}:
- * just enough Hibernate metadata to MAP an INVESTIGATION row whose
- * discriminator is {@code PreboardedExperiment} without throwing a
- * {@code WrongClassException} on a hotfix-1.32.7 instance that points at a
- * database where the phase2 schema has been applied. The full workflow
- * (creation endpoint, AgentProposal, promotion, WorkflowState lifecycle)
- * lands with the phase2 ship.</p>
+ * <p>Created by {@code POST /preboarded} when the curation-agents runner targets
+ * a GEO (or other) accession that has not yet been imported into Gemma. The
+ * preboarded carries enough identifying metadata to triage / re-run the agent
+ * against it, and accumulates one or more {@code AnnotationSet} rows over
+ * time. When the data lands as an {@code ExpressionExperiment}, the preboarded
+ * is promoted via {@code POST /preboarded/{id}/promote} — the
+ * implementation rebinds the {@code AnnotationSet} FKs to the new EE row
+ * (new-row + FK rebind approach; see {@code HANDOFF_PROPOSED_EXPERIMENT_WORKFLOW.md}
+ * §"Open questions" item 1 and STATUS file for rationale).</p>
  *
  * <p>Single-table inheritance under {@code INVESTIGATION} with discriminator
  * value {@code PreboardedExperiment}; sibling of {@link ExpressionExperiment}
  * and {@link ExpressionExperimentSubSet}.</p>
+ *
+ * <p>Defaults its {@link WorkflowState} to {@link WorkflowState#Preboarded} on
+ * construction (collapsing handoff states 1+2; see STATUS file). Promotion
+ * advances the resulting EE to {@link WorkflowState#Loaded}.</p>
  */
+@Entity
+@DiscriminatorValue("PreboardedExperiment")
 public class PreboardedExperiment extends Investigation {
 
+    @Column(name = "PREBOARDED_ACCESSION", columnDefinition = "VARCHAR(255)")
     private String accession;
-    private String source;
+
+    @Column(name = "PREBOARDED_SOURCE", columnDefinition = "VARCHAR(32)")
+    private String source = "GEO";
     /**
-     * Free-form JSON payload of identifying metadata the agent harvested before
-     * loading (title, summary, submitter, pubmed id, etc.).
-     * <p>
-     * <b>Not persisted on this branch.</b> phase2 renames the backing column from
-     * {@code PREBOARDED_IDENTIFYING_METADATA} to {@code SOURCE_METADATA}, and because
-     * {@code INVESTIGATION} is single-table inheritance, mapping it here would put the
-     * old name into the SQL for every polymorphic {@code Investigation} query and break
-     * this build against the shared database the moment that migration runs. Nothing in
-     * 1.32.x reads the value, so it is left unmapped and the two can deploy in either
-     * order. See the comment in {@code Investigation.hbm.xml}; the accessors are kept
-     * only so existing call sites still compile, and they will always read {@code null}
-     * on a reloaded instance.
+     * JSON-as-string listing the matcher names that flagged this preboarded
+     * during a {@code GeoScrapeService} run (e.g. {@code ["brain","tfperturb"]}).
+     * Null for preboardeds created outside the scrape pipeline (e.g. via the
+     * curation-agent runner directly).
      */
-    private String identifyingMetadata;
+    @Lob
+    @Column(name = "PREBOARDED_MATCHED_CRITERIA", columnDefinition = "TEXT")
+    private String matchedCriteria;
 
     public PreboardedExperiment() {
         super();
-    }
-
-    public static final class Factory {
-
-        /**
-         * @param source    upstream source (e.g. {@code "GEO"}, {@code "ArrayExpress"},
-         *                  {@code "manual"}); must not be {@code null}.
-         * @param accession upstream accession (e.g. {@code "GSE12345"}).
-         */
-        public static PreboardedExperiment newInstance( String source, String accession ) {
-            PreboardedExperiment pb = new PreboardedExperiment();
-            pb.setSource( Objects.requireNonNull( source, "source must be specified" ) );
-            pb.setAccession( accession );
-            return pb;
-        }
+        setWorkflowState( WorkflowState.Preboarded );
     }
 
     /**
      * @return the upstream accession this preboarded targets (e.g. GSE12345).
+     *         Required; the create endpoint enforces it.
      */
     public String getAccession() {
         return accession;
@@ -82,8 +76,9 @@ public class PreboardedExperiment extends Investigation {
     }
 
     /**
-     * @return the upstream source this accession belongs to (e.g. {@code "GEO"},
-     *         {@code "ArrayExpress"}, {@code "manual"}).
+     * @return the upstream source this accession belongs to. Defaults to
+     *         {@code "GEO"}; future values may include {@code "ArrayExpress"},
+     *         {@code "manual"}.
      */
     public String getSource() {
         return source;
@@ -94,22 +89,25 @@ public class PreboardedExperiment extends Investigation {
     }
 
     /**
-     * @return the identifying metadata blob (title, summary, submitter,
-     *         pubmed id, etc.) as a JSON string, or {@code null} if the
-     *         agent did not harvest it.
+     * @return JSON-as-string listing matcher names from the GEO scrape pipeline
+     *         that flagged this preboarded, or {@code null} if not produced by
+     *         the scrape pipeline.
      */
-    public String getIdentifyingMetadata() {
-        return identifyingMetadata;
+    public String getMatchedCriteria() {
+        return matchedCriteria;
     }
 
-    public void setIdentifyingMetadata( String identifyingMetadata ) {
-        this.identifyingMetadata = identifyingMetadata;
+    public void setMatchedCriteria( String matchedCriteria ) {
+        this.matchedCriteria = matchedCriteria;
     }
 
     @Override
     public int hashCode() {
+        if ( getId() != null ) {
+            return getId().hashCode();
+        }
         if ( accession != null ) {
-            return Objects.hash(accession);
+            return accession.hashCode();
         }
         return System.identityHashCode( this );
     }

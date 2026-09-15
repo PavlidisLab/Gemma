@@ -27,7 +27,6 @@ import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * @author pavlidis
@@ -37,50 +36,46 @@ import java.util.HashSet;
 public class ExpressionExperimentSubSetServiceImpl extends AbstractService<ExpressionExperimentSubSet>
         implements ExpressionExperimentSubSetService {
 
-    private final ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
+    private final ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService;
     private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     public ExpressionExperimentSubSetServiceImpl( ExpressionExperimentSubSetDao expressionExperimentSubSetDao,
+            ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService,
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         super( expressionExperimentSubSetDao );
-        this.expressionExperimentSubSetDao = expressionExperimentSubSetDao;
+        this.expressionExperimentSubSetReadService = expressionExperimentSubSetReadService;
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays ) {
-        return expressionExperimentSubSetDao.findByBioAssayIn( bioAssays );
+        return expressionExperimentSubSetReadService.findByBioAssayIn( bioAssays );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
-        return this.expressionExperimentSubSetDao.getFactorValuesUsed( entity, factor );
+        return expressionExperimentSubSetReadService.getFactorValuesUsed( entity, factor );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
-        Collection<FactorValue> list = this.expressionExperimentSubSetDao.getFactorValuesUsed( subSetId, experimentalFactor );
-        Collection<FactorValueValueObject> result = new HashSet<>();
-        for ( FactorValue fv : list ) {
-            result.add( new FactorValueValueObject( fv ) );
-        }
-        return result;
+        return expressionExperimentSubSetReadService.getFactorValuesUsedAsVO( subSetId, experimentalFactor );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset ) {
-        return expressionExperimentSubSetDao.getArrayDesignsUsed( subset );
+        return expressionExperimentSubSetReadService.getArrayDesignsUsed( subset );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperimentSubSet loadWithBioAssays( Long id ) {
-        return expressionExperimentSubSetDao.loadWithBioAssays( id );
+        return expressionExperimentSubSetReadService.loadSubSetWithBioAssays( id );
     }
 
     /**

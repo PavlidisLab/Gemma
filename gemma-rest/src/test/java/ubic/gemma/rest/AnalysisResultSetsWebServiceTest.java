@@ -3,11 +3,12 @@ package ubic.gemma.rest;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
+import ubic.gemma.core.util.test.TestAuthenticationUtils;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -15,27 +16,28 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.InputStreamReader;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
-public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest {
+public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private AnalysisResultSetsWebService service;
@@ -65,7 +67,16 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
 
-    @Before
+    @Autowired
+    private TestAuthenticationUtils testAuthenticationUtils;
+
+    @Autowired
+    private ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService expressionExperimentSubSetService;
+
+    @Autowired
+    private ubic.gemma.core.security.SecurityService securityService;
+
+    @BeforeEach
     public void setupMocks() {
 
         ee = testHelper.getTestPersistentBasicExpressionExperiment();
@@ -110,7 +121,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
         databaseEntry2 = databaseEntryService.create( databaseEntry2 );
     }
 
-    @After
+    @AfterEach
     public void removeFixtures() {
         differentialExpressionAnalysisService.remove( dea );
         expressionExperimentService.remove( ee );
@@ -120,12 +131,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
 
     @Test
     public void testFindAllWhenNoDatasetsAreProvidedThenReturnLatestAnalysisResults() {
-        ResponseDataObject<?> result = service.getResultSets( null,
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData() );
 
@@ -140,14 +152,61 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
                 .containsOnlyNulls();
     }
 
+    /**
+     * 🔒 The LISTING is ACL-filtered, not just the id-taking loaders.
+     * <p>
+     * {@code GET /resultSets/{id}} was guarded on 2026-08-24; the two listing methods were not, and
+     * {@code ?filter=id = <id>} reaches one result set through the listing just as directly. Anonymously
+     * that served the analysis, subset factor, factor values and ontology terms of a private
+     * experiment's result set.
+     * <p>
+     * 🛑 The admin half is not decoration — it is the known-positive that proves this query can return
+     * the fixture at all. Without it an anonymous empty result would be indistinguishable from a
+     * listing that returns nothing for an unrelated reason, which is the shape of a screen that cannot
+     * fail.
+     */
+    @Test
+    public void testFindAllDoesNotServePrivateResultSetsToAnonymousCallers() {
+        // known-positive: as admin the fixture is listed, and by id
+        assertThat( listedIds( "id = " + this.dears.getId() ) )
+                .as( "admin sees the fixture result set" )
+                .contains( this.dears.getId() );
+
+        try {
+            testAuthenticationUtils.runAsAnonymous();
+            assertThat( listedIds( "id = " + this.dears.getId() ) )
+                    .as( "anonymous must not see a result set of a private experiment" )
+                    .doesNotContain( this.dears.getId() );
+            assertThat( listedIds( "" ) )
+                    .as( "and not through an unfiltered listing either" )
+                    .doesNotContain( this.dears.getId() );
+        } finally {
+            // @AfterEach removeFixtures() deletes as the caller, so admin has to be back before it runs;
+            // the base class only clears the context afterwards.
+            testAuthenticationUtils.runAsAdmin();
+        }
+    }
+
+    /** Ids returned by the result-set listing under the current principal. */
+    private List<Long> listedIds( String filter ) {
+        ResponseDataObject<?> result = ( ResponseDataObject<?> ) service.getResultSets( null, null,
+                FilterArg.valueOf( filter ), OffsetArg.valueOf( "0" ), LimitArg.valueOf( "100" ),
+                SortArg.valueOf( "+id" ), null );
+        //noinspection unchecked
+        return ( ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData() ).stream()
+                .map( DifferentialExpressionAnalysisResultSetValueObject::getId )
+                .collect( java.util.stream.Collectors.toList() );
+    }
+
     @Test
     public void testFindAllWithFilters() {
-        ResponseDataObject<?> result = service.getResultSets( null,
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id = " + this.dears.getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
@@ -157,12 +216,13 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
 
     @Test
     public void testFindAllWithFiltersAndCollections() {
-        ResponseDataObject<?> result = service.getResultSets( null,
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets( null,
                 null,
                 FilterArg.valueOf( "id in (" + this.dears.getId() + ")" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.size(), 1 );
@@ -177,19 +237,21 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
                 FilterArg.valueOf( "id2 = " + this.dears.getId() ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) ) );
+                SortArg.valueOf( "+id" ),
+                null ) );
     }
 
     @Test
     public void testFindAllWithDatasetIdsThenReturnLatestAnalysisResults() {
         DatasetArrayArg datasets = DatasetArrayArg.valueOf( String.valueOf( ee.getId() ) );
-        ResponseDataObject<?> result = service.getResultSets(
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets(
                 datasets,
                 null,
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
@@ -203,19 +265,21 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
                 null,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) ) );
+                SortArg.valueOf( "+id" ),
+                null ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
     @Test
     public void testFindAllWithDatabaseEntriesThenReturnLatestAnalysisResults() {
         assertThat( ee.getAccession() ).isNotNull();
-        ResponseDataObject<?> result = service.getResultSets( null,
+        ResponseDataObject<?> result = (ResponseDataObject<?>) service.getResultSets( null,
                 DatabaseEntryArrayArg.valueOf( ee.getAccession().getAccession() ),
                 FilterArg.valueOf( "" ),
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) );
+                SortArg.valueOf( "+id" ),
+                null );
         //noinspection unchecked
         List<DifferentialExpressionAnalysisResultSetValueObject> results = ( List<DifferentialExpressionAnalysisResultSetValueObject> ) result.getData();
         assertEquals( results.get( 0 ).getId(), dears.getId() );
@@ -229,7 +293,8 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
                 null,
                 OffsetArg.valueOf( "0" ),
                 LimitArg.valueOf( "10" ),
-                SortArg.valueOf( "+id" ) ) );
+                SortArg.valueOf( "+id" ),
+                null ) );
         assertEquals( e.getResponse().getStatus(), Response.Status.NOT_FOUND.getStatusCode() );
     }
 
@@ -289,5 +354,63 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
                     // rank is null, it should appear as an empty string
                     assertEquals( "", record.get( "rank" ) );
                 } );
+    }
+
+    /**
+     * 🛑 A SUBSET analysis's result sets must be visible to a caller who can read the SOURCE experiment.
+     * <p>
+     * The ACL restriction added with the /resultSets leak fix bound {@code analysis.experimentAnalyzed.id} as an
+     * ExpressionExperiment id. For a subset analysis that is an {@link ExpressionExperimentSubSet} id, which
+     * matches no ExpressionExperiment ACL row — so every subset analysis's result sets vanished for everyone but
+     * admins, who bypass the predicate entirely and therefore could not see the damage.
+     * <p>
+     * Measured on production: GSE191016 (eid 39118) is PUBLIC with 24 subset result sets. Admin saw 24,
+     * anonymous saw 0, and the ACL chain was correct throughout — result set → analysis → experiment, all
+     * inheriting, the experiment granting IS_AUTHENTICATED_ANONYMOUSLY. Nothing was wrong with the data.
+     * <p>
+     * 🛑 The original leak test could not catch this: its fixture analyses a whole experiment, which is the one
+     * shape the broken predicate handled. Hence a subset fixture here rather than another assertion there.
+     */
+    @Test
+    public void testSubsetAnalysisResultSetsAreVisibleViaTheSourceExperiment() {
+        ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+        subset.setName( "subset-of-" + ee.getShortName() );
+        subset.setSourceExperiment( ee );
+        subset.getBioAssays().addAll( ee.getBioAssays() );
+        subset = expressionExperimentSubSetService.create( subset );
+
+        DifferentialExpressionAnalysis subsetDea = new DifferentialExpressionAnalysis();
+        subsetDea.setExperimentAnalyzed( subset );
+        ExpressionAnalysisResultSet subsetRs = new ExpressionAnalysisResultSet();
+        subsetRs.setAnalysis( subsetDea );
+        PvalueDistribution pv = new PvalueDistribution();
+        pv.setBinCounts( new double[0] );
+        pv.setNumBins( 0 );
+        subsetRs.setPvalueDistribution( pv );
+        subsetDea.getResultSets().add( subsetRs );
+        subsetDea = differentialExpressionAnalysisService.create( subsetDea );
+        Long subsetRsId = subsetDea.getResultSets().iterator().next().getId();
+        assertNotNull( subsetRsId );
+
+        // 🛑 Must run as a NON-ADMIN against a PUBLIC experiment, or it tests nothing: admins bypass the ACL
+        // predicate entirely (formAclRestrictionPredicate returns an always-true conjunction), which is exactly
+        // why nobody saw this on production -- every check was made by an admin.
+        securityService.makePublic( ee );
+
+        try {
+            assertThat( listedIds( "id = " + subsetRsId ) )
+                    .as( "known-positive: admin sees the subset result set" )
+                    .contains( subsetRsId );
+
+            testAuthenticationUtils.runAsAnonymous();
+            assertThat( listedIds( "id = " + subsetRsId ) )
+                    .as( "a subset analysis's result set must be reachable through its SOURCE experiment's ACL;"
+                            + " binding the subset id as an experiment id matches no ACL row and hides it" )
+                    .contains( subsetRsId );
+        } finally {
+            testAuthenticationUtils.runAsAdmin();
+            differentialExpressionAnalysisService.remove( subsetDea );
+            expressionExperimentSubSetService.remove( subset );
+        }
     }
 }

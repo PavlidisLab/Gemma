@@ -19,15 +19,15 @@
 package ubic.gemma.core.analysis.service;
 
 import cern.colt.list.DoubleArrayList;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.basecode.math.MatrixStats;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils;
 import ubic.gemma.core.analysis.preprocess.filter.*;
@@ -50,7 +50,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Thaws;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
  * @author keshav
  */
 @Component
-@CommonsLog
+@Slf4j
 public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixService {
 
     @Autowired
@@ -88,15 +88,21 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException {
+        return this.getFilteredMatrix( ee, dataVectors, filterConfig, logTransform, new ExpressionExperimentFilterResult() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform, ExpressionExperimentFilterResult result ) throws FilteringException {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        return this.getFilteredMatrix( ee, dataVectors, arrayDesignsUsed, filterConfig, logTransform );
+        return this.getFilteredMatrix( ee, dataVectors, arrayDesignsUsed, filterConfig, logTransform, result );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, ExpressionExperimentFilterConfig filterConfig,
             boolean logTransform ) throws FilteringException {
-        return this.getFilteredMatrix( null, dataVectors, Collections.singleton( arrayDesign ), filterConfig, logTransform );
+        return this.getFilteredMatrix( null, dataVectors, Collections.singleton( arrayDesign ), filterConfig, logTransform, new ExpressionExperimentFilterResult() );
     }
 
     @Override
@@ -207,16 +213,22 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
      * @throws NoDesignElementsException if filtering results in no row left in the expression matrix
      */
     private ExpressionDataDoubleMatrix getFilteredMatrix( @Nullable ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors,
-            Collection<ArrayDesign> arrayDesignsUsed, ExpressionExperimentFilterConfig filterConfig, boolean logTransform
+            Collection<ArrayDesign> arrayDesignsUsed, ExpressionExperimentFilterConfig filterConfig, boolean logTransform,
+            ExpressionExperimentFilterResult result
     ) throws FilteringException {
-        if ( dataVectors.isEmpty() )
-            throw new IllegalArgumentException( "Vectors must be provided" );
+        if ( dataVectors.isEmpty() ) {
+            // Surface this as a filtering failure so the REST layer can downgrade to an empty/204 response
+            // instead of bubbling an IllegalArgumentException through UnhandledExceptionMapper as a 500.
+            // See https://github.com/PavlidisLab/Gemma/issues/408.
+            throw new NoDesignElementsException( "No processed vectors were provided"
+                    + ( ee != null ? " for " + ee : "" ) + "; cannot construct a filtered matrix." );
+        }
         dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( ee, dataVectors );
         if ( logTransform ) {
             eeDoubleMatrix = logTransform( eeDoubleMatrix, arrayDesignsUsed );
         }
-        return new ExpressionExperimentFilter( filterConfig ).filter( eeDoubleMatrix, arrayDesignsUsed, new ExpressionExperimentFilterResult() );
+        return new ExpressionExperimentFilter( filterConfig ).filter( eeDoubleMatrix, arrayDesignsUsed, result );
     }
 
     /**

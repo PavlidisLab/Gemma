@@ -20,11 +20,23 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
 
 /**
- * Indicates that previous validation is being invalidated
+ * Indicates that previous validation is being invalidated.
+ *
  * @author Paul
+ * @deprecated open a
+ * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketType#GENERIC GENERIC} ticket
+ * (or {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketType#BATCH_INFO_NEEDED}
+ * when the trigger is missing batch information) via
+ * {@link ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService#openTicket}
+ * instead. See {@link CurationDetailsEvent} for the full migration map.
  */
+@Deprecated
+@Entity
+@DiscriminatorValue("NeedsAttentionEvent")
 public class NeedsAttentionEvent extends NeedsAttentionAlteringEvent {
 
     @Override

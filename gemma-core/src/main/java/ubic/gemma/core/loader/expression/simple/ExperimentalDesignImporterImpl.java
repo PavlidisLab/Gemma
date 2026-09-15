@@ -22,9 +22,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -37,11 +38,13 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -64,6 +67,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     @Autowired
     private ExperimentalDesignService experimentalDesignService;
     @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+    @Autowired
     private OntologyService ontologyService;
 
     @Override
@@ -72,10 +77,23 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         ExperimentalDesignImporterImpl.log.debug( "Parsing input file" );
         boolean readHeader = false;
 
-        BufferedReader r = new BufferedReader( new InputStreamReader( is ) );
+        BufferedReader r = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) );
         String line;
 
-        ExperimentalDesign experimentalDesign = experiment.getExperimentalDesign();
+        // Hibernate 6: re-resolve the design through the current session so its
+        // experimentalFactors PersistentSet carries a valid storedSnapshot. If we
+        // mutated the detached instance from `experiment.getExperimentalDesign()`
+        // (no snapshot from the prior session) and then merged it, the cascade into
+        // newly-added transient ExperimentalFactor/FactorValue/Statement triples
+        // triggers NPE inside DefaultMergeEventListener$CollectionVisitor →
+        // PersistentSet.equalsSnapshot because the wrap-on-cascade path leaves
+        // child collections with a null snapshot. Re-resolving up front gives the
+        // merge cascade a properly-snapshotted parent to add into.
+        ExperimentalDesign detached = experiment.getExperimentalDesign();
+        ExperimentalDesign experimentalDesign = experimentalDesignService.loadWithExperimentalFactors( detached.getId() );
+        if ( experimentalDesign == null ) {
+            throw new IllegalStateException( "ExperimentalDesign id=" + detached.getId() + " no longer exists in the session." );
+        }
 
         if ( !experimentalDesign.getExperimentalFactors().isEmpty() ) {
             ExperimentalDesignImporterImpl.log
@@ -112,14 +130,31 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         this.validateFactorFileContent( experimentalFactorLines.size(), factorValueLines );
         this.validateBioMaterialFileContent( experimentBioMaterials, factorValueLines );
 
-        // build up the composite: create experimental factor then add the experimental value
+        // build up the composite: create experimental factor (with its factor values + statements
+        // wired up in memory) then explicitly persist it via experimentalFactorService.create()
+        // BEFORE wiring it into the design's collection. Going through cascade-from-design.update()
+        // tripped HB6's PersistentSet.equalsSnapshot NPE: the cascade wrapped the new factor's
+        // fresh HashSet<FactorValue> (and the FactorValue's fresh HashSet<Statement>) to a
+        // PersistentSet without setting a snapshot, then process-property-values on the saved
+        // entity dereferenced the null snapshot. Persist factor-first (the canonical pattern, see
+        // ExpressionExperimentWriteServiceImpl.addFactor) so the merge of the design only walks
+        // already-persistent children.
         this.addExperimentalFactorsToExperimentalDesign( experimentalDesign, experimentalFactorLines, headerFields,
                 factorValueLines );
 
         assert !experimentalDesign.getExperimentalFactors().isEmpty();
-        assert !experiment.getExperimentalDesign().getExperimentalFactors().isEmpty();
 
-        experimentalDesignService.update( experimentalDesign );
+        // Mirror the persisted factors into the caller's detached EE → design view so test
+        // assertions and any downstream code that reuses the original `experiment` reference
+        // see the imported factors without a fresh reload. The detached collection is not
+        // session-tracked, so these add()s are pure in-memory bookkeeping (no flush, no cascade).
+        if ( detached != experimentalDesign && detached.getExperimentalFactors() != null ) {
+            for ( ExperimentalFactor ef : experimentalDesign.getExperimentalFactors() ) {
+                if ( ef.getId() != null && !detached.getExperimentalFactors().contains( ef ) ) {
+                    detached.getExperimentalFactors().add( ef );
+                }
+            }
+        }
 
         Collection<BioMaterial> bioMaterialsWithFactorValues = this
                 .addFactorValuesToBioMaterialsInExpressionExperiment( experimentBioMaterials, experimentalDesign,
@@ -190,8 +225,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
             if ( !this.checkForDuplicateExperimentalFactorOnExperimentalDesign( experimentalDesign,
                     experimentalFactorFromFile ) ) {
-                experimentalDesign.getExperimentalFactors().add( experimentalFactorFromFile );
-                ExperimentalDesignImporterImpl.log.info( "Added " + experimentalFactorFromFile );
+                // Persist the new factor (with its cascaded factorValues + statements) BEFORE
+                // attaching it to the design's PersistentSet so the design's flush only sees
+                // already-persistent children — see Hibernate 6 note in importDesign().
+                ExperimentalFactor persistedFactor = experimentalFactorService.create( experimentalFactorFromFile );
+                experimentalDesign.getExperimentalFactors().add( persistedFactor );
+                ExperimentalDesignImporterImpl.log.info( "Added " + persistedFactor );
             }
         }
 
@@ -319,11 +358,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         /*
          * Check if every biomaterial got used. Worth a warning, at least.
          */
-        for ( ExperimentalFactor ef : factorsAssociatedWithBioMaterials.keySet() ) {
-            if ( !factorsAssociatedWithBioMaterials.get( ef ).containsAll( experimentBioMaterials ) ) {
+        for ( Map.Entry<ExperimentalFactor, Collection<BioMaterial>> fEntry : factorsAssociatedWithBioMaterials.entrySet() ) {
+            Collection<BioMaterial> bms = fEntry.getValue();
+            if ( !bms.containsAll( experimentBioMaterials ) ) {
                 ExperimentalDesignImporterImpl.log
                         .warn( "File did not contain values for all factor - biomaterial combinations: Missing at least one for "
-                                + ef + " [populated " + factorsAssociatedWithBioMaterials.get( ef ).size() + "/"
+                                + fEntry.getKey() + " [populated " + bms.size() + "/"
                                 + experimentBioMaterials.size() + " ]" );
             }
         }
@@ -451,6 +491,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      *                                 given in the first column of
      *                                 the factor value line.
      */
+    @Nullable
     private BioMaterial getBioMaterialFromExpressionExperiment( Collection<BioMaterial> bioMaterials,
             String biomaterialNameFromFile, String externalId ) {
 

@@ -3,11 +3,11 @@ package ubic.gemma.model.expression.bioAssayData;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -17,7 +17,7 @@ import static java.util.Objects.requireNonNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@CommonsLog
+@Slf4j
 public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject<CellLevelCharacteristics> {
 
     private Set<CharacteristicValueObject> characteristics;

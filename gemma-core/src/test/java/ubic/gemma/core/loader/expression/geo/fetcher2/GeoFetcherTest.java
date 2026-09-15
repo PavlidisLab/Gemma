@@ -1,15 +1,13 @@
 package ubic.gemma.core.loader.expression.geo.fetcher2;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,15 +15,14 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@Category(GeoTest.class)
+@Tag("integration")
+@Tag("geo")
 @NetworkAvailable(url = EntrezUtils.ESEARCH)
+@ExtendWith(NetworkAvailableExtension.class)
 public class GeoFetcherTest {
 
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
-
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE246121() throws IOException {
         Path tmpdir = java.nio.file.Files.createTempDirectory( "test" );
         GeoFetcher fetcher = new GeoFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), tmpdir );
@@ -37,7 +34,7 @@ public class GeoFetcherTest {
      * This is a fallback if we encounter issues with the FTP server. It is slow, but it works.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE246121ViaGeoQuery() throws IOException {
         Path tmpdir = java.nio.file.Files.createTempDirectory( "test" );
@@ -46,7 +43,7 @@ public class GeoFetcherTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testNotFound() throws IOException {
         Path tmpdir = java.nio.file.Files.createTempDirectory( "test" );
         GeoFetcher fetcher = new GeoFetcher( new SimpleRetryPolicy( 0, 1000, 1.5 ), tmpdir );

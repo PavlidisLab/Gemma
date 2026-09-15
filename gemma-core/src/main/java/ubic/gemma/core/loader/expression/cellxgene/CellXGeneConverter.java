@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
+import ubic.gemma.core.util.SymbolFontPua;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
@@ -18,7 +19,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.io.IOException;
 import java.util.*;
@@ -34,7 +35,7 @@ import static java.util.Objects.requireNonNull;
 public class CellXGeneConverter {
 
     private final ExternalDatabaseService externalDatabaseService;
-    private final TaxonService taxonService;
+    private final TaxonReadService taxonReadService;
     private final PubMedSearch pubMedSearch;
 
     private static final Map<String, Category> CATEGORY_MAP = new HashMap<>();
@@ -46,9 +47,9 @@ public class CellXGeneConverter {
         CATEGORY_MAP.put( "disease", Categories.DISEASE );
     }
 
-    public CellXGeneConverter( ExternalDatabaseService externalDatabaseService, TaxonService taxonService, PubMedSearch pubMedSearch ) {
+    public CellXGeneConverter( ExternalDatabaseService externalDatabaseService, TaxonReadService taxonReadService, PubMedSearch pubMedSearch ) {
         this.externalDatabaseService = externalDatabaseService;
-        this.taxonService = taxonService;
+        this.taxonReadService = taxonReadService;
         this.pubMedSearch = pubMedSearch;
     }
 
@@ -64,7 +65,8 @@ public class CellXGeneConverter {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( datasetShortName );
         ee.setName( datasetMetadata.getName() );
-        ee.setDescription( collectionMetadata.getDescription() );
+        // external metadata we do not control; same repair as the GEO path
+        ee.setDescription( SymbolFontPua.repair( collectionMetadata.getDescription() ) );
         ee.setAccession( convertAccession( datasetMetadata ) );
         ee.setSource( "Imported from CELLxGENE." );
         List<BibliographicReference> bibrefs = convertPublications( collectionMetadata );
@@ -147,7 +149,7 @@ public class CellXGeneConverter {
             throw new IllegalArgumentException( "Dataset has more than one organism: " + datasetMetadata.getOrganism() + ", but splitting is not supported yet." );
         }
         OntologyTerm ot = datasetMetadata.getOrganism().iterator().next();
-        return requireNonNull( taxonService.findByScientificName( ot.getLabel() ), "No taxon found for organism: " + ot.getLabel() );
+        return requireNonNull( taxonReadService.findByScientificName( ot.getLabel() ), "No taxon found for organism: " + ot.getLabel() );
     }
 
     private Set<Characteristic> convertExperimentTags( DatasetMetadata datasetMetadata ) {

@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.protocol.Protocol;
-import ubic.gemma.persistence.service.common.protocol.ProtocolService;
+import ubic.gemma.persistence.service.common.protocol.ProtocolReadService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @author poirigui
@@ -20,7 +20,7 @@ public class ProtocolListCli extends AbstractAuthenticatedCLI {
             .get();
 
     @Autowired
-    private ProtocolService protocolService;
+    private ProtocolReadService protocolReadService;
 
     @Nullable
     @Override
@@ -37,7 +37,7 @@ public class ProtocolListCli extends AbstractAuthenticatedCLI {
     @Override
     protected void doAuthenticatedWork() throws Exception {
         try ( CSVPrinter printer = TSV_FORMAT.print( getCliContext().getOutputStream() ) ) {
-            for ( Protocol protocol : protocolService.loadAllUniqueByName() ) {
+            for ( Protocol protocol : protocolReadService.loadAllUniqueByName() ) {
                 printer.printRecord( protocol.getId(), protocol.getName(), TsvUtils.format( protocol.getDescription() ) );
             }
         }

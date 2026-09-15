@@ -21,9 +21,8 @@ package ubic.gemma.core.datastructure.matrix;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -31,8 +30,9 @@ import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -185,6 +185,7 @@ public class ExpressionDataMatrixColumnSort {
      *
      * @return ordered map of fv->bm where fv is of ef, or null if it couldn't be done properly.
      */
+    @Nullable
     private static LinkedHashMap<FactorValue, List<BioMaterial>> chunkOnFactor( ExperimentalFactor ef,
             @Nullable List<BioMaterial> bms ) {
 
@@ -249,8 +250,7 @@ public class ExpressionDataMatrixColumnSort {
          * Sanity check
          */
         int total = 0;
-        for ( FactorValue fv : chunks.keySet() ) {
-            List<BioMaterial> chunk = chunks.get( fv );
+        for ( List<BioMaterial> chunk : chunks.values() ) {
             total += chunk.size();
         }
 
@@ -271,7 +271,7 @@ public class ExpressionDataMatrixColumnSort {
             Collection<FactorValue> factorValues = bm.getAllFactorValues();
             for ( FactorValue fv : factorValues ) {
 
-                if ( fv.getCharacteristics().stream().map( Characteristic::getValue ).anyMatch( "DE_Exclude"::equalsIgnoreCase ) ) {
+                if ( FactorValueUtils.isDeExcluded( fv ) ) {
                     continue;
                 }
 
@@ -411,8 +411,7 @@ public class ExpressionDataMatrixColumnSort {
          * Process each chunk.
          */
         List<BioMaterial> result = new ArrayList<>();
-        for ( FactorValue fv : chunks.keySet() ) {
-            List<BioMaterial> chunk = chunks.get( fv );
+        for ( List<BioMaterial> chunk : chunks.values() ) {
             result.addAll( orderBiomaterialsBySortedFactors( chunk, factorsStillToDo ) );
         }
 

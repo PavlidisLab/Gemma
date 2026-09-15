@@ -1,8 +1,8 @@
 package ubic.gemma.core.ontology;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.CacheManager;
@@ -13,17 +13,15 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
-import ubic.basecode.ontology.providers.ObiService;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.ExperimentalFactorOntologyService;
+import ubic.gemma.core.ontology.providers.ObiService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
@@ -32,17 +30,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 /**
- * This test covers cases where inference is done across two distinct {@link ubic.basecode.ontology.providers.OntologyService}.
+ * This test covers cases where inference is done across two distinct {@link ubic.gemma.core.ontology.providers.OntologyService}.
  * @author poirigui
  */
-@Ignore("This test is timing out on the CI.")
-@Category(SlowTest.class)
+@Disabled("This test is timing out on the CI.")
+@Tag("slow")
 @ContextConfiguration
-public class GemmaAndExperimentalFactorOntologyTest extends BaseTest {
+public class GemmaAndExperimentalFactorOntologyTest extends BaseTest5 {
 
     @Configuration
     @TestComponent

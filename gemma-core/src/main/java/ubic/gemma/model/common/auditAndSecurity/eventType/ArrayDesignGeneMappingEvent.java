@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * The mapping of probes to genes for an ArrayDesign
  */
+@Entity
+@DiscriminatorValue("ArrayDesignGeneMappingEvent")
 public class ArrayDesignGeneMappingEvent extends ArrayDesignAnalysisEvent {
 
 }

@@ -18,18 +18,22 @@
  */
 package ubic.gemma.model.genome;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.analysis.sequence.BlatAssociationScorer;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * @author pavlidis
  */
-public class BlatResultTest extends TestCase {
+public class BlatResultTest {
 
     private BlatResult brtest = null;
 
+    @Test
     public void testScore() {
         brtest.setRepMatches( 0 );
         brtest.setMatches( 49 );
@@ -40,9 +44,10 @@ public class BlatResultTest extends TestCase {
         brtest.getQuerySequence().setLength( 50L );
         double actualReturn = BlatAssociationScorer.score( brtest );
         double expectedReturn = 47.0 / 50.0;
-        TestCase.assertEquals( expectedReturn, actualReturn, 0.001 );
+        assertEquals( expectedReturn, actualReturn, 0.001 );
     }
 
+    @Test
     public void testScorewr() {
         brtest.setRepMatches( 2 );
         brtest.setMatches( 47 );
@@ -53,12 +58,11 @@ public class BlatResultTest extends TestCase {
         brtest.getQuerySequence().setLength( 50L );
         double actualReturn = BlatAssociationScorer.score( brtest );
         double expectedReturn = 47.0 / 50.0;
-        TestCase.assertEquals( expectedReturn, actualReturn, 0.001 );
+        assertEquals( expectedReturn, actualReturn, 0.001 );
     }
 
-    @Override
+    @BeforeEach
     protected void setUp() throws Exception {
-        super.setUp();
         brtest = BlatResult.Factory.newInstance();
 
     }

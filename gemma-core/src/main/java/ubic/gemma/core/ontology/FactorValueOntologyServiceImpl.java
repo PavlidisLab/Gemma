@@ -1,18 +1,18 @@
 package ubic.gemma.core.ontology;
 
-import com.hp.hpl.jena.ontology.*;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import lombok.extern.apachecommons.CommonsLog;
+import org.apache.jena.ontology.*;
+import org.apache.jena.rdf.model.ModelFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyStatement;
-import ubic.basecode.ontology.simple.OntologyIndividualSimple;
-import ubic.basecode.ontology.simple.OntologyPropertySimple;
-import ubic.basecode.ontology.simple.OntologyStatementSimple;
-import ubic.basecode.ontology.simple.OntologyTermSimple;
+import ubic.gemma.core.ontology.model.OntologyIndividual;
+import ubic.gemma.core.ontology.model.OntologyStatement;
+import ubic.gemma.core.ontology.simple.OntologyIndividualSimple;
+import ubic.gemma.core.ontology.simple.OntologyPropertySimple;
+import ubic.gemma.core.ontology.simple.OntologyStatementSimple;
+import ubic.gemma.core.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.ontology.jena.TGFVO;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -25,7 +25,7 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Writer;
 import java.util.*;
@@ -35,7 +35,7 @@ import static ubic.gemma.core.ontology.FactorValueOntologyUtils.*;
 import static ubic.gemma.model.expression.experiment.FactorValueUtils.getSummaryString;
 
 @Service
-@CommonsLog
+@Slf4j
 @ParametersAreNonnullByDefault
 public class FactorValueOntologyServiceImpl implements FactorValueOntologyService {
 

@@ -1,9 +1,9 @@
 package ubic.gemma.core.visualization.cellbrowser;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.StringUtil;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.Category;
@@ -28,7 +28,7 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
  * Write metadata file for the Cell Browser visualization tool.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class CellBrowserMetadataWriter {
 
     /**
@@ -198,8 +198,7 @@ public class CellBrowserMetadataWriter {
                 writer.append( TsvUtils.NA );
             }
         }
-        for ( Category category : bioAssayCharacteristics.keySet() ) {
-            Map<BioAssay, Characteristic> characteristics = bioAssayCharacteristics.get( category );
+        for ( Map<BioAssay, Characteristic> characteristics : bioAssayCharacteristics.values() ) {
             Characteristic c = characteristics.get( bioAssay );
             writer.append( "\t" );
             if ( c != null ) {
@@ -208,8 +207,7 @@ public class CellBrowserMetadataWriter {
                 writer.append( TsvUtils.NA );
             }
         }
-        for ( Category category : sampleCharacteristics.keySet() ) {
-            Map<BioMaterial, Characteristic> characteristics = sampleCharacteristics.get( category );
+        for ( Map<BioMaterial, Characteristic> characteristics : sampleCharacteristics.values() ) {
             Characteristic c = characteristics.get( bioAssay.getSampleUsed() );
             writer.append( "\t" );
             if ( c != null ) {

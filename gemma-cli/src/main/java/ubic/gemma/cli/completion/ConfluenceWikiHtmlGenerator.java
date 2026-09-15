@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.cli.util.CLI;
 import ubic.gemma.cli.util.OptionsUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;

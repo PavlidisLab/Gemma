@@ -5,7 +5,7 @@
  * some limitations that made it difficult to download data frm different protocols and have some retry mechanism.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.loader.expression.geo.fetcher2;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

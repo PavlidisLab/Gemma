@@ -8,23 +8,27 @@
  * You may obtain a copy of the License at
  *
  *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
- * Read-compatibility marker for audit rows written by Gemma 2.0.
- * <p>
- * Gemma 2.0 emits this {@link AuditEventType} subclass; the 1.x line shares the audit trail, so it
- * must be able to load a row with this discriminator without a Hibernate {@code WrongClassException}.
- * The 1.x code never writes it and it carries no behaviour of its own — it exists only so the read
- * resolves. (In 2.0 it extends a richer hierarchy; here it is flattened onto an existing parent.)
+ * A pipeline job reached terminal success on an experiment.
+ *
+ * <p>Written by {@code PipelineJobBatchService} to the experiment's audit trail
+ * when a {@code PipelineJob} transitions to {@code DONE}. The message/payload
+ * carries the pipeline name + batch id + job id so downstream consumers can
+ * reconstruct provenance.</p>
+ *
+ * <p>Distinct from {@code PipelineJobEvent} (per-job push telemetry) and from
+ * {@code PipelineJobBatch.auditTrail} (batch-level governance). This event
+ * lives on the EXPERIMENT and answers "what was last done to this experiment."</p>
  */
+@Entity
+@DiscriminatorValue("PipelineRunEvent")
 public class PipelineRunEvent extends ExpressionExperimentAnalysisEvent {
+
 }

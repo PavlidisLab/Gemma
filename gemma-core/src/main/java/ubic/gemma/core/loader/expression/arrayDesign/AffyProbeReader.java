@@ -32,6 +32,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,7 +96,7 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
     public void parse( InputStream is ) throws IOException {
         if ( is == null )
             throw new IllegalArgumentException( "InputStream was null" );
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) )) {
             StopWatch timer = new StopWatch();
             timer.start();
             String line;

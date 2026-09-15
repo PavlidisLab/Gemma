@@ -24,10 +24,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.basecode.util.ConfigUtils;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
+import ubic.gemma.core.util.ConfigUtils;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.ShellUtils;
@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -78,6 +78,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param  fileName file name
      * @return BioAssay, or null if not found.
      */
+    @Nullable
     public static BioAssay matchBioAssayToCelFileName( Map<String, BioAssay> bmap, String fileName ) {
 
         Pattern regex = Pattern.compile( AffyPowerToolsProbesetSummarize.GEO_CEL_FILE_NAME_REGEX );
@@ -404,6 +405,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param  ad platform
      * @return file or null if not found
      */
+    @Nullable
     private File findCdf( ArrayDesign ad ) {
         String affyCdfs = Settings.getString( AffyPowerToolsProbesetSummarize.AFFY_POWER_TOOLS_CDF_PATH );
 
@@ -523,6 +525,7 @@ public class AffyPowerToolsProbesetSummarize {
      * @param outputPath directory
      * @return string or null if not found.s
      */
+    @Nullable
     private String[] getMPSCommand( ArrayDesign ad, List<String> celfiles, String outputPath ) {
         /*
          * Get the pgf, clf, mps file for this platform. qc probesets: optional.

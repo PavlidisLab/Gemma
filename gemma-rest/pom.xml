@@ -5,11 +5,12 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.32.8</version>
+        <version>2.0.0-alpha-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>gemma-rest</artifactId>
+    <packaging>${gemma.rest.packaging}</packaging>
 
     <name>Gemma REST</name>
     <description>Module containing the Gemma REST API</description>
@@ -45,6 +46,14 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <!-- Phase 2: spring-security-test for @WithMockUser etc. (was inherited via gemma-core's
+             unpack-and-recompile of spring-security-test 4.0 sources, which is gone now). -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <version>${spring.security.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Spring -->
         <dependency>
@@ -60,6 +69,17 @@
             <version>${spring.security.version}</version>
         </dependency>
 
+        <!-- Caffeine: bearer-token store backing the curation-UI SPA login flow
+             (see AUTH_FOR_SPA_RECCE.md Option C, ubic.gemma.rest.security.TokenStore).
+             3.2.2 is the version already converged across the reactor via yauaa; declared
+             explicitly here so the auth surface owns its dep rather than relying on a
+             user-agent parser to pull it in. -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+
         <!-- Jersey (latest for Spring 3) -->
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
@@ -72,13 +92,14 @@
             <version>${jersey.version}</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- Jersey 3.1 dropped jersey-spring3 in favor of jersey-spring6 for Spring 6 integration. -->
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-spring3</artifactId>
+            <artifactId>jersey-spring6</artifactId>
             <version>${jersey.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>org.hibernate</groupId>
+                    <groupId>org.hibernate.validator</groupId>
                     <artifactId>hibernate-validator</artifactId>
                 </exclusion>
                 <exclusion>
@@ -128,23 +149,36 @@
             <version>${jersey.version}</version>
             <scope>test</scope>
         </dependency>
+        <!--
+          Jersey 3's test framework brings in JUnit 5 (Jupiter), so Maven Surefire auto-detects
+          the JUnit 5 platform provider. junit-jupiter is inherited from the root POM
+          (test scope, managed version), so no explicit declaration is needed here.
+        -->
+
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-inmemory</artifactId>
             <version>${jersey.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- this is determined by jersey-core -->
+        <!-- Jakarta JAX-RS API (Jersey 3 ships against this; not javax.ws.rs anymore). -->
         <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-            <version>2.0.1</version>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <!-- Jakarta Servlet API (provided by the container at runtime, but needed at compile time). -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Swagger -->
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-core</artifactId>
+            <artifactId>swagger-core-jakarta</artifactId>
             <version>${swagger.version}</version>
             <exclusions>
                 <exclusion>
@@ -183,7 +217,7 @@
         </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-jaxrs2</artifactId>
+            <artifactId>swagger-jaxrs2-jakarta</artifactId>
             <version>${swagger.version}</version>
             <exclusions>
                 <exclusion>
@@ -205,20 +239,27 @@
             <artifactId>jackson-dataformat-yaml</artifactId>
             <version>${jackson.version}</version>
         </dependency>
+        <!-- JSR-310 (java.time.*) module is on the classpath transitively as runtime;
+             promote to compile so JacksonConfig can reference JavaTimeModule directly. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-jaxrs2-servlet-initializer-v2</artifactId>
+            <artifactId>swagger-jaxrs2-servlet-initializer-v2-jakarta</artifactId>
             <version>${swagger.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-integration</artifactId>
+            <artifactId>swagger-integration-jakarta</artifactId>
             <version>${swagger.version}</version>
         </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-models</artifactId>
+            <artifactId>swagger-models-jakarta</artifactId>
             <version>${swagger.version}</version>
             <exclusions>
                 <exclusion>
@@ -229,7 +270,7 @@
         </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-annotations</artifactId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
             <version>${swagger.version}</version>
         </dependency>
 
@@ -251,6 +292,71 @@
 
     <properties>
         <javadocSourcePaths>${delombok.output};${project.build.directory}/generated-sources/antlr4</javadocSourcePaths>
+        <!--
+            Default packaging is JAR; activate the `gemma-rest-war` profile to flip to
+            WAR for standalone deployment:
+                mvn -pl gemma-rest -am package -P gemma-rest-war -DskipTests
+            (The historical JAR-default rationale was that gemma-web's WAR consumed
+            gemma-rest as a compile-scope JAR. gemma-web is retired; we keep JAR-by-
+            default to avoid breaking any CI / dev-container that builds gemma-rest's
+            JAR and bundles it elsewhere.)
+        -->
+        <gemma.rest.packaging>jar</gemma.rest.packaging>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>gemma-rest-war</id>
+            <properties>
+                <gemma.rest.packaging>war</gemma.rest.packaging>
+            </properties>
+            <build>
+                <finalName>gemma-rest</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <configuration>
+                            <!--
+                                The descriptor is gemma-rest's own (no override on
+                                webXml); failOnMissingWebXml=true makes the build fail
+                                fast if it ever goes missing.
+                            -->
+                            <failOnMissingWebXml>true</failOnMissingWebXml>
+                            <webResources>
+                                <!--
+                                    Bundle the Swagger UI assets under /resources/restapidocs.
+                                    Sole home for the Swagger UI since gemma-web was retired.
+                                -->
+                                <resource>
+                                    <directory>${project.basedir}/src/main/resources/restapidocs</directory>
+                                    <targetPath>resources/restapidocs</targetPath>
+                                </resource>
+                            </webResources>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <!--
+                    Tomcat provided-scope deps: needed at compile time for any code that
+                    touches Catalina APIs; provided so the container supplies them at
+                    runtime. Tomcat version pinned to the root pom property `tomcat.version`
+                    (currently 10.1.34).
+                -->
+                <dependency>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-servlet-api</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-catalina</artifactId>
+                    <version>${tomcat.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
 </project>

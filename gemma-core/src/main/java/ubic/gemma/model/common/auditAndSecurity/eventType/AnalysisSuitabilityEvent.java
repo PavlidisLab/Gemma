@@ -19,11 +19,15 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+
 /**
  * Used for indication of the suitability, or unsuitability, of an entity for a particular type of analysis.
  *
  * @author paul
  */
+@Entity
 public abstract class AnalysisSuitabilityEvent extends AuditEventType {
 
 }

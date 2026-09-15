@@ -23,11 +23,13 @@ import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.math.MultipleTestCorrection;
-import ubic.basecode.math.metaanalysis.MetaAnalysis;
+import ubic.gemma.core.util.math.MultipleTestCorrection;
+import ubic.gemma.core.util.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -38,7 +40,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetReadService;
 
 import java.util.*;
 
@@ -57,13 +59,14 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     private CompositeSequenceService compositeSequenceService;
 
     @Autowired
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    private ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService;
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     @Override
     @Transactional
+    @Nullable
     public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds ) {
 
         /*
@@ -104,6 +107,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         return analysisService.create( analysis );
     }
 
+    @Nullable
     private Double aggregateFoldChangeForGeneWithinResultSet( Collection<DifferentialExpressionAnalysisResult> res ) {
         assert !res.isEmpty();
         Double bestPvalue = Double.MAX_VALUE;
@@ -235,6 +239,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                             fisherPvalueDown ) );
     }
 
+    @Nullable
     private GeneDifferentialExpressionMetaAnalysis doMetaAnalysis(
             Collection<ExpressionAnalysisResultSet> updatedResultSets,
             Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result ) {
@@ -262,9 +267,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             DoubleArrayList pvalues4geneDown = new DoubleArrayList();
             DoubleArrayList foldChanges4gene = new DoubleArrayList();
             Collection<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<>();
-            for ( ExpressionAnalysisResultSet rs : resultSet2Results4Gene.keySet() ) {
-                Collection<DifferentialExpressionAnalysisResult> res = resultSet2Results4Gene.get( rs );
-
+            for ( Collection<DifferentialExpressionAnalysisResult> res : resultSet2Results4Gene.values() ) {
                 if ( res.isEmpty() ) {
                     // shouldn't happen?
                     DiffExMetaAnalyzerServiceImpl.log.warn( "Unexpectedly no results in resultSet for gene " + g );
@@ -457,6 +460,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      *
      * @return a map of genes to the usable results for that gene. There can be more than one result for one resultset.
      */
+    @Nullable
     private Map<Gene, Collection<DifferentialExpressionAnalysisResult>> organizeResultsByGene(
             Collection<ExpressionAnalysisResultSet> resultSets,
             Collection<DifferentialExpressionAnalysisResult> res2set ) {
@@ -604,12 +608,16 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         /*
          * We need to check this just in the subset of samples actually used.
          */
-        BioAssaySet experimentAnalyzed = rs.getAnalysis().getExperimentAnalyzed();
+        // unproxy before the test: getExperimentAnalyzed() is mapped against the abstract BioAssaySet, so
+        // a subset arrives as a proxy that is an instance of neither subclass. It would then take the
+        // else branch and count the factor's levels over the whole experiment instead of over the
+        // samples the subset actually uses -- a meta-analysis admitted or rejected on the wrong count.
+        BioAssaySet experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( rs.getAnalysis().getExperimentAnalyzed() );
         assert experimentAnalyzed != null;
         if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
 
             ExpressionExperimentSubSet eesubset = ( ExpressionExperimentSubSet ) experimentAnalyzed;
-            Collection<FactorValue> factorValuesUsed = expressionExperimentSubSetService
+            Collection<FactorValue> factorValuesUsed = expressionExperimentSubSetReadService
                     .getFactorValuesUsed( eesubset, factor );
             if ( factorValuesUsed.size() > 2 ) {
                 throw new IllegalArgumentException(

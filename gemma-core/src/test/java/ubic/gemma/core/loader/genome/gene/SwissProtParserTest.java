@@ -18,21 +18,25 @@
  */
 package ubic.gemma.core.loader.genome.gene;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 /**
  * @author pavlidis
  */
-public class SwissProtParserTest extends TestCase {
+public class SwissProtParserTest {
 
+    @Test
     public void testParse() throws Exception {
 
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/genome/gene/uniprot_sprot_human.sample.dat" )) {
-            TestCase.assertNotNull( is );
+            assertNotNull( is );
             SwissProtParser p = new SwissProtParser();
             p.parse( is );
             is.close();
@@ -41,7 +45,7 @@ public class SwissProtParserTest extends TestCase {
             /*
              * Parser not fully implemented, doesn't return anything.
              */
-            TestCase.assertEquals( 0, results.size() );
+            assertEquals( 0, results.size() );
         }
 
     }

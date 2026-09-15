@@ -18,15 +18,20 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.io.InputStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author pavlidis
  */
-public class IlluminaProbeReaderTest extends TestCase {
+public class IlluminaProbeReaderTest {
 
     private IlluminaProbeReader apr;
 
@@ -37,33 +42,33 @@ public class IlluminaProbeReaderTest extends TestCase {
      *
      * @throws Exception when there is a problem
      */
+    @Test
     public final void testReadInputStream() throws Exception {
 
-        TestCase.assertTrue( apr != null );
+        assertTrue( apr != null );
 
         apr.parse( is );
 
         String expectedValue = "GTGGCTGCCTTCCCAGCAGTCTCTACTTCAGCATATCTGGGAGCCAGAAG";
 
-        TestCase.assertTrue( apr.containsKey( "GI_42655756-S" ) );
+        assertTrue( apr.containsKey( "GI_42655756-S" ) );
 
         Reporter r = apr.get( "GI_42655756-S" );
 
-        TestCase.assertNotNull( "Reporter GI_42655756-S not found", r );
+        assertNotNull( r, "Reporter GI_42655756-S not found" );
 
         BioSequence bs = r.getImmobilizedCharacteristic();
 
-        TestCase.assertNotNull( "Immobilized characteristic was null", bs );
+        assertNotNull( bs, "Immobilized characteristic was null" );
 
         String actualValue = bs.getSequence().toUpperCase();
 
-        TestCase.assertEquals( "Wrong sequence returned", expectedValue, actualValue );
+        assertEquals( expectedValue, actualValue, "Wrong sequence returned" );
 
     }
 
-    @Override
+    @BeforeEach
     protected void setUp() throws Exception {
-        super.setUp();
         apr = new IlluminaProbeReader();
         is = IlluminaProbeReaderTest.class.getResourceAsStream( "/data/loader/illumina-target-test.txt" );
     }

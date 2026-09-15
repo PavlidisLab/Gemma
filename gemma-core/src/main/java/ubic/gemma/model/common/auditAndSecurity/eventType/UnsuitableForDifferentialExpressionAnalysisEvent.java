@@ -19,6 +19,10 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicates that the associated Experiment is NOT suitable for differential expression analysis.
  * <p>
@@ -27,6 +31,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  *
  * @author paul
  */
+@Entity
+@DiscriminatorValue("UnsuitableForDifferentialExpressionAnalysisEvent")
 public class UnsuitableForDifferentialExpressionAnalysisEvent extends DifferentialExpressionSuitabilityEvent {
 
 }

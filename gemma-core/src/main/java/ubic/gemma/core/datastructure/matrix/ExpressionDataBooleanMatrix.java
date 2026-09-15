@@ -19,8 +19,9 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.lang3.ArrayUtils;
-import ubic.basecode.dataStructure.matrix.AbstractMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
+import org.springframework.lang.Nullable;
+import ubic.gemma.core.util.matrix.AbstractMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrixImpl;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -186,6 +187,7 @@ public class ExpressionDataBooleanMatrix extends AbstractMultiAssayExpressionDat
     /**
      * Note that if we have trouble interpreting the data, it gets left as false.
      */
+    @Nullable
     private boolean[] getVals( DesignElementDataVector vector ) {
         boolean[] vals = null;
         if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {

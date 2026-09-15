@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -315,7 +315,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     }
 
     private int slice( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
-        Assert.notNull( samples );
+        Assert.notNull( samples , "must not be null");
         List<BioAssay> assays = Arrays.stream( samples )
                 .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
                 .collect( Collectors.toList() );

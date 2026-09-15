@@ -9,7 +9,9 @@ import java.util.Collection;
 /**
  * Shared utilities for {@link ubic.gemma.core.search.SearchSource}s.
  *
- * @author poirigui
+ * <p>Restored from the pre-strip Gemma search code (ed93c2f023^^) during the
+ * Phase 3 search restoration; the original was deleted in the
+ * "stub/delete search subsystem cascade" commit.
  */
 class SearchSourceUtils {
 

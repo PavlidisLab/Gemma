@@ -18,19 +18,43 @@
  */
 package ubic.gemma.model.genome;
 
-import org.hibernate.search.annotations.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.Multifunctionality;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Represents a functionally transcribed unit in the genome, recognized by other databases (NCBI, Ensembl).
+ * <p>
+ * Hibernate Search 7 indexed root. {@code ncbiGeneId} is an integer, mapped as a generic
+ * (non-analyzed numeric) field.
  */
+@Entity
+@DiscriminatorValue("Gene")
 @Indexed
 public class Gene extends ChromosomeFeature {
 
@@ -40,17 +64,37 @@ public class Gene extends ChromosomeFeature {
      */
     public static final String NCBI_URI_PREFIX = "http://purl.org/commons/record/ncbi_gene/";
 
+    @Column(name = "OFFICIAL_SYMBOL", columnDefinition = "VARCHAR(255)")
     private String officialSymbol;
+    @Lob
+    @Column(name = "OFFICIAL_NAME", columnDefinition = "text")
     private String officialName;
+    @Column(name = "NCBI_GENE_ID", columnDefinition = "INTEGER")
     private Integer ncbiGeneId;
     @Nullable
+    @Column(name = "PREVIOUS_NCBI_ID", columnDefinition = "VARCHAR(255)")
     private String previousNcbiGeneId;
     @Nullable
-    private String ensemblId; //Non-unique for roughly 2000 genes as of Aug 11th 2017
+    @Column(name = "ENSEMBL_ID", columnDefinition = "VARCHAR(255)") //Non-unique for roughly 2000 genes as of Aug 11th 2017
+    private String ensemblId;
+    // Dummy gene products are not visible in this collection; use BioSequence2GeneProduct instead.
+    @OneToMany(mappedBy = "gene", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @SQLRestriction("DUMMY = 0")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<GeneProduct> products = new HashSet<>();
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "GENE_FK", columnDefinition = "BIGINT")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<GeneAlias> aliases = new HashSet<>();
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "TAXON_FK", columnDefinition = "BIGINT")
     private Taxon taxon;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "GENE_FK", columnDefinition = "BIGINT")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<DatabaseEntry> accessions = new HashSet<>();
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "MULTIFUNCTIONALITY_FK", unique = true, columnDefinition = "BIGINT")
     private Multifunctionality multifunctionality;
 
     /**
@@ -126,11 +170,12 @@ public class Gene extends ChromosomeFeature {
     }
 
     @Override
-    @Field
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
@@ -140,6 +185,7 @@ public class Gene extends ChromosomeFeature {
         this.accessions = accessions;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<GeneAlias> getAliases() {
         return this.aliases;
@@ -153,7 +199,7 @@ public class Gene extends ChromosomeFeature {
      * @return An Ensembl ID for the gene.
      */
     @Nullable
-    @Field(analyze = Analyze.NO)
+    @KeywordField
     public String getEnsemblId() {
         return this.ensemblId;
     }
@@ -170,7 +216,7 @@ public class Gene extends ChromosomeFeature {
         this.multifunctionality = multifunctionality;
     }
 
-    @Field(analyze = Analyze.NO)
+    @GenericField
     public Integer getNcbiGeneId() {
         return this.ncbiGeneId;
     }
@@ -179,6 +225,7 @@ public class Gene extends ChromosomeFeature {
         this.ncbiGeneId = ncbiGeneId;
     }
 
+    @KeywordField
     @Nullable
     public String getPreviousNcbiGeneId() {
         return previousNcbiGeneId;
@@ -188,7 +235,7 @@ public class Gene extends ChromosomeFeature {
         this.previousNcbiGeneId = previousNcbiGeneId;
     }
 
-    @Field(analyze = Analyze.NO)
+    @KeywordField
     public String getOfficialName() {
         return this.officialName;
     }
@@ -197,7 +244,7 @@ public class Gene extends ChromosomeFeature {
         this.officialName = officialName;
     }
 
-    @Field(analyze = Analyze.NO)
+    @KeywordField
     public String getOfficialSymbol() {
         return this.officialSymbol;
     }
@@ -206,6 +253,7 @@ public class Gene extends ChromosomeFeature {
         this.officialSymbol = officialSymbol;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<GeneProduct> getProducts() {
         return this.products;
@@ -218,8 +266,11 @@ public class Gene extends ChromosomeFeature {
     /**
      * @return Note that a Gene also has a chromosome, so the organism can be inferred that way as well. This direct association
      * is a denormalization for queries that don't care about location, just species-membership.
+     * <p>
+     * Step 2 follow-up: the pre-strip HS 5 mapping had {@code @IndexedEmbedded} here, but
+     * {@link Taxon} carries no Lucene fields, so embedding contributes nothing. Skipped; revisit
+     * when / if Taxon grows {@code @FullTextField}s for species-name search.
      */
-    @IndexedEmbedded
     public Taxon getTaxon() {
         return this.taxon;
     }

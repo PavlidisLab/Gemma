@@ -27,12 +27,15 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 
 /**
@@ -55,7 +58,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     private GeneService geneService;
 
     @Autowired
-    private Persister persisterHelper;
+    private GenomePersister genomePersister;
 
     @Autowired
     private TaxonService taxonService;
@@ -65,7 +68,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
 
     @Override
     public int load( InputStream geneInputStream, String taxonName ) throws Exception {
-        BufferedReader b = new BufferedReader( new InputStreamReader( geneInputStream ) );
+        BufferedReader b = new BufferedReader( new InputStreamReader( geneInputStream, StandardCharsets.UTF_8 ) );
         Taxon taxon = validateTaxon( taxonName );
         log.info( "Taxon and file validation passed for taxon " + taxonName );
         return load( b, taxon );
@@ -141,7 +144,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         gene.setDescription( "Imported from external annotation file" );
         gene.setTaxon( taxon );
         gene.getProducts().add( createGeneProduct( gene ) );
-        gene = ( Gene ) persisterHelper.persistOrUpdate( gene );
+        gene = genomePersister.persistOrUpdateGene( gene );
         return gene;
     }
 
@@ -193,7 +196,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         if ( !f.canRead() ) {
             throw new IOException( "Cannot read from " + geneFile );
         }
-        BufferedReader b = new BufferedReader( new FileReader( geneFile ) );
+        BufferedReader b = Files.newBufferedReader( Paths.get( geneFile ), StandardCharsets.UTF_8 );
         log.info( "File " + geneFile + " read successfully" );
         return b;
 

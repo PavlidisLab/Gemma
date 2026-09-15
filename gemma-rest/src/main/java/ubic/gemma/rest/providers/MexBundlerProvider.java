@@ -1,14 +1,14 @@
 package ubic.gemma.rest.providers;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.datastructure.matrix.io.MexMatrixBundler;
 
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.ext.MessageBodyWriter;
+import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -20,7 +20,7 @@ import static ubic.gemma.rest.DatasetsWebService.APPLICATION_10X_MEX_TYPE;
 
 @Provider
 @Produces(APPLICATION_10X_MEX)
-@CommonsLog
+@Slf4j
 public class MexBundlerProvider implements MessageBodyWriter<Path> {
 
     private final MexMatrixBundler bundler = new MexMatrixBundler();

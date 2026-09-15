@@ -14,7 +14,7 @@
  */
 package ubic.gemma.rest.servlet;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpMethod;
@@ -25,11 +25,11 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.annotation.Nullable;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.springframework.lang.Nullable;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -37,7 +37,7 @@ import java.io.IOException;
  * <p>
  * This is mounted on the gemma-rest servlet in the web.xml configuration file.
  */
-@CommonsLog
+@Slf4j
 public class CorsFilter extends OncePerRequestFilter {
 
     private static final String WILDCARD = "*";

@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -15,7 +15,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.type;
 
 public class RepresentationConversionUtilsTest {
 
-    @Before
+    @BeforeEach
     public void setUp() {
         RandomSingleCellDataUtils.setSeed( 123L );
     }

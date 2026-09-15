@@ -3,7 +3,7 @@ package ubic.gemma.core.analysis.singleCell;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 import org.springframework.util.Assert;
-import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.stats.DataVectorDescriptive;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -259,7 +259,7 @@ public class SingleCellDescriptive {
     }
 
     public static int countFast( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() , "expected true");
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int count = 0;

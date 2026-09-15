@@ -8,15 +8,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.search.*;
-import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -42,12 +39,10 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
-import java.net.URI;
+import org.springframework.lang.Nullable;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,11 +55,11 @@ import static java.util.function.Function.identity;
  */
 @Service
 @Path("/search")
-@CommonsLog
+@Slf4j
 public class SearchWebService {
 
     /**
-     * Name used in the OpenAPI schema to identify result types as per {@link #search(QueryArg, DatasetArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}'s
+     * Name used in the OpenAPI schema to identify result types as per {@link #search}'s
      * fourth argument.
      */
     public static final String RESULT_TYPES_SCHEMA_NAME = "SearchResultType";
@@ -73,11 +68,6 @@ public class SearchWebService {
      * Maximum number of search results.
      */
     public static final int MAX_SEARCH_RESULTS = 2000;
-
-    /**
-     * Maximum number of highlighted documents.
-     */
-    private static final int MAX_HIGHLIGHTED_DOCUMENTS = 500;
 
     @Autowired
     private SearchService searchService;
@@ -96,37 +86,6 @@ public class SearchWebService {
     private UriInfo uriInfo;
     @Autowired
     private EntityUrlBuilder entityUrlBuilder;
-
-    /**
-     * Highlights search result.
-     */
-    @ParametersAreNonnullByDefault
-    private class Highlighter extends DefaultHighlighter {
-
-        private int highlightedDocuments = 0;
-
-        public Highlighter() {
-            super( new SimpleMarkdownFormatter() );
-        }
-
-        @Override
-        public Map<String, String> highlightTerm( @Nullable String uri, String label, String field ) {
-            URI searchUrl = uriInfo.getBaseUriBuilder()
-                    .scheme( null ).host( null ).port( -1 )
-                    .replaceQueryParam( "query", uri != null ? uri : label )
-                    .build();
-            return Collections.singletonMap( field, String.format( "**[%s](%s)**", label, searchUrl ) );
-        }
-
-        @Override
-        public Map<String, String> highlightDocument( Document document, org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer ) {
-            if ( highlightedDocuments >= MAX_HIGHLIGHTED_DOCUMENTS ) {
-                return Collections.emptyMap();
-            }
-            highlightedDocuments++;
-            return super.highlightDocument( document, highlighter, analyzer );
-        }
-    }
 
     /**
      * Search everything subject to taxon and platform constraints.
@@ -148,7 +107,17 @@ public class SearchWebService {
             @QueryParam("platform") PlatformArg<?> platformArg,
             @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
             @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless `resultObject` is excluded.", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_SEARCH_RESULTS)) @QueryParam("limit") LimitArg limit,
-            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg
+            @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg,
+            @Parameter(description = "Expand a gene search through Gene Ontology terms (GO term → annotated genes). "
+                    + "Off by default: a gene search hits only the gene services (symbol/name/alias). GO→gene is a "
+                    + "function search, not a gene search, and scanning GO on every query is slow — opt in explicitly.")
+            @QueryParam("useGeneOntology") @DefaultValue("false") boolean useGeneOntology,
+            @Parameter(description = "Widen the search into terms Gemma knows are related to the ones matched, "
+                    + "so that a search for a disease also returns datasets annotated only with a genotype that "
+                    + "stands for it. Off by default: turning it on changes every existing result set and every "
+                    + "count derived from one, and no specificity threshold has been tuned against curator "
+                    + "judgement yet. Inferred hits score below direct ones and say so in their provenance.")
+            @QueryParam("inferRelations") @DefaultValue("false") boolean inferRelations
     ) {
         if ( query == null ) {
             throw new BadRequestException( "A query must be supplied." );
@@ -177,19 +146,40 @@ public class SearchWebService {
             maxResults = limit != null ? limit.getValue( MAX_SEARCH_RESULTS ) : 100;
         }
 
+        ubic.gemma.model.genome.Taxon taxon = taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null;
+
+        // The taxon backstop below discards results, so the search has to be asked for more than the
+        // caller wants or the discards come straight off the response.
+        boolean taxonBackstop = taxon != null;
+        // The backstop reads each result's taxon off its value object. When the caller excluded
+        // resultObject we load them anyway and strip them before responding: a search that accepts a
+        // ?taxon and then silently ignores it is worse than a slower one, and this is the path where
+        // ignoring it is invisible (the caller gets bare ids and cannot tell the species is wrong).
+        // Only pays the cost when a taxon was actually supplied.
+        boolean loadObjectsForBackstop = taxonBackstop && !fillResults;
+        int searchMaxResults = maxResults;
+        if ( taxonBackstop && maxResults > 0 ) {
+            searchMaxResults = Math.min( maxResults * TAXON_BACKSTOP_OVERFETCH, MAX_SEARCH_RESULTS );
+        }
+
         SearchSettings searchSettings = SearchSettings.builder()
                 .query( query.getValue() )
                 .datasetConstraint( datasetArg != null ? datasetArgService.getEntity( datasetArg ) : null )
-                .taxonConstraint( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
+                .taxonConstraint( taxon )
                 .platformConstraint( platformArg != null ? platformArgService.getEntity( platformArg ) : null )
                 .resultTypes( resultTypesCls )
-                .maxResults( maxResults )
+                .maxResults( searchMaxResults )
                 .fillResults( fillResults )
+                // Gene search hits only the gene services by default; GO→gene expansion is opt-in
+                // (it is a function search, and scanning GO on every gene query was a ~25s hot spot
+                // that pinned a DB connection and starved the pool).
+                .useGeneOntology( useGeneOntology )
+                .useInferredRelations( inferRelations )
                 .build();
 
         List<SearchResult<?>> searchResults;
         try {
-            searchResults = searchService.search( searchSettings, new SearchContext( new Highlighter(), null ) ).toList();
+            searchResults = searchService.search( searchSettings, new SearchContext( null, null ) ).toList();
         } catch ( ParseSearchException e ) {
             throw new BadRequestException( "Invalid search query: " + e.getQuery(), e );
         } catch ( SearchTimeoutException e ) {
@@ -201,7 +191,7 @@ public class SearchWebService {
         List<SearchResult<? extends IdentifiableValueObject<?>>> searchResultVos;
 
         // Some result VOs are null for unknown reasons, see https://github.com/PavlidisLab/Gemma/issues/417
-        if ( fillResults ) {
+        if ( fillResults || loadObjectsForBackstop ) {
             searchResultVos = searchService.loadValueObjects( searchResults );
         } else {
             searchResultVos = searchResults.stream()
@@ -214,7 +204,15 @@ public class SearchWebService {
         try {
             return new SearchResultsResponseDataObject( searchResultVos.stream()
                     .sorted() // SearchResults are sorted by descending score order
+                    // Taxon backstop. SearchSettings.taxonConstraint is advisory: it is passed to every
+                    // source but the gene sources (HibernateSearchSource, the GO source) do not apply it,
+                    // so ?query=Myc&taxon=mouse used to answer with the rat and human orthologs at every
+                    // limit — silently, which is worse than an error. Drop what provably does not match,
+                    // AFTER scoring and BEFORE the caller's limit. Mirrors GeneWebService.searchGenes.
+                    .filter( sr -> !taxonBackstop || matchesTaxon( sr.getResultObject(), taxon.getId() ) )
                     .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE ) // results are limited by class, so there might be more results than expected when unraveling everything
+                    // honour ?exclude=resultObject now that the backstop has had what it needed
+                    .map( sr -> loadObjectsForBackstop ? sr.withResultObject( ( IdentifiableValueObject<?> ) null ) : sr )
                     .map( sr -> {
                         String resultUrl;
                         boolean resultUrlExternal;
@@ -240,6 +238,49 @@ public class SearchWebService {
                 log.warn( "Failed to generate URLs for " + exceptions.size() + " search results.", e );
             }
         }
+    }
+
+    /**
+     * How much wider than the caller's {@code limit} to search when the taxon backstop is active.
+     * A symbol like {@code Myc} matches an ortholog in every taxon Gemma carries, so the wanted one
+     * can sit several rows down; this buys room for those to be discarded without eating into the
+     * response.
+     */
+    private static final int TAXON_BACKSTOP_OVERFETCH = 10;
+
+    /**
+     * Whether a search-result VO is compatible with a requested taxon.
+     * <p>
+     * Only four of the nine supported result types carry a taxon at all. The rest
+     * ({@link BibliographicReferenceValueObject}, {@link BioSequenceValueObject},
+     * {@link CompositeSequenceValueObject}, {@link ExpressionExperimentSetValueObject},
+     * blacklisted entities) have no taxon concept, and a taxon-constrained search must NOT
+     * silently drop them — {@code true} is the right answer there, not "unknown, discard".
+     * <p>
+     * A type that does carry a taxon but has none set is discarded: the caller asked for one
+     * taxon, and a result we cannot show to belong to it does not answer that question. Same
+     * rule as {@code GeneWebService.searchGenes}.
+     * <p>
+     * Reads the taxon OBJECT rather than the flattened id accessors: those are {@code @Deprecated}
+     * on two of the four, and their names disagree ({@code getTaxonID} on platforms,
+     * {@code getTaxonId} elsewhere). Mind that {@code getTaxon()} is not the object on every type —
+     * on experiments and platforms it returns the common NAME as a String.
+     */
+    private static boolean matchesTaxon( @Nullable Object vo, Long wantTaxonId ) {
+        TaxonValueObject voTaxon;
+        if ( vo instanceof GeneValueObject ) {
+            voTaxon = ( ( GeneValueObject ) vo ).getTaxon();
+        } else if ( vo instanceof ExpressionExperimentValueObject ) {
+            voTaxon = ( ( ExpressionExperimentValueObject ) vo ).getTaxonObject();
+        } else if ( vo instanceof ArrayDesignValueObject ) {
+            voTaxon = ( ( ArrayDesignValueObject ) vo ).getTaxonObject();
+        } else if ( vo instanceof GeneSetValueObject ) {
+            voTaxon = ( ( GeneSetValueObject ) vo ).getTaxon();
+        } else {
+            // no taxon concept for this result type — the constraint does not apply to it
+            return true;
+        }
+        return voTaxon != null && wantTaxonId.equals( voTaxon.getId() );
     }
 
     private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "resultObject" );
@@ -314,6 +355,17 @@ public class SearchWebService {
         @Schema(hidden = true)
         String source;
 
+        /**
+         * How the result matched the query (e.g. {@code exact_symbol}, {@code alias},
+         * {@code prefix}), or {@code null} when the producing source did not classify it.
+         * Lets a client distinguish a safe alias hit from a low-trust prefix look-alike even
+         * when their scores coincide. See {@code SearchMatchType}.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(description = "How the result matched the query (exact_symbol, alias, prefix, official_name, official_name_prefix, exact_identifier); omitted if unclassified.")
+        String matchType;
+
         @Schema(oneOf = {
                 ArrayDesignValueObject.class,
                 BibliographicReferenceValueObject.class,
@@ -345,6 +397,7 @@ public class SearchWebService {
             this.score = searchResult.getScore();
             this.highlights = searchResult.getHighlights();
             this.source = searchResult.getSource().toString();
+            this.matchType = searchResult.getMatchKind() != null ? searchResult.getMatchKind().getWireName() : null;
         }
     }
 

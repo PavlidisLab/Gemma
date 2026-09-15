@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.singleCell.aggregate;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,14 +21,14 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@CommonsLog
+@Slf4j
 @Service
 public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl implements SingleCellExpressionExperimentCreateSubSetsAndAggregateService {
 
@@ -53,7 +53,7 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl 
     public QuantitationType createSubSetsAndAggregateByCellType( ExpressionExperiment expressionExperiment, SingleCellExperimentSubSetsCreationConfig singleCellExperimentSubSetsCreationConfig, SingleCellAggregationConfig config ) {
         List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSubSetService.createSubSetsByCellType( expressionExperiment, singleCellExperimentSubSetsCreationConfig );
         int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
-        log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
+        log.info( String.format( "Aggregating over %d subsets of %s, one per cell type:%n\t%s", subsets.size(), expressionExperiment,
                 subsets.stream().map( subset -> StringUtils.rightPad( subset.getName(), longestSubsetName ) + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
         List<BioAssay> cellBAs = new ArrayList<>();
         for ( ExpressionExperimentSubSet subset : subsets ) {
@@ -75,7 +75,7 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl 
         }
         List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSubSetService.createSubSets( expressionExperiment, scd, clc, cellTypeFactor, c2f, singleCellExperimentSubSetsCreationConfig );
         int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
-        log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
+        log.info( String.format( "Aggregating over %d subsets of %s, one per cell type:%n\t%s", subsets.size(), expressionExperiment,
                 subsets.stream().map( subset -> StringUtils.rightPad( subset.getName(), longestSubsetName ) + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
 
         List<BioAssay> cellBAs = new ArrayList<>( subsets.size() * clc.getCharacteristics().size() );

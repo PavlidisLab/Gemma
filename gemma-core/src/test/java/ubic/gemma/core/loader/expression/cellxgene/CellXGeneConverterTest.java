@@ -1,8 +1,9 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +20,9 @@ import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTran
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellTransformationConfig;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -30,13 +31,13 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -44,8 +45,14 @@ import static org.mockito.Mockito.when;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreaterOrEqualTo;
 
 @ContextConfiguration
+// This class carried no tag at all, so nothing kept it out of the default suite. It
+// reaches the CellxGene API and, through CellXGeneConverter.convertPublications, live
+// Entrez as well. @NetworkAvailable does not hold it back — it skips only when the host
+// is unreachable.
+@Tag("slow")
+@ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
-public class CellXGeneConverterTest extends BaseTest {
+public class CellXGeneConverterTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -62,22 +69,19 @@ public class CellXGeneConverterTest extends BaseTest {
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
-
     private CellXGeneConverter cellxgeneConverter;
     private CellXGeneFetcher fetcher;
     private Taxon human;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         ExternalDatabaseService eds = mock();
         ExternalDatabase cellxGeneDatabase = ExternalDatabase.Factory.newInstance( "CELLxGENE", DatabaseType.EXPRESSION );
         when( eds.findByName( "CELLxGENE" ) ).thenReturn( cellxGeneDatabase );
-        TaxonService taxonService = mock();
+        TaxonReadService taxonReadService = mock();
         human = new Taxon();
-        when( taxonService.findByScientificName( "Homo sapiens" ) ).thenReturn( human );
-        cellxgeneConverter = new CellXGeneConverter( eds, taxonService, new PubMedSearch( ncbiApiKey ) );
+        when( taxonReadService.findByScientificName( "Homo sapiens" ) ).thenReturn( human );
+        cellxgeneConverter = new CellXGeneConverter( eds, taxonReadService, new PubMedSearch( ncbiApiKey ) );
         fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 500, 1.5 ),
                 downloadDir );
     }

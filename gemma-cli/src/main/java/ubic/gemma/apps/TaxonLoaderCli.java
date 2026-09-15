@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.genome.taxon.TaxonFetcher;
 import ubic.gemma.core.loader.genome.taxon.TaxonLoader;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
-import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.persister.GenomePersister;
 
 import java.io.File;
 import java.util.Collection;
@@ -35,7 +35,7 @@ import java.util.Collection;
 public class TaxonLoaderCli extends AbstractAuthenticatedCLI {
 
     @Autowired
-    private PersisterHelper persisterHelper;
+    private GenomePersister genomePersister;
 
     @Override
     public String getCommandName() {
@@ -78,7 +78,7 @@ public class TaxonLoaderCli extends AbstractAuthenticatedCLI {
         }
 
         TaxonLoader tl = new TaxonLoader();
-        tl.setPersisterHelper( persisterHelper );
+        tl.setGenomePersister( genomePersister );
         int numLoaded = tl.load( names );
         log.info( "Loaded " + numLoaded + " taxa" );
     }

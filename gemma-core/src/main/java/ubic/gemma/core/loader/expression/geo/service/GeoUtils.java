@@ -9,7 +9,6 @@ public class GeoUtils {
 
     private static final String GEO_QUERY_URL = "https://www.ncbi.nlm.nih.gov/geo/query";
     private static final String GEO_DOWNLOAD_URL = "https://www.ncbi.nlm.nih.gov/geo/download";
-    private static final String GEO_BROWSE_URL = "https://www.ncbi.nlm.nih.gov/geo/browse/";
     private static final String GEO_FTP_VIA_HTTPS_BASE_URL = "https://ftp.ncbi.nlm.nih.gov/geo";
     private static final String GEO_FTP_BASE_URL = "ftp://ftp.ncbi.nlm.nih.gov/geo";
 
@@ -41,19 +40,23 @@ public class GeoUtils {
                 throw new UnsupportedOperationException( "Unsupported GEO source: " + source + " for the direct GEO source." );
             }
             String targ;
+            // acc.cgi names its targets self / gsm / gpl / gse / all. A target it does not know is
+            // not an error: it silently answers with the accession's own record, so "samples",
+            // "platform" and "series" all returned the 2 KB series record instead of the thing
+            // asked for (measured on GSE1024, 2026-08-29).
             switch ( scope ) {
                 case SELF:
                     // in the HTML view, the default is self
                     targ = format == GeoFormat.HTML ? null : "self";
                     break;
                 case SAMPLES:
-                    targ = "samples";
+                    targ = "gsm";
                     break;
                 case PLATFORM:
-                    targ = "platform";
+                    targ = "gpl";
                     break;
                 case SERIES:
-                    targ = "series";
+                    targ = "gse";
                     break;
                 case FAMILY:
                     targ = "all";
@@ -116,39 +119,6 @@ public class GeoUtils {
             return baseUrl + "/series/" + formShortenedFtpDirName( geoAccession ) + "/" + geoAccession + "/" + formatDir + "/" + geoAccession + "_family" + ext;
         } else {
             throw new UnsupportedOperationException( "Unsupported source for GEO data: " + source + "." );
-        }
-    }
-
-    public static URL getUrlForBrowsing( GeoRecordType recordType, int start, int pageSize, GeoFormat format ) {
-        String recordTypeS;
-        switch ( recordType ) {
-            case SERIES:
-                recordTypeS = "series";
-                break;
-            case SAMPLE:
-                recordTypeS = "samples";
-                break;
-            case PLATFORM:
-                recordTypeS = "platforms";
-                break;
-            default:
-                throw new UnsupportedOperationException( "Unsupported record type for browsing: " + recordType + "." );
-        }
-        String formatS;
-        switch ( format ) {
-            case TSV:
-                formatS = "tsv";
-                break;
-            case CSV:
-                formatS = "csv";
-                break;
-            default:
-                throw new UnsupportedOperationException( "Unsupported format for browsing: " + format + "." );
-        }
-        try {
-            return new URL( GEO_BROWSE_URL + "?view=" + recordTypeS + "&zsort=date&mode=" + formatS + "&page=" + start + "&display=" + pageSize );
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
         }
     }
 

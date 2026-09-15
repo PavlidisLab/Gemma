@@ -14,34 +14,42 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.core.security.audit.AuditEventPayload;
+import ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 
-import static org.junit.Assert.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author paul
  */
-public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest {
+public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+    @Autowired
+    private AuditEventService auditEventService;
 
     @Test
-    @Category(SlowTest.class)
-    public void test() throws QuantitationTypeConversionException, FilteringException {
+    @Tag("slow")
+    public void test() throws Exception {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
         assertFalse( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
         assertNull( sampleCoexpressionAnalysisService.loadFullMatrix( ee ) );
@@ -72,6 +80,29 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
         assertNotNull( matrix );
 
         this.check( matrix );
+
+        this.checkFilterAttritionWasRecorded( ee );
+    }
+
+    /**
+     * The run records how many design elements each filter removed. This is the only place the real filter, the
+     * real aspect and a real database meet -- the mapping and the read-back are pinned by faster tests, but that
+     * the event is actually written with a payload can only be seen here.
+     */
+    private void checkFilterAttritionWasRecorded( ExpressionExperiment ee ) throws Exception {
+        AuditEvent event = auditEventService.getLastEvent( ee, SampleCorrelationAnalysisEvent.class );
+        assertNotNull( event, "the sample-correlation run should have written an audit event" );
+        assertNotNull( event.getPayload(), "the audit event should carry the filter attrition" );
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerSubtypes( SampleCorrelationAnalysisPayload.class );
+        AuditEventPayload payload = mapper.readValue( event.getPayload(), AuditEventPayload.class );
+        assertTrue( payload instanceof SampleCorrelationAnalysisPayload );
+        SampleCorrelationAnalysisPayload attrition = ( SampleCorrelationAnalysisPayload ) payload;
+        assertNotNull( attrition.config() );
+        assertEquals( 7, attrition.stages().size() );
+        assertTrue( attrition.startingRows() > 0, "the funnel should start above zero" );
+        assertTrue( attrition.finalRows() <= attrition.startingRows(), "a filter cannot add rows" );
     }
 
     /**

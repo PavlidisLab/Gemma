@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.util.mapper;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Strings;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
@@ -11,7 +11,7 @@ import java.util.*;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class SimpleBioAssayMapper extends AbstractBioAssayMapper implements HintingEntityMapper<BioAssay> {
 
     @Override

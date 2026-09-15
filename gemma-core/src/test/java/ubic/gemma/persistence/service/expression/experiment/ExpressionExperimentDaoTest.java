@@ -1,13 +1,14 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclService;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.stat.Statistics;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,18 +17,24 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentReferenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Filter;
@@ -35,18 +42,19 @@ import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Subquery;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -56,6 +64,20 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
             return new ExpressionExperimentDaoImpl( sessionFactory );
         }
+
+        // EE DAO now field-injects ArrayDesignDao for batched platform loads
+        // (round-2 probe #8 fix). Wire the real DAO here.
+        @Bean
+        public ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl( sessionFactory );
+        }
+
+        // PERF_PROBE_REPORT_ROUND4 B1: EE DAO field-injects SingleCellDimensionExperimentDao
+        // to maintain the link table on SC vector add/remove flows.
+        @Bean
+        public SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new SingleCellDimensionExperimentDaoImpl( sessionFactory );
+        }
     }
 
     @Autowired
@@ -64,12 +86,25 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Autowired
     private AclService aclService;
 
+    @Autowired
+    private SingleCellDimensionExperimentDao singleCellDimensionExperimentDao;
+
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void removeFixtures() {
         if ( ee != null ) {
-            expressionExperimentDao.remove( ee );
+            // Hibernate 6: tests like testLoadReference / testLoadMultipleReferences evict the EE
+            // and then loadReference() back, putting a different managed proxy with the same id in
+            // the session. Removing the original detached reference here would throw
+            // EntityExistsException ("A different object with the same identifier value was already
+            // associated with the session"). Re-resolve from id to get the managed instance (or null
+            // if it was already deleted) before removing.
+            ExpressionExperiment managed = expressionExperimentDao.load( ee.getId() );
+            if ( managed != null ) {
+                expressionExperimentDao.remove( managed );
+            }
+            ee = null;
         }
     }
 
@@ -161,6 +196,34 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                     } );
                 } );
         assertThat( expressionExperimentDao.load( Filters.by( f ), null ) ).isEmpty();
+    }
+
+    /**
+     * 🛑 `isPublic` is not a mapped attribute — it is read off the ACL entries when the value object
+     * is built — so the metamodel walk that enumerates filterable properties could not see it and
+     * `filter=isPublic = false` answered 400 "the property of isPublic is unknown". It is now
+     * registered by hand and resolved to the ACL predicate.
+     * <p>
+     * This asserts the query RUNS: the expression is a case-over-exists carrying the ACL class-id
+     * parameter, and the ways it can be wrong are all failures of the HQL rather than wrong answers
+     * — an unbound parameter, or a property Hibernate cannot resolve. A filter that never executed
+     * would be no better than no filter at all.
+     */
+    @Test
+    @WithMockUser
+    public void testDatasetsCanBeFilteredByVisibility() {
+        Filter isPrivate = expressionExperimentDao.getFilter( "isPublic", Filter.Operator.eq, "false" );
+        assertThat( isPrivate.getPropertyName() )
+                .as( "resolved to the ACL predicate rather than a column" )
+                .contains( "AclObjectIdentity" )
+                .contains( "IS_AUTHENTICATED_ANONYMOUSLY" );
+
+        // both directions execute; the fixture is empty of ACL rows, so what matters here is that
+        // Hibernate accepts the expression and the parameter binds
+        assertThat( expressionExperimentDao.load( Filters.by( isPrivate ), null ) ).isNotNull();
+        assertThat( expressionExperimentDao.load(
+                Filters.by( expressionExperimentDao.getFilter( "isPublic", Filter.Operator.eq, "true" ) ), null ) )
+                .isNotNull();
     }
 
     @Test
@@ -386,7 +449,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         c.setValueUri( valueUri );
         sessionFactory.getCurrentSession().persist( c );
         sessionFactory.getCurrentSession()
-                .createSQLQuery( "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, EXPRESSION_EXPERIMENT_FK, LEVEL) values (:id, :category, :categoryUri, :value, :valueUri, :eeId, :level)" )
+                .createNativeQuery( "insert into EXPRESSION_EXPERIMENT2CHARACTERISTIC (ID, CATEGORY, CATEGORY_URI, `VALUE`, VALUE_URI, EXPRESSION_EXPERIMENT_FK, LEVEL) values (:id, :category, :categoryUri, :value, :valueUri, :eeId, :level)" )
                 .setParameter( "id", c.getId() )
                 .setParameter( "category", c.getCategory() )
                 .setParameter( "categoryUri", c.getCategoryUri() )
@@ -490,33 +553,51 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testRemoveExperimentDeletesBioMaterials() {
-        Taxon taxon = new Taxon();
-        sessionFactory.getCurrentSession().persist( taxon );
-        ArrayDesign arrayDesign = new ArrayDesign();
-        arrayDesign.setPrimaryTaxon( taxon );
-        sessionFactory.getCurrentSession().persist( arrayDesign );
-        BioMaterial bm = new BioMaterial();
-        bm.setSourceTaxon( taxon );
-        sessionFactory.getCurrentSession().persist( bm );
-        BioAssay ba = new BioAssay();
-        ba.setArrayDesignUsed( arrayDesign );
-        ba.setSampleUsed( bm );
-        bm.getBioAssaysUsedIn().add( ba );
-        ExpressionExperiment ee = new ExpressionExperiment();
-        ee.getBioAssays().add( ba );
-        sessionFactory.getCurrentSession().persist( ee );
+    public void testGetSubSetsByExpressionExperimentsEmpty() {
+        // empty input must short-circuit to an empty map (no query round-trip, no NPE)
+        assertThat( expressionExperimentDao.getSubSetsByExpressionExperiments( Collections.emptyList() ) )
+                .isEmpty();
+    }
+
+    @Test
+    public void testGetSubSetsByExpressionExperimentsBatched() {
+        // ee1 has two subsets, ee2 has one, ee3 has none — verify all three appear in the result and the loop is
+        // collapsed to one query
+        ExpressionExperiment ee1 = createExpressionExperiment();
+        ExpressionExperiment ee2 = createExpressionExperiment();
+        ExpressionExperiment ee3 = createExpressionExperiment();
+
+        ExpressionExperimentSubSet subset1a = ExpressionExperimentSubSet.Factory.newInstance( "ee1-subset-a", ee1 );
+        ExpressionExperimentSubSet subset1b = ExpressionExperimentSubSet.Factory.newInstance( "ee1-subset-b", ee1 );
+        ExpressionExperimentSubSet subset2 = ExpressionExperimentSubSet.Factory.newInstance( "ee2-subset", ee2 );
+        sessionFactory.getCurrentSession().persist( subset1a );
+        sessionFactory.getCurrentSession().persist( subset1b );
+        sessionFactory.getCurrentSession().persist( subset2 );
         sessionFactory.getCurrentSession().flush();
-        sessionFactory.getCurrentSession().clear();
-        Long bmId = bm.getId();
-        Long baId = ba.getId();
-        ee = expressionExperimentDao.load( ee.getId() );
-        assertNotNull( ee );
-        expressionExperimentDao.remove( ee );
+
+        Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> bySource =
+                expressionExperimentDao.getSubSetsByExpressionExperiments( Arrays.asList( ee1, ee2, ee3 ) );
+
+        assertThat( bySource ).hasSize( 3 );
+        // The SubSet.Factory.newInstance(name, ee) prepends "<ee name> - "; compare on the id-set instead
+        assertThat( bySource.get( ee1 ) )
+                .extracting( "id" )
+                .containsExactlyInAnyOrder( subset1a.getId(), subset1b.getId() );
+        assertThat( bySource.get( ee2 ) )
+                .extracting( "id" )
+                .containsExactly( subset2.getId() );
+        // ee3 must be present with an empty bucket so callers can iterate without null-checks
+        assertThat( bySource.get( ee3 ) ).isEmpty();
+
+        // clean up — DAO.remove(ee) does not cascade to subsets (the cascade lives in the service layer),
+        // so drop the subsets first, then the EEs themselves; ee3 is handed off to @After
+        sessionFactory.getCurrentSession().remove( subset1a );
+        sessionFactory.getCurrentSession().remove( subset1b );
+        sessionFactory.getCurrentSession().remove( subset2 );
         sessionFactory.getCurrentSession().flush();
-        // the BioMaterial was attached only to this EE, so it must be deleted too
-        assertNull( sessionFactory.getCurrentSession().get( BioMaterial.class, bmId ) );
-        assertNull( sessionFactory.getCurrentSession().get( BioAssay.class, baId ) );
+        expressionExperimentDao.remove( ee1 );
+        expressionExperimentDao.remove( ee2 );
+        ee = ee3;
     }
 
     @Test
@@ -598,6 +679,186 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertNull( sessionFactory.getCurrentSession().get( BioAssayDimension.class, bad.getId() ) );
     }
 
+    /**
+     * The dataset VO has to name the platform, not merely count it: a curator reading a dataset in
+     * the UI sees a blank platform line otherwise, and {@code originalPlatform} is the field that
+     * says a dataset was switched, which is a thing they check for. Asked for by uib with Paul's
+     * "as long as it is fast to fetch" — it is the same join the array-design COUNT was already
+     * making, so nothing extra is fetched.
+     */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectNamesThePlatformsAndTheSwitch() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+
+        ArrayDesign used = new ArrayDesign();
+        used.setShortName( "GPL571" );
+        used.setName( "Affymetrix GeneChip Human Genome U133A 2.0 Array" );
+        used.setTechnologyType( TechnologyType.ONECOLOR );
+        used.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( used );
+
+        ArrayDesign switchedFrom = new ArrayDesign();
+        switchedFrom.setShortName( "GPL96" );
+        switchedFrom.setName( "Affymetrix GeneChip Human Genome U133A Array" );
+        switchedFrom.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( switchedFrom );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        BioMaterial bm1 = new BioMaterial();
+        bm1.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm1 );
+        BioAssay switched = new BioAssay();
+        switched.setArrayDesignUsed( used );
+        switched.setOriginalPlatform( switchedFrom );
+        switched.setSampleUsed( bm1 );
+        ee.getBioAssays().add( switched );
+
+        BioMaterial bm2 = new BioMaterial();
+        bm2.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm2 );
+        BioAssay notSwitched = new BioAssay();
+        notSwitched.setArrayDesignUsed( used );
+        // a no-op switch: the "original" platform is the one in use
+        notSwitched.setOriginalPlatform( used );
+        notSwitched.setSampleUsed( bm2 );
+        ee.getBioAssays().add( notSwitched );
+
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertThat( vo.getPlatforms() )
+                .singleElement()
+                .satisfies( p -> {
+                    assertEquals( "GPL571", p.getShortName() );
+                    assertEquals( "Affymetrix GeneChip Human Genome U133A 2.0 Array", p.getName() );
+                    assertEquals( "ONECOLOR", p.getTechnologyType() );
+                } );
+        // the dataset's own technology, since its platforms agree on one
+        assertEquals( "ONECOLOR", vo.getTechnologyType() );
+        // the count keeps meaning what it meant, now derived from the same rows
+        assertEquals( 1L, vo.getArrayDesignCount().longValue() );
+        assertThat( vo.getOriginalPlatforms() )
+                .withFailMessage( "the switched-from platform is reported, and the no-op switch is not" )
+                .singleElement()
+                .satisfies( p -> assertEquals( "GPL96", p.getShortName() ) );
+    }
+
+    /**
+     * The other half: a dataset nobody switched reports no original platform at all. Without this a
+     * report that named every used platform as an original one would pass the test above.
+     */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectReportsNoSwitchWhenThereWasNone() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setShortName( "GPL1261" );
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( ad );
+        ba.setSampleUsed( bm );
+        ee.getBioAssays().add( ba );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertThat( vo.getPlatforms() ).extracting( "shortName" ).containsExactly( "GPL1261" );
+        assertThat( vo.getOriginalPlatforms() ).isEmpty();
+    }
+
+    /**
+     * 🛑 A dataset run on two kinds of platform IS both, so it has no single technology and the
+     * field says so by being null. Answering with either platform's type — which is what the
+     * details VO does, taking whichever platform the iterator reaches first — labels half the
+     * dataset wrong, and a client cannot tell that from a confident answer.
+     */
+    @Test
+    @WithMockUser
+    public void testTechnologyTypeIsNullWhenThePlatformsDisagree() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign micro = new ArrayDesign();
+        micro.setShortName( "GPL571" );
+        micro.setTechnologyType( TechnologyType.ONECOLOR );
+        micro.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( micro );
+        ArrayDesign seq = new ArrayDesign();
+        seq.setShortName( "GPL11154" );
+        seq.setTechnologyType( TechnologyType.SEQUENCING );
+        seq.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( seq );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        for ( ArrayDesign ad : Arrays.asList( micro, seq ) ) {
+            BioMaterial bm = new BioMaterial();
+            bm.setSourceTaxon( taxon );
+            sessionFactory.getCurrentSession().persist( bm );
+            BioAssay ba = new BioAssay();
+            ba.setArrayDesignUsed( ad );
+            ba.setSampleUsed( bm );
+            ee.getBioAssays().add( ba );
+        }
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertNull( vo.getTechnologyType() );
+        // and the client can still see what it is made of
+        assertThat( vo.getPlatforms() ).extracting( "technologyType" )
+                .containsExactlyInAnyOrder( "ONECOLOR", "SEQUENCING" );
+    }
+
+    /**
+     * The creation date comes off the {@code C} audit event, which is the only record Gemma keeps
+     * of when a dataset was loaded.
+     */
+    /**
+     * The backfill asks this once per experiment across the corpus to decide whether to skip it, so
+     * it must not read the document to answer — {@code SOURCE_METADATA} is a LONGTEXT holding the
+     * whole GEO record.
+     */
+    @Test
+    @WithMockUser
+    public void testHasSourceMetadata() {
+        ExpressionExperiment without = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( without );
+        ExpressionExperiment with = new ExpressionExperiment();
+        with.setSourceMetadata( "{\"source\":\"GEO\"}" );
+        with.setSourceMetadataSchemaVersion( 1 );
+        sessionFactory.getCurrentSession().persist( with );
+        sessionFactory.getCurrentSession().flush();
+
+        assertFalse( expressionExperimentDao.hasSourceMetadata( without ) );
+        assertTrue( expressionExperimentDao.hasSourceMetadata( with ) );
+    }
+
+    @Test
+    @WithMockUser
+    public void testDateCreatedComesFromTheCreationAuditEvent() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        Date created = new Date( 1181157000000L ); // 2007-06-06
+        ee.getAuditTrail().addEvent( AuditEvent.Factory.newInstance( created, AuditAction.CREATE,
+                "Create ExpressionExperiment", null, null, null ) );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertEquals( created, vo.getDateCreated() );
+    }
+
     @Test
     @WithMockUser
     public void testLoadValueObjectWithSingleCellData() {
@@ -646,10 +907,188 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         vector.setDataAsDoubles( new double[] { 1.0, 2.0, 1.0, 2.0 } );
         vector.setDataIndices( new int[] { 0, 1, 2, 4 } );
         ee.getSingleCellExpressionDataVectors().add( vector );
+        ee.setNumberOfCells( 4 );
         sessionFactory.getCurrentSession().persist( ee );
         sessionFactory.getCurrentSession().flush();
         ExpressionExperimentValueObject eevo = expressionExperimentDao.loadValueObject( ee );
         assertNotNull( eevo );
+        // The modality has to be readable off the dataset itself. technologyType does not answer it — a
+        // single-cell dataset can read GENELIST — which had clients guessing from a platform-name regex.
+        assertTrue( eevo.getIsSingleCell() );
+        assertEquals( Integer.valueOf( 4 ), eevo.getNumberOfCells() );
+        // No SingleCellDimensionExperiment row here, and deliberately still single-cell: 29 datasets on prod
+        // are in exactly this state. The count is unknown, the modality is not.
+        assertNull( eevo.getNumberOfCellIds() );
+    }
+
+    /**
+     * A split part names its siblings on the dataset itself.
+     * <p>
+     * Gemma splits an experiment by a factor and titles each part "Split part N of: …", which tells a reader
+     * siblings exist and gives no way to reach one — 52 of 100 sampled single-cell datasets are split parts
+     * (uib, 2026-09-03), and the field lived on a VO only /experiment-sets/{id}/datasets serves.
+     */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectCarriesTheOtherPartsOfASplitStudy() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment part1 = new ExpressionExperiment();
+        part1.setShortName( "Study-2024.1" );
+        part1.setName( "Split part 1 of: Study [organism part = visual cortex]" );
+        part1.setTaxon( taxon );
+        ExpressionExperiment part2 = new ExpressionExperiment();
+        part2.setShortName( "Study-2024.2" );
+        part2.setName( "Split part 2 of: Study [organism part = hippocampus]" );
+        part2.setTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( part1 );
+        sessionFactory.getCurrentSession().persist( part2 );
+        part1.getOtherParts().add( part2 );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( part1 );
+        assertNotNull( vo );
+        assertEquals( 1, vo.getOtherParts().size() );
+        ExpressionExperimentReferenceValueObject sibling = vo.getOtherParts().get( 0 );
+        assertEquals( part2.getId(), sibling.getId() );
+        assertEquals( "Study-2024.2", sibling.getShortName() );
+        // the title is the only place the distinguishing factor value appears, so a reference that carries
+        // only the short name cannot tell one sibling from another
+        assertEquals( "Split part 2 of: Study [organism part = hippocampus]", sibling.getName() );
+    }
+
+    /** An unsplit dataset gets an empty list, not null — one shape for every dataset. */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectOtherPartsIsEmptyForAnUnsplitDataset() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertNotNull( vo.getOtherParts() );
+        assertTrue( vo.getOtherParts().isEmpty() );
+    }
+
+    /** And an ordinary dataset says so, rather than leaving the client to infer it. */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectWithoutSingleCellDataIsNotSingleCell() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject eevo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( eevo );
+        assertFalse( eevo.getIsSingleCell() );
+        assertNull( eevo.getNumberOfCells() );
+        assertNull( eevo.getNumberOfCellIds() );
+    }
+
+    /**
+     * Removing an experiment whose single-cell vectors were never loaded must go through the
+     * projection-query branch of {@code removeAllSingleCellDataVectors} rather than walking the lazy
+     * collection. Walking it selects every vector's DATA + DATA_INDICES blob: on GSE277430 (25,050
+     * vectors over 333,570 cells) that exhausted a 30 GB heap, and the resulting OutOfMemoryError
+     * desynced the JDBC connection so the failure surfaced as an ArrayIndexOutOfBoundsException thrown
+     * during rollback, with the real cause discarded as "Application exception overridden by rollback
+     * exception".
+     * <p>
+     * Every other test in this area builds its fixture in-session, so the collection is already
+     * initialized and only the other branch runs. This one reaches the branch that runs in production
+     * and therefore also validates that its HQL parses.
+     */
+    @Test
+    @WithMockUser
+    public void removeWithUninitializedSingleCellDataVectors() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+        CompositeSequence cs = new CompositeSequence();
+        cs.setArrayDesign( ad );
+        sessionFactory.getCurrentSession().persist( cs );
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( ad );
+        ba.setSampleUsed( bm );
+        bm.getBioAssaysUsedIn().add( ba );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.getBioAssays().add( ba );
+        SingleCellDimension scd = new SingleCellDimension();
+        scd.setCellIds( Arrays.asList( "A", "B", "C" ) );
+        scd.getBioAssays().add( ba );
+        scd.setBioAssaysOffset( new int[] { 0 } );
+        sessionFactory.getCurrentSession().persist( scd );
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setScale( ScaleType.COUNT );
+        qt.setIsSingleCellPreferred( true );
+        ee.getQuantitationTypes().add( qt );
+        SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
+        vector.setExpressionExperiment( ee );
+        vector.setDesignElement( cs );
+        vector.setQuantitationType( qt );
+        vector.setSingleCellDimension( scd );
+        vector.setDataAsDoubles( new double[] { 1.0, 2.0, 1.0 } );
+        vector.setDataIndices( new int[] { 0, 1, 2 } );
+        ee.getSingleCellExpressionDataVectors().add( vector );
+        sessionFactory.getCurrentSession().persist( ee );
+        // persist() alone does not maintain the SINGLE_CELL_DIMENSION_EXPERIMENT link table that
+        // remove() consults via getSingleCellDimensions(ee); without the row the dimension is never
+        // scheduled for deletion and super.remove(ee) trips the BIO_ASSAYS2SINGLE_CELL_DIMENSIONS FK.
+        // Production has exactly this row (GSE277430 has one).
+        singleCellDimensionExperimentDao.record( ee, qt, scd );
+
+        Long eeId = ee.getId();
+        Long qtId = qt.getId();
+        Long scdId = scd.getId();
+        // clear the whole session rather than reload()'s targeted evict: evicting the experiment
+        // cascades to its BioAssays, and the still-managed dimension would keep referencing those now
+        // detached instances, so remove() hits NonUniqueObjectException against the freshly loaded ones.
+        flushAndClearSession();
+        ExpressionExperiment reloaded = expressionExperimentDao.load( eeId );
+        assertNotNull( reloaded );
+        assertFalse( Hibernate.isInitialized( reloaded.getSingleCellExpressionDataVectors() ),
+                "The reloaded experiment must have a lazy single-cell vector collection, otherwise this test "
+                        + "exercises the same branch as every other test here." );
+
+        // Statistics are the only discriminating check here: both the fixed and the broken version end
+        // up with an empty collection (the broken one loads it, then clear()s it), but only the broken
+        // one loads vector ENTITIES. The collection does get initialized once at the very end, by
+        // super.remove(ee)'s cascade walk — by then the bulk delete has run, so that fetch selects zero
+        // rows and pulls no blobs.
+        Statistics stats = sessionFactory.getStatistics();
+        boolean statsWereEnabled = stats.isStatisticsEnabled();
+        stats.setStatisticsEnabled( true );
+        stats.clear();
+        try {
+            expressionExperimentDao.remove( reloaded );
+            assertEquals( 0, stats.getEntityStatistics( SingleCellExpressionDataVector.class.getName() ).getLoadCount(),
+                    "remove() must not load any single-cell vector: each one carries DATA + DATA_INDICES, "
+                            + "and loading all 25,050 of GSE277430's exhausted a 30 GB heap." );
+        } finally {
+            stats.setStatisticsEnabled( statsWereEnabled );
+        }
+        assertThat( reloaded.getSingleCellExpressionDataVectors() ).isEmpty();
+        sessionFactory.getCurrentSession().flush();
+
+        assertNull( sessionFactory.getCurrentSession().get( ExpressionExperiment.class, eeId ) );
+        assertNull( sessionFactory.getCurrentSession().get( QuantitationType.class, qtId ) );
+        assertNull( sessionFactory.getCurrentSession().get( SingleCellDimension.class, scdId ) );
     }
 
     @Test
@@ -671,6 +1110,9 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         expressionExperimentDao.getBioMaterialAnnotations( ee, false );
         expressionExperimentDao.getExperimentalDesignAnnotations( ee, false );
         expressionExperimentDao.getFactorValueAnnotations( ee );
+        // widened-projection variants that carry the factor value + factor as parent context; exercises the
+        // "select c, fv, ef" projection and the subset "group by c, fv, ef" so the HQL/SQL is validated here.
+        expressionExperimentDao.getFactorValueAnnotationsWithParents( ee );
     }
 
     @Test
@@ -817,7 +1259,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertTrue( sessionFactory.getCurrentSession().contains( bad ) );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testRemoveRawDataVectorsWhenQtIsUnknown() {
         ee = createExpressionExperimentWithRawVectors();
         QuantitationType qt = new QuantitationType();
@@ -827,7 +1269,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         qt.setScale( ScaleType.LOG2 );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         sessionFactory.getCurrentSession().persist( qt );
-        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt, false ) );
+        assertThrows( IllegalArgumentException.class, () -> expressionExperimentDao.removeRawDataVectors( ee, qt, false ) );
     }
 
     @Test
@@ -1135,5 +1577,184 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         sessionFactory.getCurrentSession().persist( platform );
         assertNotNull( platform.getId() );
         return platform;
+    }
+    /**
+     * A sample whose only route to an experiment is subset -> sourceExperiment must still resolve.
+     * <p>
+     * The subset fallback in {@code findIdsByBioMaterial} was guarded on {@code results == null},
+     * and {@code Query.list()} returns an empty list rather than null, so it never ran once. Every
+     * aggregated single-cell sample resolved to nothing: 665,120 of the 669,233 samples an ACL
+     * repair had to parent on 2026-08-30, each one logging "Could not find an ExpressionExperiment
+     * associated to BioMaterial".
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testFindIdsByBioMaterial_resolvesThroughASubset() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+
+        // The assay hangs off the subset only — no ee.bioAssays membership, which is the shape
+        // single-cell aggregation produces.
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( ad );
+        ba.setSampleUsed( bm );
+        bm.getBioAssaysUsedIn().add( ba );
+        sessionFactory.getCurrentSession().persist( ba );
+
+        ExpressionExperiment source = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( source );
+        ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+        subset.setSourceExperiment( source );
+        subset.getBioAssays().add( ba );
+        sessionFactory.getCurrentSession().persist( subset );
+        sessionFactory.getCurrentSession().flush();
+
+        assertThat( expressionExperimentDao.findIdsByBioMaterial( bm, true ) )
+                .as( "a subset-only sample resolves to the subset's source experiment" )
+                .containsExactly( source.getId() );
+        assertThat( expressionExperimentDao.findIdsByBioMaterial( bm, false ) )
+                .as( "and not when the caller opts out of subsets" )
+                .isEmpty();
+        // findByBioMaterial carried an identical dead null check.
+        assertThat( expressionExperimentDao.findByBioMaterial( bm, true ) )
+                .as( "the entity-returning sibling resolves it too" )
+                .extracting( ExpressionExperiment::getId )
+                .containsExactly( source.getId() );
+    }
+    /**
+     * Replacing an experiment's mean-variance relation must delete the one it replaces.
+     * <p>
+     * ExpressionExperiment.meanVarianceRelation is a @ManyToOne, and JPA has no orphanRemoval for
+     * one, so moving the reference used to leave the previous row behind with nothing pointing at
+     * it. Nothing sweeps those: on production 2026-08-30, 33,535 of 57,311 rows were unreferenced,
+     * roughly 15 GB of the table's 25.4 GB, since each row carries four mediumblobs. Abandoned ids
+     * ran right up to the maximum, so it was still accumulating.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testUpdateMeanVarianceRelation_deletesTheOneItReplaces() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+
+        MeanVarianceRelation first = new MeanVarianceRelation();
+        first.setMeans( new double[] { 1.0, 2.0 } );
+        first.setVariances( new double[] { 0.1, 0.2 } );
+        expressionExperimentDao.updateMeanVarianceRelation( ee, first );
+        sessionFactory.getCurrentSession().flush();
+        Long firstId = first.getId();
+        assertNotNull( firstId );
+
+        MeanVarianceRelation second = new MeanVarianceRelation();
+        second.setMeans( new double[] { 3.0, 4.0 } );
+        second.setVariances( new double[] { 0.3, 0.4 } );
+        expressionExperimentDao.updateMeanVarianceRelation( ee, second );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        assertThat( sessionFactory.getCurrentSession().get( MeanVarianceRelation.class, firstId ) )
+                .as( "the replaced relation is still there, abandoned" )
+                .isNull();
+        ExpressionExperiment reloaded = sessionFactory.getCurrentSession().get( ExpressionExperiment.class, ee.getId() );
+        assertThat( reloaded.getMeanVarianceRelation().getId() ).isEqualTo( second.getId() );
+    }
+
+    /**
+     * 🛑 A TRANSIENT {@link BioAssayDimension} is a normal input here, and it must not throw.
+     * <p>
+     * {@code DiffExAnalyzerUtils.dropSamplesNotAnalyzed} re-slices the data matrix whenever a sample is
+     * DE_Exclude or an outlier, and the replacement dimension comes from {@code createBADMap} ->
+     * {@code BioAssayDimension.Factory.newInstance}, which is never persisted. The old query bound the
+     * dimension entity ({@code ... and bad = :bad ...}), so an unsaved one raised
+     * {@code TransientObjectException: object references an unsaved transient instance ... BioAssayDimension}
+     * on the subset REUSE LOOKUP — before any write, which is why the transaction rolled back intact.
+     * <p>
+     * frinkbro hit it on GSE62625 (eid 9439) on 2026-09-10 and held 18 further subset re-runs. It bit only
+     * some experiments because {@code dropSamplesNotAnalyzed} returns the original matrix, and so the
+     * persisted dimension, when nothing is dropped.
+     */
+    @Test
+    public void testGetSubSetsToleratesATransientBioAssayDimension() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        List<BioAssay> assays = createAssays( 3 );
+
+        // a subset over the first two assays
+        ExpressionExperimentSubSet subset = ExpressionExperimentSubSet.Factory.newInstance( "sub-first-two", ee );
+        subset.getBioAssays().add( assays.get( 0 ) );
+        subset.getBioAssays().add( assays.get( 1 ) );
+        sessionFactory.getCurrentSession().persist( subset );
+        sessionFactory.getCurrentSession().flush();
+
+        // the shape createBADMap produces: never persisted, id null
+        BioAssayDimension transientBad = BioAssayDimension.Factory.newInstance( assays );
+        assertNull( transientBad.getId(), "the fixture must be transient or it tests nothing" );
+
+        Collection<ExpressionExperimentSubSet> found = expressionExperimentDao.getSubSets( ee, transientBad );
+
+        assertThat( found ).extracting( "id" ).containsExactly( subset.getId() );
+    }
+
+    /**
+     * Reuse still works when a sample has been DROPPED — the case that decides between the two possible fixes.
+     * <p>
+     * Skipping the lookup for a transient dimension would also stop the crash, and would silently build a
+     * duplicate subset beside the one the experiment already has, on every experiment carrying a DE_Exclude
+     * marker — 345 of them, 326 under {@code collection of material} (frinkbro, 2026-09-10). Matching on the
+     * dimension's ASSAYS keeps reuse working: a subset whose assays all survive the drop is still found, and one
+     * that contained the dropped assay is correctly NOT found, because it can no longer be fully covered.
+     */
+    @Test
+    public void testGetSubSetsStillReusesWhenASampleWasDropped() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        List<BioAssay> assays = createAssays( 3 );
+
+        ExpressionExperimentSubSet survives = ExpressionExperimentSubSet.Factory.newInstance( "survives", ee );
+        survives.getBioAssays().add( assays.get( 0 ) );
+        ExpressionExperimentSubSet loses = ExpressionExperimentSubSet.Factory.newInstance( "loses-an-assay", ee );
+        loses.getBioAssays().add( assays.get( 0 ) );
+        loses.getBioAssays().add( assays.get( 2 ) );
+        sessionFactory.getCurrentSession().persist( survives );
+        sessionFactory.getCurrentSession().persist( loses );
+        sessionFactory.getCurrentSession().flush();
+
+        // assay 2 was dropped, so the re-sliced dimension carries only 0 and 1
+        BioAssayDimension dropped = BioAssayDimension.Factory.newInstance(
+                Arrays.asList( assays.get( 0 ), assays.get( 1 ) ) );
+
+        Collection<ExpressionExperimentSubSet> found = expressionExperimentDao.getSubSets( ee, dropped );
+
+        assertThat( found )
+                .extracting( "id" )
+                .containsExactly( survives.getId() );
+    }
+
+    /** N persisted BioAssays, each on its own BioMaterial. Mirrors the subset-only shape used elsewhere here. */
+    private List<BioAssay> createAssays( int n ) {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ad );
+        List<BioAssay> assays = new ArrayList<>();
+        for ( int i = 0; i < n; i++ ) {
+            BioMaterial bm = new BioMaterial();
+            bm.setSourceTaxon( taxon );
+            sessionFactory.getCurrentSession().persist( bm );
+            BioAssay ba = new BioAssay();
+            ba.setArrayDesignUsed( ad );
+            ba.setSampleUsed( bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            sessionFactory.getCurrentSession().persist( ba );
+            assays.add( ba );
+        }
+        return assays;
     }
 }

@@ -23,12 +23,18 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Slice;
 
+import org.springframework.lang.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @see CompositeSequence
@@ -56,6 +62,27 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
      *                   accurate lookup
      */
     Slice<CompositeSequence> findByGene( Gene gene, int start, int limit, boolean useGene2Cs );
+
+    /**
+     * Cursor-paged listing of {@link CompositeSequence}s associated with a single
+     * {@link Gene} across all platforms &mdash; see {@code CURSOR_PAGINATION_STEP1_PLAN.md}
+     * step 1m. Always sorted by ascending {@code cs.id} (the primary key, indexed and
+     * unique); the cursor DAO currently restricts cursors to single-component id sorts
+     * until the index audit lands.
+     * <p>
+     * Mirrors the structure of {@link #findByGene(Gene, int, int, boolean)} but appends an
+     * {@code id > :cursorId} (ASC forward) / {@code id < :cursorId} (ASC backward)
+     * predicate to the existing gene&rarr;probe join query and fetches {@code limit + 1}
+     * rows to detect the next page; {@code totalElements} is left {@code null} (cursor
+     * mode skips the {@code COUNT(*)} per request, matching the rest of the cursor
+     * surface). Symmetric to {@link #getGenesByCursor(CompositeSequence, Cursor, int, boolean)}
+     * which walks the same join structure in the opposite direction.
+     *
+     * @param useGene2Cs whether to use the denormalized {@code GENE2CS} mapping table for
+     *                   a faster (but potentially less accurate) lookup, matching the
+     *                   semantics of the offset variant.
+     */
+    CursorPage<CompositeSequence> findByGeneByCursor( Gene gene, @Nullable Cursor cursor, int limit, boolean useGene2Cs );
 
     /**
      * Find composite sequences mapped to a given gene, restricted to a given platform.
@@ -108,12 +135,33 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
     Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs );
 
     /**
+     * Cursor-paged listing of {@link Gene}s associated with a single
+     * {@link CompositeSequence} — see {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1l.
+     * Always sorted by ascending {@code gene.id} (the primary key, indexed and unique);
+     * the cursor DAO currently restricts cursors to single-component id sorts until the
+     * index audit lands.
+     * <p>
+     * Mirrors the structure of {@link #getGenes(CompositeSequence, int, int, boolean)}
+     * but appends an {@code id > :cursorId} (ASC forward) / {@code id < :cursorId} (ASC
+     * backward) predicate to the existing probe→gene join query and fetches
+     * {@code limit + 1} rows to detect the next page; {@code totalElements} is left
+     * {@code null} (cursor mode skips the {@code COUNT(*)} per request, matching the
+     * rest of the cursor surface).
+     *
+     * @param useGene2Cs whether to use the denormalized {@code GENE2CS} mapping table for
+     *                   a faster (but potentially less accurate) lookup, matching the
+     *                   semantics of the offset variant.
+     */
+    CursorPage<Gene> getGenesByCursor( CompositeSequence compositeSequence, @Nullable Cursor cursor, int limit, boolean useGene2Cs );
+
+    /**
      * @param compositeSequences sequences
      * @return a map of CompositeSequences to BlatAssociations.
      */
     Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences );
 
+    @Nullable
     Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences );
 
     Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, int numResults );
@@ -121,4 +169,44 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
     void thaw( Collection<CompositeSequence> compositeSequences );
 
     void thaw( CompositeSequence compositeSequence );
+
+    /**
+     * Lightweight (sequence, length) projection used to hydrate
+     * {@link CompositeSequenceValueObject#getSequence()} +
+     * {@link CompositeSequenceValueObject#getSequenceLength()} on opt-in
+     * platform-elements requests. {@code biologicalCharacteristic} is
+     * {@code LAZY} on {@link CompositeSequence}; this projection avoids
+     * triggering per-row lazy loads by walking the join in one HQL.
+     */
+    record BioSequenceLite(@Nullable String sequence, @Nullable Long length) {}
+
+    /**
+     * Batch-fetch the probe-sequence projection for the supplied composite-sequence
+     * ids. Composite sequences with no {@code biologicalCharacteristic} mapping (or
+     * with the mapping present but its {@code sequence} / {@code length} unset) are
+     * omitted from the returned map. Returns an empty map on an empty input.
+     */
+    Map<Long, BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds );
+
+    /**
+     * Batch-fetch the compact gene identities mapped to each of the supplied composite-sequence
+     * ids, keyed by composite-sequence id. Probes that map to no gene are omitted from the map
+     * (the caller treats absent-from-map as "no gene mapping recorded"), so the returned map may
+     * be smaller than the input. Returns an empty map on an empty input.
+     * <p>
+     * Reads the denormalized {@code GENE2CS} table rather than walking
+     * {@code CompositeSequence -> BioSequence -> BioSequence2GeneProduct -> GeneProduct -> Gene},
+     * and projects only the three columns a listing row renders — no {@link ubic.gemma.model.genome.Gene}
+     * entities are hydrated.
+     */
+    Map<Long, List<GeneReferenceValueObject>> getGeneData( Collection<Long> compositeSequenceIds );
+
+    /**
+     * Composite-sequence ids on {@code arrayDesignId} that map to any of {@code geneIds}.
+     * <p>
+     * Straight lookup against the denormalized {@code GENE2CS} table, whose
+     * {@code gene2csgeneadindex (AD, GENE)} composite index covers exactly this predicate — no
+     * joins, no entity hydration. Returns an empty set on empty input.
+     */
+    Set<Long> findIdsByGeneIds( Collection<Long> geneIds, Long arrayDesignId );
 }

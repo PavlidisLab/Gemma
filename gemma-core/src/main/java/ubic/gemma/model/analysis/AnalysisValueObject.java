@@ -1,8 +1,12 @@
 package ubic.gemma.model.analysis;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.util.ModelUtils;
 
+@Getter
+@Setter
 public abstract class AnalysisValueObject<T extends Analysis> extends IdentifiableValueObject<T> {
 
     private String name;
@@ -19,21 +23,5 @@ public abstract class AnalysisValueObject<T extends Analysis> extends Identifiab
         if ( analysis.getProtocol() != null && ModelUtils.isInitialized( analysis.getProtocol() ) ) {
             this.protocol = new ProtocolValueObject( analysis.getProtocol() );
         }
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public ProtocolValueObject getProtocol() {
-        return protocol;
-    }
-
-    public void setProtocol( ProtocolValueObject protocol ) {
-        this.protocol = protocol;
     }
 }

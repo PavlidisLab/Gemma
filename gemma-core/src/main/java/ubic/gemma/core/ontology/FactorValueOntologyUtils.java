@@ -6,7 +6,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class FactorValueOntologyUtils {
      * Obtain a suitable ontology ID for a given factor value.
      */
     public static String getUri( FactorValue factorValue ) {
-        Assert.notNull( factorValue.getId() );
+        Assert.notNull( factorValue.getId() , "must not be null");
         return getUri( factorValue.getId() );
     }
 
@@ -119,6 +119,28 @@ public class FactorValueOntologyUtils {
      * Visit the statements of a FactorValue and generate their annotation IDs.
      */
     public static <E extends Throwable> void visitStatements( Long factorValueId, Collection<StatementValueObject> statements, StatementVisitor<AnnotationIds, E> visitor ) throws E {
+        visitAllStatements( factorValueId, statements, ( svo, ids ) -> {
+            if ( ids.getObjectId() != null || ids.getSecondObjectId() != null ) {
+                visitor.accept( svo, ids );
+            }
+        } );
+    }
+
+    /**
+     * Visit every statement, including the ones that say nothing about their subject.
+     * <p>
+     * {@link #visitStatements} is this with the object-bearing ones kept, and it is the right
+     * default for a caller building RDF: a subject with no predicate produces no triple. A caller
+     * LISTING the annotations needs all of them — a grounded term with no predicate is the
+     * commonest annotation there is, and it went missing from the design payload's
+     * {@code statements} array for exactly this reason.
+     * <p>
+     * 🛑 The two share one id allocation, and the ids must not move between them: the subject's id
+     * is allocated before the object test, so a statement gets the same
+     * {@code …/TGFVO/{fv}/{n}} identity whichever way it is visited. Splitting this into a second
+     * loop is how those two numberings would drift apart.
+     */
+    public static <E extends Throwable> void visitAllStatements( Long factorValueId, Collection<StatementValueObject> statements, StatementVisitor<AnnotationIds, E> visitor ) throws E {
         long nextAvailableId = 1L;
         for ( StatementValueObject svo : new TreeSet<>( statements ) ) {
             String subjectId = getAnnotationId( factorValueId, nextAvailableId++ );
@@ -129,9 +151,7 @@ public class FactorValueOntologyUtils {
             if ( svo.getSecondObject() != null ) {
                 secondObjectId = getAnnotationId( factorValueId, nextAvailableId++ );
             }
-            if ( objectId != null || secondObjectId != null ) {
-                visitor.accept( svo, new AnnotationIds( subjectId, objectId, secondObjectId ) );
-            }
+            visitor.accept( svo, new AnnotationIds( subjectId, objectId, secondObjectId ) );
         }
     }
 
@@ -146,7 +166,7 @@ public class FactorValueOntologyUtils {
      * Create a mapping of annotation IDs to annotations for a FactorValue.
      */
     public static Map<String, Annotation> getAnnotationsById( FactorValue fv ) {
-        Assert.notNull( fv.getId() );
+        Assert.notNull( fv.getId() , "must not be null");
         Map<String, Annotation> result = new HashMap<>();
         long nextAvailableId = 1L;
         for ( Statement s : new TreeSet<>( fv.getCharacteristics() ) ) {

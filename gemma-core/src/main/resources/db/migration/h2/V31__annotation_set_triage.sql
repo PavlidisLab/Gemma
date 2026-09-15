@@ -1,0 +1,5 @@
+-- H2 mirror of mysql/V30__annotation_set_triage.sql; see that file for the reasoning.
+-- One ADD COLUMN per statement, and DATETIME(3) to match V21's columns on this table.
+ALTER TABLE ANNOTATION_SET ADD COLUMN TRIAGE VARCHAR(16) NULL;
+ALTER TABLE ANNOTATION_SET ADD COLUMN TRIAGED_BY VARCHAR(255) NULL;
+ALTER TABLE ANNOTATION_SET ADD COLUMN TRIAGED_AT DATETIME(3) NULL;

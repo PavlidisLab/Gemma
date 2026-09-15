@@ -1,6 +1,6 @@
 package ubic.gemma.core.mail;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 import static ubic.gemma.core.util.StringUtils.urlEncode;
 
-@CommonsLog
+@Slf4j
 @Service
 public class MailServiceImpl implements MailService {
 

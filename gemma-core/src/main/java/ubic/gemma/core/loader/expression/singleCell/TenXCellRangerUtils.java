@@ -1,15 +1,16 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
@@ -19,7 +20,7 @@ import java.util.zip.GZIPInputStream;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class TenXCellRangerUtils {
 
     /**
@@ -46,7 +47,7 @@ public class TenXCellRangerUtils {
 
     public static boolean detect10xFromMexFile( Path mexFile ) {
         String[] comments;
-        try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( mexFile ) ) ) ) ) {
+        try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( mexFile ) ), StandardCharsets.UTF_8 ) ) ) {
             reader.readMatrixInfo();
             comments = reader.readComments();
         } catch ( IOException e ) {

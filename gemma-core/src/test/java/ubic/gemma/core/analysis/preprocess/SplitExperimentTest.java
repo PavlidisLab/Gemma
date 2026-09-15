@@ -19,48 +19,52 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import gemma.gsec.SecurityService;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.NotFoundException;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNoException;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 /**
  *
  *
  * @author paul
  */
-public class SplitExperimentTest extends BaseSpringContextTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class SplitExperimentTest extends BaseSpringContextTest5 {
 
     @Autowired
     private SplitExperimentService splitService;
@@ -80,12 +84,18 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     @Autowired
     private SecurityService securityService;
 
+    @Autowired
+    private AclService aclService;
+
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+
     /* fixtures */
     private Collection<ExpressionExperiment> ees;
     private ExpressionExperimentSet results;
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testSplitGSE17183ByOrganismPart() throws Exception {
 
@@ -100,7 +110,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         } catch ( AlreadyExistsInSystemException e ) {
             //noinspection unchecked
             ees = ( Collection<ExpressionExperiment> ) e.getData();
-            assumeNoException( e );
+            abort( e.getMessage() );
         }
 
         ExpressionExperiment ee = ees.iterator().next();
@@ -166,7 +176,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testSplitGSE123753ByCollectionOfMaterial() throws Exception {
 
@@ -181,7 +191,7 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         } catch ( AlreadyExistsInSystemException e ) {
             //noinspection unchecked
             ees = ( ( Collection<ExpressionExperiment> ) e.getData() );
-            assumeNoException( e );
+            abort( e.getMessage() );
         }
 
         ExpressionExperiment ee = ees.iterator().next();
@@ -212,7 +222,54 @@ public class SplitExperimentTest extends BaseSpringContextTest {
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
     }
 
-    @After
+    /**
+     * Every experiment a split produces must come out editable.
+     * <p>
+     * A split child is created through {@code eeWriteService.create}, so its ACL is the
+     * responsibility of {@code AclEventListener.onPostInsert} — nothing in
+     * {@link SplitExperimentService} sets one up itself, and {@code split} is
+     * {@code Propagation.NEVER} so the insert happens in a transaction the method does not own.
+     * ExpressionExperiments 93287, 93288, 93289, 93433 and 93434 — splits made under Gemma 1.0,
+     * which had no such listener — reached production with no ACL at all and answer 403 on every
+     * update. This pins the 2.0 path: the ACL exists and grants edit.
+     * <p>
+     * Uses a synthetic single-platform experiment rather than a GEO series so it stays in the
+     * default suite; the two tests above are {@code slow} and need the network.
+     */
+    @Test
+    public void testSplitGivesEachNewExperimentAnAcl() {
+        ArrayDesign ad = getTestPersistentArrayDesign( 0, true, false, false );
+        ExpressionExperiment ee = getTestPersistentBasicExpressionExperiment( ad );
+        ees = Collections.singleton( ee );
+
+        // Thaw the way SplitExperimentCli does, so the detached graph split() clones is the one
+        // the CLI actually hands it.
+        ee = eeService.thawLite( ee );
+        ExperimentalFactor splitOn = experimentalFactorService.thaw(
+                ee.getExperimentalDesign().getExperimentalFactors().iterator().next() );
+        assertFalse( splitOn.getFactorValues().isEmpty() );
+
+        results = splitService.split( ee, splitOn, false );
+        assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
+
+        for ( ExpressionExperiment split : results.getExperiments() ) {
+            Acl acl;
+            try {
+                acl = aclService.readAclById( new AclObjectIdentity( ExpressionExperiment.class, split.getId() ) );
+            } catch ( NotFoundException e ) {
+                acl = null;
+            }
+            assertNotNull( acl, "Split " + split.getShortName() + " was created without an ACL." );
+            assertFalse( acl.getEntries().isEmpty(),
+                    "Split " + split.getShortName() + " has an ACL with no entries, so nothing grants edit." );
+            // isEditableByUser reads the ACL for WRITE or ADMINISTRATION; that is the permission
+            // the 1.0-era splits lack, and the reason they answer 403 on update.
+            assertTrue( securityService.isEditableByCurrentUser( split ),
+                    "Split " + split.getShortName() + " is not editable by an administrator." );
+        }
+    }
+
+    @AfterEach
     public void teardown() throws Exception {
         // remove original dataset
         if ( ees != null ) {

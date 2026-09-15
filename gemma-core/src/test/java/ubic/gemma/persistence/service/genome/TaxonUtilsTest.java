@@ -19,20 +19,20 @@
 
 package ubic.gemma.persistence.service.genome;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonUtils;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author kelsey
  *
  */
-public class TaxonUtilsTest extends BaseSpringContextTest {
+public class TaxonUtilsTest extends BaseSpringContextTest5 {
 
     @Autowired
     GeneService geneService;

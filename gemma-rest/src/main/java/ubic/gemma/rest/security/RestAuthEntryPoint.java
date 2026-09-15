@@ -16,19 +16,21 @@ package ubic.gemma.rest.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Future;
@@ -36,9 +38,19 @@ import java.util.concurrent.Future;
 /**
  * Implementation of {@link AuthenticationEntryPoint} for the RESTful API to handle authentication.
  * <p>
- * This is used in applicationContext-ws-rest.xml as part of Spring Security HTTP configuration.
+ * Promoted to {@code @Component("restAuthEntryPoint")} as part of Phase 1 of
+ * {@code GEMMA_REST_STANDALONE_RECCE.md} so the bean is producible without
+ * gemma-web's {@code applicationContext-security.xml}. The matching XML bean
+ * definition in {@code gemma-web/applicationContext-security.xml} was removed
+ * to avoid a bean-id collision; the {@code <s:http pattern="/rest/v2/**">}
+ * chain in that XML still resolves {@code entry-point-ref="restAuthEntryPoint"}
+ * by name from this component.
+ * <p>
+ * Referenced by {@link RestSecurityConfig#restSecurityFilterChain} via
+ * {@code @Qualifier("restAuthEntryPoint")}.
  */
-@CommonsLog
+@Slf4j
+@Component("restAuthEntryPoint")
 public class RestAuthEntryPoint implements AuthenticationEntryPoint {
 
     private static final String MESSAGE_401 = "Provided authentication credentials are invalid.";
@@ -47,7 +59,7 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint {
     private final Future<OpenAPI> openAPI;
     private final BuildInfo buildInfo;
 
-    public RestAuthEntryPoint( ObjectMapper objectMapper, Future<OpenAPI> openAPI, BuildInfo buildInfo ) {
+    public RestAuthEntryPoint( ObjectMapper objectMapper, @Qualifier("openApi") Future<OpenAPI> openAPI, BuildInfo buildInfo ) {
         this.objectMapper = objectMapper;
         this.openAPI = openAPI;
         this.buildInfo = buildInfo;

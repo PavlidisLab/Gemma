@@ -91,6 +91,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        getPipelineJobReporter().stage( "split:" + ee.getShortName() );
         ee = this.eeService.thawLite( ee );
         ExperimentalFactor splitOn = this.guessFactor( ee );
         ExpressionExperimentSet eeSet = serv.split( ee, splitOn, true );

@@ -15,12 +15,12 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
@@ -29,8 +29,7 @@ import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperiment
 import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -46,7 +45,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.io.InputStream;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 /**
@@ -54,7 +53,7 @@ import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.deter
  *
  * @author paul
  */
-public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
+public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest5 {
 
     @Autowired
     private SimpleExpressionDataLoaderService dataLoaderService;
@@ -85,7 +84,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
@@ -142,7 +141,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
      * </pre>
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void test() {
 
         AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
@@ -157,6 +156,11 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         config.setAnalysisType( aa );
         config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
+        // The GSE8441_expmat_8probes fixture intentionally carries only 8 (+1 near-constant) probes across 22
+        // samples so the ANOVA assertions on hand-computed p-values remain tractable. Pin a smaller distinct-values
+        // threshold than production's 0.3 so the near-constant probe (2.3 in 21 samples, 2.301 in the 22nd) still
+        // goes while the 8 real probes stay.
+        config.setMinimumFractionOfUniqueValues( 0.1 );
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
@@ -177,7 +181,10 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         this.checkResults( refetched );
 
-        differentialExpressionAnalyzerService.redoAnalysis( ee, refetched );
+        // Use the threshold-pinned config so the redo path applies the same RepetitiveValuesFilter
+        // override as the initial analyze() call above; the no-config redoAnalysis(ee, dea) overload
+        // would construct a default config and re-hit the 30%-distinct-values trap.
+        differentialExpressionAnalyzerService.redoAnalysis( ee, refetched, config );
 
     }
 

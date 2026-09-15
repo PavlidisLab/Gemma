@@ -1,0 +1,16 @@
+# Place at /etc/logrotate.d/gemma-rest
+#
+# Tomcat doesn't reopen log files on SIGHUP — copytruncate is required so the
+# in-flight file descriptors keep writing to the same inode after rotation.
+# TODO(sysop): adjust retention / compression to match your aggregator policy.
+
+/var/log/gemma/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    su root root
+}

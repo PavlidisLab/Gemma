@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.transform.*;
@@ -9,7 +9,7 @@ import ubic.gemma.core.loader.util.anndata.Dataframe;
 import ubic.gemma.core.loader.util.anndata.Layer;
 import ubic.gemma.core.loader.util.anndata.MissingEncodingAttributeException;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements SingleCellDataLoaderConfigurer<AnnDataSingleCellDataLoader> {
 
     /**

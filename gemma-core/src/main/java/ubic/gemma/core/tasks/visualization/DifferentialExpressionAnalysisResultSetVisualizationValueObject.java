@@ -264,8 +264,8 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject imp
         DecimalFormat df = new DecimalFormat( "#.######" );
         StringBuilder text = new StringBuilder();
         text.append( "|" ).append( datasetShortName ).append( "|" ).append( factorName ).append( "|" );
-        for ( Long fvId : this.contrastsFactorValues.keySet() ) {
-            text.append( this.contrastsFactorValues.get( fvId ).trim() ).append( "," );
+        for ( String fvName : this.contrastsFactorValues.values() ) {
+            text.append( fvName.trim() ).append( "," );
         }
         text.append( "|" );
         for ( List<Double> pValueGroup : this.qValues ) {

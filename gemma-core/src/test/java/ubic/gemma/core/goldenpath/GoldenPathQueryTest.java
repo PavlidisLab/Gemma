@@ -18,13 +18,12 @@
  */
 package ubic.gemma.core.goldenpath;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
-import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
@@ -37,13 +36,13 @@ import static org.junit.Assume.assumeNoException;
  *
  * @author pavlidis
  */
-@Category(GoldenPathTest.class)
+@Tag("goldenpath")
 public class GoldenPathQueryTest {
 
     /* fixtures */
     private static GoldenPathQuery queryer;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws Exception {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "human" );
@@ -55,7 +54,7 @@ public class GoldenPathQueryTest {
         }
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDown() {
         if ( queryer != null )
             queryer.close();
@@ -64,21 +63,21 @@ public class GoldenPathQueryTest {
     @Test
     public final void testQueryEst() {
         Collection<BlatResult> actualValue = queryer.findAlignments( "AA411542" );
-        Assert.assertEquals( 6, actualValue.size() ); // updated for hg19 2/2011
+        Assertions.assertEquals( 6, actualValue.size() ); // updated for hg19 2/2011
     }
 
     @Test
     public final void testQueryMrna() {
         Collection<BlatResult> actualValue = queryer.findAlignments( "AK095183" );
         // assertEquals( 3, actualValue.size() );
-        Assert.assertTrue( actualValue.size() > 0 ); // value used to be 3, now 2; this should be safer.
+        Assertions.assertTrue( actualValue.size() > 0 ); // value used to be 3, now 2; this should be safer.
         BlatResult r = actualValue.iterator().next();
-        Assert.assertEquals( "AK095183", ( r.getQuerySequence().getName() ) );
+        Assertions.assertEquals( "AK095183", ( r.getQuerySequence().getName() ) );
     }
 
     @Test
     public final void testQueryNoResult() {
         Collection<BlatResult> actualValue = queryer.findAlignments( "YYYYYUUYUYUYUY" );
-        Assert.assertEquals( 0, actualValue.size() );
+        Assertions.assertEquals( 0, actualValue.size() );
     }
 }

@@ -1,13 +1,12 @@
 package ubic.gemma.rest.util.args;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -19,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class TaxonArgServiceTest extends BaseTest {
+public class TaxonArgServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -42,7 +41,7 @@ public class TaxonArgServiceTest extends BaseTest {
     @Autowired
     private TaxonService taxonService;
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( taxonService );
     }

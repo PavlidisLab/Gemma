@@ -24,20 +24,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import lombok.extern.slf4j.Slf4j;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.description.Versioned;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.util.ModelUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -49,7 +51,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused") // Used in front end
 @Data
 @EqualsAndHashCode(of = { "shortName" }, callSuper = true)
-@CommonsLog
+@Slf4j
 public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign> implements Versioned {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -94,6 +96,24 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
      */
     private Boolean isMergee;
     /**
+     * The platform this one was merged into, or null when it was not merged.
+     * <p>
+     * The companion to {@link #isMergee}, which says only THAT a merge happened. Batch-hydrated in
+     * {@code ArrayDesignDaoImpl.populateMergeRelations}; the association is {@code LAZY} on the
+     * entity, so reading {@code shortName} off the proxy inside the constructor would fire one
+     * extra query per row of a listing.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private ArrayDesignReferenceValueObject mergedInto;
+    /**
+     * The platforms merged INTO this one — the inverse of {@link #mergedInto}, empty when there are
+     * none. Companion to {@link #isMerged}.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<ArrayDesignReferenceValueObject> mergees;
+    /**
      * Indicate if this array design is subsumed by some other array design.
      */
     @JsonIgnore
@@ -119,9 +139,43 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     /**
      * The number of unique genes that this array design maps to.
+     * <p>
+     * Report-era field: a {@link String}, written by {@code ArrayDesignReportService} into a
+     * disk-serialized report and never populated on the REST path. Left as-is because those report
+     * files are Java-serialized on production and retyping the field would break reading them.
+     * The live, typed counterpart on the wire is {@link #numberOfGenes}.
      */
     @JsonIgnore
     private String numGenes;
+    /**
+     * Distinct genes the platform's elements map to, or null when the caller did not ask.
+     * <p>
+     * Opt-in via {@code ?withGeneCounts=true}; see
+     * {@code ArrayDesignDao.getGeneCounts(Collection)} for why it is not computed by default.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long numberOfGenes;
+    /**
+     * Elements on the platform that map to at least one gene, or null when the caller did not ask.
+     * Pairs with {@link #numberOfGenes} and comes from the same query — the difference between the
+     * two is what tells a reader whether a platform is densely or sparsely annotated.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Long numberOfMappedElements;
+    /**
+     * When the report backing {@link #numberOfGenes} / {@link #numberOfMappedElements} was written,
+     * as {@code yyyy.MM.dd HH:mm}.
+     * <p>
+     * Null when the counts were derived live rather than read from a report (gene-list platforms,
+     * where the element count answers both), or when no counts were populated at all. Exposed
+     * because a count read from a monthly report is not the same claim as a fresh one, and a client
+     * showing the number should be able to say how old it is.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String geneCountsLastUpdated;
     /**
      * The number of probes that have BLAT alignments.
      */
@@ -173,7 +227,18 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
      * @param ad ad
      */
     public ArrayDesignValueObject( ArrayDesign ad ) {
-        super( ad );
+        this( ad, false );
+    }
+
+    /**
+     * Variant of {@link #ArrayDesignValueObject(ArrayDesign)} that propagates the
+     * {@code skipEvents} hint up to {@link AbstractCuratableValueObject}, letting the caller batch-
+     * hydrate the three {@code last*Event} associations off {@code CurationDetails} post-fetch (via
+     * {@link AbstractCuratableValueObject#applyLastEventTriple}) instead of paying ~3 SELECTs per
+     * row at construction time. See {@code ArrayDesignDaoImpl#loadLastEventsByArrayDesignIds}.
+     */
+    public ArrayDesignValueObject( ArrayDesign ad, boolean skipEvents ) {
+        super( ad, skipEvents );
         this.name = ad.getName();
         this.shortName = ad.getShortName();
         this.description = ad.getDescription();
@@ -228,6 +293,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.hasSequenceAssociations = arrayDesignValueObject.hasSequenceAssociations;
         this.isMerged = arrayDesignValueObject.isMerged;
         this.isMergee = arrayDesignValueObject.isMergee;
+        this.mergedInto = arrayDesignValueObject.mergedInto;
+        this.mergees = arrayDesignValueObject.mergees;
         this.isSubsumed = arrayDesignValueObject.isSubsumed;
         this.isSubsumer = arrayDesignValueObject.isSubsumer;
         this.lastGeneMapping = arrayDesignValueObject.lastGeneMapping;
@@ -236,6 +303,9 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         this.lastSequenceUpdate = arrayDesignValueObject.lastSequenceUpdate;
         this.name = arrayDesignValueObject.name;
         this.numGenes = arrayDesignValueObject.numGenes;
+        this.numberOfGenes = arrayDesignValueObject.numberOfGenes;
+        this.numberOfMappedElements = arrayDesignValueObject.numberOfMappedElements;
+        this.geneCountsLastUpdated = arrayDesignValueObject.geneCountsLastUpdated;
         this.numProbeAlignments = arrayDesignValueObject.numProbeAlignments;
         this.numProbeSequences = arrayDesignValueObject.numProbeSequences;
         this.numProbesToGenes = arrayDesignValueObject.numProbesToGenes;
@@ -263,7 +333,8 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
         return expressionExperimentCount;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened common name; taxonObject already serializes")
     public String getTaxon() {
         return taxonObject == null ? null : taxonObject.getCommonName();
     }

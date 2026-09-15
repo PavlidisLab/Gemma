@@ -1,6 +1,6 @@
 package ubic.gemma.model.common.description;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.net.URL;
 import java.util.Date;
 

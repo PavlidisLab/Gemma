@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.mock;
  * This test covers subset analysis with pre-existing EE subset structure.
  */
 @ContextConfiguration
-public class SubsettedAnalysis4Test extends BaseTest {
+public class SubsettedAnalysis4Test extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -103,7 +103,10 @@ public class SubsettedAnalysis4Test extends BaseTest {
                 FactorValue.Factory.newInstance( cellTypeFactor, Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct4", null ) )
         };
         for ( int i = 0; i < 4; i++ ) {
-            fvs[i].setId( 2 + ( long ) i );
+            // From 3: ids 1 and 2 are the treatment factor's values above. FactorValue#equals compares by id
+            // when both have one, so a cell-type value sharing controlFv's id 2 IS controlFv as far as any
+            // Set or Map is concerned — across two different factors.
+            fvs[i].setId( 3 + ( long ) i );
         }
         cellTypeFactor.getFactorValues().addAll( Arrays.asList( fvs ) );
 

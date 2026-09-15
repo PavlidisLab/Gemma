@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataSortBySample;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataLoaderConfigurer<AnnDataSingleCellDataLoader> {
 
     private final Path annDataFile;

@@ -14,19 +14,17 @@
  */
 package ubic.gemma.core.loader.expression;
 
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.util.test.NetworkAvailable;
-import ubic.gemma.core.util.test.NetworkAvailableRule;
-import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -41,17 +39,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Switching of platforms that have no composite sequences.
  *
  * @author Paul
  */
-public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTest {
-
-    @Rule
-    public final NetworkAvailableRule networkAvailableRule = new NetworkAvailableRule();
+@ExtendWith(NetworkAvailableExtension.class)
+public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private GeoService geoService;
@@ -69,7 +65,8 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
      * for bug 3451
      */
     @Test
-    @Category({ GeoTest.class, SlowTest.class })
+    @Tag("geo")
+    @Tag("slow")
     @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE36025() {
 
@@ -149,7 +146,7 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         ExpressionExperiment e1 = experimentService.findByShortName( "GSE36025" );
         if ( e1 != null ) {

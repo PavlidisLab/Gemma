@@ -1,6 +1,6 @@
 package ubic.gemma.core.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.MessageSource;
@@ -10,7 +10,7 @@ import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.springframework.validation.AbstractBindingResult;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.ValueObject;
 
 import java.io.Serializable;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
-public class StrictBeanDefinitionValidatorTest extends BaseSpringContextTest {
+public class StrictBeanDefinitionValidatorTest extends BaseSpringContextTest5 {
 
     @ValueObject
     public static class TestAnnotatedVo implements Serializable {

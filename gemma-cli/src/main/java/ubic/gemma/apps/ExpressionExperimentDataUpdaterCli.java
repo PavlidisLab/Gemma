@@ -53,6 +53,7 @@ public class ExpressionExperimentDataUpdaterCli extends ExpressionExperimentMani
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        getPipelineJobReporter().stage( "data-updater:" + expressionExperiment.getShortName() );
         getBatchTaskExecutor().execute( () -> processExpressionExperimentInternal( expressionExperiment ) );
     }
 

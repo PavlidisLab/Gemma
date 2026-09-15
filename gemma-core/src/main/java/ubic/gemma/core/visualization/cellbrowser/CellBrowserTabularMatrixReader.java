@@ -3,7 +3,7 @@ package ubic.gemma.core.visualization.cellbrowser;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class CellBrowserTabularMatrixReader {
 
     private static final CSVFormat CELL_BROWSER_MATRIX_FORMAT = CSVFormat.TDF.builder()
@@ -57,7 +57,7 @@ public class CellBrowserTabularMatrixReader {
      */
     public SingleCellExpressionDataDoubleMatrix readMatrix( Reader reader, QuantitationType quantitationType,
             Map<String, CompositeSequence> designElementsMap, Map<String, BioAssay> cellIdToBioAssayMap ) throws IOException {
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE );
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE , "expected true");
         try ( CSVParser parser = CELL_BROWSER_MATRIX_FORMAT.parse( reader ) ) {
             List<String> cellIds = parser.getHeaderNames();
             cellIds = cellIds.subList( 1, cellIds.size() );

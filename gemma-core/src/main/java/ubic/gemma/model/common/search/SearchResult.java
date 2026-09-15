@@ -22,11 +22,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.Assert;
-import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.common.Identifiable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,7 +41,6 @@ import java.util.stream.Collectors;
  *
  * @author paul
  * @author poirigui
- * @see SearchSource
  * @see SearchResultSet
  */
 @Data
@@ -71,6 +69,20 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      */
     public static <T extends Identifiable> SearchResult<T> from( Class<? extends Identifiable> resultType, long entityId, double score, @Nullable Map<String, String> highlights, Object source ) {
         return new SearchResult<>( resultType, entityId, score, highlights, source );
+    }
+
+    /**
+     * Same as {@link #from(Class, Identifiable, double, Map, Object)}, but flags the result as
+     * an exact identifier match. The composite search source short-circuits remaining sources
+     * (notably the Lucene full-text leg) once any source returns such a hit. Use only when the
+     * query was matched against a canonical identifier — numeric primary key, accession,
+     * NCBI gene id, dataset/platform short name — i.e. lookups that resolve to at most one
+     * entity per query. Do NOT use for name, alias, or any tokenized field.
+     */
+    public static <T extends Identifiable> SearchResult<T> fromExactIdentifier( Class<? extends Identifiable> resultType, T entity, double score, @Nullable Map<String, String> highlights, Object source ) {
+        SearchResult<T> sr = from( resultType, entity, score, highlights, source );
+        sr.setExactIdentifierMatch( true );
+        return sr;
     }
 
     /**
@@ -113,6 +125,24 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      */
     private final Object source;
 
+    /**
+     * Whether this result was produced by an exact-identifier lookup (numeric id, short name,
+     * accession, NCBI id). The composite search source uses this as a "stop here" signal:
+     * once a source returns such a hit, downstream full-text / ontology sources are skipped
+     * because a canonical identifier already pinned the result. Defaults to {@code false}.
+     */
+    private boolean exactIdentifierMatch;
+
+    /**
+     * How this result matched the query (exact symbol, alias, prefix look-alike, …), or
+     * {@code null} when the producing source did not classify it. Unlike {@link #score}, this
+     * distinguishes an inexact prefix hit from an alias hit even when their scores coincide.
+     * Non-final and defaults to {@code null}, like {@link #exactIdentifierMatch}, so it does not
+     * affect the constructors or {@code equals}/{@code hashCode} (which key on type + id only).
+     */
+    @Nullable
+    private SearchMatchType matchKind;
+
     @Override
     public int compareTo( SearchResult<?> o ) {
         return COMPARATOR.compare( this, o );
@@ -133,7 +163,7 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      * For consistency with {@link Identifiable#getId()}, thus returns a {@link Long}. It is however backed internally
      * by a native long and cannot ever be null.
      */
-    @Nonnull
+    @NonNull
     public Long getResultId() {
         return resultId;
     }
@@ -165,6 +195,8 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      */
     public <S extends Identifiable> SearchResult<S> withResultObject( @Nullable S resultObject ) {
         SearchResult<S> searchResult = new SearchResult<>( resultType, resultId, score, highlights, source );
+        searchResult.setExactIdentifierMatch( this.exactIdentifierMatch );
+        searchResult.setMatchKind( this.matchKind );
         if ( resultObject != null ) {
             searchResult.setResultObject( resultObject );
         }
@@ -176,6 +208,8 @@ public class SearchResult<T extends Identifiable> implements Comparable<SearchRe
      */
     public SearchResult<T> withHighlights( Map<String, String> highlights ) {
         SearchResult<T> searchResult = new SearchResult<>( resultType, resultId, score, highlights, source );
+        searchResult.setExactIdentifierMatch( this.exactIdentifierMatch );
+        searchResult.setMatchKind( this.matchKind );
         if ( resultObject != null ) {
             searchResult.setResultObject( resultObject );
         }

@@ -1,11 +1,11 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.metadata.GenericMetadataSingleCellDataLoader;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 
-@CommonsLog
+@Slf4j
 public class GenericMetadataSingleCellDataLoaderConfigurer implements SingleCellDataLoaderConfigurer<GenericMetadataSingleCellDataLoader> {
 
     private final SingleCellDataLoaderConfigurer<?> delegate;

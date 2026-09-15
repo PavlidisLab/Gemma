@@ -23,13 +23,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.basecode.math.MatrixStats;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.core.security.audit.AuditedOnError;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
@@ -50,7 +52,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -60,7 +61,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataV
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -83,9 +84,6 @@ public class DataUpdaterImpl implements DataUpdater {
 
     @Autowired
     private BioAssayDimensionService assayDimensionService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private AuditEventService auditEventService;
@@ -125,6 +123,9 @@ public class DataUpdaterImpl implements DataUpdater {
 
     @Autowired
     private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
+
+    @Autowired
+    private DataUpdaterAuditService dataUpdaterAuditService;
 
     /**
      * Affymetrix: Use to bypass the automated running of apt-probeset-summarize. For example if GEO doesn't have
@@ -170,13 +171,18 @@ public class DataUpdaterImpl implements DataUpdater {
             // Switch ALL bioassays to the target platform.
             int numSwitched = this.switchBioAssaysToTargetPlatform( ee, targetPlatform, null );
 
-            auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
+            // ExpressionExperimentPlatformSwitchEvent written by @Audited on
+            // DataUpdaterAuditService.recordPlatformSwitch via AuditedAspect.
+            dataUpdaterAuditService.recordPlatformSwitch( ee,
                     "Switched " + numSwitched + " bioassays in course of updating vectors using AffyPowerTools (from "
                             + originalPlatform.getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
-        this.audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform,
-                true );
+        // DataReplacedEvent written by @Audited on DataUpdaterAuditService.recordDataReplaced
+        // via AuditedAspect. The hoist was required because self-invocation (this.audit(...)
+        // of a private helper) is invisible to Spring AOP -- see DataUpdaterAuditService.
+        dataUpdaterAuditService.recordDataReplaced( ee,
+                "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform );
 
         this.postprocess( ee );
     }
@@ -250,6 +256,18 @@ public class DataUpdaterImpl implements DataUpdater {
 
         // important: replaceData takes care of the platform switch if necessary; call first. It also deletes old QTs, so from here we have to remake them.
         this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+
+        // Re-thaw + re-snapshot the EE's QTs: replaceData ran in its own transaction
+        // and removed the old Counts/RPKM QTs from the DB, but the caller's detached
+        // ee still carries the pre-replace QT snapshot in its in-memory collection.
+        // Without a re-thaw, the reuse loops below would pin the new countqt/rpkmqt to
+        // the now-deleted QT instances (whose ids no longer resolve), and the duplicate-
+        // name guard in addRawDataVectors (DAO) would fail on the stale "Counts"/"RPKM"
+        // entries still glued to the in-memory collection. See the regression chased in
+        // DataUpdaterTest.testLoadRNASeqData second addCountData call (commit 7ab05158a8
+        // introduced the dup-name assertion that surfaces this).
+        ee = experimentService.thaw( ee );
+        oldQts = ee.getQuantitationTypes();
 
         QuantitationType countqt = this.makeCountQt();
         for ( QuantitationType oldqt : oldQts ) { // use old QT if possible
@@ -387,6 +405,19 @@ public class DataUpdaterImpl implements DataUpdater {
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
+    // @AuditedOnError replaces two imperative auditTrailService.addUpdateEvent(...)
+    // calls that previously sat in front of guard-clause throws (multi-platform-
+    // merged check and missing-CEL-files check). With this annotation the aspect
+    // emits FailedDataReplacedEvent for ANY exception thrown by this method via the
+    // 4-arg Throwable overload of AuditTrailService.addUpdateEvent (REQUIRES_NEW),
+    // putting #exception.message in NOTE and the full stack trace in DETAIL. This
+    // is a coverage improvement: previously failures past the two guards (apt
+    // processing failure, vector replacement failure, etc.) wrote nothing to the
+    // audit log; now every throw exits cleanly stamped. The two original guard
+    // messages still surface verbatim because the IllegalArgumentException and
+    // RuntimeException thrown below carry them and the default messageSpel
+    // ("#exception.message") picks them up.
+    @AuditedOnError( FailedDataReplacedEvent.class )
     public void reprocessAffyDataFromCel( ExpressionExperiment ee ) {
         DataUpdaterImpl.log.info( "------  Begin processing: " + ee + " -----" );
         Collection<ArrayDesign> associatedPlats = experimentService.getArrayDesignsUsed( ee );
@@ -401,10 +432,8 @@ public class DataUpdaterImpl implements DataUpdater {
         for ( ArrayDesign ad : associatedPlats ) {
             isOnMergedPlatform = merged.get( ad.getId() );
             if ( isOnMergedPlatform && associatedPlats.size() > 1 ) {
-                // should be rare; normally after merge we have just one platform
-                auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.class, "Cannot reprocess datasets that include a "
-                        + "merged platform and is still on multiple platforms" );
-
+                // should be rare; normally after merge we have just one platform.
+                // Failure audit row written by @AuditedOnError on this method.
                 throw new IllegalArgumentException( "Cannot reprocess datasets that include a "
                         + "merged platform and is still on multiple platforms" );
             }
@@ -417,7 +446,7 @@ public class DataUpdaterImpl implements DataUpdater {
         Collection<File> files = f.fetch( ee.getAccession().getAccession() );
 
         if ( files == null || files.isEmpty() ) {
-            auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.class, "Data was apparently not available" );
+            // Failure audit row written by @AuditedOnError on this method.
             throw new RuntimeException( "Data was apparently not available" );
         }
         ee = experimentService.thawLite( ee );
@@ -489,7 +518,9 @@ public class DataUpdaterImpl implements DataUpdater {
                         .info( "Switched " + numSwitched + " bioassays from " + originalPlatform.getShortName() + " to "
                                 + targetPlatform.getShortName() );
 
-                auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched " + numSwitched
+                // ExpressionExperimentPlatformSwitchEvent written by @Audited on
+                // DataUpdaterAuditService.recordPlatformSwitch via AuditedAspect.
+                dataUpdaterAuditService.recordPlatformSwitch( ee, "Switched " + numSwitched
                         + " bioassays in course of updating vectors using AffyPowerTools (from " + originalPlatform
                         .getShortName()
                         + " to " + targetPlatform.getShortName() + ")" );
@@ -497,7 +528,9 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         experimentService.replaceAllRawDataVectors( ee, vectors );
-        this.audit( ee, "Data vector computation from CEL files using AffyPowerTools", true );
+        // DataReplacedEvent written by @Audited on DataUpdaterAuditService.recordDataReplaced
+        // via AuditedAspect (see comment in addAffyDataFromAPTOutput).
+        dataUpdaterAuditService.recordDataReplaced( ee, "Data vector computation from CEL files using AffyPowerTools" );
 
         DataUpdaterImpl.log.info( "------  Done with reanalyzed data; cleaning up and postprocessing -----" );
 
@@ -561,6 +594,8 @@ public class DataUpdaterImpl implements DataUpdater {
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
+    @Audited( value = DataAddedEvent.class,
+            messageSpel = "'Data vectors added for ' + #targetPlatform + ', ' + #data.quantitationTypes.iterator().next()" )
     public void addData( ExpressionExperiment ee, ArrayDesign targetPlatform, ExpressionDataDoubleMatrix data ) {
 
         if ( data.rows() == 0 ) {
@@ -600,9 +635,15 @@ public class DataUpdaterImpl implements DataUpdater {
 
         experimentService.addRawDataVectors( ee, qt, vectors );
 
-        this.audit( ee, "Data vectors added for " + targetPlatform + ", " + qt, false );
+        // Audit event (DataAddedEvent) written by @Audited via AuditedAspect.
 
-        experimentService.update( ee );
+        // Re-thaw rather than merge: addRawDataVectors persists the new vectors through its own
+        // transaction, so the detached ee handed in here carries stale collection snapshots
+        // (especially the BioAssayDimensions whose many-to-many bioAssays may reference rows
+        // already removed upstream by dealWithMissingSamples). A merge() walks those snapshots
+        // and trips EntityNotFoundException: BioAssay#N — same residual the trailing call in
+        // replaceData hit (see commit 6a946c7c17).
+        ee = experimentService.thaw( ee );
 
         if ( qt.getIsPreferred() ) {
             DataUpdaterImpl.log.info( "Postprocessing preferred data" );
@@ -663,13 +704,25 @@ public class DataUpdaterImpl implements DataUpdater {
 
             this.switchBioAssaysToTargetPlatform( ee, targetPlatform, null );
 
-            auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
+            // ExpressionExperimentPlatformSwitchEvent written by @Audited on
+            // DataUpdaterAuditService.recordPlatformSwitch via AuditedAspect.
+            dataUpdaterAuditService.recordPlatformSwitch( ee,
                     "Switched in course of updating vectors using data input (from " + originalArrayDesign
                             .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
-        this.audit( ee, "Data vector replacement for " + targetPlatform, true );
-        experimentService.update( ee );
+        // DataReplacedEvent written by @Audited on DataUpdaterAuditService.recordDataReplaced
+        // via AuditedAspect (see comment in addAffyDataFromAPTOutput).
+        dataUpdaterAuditService.recordDataReplaced( ee, "Data vector replacement for " + targetPlatform );
+        // Re-thaw rather than merge: replaceAllRawDataVectors and switchBioAssaysToTargetPlatform
+        // already persisted their state through fresh sessions (ensureEeInSession + their own
+        // transactions). The detached ee handed in here still carries stale collection snapshots
+        // — chiefly the original rawExpressionDataVectors and their BioAssayDimensions, whose
+        // many-to-many bioAssays lists may reference BioAssay rows just removed by an upstream
+        // dealWithMissingSamples. A merge() would walk those snapshots and trip
+        // EntityNotFoundException: BioAssay#N (see Phase 2 Step 7 commit 27d09617b5 which
+        // identified this as the remaining residual after the per-call-site re-resolves).
+        ee = experimentService.thaw( ee );
         this.postprocess( ee );
 
         assert ee.getNumberOfDataVectors() != null;
@@ -715,25 +768,6 @@ public class DataUpdaterImpl implements DataUpdater {
             bioAssayService.update( ba );
 
         }
-    }
-
-    /**
-     * Generic
-     *
-     * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
-     * @param ee      ee
-     * @param note    note
-     */
-    private void audit( ExpressionExperiment ee, String note, boolean replace ) {
-        Class<? extends AuditEventType> eventType;
-
-        if ( replace ) {
-            eventType = DataReplacedEvent.class;
-        } else {
-            eventType = DataAddedEvent.class;
-        }
-
-        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**
@@ -812,8 +846,9 @@ public class DataUpdaterImpl implements DataUpdater {
          * Reverse the map (probably should just make this part of getChipTypes)
          */
         Map<String, Collection<BioAssay>> chip2bms = new HashMap<>();
-        for ( BioAssay ba : bm2chips.keySet() ) {
-            String c = bm2chips.get( ba );
+        for ( Map.Entry<BioAssay, String> bcEntry : bm2chips.entrySet() ) {
+            BioAssay ba = bcEntry.getKey();
+            String c = bcEntry.getValue();
             if ( !chip2bms.containsKey( c ) ) {
                 chip2bms.put( c, new HashSet<BioAssay>() );
             }
@@ -822,7 +857,9 @@ public class DataUpdaterImpl implements DataUpdater {
         Map<String, String> chipNames2GPL = AffyPowerToolsProbesetSummarize
                 .loadMapFromConfig( AffyPowerToolsProbesetSummarize.AFFY_CHIPNAME_PROPERTIES_FILE_NAME );
         Map<ArrayDesign, Collection<BioAssay>> targetPlatform2BioAssays = new HashMap<>();
-        for ( String chipname : chip2bms.keySet() ) {
+        for ( Map.Entry<String, Collection<BioAssay>> cbEntry : chip2bms.entrySet() ) {
+            String chipname = cbEntry.getKey();
+            Collection<BioAssay> baForChip = cbEntry.getValue();
 
             /*
              * Original.
@@ -835,8 +872,8 @@ public class DataUpdaterImpl implements DataUpdater {
             ArrayDesign originalPlatform = arrayDesignService.findByShortName( originalPlatName );
             ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
 
-            log.info( targetPlatform + " associated with " + chip2bms.get( chipname ).size() + " samples based on CEL files ('" + chipname + "')" );
-            targetPlatform2BioAssays.put( targetPlatform, chip2bms.get( chipname ) );
+            log.info( targetPlatform + " associated with " + baForChip.size() + " samples based on CEL files ('" + chipname + "')" );
+            targetPlatform2BioAssays.put( targetPlatform, baForChip );
         }
         return targetPlatform2BioAssays;
     }

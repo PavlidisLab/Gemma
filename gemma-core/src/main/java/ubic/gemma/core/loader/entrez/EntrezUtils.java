@@ -1,12 +1,12 @@
 package ubic.gemma.core.loader.entrez;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.SimpleRetryCallable;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -20,7 +20,7 @@ import static ubic.gemma.core.util.StringUtils.urlEncode;
  * Read more about this in <a href="https://www.ncbi.nlm.nih.gov/books/NBK25500/">The E-utilities In-Depth: Parameters, Syntax and More</a>.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class EntrezUtils {
 
     public static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
@@ -121,8 +121,8 @@ public class EntrezUtils {
      * Replay a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
     public static URL search( String db, EntrezQuery query, EntrezRetmode retmode, int retstart, int retmax, @Nullable String apiKey ) {
-        Assert.isTrue( retstart >= 0 );
-        Assert.isTrue( retmax > 0 );
+        Assert.isTrue( retstart >= 0 , "expected true");
+        Assert.isTrue( retmax > 0 , "expected true");
         if ( retstart >= query.getTotalRecords() ) {
             throw new IndexOutOfBoundsException();
         }
@@ -140,8 +140,8 @@ public class EntrezUtils {
      * Summarize a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
     public static URL summary( String db, EntrezQuery query, EntrezRetmode retmode, int retstart, int retmax, @Nullable String apiKey ) {
-        Assert.isTrue( retstart >= 0 );
-        Assert.isTrue( retmax > 0 );
+        Assert.isTrue( retstart >= 0 , "expected true");
+        Assert.isTrue( retmax > 0 , "expected true");
         if ( retstart >= query.getTotalRecords() ) {
             throw new IndexOutOfBoundsException();
         }
@@ -169,8 +169,8 @@ public class EntrezUtils {
      * Retrieve the results of a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
     public static URL fetch( String db, EntrezQuery query, EntrezRetmode retmode, String rettype, int retstart, int retmax, @Nullable String apiKey ) {
-        Assert.isTrue( retstart >= 0 );
-        Assert.isTrue( retmax > 0 );
+        Assert.isTrue( retstart >= 0 , "expected true");
+        Assert.isTrue( retmax > 0 , "expected true");
         return createUrl( EFETCH
                 + "?db=" + urlEncode( db )
                 + "&query_key=" + urlEncode( query.getQueryId() )

@@ -18,17 +18,17 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.basecode.util.RegressionTesting;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
+import ubic.gemma.core.util.RegressionTesting;
 import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.context.TestComponent;
@@ -41,8 +41,7 @@ import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperiment
 import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
 import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
-import ubic.gemma.core.util.test.BaseTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -61,7 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -69,7 +68,7 @@ import static org.mockito.Mockito.when;
  * @author paul
  */
 @ContextConfiguration
-public class ExpressionDataSVDTest extends BaseTest {
+public class ExpressionDataSVDTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -87,6 +86,16 @@ public class ExpressionDataSVDTest extends BaseTest {
 
         @Bean
         public PersisterHelper persisterHelper() {
+            return mock();
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.EeWriteService eeWriteService() {
+            return mock();
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService expressionExperimentPrePersistService() {
             return mock();
         }
 
@@ -115,7 +124,7 @@ public class ExpressionDataSVDTest extends BaseTest {
     private ExpressionDataDoubleMatrix testData = null;
     private ExpressionDataSVD svd = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
@@ -252,7 +261,7 @@ public class ExpressionDataSVDTest extends BaseTest {
      * Test on full-sized data set.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverterImpl();
         gc.setElementLimitForStrictness( 15000 );

@@ -22,7 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.BaseService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;

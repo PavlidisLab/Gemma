@@ -18,9 +18,28 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -28,8 +47,6 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import javax.annotation.Nullable;
-import javax.persistence.Transient;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -37,24 +54,90 @@ import java.util.stream.Collectors;
 
 /**
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
+ * <p>
+ * Hibernate Search 7 mapping: indexed root and embedded contributor to
+ * {@link ExperimentalFactor#getFactorValues()}. Pulls each {@link Statement} characteristic
+ * (a {@link Characteristic} subtype with predicate + object slots) into the EE document.
  */
 @Indexed
+@Entity
+@Table(name = "FACTOR_VALUE")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class FactorValue extends AbstractIdentifiable implements SecuredChild<ExpressionExperiment> {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "EXPERIMENTAL_FACTOR_FK", nullable = false, columnDefinition = "BIGINT")
     private ExperimentalFactor experimentalFactor;
+
     @Nullable
     @Deprecated
+    @Column(name = "`VALUE`", columnDefinition = "VARCHAR(255)")
     private String value;
+
     @Nullable
+    @Column(name = "IS_BASELINE", columnDefinition = "TINYINT")
     private Boolean isBaseline;
+
+    // assumed readily available in FactorValueValueObject
     @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
+    @JoinColumn(name = "MEASUREMENT_FK", columnDefinition = "BIGINT", unique = true)
     private Measurement measurement;
+
+    // assumed readily available in FactorValueValueObject
+    // remove the where clause when old-style characteristics have been removed (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
+    //
+    // @Fetch(SUBSELECT) is deliberate. This is a Set<Statement>, and Statement is a SINGLE_TABLE subclass of
+    // Characteristic (@DiscriminatorValue("Statement")). Hibernate 6 renders the subclass discriminator of a
+    // *join-fetched* subclass collection as a derived table:
+    //   left join (select * from CHARACTERISTIC t where t.class='Statement') c on fv.ID=c.FACTOR_VALUE_FK
+    // On MySQL 5.7 that derived table can stop being merged once several such prepared statements coexist on a
+    // pooled connection (Hibernate + HikariCP cachePrepStmts) and be materialized in full (~178k Statement rows)
+    // on execute -- reproduced at ~3.5s in a combined fetch. SUBSELECT keeps the collection eager but loads it in
+    // its own statement so it never lands inside a larger combined fetch (e.g. initializing
+    // ExperimentalDesign.experimentalFactors for /datasets/{id}/design). NB: the dominant /design first-contact
+    // cost was the ExperimentalFactor.annotations join, not this -- see ExperimentalFactor#annotations -- but
+    // keeping these statements out of combined fetches removes the materialization hazard as well.
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SUBSELECT)
+    @JoinColumn(name = "FACTOR_VALUE_FK", columnDefinition = "BIGINT",
+            foreignKey = @jakarta.persistence.ForeignKey(name = "CHARACTERISTIC_FACTOR_VALUE_FKC"))
+    @SQLRestriction("class = 'Statement'")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Statement> characteristics = new HashSet<>();
+
+    // non-migrated characteristics
+    // remove this mapping once all old-style characteristics have been migrated (see https://github.com/PavlidisLab/Gemma/issues/929 for details)
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "FACTOR_VALUE_FK", columnDefinition = "BIGINT",
+            foreignKey = @jakarta.persistence.ForeignKey(name = "CHARACTERISTIC_FACTOR_VALUE_FKC"))
+    @SQLRestriction("class is null")
+    @Immutable
+    @Cascade({ org.hibernate.annotations.CascadeType.DETACH, org.hibernate.annotations.CascadeType.REMOVE })
     @Deprecated
     private Set<Characteristic> oldStyleCharacteristics = new HashSet<>();
 
+    @Column(name = "NEEDS_ATTENTION", nullable = false, columnDefinition = "TINYINT")
     private boolean needsAttention;
 
+    /**
+     * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
+     * backing this factor value as a curated claim — the same verbatim provenance
+     * {@link ubic.gemma.model.common.description.Characteristic#getSupportingEvidence()} carries for a tag or a
+     * statement. Stored as-is; Gemma does not parse or query it, so the agents repo owns the evidence schema.
+     * <p>
+     * 🛑 Distinct from the evidence on this value's {@link #getCharacteristics() statements}, which is not a
+     * fallback for it. A statement's evidence backs the triple; this backs the VALUE — its label, its baseline
+     * flag, its measurement, the samples it covers — and a value carrying no statements at all (a continuous
+     * value, a plain free-text one) can still have a curator's justification behind it. Null when none was
+     * recorded.
+     */
+    @Nullable
+    @Column(name = "SUPPORTING_EVIDENCE", columnDefinition = "TEXT")
+    private String supportingEvidence;
+
+    @Transient
     private ExpressionExperiment securityOwner = null;
 
     @Override
@@ -114,6 +197,7 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
     /**
      * Collection of {@link Statement} describing this factor value.
      */
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<Statement> getCharacteristics() {
         return this.characteristics;
@@ -152,6 +236,15 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
         this.needsAttention = troubled;
     }
 
+    @Nullable
+    public String getSupportingEvidence() {
+        return supportingEvidence;
+    }
+
+    public void setSupportingEvidence( @Nullable String supportingEvidence ) {
+        this.supportingEvidence = supportingEvidence;
+    }
+
     @Transient
     @Override
     public ExpressionExperiment getSecurityOwner() {
@@ -164,8 +257,20 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
 
     @Override
     public int hashCode() {
-        // experimentalFactor is lazy-loaded, so it cannot be used in the hashCode() implementation
-        return Objects.hash( getMeasurement(), getCharacteristics() );
+        // Constant on purpose. The previous Objects.hash( getMeasurement(), getCharacteristics() ) moved
+        // whenever a statement was added to, removed from or re-termed on this factor value, because a Set's
+        // hash is the sum of its elements' and Statement hashes its predicate/object content. BioMaterial
+        // holds its factor values in a HashSet mapped @ManyToMany onto BIO_MATERIAL_FACTOR_VALUES, so an
+        // element whose hash moved mid-transaction is no longer where Hibernate's load-time snapshot recorded
+        // it, and the flush emits an INSERT for a join row that already exists: 19 of a 500-dataset curation
+        // run died on `Duplicate entry '520917-172185'` (cab, 2026-09-01, GSE117511 and 18 others). It took a
+        // commit that BOTH edited an existing factor value's statements and assigned a new factor value to the
+        // same biomaterial — the edit moved the hash, the assignment forced the collection to flush.
+        //
+        // experimentalFactor is lazy-loaded and the id flips null → value on persist, so neither of those can
+        // be hashed either. That leaves nothing stable to hash, and a constant is always correct: it costs a
+        // linear scan within one bucket, over collections that hold a handful of factor values.
+        return getClass().hashCode();
     }
 
     @Override

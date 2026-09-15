@@ -53,6 +53,13 @@ if [ ! -d "$gemma_cli_dir" ]; then
 fi
 
 echo "Generating Gemma CLI Wiki pages under $gemma_cli_wiki_dir..."
+# A Spring profile must be named explicitly. The silent fallback to 'dev' was removed
+# in 8ce6091b81 (CONFIG_AUDIT HIGH #3) because it hid a missing
+# -Dspring.profiles.active=production in container deployments; this script had been
+# relying on that fallback and started failing with "No Spring environment profile is
+# active" the first time it ran afterwards. 'dev' reproduces what it used to get. The
+# appassembler launcher passes $JAVA_OPTS through to the JVM.
+JAVA_OPTS="-Dspring.profiles.active=dev $JAVA_OPTS" \
 ./gemma-cli/target/appassembler/bin/gemma-cli --completion --completion-wiki --completion-wiki-output-dir "$gemma_cli_wiki_dir" --completion-wiki-page-suffix "$gemma_cli_wiki_page_suffix"
 
 echo "Deploying Gemma CLI Wiki to $wiki_dest..."

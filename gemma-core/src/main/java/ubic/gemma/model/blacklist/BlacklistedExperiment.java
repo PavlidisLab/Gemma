@@ -19,11 +19,16 @@
 
 package ubic.gemma.model.blacklist;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+
 /**
  * TODO Document Me
  *
  * @author paul
  */
+@Entity
+@DiscriminatorValue("blexperiment")
 public class BlacklistedExperiment extends BlacklistedEntity {
 
     @Override

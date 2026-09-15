@@ -20,15 +20,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.loader.crossref.CrossRefFetcher;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
-import ubic.gemma.model.common.search.SearchResult;
-import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentIdAndShortName;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
@@ -36,14 +35,29 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Implementation of BibliographicReferenceService.
- * Note: This is only in Core because it uses SearchService, but it could be refactored.
+ * Implementation of {@link BibliographicReferenceService}.
+ * <p>
+ * As of the Phase 3 strangler-fig decomposition, the read cluster (browse,
+ * findByExternalId variants, findVOByExternalId, count*, getRelatedExperiments,
+ * listAll, search, thaw) lives on {@link BibliographicReferenceReadService}; this
+ * facade delegates to that read service. Write-side methods (refresh + the inherited
+ * BaseService mutators) stay here.
+ * <p>
+ * Note: This is only in Core because it uses SearchService (via the read service),
+ * but it could be refactored.
  *
  * @author keshav
  * @see BibliographicReferenceService
+ * @see BibliographicReferenceReadService
  */
 @Service
 @ParametersAreNonnullByDefault
@@ -54,16 +68,20 @@ public class BibliographicReferenceServiceImpl
     private final BibliographicReferenceDao bibliographicReferenceDao;
 
     @Autowired
-    private SearchService searchService;
-
+    private BibliographicReferenceReadService bibliographicReferenceReadService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExternalDatabaseDao externalDatabaseDao;
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
     private PubMedSearch pubMedXmlFetcher;
+
+    private CrossRefFetcher crossRefFetcher;
 
     @Autowired
     public BibliographicReferenceServiceImpl( BibliographicReferenceDao bibliographicReferenceDao ) {
@@ -74,6 +92,108 @@ public class BibliographicReferenceServiceImpl
     @Override
     public void afterPropertiesSet() throws Exception {
         this.pubMedXmlFetcher = new PubMedSearch( ncbiApiKey );
+        this.crossRefFetcher = new CrossRefFetcher();
+    }
+
+    /**
+     * Find an existing BibliographicReference by its pubAccession, or create a new one.
+     * The embedded {@link ExternalDatabase} on the pubAccession is resolved (find-or-create
+     * by name) before delegating to {@link BibliographicReferenceDao#findOrCreate} so the
+     * caller can pass a transient XDB instance without violating the
+     * {@code cascade="none"} on {@code DatabaseEntry.externalDatabase}.
+     * <p>
+     * Phase 3 persister-retirement: replaces {@code persisterHelper.persist(BibRef)}
+     * (which routed through {@code CommonPersister.persistBibliographicReference}).
+     */
+    @Override
+    @Transactional
+    public BibliographicReference findOrCreate( BibliographicReference ref ) {
+        if ( ref.getPubAccession() != null && ref.getPubAccession().getExternalDatabase() != null ) {
+            ExternalDatabase xdb = ref.getPubAccession().getExternalDatabase();
+            if ( xdb.getId() == null ) {
+                ExternalDatabase existing = externalDatabaseDao.find( xdb );
+                ref.getPubAccession().setExternalDatabase( existing != null ? existing : externalDatabaseDao.create( xdb ) );
+            }
+        }
+        return bibliographicReferenceDao.findOrCreate( ref );
+    }
+
+    @Override
+    @Transactional
+    public BibliographicReference findOrCreateByPubMedId( String pubMedId ) {
+        if ( StringUtils.isBlank( pubMedId ) ) {
+            throw new IllegalArgumentException( "Must provide a PubMed ID." );
+        }
+        BibliographicReference existing = bibliographicReferenceReadService.findByExternalId( pubMedId, ExternalDatabases.PUBMED );
+        if ( existing != null ) {
+            return existing;
+        }
+        BibliographicReference fresh;
+        try {
+            fresh = this.pubMedXmlFetcher.retrieve( pubMedId );
+        } catch ( IOException e ) {
+            throw new IllegalStateException( "Unable to retrieve record from PubMed for id=" + pubMedId, e );
+        }
+        if ( fresh == null || fresh.getPublicationDate() == null ) {
+            throw new IllegalStateException( "No PubMed record found for id=" + pubMedId + "." );
+        }
+        // retrieve() populates the pubAccession with a transient PubMed ExternalDatabase; findOrCreate
+        // resolves that XDB before delegating to the DAO (see findOrCreate above).
+        return findOrCreate( fresh );
+    }
+
+    @Override
+    @Transactional
+    public BibliographicReference findOrCreateByDoi( String doi ) {
+        if ( StringUtils.isBlank( doi ) ) {
+            throw new IllegalArgumentException( "Must provide a DOI." );
+        }
+        String normalized = normalizeDoi( doi );
+
+        // (1) already stored under the DOI namespace?
+        BibliographicReference existing = bibliographicReferenceReadService.findByExternalId( normalized, ExternalDatabases.DOI );
+        if ( existing != null ) {
+            return existing;
+        }
+
+        // (2) PubMed-by-DOI — covers DOIs NCBI indexes; yields the richer PubMed record (keyed by PMID).
+        try {
+            Collection<BibliographicReference> fromPubMed = pubMedXmlFetcher.searchAndRetrieveByDoi( normalized );
+            if ( fromPubMed != null && !fromPubMed.isEmpty() ) {
+                return findOrCreate( fromPubMed.iterator().next() );
+            }
+        } catch ( IOException e ) {
+            log.warn( "PubMed-by-DOI lookup failed for " + normalized + ", falling back to CrossRef.", e );
+        }
+
+        // (3) CrossRef — covers the rest, notably bioRxiv / medRxiv preprints.
+        BibliographicReference fromCrossRef;
+        try {
+            fromCrossRef = crossRefFetcher.retrieveByDoi( normalized );
+        } catch ( IOException e ) {
+            throw new IllegalStateException( "Unable to retrieve record from CrossRef for DOI=" + normalized, e );
+        }
+        if ( fromCrossRef == null ) {
+            throw new IllegalStateException( "No PubMed or CrossRef record found for DOI=" + normalized + "." );
+        }
+        return findOrCreate( fromCrossRef );
+    }
+
+    /**
+     * Reduce a DOI in any common form ({@code https://doi.org/…}, {@code http://dx.doi.org/…},
+     * {@code doi:…}) to its bare, lower-cased form. Mirrors the stripping in
+     * {@link PubMedSearch#searchAndRetrieveByDoi(String)} so the same DOI resolves and stores identically
+     * whichever way a curator pastes it.
+     */
+    static String normalizeDoi( String doi ) {
+        String d = doi.trim();
+        for ( String prefix : new String[] { "https://doi.org/", "http://doi.org/", "https://dx.doi.org/", "http://dx.doi.org/", "doi:" } ) {
+            if ( StringUtils.startsWithIgnoreCase( d, prefix ) ) {
+                d = d.substring( prefix.length() );
+                break;
+            }
+        }
+        return d.toLowerCase();
     }
 
     @Override
@@ -89,88 +209,59 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BibliographicReference> browse( int start, int limit ) {
-        return this.bibliographicReferenceDao.browse( start, limit );
+        return bibliographicReferenceReadService.browse( start, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BibliographicReference> browse( int start, int limit, String orderField, boolean descending ) {
-        return this.bibliographicReferenceDao.browse( start, limit, orderField, descending );
+        return bibliographicReferenceReadService.browse( start, limit, orderField, descending );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BibliographicReference findByExternalId( DatabaseEntry accession ) {
-        return this.bibliographicReferenceDao.findByExternalId( accession );
+        return bibliographicReferenceReadService.findByExternalId( accession );
     }
 
     @Override
-    @Transactional
     public BibliographicReference findByExternalId( String id ) {
-
-        return this.bibliographicReferenceDao
-                .findByExternalId( id, ExternalDatabases.PUBMED );
-
+        return bibliographicReferenceReadService.findByExternalId( id );
     }
 
     @Override
-    @Transactional
     public BibliographicReference findByExternalId( String id, String databaseName ) {
-
-        return this.bibliographicReferenceDao.findByExternalId( id, databaseName );
+        return bibliographicReferenceReadService.findByExternalId( id, databaseName );
     }
 
-    /**
-     * @see BibliographicReferenceService#findVOByExternalId(String)
-     */
     @Override
-    @Transactional(readOnly = true)
     public BibliographicReferenceValueObject findVOByExternalId( final String id ) {
-        try {
-            BibliographicReference bibref = this.findByExternalId( id );
-            if ( bibref == null ) {
-                return null;
-            }
-            BibliographicReferenceValueObject bibrefVO = new BibliographicReferenceValueObject( bibref );
-            this.populateRelatedExperiments( bibref, bibrefVO );
-            return bibrefVO;
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'BibliographicReferenceService.findByExternalId(String id)' --> " + th, th );
-        }
+        return bibliographicReferenceReadService.findVOByExternalId( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long countDistinctWithRelatedExperiments() {
-        return this.bibliographicReferenceDao.countDistinctWithRelatedExperiments();
+        return bibliographicReferenceReadService.countDistinctWithRelatedExperiments();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public long countWithRelatedExperiments() {
-        return this.bibliographicReferenceDao.countWithRelatedExperiments();
+        return bibliographicReferenceReadService.countWithRelatedExperiments();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> getRelatedExperiments( int offset, int limit ) {
-        return this.bibliographicReferenceDao.getRelatedExperiments( offset, limit );
+        return bibliographicReferenceReadService.getRelatedExperiments( offset, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records ) {
-        return this.bibliographicReferenceDao.getRelatedExperiments( records );
+        return bibliographicReferenceReadService.getRelatedExperiments( records );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<Long> listAll() {
-        return bibliographicReferenceDao.listAll();
+        return bibliographicReferenceReadService.listAll();
     }
 
     @Override
@@ -232,70 +323,23 @@ public class BibliographicReferenceServiceImpl
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query, boolean searchExperiments, boolean searchBibrefs ) throws SearchException {
-        SearchSettings ss = SearchSettings.bibliographicReferenceSearch( query );
-
-        List<SearchResult<BibliographicReference>> resultEntities = searchService.search( ss )
-                .getByResultObjectType( BibliographicReference.class );
-
-        List<BibliographicReferenceValueObject> results = new ArrayList<>();
-
-        // only return associations with the selected entity types.
-        for ( SearchResult<BibliographicReference> sr : resultEntities ) {
-            BibliographicReference entity = sr.getResultObject();
-            if ( entity == null )
-                continue; // might be a compass hit that is no longer valid
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
-
-
-            if ( searchExperiments || searchBibrefs ) {
-                this.populateRelatedExperiments( entity, vo );
-                if ( !vo.getExperiments().isEmpty() || searchBibrefs ) {
-                    results.add( vo );
-                }
-            }
-
-            if ( searchBibrefs && !searchExperiments ) {
-                results.add( vo );
-            }
-
-        }
-
-        return results;
+        return bibliographicReferenceReadService.search( query, searchExperiments, searchBibrefs );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query ) throws SearchException {
-        List<SearchResult<BibliographicReference>> resultEntities = searchService
-                .search( SearchSettings.bibliographicReferenceSearch( query ) )
-                .getByResultObjectType( BibliographicReference.class );
-        List<BibliographicReferenceValueObject> results = new ArrayList<>();
-        for ( SearchResult<BibliographicReference> sr : resultEntities ) {
-            BibliographicReference entity = sr.getResultObject();
-            if ( entity == null ) {
-                continue;
-            }
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
-            this.populateRelatedExperiments( entity, vo );
-            results.add( vo );
-        }
-
-        return results;
-
+        return bibliographicReferenceReadService.search( query );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
-        return this.bibliographicReferenceDao.thaw( bibliographicReference );
+        return bibliographicReferenceReadService.thaw( bibliographicReference );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
-        return this.bibliographicReferenceDao.thaw( bibliographicReferences );
+        return bibliographicReferenceReadService.thaw( bibliographicReferences );
     }
 
     private List<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
@@ -313,18 +357,6 @@ public class BibliographicReferenceServiceImpl
         this.populateRelatedExperiments( bibRefs, idToBibRefVO );
 
         return new ArrayList<>( idToBibRefVO.values() );
-    }
-
-    private void populateRelatedExperiments( BibliographicReference bibRef,
-            BibliographicReferenceValueObject bibRefVO ) {
-        Collection<ExpressionExperiment> relatedExperiments = this.bibliographicReferenceDao
-                .getRelatedExperiments( Collections.singleton( ( bibRef ) ) )
-                .getOrDefault( ( bibRef ), Collections.emptyList() );
-        if ( relatedExperiments.isEmpty() ) {
-            bibRefVO.setExperiments( new ArrayList<>() );
-        } else {
-            bibRefVO.setExperiments( expressionExperimentService.loadValueObjects( relatedExperiments ) );
-        }
     }
 
     private void populateRelatedExperiments( Collection<BibliographicReference> bibRefs,

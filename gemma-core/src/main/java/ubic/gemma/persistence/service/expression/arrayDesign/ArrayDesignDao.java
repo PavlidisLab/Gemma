@@ -13,11 +13,13 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.CachedFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,25 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
         CachedFilteringVoEnabledDao<ArrayDesign, ArrayDesignValueObject> {
 
     String OBJECT_ALIAS = "ad";
+
+    /**
+     * Load a batch of {@link ArrayDesign}s by ID and return them keyed by ID for O(1) per-id
+     * lookup. Issues a single {@code WHERE id IN (...)} fetch (delegating to the base DAO's
+     * {@link #load(Collection)}), then collects to a map.
+     * <p>
+     * Use this in place of N×{@code Session.get(ArrayDesign.class, id)} loop patterns — see
+     * round-2 perf probe finding #8 ({@code PERF_PROBE_REPORT_ROUND2.md}): 20 sequential PK
+     * lookups (~138 ms each on the prod tunnel) cost ~2,766 ms, vs ~121 ms for a single
+     * batched fetch.
+     * <p>
+     * The returned map preserves no ordering. The base loader fetches the AD root entity only —
+     * lazy collections (e.g. {@code designElements}, {@code compositeSequences}) are NOT
+     * initialised; callers that need them must thaw explicitly to avoid a secondary N+1.
+     *
+     * @param ids platform IDs to load; an empty collection returns an empty map
+     * @return a map of id → {@link ArrayDesign} for every id that resolved to a row
+     */
+    Map<Long, ArrayDesign> loadAsMap( Collection<Long> ids );
 
     Collection<ArrayDesign> loadAllGenericGenePlatforms();
 
@@ -76,6 +97,7 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     long countGenes( boolean useGene2Cs );
 
     long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
+
 
     /**
      * Obtain all the genes associated to the platform organized by corresponding design elements.
@@ -131,6 +153,18 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
+    /**
+     * Load the platforms a dataset was ORIGINALLY submitted on, before any platform switch.
+     * <p>
+     * A dataset can have more than one — its assays need not have come from a single submitted platform. A
+     * platform recorded as an original that is ALSO the one in use is a no-op switch and is left out, so an
+     * unswitched dataset answers with an empty list rather than echoing its current platform. That is the same
+     * rule the details VO applies, kept identical so the two cannot drift into disagreeing.
+     *
+     * @see #loadValueObjectsForEE(Long)
+     */
+    List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( Long eeId );
+
     long countCompositeSequencesWithBioSequences();
 
     long countCompositeSequencesWithBlatResults();
@@ -175,4 +209,12 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     void deleteGeneProductAnnotationAssociations( ArrayDesign arrayDesign );
 
     Slice<ArrayDesignValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * Cursor-mode counterpart to {@link #loadBlacklistedValueObjects(Filters, Sort, int, int)}:
+     * keyset pagination over the blacklisted platforms, applying the same shortName/accession
+     * blacklist filter that the offset-mode variant composes — see
+     * {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1h.
+     */
+    CursorPage<ArrayDesignValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit );
 }

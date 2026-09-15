@@ -19,10 +19,10 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -31,7 +31,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneAlias;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -39,12 +39,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author jsantos
  */
-public class GeneServiceTest extends BaseIntegrationTest {
+public class GeneServiceTest extends BaseIntegrationTest5 {
 
     private static final String TEST_GENE_NAME = "test_genedao" + RandomStringUtils.insecure().next( 3 );
 
@@ -58,12 +58,12 @@ public class GeneServiceTest extends BaseIntegrationTest {
     private TaxonService taxonService;
 
     @Autowired
-    private Persister persisterHelper;
+    private GenomePersister genomePersister;
 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
 
-    @After
+    @AfterEach
     public void tearDown() {
         Collection<Gene> testGene = geneService.findByOfficialSymbol( GeneServiceTest.TEST_GENE_NAME );
         for ( Gene gene : testGene ) {
@@ -172,7 +172,7 @@ public class GeneServiceTest extends BaseIntegrationTest {
         gene.setTaxon( human );
         PhysicalLocation pl1 = PhysicalLocation.Factory.newInstance();
         Chromosome chromosome = Chromosome.Factory.newInstance( "X", null, testHelper.getTestPersistentBioSequence(), human );
-        chromosome = persisterHelper.persist( chromosome );
+        chromosome = genomePersister.persistChromosome( chromosome );
         pl1.setChromosome( chromosome );
         pl1.setNucleotide( 10000010L );
         pl1.setNucleotideLength( 1001 );
@@ -192,7 +192,7 @@ public class GeneServiceTest extends BaseIntegrationTest {
         gene2.setTaxon( human );
         PhysicalLocation pl2 = PhysicalLocation.Factory.newInstance();
         Chromosome chromosome2 = Chromosome.Factory.newInstance( "Y", null, testHelper.getTestPersistentBioSequence(), human );
-        chromosome2 = persisterHelper.persist( chromosome2 );
+        chromosome2 = genomePersister.persistChromosome( chromosome2 );
         pl2.setChromosome( chromosome2 );
         pl2.setChromosome( chromosome );
         pl2.setNucleotide( 10000010L );

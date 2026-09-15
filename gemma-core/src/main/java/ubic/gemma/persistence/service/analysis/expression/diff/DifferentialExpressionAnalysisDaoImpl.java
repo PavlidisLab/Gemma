@@ -20,17 +20,16 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
@@ -48,8 +47,7 @@ import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Thaws;
 
-import javax.annotation.Nullable;
-import java.io.Serializable;
+import org.springframework.lang.Nullable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -72,6 +70,31 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
      */
     private static final SqlStatementLogger statementLogger = new SqlStatementLogger();
 
+    /**
+     * Rows per {@code executeBatch()} when writing an analysis's results and contrasts.
+     *
+     * <h4>🛑 Why there has to be a bound at all</h4>
+     *
+     * <p>{@code gemma.db.hikari.rewriteBatchedStatements=true} (default.properties:93) makes the driver rewrite
+     * an accumulated batch into ONE multi-row {@code INSERT ... VALUES (…),(…),…}. Batching the whole analysis
+     * and calling {@code executeBatch()} once therefore built a single packet whose size grew with the total
+     * number of contrasts, with nothing bounding it.</p>
+     *
+     * <p>It landed on production 2026-09-10, GSE31534 (eid 5341):
+     * {@code PacketTooBigException: Packet for query is too large (293,298,585 > 268,435,456)}. 47 genotype
+     * levels over GPL570 is 46 contrasts x 54,681 probes = 2,515,326 rows in one statement, ~117 bytes each —
+     * frinkbro's arithmetic lands on the observed packet, so the mechanism was confirmed rather than inferred.
+     * The ceiling was roughly 2.3M contrast rows, i.e. ~42 contrasts on GPL570 or ~115 on a 20k-probe platform.</p>
+     *
+     * <p>🛑 Paul, 2026-09-10, ruling out the server's own suggestion in that message: <em>"we should just do the
+     * commits in smaller batches."</em> Raising {@code max_allowed_packet} is global, applies to every
+     * connection, and only moves the cliff — the packet is linear in the size of the analysis.</p>
+     *
+     * <p>50,000 rows is ~6 MB against the 256 MB default, two orders of margin. It is unrelated to
+     * {@code gemma.hibernate.jdbc_batch_size} (32), which this hand-built JDBC path never consults.</p>
+     */
+    private static final int INSERT_BATCH_SIZE = 50_000;
+
     private static final String
             INSERT_RESULT_SQL = "insert into DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT (ID, PVALUE, CORRECTED_PVALUE, `RANK`, CORRECTED_P_VALUE_BIN, PROBE_FK, RESULT_SET_FK) values (?, ?, ?, ?, ?, ?, ?)",
             INSERT_CONTRAST_SQL = "insert into CONTRAST_RESULT (ID, PVALUE, TSTAT, FACTOR_VALUE_FK, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, COEFFICIENT, LOG_FOLD_CHANGE, SECOND_FACTOR_VALUE_FK) values (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -85,11 +108,11 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     @Autowired
     public DifferentialExpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
         super( DifferentialExpressionAnalysis.class, sessionFactory );
-        resultPersister = ( ( SessionFactoryImpl ) sessionFactory )
-                .getEntityPersister( DifferentialExpressionAnalysisResult.class.getName() );
-        contrastPersister = ( ( SessionFactoryImpl ) sessionFactory )
-                .getEntityPersister( ContrastResult.class.getName() );
-        bioAssaySetBatchSize = HibernateUtils.getBatchSize( sessionFactory.getClassMetadata( BioAssaySet.class ), sessionFactory );
+        resultPersister = ( ( org.hibernate.engine.spi.SessionFactoryImplementor ) sessionFactory )
+                .getMappingMetamodel().getEntityDescriptor( DifferentialExpressionAnalysisResult.class.getName() );
+        contrastPersister = ( ( org.hibernate.engine.spi.SessionFactoryImplementor ) sessionFactory )
+                .getMappingMetamodel().getEntityDescriptor( ContrastResult.class.getName() );
+        bioAssaySetBatchSize = HibernateUtils.getBatchSize( BioAssaySet.class, sessionFactory );
     }
 
     /**
@@ -177,6 +200,13 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
                     insertResultStmt.setLong( 7, rs.getId() );
                     insertResultStmt.addBatch();
                     results.add( result );
+                    // Flush every INSERT_BATCH_SIZE rows so the rewritten multi-row INSERT stays well inside
+                    // max_allowed_packet. insertRowsAndAssignGeneratedKeys reads the generated keys for exactly
+                    // the objects it was handed, so per-chunk calls stay aligned by construction.
+                    if ( results.size() >= INSERT_BATCH_SIZE ) {
+                        insertRowsAndAssignGeneratedKeys( INSERT_RESULT_SQL, insertResultStmt, results, resultPersister, ( SessionImplementor ) session );
+                        results.clear();
+                    }
                 }
             }
 
@@ -203,6 +233,13 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
                         }
                         insertContrastStmt.addBatch();
                         contrasts.add( cr );
+                        // 🛑 The contrasts are the ones that overflow: this loop is per contrast per result,
+                        // where the one above is per result. Chunking here is safe for the same reason, and the
+                        // result ids these rows reference were all assigned before this loop began.
+                        if ( contrasts.size() >= INSERT_BATCH_SIZE ) {
+                            insertRowsAndAssignGeneratedKeys( INSERT_CONTRAST_SQL, insertContrastStmt, contrasts, contrastPersister, ( SessionImplementor ) session );
+                            contrasts.clear();
+                        }
                     }
                 }
             }
@@ -216,22 +253,36 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     }
 
     private void insertRowsAndAssignGeneratedKeys( String insertSql, PreparedStatement insertStmt, List<?> objects, EntityPersister persister, SessionImplementor session ) throws SQLException {
+        // Nothing pending. Guarded here rather than at each call site so a caller that flushes in chunks cannot
+        // forget it: the trailing flush after a loop sees an empty list whenever the total is an exact multiple
+        // of the chunk size, and an analysis can legitimately have no contrasts at all.
+        if ( objects.isEmpty() ) {
+            return;
+        }
         statementLogger.logStatement( insertSql + String.format( " [repeated %d times]", objects.size() ) );
-        ensureExpectedRowsAreInserted( insertStmt, insertStmt.executeBatch() );
-        ResultSet rs = insertStmt.getGeneratedKeys();
-        String idProp = persister.getIdentifierPropertyName();
-        Type idType = persister.getIdentifierType();
-        for ( Object object : objects ) {
-            Serializable id = IdentifierGeneratorHelper.getGeneratedIdentity( rs, idProp, idType );
-            persister.setIdentifier( object, id, session );
+        ensureExpectedRowsAreInserted( insertSql, insertStmt, insertStmt.executeBatch() );
+        // Direct JDBC read of getGeneratedKeys() instead of the deprecated
+        // IdentifierGeneratorHelper.getGeneratedIdentity(idProp, rs, PostInsertIdentityPersister, ...)
+        // — both PostInsertIdentityPersister and the helper method are marked for removal
+        // in Hibernate 7. DifferentialExpressionAnalysisResult's id is a Long, column 1 of the
+        // single-key result set, so rs.getLong(1) suffices.
+        try ( ResultSet rs = insertStmt.getGeneratedKeys() ) {
+            for ( Object object : objects ) {
+                if ( !rs.next() ) {
+                    throw new HibernateException( "Expected a generated identity row for every batched insert into " + persister.getEntityName() );
+                }
+                Long id = rs.getLong( 1 );
+                persister.setIdentifier( object, id, session );
+            }
         }
     }
 
-    private void ensureExpectedRowsAreInserted( PreparedStatement statement, int[] batchStatus ) throws
+    private void ensureExpectedRowsAreInserted( String insertSql, PreparedStatement statement, int[] batchStatus ) throws
             HibernateException, SQLException {
         int i = 0;
         for ( int bs : batchStatus ) {
-            Expectations.BASIC.verifyOutcome( bs, statement, i++ );
+            // Hibernate 5: verifyOutcome gained a sql String parameter.
+            Expectations.BASIC.verifyOutcome( bs, statement, i++, insertSql );
         }
     }
 
@@ -358,7 +409,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         for ( Collection<Long> batch : batchParameterList( IdentifiableUtils.getIds( probes ), 1024 ) ) {
             //noinspection unchecked
             ids.addAll( this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select a.EXPERIMENT_ANALYZED_FK from ANALYSIS a "
+                    .createNativeQuery( "select a.EXPERIMENT_ANALYZED_FK from ANALYSIS a "
                             + "join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK = a.EXPERIMENT_ANALYZED_FK "
                             + "join BIO_MATERIAL bm ON bm.ID = ba.SAMPLE_USED_FK "
                             + "join TAXON t ON bm.SOURCE_TAXON_FK = t.ID "
@@ -412,15 +463,60 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
         log.info( "Removing " + analysis + "..." );
         List<Long> resultSetIds = IdentifiableUtils.getIds( analysis.getResultSets() );
         if ( !resultSetIds.isEmpty() ) {
-            int removedContrasts = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )
+            Session session = getSessionFactory().getCurrentSession();
+            int removedContrasts = session
+                    .createNativeQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )
                     .setParameterList( "resultSetIds", resultSetIds )
                     .executeUpdate();
-            int removedResults = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "delete dear from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds)" )
+            int removedResults = session
+                    .createNativeQuery( "delete dear from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds)" )
                     .setParameterList( "resultSetIds", resultSetIds )
                     .executeUpdate();
             log.info( String.format( "Removed %d results and %d contrasts from %s.", removedResults, removedContrasts, analysis ) );
+
+            /*
+             * Hibernate 6 fix (HIBERNATE6_CASCADE_AUDIT.md HIGH #2).
+             *
+             * The two native bulk deletes above wipe DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT
+             * + CONTRAST_RESULT rows directly at the DB level, bypassing the
+             * session entirely. Any DifferentialExpressionAnalysisResult /
+             * ContrastResult instances that the caller already loaded into
+             * the session (the test exercises this; service callers that
+             * read result-sets before deleting also do) are now dangling
+             * references to deleted DB rows. Without explicit eviction the
+             * subsequent `super.remove(analysis)` / `session.remove(analysis)`
+             * cascade triggers HB6's ACTION_CHECK_ON_FLUSH walk through
+             * `resultSets` -> each ExpressionAnalysisResultSet -> its
+             * `results` bag (still holding stale managed DEARs whose
+             * `resultSet` many-to-one points at an ExpressionAnalysisResultSet
+             * now in DELETING state), and HB6 raises TransientObjectException
+             * on `persistent instance references an unsaved transient
+             * instance of ExpressionAnalysisResultSet`. Evict the stale
+             * child entities explicitly so the cascade walk only sees the
+             * parent graph that `session.remove(analysis)` is actually
+             * authorised to delete.
+             *
+             * Companion to 02c87a91ed (AnalysisResultSet + DEAResult L2
+             * cache drop, HIGH #3) and ab8b4c443c (AuditEvent L2 cache
+             * drop). Pattern A + B + D from the audit doc.
+             */
+            for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+                if ( !org.hibernate.Hibernate.isInitialized( rs.getResults() ) ) {
+                    continue;
+                }
+                for ( DifferentialExpressionAnalysisResult der : rs.getResults() ) {
+                    if ( org.hibernate.Hibernate.isInitialized( der.getContrasts() ) ) {
+                        for ( ContrastResult cr : der.getContrasts() ) {
+                            if ( session.contains( cr ) ) {
+                                session.evict( cr );
+                            }
+                        }
+                    }
+                    if ( session.contains( der ) ) {
+                        session.evict( der );
+                    }
+                }
+            }
         }
         super.remove( analysis );
     }
@@ -622,7 +718,7 @@ class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpr
     }
 
     private ExpressionExperiment getSourceExperiment( DifferentialExpressionAnalysis analysis ) {
-        BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
+        BioAssaySet experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( analysis.getExperimentAnalyzed() );
         if ( experimentAnalyzed instanceof ExpressionExperiment ) {
             return ( ExpressionExperiment ) experimentAnalyzed;
         } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {

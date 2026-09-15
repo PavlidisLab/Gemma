@@ -16,6 +16,9 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,20 +34,24 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
+import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 import static ubic.gemma.rest.util.Responders.paginate;
+import static ubic.gemma.rest.util.Responders.paginateByCursor;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -150,13 +157,38 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all genes in a given taxon")
-    public PaginatedResponseDataObject<GeneValueObject> getTaxonGenes(
+    @Operation(summary = "Retrieve all genes in a given taxon",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the `taxon.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getTaxonGenes(
             @PathParam("taxon") TaxonArg<?> taxonArg,
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
-        Slice<GeneValueObject> slice = geneArgService.getGenesInTaxon( taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() );
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms/{platform}/datasets step 1f).
+            // In cursor mode we currently force a +id sort (GeneArgService.getGenesInTaxonByCursor)
+            // — the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived taxon.id filter is composed into the Filters inside
+            // getGenesInTaxonByCursor so the taxon scope is enforced identically in both modes.
+            CursorPage<GeneValueObject> page = geneArgService.getGenesInTaxonByCursor(
+                    taxon, cursorArg.getValue(), limitArg.getValue() );
+            geneService.populateAssociatedExperimentCount( page );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
+        Slice<GeneValueObject> slice = geneArgService.getGenesInTaxon( taxon, offsetArg.getValue(), limitArg.getValue() );
         geneService.populateAssociatedExperimentCount( slice );
         return paginate( slice, new String[] { "id" } );
     }
@@ -184,14 +216,40 @@ public class TaxaWebService {
     }
 
     /**
-     * @see GeneWebService#getGeneProbes(GeneArg, OffsetArg, LimitArg)
+     * @see GeneWebService#getGeneProbes
      */
     @GET
     @Path("/{taxon}/genes/{gene}/probes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the probes associated to a genes across all platforms in a given taxon")
-    public PaginatedResponseDataObject<CompositeSequenceValueObject> getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg ) {
-        return paginate( geneArgService.getGeneProbesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ), offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
+    @Operation(summary = "Retrieve the probes associated to a genes across all platforms in a given taxon",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes — a single gene can map to many probes across multi-platform inventories): "
+                    + "pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `cs.id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
+                    + "the path-derived `{taxon}` + `{gene}` constraints are preserved (taxon enforced at gene-resolution time, identical scope to the offset variant); "
+                    + "`totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    PaginatedResponseDataObject.class,
+                                    CursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg ) {
+        Taxon taxon = taxonArgService.getEntity( taxonArg );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /genes/{gene}/probes step 1m).
+            // In cursor mode we currently force a +id sort (GeneArgService.getGeneProbesInTaxonByCursor)
+            // — the DAO restricts cursors to single-component id sorts until the index audit lands.
+            // The path-derived taxon scope is enforced inside getGeneProbesInTaxonByCursor at
+            // gene-resolution time (getEntityWithTaxon), identical to the offset variant.
+            CursorPage<CompositeSequenceValueObject> page = geneArgService.getGeneProbesInTaxonByCursor( geneArg, taxon, cursorArg.getValue(), limitArg.getValue() );
+            return paginateByCursor( page, new String[] { "id" } );
+        }
+        return paginate( geneArgService.getGeneProbesInTaxon( geneArg, taxon, offsetArg.getValue(), limitArg.getValue() ), new String[] { "id" } );
     }
 
     /**
@@ -235,18 +293,40 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the datasets for a given taxon")
-    public FilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> getTaxonDatasets( // Params:
+    @Operation(summary = "Retrieve the datasets for a given taxon",
+            description = "Supports two pagination modes. Legacy mode: pass `offset` (and `limit`); response includes `offset` and `totalElements`. "
+                    + "Cursor mode (recommended for deep pagination and consistency under writes): pass an opaque `cursor` token from a previous response's `nextCursor` / `prevCursor` field. "
+                    + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
+                    + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); the `taxon.id = ?` constraint is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request).",
+            responses = {
+                    @ApiResponse(responseCode = "200",
+                            content = @Content(schema = @Schema(oneOf = {
+                                    FilteredAndPaginatedResponseDataObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObject.class
+                            }))),
+            })
+    public Object getTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
+            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort, // Optional, default +id
+            @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         // will raise a NotFoundException if the taxon is not found
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         Filters filters = datasetArgService.getFilters( filter )
                 .and( expressionExperimentService.getFilter( "taxon.id", Long.class, Filter.Operator.eq, taxon.getId() ) );
+        if ( cursorArg != null ) {
+            // Mutual-exclusion: a non-null cursor selects cursor mode. The default offset=0 is
+            // not considered user-supplied (parallels GET /platforms step 1c). In cursor mode we
+            // currently force a +id sort (DatasetArgService.getDatasetsByCursor) — the DAO
+            // restricts cursors to single-component id sorts until the index audit lands.
+            // The taxon.id filter still applies; it has been composed into `filters` above.
+            CursorPage<ExpressionExperimentValueObject> page = datasetArgService.getDatasetsByCursor(
+                    filters, cursorArg.getValue(), limit.getValue() );
+            return new FilteredAndCursorPaginatedResponseDataObject<>( page, filters, new String[] { "id" } );
+        }
         return paginate( expressionExperimentService::loadValueObjects, filters, new String[] { "id" }, datasetArgService.getSort( sort ), offset.getValue(), limit.getValue() );
     }
 }

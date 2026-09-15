@@ -2,10 +2,10 @@ package ubic.gemma.rest.util;
 
 import org.springframework.util.Assert;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotAcceptableException;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotAcceptableException;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;

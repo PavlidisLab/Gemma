@@ -1,6 +1,5 @@
 package ubic.gemma.core.util;
 
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.ClassUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -50,11 +49,17 @@ class StrictBeanDefinitionValidator implements Validator {
         return BeanDefinition.class.isAssignableFrom( clazz );
     }
 
-    @SneakyThrows
     @Override
     public void validate( Object target, Errors errors ) {
         BeanDefinition beanDefinition = ( BeanDefinition ) target;
-        Class<?> clazz = Class.forName( beanDefinition.getBeanClassName() );
+        Class<?> clazz;
+        try {
+            clazz = Class.forName( beanDefinition.getBeanClassName() );
+        } catch ( ClassNotFoundException e ) {
+            // Spring's Validator contract has no checked exceptions; surface the unresolvable
+            // bean class as an IllegalStateException so it isn't silently dropped.
+            throw new IllegalStateException( "Could not resolve bean class " + beanDefinition.getBeanClassName(), e );
+        }
         checkSerializable( clazz, errors );
         checkZeroArgumentConstructor( clazz, errors );
         checkFields( clazz, errors );

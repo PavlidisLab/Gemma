@@ -4,7 +4,7 @@ import lombok.Data;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -25,11 +25,13 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BrowsingDao;
 import ubic.gemma.persistence.service.CachedFilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.util.Cursor;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -75,6 +77,17 @@ public interface ExpressionExperimentDao
      */
     List<Identifiers> loadAllIdentifiers();
 
+    /**
+     * Load identifiers for the given experiments only.
+     * <p>
+     * Same projection and the same ACL restriction as {@link #loadAllIdentifiers()}: an id the caller
+     * cannot read simply does not come back, so a caller resolving names for a list it was handed
+     * cannot use this to learn about a dataset it could not otherwise see.
+     *
+     * @param ids the experiments to resolve; an empty collection yields an empty list without a query
+     */
+    List<Identifiers> loadIdentifiers( Collection<Long> ids );
+
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
     @Nullable
@@ -108,8 +121,10 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
 
+    @Nullable
     Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
+    @Nullable
     Collection<Long> findIdsByBioMaterial( BioMaterial bm, boolean includeSubSets );
 
     Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> bms );
@@ -176,6 +191,13 @@ public interface ExpressionExperimentDao
 
     Collection<ArrayDesign> getArrayDesignsUsed( Collection<ExpressionExperiment> ees );
 
+    /**
+     * Per-experiment map variant of {@link #getArrayDesignsUsed(Collection)}: one HQL covers all
+     * supplied EEs, the result preserves which platform belongs to which EE. EEs absent from the
+     * map have no resolved bio-assays.
+     */
+    Map<ExpressionExperiment, Collection<ArrayDesign>> getArrayDesignsUsedByExperiment( Collection<ExpressionExperiment> ees );
+
     Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> dataVectorType );
 
     /**
@@ -240,6 +262,7 @@ public interface ExpressionExperimentDao
 
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
+    @Nullable
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
@@ -275,6 +298,16 @@ public interface ExpressionExperimentDao
 
     Collection<BioAssayDimension> getProcessedBioAssayDimensions( ExpressionExperiment ee );
 
+    /**
+     * Batched variant of {@link #getProcessedBioAssayDimensions(ExpressionExperiment)} — one HQL
+     * with an {@code IN} clause for the supplied experiments. The returned map omits experiments
+     * that have no processed dimensions; callers that need a per-key empty default must handle
+     * that explicitly. Used by {@code CachedProcessedExpressionDataVectorService} to avoid the
+     * per-EE dimension fetch + per-assay source-chain thaw cycle.
+     */
+    Map<ExpressionExperiment, Collection<BioAssayDimension>> getProcessedBioAssayDimensions( Collection<ExpressionExperiment> ees );
+
+    @Nullable
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt );
 
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
@@ -343,10 +376,44 @@ public interface ExpressionExperimentDao
      */
     boolean hasProcessedExpressionData( ExpressionExperiment ee );
 
+    /**
+     * Whether a source metadata document is stored for this experiment.
+     * <p>
+     * A projection rather than a read of the field: {@code SOURCE_METADATA} is a LONGTEXT holding
+     * the whole GEO record, and the backfill asks this question once per experiment across the
+     * corpus purely to decide whether to skip it.
+     */
+    boolean hasSourceMetadata( ExpressionExperiment ee );
+
+    /**
+     * The stored GEO source metadata document, or null when none has been harvested.
+     * <p>
+     * Separate from {@link #hasSourceMetadata(ExpressionExperiment)} because this one reads the
+     * LONGTEXT: p95 is 142 KB and the largest on production is 1.09 MB, which is why the document
+     * is not a field on the experiment value object.
+     */
+    @Nullable
+    String getSourceMetadata( ExpressionExperiment ee );
+
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
 
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Batched variant of {@link #getSubSets(ExpressionExperiment)}: obtain subsets for every experiment in the input
+     * collection in a single query, keyed by source experiment.
+     * <p>
+     * This is the canonical {@code findByEntityIdsInWith<Children>} shape — it replaces a per-entity loop that calls
+     * {@link #getSubSets(ExpressionExperiment)} once per experiment with one HQL round-trip. Experiments without
+     * subsets are present in the result map with an empty collection so callers can iterate without null-checks. ACL
+     * filtering is enforced at the service layer (see {@code ExpressionExperimentService.getSubSetsWithBioAssays}) —
+     * this DAO assumes the caller has already filtered the input.
+     *
+     * @param expressionExperiments experiments to fetch subsets for; may be empty
+     * @return a map from each input experiment to its subsets (empty collection if none)
+     */
+    Map<ExpressionExperiment, Collection<ExpressionExperimentSubSet>> getSubSetsByExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments );
 
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension bad );
 
@@ -399,6 +466,14 @@ public interface ExpressionExperimentDao
     List<ExpressionExperimentDetailsValueObject> loadDetailsValueObjectsByIdsWithCache( Collection<Long> ids );
 
     Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
+
+    /**
+     * Cursor-mode counterpart to {@link #loadBlacklistedValueObjects(Filters, Sort, int, int)}:
+     * keyset pagination over the blacklisted-experiment view. The blacklist short-name/accession
+     * predicate is composed inside the DAO and OR'd with the caller-supplied {@link Filters}.
+     * See {@code CURSOR_PAGINATION_STEP1_PLAN.md} step 1t (the EE-targeted twin of step 1h).
+     */
+    CursorPage<ExpressionExperimentValueObject> loadBlacklistedValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit );
 
     Collection<ExpressionExperiment> loadLackingFactors();
 
@@ -472,6 +547,21 @@ public interface ExpressionExperimentDao
     List<Statement> getFactorValueAnnotations( ExpressionExperimentSubSet ee );
 
     /**
+     * Obtain factor value-level annotations together with the owning factor value and experimental factor, so the read
+     * VO can carry the term's parent context ({@code parentName} = the factor value, {@code parentOfParentName} = the
+     * factor) without a second query. Each row is {@code [Statement, FactorValue, ExperimentalFactor]}. The
+     * factor-value → statement and factor → factor-value joins the projection widens are already traversed by
+     * {@link #getFactorValueAnnotations(ExpressionExperiment)}; this only stops discarding the parents.
+     */
+    List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperiment ee );
+
+    /**
+     * Subset variant of {@link #getFactorValueAnnotationsWithParents(ExpressionExperiment)}. Each row is
+     * {@code [Statement, FactorValue, ExperimentalFactor]}.
+     */
+    List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperimentSubSet subset );
+
+    /**
      * Special indicator for free-text terms.
      * <p>
      * Free-text terms or categories have a null URI and a non-empty label.
@@ -507,7 +597,7 @@ public interface ExpressionExperimentDao
      */
     Map<Characteristic, Long> getAnnotationsUsageFrequency( @Nullable Collection<Long> expressionExperimentIds, @Nullable Class<? extends Identifiable> level, int maxResults, int minFrequency, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, @Nullable Collection<String> retainedTermUris, boolean includePredicates, boolean includeObjects );
 
-    Collection<ExpressionExperiment> getExperimentsLackingPublications();
+    Collection<ExpressionExperiment> getExperimentsLackingPublications( int maxResults );
 
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 
@@ -575,6 +665,18 @@ public interface ExpressionExperimentDao
      * @return the number of replaced raw vectors
      */
     int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors );
+
+    /**
+     * Remove quantitation types attached to {@code ee} that are not referenced by any data vector.
+     * <p>
+     * These orphan rows appear after partial replace cycles fail to cascade their QT delete and
+     * after re-runs of importers that pre-attached a stub QT (e.g. AffyFromCel). Skipping them
+     * leaves stray "preferred" QTs in the experiment and triggers FK violations on subsequent
+     * imports (issues #902, #1129).
+     *
+     * @return the number of removed quantitation types
+     */
+    int removeOrphanQuantitationTypes( ExpressionExperiment ee );
 
     /**
      * Retrieve the processed vector for an experiment.
@@ -688,7 +790,9 @@ public interface ExpressionExperimentDao
 
     /**
      * Create single-cell data vectors in batches to avoid OutOfMemoryError.
-     * Accepts any {@link Iterable} to support lazy/streaming sources.
+     * <p>
+     * Accepts any {@link Iterable} so the caller can supply a lazy or streaming source; vectors
+     * are flushed and evicted every 500 rows rather than being held for the duration.
      */
     void createSingleCellDataVectors( ExpressionExperiment ee, Iterable<SingleCellExpressionDataVector> vectors );
 

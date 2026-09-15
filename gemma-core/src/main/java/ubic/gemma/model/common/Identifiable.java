@@ -1,6 +1,6 @@
 package ubic.gemma.model.common;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface for objects that have a numerical id.

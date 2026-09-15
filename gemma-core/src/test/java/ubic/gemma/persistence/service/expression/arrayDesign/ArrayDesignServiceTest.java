@@ -18,14 +18,16 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Hibernate;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import org.hibernate.SessionFactory;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
+import ubic.gemma.core.util.test.ThawTestUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -35,7 +37,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.ArrayDesignPersister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -46,12 +48,12 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
-public class ArrayDesignServiceTest extends BaseIntegrationTest {
+public class ArrayDesignServiceTest extends BaseIntegrationTest5 {
 
     private static final String DEFAULT_TAXON = "Mus musculus";
 
@@ -74,14 +76,17 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
     private ExternalDatabaseService externalDatabaseService;
 
     @Autowired
-    private Persister persisterHelper;
+    private ArrayDesignPersister arrayDesignPersister;
 
     @Autowired
     private PersistentDummyObjectHelper testHelper;
 
+    @Autowired
+    private SessionFactory sessionFactory;
+
     private final Collection<ArrayDesign> adsToRemove = new HashSet<>();
 
-    @After
+    @AfterEach
     public void tearDown() {
         arrayDesignService.remove( adsToRemove );
         adsToRemove.clear();
@@ -146,7 +151,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
 
         this.assignExternalReference( ad, gplToFind );
         this.assignExternalReference( ad, this.getGpl() );
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
@@ -170,7 +175,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
         ad.setName( name );
         ad.setShortName( name );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
@@ -219,7 +224,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
             ad.getCompositeSequences().add( c1 );
         }
 
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
 
         Collection<Taxon> taxa = arrayDesignService.getTaxaFromBioSequences( ad );
@@ -229,9 +234,9 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
         for ( Taxon taxon : taxa ) {
             list.add( taxon.getScientificName() );
         }
-        assertTrue( "Should have found " + taxonName2, list.contains( taxonName2 ) );
-        assertTrue( "Should have found " + ArrayDesignServiceTest.DEFAULT_TAXON,
-                list.contains( ArrayDesignServiceTest.DEFAULT_TAXON ) );
+        assertTrue( list.contains( taxonName2 ), "Should have found " + taxonName2 );
+        assertTrue( list.contains( ArrayDesignServiceTest.DEFAULT_TAXON ),
+                "Should have found " + ArrayDesignServiceTest.DEFAULT_TAXON );
     }
 
     /*
@@ -325,11 +330,13 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
 
     @Test
     public void testThaw() {
-        ArrayDesign ad = getTestPersistentArrayDesign( 5, true );
+        ArrayDesign persisted = getTestPersistentArrayDesign( 5, true );
+        assertNotNull( persisted.getId() );
 
-        assertNotNull( ad.getId() );
-        ad = arrayDesignService.load( ad.getId() );
-
+        // Load in a fresh session so the composite-sequences bag is NOT pre-hydrated
+        // by cascade-saves earlier in this test session. The returned instance is
+        // detached; arrayDesignService.thaw(...) re-attaches it via ensureInSession().
+        ArrayDesign ad = ThawTestUtils.loadDetachedInFreshSession( sessionFactory, ArrayDesign.class, persisted.getId() );
         assertNotNull( ad );
         assertFalse( Hibernate.isInitialized( ad.getCompositeSequences() ) );
 
@@ -390,7 +397,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
 
         ad.setPrimaryTaxon( tax );
 
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
         ad = arrayDesignService.thaw( ad );
 
@@ -405,7 +412,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
         subsumedArrayDesign.getCompositeSequences().add( c2 );
         c2.setArrayDesign( subsumedArrayDesign );
 
-        subsumedArrayDesign = persisterHelper.persist( subsumedArrayDesign );
+        subsumedArrayDesign = arrayDesignPersister.persistArrayDesign( subsumedArrayDesign );
         adsToRemove.add( subsumedArrayDesign );
         subsumedArrayDesign = arrayDesignService.thaw( subsumedArrayDesign );
         // flushAndClearSession();
@@ -435,7 +442,7 @@ public class ArrayDesignServiceTest extends BaseIntegrationTest {
 
     private ArrayDesign getTestPersistentArrayDesign() {
         ArrayDesign ad = getTestArrayDesign();
-        ad = persisterHelper.persist( ad );
+        ad = arrayDesignPersister.persistArrayDesign( ad );
         adsToRemove.add( ad );
         return ad;
     }

@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * <p>
  * Used to indicate that all associations that this array design has with BioSequences have been removed. This is needed
@@ -26,6 +30,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * misleading.
  * </p>
  */
+@Entity
+@DiscriminatorValue("ArrayDesignSequenceRemoveEvent")
 public class ArrayDesignSequenceRemoveEvent
         extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 

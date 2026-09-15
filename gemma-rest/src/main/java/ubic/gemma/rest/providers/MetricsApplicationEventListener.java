@@ -9,8 +9,8 @@ import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.ws.rs.ext.Provider;
+import jakarta.annotation.PostConstruct;
+import jakarta.ws.rs.ext.Provider;
 
 @Provider
 @Component

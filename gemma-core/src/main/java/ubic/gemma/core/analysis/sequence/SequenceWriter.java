@@ -27,6 +27,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -56,7 +57,7 @@ public class SequenceWriter {
      * @throws IOException io problems
      */
     public static int writeSequencesToFile( Collection<BioSequence> sequences, File outputFile ) throws IOException {
-        try (BufferedWriter out = new BufferedWriter( new FileWriter( outputFile ) )) {
+        try (BufferedWriter out = new BufferedWriter( new FileWriter( outputFile, StandardCharsets.UTF_8 ) )) {
 
             SequenceWriter.log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
             int count = 0;

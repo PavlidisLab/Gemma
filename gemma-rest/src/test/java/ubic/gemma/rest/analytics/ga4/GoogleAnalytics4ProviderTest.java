@@ -1,15 +1,14 @@
 package ubic.gemma.rest.analytics.ga4;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.springframework.web.client.RestTemplate;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestClient;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 
 import java.nio.charset.StandardCharsets;
@@ -24,19 +23,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
-@CommonsLog
+@Slf4j
 public class GoogleAnalytics4ProviderTest {
 
     private GoogleAnalytics4Provider provider;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add( ( request, body, execution ) -> {
-            log.info( String.format( "\nURL: %s\nPayload: %s", request.getURI(), new String( body, StandardCharsets.UTF_8 ) ) );
-            return execution.execute( request, body );
-        } );
-        provider = new GoogleAnalytics4Provider( restTemplate, "test", "test" );
+        RestClient restClient = RestClient.builder()
+                .requestInterceptor( ( request, body, execution ) -> {
+                    log.info( String.format( "\nURL: %s\nPayload: %s", request.getURI(), new String( body, StandardCharsets.UTF_8 ) ) );
+                    return execution.execute( request, body );
+                } )
+                .build();
+        provider = new GoogleAnalytics4Provider( restClient, "test", "test" );
         provider.afterPropertiesSet();
         provider.setDebug( true );
         ThreadLocal<String> clientId = ThreadLocal.withInitial( () -> RandomStringUtils.insecure().nextNumeric( 10 ) + "." + RandomStringUtils.insecure().nextNumeric( 10 ) );
@@ -44,7 +44,7 @@ public class GoogleAnalytics4ProviderTest {
         provider.setPollingIntervalMillis( 1000 );
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         provider.destroy();
     }
@@ -58,7 +58,7 @@ public class GoogleAnalytics4ProviderTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void test() throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool( 16 );
         Collection<Future<?>> futures = new ArrayList<>();

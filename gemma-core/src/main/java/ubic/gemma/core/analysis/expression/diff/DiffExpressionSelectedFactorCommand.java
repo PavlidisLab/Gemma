@@ -18,6 +18,9 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.Serializable;
 
 /**
@@ -26,6 +29,8 @@ import java.io.Serializable;
  * @author keshav
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@Getter
+@Setter
 public class DiffExpressionSelectedFactorCommand implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -41,21 +46,4 @@ public class DiffExpressionSelectedFactorCommand implements Serializable {
         this.eeId = eeId;
         this.efId = efId;
     }
-
-    public Long getEeId() {
-        return eeId;
-    }
-
-    public void setEeId( Long eeId ) {
-        this.eeId = eeId;
-    }
-
-    public Long getEfId() {
-        return efId;
-    }
-
-    public void setEfId( Long efId ) {
-        this.efId = efId;
-    }
-
 }

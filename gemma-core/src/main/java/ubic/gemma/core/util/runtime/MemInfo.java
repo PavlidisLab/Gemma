@@ -1,11 +1,16 @@
 package ubic.gemma.core.util.runtime;
 
-import lombok.Value;
-
 /**
+ * Information about system memory.
+ * <p>
+ * Implemented as a Java record (formerly a Lombok {@code @Value} class). {@link #getAvailableMemory()}
+ * is preserved as a {@code get}-prefixed alias for callers that use the JavaBean accessor convention.
+ *
  * @author poirigui
  */
-@Value
-public class MemInfo {
-    long availableMemory;
+public record MemInfo(long availableMemory) {
+
+    public long getAvailableMemory() {
+        return availableMemory;
+    }
 }

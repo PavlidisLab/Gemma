@@ -2,7 +2,7 @@ package ubic.gemma.core.datastructure.sparse;
 
 import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 import static java.util.Arrays.binarySearch;
@@ -16,7 +16,8 @@ public class SparseListUtils {
     /**
      * Get an element of a sparse array.
      */
-    public static <T> T getSparseArrayElement( List<T> array, int[] indices, int numberOfElements, int index, T defaultValue ) {
+    @Nullable
+    public static <T> T getSparseArrayElement( List<T> array, int[] indices, int numberOfElements, int index, @Nullable T defaultValue ) {
         if ( array.size() != indices.length ) {
             throw new IllegalArgumentException( String.format( "Invalid size for sparse array, it must contain %d indices.", array.size() ) );
         }

@@ -5,7 +5,7 @@
  * {@link ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector} from a set of
  * {@link ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector}.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.analysis.preprocess;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

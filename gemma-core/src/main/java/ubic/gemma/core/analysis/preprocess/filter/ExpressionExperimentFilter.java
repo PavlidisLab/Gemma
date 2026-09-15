@@ -28,7 +28,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -189,7 +189,7 @@ public class ExpressionExperimentFilter implements ExpressionDataFilter<Expressi
         result.setFinalRows( dataMatrix.rows() );
         result.setFinalColumns( ExpressionDataFilterUtils.countSamplesWithData( dataMatrix ) );
 
-        String buf = String.format( "Filter summary for %s of %s:\n%s", dataMatrix.getQuantitationType(),
+        String buf = String.format( "Filter summary for %s of %s:%n%s", dataMatrix.getQuantitationType(),
                 dataMatrix.getExpressionExperiment(), describeFilterResult( result ) );
         ExpressionExperimentFilter.log.info( buf );
 

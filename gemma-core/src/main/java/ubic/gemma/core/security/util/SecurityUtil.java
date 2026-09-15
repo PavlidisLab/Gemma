@@ -1,0 +1,283 @@
+/*
+ * The Gemma project
+ *
+ * Copyright (c) 2013 University of British Columbia
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package ubic.gemma.core.security.util;
+
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.acl.domain.AclGrantedAuthoritySid;
+import ubic.gemma.core.security.acl.domain.AclPrincipalSid;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.vote.AuthenticatedVoter;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.Sid;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import javax.annotation.Nullable;
+import java.util.Collection;
+
+/**
+ * Database-independent methods for ACLs
+ *
+ * @author Paul
+ * @version $Id: SecurityUtil.java,v 1.6 2013/09/14 16:56:04 paul Exp $
+ */
+public class SecurityUtil {
+
+    private static final AuthenticationTrustResolver authenticationTrustResolver = new AuthenticationTrustResolverImpl();
+
+    /**
+     * Returns the username of the authenticated user
+     */
+    public static String getCurrentUsername() {
+        Object principal = getAuthentication().getPrincipal();
+        if ( principal instanceof String )
+            return ( String ) principal;
+        else if ( principal instanceof UserDetails ) return ( ( UserDetails ) principal ).getUsername();
+        throw new UnsupportedOperationException( "Principal is of unrecognized type" );
+    }
+
+    public static boolean isOwner( Acl acl, String username ) {
+        String ownerName = ubic.gemma.core.security.acl.domain.Sids.principalName( acl.getOwner() );
+        return ownerName != null && ownerName.equals( username );
+    }
+
+    public static boolean isPublic( Acl acl ) {
+        return !isPrivate( acl );
+    }
+
+    /**
+     * Test whether the given ACL is constraining access to users who are at privileges above "anonymous".
+     *
+     * @return true if the permissions indicate 'non-public', false if 'public'.
+     */
+    public static boolean isPrivate( Acl acl ) {
+
+        /*
+         * If the given Acl has anonymous permissions on it, then it can't be private.
+         */
+        for ( AccessControlEntry ace : acl.getEntries() ) {
+
+            if ( !ace.getPermission().equals( BasePermission.READ ) ) continue;
+
+            String grantedAuthority = ubic.gemma.core.security.acl.domain.Sids.grantedAuthority( ace.getSid() );
+            if ( grantedAuthority != null
+                    && grantedAuthority.equals( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY )
+                    && ace.isGranting() ) {
+                return false;
+            }
+        }
+
+        /*
+         * Even if the object is not private, it's parent might be, and we might inherit that. Recursion happens here.
+         */
+        Acl parentAcl = acl.getParentAcl();
+        if ( parentAcl != null && acl.isEntriesInheriting() ) {
+            return isPrivate( parentAcl );
+        }
+
+        /*
+         * We didn't find a granted authority on IS_AUTHENTICATED_ANONYMOUSLY
+         */
+        return true;
+
+    }
+
+    public static boolean isRunningAsAdmin() {
+
+        Collection<? extends GrantedAuthority> authorities = getAuthentication().getAuthorities();
+        assert authorities != null;
+        for ( GrantedAuthority authority : authorities ) {
+            if ( authority.getAuthority().equals( AuthorityConstants.RUN_AS_ADMIN_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return true if the ACL grants READ authority to at least one group that is not admin or agent.
+     */
+    public static boolean isShared( Acl acl ) {
+        for ( AccessControlEntry ace : acl.getEntries() ) {
+
+            if ( !ace.getPermission().equals( BasePermission.READ ) ) continue;
+
+            String grantedAuthority = ubic.gemma.core.security.acl.domain.Sids.grantedAuthority( ace.getSid() );
+            if ( grantedAuthority != null && grantedAuthority.startsWith( "GROUP_" ) && ace.isGranting() ) {
+                if ( grantedAuthority.equals( AuthorityConstants.AGENT_GROUP_AUTHORITY )
+                    || grantedAuthority.equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
+                    continue;
+                }
+                return true;
+            }
+        }
+
+        /*
+         * Even if the object is not private, its parent might be, and we might inherit that. Recursion happens here.
+         */
+        Acl parentAcl = acl.getParentAcl();
+        if ( parentAcl != null && acl.isEntriesInheriting() ) {
+            return isShared( parentAcl );
+        }
+
+        /*
+         * We didn't find a granted authority for any group.
+         */
+        return false;
+    }
+
+    /**
+     * Returns true if the current user has admin authority.
+     *
+     * @return true if the current user has admin authority
+     */
+    public static boolean isUserAdmin() {
+
+        if ( !isUserLoggedIn() ) {
+            return false;
+        }
+
+        Collection<? extends GrantedAuthority> authorities = getAuthentication().getAuthorities();
+        assert authorities != null;
+        for ( GrantedAuthority authority : authorities ) {
+            if ( authority.getAuthority().equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the user is anonymous.
+     */
+    public static boolean isUserAnonymous() {
+        return authenticationTrustResolver.isAnonymous( getAuthentication() );
+    }
+
+    /**
+     * Returns true if the user is non-anonymous.
+     */
+    public static boolean isUserLoggedIn() {
+        return !isUserAnonymous();
+    }
+
+    /**
+     * Returns true if the current caller holds the curator authority.
+     * <p>
+     * 🛑 Read the granted authorities directly rather than relying on the role hierarchy that makes
+     * an administrator satisfy {@code hasAuthority('GROUP_CURATOR')} in a {@code @PreAuthorize}
+     * expression. That expansion is performed by the access-decision voter, not baked into
+     * {@link org.springframework.security.core.Authentication#getAuthorities()}, so a programmatic
+     * check sees only what was actually granted. Callers wanting "curator or better" must ask for
+     * {@link #isUserAdmin()} too, which is why {@link #isUserCuratorOrAdmin()} exists.
+     */
+    public static boolean isUserCurator() {
+        if ( !isUserLoggedIn() ) {
+            return false;
+        }
+        for ( GrantedAuthority authority : getAuthentication().getAuthorities() ) {
+            if ( authority.getAuthority().equals( AuthorityConstants.CURATOR_GROUP_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the current caller curates: a curator, or an administrator.
+     *
+     * @see #isUserCurator()
+     * @see #isUserAdmin()
+     */
+    public static boolean isUserCuratorOrAdmin() {
+        return isUserAdmin() || isUserCurator();
+    }
+
+    /**
+     * Returns true if the current caller holds the agent authority.
+     */
+    public static boolean isUserAgent() {
+        if ( !isUserLoggedIn() ) {
+            return false;
+        }
+        for ( GrantedAuthority authority : getAuthentication().getAuthorities() ) {
+            if ( authority.getAuthority().equals( AuthorityConstants.AGENT_GROUP_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Resolve the identity an action should be recorded against, given an
+     * optional {@code onBehalfOf} claim from the caller.
+     *
+     * <p>Curation writes reach Gemma through the curation agent rather than
+     * from a curator's browser, so the authenticated principal on those calls
+     * is the agent acting for someone else. Recording the principal would
+     * attribute every curator's work to the agent — and where the identity is
+     * part of a uniqueness key, as it is for a {@code DRAFT}'s
+     * {@code "draft-{curator}"} run id, it does worse than mis-attribute: two
+     * curators collapse onto one row and the second write silently overwrites
+     * the first.</p>
+     *
+     * <p>So the acting identity travels on the wire, and the principal only
+     * decides whether the caller may claim it. Only an agent or an admin may;
+     * for anyone else a claim is refused rather than ignored, because
+     * quietly substituting their own name would record a different fact from
+     * the one they asked for.</p>
+     *
+     * @param onBehalfOf the claimed identity, or {@code null} to act as
+     *                   yourself
+     * @return the identity to record
+     * @throws AccessDeniedException if a caller who is neither agent nor admin
+     *                               claims to be someone else
+     * @throws IllegalStateException if there is no authenticated caller to
+     *                               fall back to
+     */
+    public static String resolveActingIdentity( @Nullable String onBehalfOf ) {
+        String principal = getCurrentUsername();
+        if ( onBehalfOf == null || onBehalfOf.isBlank() || onBehalfOf.equals( principal ) ) {
+            if ( principal == null ) {
+                throw new IllegalStateException( "No authenticated caller to attribute this action to." );
+            }
+            return principal;
+        }
+        if ( !isUserAgent() && !isUserAdmin() ) {
+            throw new AccessDeniedException(
+                    "Only an agent or an administrator may act on behalf of another user." );
+        }
+        return onBehalfOf;
+    }
+
+    /**
+     * Returns the Authentication object from the SecurityContextHolder.
+     *
+     * @return Authentication
+     */
+    private static Authentication getAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if ( authentication == null ) throw new RuntimeException( "Null authentication object" );
+
+        return authentication;
+    }
+}

@@ -19,8 +19,7 @@
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Component;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -34,34 +33,36 @@ import java.util.Collection;
  *
  * @see BlatAssociationService
  */
-@Service
+@Component
 public class BlatAssociationServiceImpl extends AbstractService<BlatAssociation> implements BlatAssociationService {
 
-    private final BlatAssociationDao blatAssociationDao;
+    @Autowired
+    private BlatAssociationReadService readService;
 
     @Autowired
     public BlatAssociationServiceImpl( BlatAssociationDao blatAssociationDao ) {
         super( blatAssociationDao );
-        this.blatAssociationDao = blatAssociationDao;
     }
 
+    // =====================================================================
+    // Read methods -- delegate to BlatAssociationReadService.
+    // BlatAssociationService declares no @Secured / @PostAuthorize / @PostFilter
+    // on these read methods (the AdminEditableBaseImmutableService
+    // @Secured("GROUP_ADMIN") annotations cover the write side only).
+    // =====================================================================
+
     @Override
-    @Transactional(readOnly = true)
     public Collection<BlatAssociation> find( BioSequence bioSequence ) {
-        return this.blatAssociationDao.find( bioSequence );
+        return readService.find( bioSequence );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BlatAssociation> findAndThaw( BioSequence bioSequence ) {
-        Collection<BlatAssociation> results = blatAssociationDao.find( bioSequence );
-        blatAssociationDao.thaw( results );
-        return results;
+        return readService.findAndThaw( bioSequence );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<BlatAssociation> find( Gene gene ) {
-        return this.blatAssociationDao.find( gene );
+        return readService.find( gene );
     }
 }

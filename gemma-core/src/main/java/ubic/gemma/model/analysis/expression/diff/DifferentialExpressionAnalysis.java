@@ -18,23 +18,42 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * An analysis of changes in expression levels across experimental conditions
  */
+@Entity
+@DiscriminatorValue("DifferentialExpressionAnalysis")
 public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis<BioAssaySet> {
 
+    /*
+     * Cache directive removed (Hibernate 6 read-only-on-@Immutable-child stale-bag fix, mirrors the
+     * AuditEvent/ExpressionAnalysisResultSet.results pattern). @Immutable is retained because the bag
+     * is logically mutable="false" once written. cascade=ALL preserved from hbm.
+     */
+    @OneToMany(mappedBy = "analysis", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Immutable
     private Set<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
 
     @Nullable
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SUBSET_FACTOR_VALUE_FK", columnDefinition = "BIGINT")
     private FactorValue subsetFactorValue;
 
     /**

@@ -3,9 +3,9 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ThrowingConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -14,11 +14,10 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
@@ -54,7 +53,7 @@ import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingl
  * Tests covering integration of single-cell.
  */
 @ContextConfiguration
-public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest {
+public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -68,6 +67,18 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         @Bean
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
             return new ExpressionExperimentDaoImpl( sessionFactory );
+        }
+
+        // EE DAO now field-injects ArrayDesignDao for batched platform loads (round-2 probe #8).
+        @Bean
+        public ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl( sessionFactory );
+        }
+
+        // PERF_PROBE_REPORT_ROUND4 B1: SCEESI + EE DAO field-inject SingleCellDimensionExperimentDao.
+        @Bean
+        public SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new SingleCellDimensionExperimentDaoImpl( sessionFactory );
         }
 
         @Bean
@@ -91,7 +102,22 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         }
 
         @Bean
+        public ExperimentalDesignReadService experimentalDesignReadService() {
+            return mock( ExperimentalDesignReadService.class );
+        }
+
+        @Bean
+        public ExperimentalFactorReadService experimentalFactorReadService() {
+            return mock( ExperimentalFactorReadService.class );
+        }
+
+        @Bean
         public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public SingleCellExperimentDesignAuditService singleCellExperimentDesignAuditService() {
             return mock();
         }
 
@@ -113,6 +139,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     private AuditTrailService auditTrailService;
 
     @Autowired
+    private SingleCellExperimentDesignAuditService singleCellExperimentDesignAuditService;
+
+    @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
@@ -124,7 +153,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     private ArrayDesign ad;
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
@@ -150,9 +179,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         ee = expressionExperimentDao.create( ee );
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( auditTrailService );
+        reset( singleCellExperimentDesignAuditService );
     }
 
     @Test
@@ -367,8 +397,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getSingleCellDimensions( ee ) )
                 .hasSize( 2 );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " [Preferred] with dimension " + scd + ".", ( String ) null );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt2 + " with dimension " + scd2 + ".", ( String ) null );
+        // DataAddedEvent rows are written by AuditedAspect under @Audited on
+        // addSingleCellDataVectors; this test context wires the impl bean
+        // directly with no AOP proxy, so aspect-level coverage lives in
+        // AuditedAspectTest.
     }
 
     @Test
@@ -409,7 +441,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                     assertThat( matrix.getQuantitationType() ).isEqualTo( qt );
                 } );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
+        // DataAddedEvent row is written by AuditedAspect under @Audited on
+        // addSingleCellDataVectors; this test context wires the impl bean
+        // directly with no AOP proxy, so aspect-level coverage lives in
+        // AuditedAspectTest.
     }
 
     @Test
@@ -422,7 +457,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThatThrownBy( () -> scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessage( "There is already a quantitation type named counts in " + ee + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
+        // DataAddedEvent row is written by AuditedAspect under @Audited on
+        // addSingleCellDataVectors; aspect-level coverage lives in AuditedAspectTest.
     }
 
     @Test
@@ -449,11 +485,14 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         ExperimentalFactor ctf2 = scExpressionExperimentService.getCellTypeFactor( ee ).orElseThrow( AssertionError::new );
         assertThat( ctf2.getName() ).isEqualTo( "cell type" );
         assertThat( ctf2.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl2 + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " [Preferred] with dimension " + scd + ".", ( String ) null );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctl + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt2 + " with dimension " + scd2 + ".", ( String ) null );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Removed the cell type factor " + ctf + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf2 + " from preferred cell type assignment " + ctl2 + "." );
+        // DataAddedEvent rows are written by AuditedAspect under @Audited on
+        // addSingleCellDataVectors; aspect-level coverage lives in AuditedAspectTest.
+        // Cell-type-factor create / remove audits hoisted to
+        // SingleCellExperimentDesignAuditService (bucket 2g); the impl is mocked here
+        // because the test wires the service impl directly with no AOP proxy.
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, ctf, ctl.toString() );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorRemoved( ee, ctf );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, ctf2, ctl2.toString() );
     }
 
     @Test
@@ -463,6 +502,12 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false );
         sessionFactory.getCurrentSession().flush();
+        // Hibernate 6: AbstractDao.update is JPA merge() rather than HB5's Session#update reattach,
+        // so the local `vectors` instances stay detached without ids and SingleCellExpression-
+        // DataVector#equals falls back to EE+QT+DesignElement matching — making the
+        // doesNotContainAnyElementsOf(vectors) check below match the new vectors too (same DE
+        // names). Snapshot the persisted vectors with their ids by reading from the merged EE.
+        Set<SingleCellExpressionDataVector> originalVectors = new HashSet<>( ee.getSingleCellExpressionDataVectors() );
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
@@ -473,11 +518,12 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 )
-                .doesNotContainAnyElementsOf( vectors )
+                .doesNotContainAnyElementsOf( originalVectors )
                 .containsAll( vectors2 );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
-        verify( auditTrailService ).addUpdateEvent( ee, DataReplacedEvent.class, "Replaced 10 vectors with 10 vectors for " + qt + " with dimension " + scd2 + "." );
+        // DataAddedEvent / DataReplacedEvent rows are written by AuditedAspect under
+        // @Audited on addSingleCellDataVectors / replaceSingleCellDataVectors;
+        // aspect-level coverage lives in AuditedAspectTest.
     }
 
     @Test
@@ -504,10 +550,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
-        verify( auditTrailService )
-                .addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
-        verify( auditTrailService )
-                .addUpdateEvent( ee, DataRemovedEvent.class, "Removed 10 vectors for " + qt + " with dimension " + scd + "." );
+        // DataAddedEvent + DataRemovedEvent rows are written by AuditedAspect under
+        // @Audited / @AuditedConditional on the corresponding service methods; this
+        // test context wires the impl bean directly with no AOP proxy, so aspect-
+        // level coverage lives in AuditedAspectTest.
     }
 
     @Test
@@ -537,8 +583,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
-        verify( auditTrailService ).addUpdateEvent( ee, DataRemovedEvent.class, "Removed 10 vectors for " + qt + " with dimension " + scd + "." );
+        // DataAddedEvent + DataRemovedEvent rows are written by AuditedAspect under
+        // @Audited / @AuditedConditional on the corresponding service methods; this
+        // test context wires the impl bean directly with no AOP proxy, so aspect-
+        // level coverage lives in AuditedAspectTest.
     }
 
     @Test
@@ -585,12 +633,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         scExpressionExperimentService.removeCellTypeAssignment( ee, scd, newLabelling );
         assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isEmpty();
         assertThat( scExpressionExperimentService.getCellTypeFactor( ee ) ).isPresent();
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctaS + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "Removed the cell type factor " + ctf + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "Created a cell type factor " + newCtf + " from preferred cell type assignment " + newLabellingS + "." );
+        // Cell-type-factor create / remove audits hoisted to
+        // SingleCellExperimentDesignAuditService (bucket 2g).
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, ctf, ctaS );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorRemoved( ee, ctf );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, newCtf, newLabellingS );
     }
 
     /**
@@ -636,8 +683,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             assertThat( f.getCategory() ).isEqualTo( "cell type" );
             assertThat( f.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000324" );
         } );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + factor + " from preferred cell type assignment " + ctl + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + recreatedFactor + " from preferred cell type assignment " + ctl + "." );
+        // Cell-type-factor create audits hoisted to
+        // SingleCellExperimentDesignAuditService (bucket 2g).
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, factor, ctl.toString() );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, recreatedFactor, ctl.toString() );
     }
 
     @Test
@@ -660,8 +709,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             assertThat( f.getCategory() ).isEqualTo( "cell type" );
             assertThat( f.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000324" );
         } );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + factor + " from preferred cell type assignment " + ctl + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + recreatedFactor + " from preferred cell type assignment " + ctl + "." );
+        // Cell-type-factor create audits hoisted to
+        // SingleCellExperimentDesignAuditService (bucket 2g).
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, factor, ctl.toString() );
+        verify( singleCellExperimentDesignAuditService ).recordCellTypeFactorCreated( ee, recreatedFactor, ctl.toString() );
     }
 
     @Test

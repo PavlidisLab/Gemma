@@ -1,8 +1,9 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
@@ -30,7 +31,7 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -45,7 +46,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @Setter
 public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
@@ -102,7 +103,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      * An indicator for unknown cell type if the dataset uses something else than the {@code -1} code.
      */
     @Nullable
+    @Setter(AccessLevel.NONE)
     private String unknownCellTypeIndicator;
+
+    /**
+     * Whether {@link #unknownCellTypeIndicator} is a convention applied to every dataset a loader reads rather than a
+     * choice made for this particular dataset. See {@link #setDefaultUnknownCellTypeIndicator(String)}.
+     */
+    @Setter(AccessLevel.NONE)
+    private boolean unknownCellTypeIndicatorIsDefault;
 
     /**
      * Use or not the {@code raw.X} layer.
@@ -125,6 +134,30 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     public AnnDataSingleCellDataLoader( Path file ) {
         this.file = file;
+    }
+
+    /**
+     * Declare the category that marks cells whose type is unknown.
+     * <p>
+     * The indicator must occur in the data: if it does not, the wrong column or the wrong spelling was configured and
+     * every cell would silently keep a type it should not have, so {@link #getCellTypeAssignments(SingleCellDimension)}
+     * rejects the dataset. Use {@link #setDefaultUnknownCellTypeIndicator(String)} for a convention applied sight-unseen
+     * to a whole source, where absence carries no such implication.
+     */
+    public void setUnknownCellTypeIndicator( @Nullable String unknownCellTypeIndicator ) {
+        this.unknownCellTypeIndicator = unknownCellTypeIndicator;
+        this.unknownCellTypeIndicatorIsDefault = false;
+    }
+
+    /**
+     * Declare an indicator that a subclass applies by convention to every dataset it reads.
+     * <p>
+     * Unlike {@link #setUnknownCellTypeIndicator(String)}, absence is tolerated: the convention is chosen for a source
+     * without having seen the dataset, so a dataset in which no cell type is missing simply has no such category.
+     */
+    protected void setDefaultUnknownCellTypeIndicator( @Nullable String unknownCellTypeIndicator ) {
+        this.unknownCellTypeIndicator = unknownCellTypeIndicator;
+        this.unknownCellTypeIndicatorIsDefault = true;
     }
 
     @Override
@@ -218,7 +251,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         Set<QuantitationType> qts = new HashSet<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
             if ( getX( h5File ) != null ) {
-                qts.add(  createQt( h5File, getX( h5File ), null ) );
+                qts.add( createQt( h5File, getX( h5File ), null ) );
             }
             for ( String layer : h5File.getLayers() ) {
                 qts.add( createQt( h5File, h5File.getLayer( layer ), layer ) );
@@ -364,9 +397,12 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
                     .collect( Collectors.joining( "\n\t" ) ) );
         }
+        // Pin to a local so SpotBugs can see the null-guard above carries forward (field reads
+        // through the try-with-resources scope otherwise look possibly-null to its flow analysis).
+        String cellTypeFactor = cellTypeFactorName;
         try ( AnnData h5File = AnnData.open( file ); Dataframe<?> var = getCellsDataframe( h5File ) ) {
             // TODO: support cell types encoded as string-array
-            CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactorName, String.class );
+            CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactor, String.class );
             CategoricalArray<String> cellTypeUris = cellTypeUriFactorName != null ? var.getCategoricalColumn( cellTypeUriFactorName, String.class ) : null;
             CellTypeAssignment assignment = new CellTypeAssignment();
             assignment.setName( cellTypeFactorName );
@@ -386,9 +422,13 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
             assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
             if ( unknownCellTypeIndicator != null && unknownCellTypeCode == CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
-                // TODO: raise back to exception
-                log.warn( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
-                        unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
+                if ( unknownCellTypeIndicatorIsDefault ) {
+                    log.debug( String.format( "%s has no %s category, so no cell type is marked unknown. Possible values are: %s.",
+                            h5File, unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
+                } else {
+                    throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
+                            unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
+                }
             }
             // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
             // this column is indexed, so it's very fast to use indexOf
@@ -794,7 +834,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
         }
 
-        Map<BioAssay, SequencingMetadata> result = new HashMap<>( scd.getBioAssays().size() );
+        Map<BioAssay, SequencingMetadata> result = HashMap.newHashMap( scd.getBioAssays().size() );
         for ( int i = 0; i < scd.getBioAssays().size(); i++ ) {
             result.put( scd.getBioAssays().get( i ), SequencingMetadata.builder().readCount( Math.round( librarySize[i] ) ).build() );
         }
@@ -980,7 +1020,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         // build a sample offset index for efficiently selecting samples
         // if a sample does not have a corresponding BioAssay (i.e. an unwanted sample), it is set to null
         List<BioAssay> samplesBioAssay = new ArrayList<>( numberOfSamples );
-        Map<BioAssay, Integer> samplesBioAssayIndex = new HashMap<>( numberOfSamples );
+        Map<BioAssay, Integer> samplesBioAssayIndex = HashMap.newHashMap( numberOfSamples );
         List<String> samplesName = new ArrayList<>( numberOfSamples );
         int[] samplesBioAssayOffset = new int[numberOfSamples];
         int W = 0;

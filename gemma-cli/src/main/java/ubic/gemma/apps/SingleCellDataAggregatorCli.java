@@ -1,6 +1,6 @@
 package ubic.gemma.apps;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -22,7 +22,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import static ubic.gemma.cli.util.OptionsUtils.*;
 import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.*;
 
-@CommonsLog
+@Slf4j
 public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsManipulatingCli<SingleCellExpressionDataVector> {
 
     private static final String

@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -59,6 +60,7 @@ public interface DiffExAnalyzer {
      * @param config config
      * @return analysis
      */
+    @Nullable
     DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset, ExpressionDataDoubleMatrix dmatrix,
             DifferentialExpressionAnalysisConfig config ) throws AnalysisException;
 }

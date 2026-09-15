@@ -1,7 +1,7 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import no.uib.cipr.matrix.io.MatrixInfo;
 import no.uib.cipr.matrix.io.MatrixSize;
 import no.uib.cipr.matrix.io.MatrixVectorWriter;
@@ -23,7 +23,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -49,7 +49,7 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
  * files are compressed and will have a {@code .gz} extension.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @Setter
 public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 

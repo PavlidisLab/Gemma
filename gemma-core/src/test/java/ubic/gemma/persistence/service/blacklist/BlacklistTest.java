@@ -20,24 +20,24 @@
 package ubic.gemma.persistence.service.blacklist;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  *
  * @author paul
  */
-public class BlacklistTest extends BaseSpringContextTest {
+public class BlacklistTest extends BaseSpringContextTest5 {
 
     @Autowired
     BlacklistedEntityService blacklistedEntityService;

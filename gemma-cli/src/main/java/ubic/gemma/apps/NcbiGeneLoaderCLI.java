@@ -28,11 +28,11 @@ import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.File;
 import java.util.Date;
 
@@ -52,7 +52,7 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     @Autowired
     private TaxonService taxonService;
     @Autowired
-    private Persister persisterHelper;
+    private GeneWriteService geneWriteService;
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
     @Autowired
@@ -107,7 +107,7 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     protected void doAuthenticatedWork() throws Exception {
         loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
-        loader.setPersisterHelper( persisterHelper );
+        loader.setGeneWriteService( geneWriteService );
         loader.setSkipDownload( this.skipDownload );
         loader.setStartingNcbiId( startNcbiId );
 

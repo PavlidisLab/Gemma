@@ -18,20 +18,28 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
+import org.hibernate.Hibernate;
+import org.hibernate.NonUniqueResultException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.Query;
+import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
-import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.description.Characteristic;
@@ -42,9 +50,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
+import org.springframework.security.acls.domain.BasePermission;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,24 +64,13 @@ import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
  * @author Paul
  */
 @Repository
-@CommonsLog
+@Slf4j
 public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject>
         implements ExpressionAnalysisResultSetDao {
-
-    /**
-     * FIXME: this projection only selects the ID of the result set, which is subsequently fetched. It would be more
-     *        efficient to fetch all the necessary columns instead, but I don't know how to do that.
-     */
-    private final Projection rootEntityProjection;
 
     @Autowired
     public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionAnalysisResultSet.class, sessionFactory );
-        rootEntityProjection = Projections.sqlGroupProjection(
-                "{alias}.ID",
-                "{alias}.ID",
-                new String[] { "ID" },
-                new Type[] { sessionFactory.getTypeHelper().entity( ExpressionAnalysisResultSet.class ) } );
     }
 
     @Override
@@ -83,6 +81,19 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     @Override
     public void remove( ExpressionAnalysisResultSet entity ) {
         throw new UnsupportedOperationException( "Individual result sets cannot be removed directly, use DifferentialExpressionAnalysisDao.remove() instead." );
+    }
+
+    @Override
+    @Nullable
+    public ExpressionAnalysisResultSet loadWithAnalysisAndExperimentAnalyzed( Long id ) {
+        List<ExpressionAnalysisResultSet> rows = getSessionFactory().getCurrentSession()
+                .createQuery( "select rs from ExpressionAnalysisResultSet rs "
+                        + "left join fetch rs.analysis a "
+                        + "left join fetch a.experimentAnalyzed "
+                        + "where rs.id = :id", ExpressionAnalysisResultSet.class )
+                .setParameter( "id", id )
+                .list();
+        return rows.isEmpty() ? null : rows.get( 0 );
     }
 
     @Override
@@ -117,14 +128,17 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         ExpressionAnalysisResultSet ears = load( id );
         if ( ears != null ) {
             //noinspection unchecked
-            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
+            org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears "
                             + "order by res.correctedPvalue asc nulls last" )
                     .setParameter( "ears", ears )
-                    .setFirstResult( offset )
-                    .setMaxResults( limit )
-                    .list();
+                    .setFirstResult( offset );
+            // HB6 rejects setMaxResults(<0); callers may pass 0/negative to mean "no limit" — preserve that contract.
+            if ( limit > 0 ) {
+                q.setMaxResults( limit );
+            }
+            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) q.list();
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
             thawResultsAndContrasts( ears );
@@ -146,16 +160,19 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         ExpressionAnalysisResultSet ears = load( id );
         if ( ears != null ) {
             //noinspection unchecked
-            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
+            org.hibernate.query.Query<?> q = getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears and res.correctedPvalue <= :threshold "
                             // no need to specify a null mode, the threshold will filter them out
                             + "order by res.correctedPvalue" )
                     .setParameter( "ears", ears )
                     .setParameter( "threshold", threshold )
-                    .setFirstResult( offset )
-                    .setMaxResults( limit )
-                    .list();
+                    .setFirstResult( offset );
+            // HB6 rejects setMaxResults(<0); callers may pass 0/negative to mean "no limit" — preserve that contract.
+            if ( limit > 0 ) {
+                q.setMaxResults( limit );
+            }
+            List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) q.list();
             // preserve order of results
             ears.setResults( new LinkedHashSet<>( results ) );
             thawResultsAndContrasts( ears );
@@ -177,34 +194,206 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> databaseEntries, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort ) {
-        Criteria query = getFilteringCriteria( filters );
-        Criteria totalElementsQuery = getFilteringCriteria( filters );
+        // Phase 2 Step 7 port: pre-stub this used Hibernate Criteria with aliases a (analysis) and e
+        // (analysis.experimentAnalyzed) plus FilterCriteriaUtils. The equivalent JPA Criteria query
+        // below walks analysis.experimentAnalyzed off the root and pulls accession from
+        // experimentAnalyzed treated as ExpressionExperiment (BioAssaySet itself has no accession).
+        StopWatch timer = StopWatch.createStarted();
+        Session session = getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
 
-        if ( bioAssaySets != null ) {
-            query.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
-            totalElementsQuery.add( Restrictions.in( "a.experimentAnalyzed", bioAssaySets ) );
+        // --- main query: distinct entities, ordered, sliced -------------------------------------
+        CriteriaQuery<ExpressionAnalysisResultSet> q = cb.createQuery( ExpressionAnalysisResultSet.class );
+        Root<ExpressionAnalysisResultSet> root = q.from( ExpressionAnalysisResultSet.class );
+        q.select( root ).distinct( true );
+        q.where( buildPredicates( cb, q, root, bioAssaySets, databaseEntries, filters ) );
+        if ( sort != null ) {
+            q.orderBy( buildOrders( cb, root, sort ) );
+        }
+        Query<ExpressionAnalysisResultSet> hq = session.createQuery( q );
+        if ( offset > 0 ) hq.setFirstResult( offset );
+        if ( limit > 0 ) hq.setMaxResults( limit );
+        List<ExpressionAnalysisResultSet> data = hq.getResultList();
+
+        // --- count query: count(distinct id) with the same restrictions -------------------------
+        CriteriaQuery<Long> cq = cb.createQuery( Long.class );
+        Root<ExpressionAnalysisResultSet> countRoot = cq.from( ExpressionAnalysisResultSet.class );
+        cq.select( cb.countDistinct( countRoot.get( "id" ) ) );
+        cq.where( buildPredicates( cb, cq, countRoot, bioAssaySets, databaseEntries, filters ) );
+        Long totalElements = session.createQuery( cq ).getSingleResult();
+        if ( totalElements == null ) {
+            totalElements = 0L;
         }
 
-        if ( databaseEntries != null ) {
-            query.add( Restrictions.in( "e.accession", databaseEntries ) );
-            totalElementsQuery.add( Restrictions.in( "e.accession", databaseEntries ) );
-        }
+        thawAll( data );
 
-        //noinspection unchecked
-        List<ExpressionAnalysisResultSet> data = query.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY )
-                .setFirstResult( offset )
-                .setMaxResults( limit )
-                .list();
-
-        Long totalElements = ( Long ) totalElementsQuery
-                .setProjection( Projections.countDistinct( "id" ) )
-                .uniqueResult();
-
-        for ( ExpressionAnalysisResultSet d : data ) {
-            thaw( d );
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Loaded %d/%d result sets matching bioAssaySets=%s, databaseEntries=%s, filters=%s in %d ms.",
+                    data.size(), totalElements,
+                    bioAssaySets == null ? "*" : bioAssaySets.size(),
+                    databaseEntries == null ? "*" : databaseEntries.size(),
+                    filters, timer.getTime() ) );
         }
 
         return new Slice<>( loadValueObjects( data ), sort, offset, limit, totalElements );
+    }
+
+    @Override
+    public CursorPage<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInByCursor(
+            @Nullable Collection<BioAssaySet> bioAssaySets,
+            @Nullable Collection<DatabaseEntry> databaseEntries,
+            @Nullable Filters filters,
+            @Nullable Cursor cursor,
+            int limit ) {
+        // Step 1i: keyset pagination over /resultSets. Mirrors the offset-mode shape of
+        // findByBioAssaySetInAndDatabaseEntryInLimit but with single-component +id sort enforced
+        // and an id > lastSeenId (or id < lastSeenId for BACKWARD) predicate appended when a
+        // cursor is present. Fetches limit+1 to detect hasMore; no COUNT(*) per request.
+        Assert.isTrue( limit > 0, "Cursor page limit must be > 0." );
+        final String expectedSortSpec = "+id";
+        if ( cursor != null ) {
+            if ( !expectedSortSpec.equals( cursor.getSortSpec() ) ) {
+                throw new IllegalArgumentException( "Cursor sort spec '" + cursor.getSortSpec()
+                        + "' does not match the requested sort '" + expectedSortSpec + "'." );
+            }
+            Object[] key = cursor.getKeyTuple();
+            if ( key.length != 1 ) {
+                throw new IllegalArgumentException( "Cursor key tuple must have exactly 1 component for sort '"
+                        + expectedSortSpec + "'; got " + key.length + "." );
+            }
+        }
+        boolean backward = cursor != null && cursor.getDirection() == Cursor.Direction.BACKWARD;
+        Long lastSeenId = null;
+        if ( cursor != null ) {
+            try {
+                lastSeenId = ( ( Number ) cursor.getKeyTuple()[0] ).longValue();
+            } catch ( ClassCastException e ) {
+                throw new IllegalArgumentException( "Cursor key component must be numeric for sort '" + expectedSortSpec + "'.", e );
+            }
+        }
+
+        StopWatch timer = StopWatch.createStarted();
+        Session session = getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+
+        CriteriaQuery<ExpressionAnalysisResultSet> q = cb.createQuery( ExpressionAnalysisResultSet.class );
+        Root<ExpressionAnalysisResultSet> root = q.from( ExpressionAnalysisResultSet.class );
+        q.select( root ).distinct( true );
+        // Build the shared predicates (filters + bas/des) and append the keyset predicate
+        // (id > lastSeenId for forward+asc / forward+backward=desc handled below).
+        Predicate base = buildPredicates( cb, q, root, bioAssaySets, databaseEntries, filters );
+        Predicate where = base;
+        if ( lastSeenId != null ) {
+            // forward: id > x; backward: id < x (id-asc client-visible order). When backward,
+            // we reverse the order in the driver query and reverse the returned page below.
+            Predicate keyset = backward
+                    ? cb.lessThan( root.get( "id" ).as( Long.class ), lastSeenId )
+                    : cb.greaterThan( root.get( "id" ).as( Long.class ), lastSeenId );
+            where = cb.and( base, keyset );
+        }
+        q.where( where );
+        // backward cursor: order by id DESC in the driver query, reverse the returned page.
+        q.orderBy( backward ? cb.desc( root.get( "id" ) ) : cb.asc( root.get( "id" ) ) );
+
+        Query<ExpressionAnalysisResultSet> hq = session.createQuery( q );
+        hq.setMaxResults( limit + 1 );
+        List<ExpressionAnalysisResultSet> data = hq.getResultList();
+
+        boolean hasMore = data.size() > limit;
+        if ( hasMore ) {
+            data = new ArrayList<>( data.subList( 0, limit ) );
+        }
+        if ( backward ) {
+            Collections.reverse( data );
+        }
+
+        thawAll( data );
+
+        List<DifferentialExpressionAnalysisResultSetValueObject> vos = loadValueObjects( data );
+
+        String nextCursor = null;
+        String prevCursor = null;
+        if ( !vos.isEmpty() ) {
+            DifferentialExpressionAnalysisResultSetValueObject last = vos.get( vos.size() - 1 );
+            DifferentialExpressionAnalysisResultSetValueObject first = vos.get( 0 );
+            // emit nextCursor only when there's another page in the forward direction
+            if ( backward || hasMore ) {
+                nextCursor = new Cursor( expectedSortSpec, new Object[] { last.getId() }, Cursor.Direction.FORWARD ).encode();
+            }
+            // emit prevCursor whenever we have a cursor (at least one page is behind us)
+            if ( cursor != null ) {
+                prevCursor = new Cursor( expectedSortSpec, new Object[] { first.getId() }, Cursor.Direction.BACKWARD ).encode();
+            }
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( String.format( "Cursor-loaded %d/%d result sets matching bioAssaySets=%s, databaseEntries=%s, filters=%s, cursor=%s in %d ms.",
+                    vos.size(), limit + 1,
+                    bioAssaySets == null ? "*" : bioAssaySets.size(),
+                    databaseEntries == null ? "*" : databaseEntries.size(),
+                    filters, cursor, timer.getTime() ) );
+        }
+
+        Sort idSort = Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" );
+        return new CursorPage<>( vos, idSort, limit, nextCursor, prevCursor, null );
+    }
+
+    /**
+     * Build the WHERE predicate list shared by the data and count queries for
+     * {@link #findByBioAssaySetInAndDatabaseEntryInLimit}.
+     */
+    private Predicate buildPredicates( CriteriaBuilder cb, jakarta.persistence.criteria.CommonAbstractCriteria query,
+            Root<ExpressionAnalysisResultSet> root,
+            @Nullable Collection<BioAssaySet> bioAssaySets,
+            @Nullable Collection<DatabaseEntry> databaseEntries,
+            @Nullable Filters filters ) {
+        List<Predicate> preds = new ArrayList<>();
+        // Filters predicate (returns cb.conjunction() if filters null/empty). The alias map has to be
+        // passed explicitly: alias-registered properties (e.g. baselineGroup.characteristics.* under
+        // "bc") reach us as Filter(objectAlias="bc", propertyName="value"), and without the map the
+        // prefix is dropped and the path resolves as root.get("value").
+        preds.add( FilterJpaUtils.formRestrictionClause( cb, query, root, filters, getFilterablePropertyObjectAliases() ) );
+        // 🔒 ACL. Without this /resultSets served the analysis, subset factor, factor values and
+        // ontology terms of PRIVATE experiments to anonymous callers: the id-taking loaders on
+        // ExpressionAnalysisResultSetService were guarded on 2026-08-24, the two listing methods that
+        // share this method were not, and `?filter=id = <id>` reaches a single result set through the
+        // listing just as directly.
+        //
+        // 🛑 Restricted on the EXPERIMENT, not the result set. A result set is a SecuredChild: its ACL
+        // row inherits and carries no entries of its own, and the EXISTS body does not walk parentAcl,
+        // so restricting on the result set's own identity would match nothing and hide everything.
+        // Applied inside buildPredicates so the data query, the count query and the cursor query cannot
+        // drift apart — a count computed without the filter would leak the private total even when the
+        // page itself is clean.
+        // 🛑 A SUBSET analysis's experimentAnalyzed is an ExpressionExperimentSubSet, not an ExpressionExperiment,
+        // so its id is a SUBSET id and matches no ExpressionExperiment ACL row. Restricting on it directly hid
+        // every subset analysis's result sets from everyone but admins -- who bypass this predicate entirely and
+        // therefore could not see it. GSE191016 (eid 39118) is public with 24 subset result sets: admin saw 24,
+        // anonymous saw 0, and the ACL chain was correct the whole time (RS -> DEA -> EE, all inheriting, the
+        // experiment granting IS_AUTHENTICATED_ANONYMOUSLY).
+        //
+        // Roll up through sourceExperiment, the same way any count over subset analyses has to -- treat() yields
+        // null for a non-subset, so coalesce falls back to the plain experiment id and both shapes are covered by
+        // one expression.
+        Path<BioAssaySet> experimentAnalyzedForAcl = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
+        Expression<Long> aclExperimentId = cb.coalesce(
+                cb.treat( experimentAnalyzedForAcl, ExpressionExperimentSubSet.class ).get( "sourceExperiment" ).get( "id" ),
+                experimentAnalyzedForAcl.get( "id" ) );
+        preds.add( AclQueryUtils.formAclRestrictionPredicate( getSessionFactory().getCurrentSession(), cb, query,
+                aclExperimentId, ExpressionExperiment.class, BasePermission.READ ) );
+        if ( bioAssaySets != null ) {
+            // analysis.experimentAnalyzed in (:bioAssaySets)
+            Path<BioAssaySet> experimentAnalyzed = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
+            preds.add( experimentAnalyzed.in( bioAssaySets ) );
+        }
+        if ( databaseEntries != null ) {
+            // analysis.experimentAnalyzed.accession in (:databaseEntries) -- accession lives on the
+            // ExpressionExperiment subclass of BioAssaySet, so we need cb.treat() to downcast.
+            Path<BioAssaySet> experimentAnalyzed = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
+            Path<DatabaseEntry> accession = cb.treat( experimentAnalyzed, ExpressionExperiment.class ).get( "accession" );
+            preds.add( accession.in( databaseEntries ) );
+        }
+        return cb.and( preds.toArray( new Predicate[ 0 ] ) );
     }
 
     @Override
@@ -236,6 +425,42 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             Hibernate.initialize( ears.getBaselineGroup() );
             Hibernate.initialize( ears.getBaselineGroup().getExperimentalFactor() );
         }
+    }
+
+    @Override
+    public void thawAll( Collection<ExpressionAnalysisResultSet> ears ) {
+        if ( ears == null || ears.isEmpty() ) {
+            return;
+        }
+        // Two batched queries (one for the single-valued navigation chain, one for the
+        // experimentalFactors bag) replace the 5-7 sequential Hibernate.initialize calls
+        // per row in the single-element thaw(). Splitting the bag off keeps us clear of
+        // MultipleBagFetchException and row-cartesian explosion.
+        //
+        // Both queries operate on entities already attached to the session (they came out
+        // of the data query), so the fetch-joins materialize the lazy associations on the
+        // existing instances rather than producing new ones.
+        Collection<Long> ids = IdentifiableUtils.getIds( ears );
+        Session session = getSessionFactory().getCurrentSession();
+
+        // Q1: single-valued chain — analysis + experimentAnalyzed + subsetFactorValue (+EF)
+        //     + baselineGroup (+EF). All to-one associations, so a single join-fetch query
+        //     does not risk a bag explosion.
+        listByBatch( session.createQuery( "select rs from ExpressionAnalysisResultSet rs "
+                        + "left join fetch rs.analysis a "
+                        + "left join fetch a.experimentAnalyzed "
+                        + "left join fetch a.subsetFactorValue sfv "
+                        + "left join fetch sfv.experimentalFactor "
+                        + "left join fetch rs.baselineGroup bg "
+                        + "left join fetch bg.experimentalFactor "
+                        + "where rs.id in :ids", ExpressionAnalysisResultSet.class ),
+                "ids", ids, 2048 );
+
+        // Q2: experimentalFactors bag — separate to dodge MultipleBagFetchException.
+        listByBatch( session.createQuery( "select rs from ExpressionAnalysisResultSet rs "
+                        + "left join fetch rs.experimentalFactors "
+                        + "where rs.id in :ids", ExpressionAnalysisResultSet.class ),
+                "ids", ids, 2048 );
     }
 
     private void thawResultsAndContrasts( ExpressionAnalysisResultSet ears ) {
@@ -330,7 +555,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
         // result ID -> result set ID
         Map<Long, Long> representativeResults = QueryUtils.<Long, Object[]>streamByBatch( getSessionFactory().getCurrentSession()
-                        .createSQLQuery( "select dear.ID as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
+                        // MAX(dear.ID) makes this ONLY_FULL_GROUP_BY-compliant; any DEAR id for the result
+                        // set is fine here — the picker only needs one representative per result set.
+                        .createNativeQuery( "select MAX(dear.ID) as RESULT_ID, dear.RESULT_SET_FK as RESULT_SET_ID " +
                                 "from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear " +
                                 "where dear.RESULT_SET_FK in :rsIds " +
                                 "group by dear.RESULT_SET_FK" )
@@ -339,8 +566,11 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
 
         // result ID -> [ef1 ID, ef2 ID]
-        List<Object[]> representativeContrasts = listByBatch( getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK as RESULT_ID, fv1.EXPERIMENTAL_FACTOR_FK as EF1_ID, fv2.EXPERIMENTAL_FACTOR_FK as EF2_ID " +
+        List<Object[]> representativeContrasts = listByBatch( getSessionFactory().getCurrentSession().createNativeQuery(
+                        // MAX() wraps the non-grouped columns so this query is ONLY_FULL_GROUP_BY-compliant
+                        // (MySQL 5.7+ default sql_mode). All CRs for a given result share identical FV refs
+                        // by construction, so MAX picks the same value any non-aggregated reference would.
+                        "select cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK as RESULT_ID, MAX(fv1.EXPERIMENTAL_FACTOR_FK) as EF1_ID, MAX(fv2.EXPERIMENTAL_FACTOR_FK) as EF2_ID " +
                                 "from CONTRAST_RESULT cr " +
                                 // A left join is critical for performance, because otherwise the database will scan every
                                 // single contrast results until it finds a non-null one. We know however that they are all
@@ -390,8 +620,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             }
             if ( firstBaselineId != null && secondBaselineId != null ) {
                 results.put( rsId, Baseline.interaction(
-                        ( FactorValue ) getSessionFactory().getCurrentSession().load( FactorValue.class, firstBaselineId ),
-                        ( FactorValue ) getSessionFactory().getCurrentSession().load( FactorValue.class, secondBaselineId ) )
+                        ( FactorValue ) getSessionFactory().getCurrentSession().getReference( FactorValue.class, firstBaselineId ),
+                        ( FactorValue ) getSessionFactory().getCurrentSession().getReference( FactorValue.class, secondBaselineId ) )
                 );
             } else {
                 log.warn( "Could not fill the baseline groups for " + rsId + ": one or more baselines were not found in other result sets from the same analysis." );
@@ -424,43 +654,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             hist.fill( i, ( int ) counts[i] );
         }
         return hist;
-    }
-
-    @Override
-    protected Criteria getFilteringCriteria( @Nullable Filters filters ) {
-        Criteria query = this.getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionAnalysisResultSet.class )
-                .setProjection( rootEntityProjection )
-                // these two are necessary for ACL filtering, so we must use a (default) inner jointure
-                .createAlias( "analysis", "a" )
-                .createAlias( "analysis.experimentAnalyzed", "e" )
-                // if this is a subset, retrieve its source experiment
-                .createAlias( "analysis.experimentAnalyzed.sourceExperiment", "se", JoinType.LEFT_OUTER_JOIN )
-                // we need a left outer jointure so that we do not miss any result set that lacks one of these associations
-                // these aliases are necessary to resolve filterable properties
-                .createAlias( "analysis.experimentAnalyzed.accession", "ea", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "analysis.protocol", "p", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "analysis.subsetFactorValue", "sfv", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "analysis.subsetFactorValue.characteristics", "sfvc", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "baselineGroup", "b", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "baselineGroup.characteristics", "bc", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "baselineGroup.experimentalFactor", "bef", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "baselineGroup.measurement", "bm", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "pvalueDistribution", "pvd", JoinType.LEFT_OUTER_JOIN )
-                // these are used for filtering
-                .createAlias( "experimentalFactors", "ef", JoinType.LEFT_OUTER_JOIN )
-                .createAlias( "ef.factorValues", "fv", JoinType.LEFT_OUTER_JOIN );
-
-        // apply filtering
-        query.add( FilterCriteriaUtils.formRestrictionClause( filters ) );
-
-        // apply the ACL on the associated EE (or source experiment for EE subset)
-        // FIXME: would be nice to use COALESCE(se.id, e.id) instead
-        query.add( Restrictions.or(
-                AclCriteriaUtils.formAclRestrictionClause( "e.id", ExpressionExperiment.class ),
-                AclCriteriaUtils.formAclRestrictionClause( "se.id", ExpressionExperiment.class ) ) );
-
-        return query;
     }
 
     @Override
@@ -522,7 +715,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 + "where " + ( queryByResult ? "result.ID in :rids" : "result.RESULT_SET_FK = :rsid" );
 
         Query query = getSessionFactory().getCurrentSession()
-                .createSQLQuery( q )
+                .createNativeQuery( q )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .addSynchronizedEntityClass( CompositeSequence.class )
@@ -530,7 +723,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .addScalar( "RESULT_ID", StandardBasicTypes.LONG )
                 .addEntity( "gene", Gene.class )
                 // analysis results are immutable and the GENE2CS is generated, so flushing is pointless
-                .setFlushMode( FlushMode.MANUAL )
+                .setHibernateFlushMode( org.hibernate.FlushMode.MANUAL )
                 .setCacheable( true );
 
         if ( queryByResult ) {
@@ -579,5 +772,91 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     private static class FactorValueIdAndExperimentalFactorId {
         Long factorValueId;
         Long experimentalFactorId;
+    }
+
+    /**
+     * Translate a {@link Sort} chain into a list of JPA {@link Order}s rooted at the result-set entity.
+     * Mirrors {@link AbstractCriteriaFilteringVoEnabledDao} (private) so this DAO can sort the data
+     * query of {@link #findByBioAssaySetInAndDatabaseEntryInLimit} without leaking its concrete
+     * filter-collection signature onto the parent.
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private List<Order> buildOrders( CriteriaBuilder cb, Root<ExpressionAnalysisResultSet> root, Sort sort ) {
+        List<Order> orders = new ArrayList<>();
+        Map<String, String> aliasPrefixes = getFilterablePropertyObjectAliases();
+        for ( ; sort != null; sort = sort.getAndThen() ) {
+            String propertyName = sort.getPropertyName();
+            String objectAlias = sort.getObjectAlias();
+            Expression<?> expr;
+            if ( propertyName.endsWith( ".size" ) ) {
+                String collectionPath = propertyName.substring( 0, propertyName.length() - ".size".length() );
+                expr = cb.size( ( Expression ) FilterJpaUtils.resolvePathWithAlias( root, objectAlias, collectionPath, aliasPrefixes ) );
+            } else {
+                expr = FilterJpaUtils.resolvePathWithAlias( root, objectAlias, propertyName, aliasPrefixes );
+            }
+            Order order = sort.getDirection() == Sort.Direction.DESC ? cb.desc( expr ) : cb.asc( expr );
+            if ( sort.getNullMode() != null && sort.getNullMode() != Sort.NullMode.DEFAULT && order instanceof JpaOrder ) {
+                switch ( sort.getNullMode() ) {
+                    case FIRST:
+                        order = ( ( JpaOrder ) order ).nullPrecedence( NullPrecedence.FIRST );
+                        break;
+                    case LAST:
+                        order = ( ( JpaOrder ) order ).nullPrecedence( NullPrecedence.LAST );
+                        break;
+                    default:
+                        break;
+                }
+            }
+            orders.add( order );
+        }
+        return orders;
+    }
+
+    @Override
+    public Map<Long, DiffExResultSetSummaryValueObject.Prefetch> getPrefetchForVo( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+
+        // Query 1: result-set id -> ExperimentalFactor (one row per (rs,ef) pair). Using a
+        // LEFT JOIN so result sets with zero factors still appear (they keep an empty set).
+        //noinspection unchecked
+        List<Object[]> efRows = listByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select rs.id, ef from ExpressionAnalysisResultSet rs "
+                                + "left join rs.experimentalFactors ef "
+                                + "where rs.id in :rsIds" ),
+                "rsIds", ids, 2048 );
+        Map<Long, Set<ExperimentalFactor>> efs = new HashMap<>();
+        for ( Object[] row : efRows ) {
+            Long rsId = ( Long ) row[0];
+            ExperimentalFactor ef = ( ExperimentalFactor ) row[1];
+            Set<ExperimentalFactor> bucket = efs.computeIfAbsent( rsId, k -> new HashSet<>() );
+            if ( ef != null ) {
+                bucket.add( ef );
+            }
+        }
+
+        // Query 2: result-set id -> baselineGroup FactorValue (at most one). The baseline
+        // is a single FactorValue so this can be join-fetched without row explosion. We
+        // restrict to result sets that have a non-null baseline (the populateBase code
+        // already treats absence as "no baseline VO").
+        //noinspection unchecked
+        List<Object[]> baselineRows = listByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select rs.id, fv from ExpressionAnalysisResultSet rs "
+                                + "join rs.baselineGroup fv "
+                                + "where rs.id in :rsIds" ),
+                "rsIds", ids, 2048 );
+        Map<Long, FactorValue> baselines = new HashMap<>();
+        for ( Object[] row : baselineRows ) {
+            baselines.put( ( Long ) row[0], ( FactorValue ) row[1] );
+        }
+
+        Map<Long, DiffExResultSetSummaryValueObject.Prefetch> result = new HashMap<>();
+        for ( Long rsId : ids ) {
+            Set<ExperimentalFactor> rsEfs = efs.getOrDefault( rsId, Collections.emptySet() );
+            FactorValue bg = baselines.get( rsId );
+            result.put( rsId, new DiffExResultSetSummaryValueObject.Prefetch( rsEfs, bg ) );
+        }
+        return result;
     }
 }

@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.CLI;
 import ubic.gemma.core.ontology.OntologyService;
@@ -20,6 +20,21 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * @deprecated superseded by {@code GET /admin/ontologies/obsolete-terms}, which answers the same question from a
+ * running application and additionally reports the replacement each ontology asserts.
+ * <p>
+ * This command exists only because a CLI has to load the ontologies itself — hence the {@code load.ontologies=false}
+ * precondition below and the warm-up loop. A running Gemma already holds them.
+ * <p>
+ * Two things the endpoint does not carry over. Its {@code Count} column is always 1: {@code checkForObsolete}
+ * increments the count but is only reached inside the {@code checkedUris} guard, so no term can be counted twice.
+ * And it walks every characteristic in the corpus to answer a question about distinct URIs — the endpoint groups
+ * CHARACTERISTIC by URI instead and asks each one once.
+ * <p>
+ * Scheduled for removal once the correction path lands; see {@code docs/design/OBSOLETE_TERM_CORRECTION.md}.
+ */
+@Deprecated
 public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
     @Autowired
@@ -33,7 +48,7 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
     private boolean autoLoadOntologies;
 
     @Autowired
-    private List<ubic.basecode.ontology.providers.OntologyService> ontologies;
+    private List<ubic.gemma.core.ontology.providers.OntologyService> ontologies;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -42,7 +57,7 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
     @Override
     public String getShortDesc() {
-        return "Check for characteristics using obsolete terms as values (excluding GO), prints to sdout";
+        return "DEPRECATED, use GET /admin/ontologies/obsolete-terms instead. Check for characteristics using obsolete terms as values (excluding GO), prints to stdout";
     }
 
     @Override
@@ -62,26 +77,26 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
         }
 
         log.info( String.format( "Warming up %d ontologies ...", ontologies.size() ) );
-        CompletionService<ubic.basecode.ontology.providers.OntologyService> completionService = new ExecutorCompletionService<>( ontologyTaskExecutor );
-        Map<ubic.basecode.ontology.providers.OntologyService, Future<ubic.basecode.ontology.providers.OntologyService>> futures = new LinkedHashMap<>();
-        for ( ubic.basecode.ontology.providers.OntologyService ontology : ontologies ) {
+        CompletionService<ubic.gemma.core.ontology.providers.OntologyService> completionService = new ExecutorCompletionService<>( ontologyTaskExecutor );
+        Map<ubic.gemma.core.ontology.providers.OntologyService, Future<ubic.gemma.core.ontology.providers.OntologyService>> futures = new LinkedHashMap<>();
+        for ( ubic.gemma.core.ontology.providers.OntologyService ontology : ontologies ) {
             futures.put( ontology, completionService.submit( () -> {
                 // we don't need all those features for detecting obsolete terms
                 ontology.setSearchEnabled( false );
-                ontology.setInferenceMode( ubic.basecode.ontology.providers.OntologyService.InferenceMode.NONE );
+                ontology.setInferenceMode( ubic.gemma.core.ontology.providers.OntologyService.InferenceMode.NONE );
                 ontology.initialize( true, false );
                 return ontology;
             } ) );
         }
 
         for ( int i = 0; i < ontologies.size(); i++ ) {
-            ubic.basecode.ontology.providers.OntologyService os = completionService.take().get();
+            ubic.gemma.core.ontology.providers.OntologyService os = completionService.take().get();
             log.info( String.format( " === Ontology (%d/%d) warmed up: %s", i + 1, ontologies.size(), os ) );
             int remainingToLoad = ontologies.size() - ( i + 1 );
             if ( remainingToLoad > 0 && remainingToLoad <= 5 ) {
                 log.info( "Still loading:\n\t" + futures.entrySet().stream().filter( e -> !e.getValue().isDone() )
                         .map( Map.Entry::getKey )
-                        .map( ubic.basecode.ontology.providers.OntologyService::toString )
+                        .map( ubic.gemma.core.ontology.providers.OntologyService::toString )
                         .collect( Collectors.joining( "\n\t" ) ) );
             }
         }

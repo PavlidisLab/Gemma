@@ -18,33 +18,65 @@ package ubic.gemma.model.genome.gene;
  *
  */
 
-import org.hibernate.search.annotations.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.ChromosomeFeature;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 
-import javax.persistence.Transient;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Hibernate Search 7 mapping: contributes {@code name} (tokenized), {@code ncbiGi} (keyword), and
+ * its {@code accessions} (via {@code @IndexedEmbedded} -> {@code DatabaseEntry.accession}) up to
+ * {@link Gene}'s document via the {@link Gene#getProducts()} embedded path.
+ */
+@Entity
+@DiscriminatorValue("GeneProduct")
 @Indexed
 public class GeneProduct extends ChromosomeFeature {
 
+    @Column(name = "NCBI_GI", columnDefinition = "VARCHAR(255)")
     private String ncbiGi;
+    // Cascade-all here is a problem since the same entry can be associated with a biosequence as well.
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "GENE_PRODUCT_FK", columnDefinition = "BIGINT")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<DatabaseEntry> accessions = new java.util.HashSet<>();
     /**
      * Only used in transient instances in sequence analysis. The entity relation in the database is never used and will
      * be removed.
      */
+    @Transient
     private Set<PhysicalLocation> exons = new java.util.HashSet<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "GENE_FK", columnDefinition = "BIGINT")
     private Gene gene;
     /**
      * Indicate if this GeneProduct is dummy.
      * <p>
      * Dummy {@link GeneProduct} are not listed in the {@link Gene#getProducts()} associations.
      */
+    @Column(name = "DUMMY", columnDefinition = "TINYINT")
     private boolean dummy;
 
     @Override
@@ -99,11 +131,12 @@ public class GeneProduct extends ChromosomeFeature {
     }
 
     @Override
-    @Field
+    @FullTextField
     public String getName() {
         return super.getName();
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Set<DatabaseEntry> getAccessions() {
         return this.accessions;
@@ -144,7 +177,7 @@ public class GeneProduct extends ChromosomeFeature {
     /**
      * @return GI for the gene product (if available)
      */
-    @Field(analyze = Analyze.NO)
+    @KeywordField
     public String getNcbiGi() {
         return this.ncbiGi;
     }

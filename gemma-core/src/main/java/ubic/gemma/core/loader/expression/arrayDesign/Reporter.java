@@ -39,8 +39,8 @@ public class Reporter extends AbstractDescribable implements Serializable {
     private Integer col;
     private Long startInBioChar;
     private String strand;
-    private CompositeSequence compositeSequence;
-    private ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic;
+    private transient CompositeSequence compositeSequence;
+    private transient ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic;
 
     /**
      * No-arg constructor added to satisfy javabean contract

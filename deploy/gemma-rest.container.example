@@ -1,0 +1,63 @@
+# Quadlet container unit for gemma-rest 2.0.
+#
+# Place at /etc/containers/systemd/gemma-rest.container then:
+#   systemctl daemon-reload && systemctl enable --now gemma-rest
+#
+# Reference: https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html
+# This file is a starting point — review every TODO(sysop) before first deploy.
+
+[Unit]
+Description=Gemma REST 2.0 (containerised)
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+# TODO(sysop): pin a specific immutable tag (or @sha256: digest) — never use :latest in prod.
+# TODO(sysop): swap the registry/org if not pulling from ghcr.io/pavlidislab.
+Image=ghcr.io/pavlidislab/gemma-rest:2.0
+ContainerName=gemma-rest
+
+# TODO(sysop): bind only to localhost; Caddy fronts it on 443. Do NOT expose 8080 publicly.
+PublishPort=127.0.0.1:8080:8080
+
+# Non-secret config (DB URL, JVM opts, etc.) lives in env.conf.
+# TODO(sysop): chmod 600 on /etc/gemma/env.conf; owned by root.
+EnvironmentFile=/etc/gemma/env.conf
+
+# Credentials via systemd LoadCredential — sealed, only visible to this service
+# under %d (the credentials directory inside the unit's runtime).
+# TODO(sysop): create /etc/gemma/db.password with `credential-setup.sh.example`.
+# TODO(sysop): for TPM-sealed storage prefer `systemd-creds encrypt` + SetCredentialEncrypted=.
+LoadCredential=db.password:/etc/gemma/db.password
+Environment=GEMMA_DB_PASSWORD_FILE=%d/db.password
+
+# Persistent state + logs.
+# TODO(sysop): match these host paths to your filesystem layout. `:Z` privatises the SELinux
+# label for this container — if the path is shared with another consumer, use `:z` (shared)
+# or drop the flag and manage `chcon` manually.
+# TODO(sysop): pre-create /var/lib/gemma/data and /var/log/gemma with the UID/GID the
+# container process runs as (check the image's USER directive — typically `tomcat`).
+Volume=/var/lib/gemma/data:/gemmaData:Z
+Volume=/var/log/gemma:/usr/local/tomcat/logs:Z
+
+# Resource envelope.
+# TODO(sysop): match to host RAM. The JVM honours -XX:MaxRAMPercentage inside the container,
+# so heap scales with this Memory= cap. Leave 25-30% headroom for off-heap (direct buffers,
+# Lucene mmap, metaspace, native code).
+Memory=12G
+
+# Optional but recommended hardening — uncomment if your image supports it:
+# TODO(sysop): confirm the image runs as non-root (USER directive); then enable:
+# NoNewPrivileges=true
+# ReadOnly=true
+# Tmpfs=/tmp
+# Tmpfs=/usr/local/tomcat/temp
+
+[Service]
+Restart=on-failure
+RestartSec=10s
+# Cold-start of a full Hibernate + Spring context can take a while on a busy host.
+TimeoutStartSec=180s
+
+[Install]
+WantedBy=multi-user.target

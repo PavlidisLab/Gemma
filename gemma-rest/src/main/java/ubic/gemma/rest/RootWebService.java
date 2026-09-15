@@ -5,28 +5,32 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import ubic.gemma.rest.annotations.AllowsUnknownQueryParameters;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseReadService;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 
-import javax.annotation.Nullable;
-import javax.servlet.ServletContext;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
+import org.springframework.lang.Nullable;
+import jakarta.servlet.ServletContext;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,13 +49,13 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Path("/")
 @SecurityScheme(name = "basicAuth", type = SecuritySchemeType.HTTP, scheme = "basic", description = "Authenticate with your Gemma username and password")
 @SecurityScheme(name = "cookieAuth", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.COOKIE, paramName = "JSESSIONID", description = "Authenticate with your current Gemma session.")
-@CommonsLog
+@Slf4j
 public class RootWebService {
 
     private static final String MSG_WELCOME = "Welcome to Gemma RESTful API.";
 
     @Autowired
-    private ExternalDatabaseService externalDatabaseService;
+    private ExternalDatabaseReadService externalDatabaseService;
 
     @Autowired
     private UserManager userManager;
@@ -110,6 +114,74 @@ public class RootWebService {
         return respond( getUserVo( userManager.getCurrentUser() ) );
     }
 
+    // (Curation-UI compatibility alias `GET /me` was removed — it conflicted with
+    // AuthWebService.me() at Jersey resource-model validation. AuthWebService.me()
+    // is now the canonical /me handler; this class still serves /users/me.)
+
+    /**
+     * Self-service password change for the authenticated user. Requires the current
+     * password to be presented so a hijacked session or leaked token can't silently
+     * rotate the credential. Routes through {@link UserManager#changePassword}, which
+     * verifies the current password against the stored hash, enforces a minimum length,
+     * and re-encodes the new password.
+     */
+    @PUT
+    @Path("/users/me/password")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Change the authenticated user's own password",
+            description = "Requires the current password and a new password (minimum 8 characters). "
+                    + "Returns 204 on success, 400 if the current password is wrong or the new password is too short.",
+            security = {
+                    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "basicAuth"),
+                    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "cookieAuth")
+            },
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204",
+                            description = "Password changed."),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",
+                            description = "Missing fields, wrong current password, or new password too short.",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                            implementation = ubic.gemma.rest.util.ResponseErrorObject.class ) ) ) })
+    public Response changeMyPassword( ChangePasswordRequest req ) {
+        if ( req == null || req.currentPassword == null || req.currentPassword.isEmpty()
+                || req.newPassword == null || req.newPassword.isEmpty() ) {
+            throw new BadRequestException( "currentPassword and newPassword are required" );
+        }
+        try {
+            userManager.changePassword( req.currentPassword, req.newPassword );
+        } catch ( org.springframework.security.authentication.BadCredentialsException e ) {
+            // Don't distinguish "wrong current password" beyond a generic 400 message.
+            throw new BadRequestException( "The current password is incorrect." );
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( e.getMessage() );
+        }
+        return Response.noContent().build();
+    }
+
+    /**
+     * Top-level alias for {@code GET /datasets/categories}: the curation-UI calls {@code GET /categories} for the
+     * recently-used annotation-category picker. Implemented as a 302 redirect so query params (filter, limit,
+     * etc.) pass through unchanged.
+     */
+    @GET
+    @Path("/categories")
+    @Operation(summary = "Retrieve usage statistics of categories among datasets (alias of /datasets/categories)", hidden = true,
+            responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "302",
+                    description = "Redirection to /datasets/categories.") })
+    @AllowsUnknownQueryParameters
+    public Response getCategoriesAlias( @Context UriInfo uriInfo ) {
+        UriBuilder builder = uriInfo.getBaseUriBuilder()
+                .scheme( null ).host( null ).port( -1 )
+                .path( "/datasets/categories" );
+        uriInfo.getQueryParameters().forEach( ( k, vs ) -> vs.forEach( v -> builder.queryParam( k, v ) ) );
+        return Response.status( Response.Status.FOUND )
+                .location( builder.build() )
+                .build();
+    }
+
     /**
      * Retrieve user information.
      * <p>
@@ -137,7 +209,25 @@ public class RootWebService {
     private UserValueObject getUserVo( User user ) {
         // Convert to a VO and check for admin
         String group = userManager.findGroupsForUser( user.getUserName() ).stream().findFirst().orElse( null );
-        return new UserValueObject( user, group );
+        List<String> authorities = resolveAuthorities( user );
+        return new UserValueObject( user, group, authorities );
+    }
+
+    /**
+     * Resolve the user's Spring Security authorities (GROUP_ADMIN, GROUP_USER, …) as
+     * a sorted string list. The curation-UI gates admin surfaces on the presence of
+     * {@code GROUP_ADMIN} here; without this field the SPA had no signal to tell
+     * admin from non-admin and had to fall back to hide-when-anonymous gating.
+     * Routed through {@link UserManager#loadUserByUsername} so the lookup works the
+     * same on /users/me and on an admin-querying /users/{username} call — neither
+     * relies on the looked-up user being the current authentication principal.
+     */
+    private List<String> resolveAuthorities( User user ) {
+        UserDetails details = userManager.loadUserByUsername( user.getUserName() );
+        return details.getAuthorities().stream()
+                .map( GrantedAuthority::getAuthority )
+                .sorted()
+                .collect( Collectors.toList() );
     }
 
     @lombok.Value
@@ -169,6 +259,32 @@ public class RootWebService {
     }
 
     /**
+     * Request body for {@link #changeMyPassword}. Both fields are required.
+     */
+    public static class ChangePasswordRequest {
+        /** The user's current password, re-verified before the change is applied. */
+        public String currentPassword;
+        /** The desired new password (minimum 8 characters). */
+        public String newPassword;
+
+        public String getCurrentPassword() {
+            return currentPassword;
+        }
+
+        public void setCurrentPassword( String currentPassword ) {
+            this.currentPassword = currentPassword;
+        }
+
+        public String getNewPassword() {
+            return newPassword;
+        }
+
+        public void setNewPassword( String newPassword ) {
+            this.newPassword = newPassword;
+        }
+    }
+
+    /**
      * @author keshav
      */
     @lombok.Value
@@ -178,12 +294,21 @@ public class RootWebService {
         boolean enabled;
         @Nullable
         String group;
+        /**
+         * Spring Security authorities granted to this user (e.g. {@code GROUP_ADMIN},
+         * {@code GROUP_USER}). Sorted alphabetically for stable wire output. The
+         * curation-UI checks {@code authorities.includes("GROUP_ADMIN")} to decide
+         * whether to render admin surfaces; prior to 2026-06-05 this was anonymous-only
+         * because the user payload carried no role signal at all.
+         */
+        List<String> authorities;
 
-        public UserValueObject( User user, @Nullable String group ) {
+        public UserValueObject( User user, @Nullable String group, List<String> authorities ) {
             userName = user.getUserName();
             email = user.getEmail();
             enabled = user.isEnabled();
             this.group = group;
+            this.authorities = authorities;
         }
     }
 }

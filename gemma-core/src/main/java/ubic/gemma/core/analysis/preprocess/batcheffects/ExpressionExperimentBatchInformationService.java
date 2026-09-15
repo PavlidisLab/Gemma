@@ -1,10 +1,12 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +24,22 @@ public interface ExpressionExperimentBatchInformationService {
     boolean checkHasBatchInfo( ExpressionExperiment ee );
 
     /**
+     * Batch counterpart to {@link #checkHasBatchInfo(ExpressionExperiment)}. Returns a per-EE
+     * boolean using one experimental-factor HQL plus one batched
+     * {@link ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService#getLastEvents(Class, Class)}
+     * call rather than N round-trips.
+     * <p>
+     * Use this when assembling status for many EEs in one HTTP request (e.g. bulk
+     * pipeline-status); calling the single-EE variant per dataset serializes a
+     * {@code thawLiter} round-trip per EE which dominates wall-clock over a tunnel.
+     * <p>
+     * EEs absent from the input set are absent from the returned map; the boolean is
+     * {@code false} for any EE for which no batch-factor and no
+     * {@code BatchInformationEvent} could be resolved.
+     */
+    Map<ExpressionExperiment, Boolean> checkHasBatchInfo( Collection<ExpressionExperiment> ees );
+
+    /**
      * Check if the given experiment has usable batch information.
      */
     boolean checkHasUsableBatchInfo( ExpressionExperiment ee );
@@ -30,6 +48,16 @@ public interface ExpressionExperimentBatchInformationService {
      * Check if a given experiment has a significant batch confound.
      */
     boolean hasSignificantBatchConfound( ExpressionExperiment ee );
+
+    /**
+     * Check if a given {@link BioAssaySet} has a significant batch confound.
+     * <p>
+     * For an {@link ExpressionExperiment} this is equivalent to {@link #hasSignificantBatchConfound(ExpressionExperiment)}.
+     * For an {@link ExpressionExperimentSubSet} the test is restricted to the subset's assays so that confounds
+     * arising only in the full experiment do not propagate into per-subset DEA result-file headers
+     * (see <a href="https://github.com/PavlidisLab/Gemma/issues/110">#110</a>).
+     */
+    boolean hasSignificantBatchConfound( BioAssaySet bas );
 
     /**
      * Obtain the significant batch confounds for a dataset.

@@ -1,38 +1,33 @@
 package ubic.gemma.core.search.source;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclService;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.time.StopWatch;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.queryParser.MultiFieldQueryParser;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.highlight.QueryScorer;
-import org.apache.lucene.util.Version;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.search.FullTextQuery;
-import org.hibernate.search.FullTextSession;
-import org.hibernate.search.Search;
-import org.springframework.beans.factory.InitializingBean;
+import org.hibernate.search.engine.search.query.SearchResult;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.acls.model.SidRetrievalStrategy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.search.FieldAwareSearchSource;
+import ubic.gemma.core.search.Highlighter;
 import ubic.gemma.core.search.SearchContext;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.lucene.LuceneHighlighter;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
+import ubic.gemma.core.security.util.SecurityUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -41,41 +36,60 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.DoubleSummaryStatistics;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.requireNonNull;
-import static ubic.gemma.core.search.lucene.LuceneQueryUtils.parseSafely;
-
 /**
- * Search source based on Hibernate Search.
+ * Search source backed by Hibernate Search 7's local-Lucene backend.
+ *
+ * <p>This is a Hibernate Search 7 reimplementation of the pre-strip
+ * {@code HibernateSearchSource}. Key API changes vs the HS 5 original:
+ * <ul>
+ *   <li>{@code Search.getFullTextSession(session)} →
+ *       {@link Search#session(org.hibernate.engine.spi.SessionImplementor)} returning a
+ *       {@link SearchSession} that operates against the current ORM session.</li>
+ *   <li>{@code MultiFieldQueryParser} + raw Lucene {@code Query} → HS 7's
+ *       {@code SearchScope.predicate()} DSL: per-class predicate over the historical
+ *       field list ({@code ALL_FIELDS}/{@code ALL_EXACT_FIELDS}).</li>
+ *   <li>{@code FullTextQuery.list()} → {@link org.hibernate.search.engine.search.query.SearchResult#hits()}.</li>
+ *   <li>Highlighter integration is deferred to Step 5 of the recce; this build
+ *       returns no highlights.</li>
+ * </ul>
  *
  * @author poirigui
  */
 @Component
 @CommonsLog
-public class HibernateSearchSource implements FieldAwareSearchSource, InitializingBean {
+public class HibernateSearchSource implements FieldAwareSearchSource {
 
     private static final double FULL_TEXT_SCORE_PENALTY = 0.9;
 
-    private static final Class<?>[] SEARCHABLE_CLASSES = new Class[] {
-            ExpressionExperiment.class,
-            ArrayDesign.class,
-            CompositeSequence.class,
-            BioSequence.class,
-            Gene.class,
-            GeneSet.class,
-            ExpressionExperimentSet.class,
-            BibliographicReference.class
-    };
+    /**
+     * Hard cap on the over-fetched Lucene hit count so a misconfigured multiplier (or a very
+     * large requested page) can't drag arbitrary amounts of work through Hibernate Search.
+     */
+    private static final int ACL_OVER_FETCH_HARD_CAP = 500;
+
+    /**
+     * Number of unresolvable ACL identities named individually in the warning emitted by
+     * {@link #readAcls(List)}.
+     */
+    private static final int UNRESOLVED_ACL_LOG_LIMIT = 10;
 
     private static final String[] PLATFORM_FIELDS = { "shortName", "name", "description", "alternateNames.name", "externalReferences.accession" };
     private static final String[] PLATFORM_EXACT_FIELDS = { "shortName", "name", "alternateNames.name", "externalReferences.accession" };
     private static final String[] PUBLICATION_FIELDS = new String[] { "name", "abstractText",
             "authorList", "chemicals.name", "chemicals.registryNumber",
             "fullTextUri", "keywords.term", "meshTerms.term", "pubAccession.accession", "title" };
-    // TODO: check if name is suitable
     private static final String[] PUBLICATION_EXACT_FIELDS = new String[] { "name", "fullTextUri", "pubAccession.accession" };
 
     private static String[] DATASET_FIELDS = {
@@ -99,24 +113,22 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
             "experimentalDesign.experimentalFactors.factorValues.characteristics.secondObjectUri"
     };
     private static String[] DATASET_EXACT_FIELDS = {
-            "shortName", "name", "accession.accession",
+            "shortName", "name", "accession.accession"
     };
 
     private static final String[] GENE_FIELDS = {
             "name", "accessions.accession", "aliases.alias",
-            "ensemblId", "ncbiGeneId", "officialName", "officialSymbol", "products.name",
-            "products.ncbiGi", "products.accessions.accession", "products.previousNcbiId"
+            "ensemblId", "previousNcbiGeneId", "officialName", "officialSymbol",
+            "products.name", "products.ncbiGi", "products.accessions.accession"
     };
     private static final String[] GENE_EXACT_FIELDS = {
-            "name", "accessions.accession", "aliases.alias", "ensemblId", "ncbiGeneId", "officialName", "officialSymbol"
+            "name", "accessions.accession", "aliases.alias", "ensemblId", "officialName", "officialSymbol"
     };
 
     private static String[] GENE_SET_FIELDS = {
             "name", "description", "characteristics.value", "characteristics.valueUri", "sourceAccession.accession"
     };
-    private final static String[] GENE_SET_EXACT_FIELDS = {
-            "name"
-    };
+    private static final String[] GENE_SET_EXACT_FIELDS = { "name" };
 
     private static final String[] EXPERIMENT_SET_FIELDS = { "name", "description" };
     private static final String[] EXPERIMENT_SET_EXACT_FIELDS = { "name" };
@@ -125,15 +137,26 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     private static final String[] BIO_SEQUENCE_EXACT_FIELDS = { "name", "sequenceDatabaseEntry.accession" };
 
     private static String[] COMPOSITE_SEQUENCE_FIELDS = { "name", "description" };
-    private final static String[] COMPOSITE_SEQUENCE_EXACT_FIELDS = { "name" };
+    private static final String[] COMPOSITE_SEQUENCE_EXACT_FIELDS = { "name" };
 
     private static final Map<Class<?>, Set<String>> ALL_FIELDS = new HashMap<>();
     private static final Map<Class<?>, Set<String>> ALL_EXACT_FIELDS = new HashMap<>();
 
+    /**
+     * Per-indexed-root list of {@code projectable = Projectable.YES} fields. Mirrors the
+     * {@code @FullTextField(projectable = Projectable.YES)} annotations on the entity classes.
+     *
+     * <p>The Step-5 highlighter path projects these out of the Lucene document and routes the
+     * raw value through {@link Highlighter#highlight(String, String)} on the SearchContext. The
+     * HS 7 native {@code f.highlight(field)} projection is intentionally avoided here because it
+     * requires the field schema to declare {@code highlightable = Highlightable.ANY}, a change
+     * paired with the Step-6 reindex.</p>
+     */
+    private static final Map<Class<?>, String[]> PROJECTABLE_FIELDS = new HashMap<>();
+
     static {
         DATASET_FIELDS = ArrayUtils.addAll( DATASET_FIELDS, prefix( "primaryPublication.", PUBLICATION_FIELDS ) );
         DATASET_FIELDS = ArrayUtils.addAll( DATASET_FIELDS, prefix( "otherRelevantPublications.", PUBLICATION_FIELDS ) );
-        // TODO: EXPERIMENT_SET_FIELDS = ArrayUtils.addAll( EXPERIMENT_SET_FIELDS, prefix( "experiments.", DATASET_FIELDS ) );
         GENE_SET_FIELDS = ArrayUtils.addAll( GENE_SET_FIELDS, prefix( "literatureSources.", PUBLICATION_FIELDS ) );
         GENE_SET_FIELDS = ArrayUtils.addAll( GENE_SET_FIELDS, prefix( "members.gene.", GENE_FIELDS ) );
         COMPOSITE_SEQUENCE_FIELDS = ArrayUtils.addAll( COMPOSITE_SEQUENCE_FIELDS, prefix( "biologicalCharacteristic.", BIO_SEQUENCE_FIELDS ) );
@@ -143,6 +166,8 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
         ALL_FIELDS.put( BioSequence.class, new HashSet<>( Arrays.asList( BIO_SEQUENCE_FIELDS ) ) );
         ALL_FIELDS.put( Gene.class, new HashSet<>( Arrays.asList( GENE_FIELDS ) ) );
         ALL_FIELDS.put( GeneSet.class, new HashSet<>( Arrays.asList( GENE_SET_FIELDS ) ) );
+        ALL_FIELDS.put( ExpressionExperimentSet.class, new HashSet<>( Arrays.asList( EXPERIMENT_SET_FIELDS ) ) );
+        ALL_FIELDS.put( BibliographicReference.class, new HashSet<>( Arrays.asList( PUBLICATION_FIELDS ) ) );
 
         DATASET_EXACT_FIELDS = ArrayUtils.addAll( DATASET_EXACT_FIELDS, prefix( "primaryPublication.", PUBLICATION_EXACT_FIELDS ) );
         DATASET_EXACT_FIELDS = ArrayUtils.addAll( DATASET_EXACT_FIELDS, prefix( "otherRelevantPublications.", PUBLICATION_EXACT_FIELDS ) );
@@ -152,6 +177,18 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
         ALL_EXACT_FIELDS.put( BioSequence.class, new HashSet<>( Arrays.asList( BIO_SEQUENCE_EXACT_FIELDS ) ) );
         ALL_EXACT_FIELDS.put( Gene.class, new HashSet<>( Arrays.asList( GENE_EXACT_FIELDS ) ) );
         ALL_EXACT_FIELDS.put( GeneSet.class, new HashSet<>( Arrays.asList( GENE_SET_EXACT_FIELDS ) ) );
+        ALL_EXACT_FIELDS.put( ExpressionExperimentSet.class, new HashSet<>( Arrays.asList( EXPERIMENT_SET_EXACT_FIELDS ) ) );
+        ALL_EXACT_FIELDS.put( BibliographicReference.class, new HashSet<>( Arrays.asList( PUBLICATION_EXACT_FIELDS ) ) );
+
+        // Projectable fields per @Indexed root. These match the @FullTextField(projectable = Projectable.YES)
+        // annotations on the entity classes; keep in sync if you flip more fields to projectable.
+        PROJECTABLE_FIELDS.put( ExpressionExperiment.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( ArrayDesign.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( CompositeSequence.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( GeneSet.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( ExpressionExperimentSet.class, new String[] { "description" } );
+        PROJECTABLE_FIELDS.put( BibliographicReference.class, new String[] { "abstractText", "authorList", "title" } );
+        // Gene + BioSequence have no projectable text fields today.
     }
 
     private static String[] prefix( String p, String... fields ) {
@@ -167,25 +204,21 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     @Autowired
     private SidRetrievalStrategy sidRetrievalStrategy;
 
-    private final Map<Class<?>, Analyzer> analyzers = new HashMap<>();
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.openSession() );
-        try {
-            for ( Class<?> clazz : SEARCHABLE_CLASSES ) {
-                analyzers.put( clazz, fullTextSession.getSearchFactory().getAnalyzer( clazz ) );
-            }
-        } finally {
-            fullTextSession.close();
-        }
-    }
+    /**
+     * Multiplier applied to {@code maxResults} when over-fetching Lucene hits ahead of the
+     * ACL post-filter — see PERF_PROBE_SEARCH #4. Anonymous and admin requests still fetch
+     * exactly {@code maxResults} (the ACL post-filter is a no-op or near-no-op for them);
+     * other authenticated users (curators with selective project visibility) over-fetch so
+     * the response page can refill after {@link #filterByAcls} drops hits.
+     */
+    @Value("${gemma.search.acl.over_fetch_multiplier:2}")
+    private int aclOverFetchMultiplier;
 
     @Override
     public Set<String> getFields( Class<? extends Identifiable> resultType, SearchSettings.SearchMode searchMode ) {
-        return searchMode == SearchSettings.SearchMode.EXACT ?
-                ALL_EXACT_FIELDS.getOrDefault( resultType, Collections.emptySet() ) :
-                ALL_FIELDS.getOrDefault( resultType, Collections.emptySet() );
+        return searchMode == SearchSettings.SearchMode.EXACT
+                ? ALL_EXACT_FIELDS.getOrDefault( resultType, Collections.emptySet() )
+                : ALL_FIELDS.getOrDefault( resultType, Collections.emptySet() );
     }
 
     @Override
@@ -194,123 +227,243 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
     }
 
     @Override
-    public Collection<SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<ubic.gemma.model.common.search.SearchResult<ArrayDesign>> searchArrayDesign( SearchSettings settings, SearchContext context ) throws SearchException {
         return searchFor( settings, context, ArrayDesign.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? PLATFORM_EXACT_FIELDS : PLATFORM_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<ubic.gemma.model.common.search.SearchResult<BibliographicReference>> searchBibliographicReference( SearchSettings settings, SearchContext context ) throws SearchException {
         return searchFor( settings, context, BibliographicReference.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? PUBLICATION_EXACT_FIELDS : PUBLICATION_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<ubic.gemma.model.common.search.SearchResult<ExpressionExperimentSet>> searchExperimentSet( SearchSettings settings, SearchContext context ) throws SearchException {
         return searchFor( settings, context, ExpressionExperimentSet.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? EXPERIMENT_SET_EXACT_FIELDS : EXPERIMENT_SET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<BioSequence>> searchBioSequence( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<ubic.gemma.model.common.search.SearchResult<BioSequence>> searchBioSequence( SearchSettings settings, SearchContext context ) throws SearchException {
         return searchFor( settings, context, BioSequence.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? BIO_SEQUENCE_EXACT_FIELDS : BIO_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<ubic.gemma.model.common.search.SearchResult<CompositeSequence>> searchCompositeSequence( SearchSettings settings, SearchContext context ) throws SearchException {
         return searchFor( settings, context, CompositeSequence.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? COMPOSITE_SEQUENCE_EXACT_FIELDS : COMPOSITE_SEQUENCE_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<ubic.gemma.model.common.search.SearchResult<ExpressionExperiment>> searchExpressionExperiment( SearchSettings settings, SearchContext context ) throws SearchException {
         return searchFor( settings, context, ExpressionExperiment.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? DATASET_EXACT_FIELDS : DATASET_FIELDS );
     }
 
     @Override
-    public Collection<SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
-        return searchFor( settings, context, Gene.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_EXACT_FIELDS : GENE_FIELDS );
+    public Collection<ubic.gemma.model.common.search.SearchResult<Gene>> searchGene( SearchSettings settings, SearchContext context ) throws SearchException {
+        Collection<ubic.gemma.model.common.search.SearchResult<Gene>> hits =
+                searchFor( settings, context, Gene.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_EXACT_FIELDS : GENE_FIELDS );
+        // DatabaseSearchSource already applies this filter inside searchGene; the HS leg
+        // is missing the equivalent which is why cross-taxa hits (e.g. human GRIN1 on a
+        // taxon=mouse query) leak through. Filter against the Gene's taxon — null result
+        // objects (fillResults=false callers) and null taxons are dropped conservatively.
+        if ( settings.getTaxonConstraint() != null ) {
+            ubic.gemma.model.genome.Taxon want = settings.getTaxonConstraint();
+            hits.removeIf( r -> {
+                Gene g = r.getResultObject();
+                return g == null || g.getTaxon() == null || !g.getTaxon().equals( want );
+            } );
+        }
+        return hits;
     }
 
     @Override
-    public Collection<SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
+    public Collection<ubic.gemma.model.common.search.SearchResult<GeneSet>> searchGeneSet( SearchSettings settings, SearchContext context ) throws SearchException {
         return searchFor( settings, context, GeneSet.class, settings.getMode() == SearchSettings.SearchMode.EXACT ? GENE_SET_EXACT_FIELDS : GENE_SET_FIELDS );
     }
 
-    private <T extends Identifiable> Collection<SearchResult<T>> searchFor( SearchSettings settings, SearchContext context, Class<T> clazz, String... fields ) throws SearchException {
+    /**
+     * HS 7 search implementation: build a per-class scope, parse the user query through a
+     * {@code simpleQueryString} predicate over the field list (an HS-7 native, ASCII-safe
+     * alternative to HS 5's {@code MultiFieldQueryParser}), then project entity reference,
+     * Lucene score, and (when a {@link Highlighter} is supplied via {@link SearchContext})
+     * the values of the per-class {@link #PROJECTABLE_FIELDS} so they can be post-processed
+     * into highlight snippets.
+     */
+    private <T extends Identifiable> Collection<ubic.gemma.model.common.search.SearchResult<T>> searchFor(
+            SearchSettings settings, SearchContext context, Class<T> clazz, String... fields ) throws SearchException {
+        if ( settings.getQuery() == null || settings.getQuery().trim().isEmpty() ) {
+            return Collections.emptyList();
+        }
         try {
-            FullTextSession fullTextSession = Search.getFullTextSession( sessionFactory.getCurrentSession() );
-            Analyzer analyzer = analyzers.get( clazz );
-            QueryParser queryParser = new MultiFieldQueryParser( Version.LUCENE_36, fields, analyzer );
-            Query query = parseSafely( settings, queryParser, context.getIssueReporter() );
-            LuceneHighlighter luceneHighlighter;
-            org.apache.lucene.search.highlight.Highlighter highlighter;
-            String[] projection;
-            if ( context.getHighlighter() instanceof LuceneHighlighter ) {
-                luceneHighlighter = ( LuceneHighlighter ) context.getHighlighter();
-                highlighter = new org.apache.lucene.search.highlight.Highlighter( luceneHighlighter.getFormatter(), new QueryScorer( query ) );
-                projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE, FullTextQuery.DOCUMENT };
-            } else {
-                luceneHighlighter = null;
-                highlighter = null;
-                projection = new String[] { settings.isFillResults() ? FullTextQuery.THIS : FullTextQuery.ID, FullTextQuery.SCORE };
-            }
-            //noinspection unchecked
-            List<Object[]> results = fullTextSession
-                    .createFullTextQuery( query, clazz )
-                    .setProjection( projection )
-                    .setMaxResults( settings.getMaxResults() )
-                    .setCacheable( true )
-                    .list();
-            StopWatch timer = StopWatch.createStarted();
-            try {
-                DoubleSummaryStatistics stats = results.stream().mapToDouble( r -> ( Float ) r[1] ).summaryStatistics();
-                List<SearchResult<T>> r2 = results.stream()
-                        .map( r -> searchResultFromRow( r, settings, luceneHighlighter, highlighter, analyzer, clazz, stats ) )
-                        .filter( Objects::nonNull )
+            Session session = sessionFactory.getCurrentSession();
+            SearchSession searchSession = Search.session( session );
+
+            final Highlighter highlighter = context != null ? context.getHighlighter() : null;
+            final String[] highlightFields = highlighter != null
+                    ? PROJECTABLE_FIELDS.getOrDefault( clazz, new String[0] )
+                    : new String[0];
+
+            final int requestedMax = Math.max( settings.getMaxResults(), 1 );
+            final boolean aclPostFilter = Securable.class.isAssignableFrom( clazz )
+                    && aclPostFilterWillRun();
+            final int fetchSize = aclPostFilter
+                    ? Math.min( ACL_OVER_FETCH_HARD_CAP, requestedMax * Math.max( aclOverFetchMultiplier, 1 ) )
+                    : requestedMax;
+
+            SearchResult<List<?>> hits = searchSession.search( clazz )
+                    .select( f -> {
+                        org.hibernate.search.engine.search.projection.SearchProjection<?>[] projections =
+                                new org.hibernate.search.engine.search.projection.SearchProjection<?>[2 + highlightFields.length];
+                        projections[0] = f.entityReference().toProjection();
+                        projections[1] = f.score().toProjection();
+                        for ( int i = 0; i < highlightFields.length; i++ ) {
+                            projections[2 + i] = f.field( highlightFields[i], String.class ).toProjection();
+                        }
+                        return f.composite( projections );
+                    } )
+                    .where( f -> f.simpleQueryString()
+                            .fields( fields )
+                            .matching( settings.getQuery() )
+                            // tolerate Lucene-reserved characters; mirrors the pre-strip parseSafely behaviour.
+                            .defaultOperator( org.hibernate.search.engine.search.common.BooleanOperator.OR )
+                            // Drop NOT: the simpleQueryString syntax treats a `-` immediately
+                            // before a term as "must not contain". Hyphens are common inside
+                            // valid query terms — drug names (5-FU), cell lines (HEK-293), EE
+                            // short names (alizadeh-lymphoma, west-breast) — so honouring the
+                            // prohibit operator here actively breaks more queries than it serves.
+                            // The other syntactic features (AND/OR/PHRASE/PRECEDENCE/PREFIX/FUZZY/
+                            // ESCAPE/NEAR/WHITESPACE) remain enabled.
+                            .flags( org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.AND,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.OR,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.PREFIX,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.PHRASE,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.PRECEDENCE,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.ESCAPE,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.WHITESPACE,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.FUZZY,
+                                    org.hibernate.search.engine.search.predicate.dsl.SimpleQueryFlag.NEAR ) )
+                    .fetch( fetchSize );
+
+            List<List<?>> rows = hits.hits();
+            DoubleSummaryStatistics stats = rows.stream().mapToDouble( r -> ( Float ) r.get( 1 ) ).summaryStatistics();
+
+            // Batch-fetch entities by id when callers asked for filled results — replaces a
+            // per-hit session.get(clazz, id) loop with one byMultipleIds().multiLoad(...) call.
+            // For N hits this collapses N round-trips to 1, plus the L1-cache fast path via
+            // enableSessionCheck(true) when the same id was already loaded earlier in the session.
+            Map<Long, T> entitiesById = null;
+            if ( settings.isFillResults() ) {
+                List<Long> ids = rows.stream()
+                        .map( HibernateSearchSource::extractId )
+                        .filter( java.util.Objects::nonNull )
                         .collect( Collectors.toList() );
-                if ( Securable.class.isAssignableFrom( clazz ) ) {
-                    //noinspection unchecked
-                    return filterByAcls( r2, ( Class<? extends Securable> ) clazz );
+                if ( !ids.isEmpty() ) {
+                    List<T> entities = session.byMultipleIds( clazz )
+                            .enableSessionCheck( true )
+                            .multiLoad( ids );
+                    entitiesById = HashMap.newHashMap( entities.size() );
+                    for ( T e : entities ) {
+                        if ( e != null && e.getId() != null ) {
+                            entitiesById.put( e.getId(), e );
+                        }
+                    }
                 } else {
-                    return r2;
-                }
-            } finally {
-                if ( timer.getTime() > 100 ) {
-                    log.warn( String.format( "Highlighting %d results took %d ms", results.size(), timer.getTime() ) );
+                    entitiesById = Collections.emptyMap();
                 }
             }
-        } catch ( org.hibernate.search.SearchException e ) {
+            final Map<Long, T> entitiesByIdFinal = entitiesById;
+
+            List<ubic.gemma.model.common.search.SearchResult<T>> results = rows.stream()
+                    .map( r -> rowToSearchResult( r, settings, clazz, stats, highlighter, highlightFields, entitiesByIdFinal ) )
+                    .filter( java.util.Objects::nonNull )
+                    .collect( Collectors.toList() );
+
+            if ( Securable.class.isAssignableFrom( clazz ) ) {
+                //noinspection unchecked
+                Collection<ubic.gemma.model.common.search.SearchResult<T>> filtered =
+                        filterByAcls( results, ( Class<? extends Securable> ) clazz );
+                // After the ACL post-filter, trim back to the originally requested page size.
+                // When over-fetching was active (aclPostFilter == true) and the ACL still
+                // dropped enough hits to fall under requestedMax, log it — a heavier ACL
+                // skew than the multiplier accounts for is the only way to leave the page
+                // short. We don't loop-and-retry; one over-fetch is the heuristic.
+                if ( filtered.size() > requestedMax ) {
+                    return filtered.stream().limit( requestedMax ).collect( Collectors.toList() );
+                }
+                if ( aclPostFilter && filtered.size() < requestedMax && hits.hits().size() >= fetchSize ) {
+                    log.debug( String.format(
+                            "ACL post-filter left %d results from %d Lucene hits for %s (requested %d); "
+                                    + "consider raising gemma.search.acl.over_fetch_multiplier.",
+                            filtered.size(), hits.hits().size(), clazz.getSimpleName(), requestedMax ) );
+                }
+                return filtered;
+            }
+            return results;
+        } catch ( org.hibernate.search.util.common.SearchException e ) {
             throw new HibernateSearchException( String.format( "Error while searching for %s.", clazz.getName() ), e );
         }
     }
 
-    @Nullable
-    private <T extends Identifiable> SearchResult<T> searchResultFromRow( Object[] row, SearchSettings settings, @Nullable LuceneHighlighter luceneHighlighter, @Nullable org.apache.lucene.search.highlight.Highlighter highlighter, Analyzer analyzer, Class<T> clazz, DoubleSummaryStatistics stats ) {
+    /**
+     * Pull the Long id out of an HS 7 projection row's entity-reference column. Returns null
+     * for rows whose first projection isn't an {@code EntityReference} — callers filter those
+     * out the same way {@link #rowToSearchResult} drops them. Kept package-static so both the
+     * id-collection pre-pass and the per-row mapping share the same parse logic.
+     */
+    private static Long extractId( List<?> row ) {
+        Object refObj = row.get( 0 );
+        if ( refObj instanceof org.hibernate.search.engine.common.EntityReference ) {
+            Object raw = ( ( org.hibernate.search.engine.common.EntityReference ) refObj ).id();
+            return ( raw instanceof Long ) ? ( Long ) raw : Long.valueOf( raw.toString() );
+        }
+        return null;
+    }
+
+    private <T extends Identifiable> ubic.gemma.model.common.search.SearchResult<T> rowToSearchResult(
+            List<?> row, SearchSettings settings, Class<T> clazz, DoubleSummaryStatistics stats,
+            Highlighter highlighter, String[] highlightFields, Map<Long, T> entitiesById ) {
+        Float scoreF = ( Float ) row.get( 1 );
         double score;
         if ( stats.getMax() == stats.getMin() ) {
             score = FULL_TEXT_SCORE_PENALTY;
         } else {
-            score = FULL_TEXT_SCORE_PENALTY * ( ( Float ) row[1] - stats.getMin() ) / ( stats.getMax() - stats.getMin() );
+            score = FULL_TEXT_SCORE_PENALTY * ( scoreF - stats.getMin() ) / ( stats.getMax() - stats.getMin() );
+        }
+        // entity reference exposes the id as Object — entities use Long primary keys throughout Gemma.
+        Long id = extractId( row );
+        if ( id == null ) {
+            return null;
+        }
+        Map<String, String> highlights = null;
+        if ( highlighter != null && highlightFields.length > 0 ) {
+            highlights = new HashMap<>();
+            for ( int i = 0; i < highlightFields.length; i++ ) {
+                Object v = row.get( 2 + i );
+                if ( v instanceof String && !( ( String ) v ).isEmpty() ) {
+                    highlights.putAll( highlighter.highlight( ( String ) v, highlightFields[i] ) );
+                }
+            }
+            if ( highlights.isEmpty() ) {
+                highlights = null;
+            }
         }
         if ( settings.isFillResults() ) {
-            //noinspection unchecked
-            T entity = ( T ) row[0];
+            T entity = entitiesById != null ? entitiesById.get( id ) : null;
             if ( entity == null || entity.getId() == null ) {
-                // this happens if an entity is still in the cache, but was removed from the database
+                // entity vanished out from under the index — skip the stale hit.
                 return null;
             }
-            return SearchResult.from( clazz, entity, score, luceneHighlighter != null ? highlightDocument( luceneHighlighter, ( Document ) row[2], requireNonNull( highlighter ), analyzer ) : null, "hibernateSearch" );
+            return ubic.gemma.model.common.search.SearchResult.from( clazz, entity, score, highlights, "hibernateSearch" );
         } else {
-            return SearchResult.from( clazz, ( Long ) row[0], score, luceneHighlighter != null ? highlightDocument( luceneHighlighter, ( Document ) row[2], requireNonNull( highlighter ), analyzer ) : null, "hibernateSearch" );
+            return ubic.gemma.model.common.search.SearchResult.from( clazz, id, score, highlights, "hibernateSearch" );
         }
-    }
-
-    @Nullable
-    private Map<String, String> highlightDocument( LuceneHighlighter highlighter, Document document, org.apache.lucene.search.highlight.Highlighter luceneHighlighter, Analyzer analyzer ) {
-        return highlighter.highlightDocument( document, luceneHighlighter, analyzer );
     }
 
     /**
-     * Filter search results by ACLs.
+     * Filter search results by ACLs (gsec → ubic.gemma.core.security rename has shifted the
+     * imports above; the algorithm is unchanged).
      */
-    private <T extends Identifiable> Collection<SearchResult<T>> filterByAcls( Collection<SearchResult<T>> results, Class<? extends Securable> resultType ) {
+    // visible for testing
+    <T extends Identifiable> Collection<ubic.gemma.model.common.search.SearchResult<T>> filterByAcls(
+            Collection<ubic.gemma.model.common.search.SearchResult<T>> results, Class<? extends Securable> resultType ) {
         if ( results.isEmpty() ) {
             return results;
         }
@@ -318,12 +471,111 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
         List<ObjectIdentity> aclIdentities = results.stream()
                 .map( r -> new AclObjectIdentity( resultType, r.getResultId() ) )
                 .collect( Collectors.toList() );
-        Set<Long> filteredIds = aclService.readAclsById( aclIdentities ).values().stream()
-                .filter( acl -> acl.isGranted( Collections.singletonList( BasePermission.READ ), sids, false ) )
-                .map( acl -> ( Long ) acl.getObjectIdentity().getIdentifier() )
+        // Key off the identities we passed in rather than the Acl's own ObjectIdentity: on the
+        // degraded path below the map is assembled from our own keys, and it spares us a guess at
+        // which ObjectIdentity implementation the AclService chose to key its result map by.
+        Set<Long> filteredIds = readAcls( aclIdentities ).entrySet().stream()
+                .filter( e -> aclGrantsRead( e.getValue(), sids ) )
+                .map( e -> ( ( Number ) e.getKey().getIdentifier() ).longValue() )
                 .collect( Collectors.toSet() );
         return results.stream()
                 .filter( s -> filteredIds.contains( s.getResultId() ) )
                 .collect( Collectors.toList() );
+    }
+
+    /**
+     * Bulk-read the ACLs for {@code identities}, tolerating identities that have no ACL row at all.
+     * <p>
+     * Spring Security's {@link org.springframework.security.acls.jdbc.JdbcAclService#readAclsById(List)}
+     * is all-or-nothing: it discards the entire batch and throws {@link NotFoundException} if even one
+     * requested identity is unresolved. For a search post-filter that is the wrong contract twice over
+     * — an unresolvable identity should drop one hit, not 500 the request (the reported failure), and
+     * certainly not deny the whole page (what a blanket catch-and-empty-map would do).
+     * <p>
+     * The realistic source of an unresolvable identity is a Lucene document outliving its entity: the
+     * index still carries a deleted dataset, so both the row and its {@code ACLOBJECTIDENTITY} entry
+     * are gone. Hit 2026-08-14 on a local instance — {@code /datasets?query=brain} matched
+     * ExpressionExperiment 91719, absent from {@code INVESTIGATION}, and the batch read aborted the
+     * whole search. A stale hit is unreadable by definition, so dropping it is also the right answer
+     * for the user; the {@code warn} is aimed at the operator, for whom it means "reindex".
+     * <p>
+     * The failed batch call has already populated the ACL cache for every identity that DID resolve
+     * (the throw happens in {@code JdbcAclService} after {@code BasicLookupStrategy} has cached its
+     * hits), so the retry loop costs cache lookups plus one query per genuinely missing row.
+     */
+    private Map<ObjectIdentity, Acl> readAcls( List<ObjectIdentity> identities ) {
+        try {
+            return aclService.readAclsById( identities );
+        } catch ( NotFoundException e ) {
+            Map<ObjectIdentity, Acl> acls = HashMap.newHashMap( identities.size() );
+            List<ObjectIdentity> unresolved = new ArrayList<>();
+            for ( ObjectIdentity oid : identities ) {
+                try {
+                    acls.put( oid, aclService.readAclById( oid ) );
+                } catch ( NotFoundException nfe ) {
+                    unresolved.add( oid );
+                }
+            }
+            log.warn( String.format(
+                    "No ACL information for %d of %d search hits; dropping them from the results. "
+                            + "This usually means the search index references entities that no longer "
+                            + "exist and needs to be rebuilt. Affected: %s",
+                    unresolved.size(), identities.size(), summarize( unresolved ) ) );
+            return acls;
+        }
+    }
+
+    /**
+     * Render at most {@link #UNRESOLVED_ACL_LOG_LIMIT} identities for the warning above — a query
+     * that outruns a badly stale index can leave hundreds, and the count already carries the scale.
+     */
+    private static String summarize( List<ObjectIdentity> identities ) {
+        String head = identities.stream()
+                .limit( UNRESOLVED_ACL_LOG_LIMIT )
+                .map( oid -> oid.getType() + ":" + oid.getIdentifier() )
+                .collect( Collectors.joining( ", " ) );
+        return identities.size() > UNRESOLVED_ACL_LOG_LIMIT
+                ? head + ", … (" + ( identities.size() - UNRESOLVED_ACL_LOG_LIMIT ) + " more)"
+                : head;
+    }
+
+    /**
+     * Quiet equivalent of {@code acl.isGranted(READ, sids, false)}: Spring Security's
+     * {@link org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy}
+     * throws {@link NotFoundException} when an ACL has no matching ACE and no parent to
+     * inherit from. For a search post-filter "no ACE matches" is the same as "deny" —
+     * we just want to drop the hit, not 500 the whole request. This wrapper translates
+     * the exception into {@code false}.
+     * <p>
+     * Hit observed 2026-05-25 on frink: anonymous {@code /search?query=BRCA1} (no
+     * resultTypes) crossed an entity whose ACL was loaded but had no anonymous READ
+     * ACE; the stock thrower bubbled up to the REST layer as a 500.
+     */
+    private static boolean aclGrantsRead( Acl acl, List<Sid> sids ) {
+        try {
+            return acl.isGranted( Collections.singletonList( BasePermission.READ ), sids, false );
+        } catch ( NotFoundException e ) {
+            return false;
+        }
+    }
+
+    /**
+     * @return {@code true} when the ACL post-filter applied by {@link #filterByAcls} can
+     * meaningfully drop hits for the current authentication. Anonymous traffic and admin
+     * traffic both bypass the per-row READ check at the AclService layer (anonymous hits
+     * the public-only fast path; admin always wins) so over-fetching to compensate for
+     * the post-filter is wasted work.
+     */
+    private boolean aclPostFilterWillRun() {
+        if ( SecurityContextHolder.getContext().getAuthentication() == null ) {
+            return false;
+        }
+        if ( SecurityUtil.isUserAnonymous() ) {
+            return false;
+        }
+        if ( SecurityUtil.isUserAdmin() || SecurityUtil.isRunningAsAdmin() ) {
+            return false;
+        }
+        return true;
     }
 }

@@ -28,12 +28,13 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  * mapping off.
  * <p>
  * You almost certainly want to call {@link #refresh()} before using this service. This is done automatically if you use
- * the {@link HomologeneConfig#homologeneService(GeneService, TaxonService)} factory to lazy-load this service.
+ * the {@link HomologeneConfig#homologeneService(GeneService, TaxonReadService)} factory to lazy-load this service.
  *
  * @author kelsey
  */
@@ -58,12 +59,12 @@ public class HomologeneServiceImpl implements HomologeneService {
     private final Map<Long, Collection<Long>> group2Gene = new ConcurrentHashMap<>(); // Homology group ID to Name of file in NCBI
 
     private final GeneService geneService;
-    private final TaxonService taxonService;
+    private final TaxonReadService taxonReadService;
     private final Resource homologeneFile;
 
-    public HomologeneServiceImpl( GeneService geneService, TaxonService taxonService, Resource homologeneFile ) {
+    public HomologeneServiceImpl( GeneService geneService, TaxonReadService taxonReadService, Resource homologeneFile ) {
         this.geneService = geneService;
-        this.taxonService = taxonService;
+        this.taxonReadService = taxonReadService;
         this.homologeneFile = homologeneFile;
     }
 
@@ -138,7 +139,7 @@ public class HomologeneServiceImpl implements HomologeneService {
         if ( gene == null ) {
             return null;
         }
-        final Taxon taxon = this.taxonService.findByCommonName( taxonCommonName );
+        final Taxon taxon = this.taxonReadService.findByCommonName( taxonCommonName );
         Gene geneToReturn;
         if ( Objects.equals( gene.getTaxon().getId(), taxon.getId() ) ) {
             geneToReturn = gene;
@@ -159,7 +160,7 @@ public class HomologeneServiceImpl implements HomologeneService {
 
     private void parseHomologeneFile( InputStream is ) throws IOException {
 
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        BufferedReader br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) );
         String line;
 
         while ( ( line = br.readLine() ) != null ) {

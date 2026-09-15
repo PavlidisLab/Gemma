@@ -1,3 +1,8 @@
+.venv/
+.claude/
+scripts/__pycache__/
+handoffs/
+
 # CVS/git global ignores
 RCS
 SCCS
@@ -54,6 +59,7 @@ test-build
 build
 andromda*.exc
 *.jar
+!vendor/**/*.jar
 *.log
 velocity.log.*
 .myumldata
@@ -151,3 +157,43 @@ atlassian-ide-plugin.xml
 
 # a custom copy of Gemma_CLI.xml for testing purposes
 .idea/runConfigurations/Gemma_CLI_custom.xml
+figures/__pycache__/
+
+# Hibernate Search 7 Lucene index dirs (when gemma.search.dir resolves
+# to a relative path during tests, HS 7 creates per-entity subdirs at
+# that root). HibernateConfig.resolveSearchIndexBase() now coerces a
+# misconfigured value back to ${java.io.tmpdir}/gemmaData/searchIndices,
+# but these patterns stay as a defensive belt against future regressions
+# and to cover any leftover indexes from earlier runs.
+/searchIndices/
+/gemma-core/searchIndices/
+/gemma-core/target/searchIndices/
+# Per-entity Hibernate Search 7 index directories — one dir per @Indexed
+# entity root. Each contains a Lucene segments_* file and a write.lock.
+# See HibernateConfig.resolveSearchIndexBase() for the upstream guard.
+/gemma-core/AlternateName/
+/gemma-core/ArrayDesign/
+/gemma-core/BibliographicReference/
+/gemma-core/BioAssay/
+/gemma-core/BioMaterial/
+/gemma-core/BioSequence/
+/gemma-core/Characteristic/
+/gemma-core/CompositeSequence/
+/gemma-core/Compound/
+/gemma-core/DatabaseEntry/
+/gemma-core/ExperimentalDesign/
+/gemma-core/ExperimentalFactor/
+/gemma-core/ExpressionExperiment/
+/gemma-core/ExpressionExperimentSet/
+/gemma-core/FactorValue/
+/gemma-core/Gene/
+/gemma-core/GeneAlias/
+/gemma-core/GeneProduct/
+/gemma-core/GeneSet/
+/gemma-core/GeneSetMember/
+/gemma-core/Keyword/
+/gemma-core/MedicalSubjectHeading/
+/gemma-core/Statement/
+
+# Obsidian workspace (this repo is code; notes/vaults do not belong here)
+.obsidian/

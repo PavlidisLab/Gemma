@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
@@ -29,7 +30,7 @@ import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.RelationshipPersister;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -52,11 +53,14 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
     @Autowired
     private TaxonService taxonService;
     @Autowired
-    private Persister persisterHelper;
+    private RelationshipPersister relationshipPersister;
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
+
+    @Value("${gemma.download.path}")
+    private String downloadPath;
 
     private String filePath = null;
 
@@ -76,13 +80,15 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
     @Override
     protected void doAuthenticatedWork() throws Exception {
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-        gene2GOAssLoader.setPersisterHelper( persisterHelper );
+        gene2GOAssLoader.setRelationshipPersister( relationshipPersister );
 
         Collection<Taxon> taxa = taxonService.loadAll();
 
         gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxa ) );
 
         HttpFetcher fetcher = new HttpFetcher();
+        log.info( String.format( "Output will be written to: %s", downloadPath ) );
+        fetcher.setLocalBasePath( downloadPath );
 
         Collection<File> files;
         if ( filePath != null ) {

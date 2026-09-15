@@ -42,7 +42,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpression
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -365,6 +365,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        // Per-EE progress hook for the pipeline framework. NOOP outside a
+        // pipeline context (GEMMA_JOB_ID unset).
+        getPipelineJobReporter().stage( "dea:" + ee.getShortName() );
+
         ee = this.eeService.thawLite( ee );
 
         if ( mode == Mode.DELETE ) {
@@ -462,6 +466,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 factorsToUse.removeIf( ExperimentFactorUtils::isBatchFactor );
             }
 
+            // the DE_Include/DE_Exclude marker selects which samples take part; it is not a biological factor and
+            // must not be counted as one, or a design with two real factors reads as three and is refused below
+            factorsToUse.removeIf( ExperimentFactorUtils::isDeIncludeExcludeFactor );
+
             if ( factorsToUse.isEmpty() ) {
                 throw new RuntimeException( "No suitable factors to analyze found." );
             } else if ( factorsToUse.size() == 1 ) {
@@ -524,13 +532,26 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         }
 
         Collection<DifferentialExpressionAnalysis> results;
+        String performed;
         if ( factorSelectionMode == FactorSelectionMode.REDO ) {
             results = redoDifferentialExpressionAnalyses( ee, config );
-            addSuccessObject( ee, "Performed " + results.size() + " differential expression analyses based on a previous analyses." );
+            performed = " differential expression analyses based on a previous analyses.";
         } else {
             results = runDifferentialExpressionAnalyses( ee, config );
-            addSuccessObject( ee, "Performed " + results.size() + " differential expression analyses." );
+            performed = " differential expression analyses.";
         }
+
+        // An experiment that produced nothing is not a success to report. The analyzer raises
+        // AllSubSetAnalysesFailedException when no subset yields an analysis, so nothing should reach here empty;
+        // this is the guard at the reporting site, which is where the damage was done. GSE74400 (eid 12822) had
+        // both its subsets skipped, and "Performed 0 differential expression analyses." went out through
+        // addSuccessObject with exit status 0, so a batch runner testing the exit status believed it for hours.
+        if ( results.isEmpty() ) {
+            throw new RuntimeException( "No differential expression analysis was performed for " + ee.getShortName()
+                    + "; see the preceding log for the subsets that were skipped or failed." );
+        }
+
+        addSuccessObject( ee, "Performed " + results.size() + performed );
 
         if ( config.isPersist() ) {
             refreshDeaFromGemmaWeb( ee );

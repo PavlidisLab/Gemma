@@ -2,8 +2,8 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,13 +11,14 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDaoImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
@@ -25,11 +26,11 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
-public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
+public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest5 {
 
     private static final int NUM_PROBES = 100;
 
@@ -52,6 +53,18 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
             return new ExpressionExperimentDaoImpl( sessionFactory );
         }
 
+        // EE DAO now field-injects ArrayDesignDao for batched platform loads (round-2 probe #8).
+        @Bean
+        public ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl( sessionFactory );
+        }
+
+        // PERF_PROBE_REPORT_ROUND4 B1: EE DAO field-injects SingleCellDimensionExperimentDao.
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDaoImpl( sessionFactory );
+        }
+
         @Bean
         public QuantitationTypeDao quantitationTypeDao( SessionFactory sessionFactory ) {
             return new QuantitationTypeDaoImpl( sessionFactory );
@@ -61,7 +74,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
     @Autowired
     private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         RandomExpressionDataMatrixUtils.setSeed( 123L );
     }
@@ -85,6 +98,16 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         }
         BioAssayDimension bad = new BioAssayDimension();
         session.persist( bad );
+        // A quantitation type is required: the vectors used to be persisted without one, which the
+        // loader's inner join fetch then filtered out entirely, and the test only passed because the
+        // query had been loosened to a left join fetch. Production has never held such a row.
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "test" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LINEAR );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        session.persist( qt );
         // create 10000 vectors
         Set<ProcessedExpressionDataVector> vectors = new HashSet<>();
         for ( int i = 0; i < NUM_PROBES; i++ ) {
@@ -92,6 +115,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
             vector.setExpressionExperiment( ee );
             vector.setBioAssayDimension( bad );
             vector.setDesignElement( probes.get( i ) );
+            vector.setQuantitationType( qt );
             vector.setData( new byte[8 * 8] );
             vectors.add( vector );
         }

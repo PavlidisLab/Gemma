@@ -18,19 +18,34 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.analysis.expression.diff.Baseline;
+import ubic.gemma.model.analysis.expression.diff.ContrastsValueObject;
+import ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject;
+import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
+ * Facade for {@link DifferentialExpressionResultService}.
+ * <p>
+ * Phase 3 service decomposition: the row-level result read cluster has been
+ * extracted to {@link DifferentialExpressionResultReadService}; this facade delegates
+ * reads to that bean while continuing to host the ACL {@code @Secured} annotations
+ * (which live on the {@link DifferentialExpressionResultService} interface) and the
+ * inherited {@link ubic.gemma.persistence.service.BaseReadOnlyService} surface
+ * (provided by {@link AbstractService}).
+ *
  * @author keshav
  * @see DifferentialExpressionResultService
  */
@@ -38,104 +53,70 @@ import java.util.*;
 public class DifferentialExpressionResultServiceImpl extends AbstractService<DifferentialExpressionAnalysisResult>
         implements DifferentialExpressionResultService {
 
-    private final DifferentialExpressionResultDao DERDao;
+    private final DifferentialExpressionResultReadService readService;
 
     @Autowired
-    public DifferentialExpressionResultServiceImpl( DifferentialExpressionResultDao DERDao ) {
+    public DifferentialExpressionResultServiceImpl( DifferentialExpressionResultDao DERDao,
+            DifferentialExpressionResultReadService readService ) {
         super( DERDao );
-        this.DERDao = DERDao;
+        this.readService = readService;
     }
 
+    // =====================================================================
+    // Read methods -- delegate to DifferentialExpressionResultReadService.
+    // ACL @Secured annotations live on the DifferentialExpressionResultService
+    // interface and apply at the facade proxy boundary.
+    // =====================================================================
+
     @Override
-    @Transactional(readOnly = true)
     public List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzedIds( Gene gene, boolean useGene2Cs, boolean keepNonSpecific, Collection<Long> experimentAnalyzedIds, boolean includeSubSets, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, double threshold, boolean initializeFactorValues ) {
-        return DERDao.findByGeneAndExperimentAnalyzed( gene, experimentAnalyzedIds, includeSubSets,
-                sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, useGene2Cs, keepNonSpecific, initializeFactorValues );
+        return readService.findByGeneAndExperimentAnalyzedIds( gene, useGene2Cs, keepNonSpecific, experimentAnalyzedIds, includeSubSets,
+                sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, threshold, initializeFactorValues );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByExperimentAnalyzed(
             Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit ) {
-        return groupDiffExResultVos( this.DERDao.findByExperimentAnalyzed( IdentifiableUtils.getIds( experimentsAnalyzed ),
-                experimentsAnalyzed.stream().anyMatch( ea -> ea instanceof ExpressionExperiment ) && includeSubSets,
-                threshold, limit ) );
+        return readService.findByExperimentAnalyzed( experimentsAnalyzed, includeSubSets, threshold, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes ) {
-        return groupDiffExResultVos( this.DERDao.findByGene( gene, useGene2Cs, keepNonSpecificProbes ) );
+        return readService.findByGene( gene, useGene2Cs, keepNonSpecificProbes );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene,
             boolean useGene2Cs, boolean keepNonSpecificProbes, double threshold, int limit ) {
-        return groupDiffExResultVos( this.DERDao.findByGene( gene, useGene2Cs, keepNonSpecificProbes, threshold, limit ) );
+        return readService.findByGene( gene, useGene2Cs, keepNonSpecificProbes, threshold, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
             boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets ) {
-        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, useGene2Cs, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
-                experimentsAnalyzed.stream().anyMatch( ea -> ea instanceof ExpressionExperiment ) && includeSubSets ) );
+        return readService.findByGeneAndExperimentAnalyzed( gene, useGene2Cs, keepNonSpecificProbes, experimentsAnalyzed, includeSubSets );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
             boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit ) {
-        return groupDiffExResultVos( this.DERDao.findByGeneAndExperimentAnalyzed( gene, useGene2Cs, keepNonSpecificProbes, IdentifiableUtils.getIds( experimentsAnalyzed ),
-                experimentsAnalyzed.stream().anyMatch( ea -> ea instanceof ExpressionExperiment ) && includeSubSets,
-                threshold, limit ) );
+        return readService.findByGeneAndExperimentAnalyzed( gene, useGene2Cs, keepNonSpecificProbes, experimentsAnalyzed, includeSubSets, threshold, limit );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findGeneResultsByResultSetIdsAndGeneIds(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds ) {
-        return this.DERDao.findGeneResultsByResultSetIdsAndGeneIds( resultSets, geneIds );
+        return readService.findGeneResultsByResultSetIdsAndGeneIds( resultSets, geneIds );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<DifferentialExpressionValueObject> findByResultSet( ExpressionAnalysisResultSet resultSet,
             double threshold, int maxResultsToReturn, int minNumberOfResults ) {
-        return this.DERDao.findByResultSet( resultSet, threshold, maxResultsToReturn, minNumberOfResults );
+        return readService.findByResultSet( resultSet, threshold, maxResultsToReturn, minNumberOfResults );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Map<Long, ContrastsValueObject> findContrastsByAnalysisResultIds( Collection<Long> ids ) {
-        return this.DERDao.findContrastsByAnalysisResultIds( ids );
-    }
-
-    private Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> groupDiffExResultVos( Map<? extends BioAssaySet, List<DifferentialExpressionAnalysisResult>> qResult ) {
-        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
-        for ( Map.Entry<? extends BioAssaySet, List<DifferentialExpressionAnalysisResult>> e : qResult.entrySet() ) {
-            BioAssaySetValueObject ee = createValueObject( e.getKey() );
-            for ( DifferentialExpressionAnalysisResult dear : e.getValue() ) {
-                Hibernate.initialize( dear.getProbe() );
-                DifferentialExpressionValueObject probeResult = new DifferentialExpressionValueObject( dear );
-                results.computeIfAbsent( ee, k -> new ArrayList<>() ).add( probeResult );
-            }
-        }
-        return results;
-    }
-
-    /**
-     * Special use case. Use a constructor of the desired VO instead, or the loadValueObject() in all VO-Enabled services.
-     * @return an expression experiment value object.
-     */
-    private BioAssaySetValueObject createValueObject( BioAssaySet bioAssaySet ) {
-        if ( bioAssaySet instanceof ExpressionExperiment ) {
-            return new ExpressionExperimentValueObject( ( ExpressionExperiment ) bioAssaySet );
-        } else if ( bioAssaySet instanceof ExpressionExperimentSubSet ) {
-            return new ExpressionExperimentSubsetValueObject( ( ExpressionExperimentSubSet ) bioAssaySet );
-        } else {
-            throw new UnsupportedOperationException( "Unsupported BioAssaySet type for VO conversion: " + bioAssaySet.getClass().getName() );
-        }
+        return readService.findContrastsByAnalysisResultIds( ids );
     }
 }

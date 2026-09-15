@@ -8,16 +8,23 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.Highlighter;
+import ubic.gemma.core.search.OntologyHighlighter;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchSource;
+import ubic.gemma.core.search.SearchTimeoutException;
 import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchResultSet;
+import ubic.gemma.model.common.description.AnnotationRelationBasis;
+import ubic.gemma.persistence.service.common.description.AnnotationRelationDao;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -26,7 +33,16 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 
 import javax.annotation.Nullable;
 import java.net.URI;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.DoubleSummaryStatistics;
+import java.util.HashMap;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -35,6 +51,30 @@ import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.prepareTermUriQuery;
 import static ubic.gemma.core.search.source.SearchSourceUtils.isFilled;
 
+/**
+ * Ontology-driven {@link SearchSource} for {@link ExpressionExperiment} discovery
+ * via {@link Characteristic} URIs.
+ *
+ * <p><b>Phase 3 restoration.</b> This class was deleted wholesale in the Phase 2
+ * "stub/delete search subsystem cascade" commit (ed93c2f023) and is restored here
+ * per {@code SEARCH_RECCE.md} Section 6.3 Step 5. The body is the pre-strip
+ * implementation (416 LoC) with one adjustment: the {@code findExperimentsByUris}
+ * call uses the current public {@code CharacteristicService} signature
+ * (which carries an explicit {@code loadEEs} parameter).
+ *
+ * <p><b>Known runtime gap (2026-05-19).</b> This source consumes
+ * {@link OntologyService#findTerms(String, int, long, TimeUnit)}, which in turn
+ * routes through baseCode's pre-renovations {@code findTerm} machinery.
+ * baseCode 1.1.34-RENOVATIONS-SNAPSHOT stubbed its Lucene-3 indexer and exposes
+ * no public hook for the in-Gemma {@code OntologySearchService}
+ * ({@code jena-text} / Lucene 9) to slot under it. Until either baseCode gains
+ * such a hook, or Gemma's {@code OntologyServiceImpl.findTerms} is rewired to
+ * also consult {@link ubic.gemma.core.ontology.search.OntologySearchService},
+ * full-text ontology search will return empty results and only the term-URI
+ * exact-match path through {@link CharacteristicService#findBestByUri(String)}
+ * will populate. See {@code SEARCH_RECCE.md} Section 6 for the architectural
+ * gap recce and the path to closing it.
+ */
 @Component
 @CommonsLog
 public class OntologySearchSource implements SearchSource {
@@ -49,6 +89,70 @@ public class OntologySearchSource implements SearchSource {
      */
     private static final double INDIRECT_HIT_PENALTY = 0.9;
 
+    /**
+     * Penalty for a hit reached through an inferred relation rather than through the annotation
+     * itself.
+     *
+     * <p>Steeper than {@link #INDIRECT_HIT_PENALTY} on purpose. An indirect hit is still the term the
+     * user asked for, sitting at a different level of the same dataset; an inferred hit is a
+     * <i>different term</i> that Gemma believes stands for the one asked about. That is a weaker claim
+     * and it should never outrank a dataset that is actually annotated with the query.</p>
+     */
+    private static final double INFERRED_RELATION_SCORE_PENALTY = 0.5;
+
+    /**
+     * Ceiling on how many terms one query may be widened by, across all seeds.
+     *
+     * <p>A runaway guard, not a working limit: a disease with a large sub-term fan-out could otherwise
+     * turn one search into a query over thousands of URIs. When it bites, it is logged rather than
+     * applied silently -- a search that quietly stopped widening looks identical to one that found
+     * nothing to widen into.</p>
+     */
+    private static final int MAX_INFERRED_EXPANSION_TERMS = 200;
+
+    /**
+     * How many related terms any ONE matched term may contribute.
+     *
+     * <p>🛑 This is the limit that matters, and it is the difference between the two uses of the same
+     * relations. Asking "is the disease I am about to tag among those this gene is associated with?"
+     * is set membership, and every candidate belongs in the set. Widening a <i>search</i> is not: some
+     * genes carry a great many diseases -- {@code Trp53} pairs with 15 in our corpus, and a null in it
+     * genuinely models lung adenocarcinoma, medulloblastoma and breast cancer among others -- so
+     * expanding through all of them turns a search for one of those into a search for every dataset
+     * that ever mutated {@code Trp53}. The user asked a specific question and would get a
+     * gene-shaped answer.</p>
+     *
+     * <p>A per-seed cap on the RANKED list is used rather than a specificity threshold, deliberately.
+     * A threshold is an absolute number nobody has tuned against curator judgement yet, and the wrong
+     * one silently changes what search returns; a cap is relative, so a gene with fifteen diseases
+     * contributes its best few and a gene with one contributes its one.</p>
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.search.inferredRelations.maxTermsPerSeed:5}")
+    private int maxInferredTermsPerSeed = 5;
+
+    /**
+     * Minimum specificity a {@link AnnotationRelationBasis#CORPUS} relation must clear to widen a
+     * search. Ignored for asserted bases, which are not counted.
+     *
+     * <p>Zero by default: no threshold has been tuned against curator judgement, and the honest
+     * default is the one that does not quietly filter. The per-seed cap above is what keeps the
+     * widening bounded in the meantime; this is here so the bar can be raised once the distribution
+     * has been looked at.</p>
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.search.inferredRelations.minSpecificity:0}")
+    private double minInferredSpecificity = 0d;
+
+    /**
+     * Widen only through objects that relate to at most this many distinct subjects.
+     *
+     * <p>Unlike the specificity threshold, this one HAS a default, because the distribution has been
+     * looked at and it is not close: {@code Homozygous negative} relates to 2,898 subjects,
+     * {@code Overexpression} to 1,839, {@code 24 h} to 448, while {@code MPTP} and {@code 5xFAD} sit
+     * in the low single digits. Widening a search through a dose or a zygosity reaches most of the
+     * corpus and returns it as though it answered the question.</p>
+     */
+    @org.springframework.beans.factory.annotation.Value("${gemma.search.inferredRelations.maxObjectBreadth:25}")
+    private int maxInferredObjectBreadth = 25;
 
     /**
      * Special indicator for exact matches. Those are stripped out when computing summary statistics and then assigned
@@ -57,15 +161,27 @@ public class OntologySearchSource implements SearchSource {
     private static final double EXACT_MATCH_SCORE = -1.0;
 
     /**
-     * Amount of time to dedicate to searching and inferring terms.
+     * Amount of time to dedicate to searching and inferring terms. Bounded and tunable: because the
+     * search runs in a read-only transaction, this is also the ceiling on how long one request can
+     * hold its pooled DB connection during the ontology leg. The old 30s constant let a single slow
+     * search pin a connection for 3× the Hikari acquire timeout, cascading into pool exhaustion under
+     * load; default is now 10s (matching the pool's connectionTimeout).
      */
-    private static final long ONTOLOGY_SEARCH_AND_INFERENCE_TIMEOUT_MILLIS = 30000L;
+    @org.springframework.beans.factory.annotation.Value("${gemma.search.ontology.timeoutMs:10000}")
+    private long ontologySearchAndInferenceTimeoutMillis;
 
     @Autowired
     private OntologyService ontologyService;
 
     @Autowired
     private CharacteristicService characteristicService;
+
+    /**
+     * Optional so that the several test contexts wiring this source by hand keep booting without it;
+     * when absent, {@link SearchSettings#isUseInferredRelations()} simply has nothing to widen with.
+     */
+    @Autowired(required = false)
+    private ubic.gemma.persistence.service.common.description.AnnotationRelationService annotationRelationService;
 
     @Override
     public boolean accepts( SearchSettings settings ) {
@@ -76,11 +192,6 @@ public class OntologySearchSource implements SearchSource {
 
     /**
      * Search via characteristics i.e. ontology terms.
-     * <p>
-     * This is an important type of search but also a point of performance issues. Searches for "specific" terms are
-     * generally not a big problem (yielding less than 100 results); searches for "broad" terms can return numerous
-     * (thousands)
-     * results.
      */
     @Override
     public Collection<SearchResult<ExpressionExperiment>> searchExpressionExperiment( final SearchSettings settings, SearchContext context ) throws SearchException {
@@ -89,24 +200,13 @@ public class OntologySearchSource implements SearchSource {
         StopWatch watch = StopWatch.createStarted();
 
         log.debug( "Starting EE search for " + settings );
-        /*
-         * Note that the AND is applied only within one entity type. The fix would be to apply AND at this
-         * level.
-         *
-         * The tricky part here is if the user has entered a boolean query. If they put in Parkinson's disease AND
-         * neuron, then we want to eventually return entities that are associated with both. We don't expect to find
-         * single characteristics that match both.
-         *
-         * But if they put in Parkinson's disease we don't want to do two queries.
-         */
         Set<Set<String>> subclauses = extractTermsDnf( settings, true, context.getIssueReporter() );
         for ( Set<String> subclause : subclauses ) {
-            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, context, subclause, Math.max( ONTOLOGY_SEARCH_AND_INFERENCE_TIMEOUT_MILLIS - watch.getTime(), 0 ) );
+            Collection<SearchResult<ExpressionExperiment>> classResults = this.searchExpressionExperiments( settings, context, subclause, Math.max( ontologySearchAndInferenceTimeoutMillis - watch.getTime(), 0 ) );
             if ( !classResults.isEmpty() ) {
                 log.debug( String.format( "Found %d EEs matching %s", classResults.size(), String.join( " AND ", subclause ) ) );
             }
             results.addAll( classResults );
-            // this is an OR query, so we can stop as soon as we've retrieved enough results
             if ( isFilled( results, settings ) ) {
                 break;
             }
@@ -118,32 +218,18 @@ public class OntologySearchSource implements SearchSource {
         return results;
     }
 
-    /**
-     * Search for the Experiment query in ontologies, including items that are associated with children of matching
-     * query terms. That is, 'brain' should return entities tagged as 'hippocampus'. It can handle AND in searches, so
-     * Parkinson's
-     * AND neuron finds items tagged with both of those terms. The use of OR is handled by the caller.
-     *
-     * @param settings search settings
-     * @param clause   a conjunctive clause
-     * @return SearchResults of Experiments
-     */
     private SearchResultSet<ExpressionExperiment> searchExpressionExperiments( SearchSettings settings, SearchContext context, Set<String> clause, long timeoutMs ) throws SearchException {
         StopWatch watch = StopWatch.createStarted();
 
-        // we would have to first deal with the separate queries, and then apply the logic.
         SearchResultSet<ExpressionExperiment> results = new SearchResultSet<>( settings );
 
         OntologySearchSource.log.debug( "Starting characteristic search for: " + settings + " matching " + String.join( " AND ", clause ) );
         for ( String subClause : clause ) {
-            // at this point, subclauses have already been parsed, so if they contain special characters, those must be
-            // escaped, spaces must be quoted
             String subClauseQuery = LuceneQueryUtils.quote( subClause );
             SearchResultSet<ExpressionExperiment> subqueryResults = doSearchExpressionExperiment( settings.withQuery( subClauseQuery ), context, timeoutMs );
             if ( results.isEmpty() ) {
                 results.addAll( subqueryResults );
             } else {
-                // this is our Intersection operation.
                 results.retainAll( subqueryResults );
             }
             if ( watch.getTime() > 1000 ) {
@@ -152,7 +238,6 @@ public class OntologySearchSource implements SearchSource {
                 watch.reset();
                 watch.start();
             }
-            // if one subquery has no results, the intersection will be empty and we can return early
             if ( results.isEmpty() ) {
                 return results;
             }
@@ -161,14 +246,7 @@ public class OntologySearchSource implements SearchSource {
         return results;
     }
 
-    /**
-     * Perform a Experiment search based on annotations (anchored in ontology terms) - it does not have to be one word,
-     * it could be "parkinson's disease"; it can also be a URI.
-     *
-     * @return collection of SearchResults (Experiments)
-     */
     private SearchResultSet<ExpressionExperiment> doSearchExpressionExperiment( SearchSettings settings, SearchContext context, long timeoutMs ) throws SearchException {
-        // overall timer
         StopWatch watch = StopWatch.createStarted();
         long searchMs, childrenMs, retrievedMs;
 
@@ -178,7 +256,6 @@ public class OntologySearchSource implements SearchSource {
 
         Collection<OntologySearchResult<OntologyTerm>> matchingTerms;
 
-        // if the query is a term, find it directly
         searchMs = watch.getTime();
         URI termUri = prepareTermUriQuery( settings, context.getIssueReporter() );
         if ( termUri != null ) {
@@ -194,7 +271,6 @@ public class OntologySearchSource implements SearchSource {
                 resource = new OntologyResult( r2, EXACT_MATCH_SCORE );
                 matchingTerms = Collections.singleton( new OntologySearchResult<>( r2, EXACT_MATCH_SCORE ) );
             } else {
-                // attempt to guess a label from othe database
                 Characteristic c = characteristicService.findBestByUri( termUri.toString() );
                 if ( c != null ) {
                     assert c.getValueUri() != null;
@@ -206,31 +282,23 @@ public class OntologySearchSource implements SearchSource {
             }
             ontologyResults.add( resource );
         } else {
-            // Search ontology classes matches to the full-text query
             try {
                 matchingTerms = ontologyService.findTerms( settings.getQuery(), 5000,
                         Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS );
             } catch ( LuceneParseSearchException e ) {
                 log.debug( String.format( "Failed to parse '%s': %s.", settings.getQuery(), ExceptionUtils.getRootCauseMessage( e ) ), e );
-                // reattempt it without escaped
                 matchingTerms = ontologyService.findTerms( LuceneQueryUtils.escape( settings.getQuery() ), 5000,
                         Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS );
             }
             matchingTerms.stream()
-                    // ignore bnodes
                     .filter( t -> t.getResult().getUri() != null )
-                    // the only possibility for being no score is that the query is an URI and the search didn't go through
-                    // the search index
                     .map( t -> new OntologyResult( t.getResult(), t.getScore() ) )
                     .forEach( ontologyResults::add );
         }
         searchMs = watch.getTime() - searchMs;
 
-        // Search for child terms.
         childrenMs = watch.getTime();
         if ( !matchingTerms.isEmpty() && timeoutMs > 0 ) {
-            // TODO: move this logic in baseCode, this can be done far more efficiently with Jena API
-            // we don't know parent/child relation, so the best we can do is assigne the average full-text score
             double avgScore = matchingTerms.stream()
                     .mapToDouble( OntologySearchResult::getScore )
                     .filter( s -> s != EXACT_MATCH_SCORE )
@@ -239,16 +307,11 @@ public class OntologySearchSource implements SearchSource {
             try {
                 ontologyService.getChildren( matchingTerms.stream().map( OntologySearchResult::getResult ).collect( Collectors.toSet() ), false, true, Math.max( timeoutMs - watch.getTime(), 1L ), TimeUnit.MILLISECONDS )
                         .stream()
-                        // ignore bnodes
                         .filter( c -> c.getUri() != null )
-                        // small penalty for being indirectly matched
                         .map( c -> new OntologyResult( c, INDIRECT_HIT_PENALTY * avgScore ) )
-                        // if a children was already in terms, it will not be added again and thus its original score will
-                        // be reflected in the results
                         .forEach( ontologyResults::add );
             } catch ( TimeoutException e ) {
                 if ( settings.getMode().equals( SearchSettings.SearchMode.FAST ) ) {
-                    // in fast mode, we don't really care if the inference is incomplete
                     log.warn( String.format( "Obtaining children for terms matching %s timed out, those will be ignored.", settings ), e );
                 } else {
                     throw new SearchTimeoutException( String.format( "Obtaining children for terms matching '%s' timed out.", settings.getQuery() ), e );
@@ -273,12 +336,10 @@ public class OntologySearchSource implements SearchSource {
     }
 
     private void findExperimentsByOntologyResults( Collection<OntologyResult> terms, SearchSettings settings, SearchContext context, SearchResultSet<ExpressionExperiment> results ) {
-        // URIs are case-insensitive in the database, so should be the mapping to labels
         Collection<String> uris = new HashSet<>();
         Map<String, String> uri2value = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
         Map<String, Double> uri2score = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
-        // rescale the scores in a [0, 1] range
         DoubleSummaryStatistics summaryStatistics = terms.stream()
                 .map( OntologyResult::getScore )
                 .mapToDouble( s -> s )
@@ -299,53 +360,140 @@ public class OntologySearchSource implements SearchSource {
             }
         }
 
-        findExpressionExperimentsByUris( uris, uri2value, uri2score, settings, context, results );
+        Set<String> inferredUris = expandByInferredRelations( uris, uri2value, uri2score, settings );
+
+        findExpressionExperimentsByUris( uris, uri2value, uri2score, inferredUris, settings, context, results );
     }
 
-    private void findExpressionExperimentsByUris( Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score, SearchSettings settings, SearchContext context, SearchResultSet<ExpressionExperiment> results ) {
+    /**
+     * Widen the query into terms Gemma knows stand in some relation to the ones matched.
+     *
+     * <p>This is what makes a curation rule safe. If a redundant {@code disease} tag is dropped on the
+     * grounds that the genotype beside it already implies the disease, the fact only stays findable if
+     * something recovers the implication at search time. Storage without this is the failure case that
+     * looks identical to success in any spot check of the database.</p>
+     *
+     * <p>Widened in <b>both</b> directions, because which end the user typed is not something to
+     * assume: a curated statement puts the disease in the subject and the genotype in the object, so
+     * searching the disease has to reach objects and searching the gene has to reach subjects.</p>
+     *
+     * <p>Ambiguity is kept rather than resolved. {@code SURF1} is associated with three diseases and
+     * all three go into the set; a search matches if any of them does, which is the right answer
+     * whichever one the dataset means. That is only true because this is set membership -- the same
+     * ambiguity would be fatal to anything that had to pick one.</p>
+     *
+     * @return the URIs added, so a hit reached through one can say so
+     */
+    // package-private rather than private so the widening can be tested for what it does to the URI
+    // set and the scores without standing up the whole ontology search path around it
+    Set<String> expandByInferredRelations( Collection<String> uris, Map<String, String> uri2value,
+            Map<String, Double> uri2score, SearchSettings settings ) {
+        if ( !settings.isUseInferredRelations() || annotationRelationService == null || uris.isEmpty() ) {
+            return Collections.emptySet();
+        }
+        StopWatch watch = StopWatch.createStarted();
+        Set<String> seeds = new HashSet<>( uris );
+        Set<String> added = new LinkedHashSet<>();
+        Long taxonId = settings.getTaxonConstraint() != null ? settings.getTaxonConstraint().getId() : null;
+
+        // Ranked, not raw. findRelatedTerms is the right primitive for a membership test and the wrong
+        // one here: it returns the whole candidate set with nothing to order it by, which is exactly
+        // what a search must not do when one seed has fifteen candidates and another has one.
+        for ( AnnotationRelationDao.Direction direction : AnnotationRelationDao.Direction.values() ) {
+            boolean seedIsSubject = direction == AnnotationRelationDao.Direction.SUBJECT_TO_OBJECT;
+            AnnotationRelationDao.RelationQuery q = new AnnotationRelationDao.RelationQuery()
+                    .taxonId( taxonId )
+                    .minimumSpecificity( minInferredSpecificity )
+                    .maximumObjectBreadth( maxInferredObjectBreadth )
+                    // unlimited here, then capped per seed below: cutting the ranked list globally
+                    // would let one prolific seed spend the whole budget
+                    .maxResults( -1 );
+            if ( seedIsSubject ) {
+                q.subjectValueUris( seeds );
+            } else {
+                q.objectValueUris( seeds );
+            }
+
+            Map<String, Integer> perSeed = new HashMap<>();
+            for ( AnnotationRelationDao.RelationSummary r : annotationRelationService.findRelations( q ) ) {
+                String seedUri = seedIsSubject ? r.getSubjectValueUri() : r.getObjectValueUri();
+                String relatedUri = seedIsSubject ? r.getObjectValueUri() : r.getSubjectValueUri();
+                String relatedValue = seedIsSubject ? r.getObjectValue() : r.getSubjectValue();
+                if ( relatedUri == null || seedUri == null || seeds.contains( relatedUri ) ) {
+                    // an ungrounded related term cannot be matched against VALUE_URI, and a term the
+                    // query already carries is a direct hit that must keep its undiminished score
+                    continue;
+                }
+                if ( perSeed.merge( seedUri, 1, Integer::sum ) > maxInferredTermsPerSeed ) {
+                    continue;
+                }
+                if ( added.size() >= MAX_INFERRED_EXPANSION_TERMS ) {
+                    log.warn( String.format( "Inferred-relation widening for '%s' hit the %d-term ceiling; it is incomplete.",
+                            settings.getQuery(), MAX_INFERRED_EXPANSION_TERMS ) );
+                    break;
+                }
+                if ( !added.add( relatedUri ) ) {
+                    continue;
+                }
+                uris.add( relatedUri );
+                uri2value.put( relatedUri, relatedValue );
+                uri2score.put( relatedUri, INFERRED_RELATION_SCORE_PENALTY );
+            }
+            int dropped = perSeed.values().stream().mapToInt( n -> Math.max( 0, n - maxInferredTermsPerSeed ) ).sum();
+            if ( dropped > 0 ) {
+                // said out loud rather than silently truncated: a seed whose tail was cut looks
+                // identical to one that had nothing else to give
+                log.debug( String.format( "Widening '%s' %s: %d related terms beyond the %d-per-term cap were not used.",
+                        settings.getQuery(), direction, dropped, maxInferredTermsPerSeed ) );
+            }
+        }
+        log.debug( String.format( "Widened '%s' by %d inferred terms in %d ms.",
+                settings.getQuery(), added.size(), watch.getTime() ) );
+        return added;
+    }
+
+    private void findExpressionExperimentsByUris( Collection<String> uris, Map<String, String> uri2value, Map<String, Double> uri2score, Set<String> inferredUris, SearchSettings settings, SearchContext context, SearchResultSet<ExpressionExperiment> results ) {
         if ( isFilled( results, settings ) )
             return;
 
-        // ranking results by level is costly
         boolean rankByLevel = settings.getMode().equals( SearchSettings.SearchMode.ACCURATE );
 
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, true, true, true, settings.getTaxonConstraint(), getLimit( results, settings ), settings.isFillResults(), rankByLevel );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris(
+                uris, true, true, true, settings.getTaxonConstraint(),
+                getLimit( results, settings ), settings.isFillResults(), rankByLevel );
 
-        // collect all direct tags
         if ( hits.containsKey( ExpressionExperiment.class ) ) {
-            addExperimentsByUrisHits( hits.get( ExpressionExperiment.class ), "characteristics.valueUri", 1.0, uri2value, uri2score, context.getHighlighter(), results );
+            addExperimentsByUrisHits( hits.get( ExpressionExperiment.class ), "characteristics.valueUri", 1.0, uri2value, uri2score, inferredUris, context.getHighlighter(), results );
         }
 
-        // collect experimental design-related terms
         if ( hits.containsKey( ExperimentalDesign.class ) ) {
-            addExperimentsByUrisHits( hits.get( ExperimentalDesign.class ), "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", 0.9, uri2value, uri2score, context.getHighlighter(), results );
+            addExperimentsByUrisHits( hits.get( ExperimentalDesign.class ), "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", 0.9, uri2value, uri2score, inferredUris, context.getHighlighter(), results );
         }
 
-        // collect samples-related terms
         if ( hits.containsKey( BioMaterial.class ) ) {
-            addExperimentsByUrisHits( hits.get( BioMaterial.class ), "bioAssays.sampleUsed.characteristics.valueUri", 0.9, uri2value, uri2score, context.getHighlighter(), results );
+            addExperimentsByUrisHits( hits.get( BioMaterial.class ), "bioAssays.sampleUsed.characteristics.valueUri", 0.9, uri2value, uri2score, inferredUris, context.getHighlighter(), results );
         }
     }
 
-    private void addExperimentsByUrisHits( Map<String, Set<ExpressionExperiment>> hits, String field, double scoreMultiplier, Map<String, String> uri2value, Map<String, Double> uri2score, @Nullable Highlighter highlighter, SearchResultSet<ExpressionExperiment> results ) {
+    private void addExperimentsByUrisHits( Map<String, Set<ExpressionExperiment>> hits, String field, double scoreMultiplier, Map<String, String> uri2value, Map<String, Double> uri2score, Set<String> inferredUris, @Nullable Highlighter highlighter, SearchResultSet<ExpressionExperiment> results ) {
         for ( Map.Entry<String, Set<ExpressionExperiment>> entry : hits.entrySet() ) {
             String uri = entry.getKey();
             String value = uri2value.get( uri );
+            // The provenance string says which of the two it was. A dataset returned because it is
+            // annotated with the query and one returned because Gemma thinks a term it carries stands
+            // for the query are different claims, and a UI that cannot tell them apart will present
+            // the second as though it were the first.
+            String provenance = inferredUris.contains( uri )
+                    ? String.format( "CharacteristicService.findExperimentsByUris with inferred term [%s](%s)", value, uri )
+                    : String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri );
             for ( ExpressionExperiment ee : entry.getValue() ) {
                 results.add( SearchResult.from( ExpressionExperiment.class, ee, scoreMultiplier * uri2score.getOrDefault( uri, 0.0 ),
                         highlightTerm( highlighter, uri, value, field ),
-                        String.format( "CharacteristicService.findExperimentsByUris with term [%s](%s)", value, uri ) ) );
+                        provenance ) );
             }
         }
     }
 
-    /**
-     * Obtain a limit suitable for the given search results and settings.
-     *
-     * @return the difference between the maximum results and the collection size or -1 if the settings are for
-     * unlimited results
-     * @throws IllegalArgumentException if the search results are already fully filled as per {@link SearchSourceUtils#isFilled(Collection, SearchSettings)}
-     */
     private static <T extends Identifiable> int getLimit( Collection<SearchResult<T>> results, SearchSettings settings ) {
         if ( isFilled( results, settings ) ) {
             throw new IllegalArgumentException( "Search results are already fully filled, have to checked the collection with isFilled()?" );
@@ -358,17 +506,14 @@ public class OntologySearchSource implements SearchSource {
      */
     static String getLabelFromTermUri( URI termUri ) {
         String[] segments = termUri.getPath().split( "/" );
-        // use the fragment
         if ( !StringUtils.isEmpty( termUri.getFragment() ) ) {
             return partToTerm( termUri.getFragment() );
         }
-        // pick the last non-empty segment
         for ( int i = segments.length - 1; i >= 0; i-- ) {
             if ( !StringUtils.isEmpty( segments[i] ) ) {
                 return partToTerm( segments[i] );
             }
         }
-        // as a last resort, return the parsed URI
         return termUri.toString();
     }
 
@@ -400,11 +545,6 @@ public class OntologySearchSource implements SearchSource {
         }
     }
 
-    /**
-     * Highlight a given ontology term.
-     *
-     * @return a highlight, or null if no provider is set or the provider returns null
-     */
     @Nullable
     public Map<String, String> highlightTerm( @Nullable Highlighter highlighter, String termUri, String termLabel, String field ) {
         if ( highlighter instanceof OntologyHighlighter ) {

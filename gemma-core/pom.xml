@@ -3,7 +3,7 @@
     <parent>
         <artifactId>gemma</artifactId>
         <groupId>gemma</groupId>
-        <version>1.32.8</version>
+        <version>2.0.0-alpha-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>gemma-core</artifactId>
@@ -14,7 +14,13 @@
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
                 <artifactId>git-commit-id-maven-plugin</artifactId>
-                <version>9.0.2</version>
+                <!-- 9.2.0 is the latest 9.x. The 10.x line requires Maven 3.9+, but
+                     Jenkins still pins Maven 3.6.3 (see .jenkins/Jenkinsfile), so 10.x
+                     is deferred until the CI toolchain is bumped. Revisit then; the only
+                     real 9 -> 10 config change is that <includeOnlyProperties> moved from
+                     exact-match to regex (the regex form is
+                     <includeOnlyProperty>^git\.commit\.id$</includeOnlyProperty>). -->
+                <version>9.2.0</version>
                 <executions>
                     <execution>
                         <id>generate-build-info</id>
@@ -76,73 +82,43 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>unpack-spring-security-test</id>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>unpack</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.springframework.security</groupId>
-                                    <artifactId>spring-security-test</artifactId>
-                                    <version>4.0.4.RELEASE</version>
-                                    <classifier>sources</classifier>
-                                    <outputDirectory>${project.build.directory}/generated-test-sources/spring-security-test</outputDirectory>
-                                    <includes>**/*.java</includes>
-                                    <excludes>org/springframework/security/test/web/servlet/setup/**</excludes>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!-- Phase 2: pre-Spring-6 this unpacked spring-security-test 4.0.4 sources and recompiled
+                 them under our own classpath (the 4.x build excluded the MockMvc setup helpers). The 4.0
+                 sources reference javax.servlet which doesn't exist in Spring 6, so we now consume
+                 spring-security-test as a regular test-jar dependency. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <version>3.6.1</version>
-                <executions>
-                    <execution>
-                        <phase>generate-test-sources</phase>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <!-- dependencies:unpack does not add a test source root -->
-                            <sources>
-                                <source>${project.build.directory}/generated-test-sources/spring-security-test</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
     <dependencies>
         <!-- Spring -->
-        <!-- this is the latest for Spring 3 (>= 1.1 requires Spring 4) -->
+        <!-- version comes from the parent BOM. Pinned to 1.0.3.RELEASE until 2026-09-02 with the
+             note "latest for Spring 3", which stopped being true several Spring majors ago; gemma-cli
+             and gemma-rest already resolved 2.0.12 through the BOM, so gemma-core was the odd one out
+             and javadoc:aggregate was the only thing that noticed. The spring-context exclusion went
+             with it: that dependency is declared optional in 2.0.12, so it is not pulled anyway. -->
         <dependency>
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
-            <version>1.0.3.RELEASE</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-context</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+        <!-- spring-expression: parent pom declares this at runtime scope (sufficient for
+             @Cacheable/@PreAuthorize SpEL parsing which Spring does reflectively). The
+             AuditedAspect (AUDIT_SYSTEM_AUDIT.md Phase B-2) imports SpelExpressionParser
+             directly to evaluate @Audited.messageSpel, so we widen the scope to compile
+             here. Version is managed by the parent. -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-expression</artifactId>
         </dependency>
 
-        <!-- Email -->
+        <!-- Email — jakarta.mail namespace (Spring 6.x mail interfaces use jakarta.mail.*). -->
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-            <version>1.6.2</version>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <version>2.0.5</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -157,36 +133,159 @@
             </exclusions>
         </dependency>
 
-        <!-- Lucene (version is synced with baseCode) -->
+        <!-- Hibernate Search 7 + Lucene 9 (Renovations Phase 3, search restoration Step 1).
+             Bootstraps the SearchService restoration. Step 1 wires the FS-based Lucene
+             backend only; no @Indexed / @FullTextField annotations on entities yet (those
+             land in Step 2). The SessionFactory will pick HS 7 up off the classpath via
+             the integrator-loader; HS bootstrap properties are set in HibernateConfig
+             (hibernate.search.backend.*). See SEARCH_RECCE.md Sections 3.1, 3.4, 3.5. -->
         <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-            <version>${lucene.version}</version>
+            <groupId>org.hibernate.search</groupId>
+            <artifactId>hibernate-search-mapper-orm</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-analyzers</artifactId>
-            <version>${lucene.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-highlighter</artifactId>
-            <version>${lucene.version}</version>
+            <groupId>org.hibernate.search</groupId>
+            <artifactId>hibernate-search-backend-lucene</artifactId>
         </dependency>
 
-        <!-- Hibernate Search (latest for Hibernate and Lucene) -->
+        <!-- Phase 3 ontology indexer (SEARCH_RECCE.md Section 6): the in-tree
+             baseCode-derived ontology classes need Jena 4.10.0's TDB2 +
+             text-index modules. Declared here at module scope; the parent POM
+             dependencyManagement pins every Jena artifact to 4.10.0. -->
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-search-orm</artifactId>
-            <version>4.4.6.Final</version>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-tdb2</artifactId>
             <exclusions>
+                <!-- Jena 4.10's jena-base pulls these at older versions than Gemma
+                     manages directly; exclude here so the transitive declaration
+                     doesn't trip the dependencyConvergence enforcer rule. The
+                     correct versions are supplied by gemma-core / parent direct
+                     deps (commons-compress 1.28.0, commons-io 2.21.0,
+                     commons-csv 1.14.1, commons-codec via parent, jackson
+                     2.21.0 via parent, httpclient 4.5.14, libthrift, etc.). -->
                 <exclusion>
-                    <groupId>org.apache.avro</groupId>
-                    <artifactId>avro</artifactId>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.apache.solr</groupId>
-                    <artifactId>solr-analysis-extras</artifactId>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-csv</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-text</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-csv</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- OWL-API (Phase 4 of ontology-hierarchy refactor): drives the slim-CHEBI
+             module extraction via uk.ac.manchester.cs.owlapi.modularity.SyntacticLocalityModuleExtractor
+             (the STAR algorithm ROBOT wraps in its extract CLI).
+             We use the OWL-API library directly rather than ROBOT-the-library because
+             ROBOT 1.9.x pins on Jena 3.17.0 and would collide with Gemma's Jena 4.10.0.
+             owlapi-impl brings Caffeine 2.9.3; Gemma's transitive Caffeine is 3.2.2 and
+             they're binary-compatible for the OWL-API caching surface, so we let
+             dependencyManagement force 3.2.2. -->
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-api</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-impl</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.github.ben-manes.caffeine</groupId>
+                    <artifactId>caffeine</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-parsers</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-tools</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.owlapi</groupId>
+            <artifactId>owlapi-apibinding</artifactId>
+            <version>4.5.29</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+                <!-- owlapi-rio drags RDF4J + httpclient 4.5.13 (Gemma has 4.5.14); we
+                     don't need the RDF4J Rio integration for the CHEBI slim path. -->
+                <exclusion>
+                    <groupId>net.sourceforge.owlapi</groupId>
+                    <artifactId>owlapi-rio</artifactId>
+                </exclusion>
+                <!-- owlapi-oboformat brings the OBO 1.x parser; CHEBI is OWL/RDF, not
+                     OBO, so we don't need it. -->
+                <exclusion>
+                    <groupId>net.sourceforge.owlapi</groupId>
+                    <artifactId>owlapi-oboformat</artifactId>
+                </exclusion>
+                <!-- owlapi-fixers patches a handful of "wrong but in-the-wild" OWL
+                     fragments; we don't need it for CHEBI. -->
+                <exclusion>
+                    <groupId>net.sourceforge.owlapi</groupId>
+                    <artifactId>owlapi-fixers</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -232,10 +331,11 @@
         </dependency>
 
         <!-- Utilities -->
+        <!-- JAXB API: jakarta (4.x) namespace. Phase 2 moved off javax.xml.bind:jaxb-api:2.3.1. -->
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>4.0.5</version>
         </dependency>
         <dependency>
             <groupId>obo</groupId>
@@ -251,8 +351,10 @@
             <version>0.7.9</version>
         </dependency>
 
-        <!-- MTJ, for reading MatrixMarket formats -->
-        <!-- this is also declared in baseCode, but we use it explicitly for reading single-cell data -->
+        <!-- MTJ, for reading MatrixMarket formats (single-cell data).
+             Also reachable transitively via the in-tree port of baseCode's
+             CompressedSparseDoubleMatrix; declared here explicitly so the
+             intent is documented at the call site. -->
         <dependency>
             <groupId>com.googlecode.matrix-toolkits-java</groupId>
             <artifactId>mtj</artifactId>
@@ -302,26 +404,72 @@
         </dependency>
 
         <!-- Scheduling -->
-        <!-- This is the latest Quartz release compatible with Spring 3 -->
+        <!-- Quartz 2.x: JobExecutionContext is an interface, which Spring 6's
+             QuartzJobBean / SchedulerFactoryBean bind to. 1.x had it as a class
+             and broke at runtime under Spring 6. -->
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>1.8.6</version>
+            <version>2.5.0</version>
+            <exclusions>
+                <!-- Use the project's slf4j-api version (already on classpath). -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- Testing -->
-        <!-- specifically for spring-security-test which refers to definitions from javax.servlet-api, spring-web and spring-security-web -->
+        <!-- jakarta.servlet-api + spring-security-web: previously test-scoped (only spring-security-test
+             needed them). Phase 3 gsec absorption: ubic.gemma.core.security.authentication.Ajax*Handler (formerly
+             provided by the gemma-gsec JAR at compile time) now lives under gemma-core/src/main/java
+             and references HttpServletRequest/Response + SavedRequestAwareAuthenticationSuccessHandler,
+             so these deps are promoted to compile scope. servlet-api stays `provided` since the
+             container (Tomcat/Jetty) supplies the implementation at runtime. -->
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <scope>test</scope>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
             <version>${spring.security.version}</version>
+        </dependency>
+        <!-- Phase 3 gsec absorption: org.json.JSONObject used by Ajax*Handler is inherited
+             from the root pom's <dependencies> block (org.json:json:20240303), no redeclaration needed. -->
+
+        <!-- Testing -->
+        <!-- Phase 2: pull spring-security-test as a regular jar rather than unpacking 4.0 sources. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <version>${spring.security.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- Phase 3 first-wave: Flyway-managed schema versioning. Scope is `test` for now; the
+             H2 path (BaseDatabaseTest) is the only consumer of these migrations. Production
+             MySQL wiring is the follow-on session (see FLYWAY_PROD_FOLLOWUP.md) and will pull
+             flyway-core + flyway-mysql into runtime scope. H2 is supported directly by
+             flyway-core (no separate flyway-database-h2 module exists). -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Phase 3 logging A: JsonTemplateLayout for the production rolling-file appender
+             (gemma-cli log4j2.xml; was also used by gemma-web before retirement). Version is
+             managed by the root pom's <dependencyManagement> at ${log4j.version}. Runtime
+             scope: the layout is loaded reflectively by log4j-core during config parsing, no
+             compile-time references. -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-layout-template-json</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
     </dependencies>

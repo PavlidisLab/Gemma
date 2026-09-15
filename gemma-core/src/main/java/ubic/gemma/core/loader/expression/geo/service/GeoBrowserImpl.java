@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -32,8 +32,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXParseException;
-import ubic.basecode.util.DateUtil;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.DateUtil;
+import ubic.gemma.core.util.StringUtil;
 import ubic.gemma.core.loader.entrez.EntrezRetmode;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
@@ -48,10 +48,11 @@ import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.xml.xpath.XPathExpression;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -61,10 +62,9 @@ import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.loader.entrez.EntrezUtils.quoteTerm;
-import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForBrowsing;
 import static ubic.gemma.core.util.XMLUtils.*;
 
-@CommonsLog
+@Slf4j
 public class GeoBrowserImpl implements GeoBrowser {
 
     /**
@@ -111,9 +111,25 @@ public class GeoBrowserImpl implements GeoBrowser {
     private final String ncbiApiKey;
     private final PubMedSearch pubmedFetcher;
 
+    /**
+     * Warn once per JVM when NCBI calls are running unauthenticated. Without a key,
+     * {@code EntrezUtils.doNicely} spaces every Entrez call 333 ms apart instead of 100 ms, and
+     * that gate is a JVM-global monitor — so an unkeyed GEO scrape is 3.3x slower AND serialises
+     * against every other Entrez caller in the process. Silent before this: the only symptom was
+     * work that took minutes instead of seconds.
+     */
+    private static final java.util.concurrent.atomic.AtomicBoolean WARNED_NO_API_KEY =
+            new java.util.concurrent.atomic.AtomicBoolean();
+
     public GeoBrowserImpl( String ncbiApiKey ) {
         this.ncbiApiKey = ncbiApiKey;
         this.pubmedFetcher = new PubMedSearch( ncbiApiKey );
+        if ( StringUtils.isBlank( ncbiApiKey ) && WARNED_NO_API_KEY.compareAndSet( false, true ) ) {
+            log.warn( "No NCBI API key configured (entrez.efetch.apikey is blank): Entrez calls will be "
+                    + "throttled to one per 333 ms instead of one per 100 ms, JVM-wide. Set the "
+                    + "ENTREZ_EFETCH_APIKEY environment variable (or entrez.efetch.apikey in "
+                    + "Gemma.properties) to a key from https://account.ncbi.nlm.nih.gov/settings/." );
+        }
     }
 
     @Nullable
@@ -167,89 +183,10 @@ public class GeoBrowserImpl implements GeoBrowser {
     }
 
     @Override
-    public Slice<GeoRecord> getRecentGeoRecords( GeoRecordType recordType, int start, int pageSize ) throws IOException {
-        Assert.isTrue( recordType == GeoRecordType.SERIES, "Only series are supported" );
-        Assert.isTrue( start >= 0, "The starting must be zero or greater." );
-        Assert.isTrue( pageSize > 0, "The page size must be one or greater." );
-
-        // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
-        // because of garbled tabbed lines returned
-        // from GEO.
-        URL url = getUrlForBrowsing( GeoRecordType.SERIES, start, pageSize, GeoFormat.CSV );
-
-        List<GeoRecord> records = new ArrayList<>();
-        try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) ) ) {
-
-            // We are getting a tab delimited file.
-
-            // Read columns headers.
-            String headerLine = br.readLine();
-            String[] headers = StringUtil.csvSplit( headerLine );
-
-            // Map column names to their indices (handy later).
-            Map<String, Integer> columnNameToIndex = new HashMap<>();
-            for ( int i = 0; i < headers.length; i++ ) {
-                columnNameToIndex.put( headers[i], i );
-            }
-
-            // Read the rest of the file.
-            String line;
-            while ( ( line = br.readLine() ) != null ) {
-                String[] fields = StringUtil.csvSplit( line );
-
-                GeoRecord geoRecord = new GeoRecord();
-                geoRecord.setGeoAccession( fields[columnNameToIndex.get( "Accession" )] );
-                geoRecord.setTitle( StringUtils.strip( fields[columnNameToIndex.get( "Title" )]
-                        .replaceAll( GeoBrowserImpl.FLANKING_QUOTES_REGEX, "" ) ) );
-
-                String sampleCountS = fields[columnNameToIndex.get( "Sample Count" )];
-                if ( StringUtils.isNotBlank( sampleCountS ) ) {
-                    try {
-                        geoRecord.setNumSamples( Integer.parseInt( sampleCountS ) );
-                    } catch ( NumberFormatException e ) {
-                        throw new RuntimeException( "Could not parse sample count: " + sampleCountS );
-                    }
-                } else {
-                    GeoBrowserImpl.log.warn( "No sample count for " + geoRecord.getGeoAccession() );
-                }
-                geoRecord.setContactName(
-                        fields[columnNameToIndex.get( "Contact" )].replaceAll( GeoBrowserImpl.FLANKING_QUOTES_REGEX, "" ) );
-
-                List<String> taxons = Arrays.stream( fields[columnNameToIndex.get( "Taxonomy" )]
-                                .replaceAll( GeoBrowserImpl.FLANKING_QUOTES_REGEX, "" )
-                                .split( ";" ) )
-                        .map( String::trim )
-                        .collect( Collectors.toList() );
-                if ( geoRecord.getOrganisms() == null ) {
-                    geoRecord.setOrganisms( taxons );
-                } else {
-                    geoRecord.getOrganisms().addAll( taxons );
-                }
-
-                try {
-                    Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )]
-                            .replaceAll( GeoBrowserImpl.FLANKING_QUOTES_REGEX, "" ), GEO_LOCALE, GEO_DATE_FORMATS );
-                    geoRecord.setReleaseDate( date );
-                } catch ( ParseException e ) {
-                    log.error( String.format( "Failed to parse date for %s", geoRecord.getGeoAccession() ) );
-                }
-
-                geoRecord.setSeriesType( fields[columnNameToIndex.get( "Series Type" )] );
-
-                records.add( geoRecord );
-            }
-
-        }
-
-        if ( records.isEmpty() ) {
-            GeoBrowserImpl.log.warn( "No records obtained" );
-        }
-
-        return new Slice<>( records, Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), start, pageSize, null );
-    }
-
-    @Override
-    public GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<GeoSeriesType> seriesTypes ) throws IOException {
+    public GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field,
+            @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms,
+            @Nullable Collection<GeoSeriesType> seriesTypes,
+            @Nullable Date since, @Nullable Date until ) throws IOException {
         String term = entryTypeFromRecordType( recordType ) + "[" + GeoSearchField.ENTRY_TYPE + "]";
 
         if ( StringUtils.isNotBlank( searchTerms ) ) {
@@ -269,6 +206,16 @@ public class GeoBrowserImpl implements GeoBrowser {
 
         if ( seriesTypes != null ) {
             term += " AND (" + seriesTypes.stream().map( s -> quoteTerm( s.getIdentifier() ) + "[" + GeoSearchField.DATASET_TYPE + "]" ).collect( Collectors.joining( " OR " ) ) + ")";
+        }
+
+        if ( since != null || until != null ) {
+            // Entrez esearch accepts a single-field date range as quoted PDAT bounds. Fill missing
+            // bounds with safe sentinels: lower=GEO inception era, upper=today.
+            SimpleDateFormat fmt = new SimpleDateFormat( "yyyy/MM/dd" );
+            fmt.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+            String lo = fmt.format( since != null ? since : new GregorianCalendar( 1990, Calendar.JANUARY, 1 ).getTime() );
+            String hi = fmt.format( until != null ? until : new Date() );
+            term += " AND \"" + lo + "\"[PDAT] : \"" + hi + "\"[PDAT]";
         }
 
         return searchGeoRecords( recordType, term );
@@ -300,7 +247,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         }
 
         // if start > count, it should be empty
-        int expectedRecords = Math.min( pageSize, Math.max( count - start, 0 ) );
+        int expectedRecords = Math.clamp( count - start, 0, pageSize );
 
         URL fetchUrl = EntrezUtils.summary( "gds", query, EntrezRetmode.XML, start, pageSize, ncbiApiKey );
 
@@ -448,6 +395,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         } catch ( Exception e ) {
             if ( config.isIgnoreErrors() ) {
                 log.error( "Error while processing MINiML for " + record.getGeoAccession() + ", sample details will not be obtained.", e );
+                record.setDetailsIncomplete( true );
                 return;
             } else {
                 throw new RuntimeException( "Error while processing MINiML for " + record.getGeoAccession() + ".", e );
@@ -456,6 +404,7 @@ public class GeoBrowserImpl implements GeoBrowser {
 
         if ( document == null ) {
             log.warn( "Could not find any details for " + record );
+            record.setDetailsIncomplete( true );
             return;
         }
 

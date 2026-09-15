@@ -18,9 +18,9 @@
  */
 package ubic.gemma.core.security.authentication;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserExistsException;
+import ubic.gemma.core.security.AuthorityConstants;
+import ubic.gemma.core.security.authentication.UserDetailsImpl;
+import ubic.gemma.core.security.authentication.UserExistsException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -33,8 +33,13 @@ import org.springframework.security.access.intercept.RunAsUserToken;
 import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
+// Spring Security 5 removed the salt-based PasswordEncoder (org.springframework.security.authentication.encoding)
+// in favour of the algorithm-internal-salt one in org.springframework.security.crypto.password. Legacy hashes
+// produced by Gemma's pre-Phase-2 ShaPasswordEncoder + username-as-salt are recognized by
+// GemmaLegacyAwarePasswordEncoder; new encodings are BCrypt with the {bcrypt} prefix.
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -42,6 +47,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
@@ -60,7 +66,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("unused")
 @Service("userManager")
-public class UserManagerImpl implements UserManager {
+public class UserManagerImpl implements UserManager, UserDetailsPasswordService {
 
     private final Log logger = LogFactory.getLog( this.getClass() );
 
@@ -106,7 +112,7 @@ public class UserManagerImpl implements UserManager {
 
         logger.debug( "Changing password for user '" + username + "'" );
 
-        u.setPassword( passwordEncoder.encodePassword( newPassword, username ) );
+        u.setPassword( passwordEncoder.encode( newPassword ) );
         u.setEnabled( false );
         u.setSignupToken( this.generateSignupToken( username ) );
         u.setSignupTokenDatestamp( new Date() );
@@ -120,10 +126,10 @@ public class UserManagerImpl implements UserManager {
     @Override
     @Transactional(readOnly = true)
     public Collection<String> findAllUsers() {
-        Collection<gemma.gsec.model.User> users = userService.loadAll();
+        Collection<ubic.gemma.core.security.model.User> users = userService.loadAll();
 
         List<String> result = new ArrayList<>();
-        for ( gemma.gsec.model.User u : users ) {
+        for ( ubic.gemma.core.security.model.User u : users ) {
             result.add( u.getUserName() );
         }
         return result;
@@ -134,7 +140,7 @@ public class UserManagerImpl implements UserManager {
     public UserDetailsImpl createUser( String username, String email, String password ) {
         Date now = new Date();
         String key = generateSignupToken( username );
-        String encodedPassword = passwordEncoder.encodePassword( password, username );
+        String encodedPassword = passwordEncoder.encode( password );
         UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, false, null, email, key, now );
         createUser( u );
         return u;
@@ -163,9 +169,9 @@ public class UserManagerImpl implements UserManager {
         }
 
         User u = this.loadUser( userName );
-        Collection<gemma.gsec.model.UserGroup> groups = userService.findGroupsForUser( u );
+        Collection<ubic.gemma.core.security.model.UserGroup> groups = userService.findGroupsForUser( u );
 
-        for ( gemma.gsec.model.UserGroup g : groups ) {
+        for ( ubic.gemma.core.security.model.UserGroup g : groups ) {
             result.add( g.getName() );
         }
 
@@ -343,18 +349,51 @@ public class UserManagerImpl implements UserManager {
         if ( u == null ) {
             throw new IllegalArgumentException( String.format( "Unknown user with username %s.", userDetails.getUsername() ) );
         }
-        Set<UserGroup> newGroups = new HashSet<>();
+        // Resolve and validate the desired groups up-front so we fail before mutating anything.
+        Set<UserGroup> desiredGroups = new HashSet<>();
+        Set<String> desiredNames = new HashSet<>();
         for ( String groupName : groups ) {
             UserGroup group = userService.findGroupByName( groupName );
             if ( group == null ) {
                 throw new IllegalArgumentException( String.format( "Unknown group with name %s.", groupName ) );
             }
-            newGroups.add( group );
+            desiredGroups.add( group );
+            desiredNames.add( groupName );
         }
-        u.getGroups().clear();
-        u.getGroups().addAll( newGroups );
-        System.out.println( newGroups );
+
+        // Reconcile against the user's current memberships by mutating the owning side of the
+        // association (UserGroup.groupMembers) through the service. Assigning to User.getGroups()
+        // does not persist: it is the inverse side (mappedBy = "groupMembers").
+        Set<String> currentNames = new HashSet<>();
+        for ( UserGroup current : new HashSet<>( u.getGroups() ) ) {
+            currentNames.add( current.getName() );
+            if ( !desiredNames.contains( current.getName() ) ) {
+                userService.removeUserFromGroup( u, current );
+            }
+        }
+        for ( UserGroup desired : desiredGroups ) {
+            if ( !currentNames.contains( desired.getName() ) ) {
+                userService.addUserToGroup( desired, u );
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteUser( String username, String deletedByUsername ) {
+        User u = userService.findByUserName( username );
+        if ( u == null ) {
+            throw new IllegalArgumentException( "No user with name=" + username );
+        }
+        if ( u.getDeletedAt() != null ) {
+            // Idempotent — already soft-deleted; nothing to do.
+            return;
+        }
+        u.setDeletedAt( new Date() );
+        u.setDeletedBy( deletedByUsername );
+        u.setEnabled( false );
         userService.update( u );
+        userCache.removeUserFromCache( username );
     }
 
     @Override
@@ -381,13 +420,54 @@ public class UserManagerImpl implements UserManager {
         logger.debug( "Changing password for user '" + username + "'" );
 
         User u = this.loadUser( username );
-        u.setPassword( passwordEncoder.encodePassword( newPassword, username ) );
+
+        // Re-verify the current password before allowing the change. An authenticated
+        // session (or a leaked bearer token) must still prove knowledge of the existing
+        // credential, so a hijacked session can't silently rotate the password out from
+        // under the owner. matches() covers {bcrypt} and bare-BCrypt rows; legacy SHA-1
+        // rows are rewritten to {bcrypt} on successful login (upgradeEncoding), so a
+        // logged-in user's stored hash is already BCrypt by the time we get here.
+        if ( oldPassword == null || !passwordEncoder.matches( oldPassword, u.getPassword() ) ) {
+            throw new BadCredentialsException( "The current password is incorrect." );
+        }
+
+        validateNewPassword( newPassword );
+
+        u.setPassword( passwordEncoder.encode( newPassword ) );
         userService.update( u );
 
         SecurityContextHolder.getContext()
                 .setAuthentication( this.createNewAuthentication( currentAuthentication, u.getPassword() ) );
 
         userCache.removeUserFromCache( username );
+    }
+
+    @Override
+    @Transactional
+    public void adminChangePassword( String username, String newPassword ) {
+        User u = userService.findByUserName( username );
+        if ( u == null ) {
+            throw new UsernameNotFoundException( "No user found with name=" + username );
+        }
+        validateNewPassword( newPassword );
+        // Encode here — updateUser/createUser(UserDetails) store the password verbatim,
+        // so the encoding responsibility sits with the password-mutating methods.
+        u.setPassword( passwordEncoder.encode( newPassword ) );
+        userService.update( u );
+        userCache.removeUserFromCache( username );
+    }
+
+    /**
+     * Minimum length for a user-chosen or admin-reset password. Admin-generated
+     * temporary passwords are 16 characters, comfortably above this floor.
+     */
+    private static final int MIN_PASSWORD_LENGTH = 8;
+
+    private void validateNewPassword( String newPassword ) {
+        if ( newPassword == null || newPassword.length() < MIN_PASSWORD_LENGTH ) {
+            throw new IllegalArgumentException(
+                    "New password must be at least " + MIN_PASSWORD_LENGTH + " characters long." );
+        }
     }
 
     @Override
@@ -399,10 +479,10 @@ public class UserManagerImpl implements UserManager {
     @Override
     @Transactional(readOnly = true)
     public List<String> findAllGroups() {
-        Collection<gemma.gsec.model.UserGroup> groups = userService.listAvailableGroups();
+        Collection<ubic.gemma.core.security.model.UserGroup> groups = userService.listAvailableGroups();
 
         List<String> result = new ArrayList<>();
-        for ( gemma.gsec.model.UserGroup group : groups ) {
+        for ( ubic.gemma.core.security.model.UserGroup group : groups ) {
             result.add( group.getName() );
         }
         return result;
@@ -417,7 +497,7 @@ public class UserManagerImpl implements UserManager {
         Collection<User> groupMembers = group.getGroupMembers();
 
         List<String> result = new ArrayList<>();
-        for ( gemma.gsec.model.User u : groupMembers ) {
+        for ( ubic.gemma.core.security.model.User u : groupMembers ) {
             result.add( u.getUserName() );
         }
         return result;
@@ -458,6 +538,14 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     @Transactional
+    public void setGroupDescription( String groupName, String description ) {
+        UserGroup group = userService.findGroupByName( groupName );
+        group.setDescription( description );
+        userService.update( group );
+    }
+
+    @Override
+    @Transactional
     public void addUserToGroup( String username, String groupName ) {
         User u = this.loadUser( username );
         UserGroup g = this.loadGroup( groupName );
@@ -490,7 +578,7 @@ public class UserManagerImpl implements UserManager {
         UserGroup group = this.loadGroup( groupToSearch );
 
         List<GrantedAuthority> result = new ArrayList<>();
-        for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
+        for ( ubic.gemma.core.security.model.GroupAuthority ga : group.getAuthorities() ) {
             result.add( new SimpleGrantedAuthority( ga.getAuthority() ) );
         }
 
@@ -502,7 +590,7 @@ public class UserManagerImpl implements UserManager {
     public void addGroupAuthority( String groupName, GrantedAuthority authority ) {
         UserGroup g = this.loadGroup( groupName );
 
-        for ( gemma.gsec.model.GroupAuthority ga : g.getAuthorities() ) {
+        for ( ubic.gemma.core.security.model.GroupAuthority ga : g.getAuthorities() ) {
             if ( ga.getAuthority().equals( authority.getAuthority() ) ) {
                 logger.warn( "Group already has authority" + authority.getAuthority() );
                 return;
@@ -568,6 +656,39 @@ public class UserManagerImpl implements UserManager {
         return this.createUserDetails( username, new UserDetailsImpl( user ), dbAuths );
     }
 
+    /**
+     * Spring Security 6's password-upgrade hook. Called by
+     * {@code DaoAuthenticationProvider.authenticate(...)} when the configured
+     * {@link PasswordEncoder} reports {@code upgradeEncoding(storedHash) == true} after a
+     * successful auth — i.e., when a user logs in with a legacy SHA-1 password that should
+     * be re-encoded as {@code {bcrypt}}. The framework supplies the already-encoded new
+     * hash; this implementation just persists it.
+     *
+     * <p>This replaces the prior ThreadLocal-based upgrade scheme (see
+     * {@link LegacyAwareDaoAuthenticationProvider} class javadoc): no thread-bound state,
+     * works under async / reactive flows.</p>
+     */
+    @Override
+    @Transactional
+    public UserDetails updatePassword( UserDetails user, String newPassword ) {
+        String username = user.getUsername();
+        User dbUser = userService.findByUserName( username );
+        if ( dbUser == null ) {
+            throw new UsernameNotFoundException( "User with name " + username + " could not be loaded" );
+        }
+        dbUser.setPassword( newPassword );
+        userService.update( dbUser );
+        userCache.removeUserFromCache( username );
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Upgraded stored password hash for user '" + username + "' to current encoding" );
+        }
+        // Return a fresh UserDetails carrying the new hash so the caller's later operations
+        // (e.g. SecurityContext refresh) see the updated value.
+        return new UserDetailsImpl( newPassword, username, user.isEnabled(),
+                new ArrayList<>( user.getAuthorities() ),
+                dbUser.getEmail(), dbUser.getSignupToken(), dbUser.getSignupTokenDatestamp() );
+    }
+
     protected List<UserDetails> loadUsersByUsername( String username ) {
         List<UserDetails> result = new ArrayList<>();
         User u = this.loadUser( username );
@@ -596,10 +717,10 @@ public class UserManagerImpl implements UserManager {
     }
 
     private List<GrantedAuthority> loadGroupAuthorities( User user ) {
-        Collection<gemma.gsec.model.GroupAuthority> authorities = userService.loadGroupAuthorities( user );
+        Collection<ubic.gemma.core.security.model.GroupAuthority> authorities = userService.loadGroupAuthorities( user );
 
         List<GrantedAuthority> result = new ArrayList<>();
-        for ( gemma.gsec.model.GroupAuthority ga : authorities ) {
+        for ( ubic.gemma.core.security.model.GroupAuthority ga : authorities ) {
             String roleName = AuthorityConstants.ROLE_PREFIX + ga.getAuthority();
             result.add( new SimpleGrantedAuthority( roleName ) );
         }

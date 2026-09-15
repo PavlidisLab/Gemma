@@ -29,6 +29,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Collection;
 import java.util.Random;
 
@@ -95,21 +96,42 @@ public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
             bibrefIds = bibliographicReferenceService.listAll();
         }
         log.info( "There are " + bibrefIds.size() + " to update" );
+        int refreshed = 0, failed = 0, missing = 0;
+        // `retracted` is the one publication attribute that changes AFTER ingestion — a paper is
+        // ingested clean and retracted years later — and because the column defaults to false,
+        // "never re-checked" and "checked, not retracted" read identically. So the interesting
+        // output of this command is not that it ran, but which records CHANGED. Collect those:
+        // otherwise the answer is buried in one log line per reference.
+        List<String> newlyRetracted = new ArrayList<>();
         for ( Long id : bibrefIds ) {
             BibliographicReference bibref = bibliographicReferenceService.load( id );
             if ( bibref == null ) {
                 log.info( "No reference with id=" + id );
+                missing++;
                 continue;
             }
             bibref = bibliographicReferenceService.thaw( bibref );
+            String accession = bibref.getPubAccession().getAccession();
+            boolean wasRetracted = Boolean.TRUE.equals( bibref.getRetracted() );
             try {
-                BibliographicReference updated = bibliographicReferenceService.refresh( bibref.getPubAccession()
-                        .getAccession() );
+                BibliographicReference updated = bibliographicReferenceService.refresh( accession );
                 log.info( updated );
+                refreshed++;
+                if ( !wasRetracted && updated != null && Boolean.TRUE.equals( updated.getRetracted() ) ) {
+                    newlyRetracted.add( accession );
+                    log.warn( "PMID " + accession + " is now flagged retracted (was not): " + updated );
+                }
             } catch ( Exception e ) {
                 log.info( "Failed to update: " + bibref + " (" + e.getMessage() + ")" );
+                failed++;
             }
             Thread.sleep( random.nextInt( 1000 ) );
+        }
+        log.info( "updatePubMeds finished: " + refreshed + " refreshed, " + failed + " failed, "
+                + missing + " missing, " + newlyRetracted.size() + " newly retracted." );
+        if ( !newlyRetracted.isEmpty() ) {
+            log.warn( "Newly retracted PMIDs (" + newlyRetracted.size() + "): "
+                    + String.join( ",", newlyRetracted ) );
         }
     }
 

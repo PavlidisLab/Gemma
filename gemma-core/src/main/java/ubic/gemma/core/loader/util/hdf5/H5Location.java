@@ -5,7 +5,7 @@ import hdf.hdf5lib.callbacks.H5A_iterate_t;
 import hdf.hdf5lib.callbacks.H5L_iterate_opdata_t;
 import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +21,7 @@ public abstract class H5Location {
     private final long locId;
 
     protected H5Location( long locId ) {
-        Assert.isTrue( locId != H5I_INVALID_HID );
+        Assert.isTrue( locId != H5I_INVALID_HID , "expected true");
         this.locId = locId;
     }
 

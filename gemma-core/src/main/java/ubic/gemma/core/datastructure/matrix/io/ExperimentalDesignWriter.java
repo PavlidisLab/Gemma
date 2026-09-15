@@ -20,7 +20,7 @@ package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
 import org.springframework.util.Assert;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
@@ -31,7 +31,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
@@ -185,6 +185,7 @@ public class ExperimentalDesignWriter {
             ExperimentalFactor ef = factors.get( i );
             buf.append( ExperimentalDesignWriter.EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR );
             buf.append( factorColumnNames[i] ).append( " :" );
+            // Characteristic.getValue() is nullable, so a factor can carry a category with no value
             if ( ef.getCategory() != null && ef.getCategory().getValue() != null ) {
                 buf.append( " Category=" ).append( ef.getCategory().getValue().replaceAll( "\\s", "_" ) );
             }

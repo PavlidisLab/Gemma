@@ -1,9 +1,10 @@
 package ubic.gemma.core.ontology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
@@ -14,14 +15,13 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.providers.*;
-import ubic.basecode.ontology.providers.OntologyService;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import ubic.gemma.core.ontology.providers.*;
+import ubic.gemma.core.ontology.providers.OntologyService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +33,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * This test does not use the test profile as it aims to verify that all the ontologies we use in production are working
@@ -40,9 +41,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration
-public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
+public class OntologyLoadingTest {
 
     @Configuration
     @TestComponent
@@ -58,6 +60,25 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
                     "gemma.ontology.unified.tdb.tempDir=",
                     "gemma.ontology.loader.corePoolSize=4"
             );
+        }
+
+        /**
+         * {@code OntologyConfig} declares {@code ontologyRelationProducer}, whose two required
+         * collaborators live in the persistence layer this context does not stand up. Importing the
+         * configuration means taking every bean in it, so without these the context fails to build and
+         * all three tests below error out on wiring rather than on anything they assert.
+         *
+         * <p>Mocks rather than real beans on purpose: nothing here produces a relation. The producer's
+         * own behaviour is covered by {@code OntologyRelationProducerImplTest}.</p>
+         */
+        @Bean
+        public ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao() {
+            return mock( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.class );
+        }
+
+        @Bean
+        public org.springframework.transaction.PlatformTransactionManager transactionManager() {
+            return mock( org.springframework.transaction.PlatformTransactionManager.class );
         }
 
         @Bean
@@ -128,7 +149,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testInitializeAllOntologies() {
         // these are notoriously slow, so we skip them
         List<OntologyService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo, clo, cl, hpo, uberon, obi, mdo, unified );

@@ -18,6 +18,14 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
+@Entity
+
+@DiscriminatorValue("ArrayDesignMergeEvent")
+
 public class ArrayDesignMergeEvent extends ArrayDesignAnalysisEvent {
 
 }

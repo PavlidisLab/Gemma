@@ -1,7 +1,7 @@
 package ubic.gemma.model.common;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
 import java.util.ArrayList;
@@ -11,14 +11,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.model.common.DescribableUtils.*;
 
 public class DescribableUtilsTest {
 
     private final ThreadLocal<AtomicLong> idGenerator = ThreadLocal.withInitial( AtomicLong::new );
 
-    @After
+    @AfterEach
     public void tearDown() {
         idGenerator.remove();
     }
