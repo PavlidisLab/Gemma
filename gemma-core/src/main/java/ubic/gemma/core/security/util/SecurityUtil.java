@@ -249,12 +249,20 @@ public class SecurityUtil {
      *                   yourself
      * @return the identity to record
      * @throws AccessDeniedException if a caller who is neither agent nor admin
-     *                               claims to be someone else
+     *                               claims to be someone else, or if an agent
+     *                               names its own account
      * @throws IllegalStateException if there is no authenticated caller to
      *                               fall back to
      */
     public static String resolveActingIdentity( @Nullable String onBehalfOf ) {
         String principal = getCurrentUsername();
+        // An agent is never the person who directed it. Paul, 2026-09-15: "on_behalf_of=gemmaAgent is always going to
+        // be wrong." Client scripts passed GEMMA_USERNAME, which became the agent's own account on 2026-09-05, and 6
+        // DesignChangeEvent rows stored the agent as its own director.
+        if ( onBehalfOf != null && onBehalfOf.trim().equals( principal ) && isUserAgent() ) {
+            throw new AccessDeniedException( "onBehalfOf names " + principal + ", the agent account making this "
+                    + "request. It must name the person who directed the agent." );
+        }
         if ( onBehalfOf == null || onBehalfOf.isBlank() || onBehalfOf.equals( principal ) ) {
             if ( principal == null ) {
                 throw new IllegalStateException( "No authenticated caller to attribute this action to." );
