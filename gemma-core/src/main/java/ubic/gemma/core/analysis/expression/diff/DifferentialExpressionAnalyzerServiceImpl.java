@@ -180,6 +180,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis dea, DifferentialExpressionAnalysisConfig config ) {
+        Assert.isTrue( !config.isDeleteOtherAnalyses(), "Deleting the other analyses is only supported for a fresh run, not a redo." );
 
         if ( !differentialExpressionAnalysisService.canDelete( dea ) ) {
             throw new IllegalArgumentException(
@@ -238,10 +239,17 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
         config.setUseWeights( rnaSeq );
 
+        // resolved before the analysis runs, so an analysis that cannot be deleted refuses the run before any work
+        Collection<DifferentialExpressionAnalysis> others = config.isDeleteOtherAnalyses()
+                ? this.getAnalysesToDeleteAfterSaving( expressionExperiment, config )
+                : null;
+
         Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
                 .analyze( expressionExperiment, config );
 
-        if ( config.isPersist() ) {
+        if ( others != null ) {
+            diffExpressionAnalyses = this.saveAnalysesThenDelete( expressionExperiment, diffExpressionAnalyses, config, others );
+        } else if ( config.isPersist() ) {
             diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config, true );
         } else {
             DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
@@ -273,6 +281,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             boolean replaceSuperseded ) {
 
         this.deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude(), replaceSuperseded );
+        return this.saveAnalysis( expressionExperiment, analysis, config );
+    }
+
+    /**
+     * Save an analysis, schedule its archive file and audit it, without deleting any existing analysis.
+     */
+    private DifferentialExpressionAnalysis saveAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -584,6 +600,52 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             DifferentialExpressionAnalysis persistentAnalysis = this
                     .persistAnalysis( expressionExperiment, analysis, config, replaceSuperseded );
             results.add( persistentAnalysis );
+        }
+        return results;
+    }
+
+    /**
+     * The analyses {@link DifferentialExpressionAnalysisConfig#isDeleteOtherAnalyses()} will delete: every analysis of
+     * the experiment and of its subsets, as they stand before the run.
+     *
+     * @throws IllegalStateException if one of them cannot be deleted
+     */
+    private Collection<DifferentialExpressionAnalysis> getAnalysesToDeleteAfterSaving( ExpressionExperiment ee,
+            DifferentialExpressionAnalysisConfig config ) {
+        Assert.isTrue( config.isPersist(), "Other analyses can only be deleted when the new analyses are persisted." );
+        Collection<DifferentialExpressionAnalysis> others = differentialExpressionAnalysisService
+                .findByExperiment( ee, true );
+        for ( DifferentialExpressionAnalysis other : others ) {
+            if ( !differentialExpressionAnalysisService.canDelete( other ) ) {
+                throw new IllegalStateException( "Cannot delete " + other + " after the run: it is tied up with another "
+                        + "entity, such as a meta-analysis. Delete the constraining entity first." );
+            }
+        }
+        return others;
+    }
+
+    /**
+     * Save the new analyses, then delete {@code others}.
+     * <p>
+     * Unlike {@link #persistAnalyses}, nothing is deleted before saving, not even an analysis on the same factors, so
+     * the experiment keeps its analyses until the new ones exist. If no analysis was produced, or a save fails, nothing
+     * is deleted.
+     */
+    private Collection<DifferentialExpressionAnalysis> saveAnalysesThenDelete( ExpressionExperiment ee,
+            Collection<DifferentialExpressionAnalysis> analyses, DifferentialExpressionAnalysisConfig config,
+            Collection<DifferentialExpressionAnalysis> others ) {
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+            results.add( this.saveAnalysis( ee, analysis, config ) );
+        }
+        if ( results.isEmpty() ) {
+            log.warn( "No analysis was produced for " + ee.getShortName() + "; its " + others.size()
+                    + " existing analyses are kept." );
+            return results;
+        }
+        for ( DifferentialExpressionAnalysis other : others ) {
+            log.info( "Deleting " + other + ", which is not one of the " + results.size() + " analyses just saved." );
+            this.deleteAnalysis( ee, other );
         }
         return results;
     }

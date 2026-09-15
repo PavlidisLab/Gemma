@@ -606,6 +606,48 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
                 .exitCause().hasMessageContaining( "No differential expression analysis was performed" );
     }
 
+    /**
+     * Paul, 2026-09-15: the DEA CLI needs a "delete others" option.
+     */
+    @Test
+    public void testDeleteOthers() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype", "-deleteOthers" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.isDeleteOtherAnalyses() ).isTrue();
+        } ) );
+    }
+
+    /**
+     * With {@code -nodb} nothing is saved, so nothing would take the place of the deleted analyses.
+     */
+    @Test
+    public void testDeleteOthersIsRefusedWhenNothingIsSaved() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype", "-deleteOthers", "-nodb" )
+                .fails();
+        verify( differentialExpressionAnalyzerService, never() ).runDifferentialExpressionAnalyses( any(), any() );
+    }
+
+    @Test
+    public void testDeleteOthersIsRefusedWithRedo() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-redo", "-deleteOthers" )
+                .fails();
+        verify( differentialExpressionAnalyzerService, never() ).redoAnalyses( any(), any(), any(), anyBoolean() );
+    }
+
     @Test
     public void testDeleteAnalysis() {
         assertThat( differentialExpressionAnalysisCli )

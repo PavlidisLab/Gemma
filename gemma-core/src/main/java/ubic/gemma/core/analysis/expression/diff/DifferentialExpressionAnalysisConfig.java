@@ -66,6 +66,15 @@ public class DifferentialExpressionAnalysisConfig {
     private boolean persist = true;
 
     /**
+     * After the new analyses are saved, delete every other analysis of the experiment, including those of its
+     * subsets.
+     * <p>
+     * Only a fresh run honours this, and only when {@code persist} is set. Nothing is deleted before the new analyses
+     * are saved, so a run that fails leaves the existing analyses in place.
+     */
+    private boolean deleteOtherAnalyses = false;
+
+    /**
      * Factor to subset the analysis on, if non-null.
      */
     @Nullable
@@ -170,6 +179,7 @@ public class DifferentialExpressionAnalysisConfig {
         this.factorsToInclude.addAll( baseConfig.getFactorsToInclude() );
         this.interactionsToInclude.addAll( baseConfig.getInteractionsToInclude() );
         this.persist = baseConfig.isPersist();
+        this.deleteOtherAnalyses = baseConfig.isDeleteOtherAnalyses();
         this.subsetFactor = baseConfig.getSubsetFactor();
         this.subsetFactorValue = baseConfig.getSubsetFactorValue();
         this.ignoreFailingSubsets = baseConfig.isIgnoreFailingSubsets();

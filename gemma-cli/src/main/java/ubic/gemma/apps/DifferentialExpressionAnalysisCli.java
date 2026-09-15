@@ -130,6 +130,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private boolean makeArchiveFiles = true;
 
+    /**
+     * Delete the experiment's other analyses once the new ones are saved.
+     */
+    private boolean deleteOthers = false;
+
     private boolean ignoreFailingSubsets = false;
 
     @Nullable
@@ -226,6 +231,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + "Try to base analysis on previous analysis's choice of statistical model. "
                         + "Multiple subsets can be provided using comma-delimited IDs or by passing the option multiple times." )
                 .get() );
+
+        options.addOption( "deleteOthers", "delete-others", false,
+                "After the new analyses are saved, delete every other analysis of the experiment, including analyses of its subsets. "
+                        + "Nothing is deleted if the analysis fails or produces no result. "
+                        + "This is incompatible with " + formatOption( options, "nodb" ) + ", -redo,--redo, -redoAnalysis,--redo-analysis and -redoSubset,--redo-subset." );
 
         // filter options
         options.addOption( Option.builder( "filterMinNumberOfCellsPerSample" )
@@ -351,6 +361,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.moderateStatistics = !commandLine.hasOption( "nobayes" );
         this.persist = !commandLine.hasOption( "nodb" );
         this.makeArchiveFiles = !hasOption( commandLine, "nofiles", requires( toBeUnset( "nodb" ) ) );
+        this.deleteOthers = hasOption( commandLine, "deleteOthers",
+                requires( allOf( toBeUnset( "nodb" ), toBeUnset( "redo" ), toBeUnset( "redoAnalysis" ), toBeUnset( "redoSubset" ) ) ) );
         this.destination = getDataFileOptionValue( commandLine, false, false, true );
         this.filterMinNumberOfCellsPerSample = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerSample" );
         this.filterMinNumberOfCellsPerGene = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerGene" );
@@ -435,6 +447,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         config.setAnalysisType( this.type );
         config.setModerateStatistics( this.moderateStatistics );
         config.setPersist( this.persist );
+        config.setDeleteOtherAnalyses( this.deleteOthers );
         config.setMakeArchiveFile( this.persist && this.makeArchiveFiles );
         config.setIgnoreFailingSubsets( this.ignoreFailingSubsets );
         config.setUseWeights( super.eeService.isRNASeq( ee ) );
