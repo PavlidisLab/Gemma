@@ -776,6 +776,46 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
     }
 
+    private static final String DECISION_BODY = "{\"decision\":\"refused\",\"scope\":\"key\","
+            + "\"decisionKey\":\"tag:disease\",\"reason\":\"not a disease study\"}";
+
+    /**
+     * An agent recording a decision must name the person it acts for, and never its own account. Paul, 2026-09-15, of
+     * {@code CURATION_DECISION.DECIDED_BY}: "it should be the person". All 1,074 rows on gemd named gemmaAgent.
+     */
+    @Test
+    @WithMockUser(username = "gemmaAgent", authorities = { "GROUP_AGENT" })
+    public void testAnAgentRecordingADecisionMustNameThePersonItActsFor(
+            @Autowired ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationDecisionService curationDecisionService ) {
+        reset( curationDecisionService );
+        try ( Response r = target( "/datasets/1/curation/decisions" ).request().post( Entity.json( DECISION_BODY ) ) ) {
+            assertThat( r.getStatus() ).as( "without onBehalfOf" ).isEqualTo( 400 );
+        }
+        try ( Response r = target( "/datasets/1/curation/decisions" ).queryParam( "onBehalfOf", "gemmaAgent" )
+                .request().post( Entity.json( DECISION_BODY ) ) ) {
+            assertThat( r.getStatus() ).as( "naming its own account" ).isEqualTo( 400 );
+        }
+        verifyNoInteractions( curationDecisionService );
+    }
+
+    /**
+     * The agent's part is recorded in the judge kind, which defaults to AGENT for an agent caller.
+     */
+    @Test
+    @WithMockUser(username = "gemmaAgent", authorities = { "GROUP_AGENT" })
+    public void testAnAgentDecisionNamesThePersonAndRecordsTheAgentAsJudge(
+            @Autowired ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationDecisionService curationDecisionService ) {
+        reset( curationDecisionService );
+        when( curationDecisionService.decide( any(), any(), any(), any(), any(), any(), any(), any() ) )
+                .thenReturn( new ubic.gemma.model.common.auditAndSecurity.curation.CurationDecision() );
+        try ( Response r = target( "/datasets/1/curation/decisions" ).queryParam( "onBehalfOf", "administrator" )
+                .request().post( Entity.json( DECISION_BODY ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 201 );
+        }
+        verify( curationDecisionService ).decide( eq( ee ), any(), any(), any(), any(), any(), eq( "administrator" ),
+                eq( ubic.gemma.model.common.auditAndSecurity.curation.TriageJudgeKind.AGENT ) );
+    }
+
     /**
      * A factor value can name its samples by BioMaterial id.
      * <p>

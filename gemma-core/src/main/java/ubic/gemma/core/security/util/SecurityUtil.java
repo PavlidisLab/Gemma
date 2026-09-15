@@ -249,8 +249,8 @@ public class SecurityUtil {
      *                   yourself
      * @return the identity to record
      * @throws AccessDeniedException if a caller who is neither agent nor admin
-     *                               claims to be someone else, or if an agent
-     *                               names its own account
+     *                               claims to be someone else
+     * @throws ActingIdentityRefusedException if an agent names its own account
      * @throws IllegalStateException if there is no authenticated caller to
      *                               fall back to
      */
@@ -260,8 +260,8 @@ public class SecurityUtil {
         // be wrong." Client scripts passed GEMMA_USERNAME, which became the agent's own account on 2026-09-05, and 6
         // DesignChangeEvent rows stored the agent as its own director.
         if ( onBehalfOf != null && onBehalfOf.trim().equals( principal ) && isUserAgent() ) {
-            throw new AccessDeniedException( "onBehalfOf names " + principal + ", the agent account making this "
-                    + "request. It must name the person who directed the agent." );
+            throw new ActingIdentityRefusedException( "onBehalfOf names " + principal + ", the agent account making "
+                    + "this request. It must name the person who directed the agent." );
         }
         if ( onBehalfOf == null || onBehalfOf.isBlank() || onBehalfOf.equals( principal ) ) {
             if ( principal == null ) {
@@ -274,6 +274,22 @@ public class SecurityUtil {
                     "Only an agent or an administrator may act on behalf of another user." );
         }
         return onBehalfOf;
+    }
+
+    /**
+     * Refuse a ruling an agent records without naming the person who directed it.
+     * <p>
+     * A ruling's {@code decidedBy} names a person. Paul, 2026-09-15: "it should be the person; we record that the
+     * agent actually did it elsewhere." All 1,074 {@code CURATION_DECISION} rows written before this named
+     * {@code gemmaAgent}, because the agent sent no {@code onBehalfOf}.
+     *
+     * @throws ActingIdentityRefusedException if the caller is an agent and {@code onBehalfOf} is blank
+     */
+    public static void requireOnBehalfOfFromAgent( @Nullable String onBehalfOf ) {
+        if ( ( onBehalfOf == null || onBehalfOf.isBlank() ) && isUserAgent() ) {
+            throw new ActingIdentityRefusedException( "onBehalfOf is required when an agent records a ruling: it "
+                    + "names the person who directed the agent." );
+        }
     }
 
     /**

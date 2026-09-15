@@ -2568,28 +2568,33 @@ public class DatasetsWebService {
                     + "`reason` is REQUIRED -- a refusal has no other content, and a later reader needs it to "
                     + "judge whether the refusal still applies. Free text.\n\n"
                     + "Append-only: lifting a refusal means posting `allowed`, not deleting the `refused`, so "
-                    + "why it was refused survives the reversal. `?onBehalfOf=` names the deciding curator "
-                    + "when an agent relays the call; honoured only for `GROUP_AGENT` / `GROUP_ADMIN`.\n\n"
+                    + "why it was refused survives the reversal.\n\n"
+                    + "`?onBehalfOf=` names the person deciding and is honoured only for `GROUP_AGENT` / "
+                    + "`GROUP_ADMIN`. 🛑 An agent MUST send it, naming the person who directed it and never its own "
+                    + "account: `decidedBy` names a person. The agent's part is recorded in `judgeKind`, which "
+                    + "defaults to `agent` for an agent caller and `curator` for anyone else.\n\n"
                     + "Per dataset. A ruling that applies corpus-wide is a CONVENTION and belongs in the "
                     + "curation rules the agent reads, not here.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "The decision was recorded.",
                             content = @Content(schema = @Schema(implementation = CurationDecisionResponse.class))),
                     @ApiResponse(responseCode = "400",
-                            description = "A field is missing or names no value, `reason` is blank, or the "
-                                    + "scope disagrees with the key / proposal given.",
+                            description = "A field is missing or names no value, `reason` is blank, the "
+                                    + "scope disagrees with the key / proposal given, or an agent sent no "
+                                    + "`onBehalfOf` or named its own account.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No such dataset or annotation set.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response recordCurationDecision(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Who is deciding. Agents and admins only.")
+            @Parameter(description = "The person deciding. Required from an agent; agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable CurationDecisionRequest body
     ) {
         if ( body == null ) {
             throw new BadRequestException( "Request body is required." );
         }
+        SecurityUtil.requireOnBehalfOfFromAgent( onBehalfOf );
         CurationDecisionType decision;
         CurationDecisionScope scope;
         try {
@@ -2607,7 +2612,7 @@ public class DatasetsWebService {
             }
         }
         String decidedBy = SecurityUtil.resolveActingIdentity( onBehalfOf );
-        TriageJudgeKind kind = resolveDecisionJudgeKind( body.judgeKind, onBehalfOf );
+        TriageJudgeKind kind = resolveDecisionJudgeKind( body.judgeKind );
         CurationDecision d;
         try {
             d = curationDecisionService.decide( ee, decision, scope, body.decisionKey,
@@ -2652,14 +2657,12 @@ public class DatasetsWebService {
     }
 
     /**
-     * Who decided: a person, or a machine. Taken from the caller rather than
-     * inferred from the transport, for the reason the triage endpoint gives --
-     * the agent authenticates as whichever account runs it, which today is a
-     * human administrator, so inferring from the principal reports CURATOR for
-     * an agent's own rulings.
+     * Who decided: a person, or a machine. The caller's declaration wins; otherwise an agent caller records AGENT.
+     * <p>
+     * An agent must name the person it acts for (Paul, 2026-09-15), so naming someone no longer says a curator
+     * judged. A curator's ruling that the agent only relays is declared as {@code judgeKind=curator}.
      */
-    private static TriageJudgeKind resolveDecisionJudgeKind( @Nullable String declared,
-            @Nullable String onBehalfOf ) {
+    private static TriageJudgeKind resolveDecisionJudgeKind( @Nullable String declared ) {
         if ( declared != null && !declared.isBlank() ) {
             try {
                 return TriageJudgeKind.fromDbValue( declared );
@@ -2668,9 +2671,7 @@ public class DatasetsWebService {
                         + "'; expected agent or curator." );
             }
         }
-        boolean decidedForSomeoneNamed = onBehalfOf != null && !onBehalfOf.isBlank();
-        return !decidedForSomeoneNamed && SecurityUtil.isUserAgent()
-                ? TriageJudgeKind.AGENT : TriageJudgeKind.CURATOR;
+        return SecurityUtil.isUserAgent() ? TriageJudgeKind.AGENT : TriageJudgeKind.CURATOR;
     }
 
     private static CurationDecisionResponse toDecisionResponse( CurationDecision d ) {
