@@ -605,21 +605,32 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     /**
-     * The analyses {@link DifferentialExpressionAnalysisConfig#isDeleteOtherAnalyses()} will delete: every analysis of
-     * the experiment and of its subsets, as they stand before the run.
+     * The analyses {@code deleteOtherAnalyses} will delete: the experiment's analyses on the same subset factor as this
+     * run, as they stand before it. Without a subset factor, those are the analyses that are not subset analyses.
+     * <p>
+     * Paul, 2026-09-15: "don't replace analyses that don't need to be updated."
      *
      * @throws IllegalStateException if one of them cannot be deleted
      */
     private Collection<DifferentialExpressionAnalysis> getAnalysesToDeleteAfterSaving( ExpressionExperiment ee,
             DifferentialExpressionAnalysisConfig config ) {
         Assert.isTrue( config.isPersist(), "Other analyses can only be deleted when the new analyses are persisted." );
-        Collection<DifferentialExpressionAnalysis> others = differentialExpressionAnalysisService
-                .findByExperiment( ee, true );
-        for ( DifferentialExpressionAnalysis other : others ) {
-            if ( !differentialExpressionAnalysisService.canDelete( other ) ) {
-                throw new IllegalStateException( "Cannot delete " + other + " after the run: it is tied up with another "
-                        + "entity, such as a meta-analysis. Delete the constraining entity first." );
+        Long subsetFactorId = config.getSubsetFactor() != null ? config.getSubsetFactor().getId() : null;
+        Collection<DifferentialExpressionAnalysis> others = new ArrayList<>();
+        for ( DifferentialExpressionAnalysis existing : differentialExpressionAnalysisService
+                .thaw( differentialExpressionAnalysisService.findByExperiment( ee, true ) ) ) {
+            FactorValue subsetFactorValue = existing.getSubsetFactorValue();
+            Long existingSubsetFactorId = subsetFactorValue != null
+                    ? subsetFactorValue.getExperimentalFactor().getId()
+                    : null;
+            if ( !Objects.equals( existingSubsetFactorId, subsetFactorId ) ) {
+                continue;
             }
+            if ( !differentialExpressionAnalysisService.canDelete( existing ) ) {
+                throw new IllegalStateException( "Cannot delete " + existing + " after the run: it is tied up with "
+                        + "another entity, such as a meta-analysis. Delete the constraining entity first." );
+            }
+            others.add( existing );
         }
         return others;
     }

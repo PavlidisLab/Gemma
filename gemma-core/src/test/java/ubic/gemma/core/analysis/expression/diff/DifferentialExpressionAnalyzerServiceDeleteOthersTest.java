@@ -25,11 +25,13 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultCache;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,11 +51,12 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * A fresh run with {@code deleteOtherAnalyses} saves its analyses first and deletes every other analysis of the
- * experiment afterwards.
+ * A fresh run with {@code deleteOtherAnalyses} saves its analyses first, then deletes the experiment's other analyses
+ * on the same subset factor.
  * <p>
- * Paul, 2026-09-15: the DEA CLI needs a "delete others" option. Until then the route was {@code deleteDiffEx} followed
- * by {@code diffExAnalyze}; on GSE90654 the experiment had no analysis between the two calls.
+ * Paul, 2026-09-15: the DEA CLI needs a "delete others" option, and it should not "replace analyses that don't need to
+ * be updated". Until then the route was {@code deleteDiffEx} followed by {@code diffExAnalyze}; on GSE90654 the
+ * experiment had no analysis between the two calls.
  *
  * @author gembro
  */
@@ -86,8 +89,10 @@ public class DifferentialExpressionAnalyzerServiceDeleteOthersTest {
 
     private ExpressionExperiment ee;
     private ExperimentalFactor genotype;
+    private ExperimentalFactor cellType;
     private DifferentialExpressionAnalysis onGenotype;
     private DifferentialExpressionAnalysis onBoth;
+    private DifferentialExpressionAnalysis inNeurons;
     private DifferentialExpressionAnalysisConfig config;
 
     @BeforeEach
@@ -97,11 +102,13 @@ public class DifferentialExpressionAnalyzerServiceDeleteOthersTest {
         ee.setShortName( "GSE90654" );
         genotype = factor( 1L, "genotype" );
         ExperimentalFactor treatment = factor( 2L, "treatment" );
-        onGenotype = analysis( 100L, ee, Collections.singletonList( genotype ) );
-        onBoth = analysis( 200L, ee, Arrays.asList( genotype, treatment ) );
+        cellType = factor( 3L, "cell type" );
+        onGenotype = analysis( 100L, Collections.singletonList( genotype ), null );
+        onBoth = analysis( 200L, Arrays.asList( genotype, treatment ), null );
+        inNeurons = analysis( 400L, Collections.singletonList( genotype ), factorValue( 31L, cellType ) );
 
         when( differentialExpressionAnalysisService.findByExperiment( ee, true ) )
-                .thenReturn( Arrays.asList( onGenotype, onBoth ) );
+                .thenReturn( Arrays.asList( onGenotype, onBoth, inNeurons ) );
         when( differentialExpressionAnalysisService.canDelete( any( DifferentialExpressionAnalysis.class ) ) ).thenReturn( true );
         when( differentialExpressionAnalysisService.thaw( any( DifferentialExpressionAnalysis.class ) ) ).then( returnsFirstArg() );
         when( differentialExpressionAnalysisService.thaw( anyCollection() ) ).then( returnsFirstArg() );
@@ -124,16 +131,42 @@ public class DifferentialExpressionAnalyzerServiceDeleteOthersTest {
     }
 
     /**
-     * Includes the analysis on the same factors, which a run without the option deletes before saving.
+     * Includes the analysis on the same factors, which a run without the option deletes before saving. The subset
+     * analysis is on another subset factor, so it stays.
      */
     @Test
     public void testTheOtherAnalysesAreDeletedAfterTheNewOneIsSaved() {
-        DifferentialExpressionAnalysis fresh = analysis( null, ee, Collections.singletonList( genotype ) );
+        DifferentialExpressionAnalysis fresh = analysis( null, Collections.singletonList( genotype ), null );
         when( analysisSelectionAndExecutionService.analyze( ee, config ) ).thenReturn( Collections.singletonList( fresh ) );
 
         Collection<DifferentialExpressionAnalysis> results = analyzerService.runDifferentialExpressionAnalyses( ee, config );
 
         assertThat( results ).containsExactly( fresh );
+        assertThat( calls ).containsExactly( "save 300", "delete 100", "delete 200" );
+    }
+
+    @Test
+    public void testASubsetRunReplacesOnlyTheAnalysesOfThatFactorsSubsets() {
+        config.setSubsetFactor( cellType );
+        DifferentialExpressionAnalysis fresh = analysis( null, Collections.singletonList( genotype ), factorValue( 32L, cellType ) );
+        when( analysisSelectionAndExecutionService.analyze( ee, config ) ).thenReturn( Collections.singletonList( fresh ) );
+
+        analyzerService.runDifferentialExpressionAnalyses( ee, config );
+
+        assertThat( calls ).containsExactly( "save 300", "delete 400" );
+    }
+
+    /**
+     * An analysis the run does not replace cannot refuse it.
+     */
+    @Test
+    public void testAnAnalysisOutsideTheRunIsNotChecked() {
+        when( differentialExpressionAnalysisService.canDelete( inNeurons ) ).thenReturn( false );
+        DifferentialExpressionAnalysis fresh = analysis( null, Collections.singletonList( genotype ), null );
+        when( analysisSelectionAndExecutionService.analyze( ee, config ) ).thenReturn( Collections.singletonList( fresh ) );
+
+        analyzerService.runDifferentialExpressionAnalyses( ee, config );
+
         assertThat( calls ).containsExactly( "save 300", "delete 100", "delete 200" );
     }
 
@@ -188,11 +221,18 @@ public class DifferentialExpressionAnalyzerServiceDeleteOthersTest {
         return f;
     }
 
-    private static DifferentialExpressionAnalysis analysis( Long id, ExpressionExperiment ee,
-            Collection<ExperimentalFactor> factors ) {
+    private static FactorValue factorValue( Long id, ExperimentalFactor factor ) {
+        FactorValue fv = FactorValue.Factory.newInstance( factor );
+        fv.setId( id );
+        return fv;
+    }
+
+    private DifferentialExpressionAnalysis analysis( @Nullable Long id, Collection<ExperimentalFactor> factors,
+            @Nullable FactorValue subsetFactorValue ) {
         DifferentialExpressionAnalysis a = DifferentialExpressionAnalysis.Factory.newInstance();
         a.setId( id );
         a.setExperimentAnalyzed( ee );
+        a.setSubsetFactorValue( subsetFactorValue );
         ExpressionAnalysisResultSet rs = ExpressionAnalysisResultSet.Factory.newInstance();
         rs.setAnalysis( a );
         rs.getExperimentalFactors().addAll( factors );

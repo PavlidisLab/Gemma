@@ -233,7 +233,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .get() );
 
         options.addOption( "deleteOthers", "delete-others", false,
-                "After the new analyses are saved, delete every other analysis of the experiment, including analyses of its subsets. "
+                "After the new analyses are saved, delete the experiment's other analyses on the same subset factor: "
+                        + "without " + formatOption( options, "subset" ) + ", every other analysis that is not a subset analysis; "
+                        + "with it, every other analysis of that factor's subsets. "
                         + "Nothing is deleted if the analysis fails or produces no result. "
                         + "This is incompatible with " + formatOption( options, "nodb" ) + ", -redo,--redo, -redoAnalysis,--redo-analysis and -redoSubset,--redo-subset." );
 

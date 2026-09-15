@@ -66,8 +66,9 @@ public class DifferentialExpressionAnalysisConfig {
     private boolean persist = true;
 
     /**
-     * After the new analyses are saved, delete every other analysis of the experiment, including those of its
-     * subsets.
+     * After the new analyses are saved, delete the experiment's other analyses on the same subset factor: without a
+     * subset factor, every other analysis that is not a subset analysis; with one, every other analysis of that
+     * factor's subsets.
      * <p>
      * Only a fresh run honours this, and only when {@code persist} is set. Nothing is deleted before the new analyses
      * are saved, so a run that fails leaves the existing analyses in place.
