@@ -87,18 +87,69 @@ public class GeoLibraryStrategyTest {
     }
 
     /**
-     * ...and the detector stays narrow. These ride alongside ribosome profiling in the same series and are
-     * their own methods; calling them RIBO_SEQ would trade one wrong label for another.
+     * Ribosome-ASSOCIATED profiling counts, not only footprinting — Paul's ruling, 2026-09-16.
+     * <p>
+     * These titles are the ones measured in the corpus: eid 11789 {@code … FST TRAP}, 15632/15633
+     * {@code …-EGFP-Rpl10a-… IP}, 33841 {@code AA Ins poly rep1}. 40 TRAP/IP and 32 polysome samples
+     * already carried RIBO_SEQ from GEO's own declaration before this regex could match any of them.
+     * An earlier version of this test asserted the OPPOSITE for polysome — see the class the ruling
+     * reversed, and do not restore it without a newer ruling.
      */
     @Test
-    public void testRelatedButDifferentAssaysAreLeftAsOther() {
+    public void testRibosomeAssociatedAssaysAreAlsoRiboSeq() {
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "Hipp FST TRAP rep1", "" ) ) )
+                .isEqualTo( GeoLibraryStrategy.RIBO_SEQ );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "Pcp2-EGFP-Rpl10a-IP-2", "" ) ) )
+                .isEqualTo( GeoLibraryStrategy.RIBO_SEQ );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "AA Ins poly rep1", "polysome profiling" ) ) )
+                .isEqualTo( GeoLibraryStrategy.RIBO_SEQ );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "polysome fraction 3", "" ) ) )
+                .isEqualTo( GeoLibraryStrategy.RIBO_SEQ );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "RiboTag, CA1, Control, IP, replicate 1", "" ) ) )
+                .isEqualTo( GeoLibraryStrategy.RIBO_SEQ );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "Pnoc_LepR_KO_Pulldown_5", "" ) ) )
+                .isEqualTo( GeoLibraryStrategy.RIBO_SEQ );
         assertThat( GeoConverterImpl.effectiveLibStrategy(
                 other( "eIF2D KO HEK293T #1 eIF2D-V5 OE TCP-seq replicate 1", "" ) ) )
-                .isEqualTo( GeoLibraryStrategy.OTHER );
-        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "polysome fraction 3", "" ) ) )
-                .isEqualTo( GeoLibraryStrategy.OTHER );
+                .isEqualTo( GeoLibraryStrategy.RIBO_SEQ );
         assertThat( GeoConverterImpl.effectiveLibStrategy( other( "disome profiling rep2", "" ) ) )
+                .isEqualTo( GeoLibraryStrategy.RIBO_SEQ );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "polysomal RNA fraction 2", "" ) ) )
+                .isEqualTo( GeoLibraryStrategy.RIBO_SEQ );
+    }
+
+    /**
+     * 🛑 The karyotype words are NOT ribosome fractions. {@code polysomy}, {@code monosomy} and
+     * {@code uniparental disomy} are chromosome counts and share a stem with {@code polysome} /
+     * {@code monosome} / {@code disome}; the {@code (?!y)} lookahead is the only thing separating them.
+     * Drop it and every trisomy-adjacent karyotype series declared OTHER becomes ribosome profiling.
+     */
+    @Test
+    public void testKaryotypeWordsAreNotRibosomeFractions() {
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "monosomy 7 AML blasts", "" ) ) )
                 .isEqualTo( GeoLibraryStrategy.OTHER );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "polysomy of chromosome 17", "" ) ) )
+                .isEqualTo( GeoLibraryStrategy.OTHER );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( other( "uniparental disomy 14 patient", "" ) ) )
+                .isEqualTo( GeoLibraryStrategy.OTHER );
+    }
+
+    /**
+     * 🛑 The two shapes the regex CANNOT reach, whatever it says, because the gate is predicated on GEO's
+     * declared strategy. Pinned so that a later regex change is not mistaken for covering them.
+     * <p>
+     * eid 57963 carries both in ONE curator-defined arm: 6 samples declared OTHER (the regex now catches
+     * those) and 2 declared RNA_SEQ. eid 50185 declares nothing at all.
+     */
+    @Test
+    public void testTheGateStillCannotReachADeclaredOrAbsentStrategy() {
+        GeoSample declared = other( "RiboTag IP replicate 1", "" );
+        declared.setLibStrategy( GeoLibraryStrategy.RNA_SEQ );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( declared ) ).isEqualTo( GeoLibraryStrategy.RNA_SEQ );
+
+        GeoSample none = other( "RiboTag, CA1, Control, IP, replicate 1", "" );
+        none.setLibStrategy( null );
+        assertThat( GeoConverterImpl.effectiveLibStrategy( none ) ).isNull();
     }
 
     /** A non-transcriptomic source is never reinterpreted, however it is named. */
