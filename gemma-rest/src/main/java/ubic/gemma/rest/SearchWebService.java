@@ -32,6 +32,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.UnsupportedEntityUrlException;
+import ubic.gemma.rest.annotations.Costly;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -93,6 +94,7 @@ public class SearchWebService {
      * Naming the schema in for the result types is necessary so that it can be resolved in {@link CustomModelResolver}.
      */
     @GET
+    @Costly("search")
     @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma", responses = {

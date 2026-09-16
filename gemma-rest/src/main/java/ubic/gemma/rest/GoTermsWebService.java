@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import ubic.gemma.rest.annotations.Costly;
 
 /**
  * RESTful interface for reverse GO-term lookup: {@code GO term URI → genes annotated
@@ -123,6 +124,7 @@ public class GoTermsWebService {
      */
     @GET
     @Path("/{termUri}/genes")
+    @Costly("goterms")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Genes annotated to a GO term (reverse Gene2GO lookup)",
             description = "Path parameter is the URL-encoded GO URI (e.g. "
@@ -299,6 +301,7 @@ public class GoTermsWebService {
      */
     @GET
     @Path("/{termUri}/genes/count")
+    @Costly("goterms")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count of genes annotated to a GO term (optionally including descendants)",
             description = "Companion to `/goTerms/{termUri}/genes` for callers that only want " +

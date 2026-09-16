@@ -98,6 +98,7 @@ import java.util.stream.Collectors;
 
 import static ubic.gemma.rest.util.Responders.paginate;
 import static ubic.gemma.rest.util.Responders.respond;
+import ubic.gemma.rest.annotations.Costly;
 
 /**
  * RESTful interface for annotations.
@@ -1391,6 +1392,7 @@ public class AnnotationsWebService {
      */
     @GET
     @Path("/search")
+    @Costly("search")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Search for annotation tags", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),

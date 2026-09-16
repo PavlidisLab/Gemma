@@ -74,6 +74,7 @@ import java.util.stream.Collectors;
 import static ubic.gemma.rest.util.Responders.paginate;
 import static ubic.gemma.rest.util.Responders.paginateByCursor;
 import static ubic.gemma.rest.util.Responders.respond;
+import ubic.gemma.rest.annotations.Costly;
 
 /**
  * RESTful interface for genes.
@@ -161,6 +162,7 @@ public class GeneWebService {
      */
     @GET
     @Path("/search")
+    @Costly("search")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Free-text gene search (typeahead)",
             description = "Delegates to the search service with `resultTypes=Gene`. "

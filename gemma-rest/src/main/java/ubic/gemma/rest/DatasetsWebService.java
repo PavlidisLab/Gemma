@@ -209,6 +209,7 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.rest.annotations.Costly;
 import ubic.gemma.rest.annotations.CacheControl;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
@@ -546,6 +547,7 @@ public class DatasetsWebService {
     @Deprecated
     @GET
     @Path("/search")
+    @Costly("search")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Typeahead search for datasets by short name, accession, or title",
             deprecated = true,
@@ -10377,6 +10379,7 @@ public class DatasetsWebService {
     @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/processed")
+    @Costly("vectors")
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
@@ -10461,6 +10464,7 @@ public class DatasetsWebService {
     @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/raw")
+    @Costly("vectors")
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve raw expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
@@ -11157,6 +11161,7 @@ public class DatasetsWebService {
     @GET
     @GZIP
     @Path("/{dataset}/mean-variance")
+    @Costly("viz")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the per-probe mean / variance for a dataset",
             description = "Returns parallel mean[] and variance[] arrays computed by the mean-variance step; a "
@@ -11204,6 +11209,7 @@ public class DatasetsWebService {
     @GET
     @GZIP
     @Path("/{dataset}/sample-correlation")
+    @Costly("viz")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the sample-sample correlation matrix + outlier classifications",
             description = "Returns a sample correlation matrix UNMASKED, plus two parallel outlier-id lists: `actualOutlierBioAssayIds` (curator-flagged) and `predictedOutlierBioAssayIds` (algorithmic). The UI applies any visualization masking it wants.\n\nGemma stores two matrices per analysis and `?matrix=` picks one: `regressed` (the dataset's important factors regressed out), `full` (none regressed), or `best` (the default: regressed where it exists, else full). The response's `matrix` field says which one it holds. `matrix=regressed` 404s on a dataset that has no regressed matrix -- it is only computed when the design has factors above the SVD importance threshold.\n\nCorrelations are rounded to three decimals; at full precision the digits are incompressible and dominate the payload.\n\n404 if no correlation analysis has been computed for the dataset. **Single-cell datasets return 404 by design**: their matrix is the pseudo-bulk grid (samples x cell types), so it correlates across cell types rather than across samples, and it is withheld while that is revised.",
@@ -11507,6 +11513,7 @@ public class DatasetsWebService {
      */
     @GET
     @Path("/{dataset}/svd")
+    @Costly("viz")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
@@ -11882,6 +11889,7 @@ public class DatasetsWebService {
 
     @GET
     @Path("/{datasets}/expressions/genes/{genes}")
+    @Costly("vectors")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionLevelsForGenes( // Params:
@@ -11925,6 +11933,7 @@ public class DatasetsWebService {
      */
     @GET
     @Path("/{datasets}/expressions/pca")
+    @Costly("viz")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets")
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionPca( // Params:
@@ -11970,6 +11979,7 @@ public class DatasetsWebService {
      */
     @GET
     @Path("/{datasets}/expressions/differential")
+    @Costly("diffex")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the expression levels of a set of datasets subject to a threshold on their differential expressions",
             description = "Each entry under data[].geneExpressionLevels[] also carries gene-level "
