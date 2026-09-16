@@ -300,6 +300,20 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
     public static class VectorElementValueObject implements Serializable {
         private String designElementName;
         private Map<String, Double> bioAssayExpressionLevels = new HashMap<>();
+        /**
+         * Stored expression-level rank of this vector, by mean and by max, in [0, 1].
+         * <p>
+         * 🛑 Experiment-scoped: computed over the whole experiment when the vectors were
+         * processed, and reported unchanged however the request narrowed the samples. Use for
+         * "is this probe generally expressed in this study", not to order what was returned.
+         * {@code null} when the vector did not come from processed data, and on a sliced vector —
+         * {@code DoubleVectorValueObject.slice} drops the ranks rather than carry a number that
+         * no longer describes its data.
+         */
+        @Nullable
+        private Double rankByMean;
+        @Nullable
+        private Double rankByMax;
 
         public VectorElementValueObject() {
             super();
@@ -307,6 +321,8 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
 
         public VectorElementValueObject( DoubleVectorValueObject vector ) {
             this.designElementName = vector.getDesignElement().getName();
+            this.rankByMean = vector.getRankByMean();
+            this.rankByMax = vector.getRankByMax();
             this.extractProbeLevels( vector );
         }
 

@@ -152,6 +152,25 @@ public class HeatmapDataValueObject {
         private Boolean validated;
 
         /**
+         * Stored expression-level rank of this probe's vector, by mean and by max, in [0, 1].
+         * <p>
+         * 🛑 <b>Experiment-scoped, not request-scoped.</b> Both are computed over the whole
+         * experiment when the vectors are processed, and are reported unchanged when a subset
+         * narrows the column axis — so on a subset request the rank describes the full experiment
+         * while the matrix beside it does not. That makes them the right input for "is this probe
+         * generally expressed in this study" and the wrong one for ordering the rows actually
+         * returned; a client wanting the latter should compute it over the columns it received.
+         * <p>
+         * {@code null} on paths that do not carry processed vectors.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private Double rankByMean;
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private Double rankByMax;
+
+        /**
          * Free-form, gene-shaped annotation bag. Keys are short, client-visible labels; values are
          * primitives the client will display alongside the row: {@link Number} for numeric stats
          * (e.g. {@code logFC}, {@code FDR}, {@code rank}), {@link String} for categorical labels
