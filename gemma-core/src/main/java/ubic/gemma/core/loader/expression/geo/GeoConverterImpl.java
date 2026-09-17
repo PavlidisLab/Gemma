@@ -822,11 +822,19 @@ public class GeoConverterImpl implements GeoConverter {
      * often do not reach for it. Reading only the declared field files every such series under {@code OTHER},
      * which is the same bucket as spatial and APEX-seq and says nothing about what was measured.
      * <p>
-     * Deliberately narrow. Only unambiguous ribosome-profiling naming counts, and only when the sample is
-     * already transcriptomic-and-{@code OTHER} — a series that DECLARES its strategy is believed. Related
-     * assays that are not ribosome profiling are left alone even when they appear alongside it: TCP-seq,
-     * polysome and disome profiling are their own methods, and calling them {@code RIBO_SEQ} would trade one
-     * wrong label for another. Screening the remainder is a job for the curation agents, not for a regex here.
+     * {@code RIBO_SEQ} means ALL ribosome-associated profiling here — footprinting, TRAP / RiboTag and
+     * polysome purification alike — not footprinting alone. Paul's ruling, 2026-09-16, WIDENING what an
+     * earlier version of this comment said. Three things decided it: the column is already majority Gemma
+     * vocabulary ({@code MICROARRAY_*} is in no SRA CV), the broad sense is already in the corpus and GEO's
+     * own declarations put it there (40 TRAP/IP and 32 polysome samples carried {@code RIBO_SEQ} before this
+     * regex could match any of them), and widening is monotone — every row already labelled stays true, so
+     * nothing is re-labelled and nothing has to be revisited.
+     * <p>
+     * Still gated on transcriptomic-and-{@code OTHER}: a series that DECLARES its strategy is believed. That
+     * leaves two shapes this cannot reach, both real — GSE arms that declare {@code RNA_SEQ} outright
+     * (eid 57963 has both shapes in one curator-defined arm) and samples with no declared strategy at all
+     * (eid 50185, titled {@code RiboTag, CA1, Control, IP, …}). Reaching those means overriding or
+     * substituting for GEO's declaration, which is a different decision and not this one.
      * <p>
      * ⚠️ This CHANGES THE LABEL, NOT WHAT IS IMPORTED. {@code RIBO_SEQ} is admitted by the eligibility gate
      * alongside {@code RNA_SEQ} / {@code SSRNA_SEQ} / {@code OTHER}, so the samples that used to come in as
@@ -834,7 +842,14 @@ public class GeoConverterImpl implements GeoConverter {
      * profiling, which is a different decision and not this one.
      */
     private static final Pattern RIBO_SEQ_NAMING = Pattern.compile(
-            "ribo[\\s._-]?seq|ribosome[\\s._-]?profil|ribosome[\\s._-]?footprint|ribosome[\\s._-]?protected[\\s._-]?fragment|\\bRPF\\b",
+            "ribo[\\s._-]?seq|ribosome[\\s._-]?profil|ribosome[\\s._-]?footprint"
+                    + "|ribosome[\\s._-]?protected[\\s._-]?fragment|\\bRPF\\b"
+                    // ribosome-associated, per the 2026-09-16 ruling: affinity pulldown and fraction purification
+                    + "|\\btrap\\b|ribo[\\s._-]?tag|\\brpl10a\\b|pulldown|pull[\\s._-]down"
+                    // (?!y) keeps the karyotype words out: polysomy / monosomy / uniparental disomy are
+                    // chromosome counts, not ribosome fractions. The lookahead still admits polysome,
+                    // polysomal, polysomes.
+                    + "|polysom(?!y)|monosom(?!y)|disom(?!y)|tcp[\\s._-]?seq|immunoprecipit",
             Pattern.CASE_INSENSITIVE );
 
     /**

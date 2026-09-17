@@ -24,7 +24,9 @@ import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueO
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
@@ -274,10 +276,45 @@ public class ProcessedExpressionDataVectorServiceImpl
                 Comparator.nullsLast( Comparator.naturalOrder() ) ) );
 
         for ( ExpressionExperiment ee : ees ) {
-            this.addExperimentGeneVectorsWithDiffExStats( vos, ee, vectors, keepGeneNonSpecific, consolidateMode, statsByProbeId );
+            // 🛑 The vectors are stamped with the BioAssaySet they were SLICED FOR, not the dataset in the
+            // path. For a subset analysis CachedProcessedExpressionDataVectorServiceImpl.sliceSubSet gives
+            // each vector an ExpressionExperimentSubsetValueObject, so matching them on ee.getId() dropped
+            // every one and the endpoint answered 200 with an empty geneExpressionLevels — indistinguishable
+            // from "no significant genes". GSE239820 (dataset 32294, subset 32662) returned empty for all
+            // three of its result sets while /resultSets/{id} served the same stats fine.
+            Long vectorOwnerId = vectorOwnerIdFor( ee, analyzedSet );
+            if ( vectorOwnerId == null ) {
+                // The result set belongs to some other dataset entirely; nothing of this ee's is in it.
+                continue;
+            }
+            this.addExperimentGeneVectorsWithDiffExStats( vos, ee, vectorOwnerId, vectors, keepGeneNonSpecific, consolidateMode, statsByProbeId );
         }
 
         return vos;
+    }
+
+    /**
+     * Which id the vectors for {@code analyzedSet} are stamped with, when the analysis belongs to
+     * {@code ee} either directly or through one of its subsets; {@code null} when it does not belong to
+     * {@code ee} at all.
+     * <p>
+     * Unproxied before the {@code instanceof}: a subset arriving as a {@code BioAssaySet} proxy is an
+     * instance of neither subclass, which would silently answer "not this dataset" — the same trap
+     * {@code sliceSubSet} documents.
+     */
+    @Nullable
+    private static Long vectorOwnerIdFor( ExpressionExperiment ee, BioAssaySet analyzedSet ) {
+        BioAssaySet s = ( BioAssaySet ) Hibernate.unproxy( analyzedSet );
+        if ( s.getId() != null && s.getId().equals( ee.getId() ) ) {
+            return ee.getId();
+        }
+        if ( s instanceof ExpressionExperimentSubSet ) {
+            ExpressionExperiment source = ( ( ExpressionExperimentSubSet ) s ).getSourceExperiment();
+            if ( source != null && source.getId() != null && source.getId().equals( ee.getId() ) ) {
+                return s.getId();
+            }
+        }
+        return null;
     }
 
     private static boolean isMoreSignificant( DifferentialExpressionValueObject a, DifferentialExpressionValueObject b ) {
@@ -476,13 +513,18 @@ public class ProcessedExpressionDataVectorServiceImpl
      * genes whose probes span more than one result row, picks the most-significant row (smallest corrected
      * p-value) — the same selection rule the endpoint uses to rank its top-N.
      */
+    /**
+     * @param vectorOwnerId the id the vectors carry — {@code ee}'s own id for a whole-experiment analysis,
+     *                      the SUBSET's id for a subset analysis. Not the same thing as {@code ee.getId()},
+     *                      and conflating them is what made subset result sets return an empty 200.
+     */
     private void addExperimentGeneVectorsWithDiffExStats( Collection<ExperimentExpressionLevelsValueObject> vos,
-            ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
+            ExpressionExperiment ee, Long vectorOwnerId, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
             @Nullable String consolidateMode, Map<Long, DifferentialExpressionValueObject> statsByProbeId ) {
         // Batch-resolve referenced genes once; mirror of the addExperimentGeneVectors hoist.
         Set<Long> geneIds = new HashSet<>();
         for ( DoubleVectorValueObject v : vectors ) {
-            if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
+            if ( !v.getExpressionExperiment().getId().equals( vectorOwnerId ) ) {
                 continue;
             }
             if ( v.getGenes() != null ) {
@@ -497,7 +539,7 @@ public class ProcessedExpressionDataVectorServiceImpl
         Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
         Map<Gene, DifferentialExpressionValueObject> bestStatsPerGene = new HashMap<>();
         for ( DoubleVectorValueObject v : vectors ) {
-            if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
+            if ( !v.getExpressionExperiment().getId().equals( vectorOwnerId ) ) {
                 continue;
             }
 

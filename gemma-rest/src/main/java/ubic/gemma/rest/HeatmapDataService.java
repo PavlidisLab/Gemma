@@ -598,6 +598,10 @@ public class HeatmapDataService {
                 row.setGenes( refs );
             }
             row.setPvalue( v.getPvalue() );
+            // Carried straight off the vector; see RowMeta#rankByMean for why these stay
+            // experiment-scoped even when a subset has narrowed the columns.
+            row.setRankByMean( v.getRankByMean() );
+            row.setRankByMax( v.getRankByMax() );
             // Validated flag is set by the caller for diffex paths; left null otherwise.
             rows.add( row );
         }

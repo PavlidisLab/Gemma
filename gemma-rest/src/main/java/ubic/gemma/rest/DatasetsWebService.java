@@ -72,6 +72,7 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.qc.SequencingQcMetrics;
 import ubic.gemma.core.analysis.preprocess.qc.SequencingQcMetricsService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
+import ubic.gemma.core.analysis.service.BioAssayMetadataService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueNeedsAttentionService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
@@ -399,6 +400,9 @@ public class DatasetsWebService {
     private BioMaterialService bioMaterialService;
     @Autowired
     private OutlierFlaggingService outlierFlaggingService;
+
+    @Autowired
+    private BioAssayMetadataService bioAssayMetadataService;
     @Autowired
     private OutlierDetectionService outlierDetectionService;
     @Autowired
@@ -1559,6 +1563,129 @@ public class DatasetsWebService {
         public List<Long> outlierBioAssayIds;
         public int markedCount;
         public int unmarkedCount;
+    }
+
+    /**
+     * Request body for {@link #updateDatasetSampleMetadata}. Each field is optional; a field that is
+     * absent is left alone, and an explicitly {@code null} field CLEARS the column. {@code bioAssayIds}
+     * selects the samples — omit it to apply to every sample in the dataset.
+     * <p>
+     * Distinguishing "absent" from "null" is why these are boxed and why {@code *Present} flags exist:
+     * clearing a wrong {@code libraryStrategy} is a real curation act and has to be expressible.
+     */
+    public static class SampleMetadataRequest {
+        @Nullable
+        public List<Long> bioAssayIds;
+        @Nullable
+        public String libraryStrategy;
+        @Nullable
+        public String librarySelection;
+        @Nullable
+        public String extractedMolecule;
+        /** Set true to apply {@code libraryStrategy} even when it is null (i.e. to clear the column). */
+        public boolean clearLibraryStrategy;
+        /** Set true to apply {@code librarySelection} even when it is null. */
+        public boolean clearLibrarySelection;
+        /** Set true to apply {@code extractedMolecule} even when it is null. */
+        public boolean clearExtractedMolecule;
+    }
+
+    public static class SampleMetadataResponse {
+        /** Sample ids actually changed, per field. A sample already holding the value is not listed. */
+        public List<Long> libraryStrategyChanged = new ArrayList<>();
+        public List<Long> librarySelectionChanged = new ArrayList<>();
+        public List<Long> extractedMoleculeChanged = new ArrayList<>();
+    }
+
+    /**
+     * Set the upstream-derived metadata on a dataset's samples.
+     * <p>
+     * These three columns are otherwise written only by {@code GeoConverterImpl}, at import, from what GEO
+     * declared — so before this route the only way to correct one was direct SQL, which validates nothing
+     * and emits no audit event. Each field that actually changes records one
+     * {@code SampleMetadataChangedEvent} against the dataset, naming the samples in a typed payload.
+     */
+    @PUT
+    @Path("/{dataset}/samples/metadata")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority(\'GROUP_CURATOR\') or hasAuthority(\'GROUP_ADMIN\')")
+    @Operation(summary = "Set libraryStrategy, librarySelection and/or extractedMolecule on samples",
+            description = "Body: `{\"bioAssayIds\": [1,2], \"libraryStrategy\": \"RIBO_SEQ\"}`. Omit `bioAssayIds` to apply to "
+                    + "every sample in the dataset. A field that is absent is left alone; to CLEAR a column send the field as "
+                    + "null together with its `clear*` flag. `libraryStrategy` must be a GeoLibraryStrategy constant name "
+                    + "(`RNA_SEQ`, `RIBO_SEQ`, `ATAC_SEQ`, …) or `MICROARRAY_ONE_COLOR` / `MICROARRAY_TWO_COLOR`; "
+                    + "`extractedMolecule` must be an ExtractedMolecule constant (`totalRNA`, `polyARNA`, `genomicDNA`, …). "
+                    + "`librarySelection` is free text on purpose — it is the submitter\'s raw string and normalizing it to a "
+                    + "closed set would drop values we do not know. Samples already holding the value are skipped, so a repeat "
+                    + "call is a no-op and records no audit event.",
+            security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_CURATOR" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_CURATOR" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "400", description = "No field supplied, an unknown vocabulary value, or a bioAssay that does not belong to the dataset.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<SampleMetadataResponse> updateDatasetSampleMetadata(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Nullable SampleMetadataRequest body
+    ) {
+        if ( body == null ) {
+            throw new BadRequestException( "A request body is required." );
+        }
+        boolean doStrategy = body.libraryStrategy != null || body.clearLibraryStrategy;
+        boolean doSelection = body.librarySelection != null || body.clearLibrarySelection;
+        boolean doMolecule = body.extractedMolecule != null || body.clearExtractedMolecule;
+        if ( !doStrategy && !doSelection && !doMolecule ) {
+            throw new BadRequestException( "Supply at least one of libraryStrategy, librarySelection or extractedMolecule." );
+        }
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        ee = expressionExperimentService.thawBioAssays( ee );
+
+        Collection<BioAssay> targets;
+        if ( body.bioAssayIds == null ) {
+            targets = ee.getBioAssays();
+        } else {
+            Map<Long, BioAssay> byId = new HashMap<>();
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                byId.put( ba.getId(), ba );
+            }
+            List<BioAssay> selected = new ArrayList<>( body.bioAssayIds.size() );
+            for ( Long id : body.bioAssayIds ) {
+                BioAssay ba = byId.get( id );
+                if ( ba == null ) {
+                    throw new BadRequestException( "BioAssay " + id + " does not belong to dataset " + ee.getShortName() + "." );
+                }
+                selected.add( ba );
+            }
+            targets = selected;
+        }
+
+        SampleMetadataResponse out = new SampleMetadataResponse();
+        try {
+            if ( doStrategy ) {
+                out.libraryStrategyChanged = ids( bioAssayMetadataService.setLibraryStrategy( ee, targets, body.libraryStrategy ) );
+            }
+            if ( doSelection ) {
+                out.librarySelectionChanged = ids( bioAssayMetadataService.setLibrarySelection( ee, targets, body.librarySelection ) );
+            }
+            if ( doMolecule ) {
+                out.extractedMoleculeChanged = ids( bioAssayMetadataService.setExtractedMolecule( ee, targets, body.extractedMolecule ) );
+            }
+        } catch ( IllegalArgumentException e ) {
+            throw new BadRequestException( e.getMessage(), e );
+        }
+        return respond( out );
+    }
+
+    private static List<Long> ids( Collection<BioAssay> bioAssays ) {
+        List<Long> out = new ArrayList<>( bioAssays.size() );
+        for ( BioAssay ba : bioAssays ) {
+            out.add( ba.getId() );
+        }
+        out.sort( Comparator.naturalOrder() );
+        return out;
     }
 
     /**

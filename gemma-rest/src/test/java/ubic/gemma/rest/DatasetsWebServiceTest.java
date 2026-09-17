@@ -424,6 +424,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         }
 
         @Bean
+        public ubic.gemma.core.analysis.service.BioAssayMetadataService bioAssayMetadataService() {
+            return mock( ubic.gemma.core.analysis.service.BioAssayMetadataService.class );
+        }
+
+        @Bean
         public ubic.gemma.core.analysis.preprocess.OutlierDetectionService outlierDetectionService() {
             return mock( ubic.gemma.core.analysis.preprocess.OutlierDetectionService.class );
         }
@@ -553,6 +558,137 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService annotationSetService;
 
+    @Autowired
+    private ubic.gemma.core.analysis.service.BioAssayMetadataService bioAssayMetadataService;
+
+    /** Fixture: the dataset has one sample, id 7. */
+    private BioAssay sampleSevenOn( ExpressionExperiment target ) {
+        target.setId( 1L );
+        BioAssay ba = BioAssay.Factory.newInstance( "BA1" );
+        ba.setId( 7L );
+        target.getBioAssays().clear();
+        target.getBioAssays().add( ba );
+        when( expressionExperimentService.load( 1L ) ).thenReturn( target );
+        when( expressionExperimentService.thawBioAssays( target ) ).thenReturn( target );
+        return ba;
+    }
+
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testSetSampleLibraryStrategyReachesTheService() {
+        BioAssay ba = sampleSevenOn( ee );
+        when( bioAssayMetadataService.setLibraryStrategy( any(), any(), any() ) )
+                .thenReturn( Collections.singletonList( ba ) );
+
+        try ( Response r = target( "/datasets/1/samples/metadata" ).request()
+                .put( Entity.json( "{\"bioAssayIds\":[7],\"libraryStrategy\":\"RIBO_SEQ\"}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+            assertThat( r.readEntity( String.class ) ).asInstanceOf( json() )
+                    .hasPathWithValue( "$.data.libraryStrategyChanged[0]", 7 );
+        }
+        verify( bioAssayMetadataService ).setLibraryStrategy( eq( ee ), argThat( c -> c.contains( ba ) ), eq( "RIBO_SEQ" ) );
+        verify( bioAssayMetadataService, never() ).setLibrarySelection( any(), any(), any() );
+        verify( bioAssayMetadataService, never() ).setExtractedMolecule( any(), any(), any() );
+    }
+
+    /** Omitting bioAssayIds applies to every sample, rather than to none. */
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testOmittedBioAssayIdsMeansEverySample() {
+        BioAssay ba = sampleSevenOn( ee );
+        when( bioAssayMetadataService.setExtractedMolecule( any(), any(), any() ) )
+                .thenReturn( Collections.singletonList( ba ) );
+
+        try ( Response r = target( "/datasets/1/samples/metadata" ).request()
+                .put( Entity.json( "{\"extractedMolecule\":\"polyARNA\"}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+        }
+        verify( bioAssayMetadataService ).setExtractedMolecule( eq( ee ), argThat( c -> c.size() == 1 && c.contains( ba ) ), eq( "polyARNA" ) );
+    }
+
+    /**
+     * A sample id belonging to another dataset is refused before anything is written. Without this the
+     * route would happily set a column on a sample the caller never named a dataset for.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testForeignBioAssayIdIsRefused() {
+        sampleSevenOn( ee );
+        try ( Response r = target( "/datasets/1/samples/metadata" ).request()
+                .put( Entity.json( "{\"bioAssayIds\":[999],\"libraryStrategy\":\"RIBO_SEQ\"}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "999" );
+        }
+        verify( bioAssayMetadataService, never() ).setLibraryStrategy( any(), any(), any() );
+    }
+
+    /** An unknown vocabulary value becomes a 400 that names what IS accepted, not a 500. */
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testUnknownLibraryStrategyBecomesA400() {
+        sampleSevenOn( ee );
+        when( bioAssayMetadataService.setLibraryStrategy( any(), any(), any() ) )
+                .thenThrow( new IllegalArgumentException( "Unknown library strategy 'RIBOSEQ'. Known values: RIBO_SEQ, RNA_SEQ" ) );
+
+        try ( Response r = target( "/datasets/1/samples/metadata" ).request()
+                .put( Entity.json( "{\"bioAssayIds\":[7],\"libraryStrategy\":\"RIBOSEQ\"}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+            assertThat( r.readEntity( String.class ) ).contains( "RIBO_SEQ" );
+        }
+    }
+
+    /** A body naming no field at all is a caller bug, not a silent no-op. */
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testEmptyBodyIsRefused() {
+        sampleSevenOn( ee );
+        try ( Response r = target( "/datasets/1/samples/metadata" ).request().put( Entity.json( "{}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+        }
+        verifyNoInteractions( bioAssayMetadataService );
+    }
+
+    /**
+     * Clearing needs the clear flag: a null field alone is "absent", so a caller that omits a field can
+     * never wipe a column by accident.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_CURATOR" })
+    public void testClearingRequiresTheClearFlag() {
+        sampleSevenOn( ee );
+        try ( Response r = target( "/datasets/1/samples/metadata" ).request()
+                .put( Entity.json( "{\"bioAssayIds\":[7],\"libraryStrategy\":null}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 400 );
+        }
+        verify( bioAssayMetadataService, never() ).setLibraryStrategy( any(), any(), any() );
+
+        when( bioAssayMetadataService.setLibraryStrategy( any(), any(), any() ) ).thenReturn( Collections.emptyList() );
+        try ( Response r = target( "/datasets/1/samples/metadata" ).request()
+                .put( Entity.json( "{\"bioAssayIds\":[7],\"libraryStrategy\":null,\"clearLibraryStrategy\":true}" ) ) ) {
+            assertThat( r.getStatus() ).isEqualTo( 200 );
+        }
+        verify( bioAssayMetadataService ).setLibraryStrategy( eq( ee ), any(), isNull() );
+    }
+
+    /**
+     * The route is curator-or-admin.
+     * <p>
+     * 🛑 Asserted on the ANNOTATION, not by calling the route as a GROUP_USER and expecting 403.
+     * {@code @PreAuthorize} is enforced by {@code MethodSecurityConfig} in gemma-core, which this test
+     * context does not import — no test in this class wires method security, so a call as an ordinary
+     * user returns 200 here and would prove nothing either way. Reflection still fails if someone drops
+     * or weakens the annotation, which is the regression worth catching at this level.
+     */
+    @Test
+    public void testSampleMetadataRouteIsCuratorOrAdmin() throws NoSuchMethodException {
+        java.lang.reflect.Method m = DatasetsWebService.class.getMethod( "updateDatasetSampleMetadata",
+                ubic.gemma.rest.util.args.DatasetArg.class, DatasetsWebService.SampleMetadataRequest.class );
+        org.springframework.security.access.prepost.PreAuthorize pre =
+                m.getAnnotation( org.springframework.security.access.prepost.PreAuthorize.class );
+        assertThat( pre ).isNotNull();
+        assertThat( pre.value() ).contains( "GROUP_CURATOR" ).contains( "GROUP_ADMIN" );
+    }
+
     private ExpressionExperiment ee;
 
     @BeforeEach
@@ -580,7 +716,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService, bioAssayService, bioMaterialService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService, auditEventService, auditTrailService, securityService, geeqService, taskRunningService, differentialExpressionAnalysisService, userManager, ticketService, sampleCoexpressionAnalysisService, svdService, processedExpressionDataVectorService, expressionExperimentReportService, arrayDesignService, bibliographicReferenceService, ontologyTermValidator, curationLockService, annotationSetService, bioAssayService, bioMaterialService, bioAssayMetadataService );
     }
 
     private static final String HALLUCINATED_TAG_BODY = "{\"tags\":{\"items\":[{\"freeTextIntended\":true,\"clientRef\":\"t7\","
