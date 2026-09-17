@@ -69,6 +69,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayFieldCountValueObject;
+import ubic.gemma.model.expression.bioAssay.ExtractedMolecule;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -2606,6 +2608,79 @@ public class ExpressionExperimentDaoImpl
         populateDateCreated( results );
         populateSingleCellInfo( results );
         populateOtherParts( results );
+        populateLibraryFields( results );
+    }
+
+    /**
+     * Fill in {@code libraryStrategies}, {@code librarySelections} and {@code extractedMolecules} — the
+     * distinct values of each across a dataset's assays, with counts — for a page of VOs in one query.
+     * <p>
+     * One {@code group by} over the three columns together, not three queries: the combinations partition the
+     * dataset's assays, so a per-field count is a sum over the combination rows, and a dataset that is uniform
+     * in all three (better than 99.9% of them, measured by uib 2026-09-16) yields a single row.
+     * <p>
+     * A null value is carried through as a null-valued entry rather than dropped, so the counts sum to the
+     * dataset's assay count and an all-null field — {@code librarySelection} on every microarray dataset —
+     * is distinguishable from a dataset with no assays. Each field's entries are ordered by descending count so
+     * the majority value is first, which is the one a caller reading a single value wants.
+     * <p>
+     * Batched here rather than read off the entity because {@code ee.bioAssays} is lazy; touching it per VO is
+     * an N+1 on every dataset listing, and the whole point of putting these on the dataset is that a client
+     * should not have to fetch 2,158 assay rows to learn one constant.
+     */
+    private void populateLibraryFields( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, ba.libraryStrategy, ba.librarySelection, ba.extractedMolecule, count(ba.id) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.bioAssays as ba "
+                        + "where ee.id in (:ids) "
+                        + "group by ee.id, ba.libraryStrategy, ba.librarySelection, ba.extractedMolecule" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, Map<String, Integer>> strategiesByEe = new HashMap<>();
+        Map<Long, Map<String, Integer>> selectionsByEe = new HashMap<>();
+        Map<Long, Map<String, Integer>> moleculesByEe = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> {
+                    Long eeId = ( Long ) row[0];
+                    int n = ( ( Number ) row[4] ).intValue();
+                    // HashMap tolerates the null key, which is the point: a null is a value here.
+                    tally( strategiesByEe, eeId, ( String ) row[1], n );
+                    tally( selectionsByEe, eeId, ( String ) row[2], n );
+                    tally( moleculesByEe, eeId, nameOf( ( ExtractedMolecule ) row[3] ), n );
+                } );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setLibraryStrategies( toFieldCounts( strategiesByEe.get( eevo.getId() ) ) );
+            eevo.setLibrarySelections( toFieldCounts( selectionsByEe.get( eevo.getId() ) ) );
+            eevo.setExtractedMolecules( toFieldCounts( moleculesByEe.get( eevo.getId() ) ) );
+        }
+    }
+
+    /**
+     * Add {@code n} to the count for {@code value} under {@code eeId}. {@code value} may be null.
+     */
+    private static void tally( Map<Long, Map<String, Integer>> byEe, Long eeId, @Nullable String value, int n ) {
+        byEe.computeIfAbsent( eeId, k -> new HashMap<>() ).merge( value, n, Integer::sum );
+    }
+
+    /**
+     * Project one field's tallies into the wire shape, most-carried value first.
+     */
+    private static List<BioAssayFieldCountValueObject> toFieldCounts( @Nullable Map<String, Integer> counts ) {
+        if ( counts == null ) {
+            return new ArrayList<>();
+        }
+        return counts.entrySet().stream()
+                .map( e -> new BioAssayFieldCountValueObject( e.getKey(), e.getValue() ) )
+                .sorted( Comparator.comparingInt( BioAssayFieldCountValueObject::getNumberOfBioAssays ).reversed()
+                        // Ties would otherwise order by hash, so a page could report the same dataset two
+                        // different ways on two requests.
+                        .thenComparing( BioAssayFieldCountValueObject::getValue,
+                                Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
     }
 
     /**
@@ -5050,6 +5125,15 @@ public class ExpressionExperimentDaoImpl
 
     private static String nameOf( @Nullable TechnologyType tt ) {
         return tt != null ? tt.name() : null;
+    }
+
+    /**
+     * The enum's name, matching how {@code BioAssayValueObject#getExtractedMolecule()} serializes it, so a
+     * per-dataset tally and a per-sample read spell the same molecule the same way.
+     */
+    @Nullable
+    private static String nameOf( @Nullable ExtractedMolecule em ) {
+        return em != null ? em.name() : null;
     }
 
     /**

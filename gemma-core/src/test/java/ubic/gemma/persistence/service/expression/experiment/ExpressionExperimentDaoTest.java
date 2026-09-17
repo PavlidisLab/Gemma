@@ -27,6 +27,8 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayFieldCountValueObject;
+import ubic.gemma.model.expression.bioAssay.ExtractedMolecule;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -982,6 +984,121 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         // the title is the only place the distinguishing factor value appears, so a reference that carries
         // only the short name cannot tell one sibling from another
         assertEquals( "Split part 2 of: Study [organism part = hippocampus]", sibling.getName() );
+    }
+
+    /**
+     * The dataset says what kind of libraries its samples were made from, so a client does not have to
+     * fetch the sample list to read one constant.
+     * <p>
+     * {@code technologyType} cannot answer it: Gemma maps sequencing onto generic gene-list platforms, so
+     * GSE270825 reads {@code GENELIST} with 24 {@code SSRNA_SEQ} samples (uib, 2026-09-16). Reading it off
+     * {@code /datasets/&#123;id&#125;/samples} instead cost 652 KiB gzipped and 2.3 s for GSE2109's 2,158
+     * assays, for one line of text on a page.
+     */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectSummarizesTheLibraryFieldsAcrossSamples() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign arrayDesign = new ArrayDesign();
+        arrayDesign.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( arrayDesign );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        // Two RNA_SEQ assays and one SCRNA_SEQ, so the majority-first order is observable.
+        ee.getBioAssays().add( libraryAssay( taxon, arrayDesign, "RNA_SEQ", "cDNA", ExtractedMolecule.totalRNA ) );
+        ee.getBioAssays().add( libraryAssay( taxon, arrayDesign, "RNA_SEQ", "cDNA", ExtractedMolecule.totalRNA ) );
+        ee.getBioAssays().add( libraryAssay( taxon, arrayDesign, "SCRNA_SEQ", "cDNA", ExtractedMolecule.totalRNA ) );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertEquals( 2, vo.getLibraryStrategies().size() );
+        // Majority first: a caller reading a single value gets the one that speaks for the dataset.
+        assertEquals( "RNA_SEQ", vo.getLibraryStrategies().get( 0 ).getValue() );
+        assertEquals( 2, vo.getLibraryStrategies().get( 0 ).getNumberOfBioAssays() );
+        assertEquals( "SCRNA_SEQ", vo.getLibraryStrategies().get( 1 ).getValue() );
+        assertEquals( 1, vo.getLibraryStrategies().get( 1 ).getNumberOfBioAssays() );
+
+        // A field the samples agree on collapses to one entry spanning every assay, which is the
+        // 99.9% case and the reason this is on the dataset at all.
+        assertEquals( 1, vo.getLibrarySelections().size() );
+        assertEquals( "cDNA", vo.getLibrarySelections().get( 0 ).getValue() );
+        assertEquals( 3, vo.getLibrarySelections().get( 0 ).getNumberOfBioAssays() );
+        assertEquals( 1, vo.getExtractedMolecules().size() );
+        // Spelled as BioAssayValueObject spells it, so the per-dataset and per-sample reads compare.
+        assertEquals( "totalRNA", vo.getExtractedMolecules().get( 0 ).getValue() );
+
+        // The counts are a partition of the dataset's assays, which is what makes the list a distribution
+        // rather than a sample of one.
+        assertEquals( vo.getNumberOfBioAssays().intValue(),
+                vo.getLibraryStrategies().stream().mapToInt( BioAssayFieldCountValueObject::getNumberOfBioAssays ).sum() );
+    }
+
+    /**
+     * 🛑 A sample carrying no value is counted under a null-valued entry, not dropped.
+     * <p>
+     * Dropping it would break the sum against {@code numberOfBioAssays} and would render a microarray
+     * dataset's {@code librarySelection} — null on every assay, because the technology has no selection
+     * step — as an empty list, which reads as "this dataset has no samples" rather than "no value".
+     */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectCountsSamplesWithNoValueUnderANullEntry() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign arrayDesign = new ArrayDesign();
+        arrayDesign.setPrimaryTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( arrayDesign );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        ee.getBioAssays().add( libraryAssay( taxon, arrayDesign, "MICROARRAY_ONE_COLOR", null, null ) );
+        ee.getBioAssays().add( libraryAssay( taxon, arrayDesign, "MICROARRAY_ONE_COLOR", null, null ) );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertEquals( 1, vo.getLibrarySelections().size() );
+        assertNull( vo.getLibrarySelections().get( 0 ).getValue() );
+        assertEquals( 2, vo.getLibrarySelections().get( 0 ).getNumberOfBioAssays() );
+        assertEquals( 1, vo.getExtractedMolecules().size() );
+        assertNull( vo.getExtractedMolecules().get( 0 ).getValue() );
+    }
+
+    /** A dataset with no samples gets empty lists, not null — one shape for every dataset. */
+    @Test
+    @WithMockUser
+    public void testLoadValueObjectLibraryFieldsAreEmptyForADatasetWithNoSamples() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        ExpressionExperimentValueObject vo = expressionExperimentDao.loadValueObject( ee );
+        assertNotNull( vo );
+        assertNotNull( vo.getLibraryStrategies() );
+        assertTrue( vo.getLibraryStrategies().isEmpty() );
+        assertTrue( vo.getLibrarySelections().isEmpty() );
+        assertTrue( vo.getExtractedMolecules().isEmpty() );
+    }
+
+    private BioAssay libraryAssay( Taxon taxon, ArrayDesign arrayDesign, @Nullable String libraryStrategy,
+            @Nullable String librarySelection, @Nullable ExtractedMolecule extractedMolecule ) {
+        BioMaterial bm = new BioMaterial();
+        bm.setSourceTaxon( taxon );
+        sessionFactory.getCurrentSession().persist( bm );
+        BioAssay ba = new BioAssay();
+        ba.setArrayDesignUsed( arrayDesign );
+        ba.setSampleUsed( bm );
+        ba.setLibraryStrategy( libraryStrategy );
+        ba.setLibrarySelection( librarySelection );
+        ba.setExtractedMolecule( extractedMolecule );
+        bm.getBioAssaysUsedIn().add( ba );
+        return ba;
     }
 
     /** An unsplit dataset gets an empty list, not null — one shape for every dataset. */
