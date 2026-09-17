@@ -290,6 +290,97 @@ public class ContrastCodingTest {
         return fit.summarize().get( 0 ).getContrastCoefficients();
     }
 
+    /**
+     * Residual standard error of the fixture fit, from R. Gemma's summary table reports the UNSCALED standard
+     * error, so this is what turns it into the one R prints.
+     */
+    private static final double R_SIGMA = 2.34520787991171;
+
+    /**
+     * How close to R is close enough. Loose enough not to be a hostage to the BLAS a machine happens to have,
+     * tight enough to be worth asserting: the smallest p here is 3.3e-05, and the covariance-block error this
+     * suite was written to catch was off by 0.16 on a value of 0.60.
+     */
+    private static final double R_TOLERANCE = 1e-6;
+
+    /**
+     * 🛑 Benchmarked against R. The fits that produced every number below are in
+     * {@code src/test/resources/data/stat-tests/contrast-coding.R}, which regenerates them and carries the
+     * output as comments; these tests depend on them not changing.
+     * <p>
+     * The level order there is not the obvious one and the script says why: R's {@code contr.sum} drops the
+     * LAST level, Gemma drops the FIRST — the one {@code setBaseline} names — so R's factor puts Gemma's
+     * baseline last to compare like with like.
+     * <p>
+     * ⚠️ Gemma's "Std. Error" column holds the UNSCALED value ({@code sqrt(diag(cov.unscaled))}), not the
+     * standard error R prints. They differ by sigma, and the estimate, t and p are directly comparable while
+     * that one is not. Both forms are asserted here so the difference is recorded rather than rediscovered.
+     */
+    @Test
+    public void sumToZeroMatchesRContrSum() {
+        DesignMatrix dm = new DesignMatrix( unbalancedTissueDesign(), true );
+        dm.setBaseline( "tissue", "cortex" );
+        dm.setContrastCoding( "tissue", ContrastCoding.SUM_TO_ZERO );
+
+        DoubleMatrix<String, String> got = contrastRow(
+                new LeastSquaresFit( dm, oneRow( 10, 12, 20, 22, 24, 26, 30 ) ) );
+
+        // R: (Intercept) 21.33333333333334  1.03413947049924  20.62906787904974  3.26181828716962e-05
+        assertRRow( got, "(Intercept)", 21.33333333333334, 0.440958551844098, 1.03413947049924,
+                20.62906787904974, 3.26181828716962e-05 );
+        // R: tissue1 (liver) 1.66666666666667  1.23603308118261  1.34839972492648  2.48820913808664e-01
+        assertRRow( got, "tissueliver", 1.66666666666667, 0.527046276694730, 1.23603308118261,
+                1.34839972492648, 2.48820913808664e-01 );
+        // R: tissue2 (kidney) 8.66666666666666  1.70375402502174  5.08680627566299  7.04714642242505e-03
+        assertRRow( got, "tissuekidney", 8.66666666666666, 0.726483157256779, 1.70375402502174,
+                5.08680627566299, 7.04714642242505e-03 );
+        /*
+         * The derived level, which R has no row for under this parameterization. The reference values come
+         * from refitting in R with liver derived instead, where cortex IS estimated:
+         *   tissue2 <- factor(..., levels = c("cortex","kidney","liver")); contrasts(tissue2) <- contr.sum(3)
+         *   summary(lm(y ~ tissue2))  ->  -10.33333333333333  1.40929454377398  -7.33227371026462  1.841510578397e-03
+         * R reaches the same numbers the other way too, from -sum(b) and sum(cov.unscaled[2:3,2:3]).
+         */
+        assertRRow( got, "tissuecortex", -10.33333333333333, 0.600925212577331, 1.40929454377398,
+                -7.33227371026462, 1.841510578397e-03 );
+    }
+
+    /**
+     * Treatment coding against R, so the sum-to-zero work is shown not to have disturbed the path everything
+     * else uses. Last block of {@code contrast-coding.R}; R's default, no {@code contrasts()} call needed.
+     */
+    @Test
+    public void treatmentCodingMatchesRContrTreatment() {
+        DesignMatrix dm = new DesignMatrix( unbalancedTissueDesign(), true );
+        dm.setBaseline( "tissue", "cortex" );
+
+        DoubleMatrix<String, String> got = contrastRow(
+                new LeastSquaresFit( dm, oneRow( 10, 12, 20, 22, 24, 26, 30 ) ) );
+
+        assertRRow( got, "(Intercept)", 11.0, 1.65831239517770 / R_SIGMA, 1.65831239517770,
+                6.63324958071080, 0.00268009608714780 );
+        assertRRow( got, "tissueliver", 12.0, 2.03100960115899 / R_SIGMA, 2.03100960115899,
+                5.90839156700797, 0.00410747546615996 );
+        assertRRow( got, "tissuekidney", 19.0, 2.87228132326901 / R_SIGMA, 2.87228132326901,
+                6.61495092631652, 0.00270778321164432 );
+    }
+
+    /**
+     * @param unscaledSe what Gemma stores in "Std. Error"
+     * @param rSe        what R prints as Std. Error; {@code unscaledSe * sigma}
+     */
+    private static void assertRRow( DoubleMatrix<String, String> got, String row, double estimate,
+            double unscaledSe, double rSe, double t, double p ) {
+        int i = got.getRowIndexByName( row );
+        assertThat( got.get( i, 0 ) ).as( "%s estimate", row ).isCloseTo( estimate, offset( R_TOLERANCE ) );
+        assertThat( got.get( i, 1 ) ).as( "%s unscaled std. error", row )
+                .isCloseTo( unscaledSe, offset( R_TOLERANCE ) );
+        assertThat( got.get( i, 1 ) * R_SIGMA ).as( "%s std. error as R prints it", row )
+                .isCloseTo( rSe, offset( R_TOLERANCE ) );
+        assertThat( got.get( i, 2 ) ).as( "%s t value", row ).isCloseTo( t, offset( R_TOLERANCE ) );
+        assertThat( got.get( i, 3 ) ).as( "%s p value", row ).isCloseTo( p, offset( R_TOLERANCE ) );
+    }
+
     /** Naming a factor that is not in the design is a caller error, not a silent no-op. */
     @Test
     public void anUnknownFactorIsRejected() {
