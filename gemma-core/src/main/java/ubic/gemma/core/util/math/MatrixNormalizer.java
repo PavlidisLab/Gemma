@@ -14,10 +14,8 @@
  */
 package ubic.gemma.core.util.math;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.BitSet;
 
-import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -74,26 +72,15 @@ public class MatrixNormalizer<R, C> {
         f.setMinPresentCount( 1 );
         DoubleMatrix<R, C> fM = f.filter( matrix );
 
-        DoubleMatrix<R, C> missingValueStatus = imputeMissing( fM );
-
-        /*
-         * Compute ranks of each column. Missing values are wherever they end up, which is a bit odd.
-         */
-        Map<Integer, DoubleArrayList> ranks = new LinkedHashMap<>();
+        BitSet missingValueStatus = imputeMissing( fM );
 
         DoubleMatrix<R, C> sortedData = fM.copy();
         for ( int i = 0; i < fM.columns(); i++ ) {
-            DoubleArrayList dataColumn = new DoubleArrayList( fM.getColumn( i ) );
-
-            DoubleArrayList sortedColumn = dataColumn.copy();
+            DoubleArrayList sortedColumn = new DoubleArrayList( fM.getColumn( i ) );
             sortedColumn.sort();
             for ( int j = 0; j < sortedColumn.size(); j++ ) {
                 sortedData.set( j, i, sortedColumn.get( j ) );
             }
-
-            DoubleArrayList r = Rank.rankTransform( dataColumn );
-            assert r != null;
-            ranks.put( i, r );
         }
 
         /*
@@ -118,14 +105,20 @@ public class MatrixNormalizer<R, C> {
 
         for ( int j = 0; j < sortedData.columns(); j++ ) {
 
+            // Ranked here, one column at a time, rather than all of them up front. Every rank column is
+            // read by exactly this iteration of j and by nothing else, so holding all of them cost
+            // columns x rows doubles for no reuse -- 299 MB on a 34,330 x 1,090 matrix. Same number of
+            // rankTransform calls either way.
+            DoubleArrayList ranks = Rank.rankTransform( new DoubleArrayList( fM.getColumn( j ) ) );
+            assert ranks != null;
+
             for ( int i = 0; i < sortedData.rows(); i++ ) {
 
-                if ( Double.isNaN( fM.get( i, j ) ) ) {
-                    sortedData.set( i, j, Double.NaN );
-                    continue;
-                }
+                // No missing-value test here: imputeMissing filled every NaN in fM with its row mean
+                // before sortedData was copied from it, so there is none left to find. The cells that
+                // were missing are re-masked from missingValueStatus below, which is the actual record.
 
-                double rank = ranks.get( j ).get( i ) - 1.0;
+                double rank = ranks.get( i ) - 1.0;
 
                 int intrank = ( int ) Math.floor( rank );
 
@@ -142,15 +135,9 @@ public class MatrixNormalizer<R, C> {
             }
         }
 
-        assert missingValueStatus.rows() == sortedData.rows() && missingValueStatus.columns() == sortedData.columns();
-
         // mask the missing values.
-        for ( int i = 0; i < missingValueStatus.rows(); i++ ) {
-            for ( int j = 0; j < missingValueStatus.columns(); j++ ) {
-                if ( Double.isNaN( missingValueStatus.get( i, j ) ) ) {
-                    sortedData.set( i, j, Double.NaN );
-                }
-            }
+        for ( int k = missingValueStatus.nextSetBit( 0 ); k >= 0; k = missingValueStatus.nextSetBit( k + 1 ) ) {
+            sortedData.set( k / sortedData.columns(), k % sortedData.columns(), Double.NaN );
         }
 
         return sortedData;
@@ -163,25 +150,28 @@ public class MatrixNormalizer<R, C> {
      * filtered, the row mean is better.
      * <p>
      * FIXME this should be factored out
+     * <p>
+     * The record of which cells were missing is a {@link BitSet} over {@code row * columns + column}, not a
+     * matrix: it is one bit of information per cell and a same-shaped {@code DenseDoubleMatrix} charged 64 bits
+     * for it. On a 34,330 x 1,090 matrix that is 4.7 MB rather than 299 MB, and on data with no missing values
+     * at all -- the common case -- it is an empty set rather than 37.4 million stored 1.0s.
      *
-     * @param matrix
-     * @return missing value status
+     * @param matrix modified in place: every missing cell is filled with its row mean
+     * @return the positions that were missing, as {@code row * matrix.columns() + column}
      */
-    private DoubleMatrix<R, C> imputeMissing( DoubleMatrix<R, C> matrix ) {
+    private BitSet imputeMissing( DoubleMatrix<R, C> matrix ) {
         /*
          * keep track of the missing values so they can be re-masked later.
          */
-        DoubleMatrix<R, C> missingValueInfo = new DenseDoubleMatrix<>( matrix.rows(), matrix.columns() );
+        BitSet missingValueInfo = new BitSet( matrix.rows() * matrix.columns() );
         for ( int i = 0; i < matrix.rows(); i++ ) {
             DoubleArrayList v = new DoubleArrayList( matrix.getRow( i ) );
             double m = DescriptiveWithMissing.mean( v );
             for ( int j = 0; j < matrix.columns(); j++ ) {
                 double d = matrix.get( i, j );
                 if ( Double.isNaN( d ) ) {
-                    missingValueInfo.set( i, j, Double.NaN );
+                    missingValueInfo.set( i * matrix.columns() + j );
                     matrix.set( i, j, m );
-                } else {
-                    missingValueInfo.set( i, j, 1.0 );
                 }
             }
         }
