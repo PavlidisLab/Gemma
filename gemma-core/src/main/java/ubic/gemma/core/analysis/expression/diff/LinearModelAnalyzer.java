@@ -802,7 +802,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * PREPARATION FOR 'NATIVE' FITTING
          */
         DoubleMatrix<String, String> finalDataMatrix = makeDataMatrix( designMatrix, bareFilteredDataMatrix );
-        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions );
+        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions, config );
 
         /*
          * Run the analysis
@@ -1369,10 +1369,12 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * @param designMatrix           partially setup matrix
      * @param interactionFactorLists interactions to consider
      * @param baselineConditions     designation of baseline conditions for each factor
+     * @param config                 supplies each factor's {@link ContrastCoding}
      * @return final design matrix
      */
     private DesignMatrix makeDesignMatrix( ObjectMatrix<String, String, Object> designMatrix,
-            @Nullable List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions ) {
+            @Nullable List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions,
+            DifferentialExpressionAnalysisConfig config ) {
         /*
          * Determine the factors and interactions to include.
          */
@@ -1402,6 +1404,17 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
             assert baseline.getExperimentalFactor().equals( ef ) : baseline + " is not a value of " + ef;
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );
+
+            /*
+             * After setBaseline, not before: both rebuild the design, and the coding needs to know which level is
+             * the derived one. A baseline is still chosen under SUM_TO_ZERO -- it is just no longer the thing the
+             * other levels are measured against, only the one whose deviation is recovered from the others.
+             */
+            ContrastCoding coding = config.getContrastCoding( ef );
+            if ( coding != ContrastCoding.TREATMENT ) {
+                LinearModelAnalyzer.log.info( "Using " + coding + " contrasts for " + ef );
+                properDesignMatrix.setContrastCoding( factorName, coding );
+            }
         }
         return properDesignMatrix;
     }

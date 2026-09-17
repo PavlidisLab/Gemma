@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +79,12 @@ public class DesignMatrix {
      * Only applied for categorical factors.
      */
     private final Map<String, List<String>> levelsForFactors = new LinkedHashMap<>();
+
+    /**
+     * How each categorical factor's levels are coded into columns. A factor absent from this map is
+     * {@link ContrastCoding#TREATMENT}, which is what every factor was before the map existed.
+     */
+    private final Map<String, ContrastCoding> codingForFactors = new LinkedHashMap<>();
 
     private DoubleMatrix<String, String> matrix;
 
@@ -347,6 +354,44 @@ public class DesignMatrix {
     }
 
     /**
+     * How the given factor's levels are coded into columns; {@link ContrastCoding#TREATMENT} unless set.
+     */
+    public ContrastCoding getContrastCoding( String factorName ) {
+        return codingForFactors.getOrDefault( factorName, ContrastCoding.TREATMENT );
+    }
+
+    /**
+     * Choose how one categorical factor's levels are coded, and rebuild the design.
+     * <p>
+     * Per factor rather than per matrix on purpose: a design can hold a genotype factor with a real wild-type
+     * control and a tissue factor with no control at all, and those two want different codings in the same model.
+     * <p>
+     * The level that has no column of its own is the same one under either coding, so
+     * {@link #setBaseline(String, String)} still decides which level is derived rather than estimated — under
+     * {@link ContrastCoding#SUM_TO_ZERO} it is not a baseline anything is measured against, only the one whose
+     * deviation is recovered from the others.
+     *
+     * @throws IllegalArgumentException if the factor is not in this design, or is continuous — a continuous
+     *                                  covariate has one column and no levels, so there is nothing to code
+     */
+    public void setContrastCoding( String factorName, ContrastCoding coding ) {
+        Assert.notNull( coding, "Contrast coding cannot be null." );
+        if ( !this.levelsForFactors.containsKey( factorName ) ) {
+            throw new IllegalArgumentException( "No categorical factor known by name " + factorName
+                    + ", choices are: " + StringUtils.join( this.levelsForFactors.keySet(), "," ) );
+        }
+        if ( this.droppedFactors.contains( factorName ) ) {
+            log.warn( "Can't set contrast coding for a dropped factor, skipping" );
+            return;
+        }
+        if ( coding == getContrastCoding( factorName ) ) {
+            return;
+        }
+        this.codingForFactors.put( factorName, coding );
+        this.rebuild();
+    }
+
+    /**
      * @param factorName
      * @param baselineFactorValue
      */
@@ -569,6 +614,18 @@ public class DesignMatrix {
 
                 String contrastingValue = "";
                 assert tmp != null;
+                /*
+                 * The level with no column of its own. Under TREATMENT it is the baseline and its rows are all
+                 * zero; under SUM_TO_ZERO its rows are -1 in every column of this factor, which is what turns
+                 * each coefficient from "difference from that level" into "deviation from the mean of the level
+                 * means". It is levelList.get(0) either way, so setBaseline still chooses it.
+                 *
+                 * startUsed == 1 gives every level a column, so nothing is derived and there is nothing to
+                 * put -1 in.
+                 */
+                String derivedLevel = startUsed > 1 ? levelList.get( 0 ) : null;
+                boolean sumToZero = derivedLevel != null
+                        && getContrastCoding( factorName ) == ContrastCoding.SUM_TO_ZERO;
                 for ( int j = 0; j < tmp.rows(); j++ ) {
                     Object fv = factorValues.get(j);
 
@@ -578,11 +635,19 @@ public class DesignMatrix {
                         throw new IllegalArgumentException("Null value for factor " + factorName + " at row " + j);
                     }
 
-                    boolean isBaseline = !fv.equals( level );
-                    if ( !isBaseline ) {
+                    boolean isThisLevel = fv.equals( level );
+                    if ( isThisLevel ) {
                         contrastingValue = ( String ) fv;
                     }
-                    tmp.set( j, currentColumn, isBaseline ? 0.0 : 1.0 );
+                    double cell;
+                    if ( isThisLevel ) {
+                        cell = 1.0;
+                    } else if ( sumToZero && fv.equals( derivedLevel ) ) {
+                        cell = -1.0;
+                    } else {
+                        cell = 0.0;
+                    }
+                    tmp.set( j, currentColumn, cell );
                 }
 
                 // boolean redundant = checkForRedundancy( tmp, currentColumn );
