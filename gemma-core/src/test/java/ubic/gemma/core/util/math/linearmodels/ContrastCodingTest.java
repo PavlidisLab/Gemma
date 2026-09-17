@@ -168,6 +168,128 @@ public class ContrastCodingTest {
         assertThat( coef.get( 2, 0 ) ).as( "kidney minus cortex" ).isCloseTo( 19.0, offset( 1e-9 ) );
     }
 
+    /**
+     * The derived level's columns are found, and they are exactly its own factor's.
+     * <p>
+     * This is the guard against the silent half of {@link DesignMatrix#getDerivedLevelColumns()}: it declines to
+     * report a factor whose columns do not come out at one per non-derived level, so a naming change would turn
+     * the whole feature off rather than compute it wrongly. If that ever happens this test is what says so.
+     */
+    @Test
+    public void theDerivedLevelsColumnsAreFoundAndAreOnlyItsOwnFactors() {
+        ObjectMatrix<String, String, Object> design = new ObjectMatrixImpl<>( 6, 2 );
+        design.setColumnNames( java.util.Arrays.asList( "tissue", "genotype" ) );
+        design.setRowNames( java.util.Arrays.asList( "s0", "s1", "s2", "s3", "s4", "s5" ) );
+        String[] tissue = { "cortex", "cortex", "liver", "liver", "kidney", "kidney" };
+        String[] genotype = { "wt", "ko", "wt", "ko", "wt", "ko" };
+        for ( int i = 0; i < 6; i++ ) {
+            design.set( i, 0, tissue[i] );
+            design.set( i, 1, genotype[i] );
+        }
+        DesignMatrix dm = new DesignMatrix( design, true );
+        dm.setBaseline( "tissue", "cortex" );
+        dm.setBaseline( "genotype", "wt" );
+        dm.setContrastCoding( "tissue", ContrastCoding.SUM_TO_ZERO );
+
+        java.util.Map<String, java.util.List<Integer>> derived = dm.getDerivedLevelColumns();
+
+        assertThat( derived ).as( "only the sum-coded factor needs a derived contrast" )
+                .containsOnlyKeys( "tissuecortex" );
+        java.util.List<Integer> cols = derived.get( "tissuecortex" );
+        assertThat( cols ).as( "two non-derived tissue levels, and the genotype column is not one of them" )
+                .hasSize( 2 );
+        java.util.List<String> names = dm.getMatrix().getColNames();
+        for ( int c : cols ) {
+            assertThat( names.get( c ) ).startsWith( "tissue" ).isNotEqualTo( "tissuecortex" );
+        }
+    }
+
+    /**
+     * 🛑 The synthesized contrast has to be the SAME contrast, standard error included.
+     * <p>
+     * Which level is derived is an arbitrary choice, so fitting the same data with cortex derived and then with
+     * liver derived must give cortex the same deviation, standard error, t and p either way — estimated in one
+     * fit and reconstructed in the other. This is the check that the reconstruction is a real contrast and not
+     * a number that merely has the right sign.
+     * <p>
+     * It is the standard error that this actually tests. The coefficient is minus the sum of the others by
+     * construction and would come out right under any arithmetic; the error requires the whole covariance block
+     * {@code 1' XtXi 1}. Summing the individual variances instead — the obvious wrong version — ignores the
+     * covariance between the estimates, which is not zero and has no fixed sign: on this design it is negative,
+     * so the wrong version comes out too LARGE (0.898 against 0.601). It would be too small on another design,
+     * which is why the assertion below pins "different" rather than a direction.
+     */
+    @Test
+    public void theDerivedLevelsContrastMatchesEstimatingItDirectly() {
+        DesignMatrix cortexDerived = new DesignMatrix( unbalancedTissueDesign(), true );
+        cortexDerived.setBaseline( "tissue", "cortex" );
+        cortexDerived.setContrastCoding( "tissue", ContrastCoding.SUM_TO_ZERO );
+
+        DesignMatrix liverDerived = new DesignMatrix( unbalancedTissueDesign(), true );
+        liverDerived.setBaseline( "tissue", "liver" );
+        liverDerived.setContrastCoding( "tissue", ContrastCoding.SUM_TO_ZERO );
+
+        DoubleMatrix<String, String> synthesized = contrastRow(
+                new LeastSquaresFit( cortexDerived, oneRow( 10, 12, 20, 22, 24, 26, 30 ) ) );
+        DoubleMatrix<String, String> estimated = contrastRow(
+                new LeastSquaresFit( liverDerived, oneRow( 10, 12, 20, 22, 24, 26, 30 ) ) );
+
+        int syn = synthesized.getRowIndexByName( "tissuecortex" );
+        int est = estimated.getRowIndexByName( "tissuecortex" );
+
+        for ( int c = 0; c < 4; c++ ) {
+            assertThat( synthesized.get( syn, c ) )
+                    .as( "%s for cortex: synthesized vs estimated", estimated.getColName( c ) )
+                    .isCloseTo( estimated.get( est, c ), offset( 1e-9 ) );
+        }
+        // and it is a real number, not a NaN that trivially matched nothing
+        assertThat( synthesized.get( syn, 0 ) ).isCloseTo( 11.0 - 64.0 / 3.0, offset( 1e-9 ) );
+        assertThat( synthesized.get( syn, 1 ) ).isGreaterThan( 0.0 );
+
+        /*
+         * The wrong version, stated so it cannot be reintroduced quietly: adding the two coefficients'
+         * variances ignores the covariance between them, and the covariance is not zero.
+         */
+        double vLiver = Math.pow( synthesized.get( synthesized.getRowIndexByName( "tissueliver" ), 1 ), 2 );
+        double vKidney = Math.pow( synthesized.get( synthesized.getRowIndexByName( "tissuekidney" ), 1 ), 2 );
+        assertThat( Math.sqrt( vLiver + vKidney ) )
+                .as( "the diagonal alone is not the variance of the sum" )
+                .isNotCloseTo( synthesized.get( syn, 1 ), offset( 1e-6 ) );
+    }
+
+    /** Every level of a sum-coded factor gets a row, including the one with no column. */
+    @Test
+    public void everyLevelGetsAContrastUnderSumToZero() {
+        DesignMatrix dm = new DesignMatrix( unbalancedTissueDesign(), true );
+        dm.setBaseline( "tissue", "cortex" );
+        dm.setContrastCoding( "tissue", ContrastCoding.SUM_TO_ZERO );
+
+        DoubleMatrix<String, String> rows = contrastRow(
+                new LeastSquaresFit( dm, oneRow( 10, 12, 20, 22, 24, 26, 30 ) ) );
+
+        assertThat( rows.getRowNames() ).contains( "tissuecortex", "tissueliver", "tissuekidney" );
+    }
+
+    /**
+     * Treatment coding is untouched: the baseline still has no row, because there is no contrast for it — it is
+     * what everything else is measured against, not a thing measured against something.
+     */
+    @Test
+    public void treatmentCodingStillHasNoRowForTheBaseline() {
+        DesignMatrix dm = new DesignMatrix( unbalancedTissueDesign(), true );
+        dm.setBaseline( "tissue", "cortex" );
+
+        DoubleMatrix<String, String> rows = contrastRow(
+                new LeastSquaresFit( dm, oneRow( 10, 12, 20, 22, 24, 26, 30 ) ) );
+
+        assertThat( rows.getRowNames() ).contains( "tissueliver", "tissuekidney" )
+                .doesNotContain( "tissuecortex" );
+    }
+
+    private static DoubleMatrix<String, String> contrastRow( LeastSquaresFit fit ) {
+        return fit.summarize().get( 0 ).getContrastCoefficients();
+    }
+
     /** Naming a factor that is not in the design is a caller error, not a silent no-op. */
     @Test
     public void anUnknownFactorIsRejected() {

@@ -335,6 +335,63 @@ public class DesignMatrix {
         return matrix;
     }
 
+    /**
+     * The contrasts a {@link ContrastCoding#SUM_TO_ZERO} factor needs but has no column for, as a map from the
+     * name such a column would have had to the design columns that determine it.
+     * <p>
+     * A derived level's deviation is minus the sum of its factor's coefficients, and the variance of that sum
+     * needs the whole covariance block for those columns, not the individual variances -- which is why the
+     * columns are handed over rather than just the name. {@link LeastSquaresFit} does the arithmetic per row,
+     * where the QR for that row is in hand.
+     * <p>
+     * A factor's columns are identified by exact name ({@code factorName + level}) rather than by prefix:
+     * factor names are {@code f} plus an id, so {@code f10} is a prefix of {@code f100} and matching on prefixes
+     * would quietly pull another factor's columns into the sum.
+     * <p>
+     * 🛑 A factor whose columns do not come out at one per non-derived level is left out entirely. Dropped
+     * factors, interactions and any future change to how columns are named all land here, and a contrast that is
+     * missing is something a caller notices, whereas one computed over the wrong columns is not.
+     *
+     * @return derived-level column name to design column indices, empty when no factor is sum-coded
+     */
+    public Map<String, List<Integer>> getDerivedLevelColumns() {
+        Map<String, List<Integer>> out = new LinkedHashMap<>();
+        if ( codingForFactors.isEmpty() || matrix == null ) {
+            return out;
+        }
+        List<String> colNames = matrix.getColNames();
+        if ( colNames == null ) {
+            return out;
+        }
+        for ( Map.Entry<String, ContrastCoding> e : codingForFactors.entrySet() ) {
+            if ( e.getValue() != ContrastCoding.SUM_TO_ZERO ) {
+                continue;
+            }
+            String factorName = e.getKey();
+            List<String> levels = levelsForFactors.get( factorName );
+            if ( levels == null || levels.size() < 2 || droppedFactors.contains( factorName ) ) {
+                continue;
+            }
+            Set<String> owned = new HashSet<>();
+            for ( String level : levels ) {
+                owned.add( factorName + level );
+            }
+            List<Integer> cols = new ArrayList<>();
+            for ( int j = 0; j < colNames.size(); j++ ) {
+                if ( owned.contains( colNames.get( j ) ) ) {
+                    cols.add( j );
+                }
+            }
+            if ( cols.size() != levels.size() - 1 ) {
+                log.warn( "Expected " + ( levels.size() - 1 ) + " columns for sum-coded factor " + factorName
+                        + " but found " + cols.size() + "; its derived level will have no contrast." );
+                continue;
+            }
+            out.put( factorName + levels.get( 0 ), cols );
+        }
+        return out;
+    }
+
     public List<String> getTerms() {
         List<String> result = new ArrayList<>();
         result.addAll( terms.keySet() );

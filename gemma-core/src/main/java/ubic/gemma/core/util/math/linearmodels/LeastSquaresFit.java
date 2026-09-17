@@ -38,6 +38,8 @@ import ubic.gemma.core.util.matrix.ObjectMatrix;
 import ubic.gemma.core.util.math.Constants;
 import ubic.gemma.core.util.math.linalg.QRDecomposition;
 
+import org.springframework.lang.Nullable;
+
 import java.util.*;
 
 /**
@@ -162,6 +164,14 @@ public class LeastSquaresFit {
      * Map of row indices to values-present key.
      */
     private Map<Integer, BitVector> valuesPresentMap = new HashMap<>();
+
+    /**
+     * Derived-level contrasts to synthesize, from {@link DesignMatrix#getDerivedLevelColumns()}. Depends only on
+     * the design, so it is resolved once per fit rather than once per row; empty when no factor is sum-coded,
+     * which is every fit that existed before {@link ContrastCoding} did.
+     */
+    @Nullable
+    private Map<String, List<Integer>> derivedLevelColumns = null;
 
     /**
      * ebayes per-item variance estimates (if computed, null otherwise)
@@ -783,6 +793,92 @@ public class LeastSquaresFit {
      * @param i index of the fit to summarize
      * @return
      */
+    /**
+     * The derived-level contrasts this fit has to synthesize, resolved once and reused for every row.
+     */
+    private Map<String, List<Integer>> getDerivedLevelColumns() {
+        if (derivedLevelColumns == null) {
+            derivedLevelColumns = this.designMatrix != null
+                    ? this.designMatrix.getDerivedLevelColumns()
+                    : Collections.emptyMap();
+        }
+        return derivedLevelColumns;
+    }
+
+    /**
+     * Fill in the contrast for a level that has no column of its own under {@link ContrastCoding#SUM_TO_ZERO}.
+     * <p>
+     * The deviations of a factor's levels sum to zero by construction, so the derived level's is
+     * {@code -sum(beta)} over that factor's columns. Its variance is NOT the sum of their variances: the
+     * estimates are correlated, and the variance of the sum is the sum of the whole covariance block,
+     * {@code 1' XtXi 1}, scaled the same way the other coefficients are. Using the diagonal alone would
+     * understate it whenever the off-diagonal terms are positive, which for this coding they are.
+     * <p>
+     * The row is left NaN -- present but empty, the same shape an unestimated coefficient gets -- when any of
+     * the factor's columns was not estimated for this row, or when the block variance comes out non-positive.
+     * Both mean the deviations no longer sum to zero over what was actually fitted, so there is no honest
+     * number to report. A rank-deficient QR can give negative unscaled variances; the existing code says so
+     * about the diagonal and it is no different for a block of it.
+     *
+     * @param estimatedIndexForColumn design column to index among the estimated coefficients, -1 if unestimated
+     * @param row                     index of the corresponding data row, for the moderated variance
+     */
+    private void addDerivedLevelContrast(DoubleMatrix<String, String> summaryTable, int summaryRow,
+                                         List<Integer> factorColumns, int[] estimatedIndexForColumn,
+                                         DoubleMatrix1D estCoef, DoubleMatrix2D XtXi, double resvar, int row,
+                                         TDistribution tdist) {
+        int[] idx = new int[factorColumns.size()];
+        for (int k = 0; k < factorColumns.size(); k++) {
+            int col = factorColumns.get(k);
+            if (col < 0 || col >= estimatedIndexForColumn.length) {
+                return;
+            }
+            int e = estimatedIndexForColumn[col];
+            if (e < 0 || e >= estCoef.size() || e >= XtXi.rows() || e >= XtXi.columns()) {
+                return;
+            }
+            idx[k] = e;
+        }
+
+        double coef = 0.0;
+        for (int e : idx) {
+            coef -= estCoef.get(e);
+        }
+
+        /*
+         * 🛑 XtXi holds the inverse in its UPPER TRIANGLE ONLY. QRDecomposition.chol2inv calls
+         * Dpotri.dpotri("U", ...), and LAPACK's dpotri with uplo="U" writes only that half; below the
+         * diagonal is whatever the input left there, which for an upper-triangular R is zero. Every existing
+         * caller reads the diagonal alone (MatrixUtil.diagonal) and so never met this. Reading XtXi.get(a, b)
+         * for a > b would silently contribute nothing and understate the variance -- on the test design here
+         * it gives 42/72 where the truth is 26/72, and the answer looks entirely plausible.
+         */
+        double varUnscaled = 0.0;
+        for (int a : idx) {
+            for (int b : idx) {
+                varUnscaled += XtXi.get(Math.min(a, b), Math.max(a, b));
+            }
+        }
+        if (!(varUnscaled > 0.0)) {
+            return;
+        }
+        double sdUnscaled = Math.sqrt(varUnscaled);
+
+        double tstat;
+        if (this.hasBeenShrunken) {
+            // out$t <- coefficients / stdev.unscaled / sqrt(out$s2.post) -- the same form as the estimated ones
+            tstat = coef / sdUnscaled / Math.sqrt(this.varPost.get(row));
+        } else {
+            tstat = coef / (sdUnscaled * Math.sqrt(resvar));
+        }
+
+        summaryTable.set(summaryRow, 0, coef);
+        // "Std. Error" holds the UNSCALED value for the estimated coefficients too; matched deliberately
+        summaryTable.set(summaryRow, 1, sdUnscaled);
+        summaryTable.set(summaryRow, 2, tstat);
+        summaryTable.set(summaryRow, 3, 2.0 * (1.0 - tdist.cumulativeProbability(Math.abs(tstat))));
+    }
+
     LinearModelSummaryImpl summarize(int i) {
 
         String key = null;
@@ -878,8 +974,15 @@ public class LeastSquaresFit {
 
         double resvar = rss / rdf; // sqrt of this is sigma.
 
+        /*
+         * One extra row per sum-coded factor, for the level that has no column of its own. Its deviation is
+         * minus the sum of that factor's coefficients and is filled in below, once XtXi is in hand -- the
+         * variance of a sum needs the whole covariance block, not the individual variances on the diagonal.
+         */
+        Map<String, List<Integer>> derived = getDerivedLevelColumns();
+
         // matrix to hold the summary information.
-        DoubleMatrix<String, String> summaryTable = DoubleMatrixFactory.dense(allCoef.size(), 4);
+        DoubleMatrix<String, String> summaryTable = DoubleMatrixFactory.dense(allCoef.size() + derived.size(), 4);
         summaryTable.assign(Double.NaN);
         summaryTable
                 .setColumnNames(Arrays.asList(new String[]{"Estimate", "Std. Error", "t value", "Pr(>|t|)"}));
@@ -951,6 +1054,12 @@ public class LeastSquaresFit {
             tdist = new TDistribution(rdf);
         }
 
+        // design column -> its index among the ESTIMATED coefficients, or -1 when it was not estimated for
+        // this row. The derived-level arithmetic below indexes estCoef and XtXi, which are over the estimated
+        // ones only, so it cannot use design column numbers directly.
+        int[] estimatedIndexForColumn = new int[allCoef.size()];
+        Arrays.fill(estimatedIndexForColumn, -1);
+
         int j = 0;
         for (int ti = 0; ti < allCoef.size(); ti++) {
             double c = allCoef.get(ti);
@@ -969,6 +1078,7 @@ public class LeastSquaresFit {
                 continue;
             }
 
+            estimatedIndexForColumn[ti] = j;
             summaryTable.set(ti, 0, estCoef.get(j));
             summaryTable.set(ti, 1, sdUnscaled.get(j));
             summaryTable.set(ti, 2, tstats.get(j));
@@ -978,6 +1088,13 @@ public class LeastSquaresFit {
 
             j++;
 
+        }
+
+        int derivedRow = allCoef.size();
+        for (Map.Entry<String, List<Integer>> d : derived.entrySet()) {
+            summaryTable.addRowName(d.getKey());
+            addDerivedLevelContrast(summaryTable, derivedRow++, d.getValue(), estimatedIndexForColumn,
+                    estCoef, XtXi, resvar, i, tdist);
         }
 
         double rsquared = 0.0;
