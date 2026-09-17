@@ -73,6 +73,40 @@ public class BatchProcessingCliTest {
                 .contains( "99\tSUCCESS\t" );
     }
 
+    /**
+     * 🛑 A batch task that reports only a warning has reported. It used to not count, and the
+     * executor's "the task said nothing, call it a success" fallback then invented a second row —
+     * so a run whose every task was skipped printed a WARNING row and a "Batch task #N" SUCCESS row
+     * beside it, and the SUCCESS rows are what a summary gets aggregated by.
+     */
+    @Test
+    public void testAWarningIsNotAlsoCountedAsASuccess() {
+        assertThat( new WarningOnlyCli() )
+                .withArguments( "--batch-format", "TSV" )
+                .succeeds()
+                .standardOutput()
+                .asString( StandardCharsets.UTF_8 )
+                .contains( "\tWARNING\t" )
+                .doesNotContain( "SUCCESS" )
+                .doesNotContain( "Batch task #" );
+    }
+
+    private static class WarningOnlyCli extends AbstractCLI {
+
+        @Override
+        protected void buildOptions( Options options ) {
+            addBatchOption( options );
+        }
+
+        @Override
+        protected void doWork() {
+            for ( int i = 0; i < 10; i++ ) {
+                int finalI = i;
+                getBatchTaskExecutor().submit( () -> addWarningObject( finalI, "skipped" ) );
+            }
+        }
+    }
+
     private static class ParallelCli extends AbstractCLI {
 
         @Override
