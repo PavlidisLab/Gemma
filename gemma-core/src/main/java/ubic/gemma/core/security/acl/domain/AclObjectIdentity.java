@@ -37,6 +37,8 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import ubic.gemma.core.security.model.Securable;
@@ -90,10 +92,12 @@ public class AclObjectIdentity implements ObjectIdentity {
     private Long objectIdClass;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "owner_sid", nullable = false, columnDefinition = "BIGINT")
     private AclSid ownerSid;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "parent_object", columnDefinition = "BIGINT")
     private AclObjectIdentity parentObject;
 
@@ -103,6 +107,7 @@ public class AclObjectIdentity implements ObjectIdentity {
     // @Immutable, so the cascade only ever inserts or (via orphanRemoval) deletes ACE rows — never
     // updates them — which matches ACE semantics (entries are added/revoked, not mutated).
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "acl_object_identity", columnDefinition = "BIGINT", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @OrderBy("aceOrder")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)

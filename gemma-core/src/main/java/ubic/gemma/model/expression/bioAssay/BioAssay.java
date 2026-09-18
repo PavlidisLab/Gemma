@@ -97,6 +97,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * Platform used in this assay.
      */
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "ARRAY_DESIGN_USED_FK", nullable = false, columnDefinition = "BIGINT")
     private ArrayDesign arrayDesignUsed;
 
@@ -105,6 +106,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      */
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "ORIGINAL_PLATFORM_FK", columnDefinition = "BIGINT")
     private ArrayDesign originalPlatform;
 
@@ -112,6 +114,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * Sample used in this assay.
      */
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "SAMPLE_USED_FK", nullable = false, columnDefinition = "BIGINT")
     private BioMaterial sampleUsed;
 

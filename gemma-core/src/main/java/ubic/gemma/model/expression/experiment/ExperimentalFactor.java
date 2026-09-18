@@ -86,6 +86,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     @JoinColumn(name = "EXPERIMENTAL_DESIGN_FK", nullable = false, columnDefinition = "BIGINT")
     private ExperimentalDesign experimentalDesign;
     @OneToMany(mappedBy = "experimentalFactor", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<FactorValue> factorValues = new HashSet<>();
     @Deprecated

@@ -26,6 +26,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.search.engine.backend.types.Projectable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
@@ -56,6 +58,7 @@ public class CompositeSequence extends AbstractDescribable {
     @JoinColumn(name = "BIOLOGICAL_CHARACTERISTIC_FK", columnDefinition = "BIGINT")
     private BioSequence biologicalCharacteristic;
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "ARRAY_DESIGN_FK", nullable = false, columnDefinition = "BIGINT")
     private ArrayDesign arrayDesign;
 

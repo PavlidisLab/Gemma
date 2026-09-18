@@ -30,6 +30,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.common.DescribableUtils;
 
 import java.util.HashSet;
@@ -46,6 +48,7 @@ import java.util.Set;
 public class UserGroup extends AbstractAuditable implements ubic.gemma.core.security.model.UserGroup {
 
     @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinTable(name = "GROUP_MEMBERS",
             joinColumns = @JoinColumn(name = "USER_GROUPS_FK", columnDefinition = "BIGINT"),
             inverseJoinColumns = @JoinColumn(name = "GROUP_MEMBERS_FK", columnDefinition = "BIGINT"),
@@ -53,6 +56,7 @@ public class UserGroup extends AbstractAuditable implements ubic.gemma.core.secu
     private Set<User> groupMembers = new HashSet<>();
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "GROUP_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "GROUP_AUTHORITY_GROUP_FKC"))
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<GroupAuthority> authorities = new HashSet<>();
