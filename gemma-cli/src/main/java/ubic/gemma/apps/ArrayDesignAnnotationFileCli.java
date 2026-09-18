@@ -163,6 +163,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
+    protected boolean selectsOwnPlatforms() {
+        // --batch, -l and --taxon each find their own platforms (or genes) in processArrayDesigns()
+        return processAllADs || batchFileName != null || taxonName != null;
+    }
+
+    @Override
     public String getShortDesc() {
         return "Generate annotation files for platforms.";
     }

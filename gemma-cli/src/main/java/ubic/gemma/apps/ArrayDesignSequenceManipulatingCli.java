@@ -136,7 +136,11 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
                     .collect( Collectors.toSet() );
         }
         if ( arrayDesignsToProcess.isEmpty() ) {
-            throw new RuntimeException( "No platforms matched the given options." );
+            if ( selectsOwnPlatforms() ) {
+                processArrayDesigns( arrayDesignsToProcess );
+                return;
+            }
+            throw new RuntimeException( "No platforms matched the given options (none named with -a or -f, and -all not given)." );
         } else if ( arrayDesignsToProcess.size() == 1 ) {
             setEstimatedMaxTasks( 1 );
             log.info( "Final platform: " + arrayDesignsToProcess.iterator().next() );
@@ -147,6 +151,17 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
             setEstimatedMaxTasks( arrayDesignsToProcess.size() );
             processArrayDesigns( arrayDesignsToProcess );
         }
+    }
+
+    /**
+     * Whether the options of this CLI select platforms by some means other than {@code -a}, {@code -f} or
+     * {@code -all}.
+     * <p>
+     * If so, an empty selection from those options is not an error: {@link #processArrayDesigns(Collection)} is
+     * invoked with an empty collection and is responsible for finding its own platforms.
+     */
+    protected boolean selectsOwnPlatforms() {
+        return false;
     }
 
     protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
