@@ -54,49 +54,32 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
     private QuantitationTypeService quantitationTypeService;
 
     @Override
-    @Transactional(rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
-    public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch, ProcessedExpressionDataVectorCreationSummary summary ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+    @Transactional
+    public QuantitationType replaceProcessedDataVectors( ExpressionExperiment expressionExperiment,
+            ComputedProcessedData computed, ProcessedExpressionDataVectorCreationSummary summary ) {
+        // 🛑 Remove and persist in ONE transaction, and only after the computation has already succeeded.
+        // The old order was remove -> compute -> persist inside a single transaction, which was safe only
+        // because a failure in the compute rolled the removal back. With the compute outside (it takes 44
+        // minutes and holds a connection it never uses), removing first would commit a deletion and then
+        // fail, leaving the experiment with no processed vectors at all.
         log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
         expressionExperimentService.removeProcessedDataVectors( expressionExperiment );
-
-        ComputedProcessedData computed = computeProcessedData( expressionExperiment, ignoreQuantitationMismatch, summary, true );
         return persist( expressionExperiment, computed, summary );
     }
 
     @Override
-    public ExpressionDataDoubleMatrix computeUnmaskedProcessedDataMatrix( ExpressionExperiment expressionExperiment,
-            boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
-        ComputedProcessedData computed = computeProcessedData( expressionExperiment, ignoreQuantitationMismatch,
-                new ProcessedExpressionDataVectorCreationSummary(), false );
-        Collection<ProcessedExpressionDataVector> vectors = new HashSet<>( computed.data.size() );
-        for ( Map.Entry<CompositeSequence, double[]> e : computed.data.entrySet() ) {
+    public ExpressionDataDoubleMatrix toMatrix( ExpressionExperiment expressionExperiment, ComputedProcessedData computed ) {
+        Collection<ProcessedExpressionDataVector> vectors = new HashSet<>( computed.getData().size() );
+        for ( Map.Entry<CompositeSequence, double[]> e : computed.getData().entrySet() ) {
             ProcessedExpressionDataVector vec = ProcessedExpressionDataVector.Factory.newInstance();
             vec.setExpressionExperiment( expressionExperiment );
-            vec.setQuantitationType( computed.processedQt );
-            vec.setBioAssayDimension( computed.dimension );
+            vec.setQuantitationType( computed.getProcessedQt() );
+            vec.setBioAssayDimension( computed.getDimension() );
             vec.setDesignElement( e.getKey() );
             vec.setDataAsDoubles( e.getValue() );
             vectors.add( vec );
         }
         return new ExpressionDataDoubleMatrix( expressionExperiment, vectors );
-    }
-
-    /**
-     * The output of the processing pipeline, before anything is written.
-     */
-    private static class ComputedProcessedData {
-        final Map<CompositeSequence, double[]> data;
-        final BioAssayDimension dimension;
-        final QuantitationType processedQt;
-        final Map<CompositeSequence, int[]> numberOfCells;
-
-        ComputedProcessedData( Map<CompositeSequence, double[]> data, BioAssayDimension dimension,
-                QuantitationType processedQt, Map<CompositeSequence, int[]> numberOfCells ) {
-            this.data = data;
-            this.dimension = dimension;
-            this.processedQt = processedQt;
-            this.numberOfCells = numberOfCells;
-        }
     }
 
     /**
@@ -107,7 +90,9 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
      *                     sample-correlation matrix, which is the evidence a curator reviews an outlier call
      *                     against and is useless with the flagged sample's values removed from it.
      */
-    private ComputedProcessedData computeProcessedData( ExpressionExperiment expressionExperiment,
+    @Override
+    @Transactional(readOnly = true, rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
+    public ComputedProcessedData readProcessedDataInputs( ExpressionExperiment expressionExperiment,
             boolean ignoreQuantitationMismatch, ProcessedExpressionDataVectorCreationSummary summary,
             boolean maskOutliers ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         log.info( "Computing processed expression vectors for " + expressionExperiment );
@@ -171,6 +156,15 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
             log.warn( "Preferred data are counts; please convert to log2cpm" );
         }
 
+        // Everything above reads the database. Normalization is the caller's next step and runs with no
+        // transaction open; see normalizeProcessedData.
+        return new ComputedProcessedData( preferredData, dimension, processedQt, numberOfCells, referenceColumns );
+    }
+
+    @Override
+    public void normalizeProcessedData( ComputedProcessedData computed, ProcessedExpressionDataVectorCreationSummary summary ) {
+        QuantitationType processedQt = computed.getProcessedQt();
+        Map<CompositeSequence, double[]> preferredData = computed.getData();
         if ( processedQt.getIsRatio() ) {
             String m = "Data is on a ratio scale, skipping normalization step.";
             log.info( m );
@@ -181,20 +175,18 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
             summary.addComment( m );
         } else {
             log.info( "Normalizing the data" );
-            quantileNormalize( preferredData, referenceColumns );
+            quantileNormalize( preferredData, computed.getReferenceColumns() );
             processedQt.setIsNormalized( true );
             summary.setQuantileNormalized( true );
         }
-
-        return new ComputedProcessedData( preferredData, dimension, processedQt, numberOfCells );
     }
 
     private QuantitationType persist( ExpressionExperiment expressionExperiment, ComputedProcessedData computed,
             ProcessedExpressionDataVectorCreationSummary summary ) {
-        Map<CompositeSequence, double[]> preferredData = computed.data;
-        BioAssayDimension dimension = computed.dimension;
-        Map<CompositeSequence, int[]> numberOfCells = computed.numberOfCells;
-        QuantitationType processedQt = quantitationTypeService.create( computed.processedQt, ProcessedExpressionDataVector.class );
+        Map<CompositeSequence, double[]> preferredData = computed.getData();
+        BioAssayDimension dimension = computed.getDimension();
+        Map<CompositeSequence, int[]> numberOfCells = computed.getNumberOfCells();
+        QuantitationType processedQt = quantitationTypeService.create( computed.getProcessedQt(), ProcessedExpressionDataVector.class );
 
         /*
          * Done with processing, now build the vectors and persist; Do a sanity check that we don't have more than we

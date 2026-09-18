@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -149,8 +150,22 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
 
+    /**
+     * 🛑 {@link Propagation#NEVER}, and it has to be: this is where the time goes.
+     * <p>
+     * The two {@code getMatrix} legs run quantile normalization, an all-pairs correlation and a least-squares
+     * fit. On GSE260875 (34,330 x 1,090) that was 44 minutes, and with
+     * {@code hibernate.connection.handling_mode = DELAYED_ACQUISITION_AND_HOLD} a transaction around it pinned
+     * a pooled connection for the whole stretch without issuing a statement — against a pool that recycles at
+     * 30 minutes ({@code gemma.db.hikari.maxLifetime}). Every read below already goes through a service method
+     * with its own transaction, and {@link #compute} is the write with its own.
+     * <p>
+     * ⚠️ NEVER is viral upward: a caller that is itself transactional will now fail at entry with
+     * {@code IllegalTransactionStateException}. That is the rule doing its job, not a regression to route
+     * around — the caller needs splitting too.
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(propagation = Propagation.NEVER)
     public PreparedCoexMatrices prepare( ExpressionExperiment ee ) throws FilteringException {
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
