@@ -10351,7 +10351,12 @@ public class DatasetsWebService {
         } else {
             qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
         }
-        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimension( ee, qt );
+        // Only the TSV output reads the cell ids. Loading them costs about 4 s for 3.7 million cells
+        // (MSSM_Cohort, 2026-09-18), which the JSON output was paying for an 880-byte response.
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        SingleCellDimension dimension = negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                ? singleCellExpressionExperimentService.getSingleCellDimension( ee, qt )
+                : singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt );
         if ( dimension == null ) {
             throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
         }
@@ -10374,7 +10379,6 @@ public class DatasetsWebService {
             cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt )
                     .orElseThrow( () -> new NotFoundException( "No preferred cell type assignment found for " + ee.getShortName() + " and " + qt.getName() + "." ) );
         }
-        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
         if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
             if ( excludeArg != null ) {
                 throw new BadRequestException( "The 'exclude' query parameter cannot be used with the TSV output." );
@@ -10421,11 +10425,19 @@ public class DatasetsWebService {
         } else {
             qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
         }
-        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+        // As for cellTypeAssignment: only the TSV output reads the cell ids.
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        SingleCellDimension dimension = negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                ? singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt )
+                : singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt,
+                SingleCellExpressionExperimentService.SingleCellDimensionInitializationConfig.builder()
+                        .includeClcs( true )
+                        .includeCharacteristics( true )
+                        .includeIndices( true )
+                        .build() );
         if ( dimension == null ) {
             throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
         }
-        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
         if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
             return ( StreamingOutput ) output -> {
                 try ( Writer w = new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) {

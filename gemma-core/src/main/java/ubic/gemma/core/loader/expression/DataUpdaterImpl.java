@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,6 +79,14 @@ import java.util.*;
 public class DataUpdaterImpl implements DataUpdater {
 
     private static final Log log = LogFactory.getLog( DataUpdaterImpl.class );
+
+    /**
+     * This bean, through its proxy, so that calls from one of its methods to an audited one record the event.
+     * {@code @Lazy} breaks the self-reference cycle at construction.
+     */
+    @Lazy
+    @Autowired
+    private DataUpdater self;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -278,7 +287,7 @@ public class DataUpdaterImpl implements DataUpdater {
         }
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, properCountMatrix, countqt );
 
-        this.addData( ee, targetArrayDesign, countEEMatrix );
+        self.addData( ee, targetArrayDesign, countEEMatrix );
 
         this.addTotalCountInformation( ee, countEEMatrix, sequencingMetadata );
 
@@ -301,7 +310,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
             ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, properRPKMMatrix, rpkmqt );
 
-            this.addData( ee, targetArrayDesign, rpkmEEMatrix );
+            self.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
 
     }
@@ -352,7 +361,7 @@ public class DataUpdaterImpl implements DataUpdater {
             if ( platforms.size() > 1 )
                 throw new IllegalArgumentException( "Cannot apply to multiplatform data sets" );
 
-            this.addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
+            self.addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
         } catch ( Exception e ) {
             DataUpdaterImpl.log.error( e, e );
             // try to recover.

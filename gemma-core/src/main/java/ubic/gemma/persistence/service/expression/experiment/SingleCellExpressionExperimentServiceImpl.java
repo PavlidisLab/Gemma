@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -67,6 +68,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
      * {@link #streamSingleCellDataVectors} or a per-vector fetch path. See PERF_PROBE_REPORT_ROUND4 C1.</p>
      */
     public static final int MAX_SAFE_INMEMORY_SC_MATRIX_SAMPLES = 5000;
+
+    /**
+     * This bean, through its proxy, so that calls from one of its methods to an audited one record the event.
+     * {@code @Lazy} breaks the self-reference cycle at construction.
+     */
+    @Lazy
+    @Autowired
+    private SingleCellExpressionExperimentService self;
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
@@ -1209,7 +1218,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( dimension == null ) {
             throw new IllegalArgumentException( "No single-cell dimension found for " + quantitationType + " in " + ee + "." );
         }
-        return changePreferredCellTypeAssignment( ee, dimension, newPreferredCta, recreateCellTypeFactorIfNecessary, ignoreCompatibleFactor );
+        return self.changePreferredCellTypeAssignment( ee, dimension, newPreferredCta, recreateCellTypeFactorIfNecessary, ignoreCompatibleFactor );
     }
 
     @Override
@@ -1355,7 +1364,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( dim == null ) {
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
-        removeCellTypeAssignment( ee, dim, cellTypeAssignment );
+        self.removeCellTypeAssignment( ee, dim, cellTypeAssignment );
     }
 
     @Override
@@ -1375,7 +1384,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .filter( cta2 -> cta2.getId().equals( ctaId ) )
                 .findFirst()
                 .orElseThrow( () -> new IllegalArgumentException( "No cell type assignment with ID " + ctaId + " found." ) );
-        removeCellTypeAssignment( ee, dimension, cta );
+        self.removeCellTypeAssignment( ee, dimension, cta );
     }
 
     @Override
@@ -1386,7 +1395,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .collect( Collectors.toList() );
         boolean anyRemoved = false;
         for ( CellTypeAssignment cta : toRemove ) {
-            removeCellTypeAssignment( ee, dimension, cta );
+            self.removeCellTypeAssignment( ee, dimension, cta );
             anyRemoved = true;
         }
         return anyRemoved;
@@ -1402,7 +1411,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         long removed = 0;
         List<CellTypeAssignment> ctasToRemove = new ArrayList<>( dim.getCellTypeAssignments() );
         for ( CellTypeAssignment cta : ctasToRemove ) {
-            removeCellTypeAssignment( ee, dim, cta );
+            self.removeCellTypeAssignment( ee, dim, cta );
             removed++;
         }
         return removed;
@@ -1534,7 +1543,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( dim == null ) {
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
-        removeCellLevelCharacteristics( ee, dim, clc );
+        self.removeCellLevelCharacteristics( ee, dim, clc );
     }
 
     @Override
@@ -1554,7 +1563,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .filter( clc2 -> clc2.getId().equals( clcId ) )
                 .findFirst()
                 .orElseThrow( () -> new IllegalArgumentException( "No cell-level characteristics with ID " + clcId + " found." ) );
-        removeCellLevelCharacteristics( ee, dimension, clc );
+        self.removeCellLevelCharacteristics( ee, dimension, clc );
     }
 
     @Override
@@ -1565,7 +1574,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .collect( Collectors.toList() );
         boolean anyRemoved = false;
         for ( CellLevelCharacteristics clc : toRemove ) {
-            removeCellLevelCharacteristics( ee, dimension, clc );
+            self.removeCellLevelCharacteristics( ee, dimension, clc );
             anyRemoved = true;
         }
         return anyRemoved;
