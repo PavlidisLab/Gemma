@@ -675,6 +675,10 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
              */
             designMatrix = buildRDesignMatrix( factors, samplesUsed, getBaselineConditions( samplesUsed, factors ), false );
         } catch ( Exception e ) {
+            // Logged because this catches everything: a run that fails here looks exactly like one with nothing to
+            // regress unless it says so. The factor count, not the factors, since printing those can be what failed.
+            log.warn( "Could not build the design matrix to regress out " + factors.size()
+                    + " factor(s); no regressed correlation matrix will be stored.", e );
             return null;
         }
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
