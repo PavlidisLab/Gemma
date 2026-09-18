@@ -70,6 +70,40 @@ public class SampleCorrelationAttritionMappingTest {
     }
 
     /**
+     * 🛑 The two things a future "why do these two matrices disagree" has to be able to answer, neither of
+     * which can be recovered from the stored matrix: which source the data came from, and what cap was in
+     * force when it was filtered.
+     * <p>
+     * {@code unmasked-rebuild} reprocesses the raw vectors, quantile normalization included, against whatever
+     * rows that rebuild covered; {@code stored-vectors} filters data normalized at some earlier time against
+     * whatever rows existed then. The corpus will hold both — 2,591 experiments were recomputed by the
+     * current method in September 2026 — and nothing on {@code SAMPLE_COEXPRESSION_MATRIX} says which is
+     * which. Same lesson as {@code experimentSampleCount}: computable at write time, unrecoverable after.
+     */
+    @Test
+    public void thePayloadRecordsHowTheMatrixWasBuilt() {
+        ExpressionExperimentFilterResult result = new ExpressionExperimentFilterResult();
+        result.setStartingRows( 34330 );
+        result.setFinalRows( 2657 );
+
+        SampleCorrelationAnalysisPayload rebuilt = SampleCoexpressionAnalysisServiceImpl.toAttritionPayload(
+                SampleCoexpressionAnalysisServiceImpl.cormatFilterConfig( true ), result, "unmasked-rebuild" );
+        assertThat( rebuilt.dataSource() ).isEqualTo( "unmasked-rebuild" );
+        assertThat( rebuilt.startingRows() )
+                .as( "the width the rebuild covered, which is what its normalization was computed over" )
+                .isEqualTo( 34330 );
+        assertThat( rebuilt.config().maxDesignElements() )
+                .as( "the cap in force, without which the funnel's last rung cannot be read" )
+                .isEqualTo( 15000 );
+
+        SampleCorrelationAnalysisPayload old = SampleCoexpressionAnalysisServiceImpl.toAttritionPayload(
+                SampleCoexpressionAnalysisServiceImpl.cormatFilterConfig( true ), result );
+        assertThat( old.dataSource() )
+                .as( "null is 'not recorded', never 'stored-vectors'" )
+                .isNull();
+    }
+
+    /**
      * 🛑 The cap belongs to the correlation matrix and to nothing else.
      * <p>
      * Filtering early is bad for differential expression — it removes the rows you were looking for — so that

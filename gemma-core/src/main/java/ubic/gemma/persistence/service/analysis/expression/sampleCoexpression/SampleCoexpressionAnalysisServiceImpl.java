@@ -189,7 +189,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         SampleCoexpressionMatrix matrix = this.getMatrix( ee, false, vectors, filterResult, unmasked );
         SampleCoexpressionMatrix regressedMatrix = this.getMatrix( ee, true, vectors, null, unmasked );
         return new PreparedCoexMatrices( matrix, regressedMatrix,
-                matrix != null ? toAttritionPayload( cormatFilterConfig( true ), filterResult ) : null );
+                matrix != null ? toAttritionPayload( cormatFilterConfig( true ), filterResult, unmasked.dataSource() ) : null );
     }
 
 
@@ -436,6 +436,22 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         @Nullable
         private ExpressionDataDoubleMatrix value;
 
+        /**
+         * Which of the two sources the matrix came from, for the audit payload.
+         * <p>
+         * 🛑 Known only here and only at write time. A null value from {@link #get} means the rebuild was not
+         * attempted (no flagged outlier) or could not be done, and the caller fell back to the stored
+         * processed vectors — which were normalized earlier, against a different set of rows. Nothing on the
+         * stored matrix records the difference and nothing can recover it afterwards.
+         */
+        @Nullable
+        String dataSource() {
+            if ( !computed ) {
+                return null;
+            }
+            return value != null ? "unmasked-rebuild" : "stored-vectors";
+        }
+
         @Nullable
         ExpressionDataDoubleMatrix get( ExpressionExperiment ee ) {
             if ( !computed ) {
@@ -535,6 +551,15 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     static SampleCorrelationAnalysisPayload toAttritionPayload( ExpressionExperimentFilterConfig config,
             ExpressionExperimentFilterResult result ) {
+        return toAttritionPayload( config, result, null );
+    }
+
+    /**
+     * @param dataSource {@code "unmasked-rebuild"} or {@code "stored-vectors"}, or null when it was not
+     *                   established. See the payload's own javadoc for why this cannot be recovered later.
+     */
+    static SampleCorrelationAnalysisPayload toAttritionPayload( ExpressionExperimentFilterConfig config,
+            ExpressionExperimentFilterResult result, @Nullable String dataSource ) {
         List<SampleCorrelationAnalysisPayload.FilterStage> stages = Arrays.asList(
                 new SampleCorrelationAnalysisPayload.FilterStage( "noSequences", result.isNoSequencesFilterApplied(),
                         result.getAfterNoSequencesFilter(), null ),
@@ -556,9 +581,10 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                 new SampleCorrelationAnalysisPayload.FilterConfig( config.isRequireSequences(), config.isMaskOutliers(),
                         config.isIgnoreMinimumSamplesThreshold(), config.isIgnoreMinimumDesignElementsThreshold(),
                         config.getLowExpressionCut(), config.getHighExpressionCut(), config.getLowVarianceCut(),
-                        config.getLowDistinctValueCut(), config.getMinPresentFraction(), config.getMinPresentCount() ),
+                        config.getLowDistinctValueCut(), config.getMinPresentFraction(), config.getMinPresentCount(),
+                        config.getMaxDesignElements() ),
                 stages, result.getStartingRows(), result.getStartingColumns(), result.getFinalRows(),
-                result.getFinalColumns() );
+                result.getFinalColumns(), dataSource );
     }
 
     /**
