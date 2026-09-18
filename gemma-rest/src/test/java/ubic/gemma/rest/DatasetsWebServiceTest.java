@@ -3304,13 +3304,13 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload payload =
                 new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload(
                         new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload.FilterConfig(
-                                true, false, true, true, 0.2, 1.0, 0.5, 0.5, 0.3, 7 ),
+                                true, false, true, true, 0.2, 1.0, 0.5, 0.5, 0.3, 7, 15000 ),
                         java.util.Arrays.asList(
                                 new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload.FilterStage(
                                         "noSequences", true, 900, null ),
                                 new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload.FilterStage(
                                         "outliers", false, 900, 12 ) ),
-                        1000, 12, 850, 12 );
+                        1000, 12, 850, 12, "unmasked-rebuild" );
         com.fasterxml.jackson.databind.ObjectMapper aspectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
         String json = aspectMapper.writeValueAsString( ( ubic.gemma.core.security.audit.AuditEventPayload ) payload );
         org.assertj.core.api.Assertions.assertThat( json ).contains( "@type" );
