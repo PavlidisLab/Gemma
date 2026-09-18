@@ -92,6 +92,15 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private static final String A_STATUS_AVAILABLE = "Available";
     private static final String A_STATUS_NOT_AVAILABLE = "Not available";
     private static final double IMPORTANCE_THRESHOLD = 0.01;
+    /**
+     * Ceiling on the design elements used to build a correlation matrix.
+     * <p>
+     * A sample-sample correlation over the most variable 15,000 probes is not distinguishable in practice from
+     * the same correlation over 34,000 -- the estimate is over a thousand samples and converges long before
+     * that -- and most experiments never reach the cap, since the low-expression and low-variance filters
+     * above already cut harder than this. It is a ceiling for the ones that do not.
+     */
+    private static final int MAX_DESIGN_ELEMENTS_FOR_CORMAT = 15000;
     private static final String A_STATUS_COMPUTED = "Just computed";
     private static final String A_STATUS_LOADED = "Loaded from db";
 
@@ -509,6 +518,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // call could not be recovered afterwards. Consumers that want them excluded mask at the point of
         // use -- see GeeqServiceImpl.getCormat. Precedent for turning it off: ExpressionDataFileHelperService.
         fConfig.setMaskOutliers( false );
+        // 🛑 Hard cap, and deliberately NOT what the differential-expression path does. Filtering early is bad
+        // for DEA -- you lose the thing you were looking for -- so that config stays generous (Paul,
+        // 2026-09-17). This matrix answers a different question: how samples relate to one another, which a
+        // few thousand variable probes settle as well as thirty thousand do, while every stage that produces
+        // them is linear in the row count.
+        fConfig.setMaxDesignElements( MAX_DESIGN_ELEMENTS_FOR_CORMAT );
         return fConfig;
     }
 
@@ -534,7 +549,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                 new SampleCorrelationAnalysisPayload.FilterStage( "lowExpression", result.isLowExpressionFilterApplied(),
                         result.getAfterLowExpressionFilter(), null ),
                 new SampleCorrelationAnalysisPayload.FilterStage( "lowVariance", result.isLowVarianceFilterApplied(),
-                        result.getAfterLowVarianceFilter(), null ) );
+                        result.getAfterLowVarianceFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "maxDesignElements",
+                        result.isMaxDesignElementsFilterApplied(), result.getAfterMaxDesignElementsFilter(), null ) );
         return new SampleCorrelationAnalysisPayload(
                 new SampleCorrelationAnalysisPayload.FilterConfig( config.isRequireSequences(), config.isMaskOutliers(),
                         config.isIgnoreMinimumSamplesThreshold(), config.isIgnoreMinimumDesignElementsThreshold(),

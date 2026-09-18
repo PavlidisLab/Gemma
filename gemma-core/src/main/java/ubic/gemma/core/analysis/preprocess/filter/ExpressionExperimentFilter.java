@@ -186,6 +186,21 @@ public class ExpressionExperimentFilter implements ExpressionDataFilter<Expressi
             result.setAfterLowVarianceFilter( dataMatrix.rows() );
         }
 
+        // Last, because it is a budget rather than a criterion: everything above removes rows that should not
+        // be there, and this one removes rows that should, once there are more of them than the caller wants.
+        // Applying it earlier would let a probe the lowVariance cut would have dropped displace one it would
+        // have kept.
+        if ( config.getMaxDesignElements() > 0 && dataMatrix.rows() > config.getMaxDesignElements() ) {
+            ExpressionExperimentFilter.log.debug( "Keeping the " + config.getMaxDesignElements() + " most variable design elements" );
+            dataMatrix = this.filterToMostVariable( dataMatrix, config.getMaxDesignElements() );
+            result.setMaxDesignElementsFilterApplied( true );
+            result.setAfterMaxDesignElementsFilter( dataMatrix.rows() );
+            checkEnoughDesignElementsAndSamples( dataMatrix, "capping the number of design elements" );
+        } else {
+            result.setMaxDesignElementsFilterApplied( false );
+            result.setAfterMaxDesignElementsFilter( dataMatrix.rows() );
+        }
+
         result.setFinalRows( dataMatrix.rows() );
         result.setFinalColumns( ExpressionDataFilterUtils.countSamplesWithData( dataMatrix ) );
 
@@ -275,6 +290,22 @@ public class ExpressionExperimentFilter implements ExpressionDataFilter<Expressi
     /**
      * Filter rows with low variance.
      */
+    /**
+     * Keep the {@code maxRows} most variable rows.
+     * <p>
+     * Variance rather than mean expression, for the same reason {@link #filterLowVariance} uses it: it is what
+     * carries the between-sample structure a correlation matrix is made of, and a highly expressed probe that
+     * says the same thing in every sample contributes nothing to it.
+     * <p>
+     * Expressed as a fraction because {@link RowLevelFilter#setLowCutAsFraction} already implements
+     * "keep the top fraction by this method" — there is no need for a second way to say it.
+     */
+    private ExpressionDataDoubleMatrix filterToMostVariable( ExpressionDataDoubleMatrix matrix, int maxRows ) {
+        RowLevelFilter rowLevelFilter = new RowLevelFilter( RowLevelFilter.Method.VAR );
+        rowLevelFilter.setLowCutAsFraction( 1.0 - ( ( double ) maxRows / matrix.rows() ) );
+        return rowLevelFilter.filter( matrix );
+    }
+
     private ExpressionDataDoubleMatrix filterLowVariance( ExpressionDataDoubleMatrix matrix ) {
         return new LowVarianceFilter( config.getLowVarianceCut() ).filter( matrix );
     }
