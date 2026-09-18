@@ -41,7 +41,12 @@ public class RowMissingFilter<M extends Matrix2D<R, C, V>, R, C, V> extends Abst
 
     @Override
     public M filter( M data ) {
-        List<V[]> MTemp = new Vector<>();
+        // 🛑 Row INDICES, not the rows themselves. This used to hold a V[] per kept row, and for a
+        // DoubleMatrix that V is Double -- so a 34,330 x 1,090 matrix built and held 37.4 MILLION boxed
+        // Doubles, about a gigabyte of objects, to carry data that was already in `data` and that is copied
+        // out again twenty lines below. Keeping the indices costs one int per row and reads each row once,
+        // at fill time, so a single row's boxing is live at a time instead of all of them.
+        IntArrayList keptRows = new IntArrayList();
         List<R> rowNames = new Vector<>();
         int numRows = data.rows();
         int numCols = data.columns();
@@ -74,7 +79,7 @@ public class RowMissingFilter<M extends Matrix2D<R, C, V>, R, C, V> extends Abst
             present.add( missingCount );
             if ( missingCount >= ABSOLUTEMINPRESENT && missingCount >= minPresentCount ) {
                 kept++;
-                MTemp.add( MatrixUtil.getRow( data, i ) );
+                keptRows.add( i );
                 rowNames.add( data.getRowName( i ) );
             }
         }
@@ -93,11 +98,11 @@ public class RowMissingFilter<M extends Matrix2D<R, C, V>, R, C, V> extends Abst
 
             // Do another pass to add rows we missed before.
             kept = 0;
-            MTemp.clear();
+            keptRows.clear();
             for ( int i = 0; i < numRows; i++ ) {
                 if ( present.get( i ) >= minPresentCount && present.get( i ) >= ABSOLUTEMINPRESENT ) {
                     kept++;
-                    MTemp.add( MatrixUtil.getRow( data, i ) );
+                    keptRows.add( i );
                     if ( !rowNames.contains( data.getRowName( i ) ) ) {
                         rowNames.add( data.getRowName( i ) );
                     }
@@ -105,12 +110,17 @@ public class RowMissingFilter<M extends Matrix2D<R, C, V>, R, C, V> extends Abst
             }
         }
 
-        M returnval = getOutputMatrix( data, MTemp.size(), numCols );
+        // ⚠️ No "nothing was removed, return the input" short-circuit here, tempting as it is: this filter
+        // has always handed back a NEW matrix, and MatrixNormalizer.imputeMissing mutates what it is given.
+        // Aliasing the input would make that mutation visible to the caller, on every caller of a shared
+        // filter, to save one copy.
+        M returnval = getOutputMatrix( data, keptRows.size(), numCols );
 
-        // Finally fill in the return value.
-        for ( int i = 0; i < MTemp.size(); i++ ) {
+        // Finally fill in the return value, one source row at a time.
+        for ( int i = 0; i < keptRows.size(); i++ ) {
+            V[] row = MatrixUtil.getRow( data, keptRows.get( i ) );
             for ( int j = 0; j < numCols; j++ ) {
-                returnval.set( i, j, MTemp.get( i )[j] );
+                returnval.set( i, j, row[j] );
             }
         }
         returnval.setColumnNames( data.getColNames() );

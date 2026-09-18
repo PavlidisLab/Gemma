@@ -74,32 +74,45 @@ public class MatrixNormalizer<R, C> {
 
         BitSet missingValueStatus = imputeMissing( fM );
 
+        // copy() rather than a fresh matrix of the same shape because this method is generic over
+        // DoubleMatrix and cannot construct a concrete one; every cell is overwritten immediately below, so
+        // what the copy is actually for is the shape and the row and column names.
         DoubleMatrix<R, C> sortedData = fM.copy();
+
+        // One buffer for every column instead of one per column. getColumn() allocates a double[rows] on each
+        // call, so the old loop churned columns x rows doubles -- 299 MB on a 34,330 x 1,090 matrix -- to read
+        // data that is already in the matrix. DoubleArrayList wraps the array without copying and sort()
+        // orders it in place, so the sorted values are readable straight out of the buffer.
+        double[] columnBuffer = new double[fM.rows()];
+        DoubleArrayList sortedColumn = new DoubleArrayList( columnBuffer );
         for ( int i = 0; i < fM.columns(); i++ ) {
-            DoubleArrayList sortedColumn = new DoubleArrayList( fM.getColumn( i ) );
+            for ( int j = 0; j < fM.rows(); j++ ) {
+                columnBuffer[j] = fM.get( j, i );
+            }
             sortedColumn.sort();
-            for ( int j = 0; j < sortedColumn.size(); j++ ) {
-                sortedData.set( j, i, sortedColumn.get( j ) );
+            for ( int j = 0; j < fM.rows(); j++ ) {
+                sortedData.set( j, i, columnBuffer[j] );
             }
         }
 
         /*
          * Compute the mean at each rank
          */
+        // Same again for the rows: getRow() allocated a double[columns] per row and then a DoubleArrayList
+        // around it, twice over, for every one of the rows. The buffer is sized for the widest case and
+        // setSize tells Descriptive.mean how much of it counts, which is how the includeInReference subset is
+        // expressed without a second allocation.
         DoubleArrayList rowMeans = new DoubleArrayList( sortedData.rows() );
+        double[] rowBuffer = new double[sortedData.columns()];
+        DoubleArrayList contributing = new DoubleArrayList( rowBuffer );
         for ( int i = 0; i < sortedData.rows(); i++ ) {
-            double[] row = sortedData.getRow( i );
-            DoubleArrayList contributing;
-            if ( includeInReference == null ) {
-                contributing = new DoubleArrayList( row );
-            } else {
-                contributing = new DoubleArrayList( row.length );
-                for ( int j = 0; j < row.length; j++ ) {
-                    if ( includeInReference[j] ) {
-                        contributing.add( row[j] );
-                    }
+            int n = 0;
+            for ( int j = 0; j < sortedData.columns(); j++ ) {
+                if ( includeInReference == null || includeInReference[j] ) {
+                    rowBuffer[n++] = sortedData.get( i, j );
                 }
             }
+            contributing.setSize( n );
             rowMeans.add( Descriptive.mean( contributing ) );
         }
 
@@ -109,6 +122,9 @@ public class MatrixNormalizer<R, C> {
             // read by exactly this iteration of j and by nothing else, so holding all of them cost
             // columns x rows doubles for no reuse -- 299 MB on a 34,330 x 1,090 matrix. Same number of
             // rankTransform calls either way.
+            // getColumn() here and not the shared buffer: rankTransform's treatment of the list it is
+            // handed is not part of its contract, and a buffer it retained would be silently overwritten by
+            // the next column. One allocation per column is worth not having to be sure.
             DoubleArrayList ranks = Rank.rankTransform( new DoubleArrayList( fM.getColumn( j ) ) );
             assert ranks != null;
 
@@ -122,14 +138,17 @@ public class MatrixNormalizer<R, C> {
 
                 int intrank = ( int ) Math.floor( rank );
 
-                Double value = null;
+                // 🛑 double, not Double. This is the innermost loop of the whole normalization: it runs
+                // rows x columns times -- 37.4 million on a 34,330 x 1,090 matrix -- and boxing here
+                // allocated a Double object on every one of them, for a value that is read once and
+                // discarded. The null check went with it; a primitive cannot be null.
+                double value;
                 if ( rank - intrank > 0.4 && intrank > 0 ) {
                     // cope with tied ranks. 0.4 is the threshold R uses.
                     value = ( rowMeans.get( intrank ) + rowMeans.get( intrank - 1 ) ) / 2.0;
                 } else {
                     value = rowMeans.get( intrank );
                 }
-                assert value != null : "No mean value for rank=" + rank;
                 sortedData.set( i, j, value );
 
             }
