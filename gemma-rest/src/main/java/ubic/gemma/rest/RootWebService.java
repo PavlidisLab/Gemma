@@ -49,6 +49,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Path("/")
 @SecurityScheme(name = "basicAuth", type = SecuritySchemeType.HTTP, scheme = "basic", description = "Authenticate with your Gemma username and password")
 @SecurityScheme(name = "cookieAuth", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.COOKIE, paramName = "JSESSIONID", description = "Authenticate with your current Gemma session.")
+@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", description = "Authenticate with an opaque token from `POST /login`, sent as `Authorization: Bearer <token>`. Revoke it with `POST /logout`.")
 @Slf4j
 public class RootWebService {
 

@@ -23,4 +23,5 @@ openAPI:
   security:
     - basicAuth: []
     - cookieAuth: [] # this is meant for client that reuse their JSESSIONID from Gemma website
+    - bearerAuth: [] # opaque token from POST /login, sent as Authorization: Bearer <token>
     - {} # this corresponds to anonymous authentication

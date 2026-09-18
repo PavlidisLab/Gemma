@@ -8,6 +8,7 @@ import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
@@ -719,5 +720,23 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
         assertThat( offenders )
                 .withFailMessage( "operationIds swagger-core had to disambiguate, or that are missing: %s", offenders )
                 .isEmpty();
+    }
+
+    /**
+     * The bearer scheme {@code POST /login} mints has to be declared, or a generated client cannot
+     * express it and every caller hand-rolls the Authorization header.
+     */
+    @Test
+    public void testBearerAuthIsDeclared() {
+        assertThat( spec.getComponents().getSecuritySchemes() )
+                .containsKeys( "basicAuth", "cookieAuth", "bearerAuth" );
+        assertThat( spec.getComponents().getSecuritySchemes().get( "bearerAuth" ) ).satisfies( scheme -> {
+            assertThat( scheme.getType() ).isEqualTo( SecurityScheme.Type.HTTP );
+            assertThat( scheme.getScheme() ).isEqualTo( "bearer" );
+        } );
+        assertThat( spec.getSecurity() )
+                .withFailMessage( "bearerAuth is defined but not offered in the global security list, so the"
+                        + " spec says no endpoint accepts it" )
+                .anySatisfy( requirement -> assertThat( requirement ).containsKey( "bearerAuth" ) );
     }
 }
