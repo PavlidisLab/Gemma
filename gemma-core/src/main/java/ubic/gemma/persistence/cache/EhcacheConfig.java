@@ -76,6 +76,24 @@ public class EhcacheConfig {
 
     /** Read-only entity defaults: small heap, eternal-ish TTL. */
     private static final CacheSpec L2_READ_ONLY = new CacheSpec( 1000, Duration.ofHours( 24 ) );
+    /**
+     * Entities whose state includes a LONGBLOB.
+     * <p>
+     * 🛑 Every spec here is a count of ENTRIES, which makes it a heap budget only if you know what an entry
+     * weighs. For a {@code Chromosome} or a {@code Unit} that is bytes and 1,000 of them is free. For an
+     * entity carrying a blob it is whatever the blob is, and the L2 runs through JSR-107 ehcache, which
+     * stores by VALUE — so an entry is a serialized copy, not a reference.
+     * <p>
+     * Measured on production 2026-09-17: {@code SingleCellDimension} averages 0.53 MB and reaches 19.18 MB,
+     * {@code GenericCellLevelCharacteristics} averages 0.38 MB and reaches 6.47 MB. At
+     * {@link #L2_READ_ONLY}'s 1,000 entries those are 19 GB and 6 GB of nominal heap. Twenty is a number
+     * someone can multiply out and still sleep; a thousand is not.
+     * <p>
+     * ⚠️ This is a ceiling, not a licence. An entity whose blob has no upper bound belongs out of the L2
+     * entirely — see {@code SampleCoexpressionMatrix}, which reached 110 MB a row and was removed rather than
+     * resized.
+     */
+    private static final CacheSpec L2_BLOB_ENTITY = new CacheSpec( 20, Duration.ofHours( 24 ) );
     /** Read-write entity defaults: larger heap (mutable, more churn), shorter TTL. */
     private static final CacheSpec L2_READ_WRITE = new CacheSpec( 5000, Duration.ofHours( 1 ) );
     /** Nonstrict-read-write entity defaults: small heap, short TTL (high churn, stale-tolerant). */
@@ -235,9 +253,9 @@ public class EhcacheConfig {
         L2_CACHES.put( "ubic.gemma.model.common.measurement.Unit", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.common.protocol.Protocol", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.BioAssayDimension", L2_READ_ONLY );
-        L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics", L2_READ_ONLY );
+        L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics", L2_BLOB_ENTITY );
         L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation", L2_READ_ONLY );
-        L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.SingleCellDimension", L2_READ_ONLY );
+        L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.SingleCellDimension", L2_BLOB_ENTITY );
         L2_CACHES.put( "ubic.gemma.model.expression.biomaterial.Compound", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.genome.Chromosome", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult", L2_READ_ONLY );
