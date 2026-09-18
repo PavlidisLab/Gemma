@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.util.math;
 
+import ubic.gemma.core.architecture.LongComputation;
+
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix1D;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -111,6 +113,7 @@ public class MatrixStats {
      * @param data
      * @return a symmetric matrix that has the rows and columns set to be the names of the rows of the input.
      */
+    @LongComputation("All-pairs correlation; quadratic in the column count.")
     public static <R, C> DoubleMatrix<R, R> correlationMatrix( DoubleMatrix<R, C> data ) {
         DoubleMatrix<R, R> result = new DenseDoubleMatrix<>( data.rows(), data.rows() );
 
@@ -139,6 +142,7 @@ public class MatrixStats {
      * @return a sparse symmetric matrix that has the rows and columns set to be the names of the rows of the input. The
      *         diagonal is set to Double.NaN
      */
+    @LongComputation("All-pairs correlation; quadratic in the column count.")
     public static <R, C> SparseDoubleMatrix<R, R> correlationMatrix( DoubleMatrix<R, C> data, double threshold ) {
         SparseDoubleMatrix<R, R> result = new SparseDoubleMatrix<>( data.rows(), data.rows() );
 

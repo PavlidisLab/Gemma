@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.util.math.linearmodels;
 
+import ubic.gemma.core.architecture.LongComputation;
 import cern.colt.bitvector.BitVector;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
@@ -51,6 +52,7 @@ import java.util.*;
  *
  * @author paul
  */
+@LongComputation("Bulk linear-model fitting; every constructor runs the fit, so the marker is on the class.")
 public class LeastSquaresFit {
 
     private static Logger log = LoggerFactory.getLogger(LeastSquaresFit.class);

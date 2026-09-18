@@ -1,4 +1,5 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
+import ubic.gemma.core.architecture.LongComputation;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -420,6 +421,7 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         return n;
     }
 
+    @LongComputation("Whole-matrix quantile normalization; 44 minutes on GSE260875's 34,330 x 1,090, measured 2026-09-17.")
     private void quantileNormalize( Map<CompositeSequence, double[]> vectors, @Nullable boolean[] referenceColumns ) {
         Assert.isTrue( vectors.size() >= MIN_SIZE_FOR_RENORMALIZATION,
                 "At least " + MIN_SIZE_FOR_RENORMALIZATION + " vector are required for renormalization." );
