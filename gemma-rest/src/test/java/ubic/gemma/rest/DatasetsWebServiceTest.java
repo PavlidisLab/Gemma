@@ -65,7 +65,10 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -1984,6 +1987,46 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         // the point: no duplicate background build alongside the stream
         verify( expressionDataFileService, never() ).writeOrLocateTabularSingleCellExpressionDataAsync(
                 any(), any(), anyInt(), anyBoolean(), anyBoolean() );
+    }
+
+    /**
+     * The JSON output of cellTypeAssignment does not read cell ids, so it must not load them. On MSSM_Cohort (3.7
+     * million cells, 2026-09-18) that load was about 4 s of an 880-byte response.
+     */
+    @Test
+    public void testGetDatasetCellTypeAssignmentAsJsonDoesNotLoadCellIds() {
+        QuantitationType qt = new QuantitationType();
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        when( singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt ) )
+                .thenReturn( new SingleCellDimension() );
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
+                .thenReturn( Optional.of( new CellTypeAssignment() ) );
+        assertThat( target( "/datasets/1/cellTypeAssignment" ).queryParam( "exclude", "cellTypeIds" ).request().get() )
+                .hasStatus( Response.Status.OK );
+        verify( singleCellExpressionExperimentService, never() ).getSingleCellDimension( any(), any() );
+        verify( singleCellExpressionExperimentService, never() ).getSingleCellDimensionWithCellLevelCharacteristics( any(), any() );
+    }
+
+    /**
+     * As for cellTypeAssignment: the JSON output of cellLevelCharacteristics does not read cell ids.
+     */
+    @Test
+    public void testGetDatasetCellLevelCharacteristicsAsJsonDoesNotLoadCellIds() {
+        QuantitationType qt = new QuantitationType();
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        GenericCellLevelCharacteristics clc = new GenericCellLevelCharacteristics();
+        clc.setCharacteristics( new ArrayList<>() );
+        clc.setIndices( new int[0] );
+        SingleCellDimension dimension = new SingleCellDimension();
+        dimension.getCellLevelCharacteristics().add( clc );
+        when( singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( eq( ee ), eq( qt ), any() ) )
+                .thenReturn( dimension );
+        assertThat( target( "/datasets/1/cellLevelCharacteristics" ).request().get() )
+                .hasStatus( Response.Status.OK );
+        verify( singleCellExpressionExperimentService, never() ).getSingleCellDimension( any(), any() );
+        verify( singleCellExpressionExperimentService, never() ).getSingleCellDimensionWithCellLevelCharacteristics( any(), any() );
     }
 
     @Test
