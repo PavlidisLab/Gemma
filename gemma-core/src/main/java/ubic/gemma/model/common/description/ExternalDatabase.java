@@ -34,6 +34,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.DescribableUtils;
@@ -71,6 +73,7 @@ public class ExternalDatabase extends AbstractDescribable implements Auditable, 
      * Related external databases.
      */
     @OneToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "EXTERNAL_DATABASE_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "EXTERNAL_DATABASE_FKC"))
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<ExternalDatabase> externalDatabases = new HashSet<>();

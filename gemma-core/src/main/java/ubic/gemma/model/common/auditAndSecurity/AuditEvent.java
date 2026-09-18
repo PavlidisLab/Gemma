@@ -81,6 +81,7 @@ public class AuditEvent extends AbstractIdentifiable {
 
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "PERFORMER_FK", columnDefinition = "BIGINT")
     private User performer = null;
 

@@ -1,4 +1,5 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
+import ubic.gemma.core.architecture.LongComputation;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -12,7 +13,6 @@ import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionExc
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.analysis.preprocess.slice.BulkDataSlicerUtils;
-import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -22,10 +22,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Thaws;
 
 import org.springframework.lang.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
 
@@ -53,49 +53,32 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
     private QuantitationTypeService quantitationTypeService;
 
     @Override
-    @Transactional(rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
-    public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch, ProcessedExpressionDataVectorCreationSummary summary ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+    @Transactional
+    public QuantitationType replaceProcessedDataVectors( ExpressionExperiment expressionExperiment,
+            ComputedProcessedData computed, ProcessedExpressionDataVectorCreationSummary summary ) {
+        // 🛑 Remove and persist in ONE transaction, and only after the computation has already succeeded.
+        // The old order was remove -> compute -> persist inside a single transaction, which was safe only
+        // because a failure in the compute rolled the removal back. With the compute outside (it takes 44
+        // minutes and holds a connection it never uses), removing first would commit a deletion and then
+        // fail, leaving the experiment with no processed vectors at all.
         log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
         expressionExperimentService.removeProcessedDataVectors( expressionExperiment );
-
-        ComputedProcessedData computed = computeProcessedData( expressionExperiment, ignoreQuantitationMismatch, summary, true );
         return persist( expressionExperiment, computed, summary );
     }
 
     @Override
-    public ExpressionDataDoubleMatrix computeUnmaskedProcessedDataMatrix( ExpressionExperiment expressionExperiment,
-            boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
-        ComputedProcessedData computed = computeProcessedData( expressionExperiment, ignoreQuantitationMismatch,
-                new ProcessedExpressionDataVectorCreationSummary(), false );
-        Collection<ProcessedExpressionDataVector> vectors = new HashSet<>( computed.data.size() );
-        for ( Map.Entry<CompositeSequence, double[]> e : computed.data.entrySet() ) {
+    public ExpressionDataDoubleMatrix toMatrix( ExpressionExperiment expressionExperiment, ComputedProcessedData computed ) {
+        Collection<ProcessedExpressionDataVector> vectors = new HashSet<>( computed.getData().size() );
+        for ( Map.Entry<CompositeSequence, double[]> e : computed.getData().entrySet() ) {
             ProcessedExpressionDataVector vec = ProcessedExpressionDataVector.Factory.newInstance();
             vec.setExpressionExperiment( expressionExperiment );
-            vec.setQuantitationType( computed.processedQt );
-            vec.setBioAssayDimension( computed.dimension );
+            vec.setQuantitationType( computed.getProcessedQt() );
+            vec.setBioAssayDimension( computed.getDimension() );
             vec.setDesignElement( e.getKey() );
             vec.setDataAsDoubles( e.getValue() );
             vectors.add( vec );
         }
         return new ExpressionDataDoubleMatrix( expressionExperiment, vectors );
-    }
-
-    /**
-     * The output of the processing pipeline, before anything is written.
-     */
-    private static class ComputedProcessedData {
-        final Map<CompositeSequence, double[]> data;
-        final BioAssayDimension dimension;
-        final QuantitationType processedQt;
-        final Map<CompositeSequence, int[]> numberOfCells;
-
-        ComputedProcessedData( Map<CompositeSequence, double[]> data, BioAssayDimension dimension,
-                QuantitationType processedQt, Map<CompositeSequence, int[]> numberOfCells ) {
-            this.data = data;
-            this.dimension = dimension;
-            this.processedQt = processedQt;
-            this.numberOfCells = numberOfCells;
-        }
     }
 
     /**
@@ -106,7 +89,9 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
      *                     sample-correlation matrix, which is the evidence a curator reviews an outlier call
      *                     against and is useless with the flagged sample's values removed from it.
      */
-    private ComputedProcessedData computeProcessedData( ExpressionExperiment expressionExperiment,
+    @Override
+    @Transactional(readOnly = true, rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
+    public ComputedProcessedData readProcessedDataInputs( ExpressionExperiment expressionExperiment,
             boolean ignoreQuantitationMismatch, ProcessedExpressionDataVectorCreationSummary summary,
             boolean maskOutliers ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         log.info( "Computing processed expression vectors for " + expressionExperiment );
@@ -120,27 +105,41 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
 
         /* log-transform if necessary */
         // this will also consolidate sets of raw vectors that have multiple BADs
-        rawPreferredDataVectors = consolidateAndLogTransformVectors( expressionExperiment, rawPreferredDataVectors, ignoreQuantitationMismatch );
+        //
+        // 🛑 The MATRIX, not vectors built from it. consolidateAndLogTransformVectors used to finish by calling
+        // toVectors(), whose setDataAsDoubles encodes every row to a byte[], and the very next thing anyone did
+        // with those vectors was unpackData(), which decodes them straight back to the same doubles in the same
+        // column order -- toVectors stamps each vector with the matrix's own BioAssayDimension, so the slice
+        // unpackData performs is the identity. Two full-width representations and 34,330 throwaway vector
+        // objects, 299 MB apiece on a 34,330 x 1,090 experiment, to arrive at the numbers already in hand.
+        ExpressionDataDoubleMatrix consolidated = consolidateAndLogTransform( expressionExperiment,
+                rawPreferredDataVectors, ignoreQuantitationMismatch );
 
         // once the vectors have been consolidated, we can recover the dimension
-        // no that if multiple BADs were consolidated, this will return a new BAD, otherwise the same BAD that was used
-        // for the raw vectors will be re-used
+        // note that if multiple BADs were consolidated, this will be a new BAD, otherwise the same BAD that was
+        // used for the raw vectors is re-used
         // create a masked QT based on the preferred raw vectors once all the necessary transformation have been done
-        RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
-        QuantitationType preferredQt = preferredDataVectorExemplar.getQuantitationType();
-        BioAssayDimension dimension = preferredDataVectorExemplar.getBioAssayDimension();
+        QuantitationType preferredQt = consolidated.getQuantitationType();
+        BioAssayDimension dimension = consolidated.getBioAssayDimension();
+        // The dimension leaves this transaction and is read with none open. On the unmasked rebuild it becomes the
+        // correlation matrix's dimension, which SampleCoexpressionAnalysisServiceImpl.compute sorts by experimental
+        // design: every factor value's experimental factor, a lazy proxy unless initialized here.
+        Thaws.thawBioAssayDimension( dimension );
 
         summary.setRawQuantitationType( preferredQt );
 
         QuantitationType processedQt = createPreferredMaskedDataQuantitationType( preferredQt );
 
-        Map<CompositeSequence, int[]> numberOfCells = rawPreferredDataVectors.stream()
-                .filter( v -> v.getNumberOfCells() != null )
-                .collect( Collectors.toMap(
-                        DesignElementDataVector::getDesignElement,
-                        RawExpressionDataVector::getNumberOfCells ) );
-
-        Map<CompositeSequence, double[]> preferredData = unpackData( rawPreferredDataVectors, dimension );
+        Map<CompositeSequence, int[]> numberOfCells = HashMap.newHashMap( consolidated.rows() );
+        Map<CompositeSequence, double[]> preferredData = HashMap.newHashMap( consolidated.rows() );
+        for ( int i = 0; i < consolidated.rows(); i++ ) {
+            CompositeSequence designElement = consolidated.getDesignElementForRow( i );
+            preferredData.put( designElement, consolidated.getRowAsDoubles( i ) );
+            int[] noc = consolidated.getNumberOfCellsForRow( i );
+            if ( noc != null ) {
+                numberOfCells.put( designElement, noc );
+            }
+        }
 
         boolean isTwoChannel = expressionExperimentService.isTwoChannel( expressionExperiment );
         Collection<RawExpressionDataVector> missingValueVectors = getMissingValueVectors( expressionExperiment );
@@ -170,6 +169,15 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
             log.warn( "Preferred data are counts; please convert to log2cpm" );
         }
 
+        // Everything above reads the database. Normalization is the caller's next step and runs with no
+        // transaction open; see normalizeProcessedData.
+        return new ComputedProcessedData( preferredData, dimension, processedQt, numberOfCells, referenceColumns );
+    }
+
+    @Override
+    public void normalizeProcessedData( ComputedProcessedData computed, ProcessedExpressionDataVectorCreationSummary summary ) {
+        QuantitationType processedQt = computed.getProcessedQt();
+        Map<CompositeSequence, double[]> preferredData = computed.getData();
         if ( processedQt.getIsRatio() ) {
             String m = "Data is on a ratio scale, skipping normalization step.";
             log.info( m );
@@ -180,20 +188,18 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
             summary.addComment( m );
         } else {
             log.info( "Normalizing the data" );
-            quantileNormalize( preferredData, referenceColumns );
+            quantileNormalize( preferredData, computed.getReferenceColumns() );
             processedQt.setIsNormalized( true );
             summary.setQuantileNormalized( true );
         }
-
-        return new ComputedProcessedData( preferredData, dimension, processedQt, numberOfCells );
     }
 
     private QuantitationType persist( ExpressionExperiment expressionExperiment, ComputedProcessedData computed,
             ProcessedExpressionDataVectorCreationSummary summary ) {
-        Map<CompositeSequence, double[]> preferredData = computed.data;
-        BioAssayDimension dimension = computed.dimension;
-        Map<CompositeSequence, int[]> numberOfCells = computed.numberOfCells;
-        QuantitationType processedQt = quantitationTypeService.create( computed.processedQt, ProcessedExpressionDataVector.class );
+        Map<CompositeSequence, double[]> preferredData = computed.getData();
+        BioAssayDimension dimension = computed.getDimension();
+        Map<CompositeSequence, int[]> numberOfCells = computed.getNumberOfCells();
+        QuantitationType processedQt = quantitationTypeService.create( computed.getProcessedQt(), ProcessedExpressionDataVector.class );
 
         /*
          * Done with processing, now build the vectors and persist; Do a sanity check that we don't have more than we
@@ -228,13 +234,12 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
      * The consolidation is done by passing the vectors through {@link ExpressionDataDoubleMatrix} which handle multiple
      * assays per sample and then recover them on the other side.
      */
-    private Collection<RawExpressionDataVector> consolidateAndLogTransformVectors(
+    private ExpressionDataDoubleMatrix consolidateAndLogTransform(
             ExpressionExperiment ee,
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
             boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, rawPreferredDataVectors );
-        matrix = ensureLog2Scale( matrix, ignoreQuantitationMismatch );
-        return BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class );
+        return ensureLog2Scale( matrix, ignoreQuantitationMismatch );
     }
 
     @Nullable
@@ -420,6 +425,7 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         return n;
     }
 
+    @LongComputation("Whole-matrix quantile normalization; 44 minutes on GSE260875's 34,330 x 1,090, measured 2026-09-17.")
     private void quantileNormalize( Map<CompositeSequence, double[]> vectors, @Nullable boolean[] referenceColumns ) {
         Assert.isTrue( vectors.size() >= MIN_SIZE_FOR_RENORMALIZATION,
                 "At least " + MIN_SIZE_FOR_RENORMALIZATION + " vector are required for renormalization." );

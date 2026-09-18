@@ -25,7 +25,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     private final AtomicInteger numberOfSuccessOrErrorObjects = new AtomicInteger( 0 );
     private volatile boolean hasErrorObjects = false;
 
-    private final ThreadLocal<Boolean> wasSuccessObjectAdded = ThreadLocal.withInitial( () -> false );
+    private final ThreadLocal<Boolean> wasResultAdded = ThreadLocal.withInitial( () -> false );
     private final ThreadLocal<Boolean> wasErrorObjectAdded = ThreadLocal.withInitial( () -> false );
 
     private final StopWatch timer = StopWatch.createStarted();
@@ -46,12 +46,16 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     }
 
     /**
-     * Indicate if a success object was added for the current thread.
+     * Indicate if any result -- success, warning or error -- was added for the current thread.
+     * <p>
+     * A warning counts. It used to not, and a batch task whose only report was a warning was then
+     * given a second, invented row saying "Batch task #N" SUCCESS by
+     * {@link BatchTaskExecutorService}, because nothing looked like a report to it.
      * <p>
      * This status is reset by {@link #clearThreadLocals()}.
      */
-    boolean wasSuccessObjectAdded() {
-        return wasSuccessObjectAdded.get();
+    boolean wasResultAdded() {
+        return wasResultAdded.get();
     }
 
     /**
@@ -68,7 +72,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
      */
     void clearThreadLocals() {
         wasErrorObjectAdded.remove();
-        wasSuccessObjectAdded.remove();
+        wasResultAdded.remove();
     }
 
     /**
@@ -179,12 +183,12 @@ public class BatchTaskProgressReporter implements AutoCloseable {
 
     private void addBatchProcessingResult( BatchTaskProcessingResult result ) {
         int completed;
+        wasResultAdded.set( true );
         if ( result.getResultType() == BatchTaskProcessingResult.ResultType.ERROR ) {
             wasErrorObjectAdded.set( true );
             hasErrorObjects = true;
             completed = numberOfSuccessOrErrorObjects.incrementAndGet();
         } else if ( result.getResultType() == BatchTaskProcessingResult.ResultType.SUCCESS ) {
-            wasSuccessObjectAdded.set( true );
             completed = numberOfSuccessOrErrorObjects.incrementAndGet();
         } else {
             completed = numberOfSuccessOrErrorObjects.get();

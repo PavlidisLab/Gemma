@@ -64,6 +64,7 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis<Express
     private Set<ProbeLoading> probeLoadings = new HashSet<>();
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "PRINCIPAL_COMPONENT_ANALYSIS_FK", columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "EIGENVALUE_PRINCIPAL_COMPONENT_ANALYSIS_FKC"))
     @Immutable
@@ -71,6 +72,7 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis<Express
     private Set<Eigenvalue> eigenValues = new HashSet<>();
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "PRINCIPAL_COMPONENT_ANALYSIS_FK", columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "EIGENVECTOR_PRINCIPAL_COMPONENT_ANALYSIS_FKC"))
     @Immutable

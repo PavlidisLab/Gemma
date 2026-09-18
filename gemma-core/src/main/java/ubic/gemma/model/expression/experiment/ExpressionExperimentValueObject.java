@@ -9,6 +9,7 @@ import ubic.gemma.core.security.acl.domain.AclSid;
 import ubic.gemma.core.security.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssayFieldCountValueObject;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
@@ -109,6 +110,45 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      */
     @Schema(description = "Platforms the assays were originally run on, when the dataset was switched to another platform. Empty when there was no switch; a switch to the same platform is not reported.")
     private List<ArrayDesignReferenceValueObject> originalPlatforms;
+
+    /**
+     * What kind of libraries the dataset's samples were made from, as the distinct
+     * {@code libraryStrategy} values with a count of the samples carrying each.
+     * <p>
+     * Here because it is the dataset's answer to "what kind of experiment is this", and
+     * {@link #technologyType} is not: Gemma maps sequencing data onto generic gene-list platforms, so
+     * GSE270825 reads {@code GENELIST} with 24 {@code SSRNA_SEQ} samples. The curated {@code assay} tag
+     * that clients used instead is being retired.
+     * <p>
+     * A list rather than a single value because a dataset is not obliged to be uniform, and 18 of the
+     * 23,544 on prod are not (measured, uib, 2026-09-16) — but it is a one-element list for the other
+     * 99.92%, which is why it belongs on the dataset instead of being re-derived from the sample list by
+     * every client. Reading it off {@code /datasets/&#123;id&#125;/samples} cost the whole assay list:
+     * 652 KiB gzipped and 2.3 s for GSE2109's 2,158 samples, for one line of text on a page.
+     *
+     * @see BioAssayFieldCountValueObject for how a null value and the counts are to be read
+     */
+    @Schema(description = "Distinct libraryStrategy values across the dataset's samples, with the number of samples carrying each. One entry for all but ~0.08% of datasets. Empty when the dataset has no samples.")
+    private List<BioAssayFieldCountValueObject> libraryStrategies;
+
+    /**
+     * How the dataset's libraries were selected, as the distinct {@code librarySelection} values with a
+     * count of the samples carrying each.
+     * <p>
+     * 🛑 Read beside {@link #extractedMolecules}, not instead of it — see
+     * {@link ubic.gemma.model.expression.bioAssay.BioAssay#getLibrarySelection()}: total RNA with a polyA
+     * selection step is common, and the molecule alone does not say so. On a microarray dataset every
+     * sample is null here, because the technology has no selection step.
+     */
+    @Schema(description = "Distinct librarySelection values across the dataset's samples, with the number of samples carrying each. Null-valued on microarray datasets, where the field does not apply.")
+    private List<BioAssayFieldCountValueObject> librarySelections;
+
+    /**
+     * What was extracted from the dataset's samples and assayed, as the distinct
+     * {@code extractedMolecule} values with a count of the samples carrying each.
+     */
+    @Schema(description = "Distinct extractedMolecule values across the dataset's samples, with the number of samples carrying each.")
+    private List<BioAssayFieldCountValueObject> extractedMolecules;
 
     /**
      * When the dataset was created in Gemma — loaded, not published.
@@ -396,6 +436,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.arrayDesignCount = vo.getArrayDesignCount();
         this.platforms = vo.getPlatforms();
         this.originalPlatforms = vo.getOriginalPlatforms();
+        this.libraryStrategies = vo.getLibraryStrategies();
+        this.librarySelections = vo.getLibrarySelections();
+        this.extractedMolecules = vo.getExtractedMolecules();
         this.dateCreated = vo.getDateCreated();
         this.bioMaterialCount = vo.getBioMaterialCount();
         this.userCanWrite = vo.getUserCanWrite();

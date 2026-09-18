@@ -152,6 +152,9 @@ class GeoSourceMetadataBuilderTest {
         assertThat( doc.get( "sampleCount" ).asInt() )
                 .as( "sampleCount is GEO's series count, so it exceeds samples.length for a split" )
                 .isEqualTo( 3 );
+        assertThat( doc.get( "experimentSampleCount" ).asInt() )
+                .as( "experimentSampleCount is Gemma's count for this sibling, not the series'" )
+                .isEqualTo( 2 );
         assertThat( doc.get( "samples" ) ).hasSize( 2 );
         assertThat( doc.get( "samples" ).get( 0 ).get( "accession" ).asText() ).isEqualTo( "GSM1" );
         assertThat( doc.get( "samples" ).get( 1 ).get( "accession" ).asText() ).isEqualTo( "GSM3" );
@@ -169,6 +172,36 @@ class GeoSourceMetadataBuilderTest {
         assertThat( doc.get( "sampleCount" ).asInt() ).isEqualTo( 2 );
         assertThat( doc.get( "samples" ) ).hasSize( 2 );
         assertThat( doc.has( "isSplitSubseries" ) ).isFalse();
+        assertThat( doc.has( "experimentSampleCount" ) )
+                .as( "no accession set was supplied, so Gemma stated no count of its own" )
+                .isFalse();
+    }
+
+    /**
+     * 🛑 The case that needs both counts in the document. GEO deleted every GSM accession Gemma
+     * holds for 8 experiments — deletion dates 2013 to 2026, overlap with what GEO serves under
+     * those series today 0/8 — so the document is written with an empty samples list against a
+     * sampleCount in the dozens, and it is REPRODUCIBLE: -force on GSE42727 rewrote the document
+     * and produced samples:[] again (frb, 2026-09-17, Gemma ticket #57).
+     * <p>
+     * Before this, the run's only trace of that was a WARN line, and the batch summary row read
+     * SUCCESS. Gemma's own count was nowhere in the artifact, so nothing holding the document could
+     * tell "GEO no longer serves our samples" from "this is a split sibling".
+     */
+    @Test
+    void anExperimentWhoseSamplesGeoNoLongerServesCarriesBothCounts() throws Exception {
+        GeoSeries whatGeoServesNow = series(
+                sample( "GSM9001", "replacement 1", "Homo sapiens" ),
+                sample( "GSM9002", "replacement 2", "Homo sapiens" ),
+                sample( "GSM9003", "replacement 3", "Homo sapiens" ) );
+        Set<String> whatGemmaHolds = new LinkedHashSet<>( java.util.Arrays.asList( "GSM1048832", "GSM1048833" ) );
+
+        JsonNode doc = build( whatGeoServesNow,
+                new GeoSourceMetadataBuilder.ExperimentIdentity( "GSE42727", 4412L, false, whatGemmaHolds ) );
+
+        assertThat( doc.get( "sampleCount" ).asInt() ).as( "GEO's" ).isEqualTo( 3 );
+        assertThat( doc.get( "experimentSampleCount" ).asInt() ).as( "Gemma's" ).isEqualTo( 2 );
+        assertThat( doc.get( "samples" ) ).as( "the overlap" ).isEmpty();
     }
 
     @Test

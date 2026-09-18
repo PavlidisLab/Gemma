@@ -36,7 +36,7 @@ public class BatchTaskExecutorService extends AbstractDelegatingExecutorService 
         return () -> {
             try {
                 runnable.run();
-                if ( !progressReporter.wasSuccessObjectAdded() && !progressReporter.wasErrorObjectAdded() ) {
+                if ( !progressReporter.wasResultAdded() ) {
                     progressReporter.addSuccessObject( batchObject );
                 }
             } catch ( Exception e ) {
@@ -57,7 +57,7 @@ public class BatchTaskExecutorService extends AbstractDelegatingExecutorService 
         return () -> {
             try {
                 T result = callable.call();
-                if ( !progressReporter.wasSuccessObjectAdded() && !progressReporter.wasErrorObjectAdded() ) {
+                if ( !progressReporter.wasResultAdded() ) {
                     progressReporter.addSuccessObject( batchObject );
                 }
                 return result;

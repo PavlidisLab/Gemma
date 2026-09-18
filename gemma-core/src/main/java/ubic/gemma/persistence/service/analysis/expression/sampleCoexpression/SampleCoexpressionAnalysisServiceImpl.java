@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -91,6 +92,15 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private static final String A_STATUS_AVAILABLE = "Available";
     private static final String A_STATUS_NOT_AVAILABLE = "Not available";
     private static final double IMPORTANCE_THRESHOLD = 0.01;
+    /**
+     * Ceiling on the design elements used to build a correlation matrix.
+     * <p>
+     * A sample-sample correlation over the most variable 15,000 probes is not distinguishable in practice from
+     * the same correlation over 34,000 -- the estimate is over a thousand samples and converges long before
+     * that -- and most experiments never reach the cap, since the low-expression and low-variance filters
+     * above already cut harder than this. It is a ceiling for the ones that do not.
+     */
+    private static final int MAX_DESIGN_ELEMENTS_FOR_CORMAT = 15000;
     private static final String A_STATUS_COMPUTED = "Just computed";
     private static final String A_STATUS_LOADED = "Loaded from db";
 
@@ -149,8 +159,22 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
 
+    /**
+     * 🛑 {@link Propagation#NEVER}, and it has to be: this is where the time goes.
+     * <p>
+     * The two {@code getMatrix} legs run quantile normalization, an all-pairs correlation and a least-squares
+     * fit. On GSE260875 (34,330 x 1,090) that was 44 minutes, and with
+     * {@code hibernate.connection.handling_mode = DELAYED_ACQUISITION_AND_HOLD} a transaction around it pinned
+     * a pooled connection for the whole stretch without issuing a statement — against a pool that recycles at
+     * 30 minutes ({@code gemma.db.hikari.maxLifetime}). Every read below already goes through a service method
+     * with its own transaction, and {@link #compute} is the write with its own.
+     * <p>
+     * ⚠️ NEVER is viral upward: a caller that is itself transactional will now fail at entry with
+     * {@code IllegalTransactionStateException}. That is the rule doing its job, not a regression to route
+     * around — the caller needs splitting too.
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(propagation = Propagation.NEVER)
     public PreparedCoexMatrices prepare( ExpressionExperiment ee ) throws FilteringException {
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
@@ -165,7 +189,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         SampleCoexpressionMatrix matrix = this.getMatrix( ee, false, vectors, filterResult, unmasked );
         SampleCoexpressionMatrix regressedMatrix = this.getMatrix( ee, true, vectors, null, unmasked );
         return new PreparedCoexMatrices( matrix, regressedMatrix,
-                matrix != null ? toAttritionPayload( cormatFilterConfig( true ), filterResult ) : null );
+                matrix != null ? toAttritionPayload( cormatFilterConfig( true ), filterResult, unmasked.dataSource() ) : null );
     }
 
 
@@ -412,6 +436,22 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         @Nullable
         private ExpressionDataDoubleMatrix value;
 
+        /**
+         * Which of the two sources the matrix came from, for the audit payload.
+         * <p>
+         * 🛑 Known only here and only at write time. A null value from {@link #get} means the rebuild was not
+         * attempted (no flagged outlier) or could not be done, and the caller fell back to the stored
+         * processed vectors — which were normalized earlier, against a different set of rows. Nothing on the
+         * stored matrix records the difference and nothing can recover it afterwards.
+         */
+        @Nullable
+        String dataSource() {
+            if ( !computed ) {
+                return null;
+            }
+            return value != null ? "unmasked-rebuild" : "stored-vectors";
+        }
+
         @Nullable
         ExpressionDataDoubleMatrix get( ExpressionExperiment ee ) {
             if ( !computed ) {
@@ -494,6 +534,12 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         // call could not be recovered afterwards. Consumers that want them excluded mask at the point of
         // use -- see GeeqServiceImpl.getCormat. Precedent for turning it off: ExpressionDataFileHelperService.
         fConfig.setMaskOutliers( false );
+        // 🛑 Hard cap, and deliberately NOT what the differential-expression path does. Filtering early is bad
+        // for DEA -- you lose the thing you were looking for -- so that config stays generous (Paul,
+        // 2026-09-17). This matrix answers a different question: how samples relate to one another, which a
+        // few thousand variable probes settle as well as thirty thousand do, while every stage that produces
+        // them is linear in the row count.
+        fConfig.setMaxDesignElements( MAX_DESIGN_ELEMENTS_FOR_CORMAT );
         return fConfig;
     }
 
@@ -505,6 +551,15 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     static SampleCorrelationAnalysisPayload toAttritionPayload( ExpressionExperimentFilterConfig config,
             ExpressionExperimentFilterResult result ) {
+        return toAttritionPayload( config, result, null );
+    }
+
+    /**
+     * @param dataSource {@code "unmasked-rebuild"} or {@code "stored-vectors"}, or null when it was not
+     *                   established. See the payload's own javadoc for why this cannot be recovered later.
+     */
+    static SampleCorrelationAnalysisPayload toAttritionPayload( ExpressionExperimentFilterConfig config,
+            ExpressionExperimentFilterResult result, @Nullable String dataSource ) {
         List<SampleCorrelationAnalysisPayload.FilterStage> stages = Arrays.asList(
                 new SampleCorrelationAnalysisPayload.FilterStage( "noSequences", result.isNoSequencesFilterApplied(),
                         result.getAfterNoSequencesFilter(), null ),
@@ -519,14 +574,17 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                 new SampleCorrelationAnalysisPayload.FilterStage( "lowExpression", result.isLowExpressionFilterApplied(),
                         result.getAfterLowExpressionFilter(), null ),
                 new SampleCorrelationAnalysisPayload.FilterStage( "lowVariance", result.isLowVarianceFilterApplied(),
-                        result.getAfterLowVarianceFilter(), null ) );
+                        result.getAfterLowVarianceFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "maxDesignElements",
+                        result.isMaxDesignElementsFilterApplied(), result.getAfterMaxDesignElementsFilter(), null ) );
         return new SampleCorrelationAnalysisPayload(
                 new SampleCorrelationAnalysisPayload.FilterConfig( config.isRequireSequences(), config.isMaskOutliers(),
                         config.isIgnoreMinimumSamplesThreshold(), config.isIgnoreMinimumDesignElementsThreshold(),
                         config.getLowExpressionCut(), config.getHighExpressionCut(), config.getLowVarianceCut(),
-                        config.getLowDistinctValueCut(), config.getMinPresentFraction(), config.getMinPresentCount() ),
+                        config.getLowDistinctValueCut(), config.getMinPresentFraction(), config.getMinPresentCount(),
+                        config.getMaxDesignElements() ),
                 stages, result.getStartingRows(), result.getStartingColumns(), result.getFinalRows(),
-                result.getFinalColumns() );
+                result.getFinalColumns(), dataSource );
     }
 
     /**

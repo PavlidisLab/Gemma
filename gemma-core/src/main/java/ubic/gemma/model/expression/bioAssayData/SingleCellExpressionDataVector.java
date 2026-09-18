@@ -11,6 +11,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -48,11 +50,13 @@ public class SingleCellExpressionDataVector extends DesignElementDataVector {
     // because bulk vectors keep it LAZY. @MappedSuperclass + @AssociationOverride cannot change
     // fetch mode, so each leaf hierarchy declares the field with the fetch policy it needs.
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "QUANTITATION_TYPE_FK", nullable = false, columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "SINGLE_CELL_EXPRESSION_DATA_VECTOR_QUANTITATION_TYPE_FKC"))
     private QuantitationType quantitationType;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "SINGLE_CELL_DIMENSION_FK", nullable = false, columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "SINGLE_CELL_EXPRESSION_DATA_VECTOR_SINGLE_CELL_DIMENSION_FKC"))
     private SingleCellDimension singleCellDimension;

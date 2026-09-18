@@ -27,6 +27,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -59,6 +61,7 @@ public class Taxon extends AbstractIdentifiable {
     private Integer secondaryNcbiId;
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "EXTERNAL_DATABASE_FK", unique = true, columnDefinition = "BIGINT")
     private ExternalDatabase externalDatabase;
 

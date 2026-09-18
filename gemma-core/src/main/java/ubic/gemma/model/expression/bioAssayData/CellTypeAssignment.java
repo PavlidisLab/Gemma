@@ -12,6 +12,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -94,6 +96,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
     // The cell types live in the CHARACTERISTIC table; spell out the FK + ordering column.
     @MayBeUninitialized
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "CELL_TYPE_ASSIGNMENT_FK", columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "CHARACTERISTIC_CELL_TYPE_ASSIGNMENT_FKC"))
     @OrderColumn(name = "CELL_TYPE_ASSIGNMENT_ORDERING")

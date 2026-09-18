@@ -22,13 +22,17 @@ import lombok.Data;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.util.math.linearmodels.ContrastCoding;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import org.springframework.lang.Nullable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -57,6 +61,19 @@ public class DifferentialExpressionAnalysisConfig {
     private boolean moderateStatistics = DifferentialExpressionAnalysisConfig.DEFAULT_MODERATE_STATISTICS;
 
     private final Set<ExperimentalFactor> factorsToInclude = new HashSet<>();
+
+    /**
+     * How each categorical factor's levels are coded in the design matrix, which decides what its coefficients
+     * mean. A factor absent from this map is {@link ContrastCoding#TREATMENT}.
+     * <p>
+     * Per factor rather than per analysis because the two codings answer different questions and a single model
+     * can want both: a genotype factor with a wild-type control is read against that control, while a tissue
+     * factor in the same design has no control to be read against and wants
+     * {@link ContrastCoding#SUM_TO_ZERO}, where every level is reported against the mean of the level means.
+     *
+     * @see #setContrastCoding(ExperimentalFactor, ContrastCoding)
+     */
+    private final Map<ExperimentalFactor, ContrastCoding> contrastCoding = new HashMap<>();
 
     private final Set<Set<ExperimentalFactor>> interactionsToInclude = new HashSet<>();
 
@@ -198,6 +215,23 @@ public class DifferentialExpressionAnalysisConfig {
     /**
      * Add a collection of factors to include in the analysis.
      */
+    /**
+     * Choose how one factor's levels are coded. Continuous factors have no levels and are rejected.
+     */
+    public void setContrastCoding( ExperimentalFactor factor, ContrastCoding coding ) {
+        Assert.notNull( coding, "Contrast coding cannot be null." );
+        Assert.isTrue( factor.getType() != FactorType.CONTINUOUS,
+                "A continuous factor has one column and no levels, so it has no contrast coding: " + factor );
+        this.contrastCoding.put( factor, coding );
+    }
+
+    /**
+     * How the given factor's levels are coded; {@link ContrastCoding#TREATMENT} unless set.
+     */
+    public ContrastCoding getContrastCoding( ExperimentalFactor factor ) {
+        return this.contrastCoding.getOrDefault( factor, ContrastCoding.TREATMENT );
+    }
+
     public void addFactorsToInclude( Collection<ExperimentalFactor> factors ) {
         factorsToInclude.addAll( factors );
     }

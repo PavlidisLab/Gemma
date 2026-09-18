@@ -483,21 +483,33 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                 body = Files.readAllBytes( cached.toPath() );
             } else {
                 body = metadataRetry.execute( EntrezUtils.retryNicely( ctx -> {
+                    byte[] fetched;
                     try ( InputStream is = url.openStream() ) {
-                        return IOUtils.toByteArray( is );
+                        fetched = IOUtils.toByteArray( is );
                     }
+                    // 🛑 Validate BEFORE caching. An HTML body used to be written to the cache and
+                    // only then rejected, so a transient refusal became a permanent one: every later
+                    // run read the stored page, threw again, and never re-fetched. That is survivable
+                    // for a withdrawn accession, which is not coming back, and wrong for a CAPTCHA
+                    // challenge, which is a moment in time -- one challenged fetch pinned that
+                    // accession until somebody deleted the file by hand.
+                    //
+                    // Inside the retry on purpose. A page that says nothing about the accession is
+                    // raised as an IOException, which is what metadataRetry retries on, so a hiccup
+                    // costs three attempts instead of producing a verdict; a page carrying GEO's own
+                    // verdict is raised as a RuntimeException, which metadataRetry passes straight
+                    // through, because there is nothing to wait for.
+                    if ( looksLikeHtml( fetched ) ) {
+                        HtmlVerdict verdict = describeHtmlBody( fetched, url );
+                        if ( verdict.retryable() ) {
+                            throw new IOException( verdict.message() );
+                        }
+                        throw new RuntimeException( verdict.message() );
+                    }
+                    return fetched;
                 }, ncbiApiKey ), "fetch " + url );
-                    if ( body.length == 0 && requireContent ) {
+                if ( body.length == 0 && requireContent ) {
                     throw new RuntimeException( "GEO returned an empty document for " + url );
-                }
-                // 🛑 Validate BEFORE caching. An HTML body used to be written to the cache and only
-                // then rejected, so a transient refusal became a permanent one: every later run read
-                // the stored page, threw again, and never re-fetched. That is survivable for a
-                // withdrawn accession, which is not coming back, and wrong for a CAPTCHA challenge,
-                // which is a moment in time -- one challenged fetch pinned that accession until
-                // somebody deleted the file by hand.
-                if ( looksLikeHtml( body ) ) {
-                    throw new RuntimeException( describeHtmlBody( body, url ) );
                 }
                 this.writeMetadataCacheFile( cached, body );
             }
@@ -505,9 +517,10 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             // not an error. Without this the SOFT parser reads the page, finds no series, and the run
             // reports "No series was parsed" -- which reads as a parser bug rather than as GEO
             // declining to serve the record. Measured on GSE6959, 2026-08-29. Still checked after the
-            // cache read, for entries stored before the fetch-side check above existed.
+            // cache read, for entries stored before the fetch-side check above existed; nothing is
+            // retried here, because re-reading the same file cannot produce a different answer.
             if ( looksLikeHtml( body ) ) {
-                throw new RuntimeException( describeHtmlBody( body, url ) );
+                throw new RuntimeException( describeHtmlBody( body, url ).message() );
             }
             if ( body.length > 0 ) {
                 parser.parse( new ByteArrayInputStream( body ) );
@@ -532,31 +545,84 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     }
 
     /**
+     * What an HTML response body says, and whether asking GEO again can change it.
+     *
+     * @param retryable whether a second attempt is worth making
+     * @param message   what to report, in either case
+     */
+    private record HtmlVerdict(boolean retryable, String message) {
+    }
+
+    /**
+     * The accession viewer's own verdict lines, lowercased. Measured against acc.cgi 2026-09-17:
+     * GSE6959 (deleted), GSE312000 (embargoed), GSE999999999 (no such accession).
+     */
+    private static final String[] TERMINAL_VERDICTS = {
+            "was deleted by the geo staff",
+            "could not find a public or private accession",
+            "is currently private"
+    };
+
+    /**
+     * Say which kind of HTML page GEO served, because the kinds need opposite responses.
+     * <p>
+     * A withdrawn, private or unknown accession is a fact about the record, stated in the accession
+     * viewer's own words, and a retry returns the same page. A CAPTCHA challenge is a fact about
+     * this client at this moment and says nothing about the accession. Anything else is neither:
+     * acc.cgi answered {@code targ=self} for GSE42727 with 133 KB of NCBI error HTML on 2026-09-17
+     * and served the SOFT record on the very next attempt.
+     * <p>
+     * 🛑 Only a verdict line makes this terminal; every other HTML body is retryable. The opposite
+     * default is what put 17 experiments in the 2026-09-15 backfill summary under "the accession is
+     * withdrawn, private or unknown to GEO" without anything having asked twice. A wrong retryable
+     * costs three attempts; a wrong terminal writes a false fact about the record into a summary
+     * that a reader has no way to second-guess.
+     */
+    private static HtmlVerdict describeHtmlBody( byte[] body, URL url ) {
+        String text = new String( body, StandardCharsets.UTF_8 );
+        String s = text.toLowerCase( Locale.ROOT );
+        if ( s.contains( "recaptcha" ) || s.contains( "challengepage" ) || s.contains( "challenge-page" ) ) {
+            return new HtmlVerdict( true, "GEO served a CAPTCHA challenge page rather than a SOFT record for " + url
+                    + "; NCBI is challenging this client, which is intermittent and host-specific and"
+                    + " says nothing about the accession. Retry later, or read the stored"
+                    + " sourceMetadata snapshot instead of re-fetching from GEO." );
+        }
+        for ( String verdict : TERMINAL_VERDICTS ) {
+            int at = s.indexOf( verdict );
+            if ( at >= 0 ) {
+                return new HtmlVerdict( false, "GEO served an HTML page rather than a SOFT record for " + url
+                        + "; the accession is withdrawn, private or unknown to GEO: " + quoteVerdict( text, at ) );
+            }
+        }
+        return new HtmlVerdict( true, "GEO served an HTML page rather than a SOFT record for " + url
+                + "; it carries none of the accession viewer's verdict lines, so it is an error page"
+                + " rather than a statement about the accession." );
+    }
+
+    /**
+     * Lift the sentence GEO wrote out of the page, so a summary row says which of withdrawn,
+     * private and unknown it was.
+     * <p>
+     * The viewer puts it in a {@code <font color="red">} of its own on one very long line, so the
+     * enclosing tags bound it and the line does not.
+     */
+    private static String quoteVerdict( String text, int at ) {
+        int from = text.lastIndexOf( '>', at );
+        int to = text.indexOf( '<', at );
+        String sentence = text.substring( from >= 0 ? from + 1 : at, to > at ? to : text.length() )
+                .replace( "&nbsp;", " " )
+                .replace( "&quot;", "\"" )
+                .replaceAll( "\\s+", " " )
+                .trim();
+        return sentence.length() > 200 ? sentence.substring( 0, 200 ) + "..." : sentence;
+    }
+
+    /**
      * Whether a response body is an HTML document rather than SOFT.
      * <p>
      * Checked on the first bytes only, and tolerant of a leading byte-order mark or blank line: the
      * point is to tell a served record from a served error page, not to parse HTML.
      */
-    /**
-     * Say which kind of HTML page GEO served, because the two need opposite responses.
-     * <p>
-     * A withdrawn or private accession is a fact about the record and will not change on a retry; a
-     * CAPTCHA challenge is a fact about this client at this moment and says nothing about the
-     * accession at all. Reporting the first when it is the second sends a reader to check whether a
-     * dataset was pulled from GEO, which is a confident wrong answer.
-     */
-    private static String describeHtmlBody( byte[] body, URL url ) {
-        String s = new String( body, StandardCharsets.UTF_8 ).toLowerCase( Locale.ROOT );
-        if ( s.contains( "recaptcha" ) || s.contains( "challengepage" ) || s.contains( "challenge-page" ) ) {
-            return "GEO served a CAPTCHA challenge page rather than a SOFT record for " + url
-                    + "; NCBI is challenging this client, which is intermittent and host-specific and"
-                    + " says nothing about the accession. Retry later, or read the stored"
-                    + " sourceMetadata snapshot instead of re-fetching from GEO.";
-        }
-        return "GEO served an HTML page rather than a SOFT record for " + url
-                + "; the accession is withdrawn, private or unknown to GEO.";
-    }
-
     private static boolean looksLikeHtml( byte[] body ) {
         String head = new String( body, 0, Math.min( body.length, 64 ), StandardCharsets.UTF_8 )
                 .replace( "\uFEFF", "" ).trim().toLowerCase( Locale.ROOT );

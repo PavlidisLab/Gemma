@@ -2152,30 +2152,65 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
      * for a page got the whole dataset instead, with nothing in the body saying so.
      * <p>
      * Measured on production ({@code gemma2}, dataset 7332 = GSE2109, 2158 samples):
-     * {@code ?limit=20} returned all 2158 assays, byte-identical to the no-parameter call. The legacy
-     * response has no {@code totalElements} and no {@code nextCursor}, so silently truncating to 20 would
-     * lose 2138 rows just as invisibly; the parameter is refused instead. {@code offset} on this route was
-     * already a 400 — it is not declared at all, so {@code UnknownQueryParameterFilter} catches it. That
-     * filter cannot see this case, because {@code limit} *is* declared; the route binds it and then has
-     * nothing to do with it.
+     * {@code ?limit=20} returned all 2158 assays, byte-identical to the no-parameter call. Silently
+     * truncating the legacy body to 20 would have lost 2138 rows just as invisibly — it has no
+     * {@code totalElements} and no {@code nextCursor} in which to declare it — so {@code limit} now
+     * selects cursor mode, whose wrapper can. A bare {@code limit} is also the only way into cursor mode
+     * from a standing start: neither listing has an offset mode, so nothing they can return without a
+     * cursor carries a {@code nextCursor} to continue from.
      */
     @Test
-    public void testGetDatasetSamplesRejectsALimitItCannotHonour() {
-        // Stub the listing so the refusal is a decision, not a missing fixture.
+    public void testGetDatasetSamplesHonoursALimitByPaginating() {
+        // Stub BOTH listings so the assertion is about which one the route chose, not which one has a fixture.
         when( bioAssayService.loadValueObjects( any(), any(), anyBoolean(), anyBoolean() ) )
                 .thenReturn( Collections.singletonList( sampleAssay() ) );
         when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( bioAssayService.loadValueObjectsByCursorForExpressionExperiment( eq( ee ), isNull(), eq( 1 ) ) )
+                .thenReturn( new CursorPage<>( Collections.singletonList( sampleAssay() ),
+                        Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ),
+                        1, "next-cursor-token", null, null ) );
         // The mocks are context-scoped singletons; only this test's calls are the subject here.
         clearInvocations( bioAssayService );
 
-        assertThat( target( "/datasets/1/samples" ).queryParam( "limit", "20" ).request().get() )
+        assertThat( target( "/datasets/1/samples" ).queryParam( "limit", "1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entityAsString().asInstanceOf( json() )
+                // The wrapper declares the truncation, which is what the unpaginated one could not do.
+                .hasPath( "$.nextCursor" );
+
+        // The keyset walk ran and the unpaginated listing did not.
+        verify( bioAssayService ).loadValueObjectsByCursorForExpressionExperiment( eq( ee ), isNull(), eq( 1 ) );
+        verify( bioAssayService, never() ).loadValueObjects( any(), any(), anyBoolean(), anyBoolean() );
+    }
+
+    /** The sibling subset listing has the same shape and takes a bare {@code limit} the same way. */
+    @Test
+    public void testGetDatasetSubSetSamplesHonoursALimitByPaginating() {
+        when( expressionExperimentService.getSubSetByIdWithCharacteristicsAndBioAssays( ee, 1L ) )
+                .thenReturn( ExpressionExperimentSubSet.Factory.newInstance( "test", ee ) );
+        when( bioAssayService.loadValueObjectsByCursorForSubSet( any(), isNull(), eq( 1 ) ) )
+                .thenReturn( new CursorPage<>( Collections.emptyList(),
+                        Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ),
+                        1, null, null, null ) );
+
+        assertThat( target( "/datasets/1/subSets/1/samples" ).queryParam( "limit", "1" ).request().get() )
+                .hasStatus( Response.Status.OK );
+
+        verify( bioAssayService ).loadValueObjectsByCursorForSubSet( any(), isNull(), eq( 1 ) );
+    }
+
+    /**
+     * The QT-narrowed sample listings sort by assay name and restrict to a {@link BioAssayDimension},
+     * neither of which an {@code id}-only cursor can express, so they stay unpaginated — and a
+     * {@code limit} there is refused rather than dropped.
+     */
+    @Test
+    public void testGetDatasetSamplesRejectsALimitOnTheQuantitationTypeNarrowedListing() {
+        assertThat( target( "/datasets/1/samples" ).queryParam( "limit", "1" )
+                .queryParam( "useProcessedQuantitationType", "true" ).request().get() )
                 .hasStatus( Response.Status.BAD_REQUEST );
 
-        // The sibling subset listing has the same shape and answers the same way.
-        assertThat( target( "/datasets/1/subSets/1/samples" ).queryParam( "limit", "20" ).request().get() )
-                .hasStatus( Response.Status.BAD_REQUEST );
-
-        // The listing itself must not have run — a 400 that still paid for the query would be pointless.
+        // A 400 that still paid for the query would be pointless.
         verify( bioAssayService, never() ).loadValueObjects( any(), any(), anyBoolean(), anyBoolean() );
     }
 
@@ -3269,13 +3304,13 @@ public class DatasetsWebServiceTest extends BaseJerseyTest5 {
         ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload payload =
                 new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload(
                         new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload.FilterConfig(
-                                true, false, true, true, 0.2, 1.0, 0.5, 0.5, 0.3, 7 ),
+                                true, false, true, true, 0.2, 1.0, 0.5, 0.5, 0.3, 7, 15000 ),
                         java.util.Arrays.asList(
                                 new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload.FilterStage(
                                         "noSequences", true, 900, null ),
                                 new ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload.FilterStage(
                                         "outliers", false, 900, 12 ) ),
-                        1000, 12, 850, 12 );
+                        1000, 12, 850, 12, "unmasked-rebuild" );
         com.fasterxml.jackson.databind.ObjectMapper aspectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
         String json = aspectMapper.writeValueAsString( ( ubic.gemma.core.security.audit.AuditEventPayload ) payload );
         org.assertj.core.api.Assertions.assertThat( json ).contains( "@type" );

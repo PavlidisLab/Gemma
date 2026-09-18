@@ -24,6 +24,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -39,6 +41,7 @@ import java.util.Objects;
 public class ProbeLoading extends AbstractIdentifiable {
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "PROBE_FK", nullable = false, columnDefinition = "BIGINT")
     private CompositeSequence probe;
     @Column(name = "COMPONENT_NUMBER", nullable = false, columnDefinition = "INTEGER")

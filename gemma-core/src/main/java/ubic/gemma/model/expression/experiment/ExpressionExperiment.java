@@ -154,6 +154,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private Integer numberOfCells;
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "TAXON_FK", columnDefinition = "BIGINT")
     private Taxon taxon;
 

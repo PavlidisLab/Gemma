@@ -802,7 +802,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * PREPARATION FOR 'NATIVE' FITTING
          */
         DoubleMatrix<String, String> finalDataMatrix = makeDataMatrix( designMatrix, bareFilteredDataMatrix );
-        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions );
+        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions, config );
 
         /*
          * Run the analysis
@@ -1254,6 +1254,22 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     }
 
     /**
+     * Recover the factor value id from a coefficient name such as {@code f42fv1005}.
+     * <p>
+     * The trailing {@code _base} is stripped because a sum-coded factor's derived level gets a contrast too, and
+     * its coefficient name is built from the same {@code nameForR(fv, true)} the baseline uses — so the id is
+     * followed by a suffix that {@link Long#parseLong} cannot read. Under treatment coding no such coefficient
+     * exists and the strip is a no-op.
+     */
+    private static long factorValueIdIn( String term, String factorName ) {
+        String id = term.replace( factorName + DiffExAnalyzerUtils.FACTOR_VALUE_RNAME_PREFIX, "" );
+        if ( id.endsWith( DiffExAnalyzerUtils.FACTOR_VALUE_BASELINE_SUFFIX ) ) {
+            id = id.substring( 0, id.length() - DiffExAnalyzerUtils.FACTOR_VALUE_BASELINE_SUFFIX.length() );
+        }
+        return Long.parseLong( id );
+    }
+
+    /**
      * Add a contrast to the given result.
      */
     private void makeContrast( DifferentialExpressionAnalysisResult probeAnalysisResult,
@@ -1307,8 +1323,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             Long factorValueId;
 
             try {
-                factorValueId = Long.parseLong(
-                        firstTerm.replace( factorNames[0] + DiffExAnalyzerUtils.FACTOR_VALUE_RNAME_PREFIX, "" ) );
+                factorValueId = factorValueIdIn( firstTerm, factorNames[0] );
             } catch ( NumberFormatException e ) {
                 throw new RuntimeException( "Failed to parse: " + firstTerm + " into a factorvalue id" );
             }
@@ -1329,8 +1344,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 assert secondTerm != null;
 
                 try {
-                    factorValueId = Long.parseLong( secondTerm
-                            .replace( factorNames[1] + DiffExAnalyzerUtils.FACTOR_VALUE_RNAME_PREFIX, "" ) );
+                    factorValueId = factorValueIdIn( secondTerm, factorNames[1] );
                 } catch ( NumberFormatException e ) {
                     throw new RuntimeException( "Failed to parse: " + secondTerm + " into a factorvalue id" );
                 }
@@ -1369,10 +1383,12 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * @param designMatrix           partially setup matrix
      * @param interactionFactorLists interactions to consider
      * @param baselineConditions     designation of baseline conditions for each factor
+     * @param config                 supplies each factor's {@link ContrastCoding}
      * @return final design matrix
      */
     private DesignMatrix makeDesignMatrix( ObjectMatrix<String, String, Object> designMatrix,
-            @Nullable List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions ) {
+            @Nullable List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions,
+            DifferentialExpressionAnalysisConfig config ) {
         /*
          * Determine the factors and interactions to include.
          */
@@ -1402,6 +1418,17 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
             assert baseline.getExperimentalFactor().equals( ef ) : baseline + " is not a value of " + ef;
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );
+
+            /*
+             * After setBaseline, not before: both rebuild the design, and the coding needs to know which level is
+             * the derived one. A baseline is still chosen under SUM_TO_ZERO -- it is just no longer the thing the
+             * other levels are measured against, only the one whose deviation is recovered from the others.
+             */
+            ContrastCoding coding = config.getContrastCoding( ef );
+            if ( coding != ContrastCoding.TREATMENT ) {
+                LinearModelAnalyzer.log.info( "Using " + coding + " contrasts for " + ef );
+                properDesignMatrix.setContrastCoding( factorName, coding );
+            }
         }
         return properDesignMatrix;
     }
