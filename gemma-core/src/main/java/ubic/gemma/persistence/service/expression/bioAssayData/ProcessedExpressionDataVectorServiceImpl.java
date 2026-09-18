@@ -96,7 +96,8 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Transactional(propagation = Propagation.NEVER)
     public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException {
         try {
-            return createProcessedDataVectors( expressionExperiment, updateRanks, true );
+            // through the proxy, or the @AuditedOnError on the overload does not fire
+            return self.createProcessedDataVectors( expressionExperiment, updateRanks, true );
         } catch ( QuantitationTypeDetectionException e ) {
             // never happening
             throw new RuntimeException( e );

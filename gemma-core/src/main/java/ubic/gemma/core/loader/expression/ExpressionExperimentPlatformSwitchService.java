@@ -21,7 +21,9 @@ package ubic.gemma.core.loader.expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
@@ -113,16 +115,46 @@ public class ExpressionExperimentPlatformSwitchService {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     /**
+     * This bean, through its proxy, so that the transactional steps of a switch get their own transactions.
+     */
+    @Lazy
+    @Autowired
+    private ExpressionExperimentPlatformSwitchService self;
+
+    /**
      * If you know the array designs are already in a merged state, you should use switchExperimentToMergedPlatform
+     * <p>
+     * {@link Propagation#NEVER}: the switch commits in its own transaction, and the processed vectors are then
+     * regenerated with none open, because {@link ProcessedExpressionDataVectorService#createProcessedDataVectors}
+     * is itself {@code NEVER} and throws when called inside one.
      *
      * @param  ee          ee
      * @param  arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
      *                     changed for them.
      */
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     @Audited(value = ExpressionExperimentPlatformSwitchEvent.class,
             messageSpel = "'Switch to use ' + #arrayDesign.shortName")
     public void switchExperimentToArrayDesign( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
+        if ( self.switchPlatformAndVectors( ee, arrayDesign ) ) {
+            log.info( ee + " has data, regenerating processed data vectors..." );
+            try {
+                processedExpressionDataVectorService.createProcessedDataVectors( ee, false );
+            } catch ( QuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+    }
+
+    /**
+     * The transactional part of {@link #switchExperimentToArrayDesign}: everything except regenerating the processed
+     * vectors.
+     *
+     * @return true if the experiment has data on a multi-platform-per-sample design, in which case its processed
+     * vectors must be regenerated
+     */
+    @Transactional
+    public boolean switchPlatformAndVectors( ExpressionExperiment ee, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
         ee = expressionExperimentService.thaw( ee );
@@ -210,18 +242,11 @@ public class ExpressionExperimentPlatformSwitchService {
         }
 
         expressionExperimentService.update( ee );
-        // Audit event written by @Audited on this method via AuditedAspect.
+        // Audit event written by @Audited on switchExperimentToArrayDesign via AuditedAspect.
         // Note "Switch to use <shortName>" is built by SpEL in the annotation (Phase B-2).
         log.info( "Completing switching " + ee ); // flush of transaction happens after this, can take a while.
 
-        if ( hasData && targetBioAssayDimension != null /* case 2 */ ) {
-            log.info( ee + " has data, regenerating processed data vectors..." );
-            try {
-                processedExpressionDataVectorService.createProcessedDataVectors( ee, false ); // this still fails sometimes? works fine if run later by cli
-            } catch ( QuantitationTypeConversionException e ) {
-                throw new RuntimeException( e );
-            }
-        }
+        return hasData && targetBioAssayDimension != null /* case 2 */;
     }
 
     /**
@@ -229,12 +254,12 @@ public class ExpressionExperimentPlatformSwitchService {
      * @param expExp the experiment to switch to a merged platform
      * @return the selected merged platform the experiment was switched to
      */
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public ArrayDesign switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
-        ArrayDesign arrayDesign = this.locateMergedDesign( expExp );
+        ArrayDesign arrayDesign = self.locateMergedDesign( expExp );
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
-        this.switchExperimentToArrayDesign( expExp, arrayDesign );
+        self.switchExperimentToArrayDesign( expExp, arrayDesign );
         return arrayDesign;
     }
 
@@ -373,7 +398,8 @@ public class ExpressionExperimentPlatformSwitchService {
 
     }
 
-    private ArrayDesign locateMergedDesign( ExpressionExperiment expExp ) {
+    @Transactional(readOnly = true)
+    public ArrayDesign locateMergedDesign( ExpressionExperiment expExp ) {
         // get the array designs for this EE
         ArrayDesign arrayDesign = null;
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );

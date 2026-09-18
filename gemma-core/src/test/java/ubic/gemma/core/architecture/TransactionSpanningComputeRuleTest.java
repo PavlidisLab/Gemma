@@ -101,6 +101,20 @@ public class TransactionSpanningComputeRuleTest {
         return true;
     }
 
+    /**
+     * Whether this code unit asserts that no transaction is open. Called from inside one, it throws
+     * {@code IllegalTransactionStateException} — which is how {@code Propagation.NEVER} spreads upward.
+     */
+    private static boolean declaresNever( JavaCodeUnit unit ) {
+        Optional<? extends com.tngtech.archunit.core.domain.JavaAnnotation<?>> a =
+                unit.tryGetAnnotationOfType( Transactional.class.getName() );
+        if ( !a.isPresent() ) {
+            return false;
+        }
+        Optional<Object> propagation = a.get().tryGetExplicitlyDeclaredProperty( "propagation" );
+        return propagation.isPresent() && String.valueOf( propagation.get() ).endsWith( "NEVER" );
+    }
+
     private static boolean isLongComputation( JavaCodeUnit unit ) {
         return unit.isAnnotatedWith( LongComputation.class )
                 || unit.getOwner().isAnnotatedWith( LongComputation.class );
@@ -161,7 +175,8 @@ public class TransactionSpanningComputeRuleTest {
     }
 
     /**
-     * The first {@link LongComputation} this method can reach, with the call path that gets there, or null.
+     * The first {@link LongComputation} or {@link Propagation#NEVER} method this method can reach, with the call
+     * path that gets there, or null.
      */
     private static List<JavaCodeUnit> pathToComputation( JavaMethod start, JavaClasses classes ) {
         Set<String> seen = new HashSet<>();
@@ -179,7 +194,7 @@ public class TransactionSpanningComputeRuleTest {
                 }
                 List<JavaCodeUnit> extended = new ArrayList<>( path );
                 extended.add( next );
-                if ( isLongComputation( next ) ) {
+                if ( isLongComputation( next ) || declaresNever( next ) ) {
                     return extended;
                 }
                 queue.add( extended );
@@ -208,6 +223,16 @@ public class TransactionSpanningComputeRuleTest {
                     }
                     List<JavaCodeUnit> path = pathToComputation( method, null );
                     if ( path == null ) {
+                        return;
+                    }
+                    if ( !isLongComputation( path.get( path.size() - 1 ) ) ) {
+                        events.add( SimpleConditionEvent.violated( method, String.format(
+                                "%s.%s is @Transactional and reaches a Propagation.NEVER method, which throws "
+                                        + "IllegalTransactionStateException when called inside a transaction. Make "
+                                        + "the caller an orchestrator too: Propagation.NEVER on it, and its "
+                                        + "transactional steps through its proxy.%n"
+                                        + "      %s",
+                                method.getOwner().getSimpleName(), method.getName(), describe( path ) ) ) );
                         return;
                     }
                     events.add( SimpleConditionEvent.violated( method, String.format(
@@ -240,12 +265,16 @@ public class TransactionSpanningComputeRuleTest {
     /**
      * {@code allowEmptyShould} stays {@code false}: if the {@code that()} clause ever stops matching any
      * method, that is a broken rule, not a clean codebase.
+     * <p>
+     * The scope is every class, not only {@code ..service..} and {@code core.analysis..} as it first was.
+     * {@code ExpressionExperimentPlatformSwitchService} is in {@code core.loader.expression} and called
+     * {@code createProcessedDataVectors} from inside its own transaction after that method became {@code NEVER};
+     * the narrower rule never looked at it, and {@code ExpressionExperimentPlatformSwitchTest} failed on it.
      */
     @ArchTest
     public static final ArchRule transactional_methods_must_not_span_a_long_computation =
             methods()
-                    .that().areDeclaredInClassesThat().resideInAPackage( "ubic.gemma..service.." )
-                    .or().areDeclaredInClassesThat().resideInAPackage( "ubic.gemma.core.analysis.." )
+                    .that().areDeclaredInClassesThat().resideInAPackage( "ubic.gemma.." )
                     .should( NOT_REACH_A_LONG_COMPUTATION )
                     .allowEmptyShould( false );
 }
