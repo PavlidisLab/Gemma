@@ -22,6 +22,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.Thaws;
 
 import org.springframework.lang.Nullable;
 import java.util.*;
@@ -120,6 +121,10 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         // create a masked QT based on the preferred raw vectors once all the necessary transformation have been done
         QuantitationType preferredQt = consolidated.getQuantitationType();
         BioAssayDimension dimension = consolidated.getBioAssayDimension();
+        // The dimension leaves this transaction and is read with none open. On the unmasked rebuild it becomes the
+        // correlation matrix's dimension, which SampleCoexpressionAnalysisServiceImpl.compute sorts by experimental
+        // design: every factor value's experimental factor, a lazy proxy unless initialized here.
+        Thaws.thawBioAssayDimension( dimension );
 
         summary.setRawQuantitationType( preferredQt );
 
