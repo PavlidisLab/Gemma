@@ -16,6 +16,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -62,6 +63,7 @@ import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.annotations.GZIP;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
@@ -881,7 +883,10 @@ public class PlatformsWebService {
                             content = @Content(schema = @Schema(type = "string"),
                                     examples = { @ExampleObject("classpath:/restapidocs/examples/platform-annotations.tsv") })),
                     @ApiResponse(responseCode = "400", description = "The annotation file type is not a recognised value.",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "The annotation file is not on disk and cannot be generated, because the Gene Ontology is not loaded on this instance.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg,// Optional, default null

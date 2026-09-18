@@ -11,6 +11,7 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.report.HomeStats;
 import ubic.gemma.core.analysis.report.HomeStatsService;
 import ubic.gemma.rest.annotations.CacheControl;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 
@@ -60,6 +62,7 @@ public class StatsWebService {
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = "Snapshot not yet generated; retry shortly.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<HomeStats> getHomeStats() {

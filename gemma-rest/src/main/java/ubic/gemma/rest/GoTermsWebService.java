@@ -12,6 +12,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,7 +23,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
@@ -35,6 +35,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.LimitArg;
@@ -140,7 +141,8 @@ public class GoTermsWebService {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Invalid termUri / taxon / limit / offset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = "Ontology subtree expansion timed out (propagate=true only).",
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             })
     public PaginatedResponseDataObject<GeneValueObject> getGenesByGoTerm(
@@ -311,7 +313,8 @@ public class GoTermsWebService {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Invalid termUri / taxon / maxTerms.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = "Ontology subtree expansion timed out (propagate=true only).",
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             })
     public ubic.gemma.rest.util.ResponseDataObject<GoTermGeneCountValueObject> countGenesByGoTerm(

@@ -16,6 +16,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -51,6 +52,7 @@ import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
@@ -174,6 +176,7 @@ public class GeneWebService {
                     @ApiResponse(responseCode = "400", description = "Empty / invalid query, or `limit` out of range.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "The search timed out.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<GeneValueObject>> searchGenes(

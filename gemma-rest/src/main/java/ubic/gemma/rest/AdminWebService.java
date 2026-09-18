@@ -13,6 +13,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -56,6 +57,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.config.DataSourceConfig;
 import ubic.gemma.core.job.SubmittedTask;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.args.PlatformArgService;
 import ubic.gemma.rest.util.args.PlatformArg;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -1241,6 +1243,7 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "409", description = "Rebuild already in progress.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "Ontology is not loaded yet.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response rebuildOntologySlim( @PathParam("name") String name ) {
@@ -1340,6 +1343,7 @@ public class AdminWebService {
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = "Resolving terms exceeded the timeout; the ontologies are probably still loading.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<ObsoleteTermUsage>> getObsoleteTerms(
             @Parameter(description = "Budget in seconds for resolving terms against the loaded ontologies.")

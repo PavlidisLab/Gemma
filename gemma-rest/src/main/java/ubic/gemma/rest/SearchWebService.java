@@ -3,6 +3,7 @@ package ubic.gemma.rest;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,6 +36,7 @@ import ubic.gemma.persistence.util.UnsupportedEntityUrlException;
 import ubic.gemma.rest.annotations.Costly;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -100,7 +102,9 @@ public class SearchWebService {
     @Operation(summary = "Search everything in Gemma", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "400", description = "Invalid search query, taxon, platform result type or exclusion specification.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-            @ApiResponse(responseCode = "503", description = "The search timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = "The search timed out.",
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public SearchResultsResponseDataObject search(
             @QueryParam("query") QueryArg query,

@@ -8,7 +8,13 @@ import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import lombok.Data;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
@@ -17,9 +23,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
@@ -37,6 +46,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
+import ubic.gemma.rest.annotations.Costly;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 import ubic.gemma.rest.util.OpenApiFactory;
 import ubic.gemma.rest.util.args.*;
@@ -555,5 +565,159 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
             }
         }
         return names;
+    }
+
+    /**
+     * Operations whose 503 is a standing condition rather than a schedule, so they send no
+     * {@code Retry-After}: retrying at any particular moment is no more likely to work.
+     */
+    private static final List<String> NO_RETRY_AFTER_503 =
+            Arrays.asList( "getDbPool", "getHealth", "scrape" );
+
+    /**
+     * Every 503 the API can schedule a retry for must declare the header carrying that schedule.
+     *
+     * <p>Two resource classes told callers in prose to "lookup the `Retry-After` header" while no
+     * response anywhere declared one, so a generated client could not see it and gemmapy had to
+     * write the parsing by hand. Everything that throws {@code ServiceUnavailableException} passes a
+     * retry-after, and {@code CostlyEndpointFilter} sets the header itself, so the only 503s
+     * legitimately without one are the standing conditions in {@link #NO_RETRY_AFTER_503}.
+     */
+    @Test
+    public void testRetryableServiceUnavailableResponsesDeclareRetryAfter() {
+        List<String> offenders = new ArrayList<>();
+        Set<String> exemptionsSeen = new TreeSet<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            for ( Operation operation : pathEntry.getValue().readOperations() ) {
+                if ( operation.getResponses() == null ) {
+                    continue;
+                }
+                ApiResponse unavailable = operation.getResponses().get( "503" );
+                if ( unavailable == null ) {
+                    continue;
+                }
+                inspected++;
+                String operationId = operation.getOperationId();
+                if ( NO_RETRY_AFTER_503.contains( operationId ) ) {
+                    exemptionsSeen.add( operationId );
+                } else if ( unavailable.getHeaders() == null
+                        || !unavailable.getHeaders().containsKey( "Retry-After" ) ) {
+                    offenders.add( pathEntry.getKey() + " (" + operationId + ")" );
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to document many 503s; inspected only %d", inspected )
+                .isGreaterThan( 20 );
+        assertThat( exemptionsSeen )
+                .withFailMessage( "an operation exempted from the Retry-After rule no longer documents a 503;"
+                        + " drop it from NO_RETRY_AFTER_503 rather than leaving the exemption to rot" )
+                .containsExactlyElementsOf( NO_RETRY_AFTER_503 );
+        assertThat( offenders )
+                .withFailMessage( "503 responses that schedule a retry but do not declare the Retry-After header: %s",
+                        offenders )
+                .isEmpty();
+    }
+
+    /**
+     * A {@link Costly} route can be refused when its budget is full, so its 503 belongs in the spec.
+     *
+     * <p>Eight of the fourteen did not document one. The check runs off the annotation rather than a
+     * hand-kept list so a route marked {@code @Costly} later cannot quietly skip it; the operation is
+     * matched by operationId, which is the method name unless {@code @Operation} overrides it.
+     */
+    @Test
+    public void testCostlyEndpointsDocumentTheirCapacity503() {
+        Set<String> costlyMethods = costlyMethodNames();
+        assertThat( costlyMethods )
+                .withFailMessage( "the @Costly scan found almost nothing, so this test would pass vacuously" )
+                .hasSizeGreaterThan( 10 );
+
+        List<String> offenders = new ArrayList<>();
+        Set<String> matched = new TreeSet<>();
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            for ( Operation operation : pathEntry.getValue().readOperations() ) {
+                String operationId = operation.getOperationId();
+                if ( operationId == null || !costlyMethods.contains( operationId ) ) {
+                    continue;
+                }
+                matched.add( operationId );
+                ApiResponse unavailable = operation.getResponses() != null
+                        ? operation.getResponses().get( "503" ) : null;
+                if ( unavailable == null ) {
+                    offenders.add( pathEntry.getKey() + " (" + operationId + ") documents no 503" );
+                } else if ( unavailable.getHeaders() == null
+                        || !unavailable.getHeaders().containsKey( "Retry-After" ) ) {
+                    offenders.add( pathEntry.getKey() + " (" + operationId + ") 503 declares no Retry-After" );
+                }
+            }
+        }
+
+        assertThat( matched )
+                .withFailMessage( "@Costly methods with no operation in the spec — an @Operation(operationId=...)"
+                        + " override would break the match this test relies on: %s",
+                        new TreeSet<>( CollectionUtils.subtract( costlyMethods, matched ) ) )
+                .containsExactlyInAnyOrderElementsOf( costlyMethods );
+        assertThat( offenders )
+                .withFailMessage( "@Costly routes can be refused 503 by the budget but do not say so: %s", offenders )
+                .isEmpty();
+    }
+
+    /**
+     * Names of the methods annotated {@link Costly}, found by the same component scan the WAR runs.
+     */
+    private static Set<String> costlyMethodNames() {
+        ClassPathScanningCandidateComponentProvider scanner =
+                new ClassPathScanningCandidateComponentProvider( false );
+        scanner.addIncludeFilter( new AnnotationTypeFilter( jakarta.ws.rs.Path.class ) );
+        Set<String> names = new TreeSet<>();
+        for ( BeanDefinition definition : scanner.findCandidateComponents( "ubic.gemma.rest" ) ) {
+            Class<?> resource;
+            try {
+                resource = Class.forName( Objects.requireNonNull( definition.getBeanClassName() ) );
+            } catch ( ClassNotFoundException e ) {
+                throw new RuntimeException( e );
+            }
+            for ( Method method : resource.getDeclaredMethods() ) {
+                if ( method.isAnnotationPresent( Costly.class ) ) {
+                    names.add( method.getName() );
+                }
+            }
+        }
+        return names;
+    }
+
+    /**
+     * swagger-core disambiguates two resource methods of the same name by appending {@code _1}, and
+     * which of the pair gets the suffix depends on scan order — so the generated client's method name
+     * for one of them is not stable across builds. Name both explicitly with
+     * {@code @Operation(operationId = ...)} instead.
+     */
+    @Test
+    public void testOperationIdsAreNotAutoDisambiguated() {
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            for ( Operation operation : pathEntry.getValue().readOperations() ) {
+                String operationId = operation.getOperationId();
+                if ( operationId == null ) {
+                    offenders.add( pathEntry.getKey() + " has an operation with no operationId" );
+                    continue;
+                }
+                inspected++;
+                if ( operationId.matches( ".*_\\d+$" ) ) {
+                    offenders.add( pathEntry.getKey() + " -> " + operationId );
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to expose many operationIds; inspected only %d", inspected )
+                .isGreaterThan( 200 );
+        assertThat( offenders )
+                .withFailMessage( "operationIds swagger-core had to disambiguate, or that are missing: %s", offenders )
+                .isEmpty();
     }
 }

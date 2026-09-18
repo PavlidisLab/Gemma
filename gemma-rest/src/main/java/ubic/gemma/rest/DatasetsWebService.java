@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -441,7 +442,9 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
             @Parameter(description = "If specified, `sort` will default to `-searchResult.score` instead of `+id`. Note that sorting by `searchResult.score` is only valid if a query is specified.") @QueryParam("query") QueryArg query,
@@ -555,14 +558,17 @@ public class DatasetsWebService {
     @Path("/search")
     @Costly("search")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Typeahead search for datasets by short name, accession, or title",
+    @Operation(operationId = "searchDatasetsTypeahead",
+            summary = "Typeahead search for datasets by short name, accession, or title",
             deprecated = true,
             description = "Deprecated: use `GET /datasets?query=...` instead (same search, paginated); scheduled for removal in 2.10. "
                     + "Returns a thin list of dataset hits ranked by search score.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The query parameter is missing or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<DatasetSearchHitValueObject>> searchDatasets(
             @Parameter(description = "The search query (e.g. a short name, accession, or fragment of the title). Required.", required = true) @QueryParam("query") QueryArg query,
@@ -637,7 +643,9 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count datasets matching the provided query and filter", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<Long> getNumberOfDatasets(
             @QueryParam("query") QueryArg query,
@@ -683,7 +691,9 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
             @QueryParam("query") QueryArg query,
@@ -757,7 +767,9 @@ public class DatasetsWebService {
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
             @QueryParam("query") QueryArg query,
@@ -822,7 +834,9 @@ public class DatasetsWebService {
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
             @QueryParam("query") QueryArg query,
@@ -994,7 +1008,9 @@ public class DatasetsWebService {
                     + "query with `maxResults=0` (unlimited).",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<Long> getNumberOfAnnotations(
             @QueryParam("query") QueryArg query,
@@ -1083,7 +1099,9 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
             @QueryParam("query") QueryArg query,
@@ -10520,7 +10538,10 @@ public class DatasetsWebService {
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-processed-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty. Only applicable if filter is set to true."),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetProcessedExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("filter") @DefaultValue("false") Boolean filtered,
@@ -10604,7 +10625,10 @@ public class DatasetsWebService {
                             schema = @Schema(type = "string"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-raw-data.tsv") })),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetRawExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
@@ -10734,7 +10758,10 @@ public class DatasetsWebService {
                                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.tsv") })
                             }),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "The requested file is still being generated, or too many file-generation tasks are already running. Generation has been started; retry after the delay in the `Retry-After` header.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetSingleCellExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
@@ -10839,7 +10866,10 @@ public class DatasetsWebService {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))
             }),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "503", description = "The design file is still being generated. Retry after the delay in the `Retry-After` header.",
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExperimentalDesignValueObject> getDatasetDesignJson(
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
@@ -10963,7 +10993,10 @@ public class DatasetsWebService {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))
             }),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "503", description = "The design file is still being generated. Retry after the delay in the `Retry-After` header.",
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @Parameter(description = "Quantitation type to produce the experimental design for. This only works for raw data vectors. The default is to produce the design for the experiment.") @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
@@ -11307,7 +11340,10 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no mean-variance relation.",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<MeanVarianceValueObject> getDatasetMeanVariance( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
@@ -11347,7 +11383,10 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist, has no sample correlation matrix, or is single-cell (see description).",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SampleCorrelationMatrixValueObject> getDatasetSampleCorrelation(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Which stored matrix to return: `best` (the regressed one where it exists, else the full one), `regressed`, or `full`.")
@@ -11649,6 +11688,9 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
@@ -12022,7 +12064,13 @@ public class DatasetsWebService {
     @Path("/{datasets}/expressions/genes/{genes}")
     @Costly("vectors")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
+    @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionLevelsForGenes( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @PathParam("genes") GeneArrayArg genes, // Required
@@ -12066,7 +12114,13 @@ public class DatasetsWebService {
     @Path("/{datasets}/expressions/pca")
     @Costly("viz")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets")
+    @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionPca( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("component") @DefaultValue("1") Integer component, // Required, default 1
@@ -12121,7 +12175,13 @@ public class DatasetsWebService {
                     + "single contrast on that row — or, for multi-contrast result sets, from the "
                     + "contrast with the smallest uncorrected p-value on that row. When a gene maps "
                     + "to several probes, the most-significant probe row is used. All five fields are "
-                    + "nullable and are additive — existing fields are unchanged.")
+                    + "nullable and are additive — existing fields are unchanged.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsDifferentialExpression( // Params:
             @PathParam("datasets") DatasetArrayArg datasets, // Required
             @QueryParam("diffExSet") Long diffExSet, // Required

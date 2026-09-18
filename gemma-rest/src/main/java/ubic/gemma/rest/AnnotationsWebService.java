@@ -22,6 +22,7 @@ package ubic.gemma.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -72,6 +73,7 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.ranking.AnnotationSearchRankingStrategy;
 import ubic.gemma.rest.ranking.LuceneOrderRankingStrategy;
 import ubic.gemma.rest.ranking.QueryTokens;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -402,7 +404,9 @@ public class AnnotationsWebService {
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> getAnnotationsParents(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
             @Parameter(description = "Only include direct children.") @QueryParam("direct") @DefaultValue("false") boolean direct ) {
@@ -423,7 +427,9 @@ public class AnnotationsWebService {
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> getAnnotationsChildren(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
@@ -543,7 +549,9 @@ public class AnnotationsWebService {
             responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-            @ApiResponse(responseCode = "503", description = "Ontology lookup timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = "Ontology lookup timed out.",
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<OntologyTermValueObject> getAnnotationTerm(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
@@ -1397,7 +1405,9 @@ public class AnnotationsWebService {
     @Operation(summary = "Search for annotation tags", responses = {
             @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-            @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public AnnotationSearchResponseDataObject searchAnnotations(
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @QueryParam("query") @DefaultValue("") StringArrayArg query,
@@ -1718,7 +1728,9 @@ public class AnnotationsWebService {
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The batch is empty / oversized, or a shared parameter is invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<AnnotationSearchBatchResultValueObject>> searchAnnotationsBatch( @Nullable AnnotationSearchBatchRequest body ) {
         if ( body == null || body.getQueries() == null || body.getQueries().isEmpty() ) {
@@ -1859,13 +1871,16 @@ public class AnnotationsWebService {
     @GET
     @Path("/search/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve datasets associated to an annotation tags search",
+    @Operation(operationId = "searchDatasets",
+            summary = "Retrieve datasets associated to an annotation tags search",
             description = "This is deprecated in favour of the [/datasets](#/default/getDatasets) endpoint. Use the `AND` operator to intersect the results of multiple queries.",
             deprecated = true,
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.") @QueryParam("query") @DefaultValue("") StringArrayArg query,
@@ -1947,7 +1962,9 @@ public class AnnotationsWebService {
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
