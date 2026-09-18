@@ -237,8 +237,9 @@
     <!--
         Jersey servlet. Init params copied verbatim from gemma-web/web.xml:176–198
         so the REST surface area is identical. Package-scan covers ubic.gemma.rest
-        (the @Path resources). The two Jersey providers (GZipEncoder + Spring
-        RequestContextFilter) are registered by classname. OpenAPI config is
+        (the @Path resources). The two Jersey providers (FastGZipEncoder, a
+        level-4 GZipEncoder, + Spring RequestContextFilter) are registered by
+        classname. OpenAPI config is
         anchored to the gemma-rest context id and points at the
         openapi-configuration.yaml bundled in gemma-rest's classes.
 
@@ -262,7 +263,7 @@
         </init-param>
         <init-param>
             <param-name>jersey.config.server.provider.classnames</param-name>
-            <param-value>org.glassfish.jersey.message.GZipEncoder,org.glassfish.jersey.server.spring.scope.RequestContextFilter</param-value>
+            <param-value>ubic.gemma.rest.providers.FastGZipEncoder,org.glassfish.jersey.server.spring.scope.RequestContextFilter</param-value>
         </init-param>
         <init-param>
             <param-name>openapi.context.id</param-name>

@@ -23,6 +23,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 import ubic.gemma.core.context.EnvironmentProfiles;
+import ubic.gemma.rest.providers.FastGZipEncoder;
 
 import jakarta.ws.rs.core.Application;
 
@@ -65,7 +66,7 @@ public abstract class BaseJerseyTest5 extends JerseyTest implements ApplicationC
                 // integration resources are deliberately absent — OpenApiWebService serves
                 // /openapi.{json,yaml} from the `openApi` bean instead
                 .packages( "ubic.gemma.rest" )
-                .registerClasses( GZipEncoder.class )
+                .registerClasses( FastGZipEncoder.class )
                 // use a generic context for now, it will be replaced when this bean is fully initialized in setApplicationContext()
                 .property( "contextConfig", new GenericWebApplicationContext() )
                 .property( "openApi.configuration.location", "/WEB-INF/classes/openapi-configuration.yaml" )
