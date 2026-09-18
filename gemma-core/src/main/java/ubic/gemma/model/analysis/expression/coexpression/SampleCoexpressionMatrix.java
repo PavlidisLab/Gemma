@@ -45,15 +45,17 @@ import java.util.Objects;
  * n-squared LONGBLOB: 9.5 MB at 1,090 samples, and 110 MB at the largest row on production, across 47,532
  * rows. "1,000 entries" was therefore a heap budget of tens of gigabytes written as a small number.
  *
- * It was not theoretical. corrMat -force on GSE260875 died against a 30 GiB heap with 29.7 GiB of it in
- * 1,901 retained copies of that experiment's 9.5 MB matrix -- measured from a heap dump by frb, 2026-09-17,
- * as 1,901 byte[9,505,52x] paired with 1,901 int[1,817,91x] and no double[] in the heap at all. Hibernate's
- * L2 runs through JSR-107 ehcache, whose stores are by VALUE, so each entry is a serialized copy rather than
- * a reference -- which is why the histogram shows byte arrays of exactly 1090 x 1090 x 8 plus a serialization
- * header, and no live matrix objects.
+ * ⚠️ This was NOT the cause of the GSE260875 out-of-memory, and an earlier version of this comment said it
+ * was. frb's referrer scan of the same heap dump found that of the 1,901 matrix-sized byte arrays, exactly
+ * ONE is held by this field; the other 1,899 are held by com.mysql.cj.protocol.a.NativePacketPayload. The
+ * blob was being read off the wire ~1,899 times and retained by the driver, one layer below anything the ORM
+ * controls. The cache was not holding them.
  *
- * The database is where 2.7 GB of correlation matrices belong. A caller that wants one repeatedly should hold
- * it, or cache the response, not ask the ORM to keep serialized copies of blobs.
+ * It is removed anyway, on its own arithmetic: 1,000 entries of an n-squared LONGBLOB is a heap budget nobody
+ * wrote down and nobody would have approved. The database is where 2.7 GB of correlation matrices belong. A
+ * caller that wants one repeatedly should hold it, or cache the response, not ask the ORM to keep serialized
+ * copies of blobs -- Hibernate's L2 runs through JSR-107 ehcache, whose stores are by VALUE, so an entry here
+ * is a serialized copy rather than a reference.
  */
 @Entity
 @Table(name = "SAMPLE_COEXPRESSION_MATRIX")
