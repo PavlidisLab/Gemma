@@ -72,14 +72,15 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
 
         this.check( matrix );
 
-        matrix = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
-        assertNotNull( matrix );
-        this.check( matrix );
+        // No SVD has been run on this fixture, so no factor passes the importance threshold and nothing is
+        // regressed out. Since 44ab56f214 that stores no regressed matrix rather than a copy of the full one, and
+        // the best matrix falls back to the full.
+        assertNull( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) );
 
-        matrix = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
-        assertNotNull( matrix );
-
-        this.check( matrix );
+        DoubleMatrix<BioAssay, BioAssay> best = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
+        assertNotNull( best );
+        this.check( best );
+        assertEquals( matrix.getRowNames(), best.getRowNames() );
 
         this.checkFilterAttritionWasRecorded( ee );
     }
@@ -100,7 +101,7 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
         assertTrue( payload instanceof SampleCorrelationAnalysisPayload );
         SampleCorrelationAnalysisPayload attrition = ( SampleCorrelationAnalysisPayload ) payload;
         assertNotNull( attrition.config() );
-        assertEquals( 7, attrition.stages().size() );
+        assertEquals( 8, attrition.stages().size() ); // maxDesignElements is the eighth, since 5babee9fa6
         assertTrue( attrition.startingRows() > 0, "the funnel should start above zero" );
         assertTrue( attrition.finalRows() <= attrition.startingRows(), "a filter cannot add rows" );
     }
