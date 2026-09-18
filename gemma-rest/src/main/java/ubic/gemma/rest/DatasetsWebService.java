@@ -65,6 +65,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoDesignElementsException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.util.GzipUtils;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
@@ -232,7 +233,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPOutputStream;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.*;
@@ -10566,7 +10566,7 @@ public class DatasetsWebService {
         // client; a concurrent builder degrades this to a plain stream, as before.
         String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
         return Response.ok( ( StreamingOutput ) output -> {
-                    try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
+                    try ( Writer writer = new OutputStreamWriter( GzipUtils.newGzipOutputStream( output ), StandardCharsets.UTF_8 ) ) {
                         expressionDataFileService.streamAndWriteProcessedExpressionData( ee, filtered, force,
                                 writer, true );
                     } catch ( NoDesignElementsException ex ) {
@@ -10642,7 +10642,7 @@ public class DatasetsWebService {
         // the cache file are fed from a single pass instead of racing two full builds per cold request.
         String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
         return Response.ok( ( StreamingOutput ) output -> {
-                    try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) {
+                    try ( Writer writer = new OutputStreamWriter( GzipUtils.newGzipOutputStream( output ), StandardCharsets.UTF_8 ) ) {
                         expressionDataFileService.streamAndWriteRawExpressionData( ee, qt, force, writer, true );
                     }
                 } )
@@ -10804,7 +10804,7 @@ public class DatasetsWebService {
     private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download, boolean force ) {
         String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
         return Response.ok( ( StreamingOutput ) stream -> {
-                    try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
+                    try ( Writer writer = new OutputStreamWriter( GzipUtils.newGzipOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
                         // we do not want to use cursor fetch because it requires a lot of memory on the database server
                         expressionDataFileService.streamAndWriteTabularSingleCellExpressionData( ee, qt, 30, false, force, writer, true );
                     }
@@ -10984,7 +10984,7 @@ public class DatasetsWebService {
             }
             String filename = getDesignFileName( ee, qt );
             return Response.ok( ( StreamingOutput ) stream -> {
-                        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
+                        try ( Writer writer = new OutputStreamWriter( GzipUtils.newGzipOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
                             expressionDataFileService.writeDesignMatrix( ee, qt, RawExpressionDataVector.class, writer, false );
                         }
                     } )
@@ -11005,7 +11005,7 @@ public class DatasetsWebService {
             log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
             String filename = getDesignFileName( ee, useProcessedQuantitationType );
             return Response.ok( ( StreamingOutput ) stream -> {
-                        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
+                        try ( Writer writer = new OutputStreamWriter( GzipUtils.newGzipOutputStream( stream ), StandardCharsets.UTF_8 ) ) {
                             expressionDataFileService.writeDesignMatrix( ee, useProcessedQuantitationType, writer, false );
                         }
                     } )

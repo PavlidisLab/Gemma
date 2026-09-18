@@ -35,6 +35,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.*;
 import ubic.gemma.core.datastructure.matrix.io.*;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.GzipUtils;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.visualization.cellbrowser.CellBrowserTabularMatrixWriter;
@@ -71,7 +72,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.*;
@@ -1425,7 +1425,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * Open a given path for writing, ensuring that all necessary parent directories are created.
      */
     private Writer openCompressedFile( Path file ) throws IOException {
-        return new OutputStreamWriter( new GZIPOutputStream( openFile( file ) ), StandardCharsets.UTF_8 );
+        return new OutputStreamWriter( GzipUtils.newGzipOutputStream( openFile( file ) ), StandardCharsets.UTF_8 );
     }
 
     /**

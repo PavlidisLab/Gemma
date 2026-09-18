@@ -31,6 +31,7 @@ import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyUtils;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.GzipUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.Characteristic;
@@ -49,7 +50,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
 
 import static ubic.gemma.core.util.TsvUtils.appendBaseHeader;
 
@@ -560,7 +560,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             // ensure the parent directory exists
             PathUtils.createParentDirectories( f );
 
-            writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ), StandardCharsets.UTF_8 );
+            writer = new OutputStreamWriter( GzipUtils.newGzipOutputStream( Files.newOutputStream( f ) ), StandardCharsets.UTF_8 );
         }
         appendBaseHeader( "Platform annotations", buildInfo, new Date(), writer );
         writer.append( "#" ).append( "\n" );
