@@ -45,6 +45,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketSer
 import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -241,8 +242,8 @@ public class TicketsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectTicketValueObject.class,
+                                    CursorPaginatedResponseDataObjectTicketValueObject.class
                             }))),
             })
     public Object getTickets(
@@ -630,8 +631,8 @@ public class TicketsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    ResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    ResponseDataObjectListTicketEventValueObject.class,
+                                    CursorPaginatedResponseDataObjectTicketEventValueObject.class
                             }))),
                     @ApiResponse(responseCode = "404", description = "The ticket does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })

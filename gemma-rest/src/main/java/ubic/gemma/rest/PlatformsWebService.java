@@ -65,6 +65,7 @@ import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -149,8 +150,8 @@ public class PlatformsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectArrayDesignValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectArrayDesignValueObject.class
                             }))),
             })
     public Object getPlatforms( // Params:
@@ -217,8 +218,8 @@ public class PlatformsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectArrayDesignValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectArrayDesignValueObject.class
                             }))),
             })
     public Object getPlatformsByIds( // Params:
@@ -268,8 +269,8 @@ public class PlatformsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectArrayDesignValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectArrayDesignValueObject.class
                             }))),
             })
     public Object getBlacklistedPlatforms(
@@ -315,8 +316,8 @@ public class PlatformsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectExpressionExperimentValueObject.class,
+                                    CursorPaginatedResponseDataObjectExpressionExperimentValueObject.class
                             }))),
             })
     public Object getPlatformDatasets( // Params:
@@ -360,8 +361,8 @@ public class PlatformsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
                             }))),
             })
     public Object getPlatformElements( // Params:
@@ -587,8 +588,8 @@ public class PlatformsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
                             }))),
             })
     public Object getPlatformElement( // Params:
@@ -652,8 +653,8 @@ public class PlatformsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectGeneValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectGeneValueObject.class
                             }))),
             })
     public Object getPlatformElementGenes( // Params:
@@ -952,8 +953,8 @@ public class PlatformsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    ResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    ResponseDataObjectListTicketValueObject.class,
+                                    CursorPaginatedResponseDataObjectTicketValueObject.class
                             })))
             })
     public Object getPlatformTickets(

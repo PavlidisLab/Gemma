@@ -51,6 +51,7 @@ import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.SortValueObject;
@@ -136,8 +137,8 @@ public class AnalysisResultSetsWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class
                             }))),
             })
     public Object getResultSets(

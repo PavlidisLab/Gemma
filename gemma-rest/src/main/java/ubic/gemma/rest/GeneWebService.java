@@ -52,6 +52,7 @@ import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -115,8 +116,8 @@ public class GeneWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectGeneValueObject.class,
+                                    CursorPaginatedResponseDataObjectGeneValueObject.class
                             }))),
             })
     public Object getGenes(
@@ -452,8 +453,8 @@ public class GeneWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    CursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
                             }))),
             })
     public Object getGeneProbes( // Params:

@@ -42,6 +42,7 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -165,8 +166,8 @@ public class TaxaWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectGeneValueObject.class,
+                                    CursorPaginatedResponseDataObjectGeneValueObject.class
                             }))),
             })
     public Object getTaxonGenes(
@@ -232,8 +233,8 @@ public class TaxaWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    CursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
                             }))),
             })
     public Object getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
@@ -301,8 +302,8 @@ public class TaxaWebService {
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectExpressionExperimentValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject.class
                             }))),
             })
     public Object getTaxonDatasets( // Params:

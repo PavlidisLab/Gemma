@@ -215,6 +215,7 @@ import ubic.gemma.rest.annotations.Costly;
 import ubic.gemma.rest.annotations.CacheControl;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.args.*;
 
 import org.springframework.lang.Nullable;
@@ -13044,22 +13045,6 @@ public class DatasetsWebService {
 
         public FilteredAndInferredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject( CursorPage<ExpressionExperimentValueObject> payload, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
             super( payload, filters, groupBy, inferredTerms );
-        }
-    }
-
-    /** Legacy shape for {@link #getDatasetTickets}. */
-    public static class ResponseDataObjectListTicketValueObject extends ResponseDataObject<List<TicketValueObject>> {
-
-        public ResponseDataObjectListTicketValueObject( List<TicketValueObject> payload ) {
-            super( payload );
-        }
-    }
-
-    /** Cursor shape for {@link #getDatasetTickets}. */
-    public static class CursorPaginatedResponseDataObjectTicketValueObject extends CursorPaginatedResponseDataObject<TicketValueObject> {
-
-        public CursorPaginatedResponseDataObjectTicketValueObject( CursorPage<TicketValueObject> payload, String[] groupBy ) {
-            super( payload, groupBy );
         }
     }
 

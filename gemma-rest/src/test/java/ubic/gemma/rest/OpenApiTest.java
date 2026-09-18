@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.lang.Nullable;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
@@ -465,5 +466,94 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
         assertThat( offenders )
                 .withFailMessage( "snake_case on the wire (the API serves camelCase only): %s", offenders )
                 .isEmpty();
+    }
+
+    /**
+     * Every response container reachable from a path must say what its {@code data} payload holds.
+     *
+     * <p>An endpoint that supports both offset and cursor pagination returns {@link Object} and
+     * declares its shapes with {@code @Schema(oneOf = {...})}. Java erases type arguments, so naming
+     * a raw generic container there — {@code PaginatedResponseDataObject.class} — produces a schema
+     * whose {@code data} is an array of bare {@code object}, and the payload type is gone. A client
+     * generated from that deserializes to untyped dictionaries and reads nulls for every field
+     * instead of failing, which is why this is worth a build failure rather than a code review.
+     *
+     * <p>The fix is to name a bound subclass from {@link ubic.gemma.rest.util.OpenApiResponseTypes}
+     * instead. Since the method's return type is {@code Object}, nothing but this test checks that
+     * the declared container is also the one the method actually builds.
+     */
+    @Test
+    public void testPaginatedResponsesDeclareTheirPayloadType() {
+        Map<String, Schema> schemas = spec.getComponents().getSchemas();
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathEntry.getValue().readOperationsMap().entrySet() ) {
+                Operation operation = opEntry.getValue();
+                if ( operation.getResponses() == null ) {
+                    continue;
+                }
+                for ( Map.Entry<String, ApiResponse> responseEntry : operation.getResponses().entrySet() ) {
+                    ApiResponse response = responseEntry.getValue();
+                    if ( response.getContent() == null ) {
+                        continue;
+                    }
+                    for ( io.swagger.v3.oas.models.media.MediaType media : response.getContent().values() ) {
+                        for ( String schemaName : referencedSchemaNames( media.getSchema() ) ) {
+                            Schema<?> container = schemas.get( schemaName );
+                            if ( container == null || container.getProperties() == null ) {
+                                continue;
+                            }
+                            Schema<?> data = ( Schema<?> ) container.getProperties().get( "data" );
+                            if ( data == null || !"array".equals( data.getType() ) ) {
+                                continue;
+                            }
+                            inspected++;
+                            Schema<?> items = data.getItems();
+                            boolean typed = items != null
+                                    && ( items.get$ref() != null
+                                    || ( items.getType() != null && !"object".equals( items.getType() ) ) );
+                            if ( !typed ) {
+                                offenders.add( String.format( "%s %s -> %s: %s has an untyped data array",
+                                        opEntry.getKey(), pathEntry.getKey(), responseEntry.getKey(), schemaName ) );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Guard against the guard going vacuous: if the spec ever stops emitting list containers,
+        // this test would pass by inspecting nothing.
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to expose many list-shaped responses; inspected only %d", inspected )
+                .isGreaterThan( 50 );
+
+        assertThat( offenders )
+                .withFailMessage( "response containers that lost their payload type — name a bound subclass"
+                        + " from OpenApiResponseTypes in the @Schema(oneOf = ...) instead of the raw generic: %s",
+                        offenders )
+                .isEmpty();
+    }
+
+    /**
+     * Component schema names a response schema points at, following a {@code $ref} directly and each
+     * branch of a {@code oneOf} / {@code anyOf}. Inline schemas contribute nothing.
+     */
+    private static List<String> referencedSchemaNames( @Nullable Schema<?> schema ) {
+        if ( schema == null ) {
+            return Collections.emptyList();
+        }
+        List<String> names = new ArrayList<>();
+        if ( schema.get$ref() != null ) {
+            names.add( schema.get$ref().substring( schema.get$ref().lastIndexOf( '/' ) + 1 ) );
+        }
+        List<Schema> branches = schema.getOneOf() != null ? schema.getOneOf() : schema.getAnyOf();
+        if ( branches != null ) {
+            for ( Schema<?> branch : branches ) {
+                names.addAll( referencedSchemaNames( branch ) );
+            }
+        }
+        return names;
     }
 }
