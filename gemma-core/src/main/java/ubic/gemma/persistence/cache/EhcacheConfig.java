@@ -214,7 +214,13 @@ public class EhcacheConfig {
 
         // --- Read-only entity regions (immutable configuration / reference data) ---
         L2_CACHES.put( "ubic.gemma.model.analysis.AnalysisResultSet", L2_READ_ONLY );
-        L2_CACHES.put( "ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix", L2_READ_ONLY );
+        // 🛑 SampleCoexpressionMatrix is deliberately absent. These specs are in ENTRIES, and one of its
+        // entries is an n-squared LONGBLOB -- 9.5 MB at 1,090 samples, 110 MB at the largest row on
+        // production. L2_READ_ONLY's 1,000 entries was tens of gigabytes of heap written as a small number,
+        // and it killed corrMat on GSE260875 with 29.7 GiB in 1,901 serialized copies of one matrix. See the
+        // entity's own header. Anything else here with a LONGBLOB is worth the same arithmetic before it is
+        // trusted: SingleCellDimension averages 0.53 MB and reaches 19 MB, bounded today only by there being
+        // 550 rows of it.
         L2_CACHES.put( "ubic.gemma.model.analysis.expression.diff.HitListSize", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.analysis.expression.diff.PvalueDistribution", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.analysis.expression.pca.Eigenvalue", L2_READ_ONLY );
