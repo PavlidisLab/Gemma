@@ -231,10 +231,15 @@ public class DataUpdaterImpl implements DataUpdater {
              */
         }
 
-        this.dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
-
+        // Match the rows to the platform before dealWithMissingSamples, which removes and commits the unmatched
+        // samples: a matrix whose rows match no platform element must fail while the experiment is still intact.
         DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = this
                 .matchElementsToRowNames( targetArrayDesign, countMatrix );
+        DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = rpkmMatrix != null ? this
+                .matchElementsToRowNames( targetArrayDesign, rpkmMatrix ) : null;
+
+        this.dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
+
         this.matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
 
         assert !properCountMatrix.getColNames().isEmpty();
@@ -297,9 +302,7 @@ public class DataUpdaterImpl implements DataUpdater {
         this.addTotalCountInformation( ee, countEEMatrix, sequencingMetadata );
 
         if ( rpkmMatrix != null ) {
-
-            DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = this
-                    .matchElementsToRowNames( targetArrayDesign, rpkmMatrix );
+            assert properRPKMMatrix != null;
             this.matchBioMaterialsToColNames( ee, rpkmMatrix, properRPKMMatrix );
 
             assert !properRPKMMatrix.getColNames().isEmpty();

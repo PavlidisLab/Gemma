@@ -166,8 +166,27 @@ public class DataUpdaterImplTest {
         verify( qtService, times( 1 ) ).update( countQt );
     }
 
+    /**
+     * With {@code -allowMissing}, the samples missing from the count matrix are removed and committed. A matrix whose
+     * rows match no platform element must be rejected before that happens.
+     */
+    @Test
+    public void testAddCountDataRemovesNoSampleWhenNoRowMatchesThePlatform() {
+        DoubleMatrix<String, String> counts = matrix( Arrays.asList( "sample1", "sample2" ), "notOnPlatform1", "notOnPlatform2" );
+
+        assertThatThrownBy( () -> dataUpdater.addCountData( ee, platform, counts, null, Collections.emptyMap(), true ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "None of the rows matched the given platform elements" );
+        assertThat( ee.getBioAssays() ).hasSize( 3 );
+        verify( experimentService, never() ).update( any( ExpressionExperiment.class ) );
+        verify( bioAssayService, never() ).remove( any( BioAssay.class ) );
+    }
+
     private DoubleMatrix<String, String> matrix( String... rowNames ) {
-        List<String> colNames = Arrays.asList( "sample1", "sample2", "sample3" );
+        return matrix( Arrays.asList( "sample1", "sample2", "sample3" ), rowNames );
+    }
+
+    private DoubleMatrix<String, String> matrix( List<String> colNames, String... rowNames ) {
         DenseDoubleMatrix<String, String> m = new DenseDoubleMatrix<>( rowNames.length, colNames.size() );
         for ( int i = 0; i < rowNames.length; i++ ) {
             for ( int j = 0; j < colNames.size(); j++ ) {
