@@ -38,6 +38,22 @@ class GoldenPathProbeMappingTablesTest {
         assertThat( check( true, true ) ).isEmpty();
     }
 
+    /**
+     * {@code mapPlatformToGenes -mirna} turns every track off; nothing reads {@code useMiRNA}, so the remap deleted the
+     * platform's associations and found none.
+     */
+    @Test
+    void noGeneTrackIsRefused() {
+        ubic.gemma.core.analysis.sequence.ProbeMapperConfig config = new ubic.gemma.core.analysis.sequence.ProbeMapperConfig();
+        config.setAllTracksOff();
+        config.setUseMiRNA( true );
+        assertThatThrownBy( () -> GoldenPathSequenceAnalysis.checkSomeGeneTrackIsOn( config ) )
+                .isInstanceOf( IllegalStateException.class )
+                .hasMessageContaining( "create none" );
+        config.setUseRefGene( true );
+        GoldenPathSequenceAnalysis.checkSomeGeneTrackIsOn( config );
+    }
+
     @Test
     void missingTablesAreAllNamedWithTheDatabase() {
         tableIsMissing( "ncbiRefSeqLink" );

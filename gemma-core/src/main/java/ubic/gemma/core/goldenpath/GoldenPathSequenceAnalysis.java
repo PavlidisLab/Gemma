@@ -107,9 +107,24 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      *         RefSeq accessions without versions, which the known-gene join to {@code ncbiRefSeqCurated} cannot match
      */
     public void checkTablesForProbeMapping( ProbeMapperConfig config ) {
+        checkSomeGeneTrackIsOn( config );
         for ( String warning : GoldenPathSequenceAnalysis.checkTablesForProbeMapping( this.getJdbcTemplate(),
                 this.getSearchedDatabase().getName(), config.isUseRefGene(), config.isUseKnownGene() ) ) {
             GoldenPath.log.warn( warning );
+        }
+    }
+
+    /**
+     * {@link #findAssociations} finds gene products only through the RefSeq and known-gene tracks. With both off (the
+     * {@code -mirna} mode turns every track off, and nothing reads {@code useMiRNA}), a remap deletes the platform's
+     * alignment-based associations and creates none.
+     *
+     * @throws IllegalStateException if neither track is on
+     */
+    static void checkSomeGeneTrackIsOn( ProbeMapperConfig config ) {
+        if ( !config.isUseRefGene() && !config.isUseKnownGene() ) {
+            throw new IllegalStateException( "Neither the RefSeq nor the known-gene track is enabled, so probe mapping would "
+                    + "delete the platform's alignment-based associations and create none." );
         }
     }
 
