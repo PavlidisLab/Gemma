@@ -33,7 +33,7 @@ public class FileUtils {
     }
 
     /**
-     * Writes a file or a directory at a given path, handed to it by {@link #writeAtomically(Path, PathWriter)}.
+     * Writes a file or a directory at a given path, handed to it by {@link FileUtils#writeAtomically(Path, PathWriter)}.
      */
     @FunctionalInterface
     public interface PathWriter<E extends Exception> {
