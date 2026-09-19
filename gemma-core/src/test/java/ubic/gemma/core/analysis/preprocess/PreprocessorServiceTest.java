@@ -8,7 +8,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
@@ -27,6 +29,10 @@ class PreprocessorServiceTest {
     private ExpressionExperimentService expressionExperimentService;
     @Mock
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Mock
+    private GeeqService geeqService;
+    @Mock
+    private PreprocessorHelperService preprocessorHelperService;
 
     @InjectMocks
     private PreprocessorServiceImpl preprocessorService;
@@ -46,5 +52,21 @@ class PreprocessorServiceTest {
 
         verify( processedExpressionDataVectorService, never() )
                 .createProcessedDataVectors( any(), anyBoolean(), anyBoolean() );
+    }
+
+    /**
+     * A GEEQ scoring failure reaches the caller as a {@link PreprocessingException}, so that
+     * {@code process(..., ignoreDiagnosticsFailure)} handles it like the other diagnostics.
+     */
+    @Test
+    void processDiagnosticsReportsAGeeqFailureAsAPreprocessingException() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( "GSE100010" );
+        when( geeqService.calculateScore( ee, GeeqService.ScoreMode.all ) )
+                .thenThrow( new RuntimeException( "GEEQ scoring (mode: all) did not finish for GSE100010; no score was saved." ) );
+
+        assertThatThrownBy( () -> preprocessorService.processDiagnostics( ee ) )
+                .isInstanceOf( PreprocessingException.class )
+                .hasMessageContaining( "GEEQ scoring failed" );
     }
 }
