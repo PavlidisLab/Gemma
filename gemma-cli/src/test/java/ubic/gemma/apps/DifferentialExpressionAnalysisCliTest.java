@@ -22,6 +22,9 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -42,6 +45,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -145,6 +150,9 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
 
     @Autowired
     private EntityLocator entityLocator;
+
+    @Autowired
+    private AuditEventService auditEventService;
 
     private ExpressionExperiment ee;
 
@@ -700,5 +708,42 @@ public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
                         a.getName() + ":" + a.getName(),  // interaction with itself
                         a.getName() + ":" + e.getName() ); // interaction with a continuous factor
         verifyNoInteractions( differentialExpressionAnalysisService );
+    }
+
+    /**
+     * {@code -mdate -30d}: a dataset analysed 5 days ago is skipped.
+     */
+    @Test
+    public void testLimitingDateSkipsADatasetAnalysedSinceThatDate() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Collections.singletonList( deaEventDaysAgo( 5 ) ) );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-mdate", "-30d" )
+                .fails();
+        verify( differentialExpressionAnalyzerService, never() ).runDifferentialExpressionAnalyses( any(), any() );
+    }
+
+    /**
+     * {@code -mdate -30d}: a dataset last analysed 60 days ago is analysed.
+     */
+    @Test
+    public void testLimitingDateRunsADatasetLastAnalysedBeforeThatDate() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Collections.singletonList( deaEventDaysAgo( 60 ) ) );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-mdate", "-30d" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), any() );
+    }
+
+    private AuditEvent deaEventDaysAgo( int days ) {
+        return AuditEvent.Factory.newInstance( new Date( System.currentTimeMillis() - TimeUnit.DAYS.toMillis( days ) ),
+                AuditAction.UPDATE, "DEA", null, null, new DifferentialExpressionAnalysisEvent() );
     }
 }

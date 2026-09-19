@@ -61,6 +61,12 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
+    protected boolean selectsOwnExperiments( CommandLine commandLine ) {
+        // -a deletes platforms instead, in doAuthenticatedWork()
+        return commandLine.hasOption( 'a' );
+    }
+
+    @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'a' ) ) {
             this.platformAccs = Arrays.asList( StringUtils.split( commandLine.getOptionValue( 'a' ), "," ) );

@@ -109,7 +109,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         preprocessorHelperService.processForMeanVarianceRelation( ee );
         preprocessorHelperService.processForPca( ee );
         // FIXME: OPT_MODE_ALL is overkill, but none of the options currently address the exact need. No big deal.
-        geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
+        try {
+            geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
+        } catch ( RuntimeException e ) {
+            // calculateScore throws when scoring does not finish; report it as a diagnostics failure so that
+            // process(..., ignoreDiagnosticsFailure) treats it like the other diagnostics.
+            throw new PreprocessingException( ee, "GEEQ scoring failed", e );
+        }
     }
 
     private void processVectorCreate( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {

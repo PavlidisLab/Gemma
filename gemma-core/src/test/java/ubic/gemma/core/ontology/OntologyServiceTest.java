@@ -30,12 +30,14 @@ import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.ontology.model.AnnotationProperty;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.common.description.CharacteristicReadService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
@@ -911,5 +913,34 @@ public class OntologyServiceTest extends BaseTest5 {
 
         verify( geneOntologyService, never() ).getParents( any(), anyBoolean(), anyBoolean() );
         verify( geneOntologyService, never() ).getParents( any(), anyBoolean(), anyBoolean(), anyBoolean() );
+    }
+
+    /**
+     * A Statement whose value label is corrected but whose object URI resolves to no term: the correction is part
+     * of the returned (printed) corrections, so it must also be saved.
+     */
+    @Test
+    public void testFixOntologyTermLabelsSavesAStatementCorrectionWhenItsObjectUriDoesNotResolve() throws TimeoutException {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( "http://test/subject" ) ).thenReturn( new OntologyTermSimple( "http://test/subject", "correct label" ) );
+        // http://test/object is not a term in any ontology
+        Statement statement = Statement.Factory.newInstance();
+        statement.setValue( "stale label" );
+        statement.setValueUri( "http://test/subject" );
+        statement.setObject( "some object" );
+        statement.setObjectUri( "http://test/object" );
+        // already correct, and after the statement in the same batch
+        Characteristic upToDate = Characteristic.Factory.newInstance();
+        upToDate.setValue( "correct label" );
+        upToDate.setValueUri( "http://test/subject" );
+        when( characteristicReadService.browse( 0, 5000 ) ).thenReturn( Arrays.asList( statement, upToDate ) );
+        when( characteristicReadService.browse( 5000, 5000 ) ).thenReturn( Collections.emptyList() );
+
+        Map<String, OntologyTerm> corrections = ontologyService.fixOntologyTermLabels( false, 5000, TimeUnit.MILLISECONDS );
+
+        assertTrue( corrections.containsKey( "stale label" ) );
+        assertEquals( "correct label", statement.getValue() );
+        verify( characteristicService ).update( same( statement ) );
+        verify( characteristicService, never() ).update( same( upToDate ) );
     }
 }
