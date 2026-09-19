@@ -35,6 +35,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.*;
 import ubic.gemma.core.datastructure.matrix.io.*;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.GzipUtils;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
@@ -543,14 +544,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             if ( checkFileOkToReturn( forceWrite, dest.getPath(), date ) ) {
                 return dest.steal();
             }
-            try ( LockedPath lockedPath = dest.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+            try ( LockedPath lockedPath = dest.toExclusive() ) {
                 log.info( "Will write tabular data for " + qt + " to " + lockedPath.getPath() + "." );
-                int written = writeTabularSingleCellExpressionDataInternal( ee, null, qt, null, false, false, fetchSize, writer, useCursorFetchIfSupported, false, console );
+                int written = writeCompressedFileAtomically( lockedPath.getPath(),
+                        writer -> writeTabularSingleCellExpressionDataInternal( ee, null, qt, null, false, false, fetchSize, writer, useCursorFetchIfSupported, false, console ) );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return lockedPath.toShared();
-            } catch ( Exception e ) {
-                Files.deleteIfExists( dest.getPath() );
-                throw e;
             }
         }
     }
@@ -689,8 +688,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath lockedPath = dest.toExclusive() ) {
                 // no need to autoflush, the path is now known by the caller until we're done
-                int written = writeMexSingleCellExpressionDataInternal( ee, null, qt, null, false, fetchSize, useCursorFetchIfSupported, lockedPath.getPath(), false, console );
-                log.info( "Wrote " + written + " vectors for " + qt + " to " + lockedPath.getPath() + "." );
+                int[] written = new int[1];
+                replaceFile( lockedPath.getPath(), tmpDir -> written[0] = writeMexSingleCellExpressionDataInternal( ee, null, qt, null, false, fetchSize, useCursorFetchIfSupported, tmpDir, false, console ) );
+                log.info( "Wrote " + written[0] + " vectors for " + qt + " to " + lockedPath.getPath() + "." );
                 return lockedPath.toShared();
             }
         }
@@ -854,14 +854,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return Optional.empty();
             }
 
-            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+            try ( LockedPath lockedPath = f.toExclusive() ) {
                 ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f.getPath() );
-                int written = writeProcessedExpressionData( ee, filtered, null, false, false, false, writer, false );
+                int written = writeCompressedFileAtomically( lockedPath.getPath(),
+                        writer -> writeProcessedExpressionData( ee, filtered, null, false, false, false, writer, false ) );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return Optional.of( lockedPath.toShared() );
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
             }
         }
     }
@@ -886,14 +884,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return Optional.empty();
             }
 
-            try ( LockedPath ignored = f.toExclusive(); Writer writer = openCompressedFile( ignored.getPath() ) ) {
+            try ( LockedPath ignored = f.toExclusive() ) {
                 ExpressionDataFileServiceImpl.log.info( "Creating new tabular expression data file: " + f );
-                int written = writeProcessedExpressionData( ee, filtered, null, false, false, false, writer, false );
+                int written = writeCompressedFileAtomically( ignored.getPath(),
+                        writer -> writeProcessedExpressionData( ee, filtered, null, false, false, false, writer, false ) );
                 log.info( "Wrote " + written + " vectors to " + f + "." );
                 return Optional.of( ignored.toShared() );
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
             }
         }
     }
@@ -984,45 +980,65 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return;
             }
             log.info( "Creating new expression data file: " + p.getPath() );
-            Writer cacheWriter = openCompressedFile( p.getPath() );
-            ResilientTeeWriter tee = new ResilientTeeWriter( dest, cacheWriter );
-            int written;
+            int[] written = new int[1];
+            boolean[] callerDead = new boolean[1];
+            boolean cacheGood;
             try {
-                written = build.writeTo( tee );
-            } catch ( Exception e ) {
-                // the BUILD failed; a partial cache file must not survive to be served as complete
-                try {
-                    cacheWriter.close();
-                } catch ( IOException suppressed ) {
-                    e.addSuppressed( suppressed );
+                replaceFile( p.getPath(), tmp -> {
+                    Writer cacheWriter = openCompressedFile( tmp );
+                    ResilientTeeWriter tee = new ResilientTeeWriter( dest, cacheWriter );
+                    try {
+                        written[0] = build.writeTo( tee );
+                    } catch ( Exception e ) {
+                        // the BUILD failed; no cache file is left and the failure reaches the caller
+                        try {
+                            cacheWriter.close();
+                        } catch ( IOException suppressed ) {
+                            e.addSuppressed( suppressed );
+                        }
+                        throw e;
+                    }
+                    callerDead[0] = tee.isCallerDead();
+                    if ( tee.isCacheFileDead() ) {
+                        try {
+                            cacheWriter.close();
+                        } catch ( IOException ignored ) {
+                            // the leg already failed; this close is best-effort resource release
+                        }
+                        throw new CacheFileAbandonedException( null );
+                    }
+                    try {
+                        cacheWriter.close(); // writes the gzip trailer
+                    } catch ( IOException e ) {
+                        throw new CacheFileAbandonedException( e );
+                    }
+                } );
+                cacheGood = true;
+            } catch ( CacheFileAbandonedException e ) {
+                // the caller got its stream; only the cache file is given up
+                if ( e.getCause() != null ) {
+                    log.warn( "Failed to finalize " + p.getPath() + "; deleting the partial cache file.", e.getCause() );
                 }
-                Files.deleteIfExists( p.getPath() );
-                throw e;
+                cacheGood = false;
             }
-            boolean cacheGood = !tee.isCacheFileDead();
             if ( cacheGood ) {
-                try {
-                    cacheWriter.close(); // writes the gzip trailer
-                } catch ( IOException e ) {
-                    log.warn( "Failed to finalize " + p.getPath() + "; deleting the partial cache file.", e );
-                    cacheGood = false;
-                }
-            } else {
-                try {
-                    cacheWriter.close();
-                } catch ( IOException ignored ) {
-                    // the leg already failed; this close is best-effort resource release
-                }
+                log.info( "Wrote " + written[0] + " vectors to " + p.getPath() + "." );
             }
-            if ( cacheGood ) {
-                log.info( "Wrote " + written + " vectors to " + p.getPath() + "." );
-            } else {
-                Files.deleteIfExists( p.getPath() );
-            }
-            if ( tee.isCallerDead() ) {
+            if ( callerDead[0] ) {
                 log.info( "The caller went away while streaming " + filename + "; the cache file was "
                         + ( cacheGood ? "still completed" : "abandoned" ) + "." );
             }
+        }
+    }
+
+    /**
+     * Signals that the cache leg of {@link #streamAndPopulateCache} failed while the build and the caller's stream
+     * succeeded: no cache file is left and the call returns normally.
+     */
+    private static final class CacheFileAbandonedException extends IOException {
+
+        private CacheFileAbandonedException( @Nullable IOException cause ) {
+            super( cause );
         }
     }
 
@@ -1112,14 +1128,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
                 return f.steal();
             }
-            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+            try ( LockedPath lockedPath = f.toExclusive() ) {
                 ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + lockedPath.getPath() );
-                int written = writeRawExpressionData( ee, type, null, false, false, false, writer, false );
+                int written = writeCompressedFileAtomically( lockedPath.getPath(),
+                        writer -> writeRawExpressionData( ee, type, null, false, false, false, writer, false ) );
                 log.info( "Wrote " + written + " vectors for " + type + "." );
                 return lockedPath.toShared();
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
             }
         }
     }
@@ -1132,15 +1146,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return f.steal();
             }
             // FIXME: subtract elapsed time
-            try ( LockedPath lockedPath = f.toExclusive( timeout, timeUnit );
-                    Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+            try ( LockedPath lockedPath = f.toExclusive( timeout, timeUnit ) ) {
                 ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + lockedPath.getPath() );
-                int written = writeRawExpressionData( ee, type, null, false, false, false, writer, false );
+                int written = writeCompressedFileAtomically( lockedPath.getPath(),
+                        writer -> writeRawExpressionData( ee, type, null, false, false, false, writer, false ) );
                 log.info( "Wrote " + written + " vectors for " + type + "." );
                 return lockedPath.toShared();
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
             }
         }
     }
@@ -1165,13 +1176,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             if ( this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
                 return Optional.of( f.steal() );
             }
-            try ( LockedPath lockedPath = f.toExclusive();
-                    Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-                writeDesignMatrix( ee, useProcessedData, writer, false );
+            try ( LockedPath lockedPath = f.toExclusive() ) {
+                ExpressionExperiment thawedEe = ee;
+                writeCompressedFileAtomically( lockedPath.getPath(), writer -> {
+                    writeDesignMatrix( thawedEe, useProcessedData, writer, false );
+                    return 0;
+                } );
                 return Optional.of( lockedPath.toShared() );
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
             }
         }
     }
@@ -1187,13 +1198,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             if ( this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
                 return Optional.of( f.steal() );
             }
-            try ( LockedPath lockedPath = f.toExclusive( timeout, timeUnit );
-                    Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-                writeDesignMatrix( ee, useProcessedData, writer, false );
+            try ( LockedPath lockedPath = f.toExclusive( timeout, timeUnit ) ) {
+                ExpressionExperiment thawedEe = ee;
+                writeCompressedFileAtomically( lockedPath.getPath(), writer -> {
+                    writeDesignMatrix( thawedEe, useProcessedData, writer, false );
+                    return 0;
+                } );
                 return Optional.of( lockedPath.toShared() );
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
             }
         }
     }
@@ -1209,16 +1220,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
                 return Optional.empty();
             }
-            try ( LockedPath ignored = f.toExclusive();
-                    Writer writer = openCompressedFile( ignored.getPath() ) ) {
+            try ( LockedPath lockedPath = f.toExclusive() ) {
                 ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, null, filtered );
-                ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + ignored.getPath() );
-                int written = new JsonMatrixWriter().write( matrix, ProcessedExpressionDataVector.class, writer );
-                log.info( "Wrote " + written + " vectors to " + ignored.getPath() + "." );
-                return Optional.of( f.toShared() );
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
+                ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + lockedPath.getPath() );
+                int written = writeCompressedFileAtomically( lockedPath.getPath(),
+                        writer -> new JsonMatrixWriter().write( matrix, ProcessedExpressionDataVector.class, writer ) );
+                log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
+                return Optional.of( lockedPath.toShared() );
             }
         }
     }
@@ -1230,16 +1238,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
                 return f.steal();
             }
-            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+            try ( LockedPath lockedPath = f.toExclusive() ) {
                 Collection<BulkExpressionDataVector> vectors = helperService.getVectors( ee, type );
                 BulkExpressionDataMatrix<?> expressionDataMatrix = MultiAssayBulkExpressionDataMatrix.getMatrix( vectors );
                 ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + lockedPath.getPath() );
-                int written = new JsonMatrixWriter().write( expressionDataMatrix, RawExpressionDataVector.class, writer );
+                int written = writeCompressedFileAtomically( lockedPath.getPath(),
+                        writer -> new JsonMatrixWriter().write( expressionDataMatrix, RawExpressionDataVector.class, writer ) );
                 log.info( "Wrote " + written + " vectors for " + type + " to " + lockedPath.getPath() );
                 return lockedPath.toShared();
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
             }
         }
     }
@@ -1259,7 +1265,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 log.info( f + " exists, not regenerating" );
                 return f.steal();
             }
-            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+            try ( LockedPath lockedPath = f.toExclusive() ) {
                 log.info( "Creating result-set TSV cache: " + lockedPath.getPath() );
                 ExpressionAnalysisResultSet ears = expressionAnalysisResultSetService.loadWithResultsAndContrasts( resultSetId );
                 if ( ears == null ) {
@@ -1267,11 +1273,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 }
                 Map<Long, Set<Gene>> resultId2Genes = expressionAnalysisResultSetService.loadResultIdToGenesMap( ears );
                 Baseline baseline = expressionAnalysisResultSetService.getBaseline( ears );
-                expressionAnalysisResultSetFileService.writeTsv( ears, baseline, resultId2Genes, writer );
+                writeCompressedFileAtomically( lockedPath.getPath(), writer -> {
+                    expressionAnalysisResultSetFileService.writeTsv( ears, baseline, resultId2Genes, writer );
+                    return 0;
+                } );
                 return lockedPath.toShared();
-            } catch ( Exception e ) {
-                Files.deleteIfExists( f.getPath() );
-                throw e;
             }
         }
     }
@@ -1322,14 +1328,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
 
             // (Re-)create the file
-            try ( LockedPath lockedPath = f.toExclusive(); OutputStream stream = openFile( lockedPath.getPath() ) ) {
+            try ( LockedPath lockedPath = f.toExclusive() ) {
                 log.info( "Creating differential expression analysis archive file: " + lockedPath.getPath() );
-                writeDiffExAnalysisArchiveFile( analysis, stream );
+                // a truncated file at this path is served as the archive on every later request
+                replaceFile( lockedPath.getPath(), tmp -> {
+                    try ( OutputStream stream = openFile( tmp ) ) {
+                        writeDiffExAnalysisArchiveFile( analysis, stream );
+                    }
+                } );
                 return lockedPath.toShared();
-            } catch ( Exception e ) {
-                // otherwise the truncated file is served as the archive on every later request
-                Files.deleteIfExists( f.getPath() );
-                throw e;
             }
         }
     }
@@ -1363,10 +1370,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( !forceWrite && Files.exists( file ) ) {
             throw new IllegalArgumentException( file + " already exists, use forceWrite to overwrite." );
         }
-        try ( OutputStream stream = openFile( file ) ) {
-            writeDiffExAnalysisArchiveFile( analysis, stream );
-            log.info( "Wrote " + analysis + " to " + file + "." );
-        }
+        FileUtils.writeAtomically( file, tmp -> {
+            try ( OutputStream stream = openFile( tmp ) ) {
+                writeDiffExAnalysisArchiveFile( analysis, stream );
+            }
+        } );
+        log.info( "Wrote " + analysis + " to " + file + "." );
     }
 
     @Override
@@ -1426,7 +1435,49 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     /**
+     * Replace a file or directory in {@link #dataDir} through {@link FileUtils#writeAtomically}, so a partial one is
+     * never at {@code file}. A failed write leaves nothing at {@code file}, a previous file included.
+     * <p>
+     * The caller holds the exclusive lock on {@code file}. Only a failure of the write reaches the delete: a lock that
+     * could not be acquired must not cost a file another holder is reading or writing.
+     */
+    private <E extends Exception> void replaceFile( Path file, FileUtils.PathWriter<E> writer ) throws IOException, E {
+        try {
+            FileUtils.writeAtomically( file, writer );
+        } catch ( Exception e ) {
+            try {
+                if ( Files.isDirectory( file ) ) {
+                    PathUtils.deleteDirectory( file );
+                } else {
+                    Files.deleteIfExists( file );
+                }
+            } catch ( IOException suppressed ) {
+                e.addSuppressed( suppressed );
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * {@link #replaceFile} for a gzip-compressed text file.
+     *
+     * @return the value returned by {@code build}
+     */
+    private <E extends Exception> int writeCompressedFileAtomically( Path file, DataWriter<E> build ) throws IOException, E {
+        int[] written = new int[1];
+        replaceFile( file, tmp -> {
+            try ( Writer writer = openCompressedFile( tmp ) ) {
+                written[0] = build.writeTo( writer );
+            }
+        } );
+        return written[0];
+    }
+
+    /**
      * Open a given path for writing, ensuring that all necessary parent directories are created.
+     * <p>
+     * Only for the temporary path handed out by {@link FileUtils#writeAtomically}: a file written in place is left
+     * truncated at its final path when the write stops midway, and is then served as complete.
      */
     private Writer openCompressedFile( Path file ) throws IOException {
         return new OutputStreamWriter( GzipUtils.newGzipOutputStream( openFile( file ) ), StandardCharsets.UTF_8 );
@@ -1434,6 +1485,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     /**
      * Open a given path for writing, ensuring that all necessary parent directories are created.
+     * <p>
+     * Only for the temporary path handed out by {@link FileUtils#writeAtomically}, as for
+     * {@link #openCompressedFile(Path)}.
      */
     private OutputStream openFile( Path file ) throws IOException {
         PathUtils.createParentDirectories( file );

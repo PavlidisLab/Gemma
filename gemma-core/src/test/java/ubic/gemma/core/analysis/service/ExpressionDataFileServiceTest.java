@@ -20,6 +20,7 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -51,6 +52,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -425,5 +430,105 @@ public class ExpressionDataFileServiceTest extends BaseTest5 {
                 .hasMessage( "confound test failed" );
         assertThat( appdataHome.resolve( "dataFiles" ).resolve( ExpressionDataFileUtils.getDiffExArchiveFileName( analysis ) ) )
                 .doesNotExist();
+    }
+
+    /**
+     * Nothing may be at the archive's path while it is being built. A JVM that dies at that point, or a daemon writer
+     * thread halted by {@code System.exit}, leaves whatever is there, and it is then served as the archive.
+     */
+    @Test
+    public void testDiffExArchiveIsNotAtItsPathWhileBeingBuilt() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9003L );
+        ee.setShortName( "diffExArchiveInFlight" );
+        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+        analysis.setId( 9004L );
+        analysis.setExperimentAnalyzed( ee );
+        Path archive = appdataHome.resolve( "dataFiles" ).resolve( ExpressionDataFileUtils.getDiffExArchiveFileName( analysis ) );
+        AtomicReference<Boolean> existedDuringBuild = new AtomicReference<>();
+        when( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ( BioAssaySet ) ee ) )
+                .thenAnswer( inv -> {
+                    existedDuringBuild.set( Files.exists( archive ) );
+                    throw new IllegalStateException( "build stopped" );
+                } );
+
+        assertThatThrownBy( () -> expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, false ) )
+                .hasMessage( "build stopped" );
+        assertThat( existedDuringBuild.get() ).isFalse();
+    }
+
+    /**
+     * An {@link Error} is not caught by a catch of {@link Exception}, so the partial archive stayed at its path.
+     */
+    @Test
+    public void testErrorDuringDiffExArchiveBuildLeavesNoFile() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9005L );
+        ee.setShortName( "diffExArchiveError" );
+        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+        analysis.setId( 9006L );
+        analysis.setExperimentAnalyzed( ee );
+        String archiveName = ExpressionDataFileUtils.getDiffExArchiveFileName( analysis );
+        when( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ( BioAssaySet ) ee ) )
+                .thenThrow( new StackOverflowError( "simulated" ) );
+
+        assertThatThrownBy( () -> expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, false ) )
+                .isInstanceOf( StackOverflowError.class );
+        assertThat( appdataHome.resolve( "dataFiles" ).resolve( archiveName ) ).doesNotExist();
+        try ( Stream<Path> files = Files.list( appdataHome.resolve( "dataFiles" ) ) ) {
+            assertThat( files.map( f -> f.getFileName().toString() ) )
+                    .noneMatch( name -> name.contains( archiveName ) );
+        }
+    }
+
+    /**
+     * The JSON processed-data writer returned {@code toShared()} of the shared lock that {@code toExclusive()} had
+     * already closed, which throws {@link IllegalStateException}.
+     */
+    @Test
+    public void testWriteOrLocateJsonProcessedDataFile() throws Exception {
+        ExpressionExperiment ee = setUpExperimentWithRandomMatrix( "jsonProcessed", 104L );
+        when( expressionExperimentService.hasProcessedExpressionData( ee ) ).thenReturn( true );
+        assertThat( expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, false )
+                .map( LockedPath::closeAndGetPath ) )
+                .hasValueSatisfying( p -> assertThat( p ).exists().isNotEmptyFile() );
+    }
+
+    /**
+     * The delete-on-failure catch also covered the lock upgrade, so a timed-out upgrade deleted the file that another
+     * holder had locked.
+     */
+    @Test
+    public void testTimedOutLockUpgradeDoesNotDeleteTheFile() throws Exception {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9007L );
+        ee.setShortName( "timedOutUpgrade" );
+        QuantitationType qt = new QuantitationType();
+        qt.setId( 9008L );
+        qt.setName( "counts" );
+        Path rawFile = appdataHome.resolve( "dataFiles" ).resolve( getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX ) );
+        PathUtils.createParentDirectories( rawFile );
+        Files.write( rawFile, "complete".getBytes( StandardCharsets.UTF_8 ) );
+
+        CountDownLatch held = new CountDownLatch( 1 );
+        CountDownLatch release = new CountDownLatch( 1 );
+        Thread reader = new Thread( () -> {
+            try ( LockedPath ignored = fileLockManager.acquirePathLock( rawFile, false ) ) {
+                held.countDown();
+                release.await();
+            } catch ( Exception e ) {
+                throw new RuntimeException( e );
+            }
+        }, "raw-data-file-reader" );
+        reader.start();
+        held.await();
+        try {
+            assertThatThrownBy( () -> expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, true, 100, TimeUnit.MILLISECONDS ) )
+                    .isInstanceOf( TimeoutException.class );
+            assertThat( rawFile ).hasContent( "complete" );
+        } finally {
+            release.countDown();
+            reader.join();
+        }
     }
 }
