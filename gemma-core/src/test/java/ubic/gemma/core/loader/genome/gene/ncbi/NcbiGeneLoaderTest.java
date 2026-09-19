@@ -9,6 +9,10 @@ import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.time.Duration;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,6 +55,53 @@ class NcbiGeneLoaderTest {
                         .hasRootCauseMessage( "database went away" ) );
         verify( geneWriteService, times( 1 ) ).upsert( any() );
         verifyNoInteractions( taxonService );
+    }
+
+    /**
+     * The loader caught {@link Exception}, so an {@link Error} ended its thread with nothing recorded and the main
+     * thread waited forever.
+     */
+    @Test
+    void anErrorInTheLoaderEndsTheRun() {
+        when( geneWriteService.upsert( any() ) ).thenThrow( new AssertionError( "broken invariant" ) );
+
+        assertTimeoutPreemptively( Duration.ofSeconds( 60 ), () ->
+                assertThatThrownBy( this::load )
+                        .hasMessageContaining( "resume with -restart" )
+                        .hasRootCauseInstanceOf( AssertionError.class ) );
+        verifyNoInteractions( taxonService );
+    }
+
+    /**
+     * Same for the converter thread: an {@link Error} must be recorded where the loader looks for failures.
+     */
+    @Test
+    void anErrorInTheConverterIsRecorded() throws InterruptedException {
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        AtomicBoolean sourceDone = new AtomicBoolean( false );
+        AtomicBoolean converterDone = new AtomicBoolean( false );
+        NcbiGeneConverter converter = new NcbiGeneConverter() {
+            @Override
+            public Gene convert( NcbiGeneData data ) {
+                throw new AssertionError( "broken invariant" );
+            }
+        };
+        converter.setFailure( failure );
+        converter.setSourceDoneFlag( sourceDone );
+        converter.setProducerDoneFlag( converterDone );
+        BlockingQueue<NcbiGeneData> in = new ArrayBlockingQueue<>( 1 );
+        in.put( new NcbiGeneData() );
+        sourceDone.set( true );
+
+        converter.convert( in, new ArrayBlockingQueue<>( 1 ) );
+
+        assertTimeoutPreemptively( Duration.ofSeconds( 30 ), () -> {
+            while ( failure.get() == null ) {
+                Thread.sleep( 50 );
+            }
+        } );
+        assertThat( failure.get() ).hasRootCauseInstanceOf( AssertionError.class );
+        assertThat( converterDone ).isFalse();
     }
 
     @Test

@@ -269,9 +269,10 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                     } catch ( InterruptedException e ) {
                         // stopped by the loader
                         return;
-                    } catch ( Exception e ) {
+                    } catch ( Throwable e ) {
                         // this used to log and 'break', which marked the conversion as complete: every later gene
-                        // was silently skipped
+                        // was silently skipped. Throwable, so that an Error is recorded too instead of ending the
+                        // thread with nothing set.
                         if ( !stopped ) {
                             failure.compareAndSet( null, new RuntimeException( "Failed to convert NCBI gene "
                                     + ( data != null && data.getGeneInfo() != null ? data.getGeneInfo().getGeneId() : "(unknown)" ) + ".", e ) );

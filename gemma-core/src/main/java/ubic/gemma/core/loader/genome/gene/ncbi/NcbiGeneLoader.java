@@ -294,8 +294,10 @@ public class NcbiGeneLoader {
 
             try {
                 this.upsert( gene );
-            } catch ( Exception e ) {
-                if ( dryRun ) {
+            } catch ( Throwable e ) {
+                // Throwable, not Exception: an Error used to end this thread without recording anything or setting
+                // loaderDone, and the main thread then waited forever
+                if ( dryRun && e instanceof Exception ) {
                     NcbiGeneLoader.log.error( "Dry run: loading " + gene + " failed: " + e.getMessage(), e );
                     if ( failedGenes.size() < SUMMARY_EXAMPLES ) {
                         failedGenes.add( gene.getNcbiGeneId() + " (" + e.getMessage() + ")" );

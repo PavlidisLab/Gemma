@@ -18,10 +18,10 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -30,6 +30,7 @@ import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.ShellUtils;
+import ubic.gemma.core.util.StreamDrainer;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
@@ -42,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -105,6 +105,9 @@ public class ShellDelegatingBlat implements Blat {
 
     @Nullable
     private Process serverProcess;
+    @Nullable
+    @Getter(AccessLevel.NONE)
+    private StreamDrainer serverStderr;
     private String serverHost;
     private int serverPort;
 
@@ -293,13 +296,16 @@ public class ShellDelegatingBlat implements Blat {
                 .redirectOutput( ProcessBuilder.Redirect.INHERIT )
                 .redirectError( ProcessBuilder.Redirect.PIPE )
                 .start();
+        // read stderr for as long as the server runs: nothing read it before, so a server that wrote more than a pipe
+        // buffer's worth to it blocked
+        this.serverStderr = StreamDrainer.start( serverProcess.getErrorStream(), "gfServer stderr" );
         this.serverHost = host;
         this.serverPort = port;
 
         // wait a little bit to see if the server fails early (i.e. incorrect parameters)
         try {
             if ( serverProcess.waitFor( 100, TimeUnit.MILLISECONDS ) ) {
-                String errorMessage = StringUtils.strip( IOUtils.toString( serverProcess.getErrorStream(), StandardCharsets.UTF_8 ) );
+                String errorMessage = StringUtils.strip( serverStderr.await( 10, TimeUnit.SECONDS ) );
                 throw new RuntimeException( "Could not start gfServer (exit value=" + serverProcess.exitValue() + "):\n" + errorMessage );
             }
         } catch ( InterruptedException e ) {
@@ -377,12 +383,7 @@ public class ShellDelegatingBlat implements Blat {
                 if ( serverExitCode == 0 || serverExitCode == 143 ) {
                     ShellDelegatingBlat.log.info( "gfServer on port " + serverPort + " shut down with exit value " + serverExitCode );
                 } else {
-                    String errorMessage;
-                    try {
-                        errorMessage = IOUtils.toString( serverProcess.getErrorStream(), StandardCharsets.UTF_8 );
-                    } catch ( IOException e ) {
-                        errorMessage = "Could not read error stream from gfServer process.";
-                    }
+                    String errorMessage = serverStderr != null ? serverStderr.await( 10, TimeUnit.SECONDS ) : "";
                     ShellDelegatingBlat.log.info( "gfServer on port " + serverPort + " shut down with exit value " + serverExitCode + "\n" + errorMessage );
                 }
             } else {
@@ -456,20 +457,25 @@ public class ShellDelegatingBlat implements Blat {
                 .redirectOutput( ProcessBuilder.Redirect.appendTo( new File( "/dev/null" ) ) )
                 .redirectError( ProcessBuilder.Redirect.PIPE )
                 .start();
+        // read stderr while gfClient runs: it used to be read only after exit, so a gfClient that wrote more than a
+        // pipe buffer's worth to it blocked, and this waited forever
+        StreamDrainer stderr = StreamDrainer.start( run.getErrorStream(), "gfClient stderr" );
         // wait...
+        String errorMessage;
         try {
             while ( !run.waitFor( ShellDelegatingBlat.BLAT_UPDATE_INTERVAL_MS, TimeUnit.MILLISECONDS ) ) {
                 // I hope this is okay...
                 this.checkOutputFile( outputPath, overallWatch );
             }
+            errorMessage = StringUtils.strip( stderr.await( 10, TimeUnit.SECONDS ) );
         } catch ( InterruptedException e ) {
+            run.destroy();
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );
         }
 
         int exitVal = run.exitValue();
         if ( exitVal != 0 ) {
-            String errorMessage = StringUtils.strip( IOUtils.toString( run.getErrorStream(), StandardCharsets.UTF_8 ) );
             throw new RuntimeException( "gfClient exited with " + exitVal + ":\n" + errorMessage );
         }
 

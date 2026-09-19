@@ -401,7 +401,9 @@ public class GemmaCLI {
             SystemCLIContext cliContext = new SystemCLIContext( commandRequested, argsToPass );
             cli.executeCommand( cliContext );
             statusCode = cliContext.getExitStatus();
-        } catch ( Exception e ) {
+        } catch ( Throwable e ) {
+            // Throwable, not Exception: an Error used to propagate out of main() past System.exit() below, and the
+            // JVM then waited on any non-daemon thread still running
             System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
             System.err.println( ExceptionUtils.getStackTrace( e ) );
             statusCode = 1;

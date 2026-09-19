@@ -160,11 +160,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon,
             Collection<BlatResult> rawBlatResults ) {
 
-        ArrayDesignSequenceAlignmentServiceImpl.log.info( "Looking for old results to remove..." );
-
         ad = arrayDesignService.thaw( ad );
 
-        arrayDesignService.deleteAlignmentData( ad );
         // Blat file processing can only be run on one taxon at a time
         taxon = this.validateTaxaForBlatFile( ad, taxon );
 
@@ -183,7 +180,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         ExternalDatabase searchedDatabase = ShellDelegatingBlat.getSearchedGenome( taxon );
 
-        Collection<BlatResult> toSkip = new HashSet<>();
+        // by identity: a result skipped here has a transient query sequence, and BlatResult.hashCode() throws on one
+        Collection<BlatResult> toSkip = Collections.newSetFromMap( new IdentityHashMap<>() );
         for ( BlatResult result : rawBlatResults ) {
 
             /*
@@ -221,6 +219,16 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         for ( Collection<BlatResult> alignments : goldenPathAlignments.values() ) {
             rawBlatResults.addAll( alignments );
         }
+
+        // the old results used to be deleted before any of the above, so a failure there, or a file matching no
+        // sequence on the platform, left it with no alignments at all
+        if ( rawBlatResults.isEmpty() ) {
+            throw new IllegalStateException( "None of the BLAT results are for sequences on " + ad
+                    + ", and the GoldenPath database has none either; its existing alignments were kept." );
+        }
+
+        ArrayDesignSequenceAlignmentServiceImpl.log.info( "Looking for old results to remove..." );
+        arrayDesignService.deleteAlignmentData( ad );
 
         Collection<BlatResult> results = this.persistBlatResults( rawBlatResults );
 
@@ -407,7 +415,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             ArrayDesignSequenceAlignmentServiceImpl.log.info( "Running in 'sensitive' mode if possible" );
 
         Collection<Taxon> taxa = arrayDesignService.getTaxaFromBioSequences( ad );
-        boolean first = true;
+        boolean oldResultsRemoved = false;
+        int numSequences = 0;
         for ( Taxon taxon : taxa ) {
 
             Collection<BioSequence> sequencesToBlat = ArrayDesignSequenceAlignmentServiceImpl.getSequences( ad, taxon );
@@ -430,11 +439,15 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
             int noResults = 0;
             int count = 0;
+            numSequences += sequencesToBlat.size();
 
-            // We only remove the results here, after we have at least one set of blat results.
-            if ( first ) {
+            // We only remove the old results once there is at least one set of new ones to replace them. This used to
+            // test only that this was the first taxon, so a BLAT run that returned nothing (e.g. a gfServer serving
+            // the wrong genome) deleted every alignment and saved none.
+            if ( !oldResultsRemoved && !results.isEmpty() ) {
                 ArrayDesignSequenceAlignmentServiceImpl.log.info( "Looking for old results to remove..." );
                 arrayDesignService.deleteAlignmentData( ad );
+                oldResultsRemoved = true;
             }
 
             for ( BioSequence sequence : sequencesToBlat ) {
@@ -463,7 +476,15 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
             ArrayDesignSequenceAlignmentServiceImpl.log
                     .info( noResults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
-            first = false;
+        }
+
+        if ( !oldResultsRemoved && numSequences == 0 ) {
+            throw new IllegalStateException( ad + " has no sequences with sequence data to align; its existing "
+                    + "alignments were kept." );
+        } else if ( !oldResultsRemoved ) {
+            throw new IllegalStateException( "No alignments were found for any of the " + numSequences + " sequences of "
+                    + ad + ", so its existing alignments were kept. Check that the gfServer for "
+                    + ( taxa.size() == 1 ? taxa.iterator().next() : taxa ) + " is running and serving the right genome." );
         }
 
         arrayDesignReportService.generateArrayDesignReport( ad.getId() );
