@@ -99,4 +99,24 @@ class FactorValueOntologyWriterCliTest extends BaseCliTest5 {
             assertThat( files ).containsExactly( tgfvo );
         }
     }
+
+    /**
+     * {@code -o} was defined without an argument, so the path was left over and the output file was null.
+     */
+    @Test
+    void outputFileOption() throws IOException {
+        Path out = Files.createTempDirectory( "tgfvo-out" ).resolve( "TGFVO.OWL" );
+        when( factorValueOntologyService.getFactorValueUris() ).thenReturn( Collections.singletonList( "http://example.com/fv/1" ) );
+        doAnswer( inv -> {
+            Writer writer = inv.getArgument( 1 );
+            writer.write( "ontology" );
+            return null;
+        } ).when( factorValueOntologyService ).writeToRdfIgnoreAcls( any(), any() );
+
+        assertThat( cli )
+                .withArguments( "-o", out.toString() )
+                .succeeds();
+
+        assertThat( out ).hasContent( "ontology" );
+    }
 }

@@ -1,6 +1,7 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +51,8 @@ public class FactorValueOntologyWriterCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( "o", "output-file" );
+        options.addOption( Option.builder( "o" ).longOpt( "output-file" ).hasArg().type( Path.class ).argName( "file" )
+                .desc( "Output file (default: " + tgfvoPath + "). A .gz suffix compresses it." ).get() );
         options.addOption( "force", "force", false, "Force overwriting the output file if it exists." );
     }
 
