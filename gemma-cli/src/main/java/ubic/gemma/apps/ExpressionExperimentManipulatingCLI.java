@@ -56,7 +56,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -170,6 +169,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Subset of {@link #singleExperimentOptions} being used.
      */
     private final Set<String> singleExperimentOptionsUsed = new HashSet<>();
+    /**
+     * Whether this CLI defines the {@code -force} option; set when the options are built.
+     */
+    private boolean hasForceOption = false;
 
     protected ExpressionExperimentManipulatingCLI() {
         super( ExpressionExperiment.class );
@@ -301,6 +304,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
         if ( singleExperimentMode ) {
             buildExperimentOptions( options );
+            hasForceOption = options.hasOption( FORCE_OPTION );
             return;
         }
 
@@ -334,6 +338,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         addBatchOption( options );
 
         buildExperimentOptions( options );
+        hasForceOption = options.hasOption( FORCE_OPTION );
     }
 
     protected void buildExperimentOptions( Options options ) {
@@ -664,19 +669,25 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         Set<Long> troubledIds = new HashSet<>( eeService.loadTroubledIds() );
 
         // only retain non-troubled experiments
-        AtomicInteger removedTroubledExperiments = new AtomicInteger();
+        List<ExpressionExperiment> removedTroubledExperiments = new ArrayList<>();
         expressionExperiments.removeIf( ee -> {
             // for subsets, check source experiment troubled flag
             if ( troubledIds.contains( ee.getId() ) ) {
-                removedTroubledExperiments.incrementAndGet();
+                removedTroubledExperiments.add( ee );
                 return true;
             } else {
                 return false;
             }
         } );
-        if ( removedTroubledExperiments.get() > 0 ) {
-            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed; use -%s to include those.",
-                    removedTroubledExperiments.get(), expressionExperiments.size(), FORCE_OPTION ) );
+        if ( !removedTroubledExperiments.isEmpty() ) {
+            // only point at -force if this CLI accepts it
+            String howToInclude = hasForceOption ? String.format( "; use -%s to include it", FORCE_OPTION ) : "";
+            for ( ExpressionExperiment ee : removedTroubledExperiments ) {
+                addWarningObject( ee, "Skipped because it is troubled" + howToInclude + "." );
+            }
+            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed%s.",
+                    removedTroubledExperiments.size(), expressionExperiments.size(),
+                    hasForceOption ? String.format( "; use -%s to include those", FORCE_OPTION ) : "" ) );
         }
     }
 

@@ -23,6 +23,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
@@ -42,6 +43,16 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
         @Bean
         public TestSingleExperimentCli testSingleExperimentCli() {
             return new TestSingleExperimentCli();
+        }
+
+        @Bean
+        public TestMultiExperimentCli testMultiExperimentCli() {
+            return new TestMultiExperimentCli();
+        }
+
+        @Bean
+        public TestMultiExperimentCliWithForce testMultiExperimentCliWithForce() {
+            return new TestMultiExperimentCliWithForce();
         }
 
         @Bean
@@ -102,8 +113,33 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
         }
     }
 
+    static class TestMultiExperimentCli extends ExpressionExperimentManipulatingCLI {
+
+        @Override
+        protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+            addSuccessObject( expressionExperiment, "Processed." );
+        }
+    }
+
+    static class TestMultiExperimentCliWithForce extends TestMultiExperimentCli {
+
+        @Override
+        protected void buildExperimentOptions( Options options ) {
+            addForceOption( options );
+        }
+    }
+
     @Autowired
     private TestSingleExperimentCli testSingleExperimentCli;
+
+    @Autowired
+    private TestMultiExperimentCli testMultiExperimentCli;
+
+    @Autowired
+    private TestMultiExperimentCliWithForce testMultiExperimentCliWithForce;
+
+    @Autowired
+    private ExpressionExperimentService eeService;
 
     @Autowired
     private EntityLocator entityLocator;
@@ -147,5 +183,47 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
                 .contains( "-o,--output-file" )
                 .contains( "-d,--output-dir" );
         assertThat( cli ).withArguments( "--" );
+    }
+
+    /**
+     * A troubled dataset dropped from a multi-dataset run is listed in the batch summary. This CLI has no
+     * {@code -force} option, so the summary must not tell the user to pass it.
+     */
+    @Test
+    @WithMockUser
+    public void testATroubledDatasetDroppedFromABatchIsReportedAsAWarning() {
+        mockTwoDatasetsWithTheSecondTroubled();
+        assertThat( testMultiExperimentCli )
+                .withArguments( "-e", "GSE1,GSE2", "--batch-format", "TSV" )
+                .succeeds()
+                .standardOutput()
+                .asString( StandardCharsets.UTF_8 )
+                .contains( "GSE1\tSUCCESS\tProcessed." )
+                .contains( "GSE2\tWARNING\tSkipped because it is troubled." )
+                .doesNotContain( "-force" );
+    }
+
+    @Test
+    @WithMockUser
+    public void testATroubledDatasetDroppedFromABatchPointsAtForceWhenTheCliAcceptsIt() {
+        mockTwoDatasetsWithTheSecondTroubled();
+        assertThat( testMultiExperimentCliWithForce )
+                .withArguments( "-e", "GSE1,GSE2", "--batch-format", "TSV" )
+                .succeeds()
+                .standardOutput()
+                .asString( StandardCharsets.UTF_8 )
+                .contains( "GSE2\tWARNING\tSkipped because it is troubled; use -force to include it." );
+    }
+
+    private void mockTwoDatasetsWithTheSecondTroubled() {
+        ExpressionExperiment ee1 = new ExpressionExperiment();
+        ee1.setId( 1L );
+        ee1.setShortName( "GSE1" );
+        ExpressionExperiment ee2 = new ExpressionExperiment();
+        ee2.setId( 2L );
+        ee2.setShortName( "GSE2" );
+        when( entityLocator.locateExpressionExperiment( eq( "GSE1" ), anyBoolean() ) ).thenReturn( ee1 );
+        when( entityLocator.locateExpressionExperiment( eq( "GSE2" ), anyBoolean() ) ).thenReturn( ee2 );
+        when( eeService.loadTroubledIds() ).thenReturn( Collections.singletonList( 2L ) );
     }
 }
