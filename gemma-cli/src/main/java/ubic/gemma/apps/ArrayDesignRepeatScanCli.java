@@ -103,15 +103,15 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignRepeatAnalysisEvent.class ) ) {
                     log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                    // not really an error, but nice to get notification.
-                    addErrorObject( design, "Skipped because it was last run after " + skipIfLastRunLaterThan );
+                    // not really an error, but nice to get notification; an error object would fail the run.
+                    addWarningObject( design, "Skipped because it was last run after " + skipIfLastRunLaterThan );
                     continue;
                 }
 
                 if ( this.isSubsumedOrMerged( design ) ) {
                     log.warn( design + " is subsumed or merged into another design, it will not be run." );
-                    // not really an error, but nice to get notification.
-                    addErrorObject( design, "Skipped because it is subsumed by or merged into another design." );
+                    // not really an error, but nice to get notification; an error object would fail the run.
+                    addWarningObject( design, "Skipped because it is subsumed by or merged into another design." );
                     continue;
                 }
 
@@ -129,6 +129,12 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         } else {
             throw new RuntimeException();
         }
+    }
+
+    @Override
+    protected boolean selectsOwnPlatforms() {
+        // -mdate without -a/-f/-all scans every platform last scanned before that date, found in processArrayDesigns()
+        return getLimitingDate() != null;
     }
 
     @Override

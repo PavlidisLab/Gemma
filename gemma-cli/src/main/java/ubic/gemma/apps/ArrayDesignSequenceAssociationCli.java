@@ -139,10 +139,14 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         // this is kind of an oddball function of this tool.
         if ( this.sequenceId != null ) {
+            String[] databases = new String[] { "nt", "est_others", "est_human", "est_mouse" };
             BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
-                    new String[] { "nt", "est_others", "est_human", "est_mouse" }, force );
+                    databases, force );
             if ( updated != null ) {
                 log.info( "Updated or created " + updated );
+                addSuccessObject( this.sequenceId, "Updated or created " + updated );
+            } else {
+                addErrorObject( this.sequenceId, "Not found in the BLAST databases " + String.join( ", ", databases ) );
             }
             return;
         }
@@ -221,6 +225,12 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                     databases, force );
             this.audit( arrayDesign, "Sequence looked up from BLAST databases" );
         }
+    }
+
+    @Override
+    protected boolean selectsOwnPlatforms() {
+        // -s updates a single sequence and needs no platform
+        return sequenceId != null;
     }
 
     /**

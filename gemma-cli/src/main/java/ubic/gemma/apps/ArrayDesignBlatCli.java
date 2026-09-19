@@ -123,6 +123,12 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
+    protected boolean selectsOwnPlatforms() {
+        // -t alone runs every platform of that taxon, found in processArrayDesigns()
+        return taxon != null;
+    }
+
+    @Override
     protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
