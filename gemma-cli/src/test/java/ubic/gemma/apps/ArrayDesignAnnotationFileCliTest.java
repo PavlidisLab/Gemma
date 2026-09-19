@@ -22,6 +22,7 @@ import ubic.gemma.core.security.authentication.ManualAuthenticationService;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -29,6 +30,8 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -124,9 +127,15 @@ class ArrayDesignAnnotationFileCliTest extends BaseCliTest5 {
     @Autowired
     private TaxonReadService taxonReadService;
 
+    @Autowired
+    private GeneService geneService;
+
+    @Autowired
+    private EntityLocator entityLocator;
+
     @AfterEach
     void tearDown() {
-        reset( arrayDesignService, arrayDesignAnnotationService, taxonReadService );
+        reset( arrayDesignService, arrayDesignAnnotationService, taxonReadService, geneService, entityLocator );
     }
 
     @Test
@@ -174,6 +183,53 @@ class ArrayDesignAnnotationFileCliTest extends BaseCliTest5 {
                 .exitCause()
                 .hasMessageStartingWith( "No platforms matched the given options" );
         verifyNoInteractions( arrayDesignAnnotationService );
+    }
+
+    /**
+     * Without --batch, --taxon writes a generic all-genes file and used to ignore any platform selection given with it,
+     * exiting 0 without touching the platform.
+     */
+    @Test
+    @WithMockUser
+    void taxonWithPlatformSelectionIsRejected() {
+        assertThat( cliProvider.getObject() )
+                .withArguments( "-a", "GPL570", "-t", "human", "-nogo" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( org.apache.commons.cli.ParseException.class )
+                .hasMessageContaining( "-a" );
+        assertThat( cliProvider.getObject() )
+                .withArguments( "-all", "-t", "human", "-nogo" )
+                .fails();
+        assertThat( cliProvider.getObject() )
+                .withArguments( "-l", "platforms.txt", "-t", "human", "-nogo" )
+                .fails();
+        verifyNoInteractions( arrayDesignAnnotationService, entityLocator );
+    }
+
+    /**
+     * The generic file goes through a PrintWriter over standard output, which buffers; it was never flushed, so the end
+     * of the file was lost.
+     */
+    @Test
+    @WithMockUser
+    void taxonWritesTheWholeGenericFileToStandardOutput() {
+        Taxon human = Taxon.Factory.newInstance( "human" );
+        Gene gene = Gene.Factory.newInstance();
+        when( entityLocator.locateTaxon( "human" ) ).thenReturn( human );
+        when( geneService.loadAll( human ) ).thenReturn( Collections.singletonList( gene ) );
+        when( arrayDesignAnnotationService.generateAnnotationFile( any( Writer.class ), anyCollection(), anyBoolean() ) )
+                .thenAnswer( a -> {
+                    a.getArgument( 0, Writer.class ).write( "GeneSymbol\tGeneName\nABC1\tsome gene\n" );
+                    return 1;
+                } );
+
+        assertThat( cliProvider.getObject() )
+                .withArguments( "-t", "human", "-nogo" )
+                .succeeds()
+                .standardOutput()
+                .asString( StandardCharsets.UTF_8 )
+                .contains( "ABC1\tsome gene\n" );
     }
 
     private static ArrayDesign platform( String shortName, TechnologyType technologyType ) {
