@@ -170,7 +170,14 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         if ( !( bas instanceof ExpressionExperimentSubSet ) ) {
             throw new IllegalArgumentException( "Unsupported BioAssaySet type: " + bas.getClass().getName() );
         }
-        ExpressionExperimentSubSet subset = ( ExpressionExperimentSubSet ) bas;
+        // Re-read in this session, as the experiment branch does with thawLite: the subset usually arrives
+        // detached, and the confound test walks its bioAssays -- "failed to lazily initialize a collection of
+        // role: ExpressionExperimentSubSet.bioAssays" for every subset analysis's DEA archive.
+        Long subsetId = ( ( ExpressionExperimentSubSet ) bas ).getId();
+        ExpressionExperimentSubSet subset = sessionFactory.getCurrentSession().get( ExpressionExperimentSubSet.class, subsetId );
+        if ( subset == null ) {
+            throw new IllegalArgumentException( "No ExpressionExperimentSubSet with ID " + subsetId + "." );
+        }
         ExpressionExperiment parent = subset.getSourceExperiment();
         if ( parent == null || !this.checkHasUsableBatchInfo( parent ) ) {
             return false;

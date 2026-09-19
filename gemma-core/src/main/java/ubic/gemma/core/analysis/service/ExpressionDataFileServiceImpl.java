@@ -1326,6 +1326,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 log.info( "Creating differential expression analysis archive file: " + lockedPath.getPath() );
                 writeDiffExAnalysisArchiveFile( analysis, stream );
                 return lockedPath.toShared();
+            } catch ( Exception e ) {
+                // otherwise the truncated file is served as the archive on every later request
+                Files.deleteIfExists( f.getPath() );
+                throw e;
             }
         }
     }

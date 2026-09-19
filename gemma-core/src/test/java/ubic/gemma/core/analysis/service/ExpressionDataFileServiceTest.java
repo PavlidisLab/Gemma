@@ -19,6 +19,8 @@ import ubic.gemma.core.util.locking.FileLockManagerImpl;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
@@ -52,6 +54,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.times;
@@ -193,6 +196,9 @@ public class ExpressionDataFileServiceTest extends BaseTest5 {
 
     @Autowired
     private FileLockManager fileLockManager;
+
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
 
     @Value("${gemma.appdata.home}")
     private Path appdataHome;
@@ -398,5 +404,26 @@ public class ExpressionDataFileServiceTest extends BaseTest5 {
         assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, false )
                 .map( LockedPath::closeAndGetPath ) )
                 .hasValue( reportFile );
+    }
+
+    /**
+     * A failed DEA archive build must not leave the truncated file behind: the next request finds it and serves it as
+     * the archive. 304 of the 774 archives on gemma2 were 0 bytes.
+     */
+    @Test
+    public void testFailedDiffExArchiveBuildLeavesNoFile() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9001L );
+        ee.setShortName( "failedDiffExArchive" );
+        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+        analysis.setId( 9002L );
+        analysis.setExperimentAnalyzed( ee );
+        when( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ( BioAssaySet ) ee ) )
+                .thenThrow( new IllegalStateException( "confound test failed" ) );
+
+        assertThatThrownBy( () -> expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, false ) )
+                .hasMessage( "confound test failed" );
+        assertThat( appdataHome.resolve( "dataFiles" ).resolve( ExpressionDataFileUtils.getDiffExArchiveFileName( analysis ) ) )
+                .doesNotExist();
     }
 }
