@@ -83,8 +83,12 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
             for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
-                    log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
-                    return;
+                    String reason = skipIfLastRunLaterThan != null
+                            ? "Skipped because it was last run after " + skipIfLastRunLaterThan
+                            : "Seems to be up to date or is not ready to run";
+                    log.warn( arrayDesign + ": " + reason );
+                    addWarningObject( arrayDesign, reason );
+                    continue;
                 }
 
                 arrayDesign = arrayDesignService.thaw( arrayDesign );

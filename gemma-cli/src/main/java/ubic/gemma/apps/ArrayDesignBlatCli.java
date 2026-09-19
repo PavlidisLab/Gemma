@@ -135,8 +135,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
             for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
+                    // shouldRun() has already recorded a warning object saying why
                     log.warn( arrayDesign + " does not meet criteria to be processed" );
-                    return;
+                    continue;
                 }
 
                 arrayDesign = arrayDesignService.thaw( arrayDesign );
