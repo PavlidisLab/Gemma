@@ -25,6 +25,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
@@ -32,12 +36,18 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -76,6 +86,9 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ChromosomeService chromosomeService;
+
+    @Autowired
+    private AnnotationAssociationService annotationAssociationService;
 
     /**
      * Quirk 4.3 (migration plan): NCBI ID merge with comma-separated
@@ -342,6 +355,292 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
         geneWriteService.upsert( geneOn( human, chromosomeName, null ) );
 
         assertEquals( 1, chromosomeService.find( chromosomeName, human ).size() );
+    }
+
+    /**
+     * A gene product NCBI no longer lists for its gene is deleted with its alignments, which is what takes the probes
+     * away from the gene.
+     */
+    @Test
+    public void testUpsertRemovesAProductNoLongerListed() {
+        Taxon human = this.getTaxon( "human" );
+        Gene gene = persistGene( human, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ) );
+        GeneProduct p1 = gene.getProducts().iterator().next();
+        BioSequence sequence = testHelper.getTestPersistentBioSequence( human );
+        BlatAssociation alignment = align( sequence, p1, human );
+        platformWith( human, sequence );
+
+        geneWriteService.upsert( newInfoWithOnlyANewProduct( gene ) );
+
+        assertFalse( exists( p1 ) );
+        assertFalse( exists( alignment ) );
+    }
+
+    @Test
+    public void testUpsertWithRemovalOffKeepsTheProductAttachedAndReportsIt() {
+        Taxon human = this.getTaxon( "human" );
+        Gene gene = persistGene( human, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ) );
+        GeneProduct p1 = gene.getProducts().iterator().next();
+        BioSequence sequence = testHelper.getTestPersistentBioSequence( human );
+        BlatAssociation alignment = align( sequence, p1, human );
+        AnnotationAssociation annotation = annotate( sequence, p1 );
+        ArrayDesign platform = platformWith( human, sequence );
+        Gene newInfo = newInfoWithOnlyANewProduct( gene );
+        List<GeneProductChange> changes = new ArrayList<>();
+
+        geneWriteService.upsert( newInfo, false, changes::add );
+
+        assertTrue( exists( p1 ) );
+        assertEquals( gene.getId(), geneOf( p1 ), "the product must stay attached to its gene" );
+        assertTrue( exists( alignment ) );
+        assertTrue( exists( annotation ) );
+        assertEquals( 2, countProductsOf( gene ), "the new product is added as usual" );
+        assertEquals( 1, changes.size() );
+        GeneProductChange change = changes.get( 0 );
+        assertEquals( GeneProductChange.Kind.REMOVE, change.kind() );
+        assertFalse( change.applied() );
+        assertEquals( "human", change.taxon() );
+        assertEquals( gene.getNcbiGeneId(), change.geneNcbiId() );
+        assertEquals( gene.getOfficialSymbol(), change.geneSymbol() );
+        assertEquals( p1.getId(), change.productId() );
+        assertEquals( p1.getName(), change.productName() );
+        assertEquals( p1.getNcbiGi(), change.productGi() );
+        assertEquals( 1, change.blatAssociations() );
+        assertEquals( 1, change.annotationAssociations() );
+        assertEquals( List.of( platform.getShortName() ), change.platforms() );
+    }
+
+    /**
+     * A product NCBI now lists for another gene is still moved; the move is reported with the alignments that go with
+     * it.
+     */
+    @Test
+    public void testUpsertReportsAProductMovedToAnotherGene() {
+        Taxon human = this.getTaxon( "human" );
+        Gene from = persistGene( human, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ) );
+        GeneProduct moving = from.getProducts().iterator().next();
+        BioSequence sequence = testHelper.getTestPersistentBioSequence( human );
+        align( sequence, moving, human );
+        ArrayDesign platform = platformWith( human, sequence );
+        Gene to = persistGene( human, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ) );
+        GeneProduct staying = to.getProducts().iterator().next();
+
+        Gene newInfo = newInfo( to );
+        newInfo.getProducts().add( productInfo( newInfo, staying.getName(), staying.getNcbiGi() ) );
+        newInfo.getProducts().add( productInfo( newInfo, moving.getName(), moving.getNcbiGi() ) );
+        List<GeneProductChange> changes = new ArrayList<>();
+
+        geneWriteService.upsert( newInfo, false, changes::add );
+
+        assertEquals( to.getId(), geneOf( moving ) );
+        assertEquals( 1, changes.size() );
+        GeneProductChange change = changes.get( 0 );
+        assertEquals( GeneProductChange.Kind.SWITCH, change.kind() );
+        assertTrue( change.applied() );
+        assertEquals( from.getNcbiGeneId(), change.geneNcbiId() );
+        assertEquals( to.getNcbiGeneId(), change.toGeneNcbiId() );
+        assertEquals( to.getOfficialSymbol(), change.toGeneSymbol() );
+        assertEquals( moving.getId(), change.productId() );
+        assertEquals( 1, change.blatAssociations() );
+        assertEquals( List.of( platform.getShortName() ), change.platforms() );
+    }
+
+    @Test
+    public void testReplayWithoutPlatformsDeletesTheProductAndItsAssociations() {
+        Taxon human = this.getTaxon( "human" );
+        Gene gene = persistGene( human, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ) );
+        GeneProduct p1 = gene.getProducts().iterator().next();
+        BioSequence sequence = testHelper.getTestPersistentBioSequence( human );
+        BlatAssociation alignment = align( sequence, p1, human );
+        AnnotationAssociation annotation = annotate( sequence, p1 );
+        ArrayDesign platform = platformWith( human, sequence );
+        GeneProductChange removal = keptRemoval( gene );
+
+        GeneProductRemovalOutcome outcome = geneWriteService.replayGeneProductRemoval( removal, null, false );
+
+        assertFalse( outcome.isSkipped() );
+        assertTrue( outcome.productDeleted() );
+        assertEquals( 1, outcome.blatAssociationsDeleted() );
+        assertEquals( 1, outcome.annotationAssociationsDeleted() );
+        assertEquals( List.of( platform.getShortName() ), outcome.platforms() );
+        assertFalse( exists( p1 ) );
+        assertFalse( exists( alignment ) );
+        assertFalse( exists( annotation ) );
+        assertEquals( 1, countProductsOf( gene ), "only the product NCBI still lists is left" );
+    }
+
+    /**
+     * Limited to one platform, the associations of the other platform's elements stay, and so does the product, until
+     * the replay for that platform removes the last of them.
+     */
+    @Test
+    public void testReplayLimitedToPlatformsKeepsTheProductUntilItsLastAssociationGoes() {
+        Taxon human = this.getTaxon( "human" );
+        Gene gene = persistGene( human, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ) );
+        GeneProduct p1 = gene.getProducts().iterator().next();
+        BioSequence sequence1 = testHelper.getTestPersistentBioSequence( human );
+        BioSequence sequence2 = testHelper.getTestPersistentBioSequence( human );
+        BlatAssociation alignment1 = align( sequence1, p1, human );
+        BlatAssociation alignment2 = align( sequence2, p1, human );
+        ArrayDesign platform1 = platformWith( human, sequence1 );
+        ArrayDesign platform2 = platformWith( human, sequence2 );
+        GeneProductChange removal = keptRemoval( gene );
+
+        GeneProductRemovalOutcome first = geneWriteService.replayGeneProductRemoval( removal, List.of( platform1 ), false );
+
+        assertFalse( first.isSkipped() );
+        assertFalse( first.productDeleted() );
+        assertEquals( 1, first.blatAssociationsDeleted() );
+        assertEquals( List.of( platform1.getShortName() ), first.platforms() );
+        assertFalse( exists( alignment1 ) );
+        assertTrue( exists( alignment2 ), "the other platform's association must stay" );
+        assertTrue( exists( p1 ) );
+        assertEquals( gene.getId(), geneOf( p1 ) );
+
+        GeneProductRemovalOutcome second = geneWriteService.replayGeneProductRemoval( removal, List.of( platform2 ), false );
+
+        assertTrue( second.productDeleted() );
+        assertEquals( 1, second.blatAssociationsDeleted() );
+        assertFalse( exists( alignment2 ) );
+        assertFalse( exists( p1 ) );
+    }
+
+    @Test
+    public void testReplaySkipsARemovalWhoseGiChanged() {
+        Taxon human = this.getTaxon( "human" );
+        Gene gene = persistGene( human, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ) );
+        GeneProduct p1 = gene.getProducts().iterator().next();
+        BioSequence sequence = testHelper.getTestPersistentBioSequence( human );
+        BlatAssociation alignment = align( sequence, p1, human );
+        GeneProductChange removal = keptRemoval( gene );
+        GeneProductChange withOtherGi = new GeneProductChange( removal.kind(), removal.applied(), removal.taxon(),
+                removal.geneNcbiId(), removal.geneSymbol(), null, null, removal.productId(), removal.productName(),
+                "1" + removal.productGi(), removal.blatAssociations(), removal.annotationAssociations(), removal.platforms() );
+
+        GeneProductRemovalOutcome outcome = geneWriteService.replayGeneProductRemoval( withOtherGi, null, false );
+
+        assertEquals( GeneProductRemovalOutcome.SkipReason.GI_CHANGED, outcome.skipReason() );
+        assertTrue( exists( p1 ) );
+        assertTrue( exists( alignment ) );
+    }
+
+    @Test
+    public void testReplayDryRunDeletesNothing() {
+        Taxon human = this.getTaxon( "human" );
+        Gene gene = persistGene( human, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ) );
+        GeneProduct p1 = gene.getProducts().iterator().next();
+        BioSequence sequence = testHelper.getTestPersistentBioSequence( human );
+        BlatAssociation alignment = align( sequence, p1, human );
+        ArrayDesign platform = platformWith( human, sequence );
+        GeneProductChange removal = keptRemoval( gene );
+
+        GeneProductRemovalOutcome outcome = geneWriteService.replayGeneProductRemoval( removal, null, true );
+
+        assertTrue( outcome.productDeleted() );
+        assertEquals( 1, outcome.blatAssociationsDeleted() );
+        assertEquals( List.of( platform.getShortName() ), outcome.platforms() );
+        assertTrue( exists( p1 ) );
+        assertTrue( exists( alignment ) );
+        assertEquals( gene.getId(), geneOf( p1 ) );
+    }
+
+    /**
+     * Run the gene through an upsert with removal off, listing a new product instead of its only one, and return the
+     * removal that was not made.
+     */
+    private GeneProductChange keptRemoval( Gene gene ) {
+        List<GeneProductChange> changes = new ArrayList<>();
+        geneWriteService.upsert( newInfoWithOnlyANewProduct( gene ), false, changes::add );
+        assertEquals( 1, changes.size() );
+        return changes.get( 0 );
+    }
+
+    private Gene persistGene( Taxon taxon, String productName ) {
+        String symbol = "TEST_" + RandomStringUtils.insecure().nextAlphabetic( 6 ).toUpperCase();
+        Gene gene = Gene.Factory.newInstance();
+        gene.setName( symbol );
+        gene.setOfficialSymbol( symbol );
+        gene.setOfficialName( symbol );
+        gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 7 ) ) + 30_000_000 );
+        gene.setTaxon( taxon );
+        gene.getProducts().add( productInfo( gene, productName, RandomStringUtils.insecure().nextNumeric( 9 ) ) );
+        return genomePersister.persistGene( gene );
+    }
+
+    private Gene newInfo( Gene gene ) {
+        Gene newInfo = Gene.Factory.newInstance();
+        newInfo.setName( gene.getName() );
+        newInfo.setOfficialSymbol( gene.getOfficialSymbol() );
+        newInfo.setOfficialName( gene.getOfficialName() );
+        newInfo.setNcbiGeneId( gene.getNcbiGeneId() );
+        newInfo.setTaxon( gene.getTaxon() );
+        return newInfo;
+    }
+
+    private Gene newInfoWithOnlyANewProduct( Gene gene ) {
+        Gene newInfo = newInfo( gene );
+        newInfo.getProducts().add( productInfo( newInfo, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ),
+                "8" + RandomStringUtils.insecure().nextNumeric( 8 ) ) );
+        return newInfo;
+    }
+
+    private GeneProduct productInfo( Gene gene, String name, String gi ) {
+        GeneProduct gp = GeneProduct.Factory.newInstance();
+        gp.setName( name );
+        gp.setNcbiGi( gi );
+        gp.setGene( gene );
+        return gp;
+    }
+
+    private BlatAssociation align( BioSequence sequence, GeneProduct product, Taxon taxon ) {
+        BlatAssociation alignment = BlatAssociation.Factory.newInstance();
+        alignment.setBioSequence( sequence );
+        alignment.setGeneProduct( product );
+        alignment.setBlatResult( testHelper.getTestPersistentBlatResult( sequence, taxon ) );
+        return genomePersister.persistBlatAssociation( alignment );
+    }
+
+    private AnnotationAssociation annotate( BioSequence sequence, GeneProduct product ) {
+        AnnotationAssociation annotation = AnnotationAssociation.Factory.newInstance();
+        annotation.setBioSequence( sequence );
+        annotation.setGeneProduct( product );
+        return annotationAssociationService.create( annotation );
+    }
+
+    /**
+     * A platform with one element for each sequence.
+     */
+    private ArrayDesign platformWith( Taxon taxon, BioSequence... sequences ) {
+        ArrayDesign platform = ArrayDesign.Factory.newInstance();
+        platform.setShortName( "TEST_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        platform.setName( platform.getShortName() );
+        platform.setTechnologyType( TechnologyType.ONECOLOR );
+        platform.setPrimaryTaxon( taxon );
+        for ( BioSequence sequence : sequences ) {
+            CompositeSequence element = CompositeSequence.Factory.newInstance();
+            element.setName( RandomStringUtils.insecure().nextAlphanumeric( 10 ) );
+            element.setArrayDesign( platform );
+            element.setBiologicalCharacteristic( sequence );
+            platform.getCompositeSequences().add( element );
+        }
+        return arrayDesignPersister.persistArrayDesign( platform );
+    }
+
+    private boolean exists( GeneProduct product ) {
+        return getJdbcTemplate().queryForObject( "select count(*) from CHROMOSOME_FEATURE where ID = ?", Integer.class, product.getId() ) > 0;
+    }
+
+    private boolean exists( BioSequence2GeneProduct association ) {
+        return getJdbcTemplate().queryForObject( "select count(*) from BIO_SEQUENCE2_GENE_PRODUCT where ID = ?", Integer.class, association.getId() ) > 0;
+    }
+
+    @Nullable
+    private Long geneOf( GeneProduct product ) {
+        return getJdbcTemplate().queryForObject( "select GENE_FK from CHROMOSOME_FEATURE where ID = ?", Long.class, product.getId() );
+    }
+
+    private int countProductsOf( Gene gene ) {
+        return getJdbcTemplate().queryForObject( "select count(*) from CHROMOSOME_FEATURE where GENE_FK = ?", Integer.class, gene.getId() );
     }
 
     private Gene geneOn( Taxon taxon, String chromosomeName, @Nullable String chromosomeSequenceName ) {
