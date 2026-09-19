@@ -168,7 +168,15 @@ public class PreboardedWebService {
     @Path("/preboarded")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Resolve accession -> preboarded, or list preboarded in a state",
-            description = "Exactly one of `accession` or `state` must be supplied.")
+            description = "Exactly one of `accession` or `state` must be supplied.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The preboarded experiment the accession resolves to.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PreboardedResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "No preboarded experiment with that accession.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "501", description = "Listing by state is not served here; the body names where it is. Use `GET /workflow/queue`.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(description = "{ error, state, redirectTo }")))
+            })
     public Response listOrResolvePreboarded(
             @Parameter(description = "Resolve accession -> preboarded id.")
             @QueryParam("accession") @Nullable String accession,

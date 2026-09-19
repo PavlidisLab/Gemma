@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -666,7 +667,13 @@ public class AnnotationSetsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Read the triage rulings on an annotation set",
             description = "Most recent first, so the head of the list is the effective verdict. An empty "
-                    + "list means nobody has ruled.")
+                    + "list means nobody has ruled.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The rulings, most recent first. Empty when nobody has ruled.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = TriageResponse.class)))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response getTriage( @PathParam("id") Long id ) {
         AnnotationSet set = requireLoad( id, "id" );
         List<TriageResponse> rows = new ArrayList<>();
@@ -816,7 +823,13 @@ public class AnnotationSetsWebService {
                     + "Standing is keyed on `findingId` for rows that carry one and on `targetId` "
                     + "for rows that do not, and the two are SEPARATE — a ruling on a finding never "
                     + "supersedes a ruling on a target. So a set holding both kinds can return two "
-                    + "rows for one target, which is correct rather than a duplicate.")
+                    + "rows for one target, which is correct rather than a duplicate.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "One row per finding by default, or the full append-only sequence with `?history=true`.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = DispositionResponse.class)))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response getDispositions(
             @PathParam("id") Long id,
             @Parameter(description = "Return every ruling rather than the standing one per finding.")

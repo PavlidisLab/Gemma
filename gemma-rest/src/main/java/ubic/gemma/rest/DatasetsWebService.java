@@ -30,6 +30,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -2661,7 +2662,13 @@ public class DatasetsWebService {
     @Operation(summary = "List AnnotationSets attached to a dataset, newest first.",
             description = "`?role=` filters by role (`proposal`/`draft`/`snapshot`/`commit`/`all`). "
                     + "`?source=` filters by source. `?createdBy=` filters by producer identity. "
-                    + "`?shape=full|meta` selects response shape.")
+                    + "`?shape=full|meta` selects response shape.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Newest first. `?shape=meta` returns the summary rows instead of the full sets.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(oneOf = { AnnotationSetsWebService.AnnotationSetResponse.class, AnnotationSetsWebService.AnnotationSetSummaryResponse.class })))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response listDatasetAnnotationSets(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, `commit`, or `all` (default).")
@@ -2778,7 +2785,13 @@ public class DatasetsWebService {
                     + "decides what each means.\n\n"
                     + "🛑 The scope is part of what a decision supersedes. A ruling on one item does not "
                     + "reverse a ruling on the whole key it belongs to, nor the other way round, so this can "
-                    + "return an `item` row and a `key` row that look contradictory and are not.")
+                    + "return an `item` row and a `key` row that look contradictory and are not.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The standing refusals by default, or every decision with `?history=true`.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = CurationDecisionResponse.class)))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response getCurationDecisions(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Return every decision rather than the standing one per key.")
@@ -2913,7 +2926,13 @@ public class DatasetsWebService {
                     + "swept, so an abandoned tab frees itself.\n\n"
                     + "Note this route answers with the bare object rather than the `{\"data\": …}` envelope the "
                     + "rest of the service uses. Read `locked` off the top level; reading `data.locked` yields "
-                    + "nothing, which is indistinguishable from \"not locked\".")
+                    + "nothing, which is indistinguishable from \"not locked\".",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Always a body: `locked` is false and the other fields are absent when nobody holds the lock.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = CurationLockResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response getCurationLock( @PathParam("dataset") DatasetArg<?> datasetArg ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         return Response.ok( toLockResponse( curationLockService.current( ee ).orElse( null ) ) ).build();
@@ -3451,7 +3470,13 @@ public class DatasetsWebService {
             description = "Defaults to the caller's own draft. `?onBehalfOf=` reads another "
                     + "curator's, and is honoured only for a caller holding `GROUP_AGENT` or "
                     + "`GROUP_ADMIN`. An agent asking for \"the draft\" without naming a curator "
-                    + "would get its own, which is never what it means.")
+                    + "would get its own, which is never what it means.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The curator's draft.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist, or the curator has no draft on it.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response getDatasetDraftAnnotationSet(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Whose draft to read. Agents and admins only; anyone else claiming another identity is refused.")

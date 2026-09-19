@@ -288,6 +288,13 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                                 && "409".equals( code ) ) {
                             continue;
                         }
+                        // GET /preboarded 501 intentionally returns a richer body
+                        // (error, state, redirectTo) naming the endpoint that does serve the listing.
+                        if ( method == PathItem.HttpMethod.GET
+                                && "/preboarded".equals( path )
+                                && "501".equals( code ) ) {
+                            continue;
+                        }
                         // GET /metrics is a Prometheus scrape target: it answers text/plain on every
                         // status, so an error there has no JSON body to check.
                         if ( "scrape".equals( operation.getOperationId() ) ) {
@@ -834,5 +841,94 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                 .withFailMessage( "non-JSON response bodies left as an untyped object — declare"
                         + " @Schema(type = \"string\") on the @Content: %s", offenders )
                 .isEmpty();
+    }
+
+    /**
+     * Write operations still returning a schema-less 2xx JSON body.
+     *
+     * <p>The read surface is clean and stays that way; this list is what is left on the write side,
+     * and it may only shrink. Each entry is a method returning raw {@code Response} with no
+     * {@code @ApiResponse} naming the entity. They are listed rather than tolerated by a
+     * GET-only rule so a new one fails the build instead of joining them quietly.
+     */
+    private static final List<String> SCHEMALESS_WRITE_RESPONSES = Arrays.asList(
+            "POST /annotation-sets/{id}/reopen -> 200",
+            "POST /annotations/datasets/{dataset}/annotations -> 201",
+            "POST /login -> 200",
+            "POST /logout -> 200",
+            "DELETE /datasets/{dataset}/curation/lock -> 200",
+            "POST /datasets/{dataset}/annotations -> 201",
+            "PUT /datasets/{dataset}/annotation-sets/draft -> 200",
+            "POST /datasets/{dataset}/annotation-sets -> 200",
+            "POST /experiment-sets -> 201",
+            "POST /groups -> 200",
+            "DELETE /groups/{id} -> 200",
+            "DELETE /groups/{id}/members/{memberId} -> 200",
+            "POST /preboarded/{id}/annotation-sets -> 201",
+            "POST /preboarded/{id}/annotation-sets -> 200",
+            "POST /preboarded -> 201",
+            "POST /preboarded/{id}/promote -> 200",
+            "POST /tickets -> 200",
+            "DELETE /tickets/{id} -> 200",
+            "DELETE /tickets/{id}/targets/{targetType}/{targetId} -> 200",
+            "PUT /datasets/{id}/workflow -> 200" );
+
+    /**
+     * A successful JSON response must say what its body is.
+     *
+     * <p>{@code testEnsureThatAllEndpointHaveADefaultGetResponseOrIsARedirection} already requires a
+     * content block, but a content block with a null schema satisfies it — which is what seven
+     * {@code Response}-returning GETs had. Returning raw {@code jakarta.ws.rs.core.Response} tells
+     * swagger-core nothing about the entity, so unless the method declares an {@code @ApiResponse}
+     * with a schema the spec publishes the media type and stops there, and a generated client hands
+     * back an untyped blob.
+     *
+     * @see #SCHEMALESS_WRITE_RESPONSES
+     */
+    @Test
+    public void testSuccessfulJsonResponsesDeclareASchema() {
+        List<String> offenders = new ArrayList<>();
+        Set<String> known = new TreeSet<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathEntry.getValue().readOperationsMap().entrySet() ) {
+                Operation operation = opEntry.getValue();
+                if ( operation.getResponses() == null ) {
+                    continue;
+                }
+                for ( Map.Entry<String, ApiResponse> responseEntry : operation.getResponses().entrySet() ) {
+                    if ( !responseEntry.getKey().startsWith( "2" ) || responseEntry.getValue().getContent() == null ) {
+                        continue;
+                    }
+                    io.swagger.v3.oas.models.media.MediaType json =
+                            responseEntry.getValue().getContent().get( "application/json" );
+                    if ( json == null ) {
+                        continue;
+                    }
+                    inspected++;
+                    if ( json.getSchema() == null ) {
+                        String where = opEntry.getKey() + " " + pathEntry.getKey() + " -> " + responseEntry.getKey();
+                        if ( SCHEMALESS_WRITE_RESPONSES.contains( where ) ) {
+                            known.add( where );
+                        } else {
+                            offenders.add( where + " (" + operation.getOperationId() + ")" );
+                        }
+                    }
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to declare many successful JSON responses; inspected only %d", inspected )
+                .isGreaterThan( 150 );
+        assertThat( offenders )
+                .withFailMessage( "successful JSON responses with no schema — a method returning raw Response"
+                        + " needs an @ApiResponse that names the entity: %s", offenders )
+                .isEmpty();
+        assertThat( known )
+                .withFailMessage( "an entry of SCHEMALESS_WRITE_RESPONSES now declares a schema, or moved."
+                        + " Delete it from the list rather than leaving it to rot: %s",
+                        new TreeSet<>( CollectionUtils.subtract( SCHEMALESS_WRITE_RESPONSES, known ) ) )
+                .containsExactlyInAnyOrderElementsOf( SCHEMALESS_WRITE_RESPONSES );
     }
 }
