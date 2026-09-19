@@ -235,7 +235,11 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             } else {
                 this.pipelineJobReporter.completed();
             }
-        } catch ( Exception e ) {
+        } catch ( Throwable t ) {
+            // Throwable, not Exception: an Error used to skip this block, so the batch executor was never shut down,
+            // its non-daemon threads kept the JVM alive, and GemmaCLI never reached System.exit(). An
+            // OutOfMemoryError does not get here: -XX:+ExitOnOutOfMemoryError ends the JVM first.
+            Exception e = t instanceof Exception ? ( Exception ) t : new RuntimeException( t.toString(), t );
             if ( e instanceof InterruptedException ) {
                 Thread.currentThread().interrupt();
             }
