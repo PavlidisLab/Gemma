@@ -171,14 +171,18 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         int hits = 0;
         int numWithNoResults = 0;
         try {
-            if ( useDB ) {
-                ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old alignment-based associations" );
-                arrayDesignService.deleteGeneProductAlignmentAssociations( arrayDesign );
-            }
-
-            ArrayDesignProbeMapperServiceImpl.log
-                    .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
             try ( GoldenPathSequenceAnalysis goldenPathDb = goldenPathSequenceAnalysisFactory.create( taxon ) ) {
+                // before the delete: a missing GoldenPath table used to fail the first probe query, after the
+                // platform's associations were already gone
+                goldenPathDb.checkTablesForProbeMapping( config );
+
+                if ( useDB ) {
+                    ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old alignment-based associations" );
+                    arrayDesignService.deleteGeneProductAlignmentAssociations( arrayDesign );
+                }
+
+                ArrayDesignProbeMapperServiceImpl.log
+                        .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
                 for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
                     Map<String, Collection<BlatAssociation>> results = this
