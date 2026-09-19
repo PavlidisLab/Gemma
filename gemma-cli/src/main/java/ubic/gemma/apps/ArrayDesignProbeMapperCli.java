@@ -395,6 +395,16 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     @Override
+    protected boolean selectsOwnPlatforms() {
+        if ( this.probeNames != null ) {
+            // -probes works on a single platform named with -a
+            return false;
+        }
+        // same condition as the batchRun() branch of processArrayDesigns()
+        return taxon != null || getLimitingDate() != null || isAutoSeek();
+    }
+
+    @Override
     protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
@@ -477,7 +487,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 throw new IllegalStateException(
                         "Sorry, you can't provide an input mapping file when doing multiple arrays at once" );
             }
-            this.configure( null );
+            if ( this.taxon != null ) {
+                // validates and logs the options once; without -t, configure() needs a platform to find the taxon,
+                // and each platform is configured in processArrayDesign(Date, ArrayDesign) anyway
+                this.configure( null );
+            }
             this.batchRun( skipIfLastRunLaterThan );
 
         } else {
@@ -603,10 +617,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 log.info( getRelatedDesigns( design ).size() + " subsumed or merged platforms will be implicitly updated" );
             }
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
+            if ( useDB ) {
+                // as in the single-platform path: with -nodb nothing was written, so no mapping event is recorded
+                this.audit( design, "Part of a batch job", AlignmentBasedGeneMappingEvent.class );
+                updateMergedOrSubsumed( design );
+            }
             addSuccessObject( design );
-            this.audit( design, "Part of a batch job", AlignmentBasedGeneMappingEvent.class );
-
-            updateMergedOrSubsumed( design );
 
         } catch ( Exception e ) {
             addErrorObject( design, e );

@@ -36,8 +36,10 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -81,6 +83,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
         Option sequenceNameList = Option.builder( "b" )
                 .longOpt( "file" )
+                .hasArg().argName( "file" )
                 .desc( "File with list of biosequence ids to check; default: check all on provided platforms" )
                 .build();
         options.addOption( sequenceNameList );
@@ -96,6 +99,12 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
         if ( commandLine.hasOption( 'b' ) ) {
             this.file = commandLine.getOptionValue( 'b' );
         }
+    }
+
+    @Override
+    protected boolean selectsOwnPlatforms() {
+        // -b checks the sequences listed in the file, with no platform
+        return file != null;
     }
 
     @Override
@@ -121,8 +130,8 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                 bioSequences = bss.thaw( bioSequences );
                 processSequences( bioSequences );
                 return;
-            } catch ( Exception e ) {
-                return;
+            } catch ( IOException e ) {
+                throw new UncheckedIOException( "Failed to read biosequence IDs from " + file, e );
             }
         } else {
             ads = arrayDesignService.loadAll();

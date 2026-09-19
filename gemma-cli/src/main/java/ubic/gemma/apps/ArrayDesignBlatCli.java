@@ -123,6 +123,12 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
+    protected boolean selectsOwnPlatforms() {
+        // -t alone runs every platform of that taxon, found in processArrayDesigns()
+        return taxon != null;
+    }
+
+    @Override
     protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
@@ -135,8 +141,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
             for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
+                    // shouldRun() has already recorded a warning object saying why
                     log.warn( arrayDesign + " does not meet criteria to be processed" );
-                    return;
+                    continue;
                 }
 
                 arrayDesign = arrayDesignService.thaw( arrayDesign );
