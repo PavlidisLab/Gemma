@@ -25,6 +25,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.Nullable;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -80,6 +81,16 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
     // proactive mode
     private boolean proactive = false;
     private Collection<String> platformsToScreen;
+
+    @Nullable
+    private GeoBrowser geoBrowser;
+
+    /**
+     * Package-private so a test can supply a stub instead of querying NCBI.
+     */
+    void setGeoBrowser( GeoBrowser geoBrowser ) {
+        this.geoBrowser = geoBrowser;
+    }
 
     public BlacklistCli() {
         setRequireLogin();
@@ -253,7 +264,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
      *
      */
     private void proactivelyBlacklistExperiments( ExternalDatabase geo ) throws Exception {
-        GeoBrowser gbs = new GeoBrowserImpl( ncbiApiKey );
+        GeoBrowser gbs = geoBrowser != null ? geoBrowser : new GeoBrowserImpl( ncbiApiKey );
 
         Collection<String> candidates = new ArrayList<>();
         int numChecked = 0;
@@ -261,7 +272,8 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
         for ( BlacklistedEntity be : blacklistedEntityService.loadAll() ) {
             if ( be instanceof BlacklistedPlatform ) {
 
-                if ( platformsToScreen == null || !platformsToScreen.isEmpty()
+                // `!isEmpty()` here made every blacklisted platform a candidate whenever -a was given.
+                if ( platformsToScreen == null || platformsToScreen.isEmpty()
                         || platformsToScreen.contains( be.getExternalAccession().getAccession() ) ) {
                     candidates.add( be.getExternalAccession().getAccession() );
                     numChecked++;
@@ -275,8 +287,10 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
             }
         }
 
-        // finish the last batch
-        fetchAndBlacklist( geo, gbs, candidates );
+        // finish the last batch; an empty one would search GEO with no platform filter at all
+        if ( !candidates.isEmpty() ) {
+            numBlacklisted += fetchAndBlacklist( geo, gbs, candidates );
+        }
 
         log.info( "Checked " + numChecked + " blacklisted platforms for experiment in GEO, blacklisted " + numBlacklisted + " GSEs" );
 
@@ -307,7 +321,10 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                     Thread.sleep( 500 );
                     continue; // try again
                 }
-                log.info( "Too many failures, giving up" );
+                // An error object, not an INFO line: the run used to exit 0 with this batch's
+                // experiments never checked or blacklisted.
+                addErrorObject( String.join( ",", candidates ), "Could not fetch GEO series for these platforms after "
+                        + retries + " attempts; their experiments were not checked or blacklisted.", e );
                 break;
             }
 
@@ -389,7 +406,8 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
             }
             this.proactive = true;
             if ( commandLine.hasOption( "a" ) ) {
-                this.platformsToScreen = Arrays.asList( StringUtils.split( commandLine.getOptionValue( "a" ) ) );
+                // commas, as the option says; split on whitespace, `-a GPL1,GPL2` was one platform named "GPL1,GPL2"
+                this.platformsToScreen = Arrays.asList( StringUtils.split( commandLine.getOptionValue( "a" ), ", " ) );
             }
         } else if ( commandLine.hasOption( "file" ) ) {
             if ( commandLine.hasOption( "accession" ) || commandLine.hasOption( "pp" ) ) {
