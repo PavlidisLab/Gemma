@@ -353,7 +353,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
                 || commandLine.hasOption( "e" )
                 || commandLine.hasOption( 'f' )
                 || commandLine.hasOption( 'q' );
-        if ( !hasAnyDatasetOptions && !defaultToAll ) {
+        if ( !hasAnyDatasetOptions && !defaultToAll && !selectsOwnExperiments( commandLine ) ) {
             throw new MissingOptionException( "At least one of -all, -e, -eeset, -f, or -q must be provided." );
         }
         if ( defaultToAll && !hasAnyDatasetOptions ) {
@@ -395,6 +395,17 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
 
+    }
+
+    /**
+     * Whether the given options select what to process by some means other than {@code -all}, {@code -e},
+     * {@code -eeset}, {@code -f} or {@code -q}.
+     * <p>
+     * If so, giving none of those is not an error. The subclass is then responsible for its own selection, e.g. by
+     * overriding {@link #doAuthenticatedWork()}. This is checked before {@link #processExperimentOptions(CommandLine)}.
+     */
+    protected boolean selectsOwnExperiments( CommandLine commandLine ) {
+        return false;
     }
 
     @Override

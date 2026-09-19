@@ -14,6 +14,7 @@ import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -28,6 +29,7 @@ import java.util.Collections;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
@@ -53,6 +55,11 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
         @Bean
         public TestMultiExperimentCliWithForce testMultiExperimentCliWithForce() {
             return new TestMultiExperimentCliWithForce();
+        }
+
+        @Bean
+        public DeleteExperimentsCli deleteExperimentsCli() {
+            return new DeleteExperimentsCli();
         }
 
         @Bean
@@ -142,6 +149,12 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
     private ExpressionExperimentService eeService;
 
     @Autowired
+    private DeleteExperimentsCli deleteExperimentsCli;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
     private EntityLocator entityLocator;
 
     @Test
@@ -225,5 +238,33 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
         when( entityLocator.locateExpressionExperiment( eq( "GSE1" ), anyBoolean() ) ).thenReturn( ee1 );
         when( entityLocator.locateExpressionExperiment( eq( "GSE2" ), anyBoolean() ) ).thenReturn( ee2 );
         when( eeService.loadTroubledIds() ).thenReturn( Collections.singletonList( 2L ) );
+    }
+
+    /**
+     * {@code deleteExperiments -a} selects platforms, not datasets, so it must not be rejected for lacking a dataset
+     * option.
+     */
+    @Test
+    @WithMockUser
+    public void testDeleteExperimentsWithOnlyAPlatformOption() {
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setId( 1L );
+        ad.setShortName( "GPL1" );
+        when( entityLocator.locateArrayDesign( "GPL1" ) ).thenReturn( ad );
+        assertThat( deleteExperimentsCli )
+                .withArguments( "-a", "GPL1" )
+                .succeeds();
+        verify( arrayDesignService ).remove( ad );
+    }
+
+    @Test
+    @WithMockUser
+    public void testDeleteExperimentsWithNoSelectionStillFails() {
+        assertThat( deleteExperimentsCli )
+                .withArguments()
+                .fails()
+                .standardError()
+                .asString( StandardCharsets.UTF_8 )
+                .startsWith( "At least one of -all, -e, -eeset, -f, or -q must be provided." );
     }
 }
