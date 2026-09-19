@@ -244,9 +244,9 @@ public class NcbiGeneDomainObjectGenerator {
                     NcbiGeneDomainObjectGenerator.log.debug( "Parsing gene2accession=" + gene2AccessionFile.getAbsolutePath() );
                     accParser.setStartingNbiId( startingNcbiId );
                     accParser.parse( gene2AccessionFile, geneDataQueue, geneInfoMap );
-                } catch ( Exception e ) {
+                } catch ( Throwable e ) {
                     // an uncaught exception here used to end the thread without setting producerDone, and the
-                    // loader then waited for it forever
+                    // loader then waited for it forever; the same holds for an Error
                     if ( !stopped ) {
                         failure.compareAndSet( null, new RuntimeException( "Failed to parse " + gene2AccessionFile + ".", e ) );
                     }
