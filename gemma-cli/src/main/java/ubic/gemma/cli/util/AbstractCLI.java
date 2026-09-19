@@ -156,9 +156,15 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
         return CommandGroup.MISC;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Defining an option whose short or long name is already taken, whether by this class or by a base class, raises
+     * an {@link IllegalStateException}.
+     */
     @Override
     public Options getOptions() {
-        Options options = new Options();
+        Options options = new DuplicateRejectingOptions( getClass().getName() );
         buildStandardOptions( options );
         buildOptions( options );
         return options;

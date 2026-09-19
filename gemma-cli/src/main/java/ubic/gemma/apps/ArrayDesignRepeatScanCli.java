@@ -57,7 +57,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     @Override
     protected void buildArrayDesignOptions( Options options ) {
-        Option fileOption = Option.builder( "f" ).hasArg().argName( ".out file" )
+        Option fileOption = Option.builder( "file" ).hasArg().argName( ".out file" )
                 .desc( "RepeatScan file to use as input" ).longOpt( "file" ).type( Path.class )
                 .get();
         options.addOption( fileOption );
@@ -65,8 +65,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     @Override
     protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( 'f' ) ) {
-            this.inputFileName = commandLine.getParsedOptionValue( 'f' );
+        if ( commandLine.hasOption( "file" ) ) {
+            this.inputFileName = commandLine.getParsedOptionValue( "file" );
         }
     }
 
