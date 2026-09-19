@@ -45,11 +45,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +62,7 @@ import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.times;
@@ -413,6 +416,61 @@ public class ExpressionDataFileServiceTest extends BaseTest5 {
         assertThatThrownBy( () -> expressionDataFileService.copyMetadataFile( ee, source, "notes.txt", true ) )
                 .hasMessageStartingWith( "Failed to acquire exclusive lock" );
         assertThat( destination ).hasContent( "valid" );
+    }
+
+    /**
+     * A data file that could not be deleted was only logged: deleteProcessedData reported "Deleted processed data."
+     * and exited 0, and writeOrLocateProcessedDataFile went on serving the stale file.
+     */
+    @Test
+    public void testFailedProcessedDataFileDeleteReachesTheCaller() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9009L );
+        ee.setShortName( "undeletableProcessed" );
+        Path readOnly = makeUndeletable( appdataHome.resolve( "dataFiles" ).resolve( getDataOutputFilename( ee, false, TABULAR_BULK_DATA_FILE_SUFFIX ) ) );
+        try {
+            assumeFalse( Files.isWritable( readOnly ), "file permissions are not enforced for this user" );
+            assertThatThrownBy( () -> expressionDataFileService.deleteAllProcessedDataFiles( ee ) )
+                    .isInstanceOf( UncheckedIOException.class )
+                    .hasMessageStartingWith( "Failed to delete 1 data file(s)" );
+        } finally {
+            Files.setPosixFilePermissions( readOnly, PosixFilePermissions.fromString( "rwxr-xr-x" ) );
+        }
+    }
+
+    /**
+     * As for processed data: deleteRawData reported "Deleted raw data." when a file could not be deleted.
+     */
+    @Test
+    public void testFailedRawDataFileDeleteReachesTheCaller() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9010L );
+        ee.setShortName( "undeletableRaw" );
+        QuantitationType qt = new QuantitationType();
+        qt.setId( 9011L );
+        qt.setName( "counts" );
+        Path readOnly = makeUndeletable( appdataHome.resolve( "dataFiles" ).resolve( getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX ) ) );
+        try {
+            assumeFalse( Files.isWritable( readOnly ), "file permissions are not enforced for this user" );
+            assertThatThrownBy( () -> expressionDataFileService.deleteAllDataFiles( ee, qt ) )
+                    .isInstanceOf( UncheckedIOException.class )
+                    .hasMessageStartingWith( "Failed to delete 1 data file(s)" );
+        } finally {
+            Files.setPosixFilePermissions( readOnly, PosixFilePermissions.fromString( "rwxr-xr-x" ) );
+        }
+    }
+
+    /**
+     * Make {@code path} a directory the service cannot delete: it holds a file in a read-only sub-directory.
+     *
+     * @return the read-only sub-directory, whose permissions the caller restores
+     */
+    private static Path makeUndeletable( Path path ) throws IOException {
+        Path readOnly = path.resolve( "readOnly" );
+        Files.createDirectories( readOnly );
+        Files.createFile( readOnly.resolve( "file" ) );
+        Files.setPosixFilePermissions( readOnly, PosixFilePermissions.fromString( "r-xr-xr-x" ) );
+        return readOnly;
     }
 
     @Test

@@ -145,12 +145,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
 
         // per-QT output files (raw and single-cell data)
+        List<IOException> failures = new ArrayList<>();
         for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
-            deleted += deleteAllDataFiles( ee, qt );
+            deleted += deleteAllDataFiles( ee, qt, failures );
         }
 
         // processed data files
-        deleted += deleteAllProcessedDataFiles( ee );
+        deleted += deleteAllProcessedDataFiles( ee, failures );
+        logDeleteFailures( failures );
 
         // analysis files which are generally derived from the processed data
         deleted += deleteAllAnalysisFiles( ee );
@@ -173,12 +175,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         int deleted = 0;
 
         // per-QT output files (raw and single-cell data)
+        List<IOException> failures = new ArrayList<>();
         for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
-            deleted += deleteAllDataFiles( ee, qt );
+            deleted += deleteAllDataFiles( ee, qt, failures );
         }
 
         // processed data files
-        deleted += deleteAllProcessedDataFiles( ee );
+        deleted += deleteAllProcessedDataFiles( ee, failures );
+        logDeleteFailures( failures );
 
         // diff. ex. files
         Collection<DifferentialExpressionAnalysis> analyses = helperService.getAnalyses( ee );
@@ -195,6 +199,16 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public int deleteAllDataFiles( ExpressionExperiment ee, QuantitationType qt ) {
+        List<IOException> failures = new ArrayList<>();
+        int deleted = deleteAllDataFiles( ee, qt, failures );
+        throwDeleteFailures( failures );
+        return deleted;
+    }
+
+    /**
+     * @param failures receives the failed deletes; the other files are still deleted
+     */
+    private int deleteAllDataFiles( ExpressionExperiment ee, QuantitationType qt, List<IOException> failures ) {
         int deleted = 0;
         for ( ExpressionExperimentDataFileType type : ExpressionExperimentDataFileType.values() ) {
             try {
@@ -204,7 +218,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             } catch ( IllegalArgumentException e ) {
                 // ignore, this is just an illegal combination of QT and file type
             } catch ( IOException e ) {
-                log.error( "Failed to delete data file for " + qt + ".", e );
+                failures.add( e );
             }
         }
         return deleted;
@@ -212,25 +226,59 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public int deleteAllProcessedDataFiles( ExpressionExperiment ee ) {
+        List<IOException> failures = new ArrayList<>();
+        int deleted = deleteAllProcessedDataFiles( ee, failures );
+        throwDeleteFailures( failures );
+        return deleted;
+    }
+
+    /**
+     * @param failures receives the failed deletes; the other files are still deleted
+     */
+    private int deleteAllProcessedDataFiles( ExpressionExperiment ee, List<IOException> failures ) {
         int deleted = 0;
         for ( ExpressionExperimentDataFileType type : ExpressionExperimentDataFileType.values() ) {
-            try {
-                deleteDataFile( ee, true, type );
-            } catch ( IllegalArgumentException e ) {
-                // ignore, this is just an illegal combination of QT and file type
-            } catch ( IOException e ) {
-                log.error( "Failed to delete: " + getDataFileInternal( ee, true, type ), e );
+            for ( boolean filtered : new boolean[] { true, false } ) {
+                try {
+                    if ( deleteDataFile( ee, filtered, type ) ) {
+                        deleted++;
+                    }
+                } catch ( IllegalArgumentException e ) {
+                    // ignore, this is just an illegal combination of QT and file type
+                } catch ( IOException e ) {
+                    failures.add( e );
+                }
             }
-            try {
-                deleteDataFile( ee, false, type );
-            } catch ( IllegalArgumentException e ) {
-                // ignore, this is just an illegal combination of QT and file type
-            } catch ( IOException e ) {
-                log.error( "Failed to delete: " + getDataFileInternal( ee, false, type ), e );
-            }
-            deleteProcessedDataDesignFile( ee );
+        }
+        if ( deleteAndLog( dataDir.resolve( getDesignFileName( ee, true ) ), failures ) ) {
+            deleted++;
         }
         return deleted;
+    }
+
+    /**
+     * A data file that could not be deleted is served as current by the {@code writeOrLocate*} methods, which check
+     * only that it exists and its date, so the caller must learn of it.
+     *
+     * @throws UncheckedIOException if any delete failed, with the first failure as its cause and the others
+     *                              suppressed
+     */
+    private static void throwDeleteFailures( List<IOException> failures ) {
+        if ( failures.isEmpty() ) {
+            return;
+        }
+        UncheckedIOException e = new UncheckedIOException( "Failed to delete " + failures.size() + " data file(s): "
+                + failures.get( 0 ).getMessage(), failures.get( 0 ) );
+        for ( IOException other : failures.subList( 1, failures.size() ) ) {
+            e.addSuppressed( other );
+        }
+        throw e;
+    }
+
+    private static void logDeleteFailures( List<IOException> failures ) {
+        for ( IOException e : failures ) {
+            log.error( "Failed to delete a data file.", e );
+        }
     }
 
     @Override
@@ -274,13 +322,25 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private boolean deleteAndLog( Path path ) {
+        List<IOException> failures = new ArrayList<>( 1 );
+        boolean deleted = deleteAndLog( path, failures );
+        for ( IOException e : failures ) {
+            ExpressionDataFileServiceImpl.log.error( "Failed to delete: " + path, e );
+        }
+        return deleted;
+    }
+
+    /**
+     * @param failures receives the failure if the file could not be deleted
+     */
+    private boolean deleteAndLog( Path path, List<IOException> failures ) {
         try ( LockedPath lockedPath = fileLockManager.acquirePathLock( path, true ) ) {
             if ( Files.deleteIfExists( lockedPath.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( "Deleted: " + lockedPath.getPath() );
                 return true;
             }
         } catch ( IOException e ) {
-            ExpressionDataFileServiceImpl.log.error( "Failed to delete: " + path, e );
+            failures.add( e );
         }
         return false;
     }
