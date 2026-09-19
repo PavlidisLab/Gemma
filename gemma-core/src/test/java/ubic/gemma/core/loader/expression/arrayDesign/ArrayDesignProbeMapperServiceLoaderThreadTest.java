@@ -34,8 +34,9 @@ import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.*;
 
 /**
- * mapPlatformToGenes deletes the platform's alignment-based associations, then maps each probe on this thread and
- * saves the associations on another. A failure on either side must end the mapping as a failure and stop the other.
+ * mapPlatformToGenes checks the GoldenPath database, deletes the platform's alignment-based associations, then maps
+ * each probe on this thread and saves the associations on another. A failure on either side must end the mapping as a
+ * failure and stop the other.
  */
 class ArrayDesignProbeMapperServiceLoaderThreadTest {
 
@@ -55,6 +56,8 @@ class ArrayDesignProbeMapperServiceLoaderThreadTest {
         loaderThreads.add( t );
         t.start();
     };
+
+    private final GoldenPathSequenceAnalysis goldenPathDb = mock();
 
     private ArrayDesignProbeMapperServiceImpl service;
     private ArrayDesign arrayDesign;
@@ -76,7 +79,7 @@ class ArrayDesignProbeMapperServiceLoaderThreadTest {
         }
 
         when( arrayDesignService.getTaxaFromBioSequences( arrayDesign ) ).thenReturn( Collections.singleton( human ) );
-        when( goldenPathSequenceAnalysisFactory.create( human ) ).thenReturn( mock( GoldenPathSequenceAnalysis.class ) );
+        when( goldenPathSequenceAnalysisFactory.create( human ) ).thenReturn( goldenPathDb );
         when( blatResultService.findByBioSequence( any() ) )
                 .thenAnswer( a -> new ArrayList<>( Collections.singleton( BlatResult.Factory.newInstance() ) ) );
         when( probeMapper.processBlatResults( any(), anyCollection(), any() ) ).thenAnswer( a -> {
@@ -148,6 +151,26 @@ class ArrayDesignProbeMapperServiceLoaderThreadTest {
         assertThatThrownBy( this::map ).hasMessage( "goldenpath went away" );
 
         assertThat( loaderThreads ).hasSize( 1 );
+        loaderThreads.get( 0 ).join( 10_000 );
+        assertThat( loaderThreads.get( 0 ).isAlive() ).as( "the loader thread has stopped" ).isFalse();
+    }
+
+    /**
+     * The GoldenPath connection was opened after the delete, so a database without the tables the mapping reads
+     * failed on the first probe with the platform's associations already gone.
+     */
+    @Test
+    void aGoldenPathDatabaseThatCannotMapFailsBeforeAnythingIsDeleted() throws InterruptedException {
+        ProbeMapperConfig config = new ProbeMapperConfig();
+        doThrow( new IllegalStateException( "GoldenPath database hg38 has no ncbiRefSeqCurated table" ) )
+                .when( goldenPathDb ).checkTablesForProbeMapping( config );
+
+        assertThatThrownBy( () -> service.processArrayDesign( arrayDesign, config, true ) )
+                .hasMessageContaining( "has no ncbiRefSeqCurated table" );
+
+        verify( arrayDesignService, never() ).deleteGeneProductAlignmentAssociations( any() );
+        verifyNoInteractions( probeMapper, genomePersister, arrayDesignReportService );
+        verify( goldenPathDb ).close();
         loaderThreads.get( 0 ).join( 10_000 );
         assertThat( loaderThreads.get( 0 ).isAlive() ).as( "the loader thread has stopped" ).isFalse();
     }
