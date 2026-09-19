@@ -404,6 +404,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             return;
         }
 
+        // -mdate: skip datasets analysed after the limiting date; noNeedToRun records why
+        if ( getLimitingDate() != null && noNeedToRun( ee, DifferentialExpressionAnalysisEvent.class ) ) {
+            return;
+        }
+
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalStateException( ee + " does not have an experimental design populated." );
         }
