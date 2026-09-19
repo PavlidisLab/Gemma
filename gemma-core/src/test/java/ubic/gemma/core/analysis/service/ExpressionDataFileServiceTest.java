@@ -395,6 +395,26 @@ public class ExpressionDataFileServiceTest extends BaseTest5 {
                 .hasValue( reportFile );
     }
 
+    /**
+     * The catch that deletes the destination after a failed copy also enclosed the lock acquisition, so a lock that
+     * could not be acquired deleted a valid metadata file this call never wrote.
+     */
+    @Test
+    public void testCopyMetadataFileWhenTheLockFailsKeepsTheExistingFile() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setShortName( "lockFailure" );
+        Path destination = appdataHome.resolve( "metadata/lockFailure/notes.txt" );
+        PathUtils.createParentDirectories( destination );
+        Files.write( destination, "valid".getBytes( StandardCharsets.UTF_8 ) );
+        // a directory where the lock file goes makes acquiring the lock fail
+        Files.createDirectories( destination.resolveSibling( "notes.txt.lock" ) );
+        Path source = Files.createTempFile( "notes", ".txt" );
+
+        assertThatThrownBy( () -> expressionDataFileService.copyMetadataFile( ee, source, "notes.txt", true ) )
+                .hasMessageStartingWith( "Failed to acquire exclusive lock" );
+        assertThat( destination ).hasContent( "valid" );
+    }
+
     @Test
     public void testDeleteMetadata() throws IOException {
         ExpressionExperiment ee = new ExpressionExperiment();

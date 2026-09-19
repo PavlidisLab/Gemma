@@ -392,11 +392,19 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         try ( LockedPath ignored = fileLockManager.acquirePathLock( destinationFile, true ) ) {
             PathUtils.createParentDirectories( destinationFile );
             log.info( "Copying metadata file: " + existingFile + " to " + destinationFile + "." );
-            Files.copy( existingFile, destinationFile, StandardCopyOption.REPLACE_EXISTING );
+            try {
+                Files.copy( existingFile, destinationFile, StandardCopyOption.REPLACE_EXISTING );
+            } catch ( Exception e ) {
+                // only a failed copy may delete the destination: a lock that could not be acquired leaves an existing
+                // file this call never wrote
+                try {
+                    Files.deleteIfExists( destinationFile );
+                } catch ( IOException suppressed ) {
+                    e.addSuppressed( suppressed );
+                }
+                throw e;
+            }
             return destinationFile;
-        } catch ( Exception e ) {
-            Files.deleteIfExists( destinationFile );
-            throw e;
         }
     }
 
