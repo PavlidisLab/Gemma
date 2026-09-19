@@ -59,7 +59,7 @@ public class InitializeDatabaseCli extends AbstractCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
-        this.force = getOptions().hasOption( "force" );
+        this.force = commandLine.hasOption( "force" );
     }
 
     @Override

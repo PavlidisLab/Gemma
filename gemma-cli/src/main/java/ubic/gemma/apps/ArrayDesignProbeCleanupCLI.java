@@ -47,7 +47,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
     @Override
     protected void buildArrayDesignOptions( Options options ) {
-        Option fileOption = Option.builder( "f" ).hasArg().required().argName( "file" )
+        Option fileOption = Option.builder( "file" ).hasArg().required().argName( "file" )
                 .desc( "File (tabbed) with element ids in the first column" ).longOpt( "file" )
                 .build();
 
@@ -57,8 +57,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
     @Override
     protected void processArrayDesignOptions( CommandLine commandLine ) {
-        if ( commandLine.hasOption( 'f' ) ) {
-            file = commandLine.getOptionValue( 'f' );
+        if ( commandLine.hasOption( "file" ) ) {
+            file = commandLine.getOptionValue( "file" );
         }
     }
 

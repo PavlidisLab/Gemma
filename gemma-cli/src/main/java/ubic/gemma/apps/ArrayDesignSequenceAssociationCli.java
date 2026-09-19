@@ -71,7 +71,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     @Override
     protected void buildArrayDesignOptions( Options options ) {
 
-        Option fileOption = Option.builder( "f" ).argName( "Input sequence file" ).hasArg()
+        Option fileOption = Option.builder( "file" ).argName( "Input sequence file" ).hasArg()
                 .desc( "Path to file (FASTA for cDNA or three-column format for OLIGO). If the FASTA file doesn't have " +
                         "probe identifiers included, provide identifiers via the -i option." ).longOpt( "file" ).build();
 
@@ -111,8 +111,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             sequenceType = commandLine.getOptionValue( 'y' );
         }
 
-        if ( commandLine.hasOption( 'f' ) ) {
-            this.sequenceFile = commandLine.getOptionValue( 'f' );
+        if ( commandLine.hasOption( "file" ) ) {
+            this.sequenceFile = commandLine.getOptionValue( "file" );
         }
 
         if ( commandLine.hasOption( 's' ) ) {

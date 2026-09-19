@@ -65,7 +65,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                 .longOpt( "other" )
                 .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( CompletionType.PLATFORM ) ) )
                 .build();
-        Option allways = Option.builder( "all" ).desc( "Test all platforms listed against all (not just to the first one)" ).build();
+        Option allways = Option.builder( "allWays" ).desc( "Test all platforms listed against all (not just to the first one)" ).build();
 
         options.addOption( otherArrayDesignOption );
         options.addOption( allways );
@@ -79,7 +79,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             this.otherArrayDesignNames = new HashSet<>();
             this.otherArrayDesignNames.addAll( Arrays.asList( names ) );
         }
-        this.allWays = commandLine.hasOption( "all" );
+        this.allWays = commandLine.hasOption( "allWays" );
     }
 
     @Override
