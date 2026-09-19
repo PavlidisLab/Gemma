@@ -21,7 +21,10 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EntityLocator;
@@ -57,6 +60,10 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     private ExternalDatabaseService externalDatabaseService;
     @Autowired
     private EntityLocator entityLocator;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+    @Autowired
+    private SessionFactory sessionFactory;
 
     private NcbiGeneLoader loader;
     private String filePath = null;
@@ -64,6 +71,9 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     private String taxonCommonName = null;
     private boolean skipDownload = false;
     private Integer startNcbiId = null;
+    @Nullable
+    private Integer limit = null;
+    private boolean dryRun = false;
 
     public NcbiGeneLoaderCLI() {
         setRequireLogin();
@@ -101,6 +111,14 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
 
         options.addOption( Option.builder( "restart" ).longOpt( null ).desc( "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
                 + "and assumes you have the right -taxon option, if any)" ).argName( "ncbi id" ).hasArg().build() );
+
+        options.addOption( Option.builder( "limit" ).longOpt( "limit" ).hasArg().argName( "number of genes" ).type( Number.class )
+                .desc( "Stop after this many genes. No taxon is marked as having usable genes and the GENE database's last-updated date is not changed." )
+                .build() );
+
+        options.addOption( "dryRun", "dry-run", false, "Load each gene as usual, flush it to the database, then roll it back; "
+                + "files are still downloaded. Reports the genes that would be created or updated, the gene products that would "
+                + "be removed, and every gene that fails. Combine with -limit to rehearse a few genes." );
     }
 
     @Override
@@ -110,6 +128,10 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
         loader.setGeneWriteService( geneWriteService );
         loader.setSkipDownload( this.skipDownload );
         loader.setStartingNcbiId( startNcbiId );
+        loader.setLimit( limit );
+        loader.setDryRun( dryRun );
+        loader.setTransactionManager( transactionManager );
+        loader.setSessionFactory( sessionFactory );
 
         Taxon t = null;
         if ( taxonCommonName != null ) {
@@ -136,12 +158,24 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
             }
         }
 
-        ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE );
-        if ( ed != null ) {
-            externalDatabaseService.updateReleaseLastUpdated( ed, null, new Date() );
-        } else {
-            log.warn( String.format( "No external database with name %s.", ExternalDatabases.GENE ) );
+        if ( dryRun ) {
+            log.info( "Dry run: nothing was written." );
+            return;
         }
+
+        if ( limit != null && loader.getLoadedGeneCount() >= limit ) {
+            log.warn( "Stopped at the limit of " + limit + " genes; the " + ExternalDatabases.GENE + " database's last-updated date was not changed." );
+        } else {
+            ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE );
+            if ( ed != null ) {
+                externalDatabaseService.updateReleaseLastUpdated( ed, null, new Date() );
+            } else {
+                log.warn( String.format( "No external database with name %s.", ExternalDatabases.GENE ) );
+            }
+        }
+
+        log.info( "Gene records changed, so the probe-to-gene tables built from them are now stale: run updateGene2Cs, "
+                + "then makePlatformAnnotFiles." );
     }
 
     @Override
@@ -151,7 +185,7 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
 
     @Override
 
-    protected void processOptions( CommandLine commandLine ) {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'f' ) ) {
             filePath = commandLine.getOptionValue( 'f' );
         }
@@ -166,6 +200,13 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
         if ( commandLine.hasOption( "nodownload" ) ) {
             this.skipDownload = true;
         }
+        if ( commandLine.hasOption( "limit" ) ) {
+            this.limit = ( ( Number ) commandLine.getParsedOptionValue( "limit" ) ).intValue();
+            if ( this.limit <= 0 ) {
+                throw new ParseException( "-limit must be a positive number of genes." );
+            }
+        }
+        this.dryRun = commandLine.hasOption( "dryRun" );
     }
 
 }

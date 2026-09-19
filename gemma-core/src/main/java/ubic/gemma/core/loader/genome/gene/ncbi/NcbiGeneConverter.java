@@ -43,7 +43,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Convert NCBIGene2Accession objects into Gemma Gene objects with associated GeneProducts. Genes without products are
@@ -67,6 +69,9 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
     AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean sourceDone = new AtomicBoolean( false );
+    private AtomicReference<Throwable> failure = new AtomicReference<>();
+    private volatile boolean stopped = false;
+    private Thread convertThread;
 
     /**
      * @return the genBank
@@ -241,13 +246,14 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
 
-        Thread convertThread = ThreadUtils.newThread( new Runnable() {
+        convertThread = ThreadUtils.newThread( new Runnable() {
             @Override
             @SuppressWarnings("synthetic-access")
             public void run() {
                 while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {
+                    NcbiGeneData data = null;
                     try {
-                        NcbiGeneData data = geneInfoQueue.poll();
+                        data = geneInfoQueue.poll( 1, TimeUnit.SECONDS );
                         if ( data == null ) {
                             continue;
                         }
@@ -261,11 +267,16 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                         geneQueue.put( converted );
 
                     } catch ( InterruptedException e ) {
-                        NcbiGeneConverter.log.warn( "Interrupted" );
-                        break;
+                        // stopped by the loader
+                        return;
                     } catch ( Exception e ) {
-                        NcbiGeneConverter.log.error( e, e );
-                        break;
+                        // this used to log and 'break', which marked the conversion as complete: every later gene
+                        // was silently skipped
+                        if ( !stopped ) {
+                            failure.compareAndSet( null, new RuntimeException( "Failed to convert NCBI gene "
+                                    + ( data != null && data.getGeneInfo() != null ? data.getGeneInfo().getGeneId() : "(unknown)" ) + ".", e ) );
+                        }
+                        return;
                     }
                 }
                 producerDone.set( true );
@@ -273,6 +284,23 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         }, "Converter" );
 
         convertThread.start();
+    }
+
+    /**
+     * Where the conversion thread records the exception that ended it; the loader waits on this.
+     */
+    public void setFailure( AtomicReference<Throwable> failure ) {
+        this.failure = failure;
+    }
+
+    /**
+     * Stop the conversion thread, if it is running.
+     */
+    public void stop() {
+        stopped = true;
+        if ( convertThread != null ) {
+            convertThread.interrupt();
+        }
     }
 
     public boolean isProducerDone() {

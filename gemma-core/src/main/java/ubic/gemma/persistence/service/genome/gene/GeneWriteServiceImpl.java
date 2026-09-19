@@ -256,8 +256,8 @@ public class GeneWriteServiceImpl implements GeneWriteService {
              * Note: On occasion, we have two genes with the same symbol but different NCBI ids. This happens when NCBI
              * screws up somehow (?) and has two records for the same gene with different IDs, and we end up with them
              * both at the time they were considered separate genes. At some later date NCBI decides to (in effect)
-             * merge them, so one of the genes has to be deprecated. Such 'relics' are deleted by the DAO, because it
-             * results in more than one gene being found.
+             * merge them, so one of the genes has to be deprecated. Such 'relics' are left in place: GeneDaoImpl.find()
+             * no longer deletes them (HQL_SQL_AUDIT C4), it logs them and returns the gene with the matching NCBI id.
              */
 
         }
