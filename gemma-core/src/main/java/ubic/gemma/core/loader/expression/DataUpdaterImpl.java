@@ -28,7 +28,6 @@ import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.util.math.MatrixStats;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.security.audit.Audited;
@@ -193,7 +192,7 @@ public class DataUpdaterImpl implements DataUpdater {
         dataUpdaterAuditService.recordDataReplaced( ee,
                 "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform );
 
-        this.postprocess( ee );
+        this.postprocess( ee, "replaced" );
     }
 
     /**
@@ -264,7 +263,13 @@ public class DataUpdaterImpl implements DataUpdater {
         ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmMatrix, log2cpmQt );
 
         // important: replaceData takes care of the platform switch if necessary; call first. It also deletes old QTs, so from here we have to remake them.
-        this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+        RawDataPostprocessingException postprocessingFailure = null;
+        try {
+            this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+        } catch ( RawDataPostprocessingException e ) {
+            // the log2cpm data is stored and the old counts are gone; store the counts (and RPKM) before reporting it
+            postprocessingFailure = e;
+        }
 
         // Re-thaw + re-snapshot the EE's QTs: replaceData ran in its own transaction
         // and removed the old Counts/RPKM QTs from the DB, but the caller's detached
@@ -313,6 +318,9 @@ public class DataUpdaterImpl implements DataUpdater {
             self.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
 
+        if ( postprocessingFailure != null ) {
+            throw postprocessingFailure;
+        }
     }
 
     /**
@@ -362,11 +370,16 @@ public class DataUpdaterImpl implements DataUpdater {
                 throw new IllegalArgumentException( "Cannot apply to multiplatform data sets" );
 
             self.addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
+        } catch ( RawDataPostprocessingException e ) {
+            // the log2cpm data was stored and is now the preferred data; only its post-processing failed, so the
+            // counts must stay non-preferred
+            throw e;
         } catch ( Exception e ) {
-            DataUpdaterImpl.log.error( e, e );
             // try to recover.
             qt.setIsPreferred( true );
             qtService.update( qt );
+            throw new RuntimeException( String.format( "Failed to compute log2cpm from %s for %s; %s is the preferred quantitation type again.",
+                    qt, ee.getShortName(), qt.getName() ), e );
         }
 
     }
@@ -587,7 +600,7 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         if ( needsPost )
-            this.postprocess( ee );
+            this.postprocess( ee, "replaced" );
     }
 
     /**
@@ -656,7 +669,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
         if ( qt.getIsPreferred() ) {
             DataUpdaterImpl.log.info( "Postprocessing preferred data" );
-            this.postprocess( ee );
+            this.postprocess( ee, "added" );
             assert ee.getNumberOfDataVectors() != null;
         }
     }
@@ -732,7 +745,7 @@ public class DataUpdaterImpl implements DataUpdater {
         // EntityNotFoundException: BioAssay#N (see Phase 2 Step 7 commit 27d09617b5 which
         // identified this as the remaining residual after the per-call-site re-resolves).
         ee = experimentService.thaw( ee );
-        this.postprocess( ee );
+        this.postprocess( ee, "replaced" );
 
         assert ee.getNumberOfDataVectors() != null;
     }
@@ -1183,15 +1196,16 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * Generic
      *
-     * @param ee experiment
-     * @return experiment
+     * @param ee            experiment
+     * @param rawDataChange what was done to the raw data before this call ("replaced", "added"), for the error message
+     * @throws RawDataPostprocessingException if post-processing fails; the raw data change is already committed
      */
-    private void postprocess( ExpressionExperiment ee ) {
+    private void postprocess( ExpressionExperiment ee, String rawDataChange ) {
         // several transactions
         try {
             preprocessorService.process( ee );
-        } catch ( PreprocessingException e ) {
-            DataUpdaterImpl.log.error( "Error during postprocessing", e );
+        } catch ( RuntimeException e ) {
+            throw new RawDataPostprocessingException( ee, rawDataChange, e );
         }
     }
 
