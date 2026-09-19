@@ -402,7 +402,7 @@ public class AnnotationsWebService {
             description = "Terms that are returned satisfies the [rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [part_of](http://purl.obolibrary.org/obo/BFO_0000050) relations. When `direct` is set to false, this rule is applied recursively. "
                     + "Each returned term carries `viaSubClassOf`, saying which of the two reached it: `true` for a plain subClassOf ancestor, `false` for one reachable only across `part_of` (or, on CHEBI, `has_role`). On a CHEBI term that is the structure/role split — vancomycin's `glycopeptide` is `true`, its `antibacterial drug` is `false`.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The parent terms. Each carries `viaSubClassOf`, saying whether it was reached as a plain superclass or only across a non-taxonomic relation.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "Ontology inference timed out.",
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
@@ -425,7 +425,7 @@ public class AnnotationsWebService {
             description = "Terms that are returned satisfies the [inverse of rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [has_part](http://purl.obolibrary.org/obo/BFO_0000051) relations. When `direct` is set to false, this rule is applied recursively. "
                     + "Each returned term carries `viaSubClassOf`, saying which of the two reached it: `true` for a plain subclass descendant, `false` for one reachable only across the non-taxonomic relations.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The child terms. Each carries `viaSubClassOf`, saying whether it was reached as a plain subclass or only across a non-taxonomic relation.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "Ontology inference timed out.",
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
@@ -467,7 +467,7 @@ public class AnnotationsWebService {
                     + "**Provisional.** These rows stand in for a database migration that is written and not yet "
                     + "applied; when it runs this list becomes empty, and an empty list is the finished state, "
                     + "not a failure.",
-            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+            responses = { @ApiResponse(responseCode = "200", description = "The term URIs Gemma rewrites, each with the URI it is rewritten to.", useReturnTypeSchema = true, content = @Content()) })
     public ResponseDataObject<List<CanonicalUriValueObject>> getCanonicalUris(
             @Parameter(description = "Only return the mapping for this URI, if one exists.")
             @QueryParam("uri") @Nullable String uri ) {
@@ -547,7 +547,7 @@ public class AnnotationsWebService {
     @Operation(summary = "Retrieve an ontology term by its URI",
             description = "For a term the ontology has deprecated (`obsolete: true`), the response also carries where to go next: `termReplacedBy` (the successor's full IRI, `IAO:0100001`) with `termReplacedByLabel`, the weaker `consider` candidates, and `obsoletedInVersion`. These are absent/empty for live terms.",
             responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", description = "The term. For one the ontology has deprecated, `termReplacedBy` and `consider` say where to go instead; both are absent or empty for a live term.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             @ApiResponse(responseCode = "503", description = "Ontology lookup timed out.",
                     headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
@@ -667,7 +667,7 @@ public class AnnotationsWebService {
     @Path("/categories")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all ontology categories used in Gemma", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+            @ApiResponse(responseCode = "200", description = "Every ontology category in use across Gemma's annotations.", useReturnTypeSchema = true, content = @Content())
     })
     public ResponseDataObject<List<AnnotationCategoryValueObject>> getAnnotationCategories() {
         Map<String, List<String>> prefixesByKey = resolveCategoryPrefixes();
@@ -849,7 +849,7 @@ public class AnnotationsWebService {
     @Path("/predicates")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all ontology predicates used in Gemma", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+            @ApiResponse(responseCode = "200", description = "Every ontology predicate in use across Gemma's annotations.", useReturnTypeSchema = true, content = @Content())
     })
     public ResponseDataObject<List<OntologyTermSimpleValueObject>> getAnnotationPredicates() {
         List<OntologyTermSimpleValueObject> vos = ontologyService.getRelationTerms().stream()
@@ -885,7 +885,7 @@ public class AnnotationsWebService {
                     + "is true of a fraction of the cells and not of the study. Bulk is unaffected: a constant "
                     + "cell type there is a real experiment-level property. `includeCellTypeSubjects=true` "
                     + "returns them, for seeing what the cut removed.",
-            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+            responses = { @ApiResponse(responseCode = "200", description = "The relations between the given terms, each with the basis on which it was inferred.", useReturnTypeSchema = true, content = @Content()) })
     public ResponseDataObject<List<AnnotationRelationValueObject>> getAnnotationRelations(
             @Parameter(description = "Term on the subject side, as a URI or a plain value.") @QueryParam("subject") @Nullable String subject,
             @Parameter(description = "Term on the object side, as a URI or a plain value.") @QueryParam("object") @Nullable String object,
@@ -1068,7 +1068,7 @@ public class AnnotationsWebService {
                     + "related and on what basis. Omit 'to' to get everything the 'from' terms imply. "
                     + "Ambiguity is preserved rather than resolved: every candidate is returned, because a "
                     + "membership test is right whichever one is meant.",
-            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+            responses = { @ApiResponse(responseCode = "200", description = "The terms already implied by the others, so a caller can avoid adding a redundant annotation.", useReturnTypeSchema = true, content = @Content()) })
     public ResponseDataObject<List<AnnotationRelationValueObject>> getImpliedAnnotations(
             @Parameter(description = "Comma-separated term URIs the experiment already carries.", required = true) @QueryParam("from") @Nullable String from,
             @Parameter(description = "Comma-separated candidate term URIs to test. Omit to return everything implied.") @QueryParam("to") @Nullable String to,
@@ -1403,7 +1403,7 @@ public class AnnotationsWebService {
     @Costly("search")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Search for annotation tags", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", description = "The matching annotation tags.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
                     headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
@@ -1726,7 +1726,7 @@ public class AnnotationsWebService {
                     + "per-item. A per-item failure is reported in that item's `error` field and does NOT fail the "
                     + "batch. At most " + SEARCH_BATCH_MAX_ITEMS + " items per request.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "One result set per query in the batch, in the order the queries were given.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The batch is empty / oversized, or a shared parameter is invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
@@ -1848,7 +1848,7 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The matching annotation tags.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
@@ -1876,7 +1876,7 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of the [/datasets](#/default/getDatasets) endpoint. Use the `AND` operator to intersect the results of multiple queries.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The datasets carrying annotations that match the search, paginated.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
@@ -1935,7 +1935,7 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The datasets carrying annotations that match the search, paginated.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
@@ -1960,7 +1960,7 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of the [/datasets](#/default/getDatasets) endpoint with a `query` parameter and a `filter` parameter with `taxon.id = {taxon} or taxon.commonName = {taxon} or taxon.scientificName = {taxon}` to restrict the taxon instead.  Use the `AND` operator to intersect the results of multiple queries.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The taxon's datasets carrying annotations that match the search, paginated.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
@@ -2018,7 +2018,7 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The taxon's datasets carrying annotations that match the search, paginated.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
@@ -6305,7 +6305,7 @@ public class AnnotationsWebService {
                     + "Requires GROUP_CURATOR or GROUP_ADMIN.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "What the diff-then-apply actually changed: the annotations added, removed and left alone.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",

@@ -150,7 +150,7 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platforms, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     FilteredAndPaginatedResponseDataObjectArrayDesignValueObject.class,
                                     FilteredAndCursorPaginatedResponseDataObjectArrayDesignValueObject.class
@@ -189,7 +189,10 @@ public class PlatformsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count platforms matching the provided filter")
+    @Operation(summary = "Count platforms matching the provided filter",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The number of platforms matching the filter.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<Long> getNumberOfPlatforms(
             @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
         return respond( arrayDesignService.count( arrayDesignArgService.getFilters( filter ) ) );
@@ -218,7 +221,7 @@ public class PlatformsWebService {
                     + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); "
                     + "the path-derived platform-identifier predicate is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platforms the identifiers resolved to, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     FilteredAndPaginatedResponseDataObjectArrayDesignValueObject.class,
                                     FilteredAndCursorPaginatedResponseDataObjectArrayDesignValueObject.class
@@ -269,7 +272,7 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); the blacklist short-name/accession predicate is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The blacklisted platforms, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     FilteredAndPaginatedResponseDataObjectArrayDesignValueObject.class,
                                     FilteredAndCursorPaginatedResponseDataObjectArrayDesignValueObject.class
@@ -316,7 +319,7 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (legacy offset mode keys off `bioAssays.arrayDesignUsed.id`; cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the `bioAssays.arrayDesignUsed.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The experiments using the platform, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     PaginatedResponseDataObjectExpressionExperimentValueObject.class,
                                     CursorPaginatedResponseDataObjectExpressionExperimentValueObject.class
@@ -361,7 +364,7 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (legacy offset mode uses the DAO default order; cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the `arrayDesign.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platform's elements, in whichever pagination envelope the request selected. `sequence` and `genes` are populated only when asked for.",
                             content = @Content(schema = @Schema(oneOf = {
                                     FilteredAndPaginatedResponseDataObjectCompositeSequenceValueObject.class,
                                     FilteredAndCursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
@@ -588,7 +591,7 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the path-derived `arrayDesign.id = ?` constraint and the `{probes}` id/name set restriction are both preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The named elements, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     FilteredAndPaginatedResponseDataObjectCompositeSequenceValueObject.class,
                                     FilteredAndCursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
@@ -653,7 +656,7 @@ public class PlatformsWebService {
                     + "In cursor mode the result is always sorted by ascending `gene.id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
                     + "the path-derived `{platform}` and `{probe}` constraints are preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The genes the probe maps to, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     FilteredAndPaginatedResponseDataObjectGeneValueObject.class,
                                     FilteredAndCursorPaginatedResponseDataObjectGeneValueObject.class
@@ -710,7 +713,7 @@ public class PlatformsWebService {
     @Operation(summary = "Retrieve the gene-mapping summary for a probe",
             description = "Returns the probe value object with `geneMappingSummaries` populated: one entry per distinct BLAT alignment, carrying the alignment scores, the biological sequence metadata, and the genes supported by that alignment. Replaces the legacy `getGeneMappingSummary` DWR call.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The probe's gene-mapping summary: its BLAT alignments, its biological sequence, and the genes it supports.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "Probe not found on the given platform",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
@@ -761,7 +764,7 @@ public class PlatformsWebService {
     @Operation(summary = "Retrieve the BLAT alignments of a probe as a UCSC custom track",
             description = "Returns a UCSC Genome Browser custom track in PSL format covering every BLAT alignment of the probe: a `browser position` line framing the best-scoring alignment, a `track` line, and one PSL data line per alignment. Intended to be POSTed to UCSC's `hgCustom` as `hgct_customText` by the client.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "A UCSC custom track in PSL format, ready to paste into the genome browser.",
                             content = @Content(mediaType = TEXT_PLAIN_UTF8, schema = @Schema(type = "string"))),
                     @ApiResponse(responseCode = "404", description = "Probe not found on the given platform, or it has no BLAT alignments that can be placed in the genome browser",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
@@ -879,7 +882,7 @@ public class PlatformsWebService {
                     + "assigned terms. The non-standard flavours only exist for platforms whose annotations were "
                     + "generated with GO loaded; requesting one that is absent regenerates all three.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platform's annotation file. It is generated on demand and cached on disk, so the first request after a mapping change pays for the generation.",
                             content = @Content(schema = @Schema(type = "string"),
                                     examples = { @ExampleObject("classpath:/restapidocs/examples/platform-annotations.tsv") })),
                     @ApiResponse(responseCode = "400", description = "The annotation file type is not a recognised value.",
@@ -956,7 +959,7 @@ public class PlatformsWebService {
                     + "the open-state restriction (OPEN/IN_PROGRESS) are preserved; `totalElements` is `null` by "
                     + "default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platform's open curation tickets — a plain list, or the cursor envelope when a `cursor` was supplied.",
                             content = @Content(schema = @Schema(oneOf = {
                                     ResponseDataObjectListTicketValueObject.class,
                                     CursorPaginatedResponseDataObjectTicketValueObject.class

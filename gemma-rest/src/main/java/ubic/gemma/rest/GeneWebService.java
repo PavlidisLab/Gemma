@@ -116,7 +116,7 @@ public class GeneWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing both yields a 400. "
                     + "In cursor mode `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The genes, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     PaginatedResponseDataObjectGeneValueObject.class,
                                     CursorPaginatedResponseDataObjectGeneValueObject.class
@@ -172,7 +172,7 @@ public class GeneWebService {
                     + "Returns gene value-objects ordered by search score. Hard-cap on `limit` is "
                     + SEARCH_MAX_LIMIT_STR + "; default is " + SEARCH_DEFAULT_LIMIT_STR + ".",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The matching genes.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Empty / invalid query, or `limit` out of range.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "The search timed out.",
@@ -406,7 +406,10 @@ public class GeneWebService {
     @GET
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve genes matching gene identifiers")
+    @Operation(summary = "Retrieve genes matching gene identifiers",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The genes the identifiers resolved to.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<GeneValueObject>> getGenesByIds( // Params:
             @PathParam("genes") GeneArrayArg genes // Required
     ) {
@@ -428,7 +431,10 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the physical locations of a given gene")
+    @Operation(summary = "Retrieve the physical locations of a given gene",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The gene's physical locations.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocations( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
@@ -454,7 +460,7 @@ public class GeneWebService {
                     + "Pass `summary=true` to receive an enriched per-row VO with the gene-list this probe maps to and the BLAT-hit count (replaces the legacy `getGeneCsSummaries` DWR call); "
                     + "the page shape is unchanged but each element is a `CompositeSequenceSummaryValueObject` instead of the thin `CompositeSequenceValueObject`.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The probes for the gene across all platforms, in whichever pagination envelope the request selected. With `summary=true` each row also carries the genes that probe maps to and its BLAT-hit count.",
                             content = @Content(schema = @Schema(oneOf = {
                                     PaginatedResponseDataObjectCompositeSequenceValueObject.class,
                                     CursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
@@ -563,7 +569,10 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/goTerms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the GO terms associated to a gene")
+    @Operation(summary = "Retrieve the GO terms associated to a gene",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The GO terms annotated to the gene.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
             @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
@@ -588,7 +597,7 @@ public class GeneWebService {
     @Operation(summary = "Retrieve a fully-populated overview of a gene",
             description = "Returns the gene VO populated with aliases, multifunctionality rank, composite-sequence count, platform count, gene-set memberships, homologues, GO-term count, and associated-experiment count. Replaces the legacy `loadGeneDetails` DWR call used by the gemma-web gene page.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The gene with every field populated, which is more than the listing endpoints return.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "Gene not found",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
@@ -619,7 +628,7 @@ public class GeneWebService {
     @Operation(summary = "Retrieve the homologues of a gene",
             description = "Returns the gene's homologues across all taxa (via the homologene service). The legacy gemma-web gene page surfaces this in the Overview tab.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The gene's homologues in other taxa.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "Gene not found",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
@@ -660,7 +669,7 @@ public class GeneWebService {
                     + "Results are scoped to experiments the caller has read access to (ACL-filtered). "
                     + "Cold-cache latency is mitigated by a scheduled warm-up of a seed gene list (`gemma.diffex.warmup.*`).",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The gene's differential expression results, grouped by experiment.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "Gene not found",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })

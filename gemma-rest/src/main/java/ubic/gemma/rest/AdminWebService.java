@@ -313,7 +313,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "Every registered cache with its hit / miss counts. Stat fields are null on a cache whose JCache statistics MBean is missing, which is not the same as a cache that has seen no traffic.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<CacheListResponse> getCaches() {
         Collection<String> names = cacheManager.getCacheNames();
@@ -447,7 +447,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "A snapshot of Hibernate's statistics counters, as of this request.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<HibernateStatsResponse> getHibernateStats() {
         Statistics s = sessionFactory.getStatistics();
@@ -510,7 +510,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "The background tasks currently tracked in memory. A task that has finished and been evicted is simply absent.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<JobsListResponse> getJobs() {
         Collection<SubmittedTask> tasks = taskRunningService.getSubmittedTasks();
@@ -699,7 +699,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The platform, with its report freshly regenerated.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No platform matches the supplied identifier",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
@@ -760,7 +760,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "Per-index status for the Hibernate Search indices.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<SearchIndicesResponse> getSearchIndices() {
         SearchMapping mapping = Search.mapping( sessionFactory );
@@ -940,7 +940,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "A single read of the process's memory, GC, thread and load counters. No history — that is what `/metrics` is for.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<SystemSnapshotResponse> getSystem() {
         MemoryMXBean mem = ManagementFactory.getMemoryMXBean();
@@ -986,7 +986,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "The authenticated users that currently hold a session.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<SessionsResponse> getSessions() {
         List<Object> principals = sessionRegistry.getAllPrincipals();
@@ -1056,7 +1056,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "Which ontologies are loaded, and how far along the ones still loading are.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<OntologiesResponse> getOntologies(
             @QueryParam("includeTermCount") @DefaultValue("false") boolean includeTermCount ) {
@@ -1341,7 +1341,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The obsolete ontology terms still referenced by annotations, with where each is used.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = "Resolving terms exceeded the timeout; the ontologies are probably still loading.",
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -1442,7 +1442,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "A snapshot of the HikariCP connection pool. Answers 503 instead when the configured DataSource is not Hikari.",
                             content = @Content(schema = @Schema(implementation = ResponseDataObjectDbPoolResponse.class))),
                     @ApiResponse(responseCode = "503", description = "Configured DataSource is not HikariCP",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
@@ -1497,7 +1497,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "Whether the curation-agents service answered, and what it said.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<CurationAgentHealthResponse> getCurationAgentHealth() {
         CurationAgentHealthResponse body = new CurationAgentHealthResponse();
@@ -1553,7 +1553,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The scraped GEO metadata for the requested accessions.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Empty or missing accessions list",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "502", description = "GEO E-utilities request failed",
@@ -1755,7 +1755,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The last scrape watermark. Deprecated: the curation agent does its own scraping and does not update this.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No scrape has been run.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
@@ -1804,7 +1804,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "A roll-up of annotation-set and ticket lifecycle state across the corpus.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<CurationStatusResponse> getCurationStatus() {
         Date now = new Date();
@@ -1871,7 +1871,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "Every user account.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<UsersListResponse> getUsers(
             @QueryParam("includeDeleted") @DefaultValue("false") boolean includeDeleted ) {
@@ -1990,7 +1990,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The user after the change.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Empty body",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No user with that username",
@@ -2052,7 +2052,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The generated temporary password, shown exactly once and not recoverable afterwards.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No user with that username",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "User is soft-deleted",
@@ -2239,7 +2239,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "The blacklist entries.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<BlacklistListResponse> listBlacklistEntries(
             @QueryParam("limit") @DefaultValue("100") int limit,

@@ -95,7 +95,7 @@ public class CompletionsWebService {
             description = "Returns matching taxa as { value, description } pairs. Each taxon "
                     + "contributes up to four entries (id, ncbiId, commonName, scientificName); "
                     + "duplicates are dropped.",
-            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+            responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getTaxonCompletions(
             @Parameter(description = "Case-insensitive prefix to match against the candidate value.")
             @QueryParam("prefix") @DefaultValue("") String prefix,
@@ -126,7 +126,7 @@ public class CompletionsWebService {
             description = "Returns matching platforms. Each platform contributes id, shortName, name, "
                     + "and any alternate names. Pass {@code generic=true} to restrict to platforms that "
                     + "are valid as 'generic gene' targets.",
-            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+            responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getPlatformCompletions(
             @QueryParam("prefix") @DefaultValue("") String prefix,
             @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit,
@@ -151,7 +151,7 @@ public class CompletionsWebService {
     @Path("/protocols")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Prefix-aware completions for protocols",
-            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+            responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getProtocolCompletions(
             @QueryParam("prefix") @DefaultValue("") String prefix,
             @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
@@ -168,7 +168,7 @@ public class CompletionsWebService {
     @Path("/dataset-groups")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Prefix-aware completions for dataset (expression-experiment) groups",
-            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+            responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getDatasetGroupCompletions(
             @QueryParam("prefix") @DefaultValue("") String prefix,
             @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
@@ -188,7 +188,7 @@ public class CompletionsWebService {
             description = "Returns matching dataset identifiers (id, short name) with the dataset's "
                     + "short name as description. Backed by ExpressionExperimentService.loadAllIdentifiersAndName "
                     + "so the lookup avoids fetching full VOs.",
-            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+            responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getDatasetCompletions(
             @QueryParam("prefix") @DefaultValue("") String prefix,
             @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
@@ -206,7 +206,7 @@ public class CompletionsWebService {
     @Operation(summary = "Prefix-aware completions for ontology terms used as Characteristic values",
             description = "Returns matching ontology terms by URI and, where applicable, by OBO short ID. "
                     + "Backed by CharacteristicReadService.findValueGroupedByValueUri.",
-            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+            responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getOntologyTermCompletions(
             @QueryParam("prefix") @DefaultValue("") String prefix,
             @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {

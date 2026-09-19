@@ -92,7 +92,10 @@ public class TaxaWebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all available taxa")
+    @Operation(summary = "Retrieve all available taxa",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Every taxon Gemma knows about.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<TaxonValueObject>> getTaxa() {
         return respond( taxonService.loadAllValueObjects() );
     }
@@ -112,7 +115,10 @@ public class TaxaWebService {
     @GET
     @Path("/{taxa}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve taxa by their identifiers")
+    @Operation(summary = "Retrieve taxa by their identifiers",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The taxa the identifiers resolved to.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<TaxonValueObject>> getTaxaByIds( @PathParam("taxa") TaxonArrayArg taxaArg ) {
         Filters filters = taxonArgService.getFilters( taxaArg );
         Sort sort = taxonService.getSort( "id", null, Sort.NullMode.LAST );
@@ -133,7 +139,10 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/chromosomes/{chromosome}/genes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve genes overlapping a given region in a taxon")
+    @Operation(summary = "Retrieve genes overlapping a given region in a taxon",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The genes overlapping the requested region.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<GeneValueObject>> getTaxonGenesOverlappingChromosome( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("chromosome") String chromosomeName, // Required
@@ -164,7 +173,7 @@ public class TaxaWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the `taxon.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The taxon's genes, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     PaginatedResponseDataObjectGeneValueObject.class,
                                     CursorPaginatedResponseDataObjectGeneValueObject.class
@@ -206,7 +215,10 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve genes matching gene identifiers in a given taxon")
+    @Operation(summary = "Retrieve genes matching gene identifiers in a given taxon",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The genes the identifiers resolved to, restricted to the taxon.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<GeneValueObject>> getTaxonGenesByIds( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArrayArg geneArg // Required
@@ -231,7 +243,7 @@ public class TaxaWebService {
                     + "the path-derived `{taxon}` + `{gene}` constraints are preserved (taxon enforced at gene-resolution time, identical scope to the offset variant); "
                     + "`totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The probes for the gene across the taxon's platforms, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     PaginatedResponseDataObjectCompositeSequenceValueObject.class,
                                     CursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
@@ -259,7 +271,10 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}/goTerms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the GO terms associated to a gene in a given taxon")
+    @Operation(summary = "Retrieve the GO terms associated to a gene in a given taxon",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The GO terms annotated to the gene.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getTaxonGeneGoTerms( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg ) {
         return respond( geneArgService.getGeneGoTermsInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
@@ -275,7 +290,10 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve physical locations for a given gene and taxon")
+    @Operation(summary = "Retrieve physical locations for a given gene and taxon",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The gene's physical locations.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<PhysicalLocationValueObject>> getTaxonGeneLocations( // Params:
             @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @PathParam("gene") GeneArg<?> geneArg // Required
@@ -300,7 +318,7 @@ public class TaxaWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); the `taxon.id = ?` constraint is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The taxon's datasets, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     FilteredAndPaginatedResponseDataObjectExpressionExperimentValueObject.class,
                                     FilteredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject.class

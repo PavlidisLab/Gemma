@@ -931,4 +931,50 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                         new TreeSet<>( CollectionUtils.subtract( SCHEMALESS_WRITE_RESPONSES, known ) ) )
                 .containsExactlyInAnyOrderElementsOf( SCHEMALESS_WRITE_RESPONSES );
     }
+
+    /**
+     * {@code description} is REQUIRED on a Response Object in OpenAPI 3.0, so a document with one
+     * missing is invalid. 184 responses had none and another 59 carried swagger-core's "default
+     * response" placeholder, which is the same thing wearing a hat.
+     *
+     * <p>Two exclusions. {@code GET /genes/probes/refresh} publishes {@code *&#47;*} with no content
+     * swagger-core can attach a description to — swagger-api/swagger-core#4693, which
+     * {@code testEnsureThatAllEndpointHaveADefaultGetResponseOrIsARedirection} already skips for the
+     * same reason. The {@code /custom} paths are Jersey test fixtures from
+     * {@code UnknownQueryParameterFilterTest} and friends: they are on this module's test classpath,
+     * so the scan picks them up here, and they are not in the deployed spec.
+     */
+    @Test
+    public void testEveryResponseHasADescription() {
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            if ( pathEntry.getKey().startsWith( "/custom" ) ) {
+                continue;
+            }
+            for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathEntry.getValue().readOperationsMap().entrySet() ) {
+                Operation operation = opEntry.getValue();
+                if ( operation.getResponses() == null || "refreshGenesProbes".equals( operation.getOperationId() ) ) {
+                    continue;
+                }
+                for ( Map.Entry<String, ApiResponse> responseEntry : operation.getResponses().entrySet() ) {
+                    inspected++;
+                    String description = responseEntry.getValue().getDescription();
+                    if ( description == null || description.trim().isEmpty()
+                            || "default response".equals( description ) ) {
+                        offenders.add( opEntry.getKey() + " " + pathEntry.getKey() + " -> " + responseEntry.getKey()
+                                + " (" + operation.getOperationId() + ")" );
+                    }
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to declare many responses; inspected only %d", inspected )
+                .isGreaterThan( 500 );
+        assertThat( offenders )
+                .withFailMessage( "responses with no description, or still on swagger-core's placeholder."
+                        + " OpenAPI 3.0 requires one, so the document is invalid without it: %s", offenders )
+                .isEmpty();
+    }
 }
