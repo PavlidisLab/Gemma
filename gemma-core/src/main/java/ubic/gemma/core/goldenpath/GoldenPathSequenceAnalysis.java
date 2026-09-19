@@ -47,6 +47,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -89,6 +90,11 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * cache results of mRNA queries.
      */
     private final LRUMap cache = new LRUMap( 2000 );
+
+    /**
+     * Longest transcript span per table; see {@link #getMaxTranscriptSpan}.
+     */
+    private final Map<String, Long> maxTranscriptSpans = new HashMap<>();
 
     public GoldenPathSequenceAnalysis( Taxon taxon ) {
         super( taxon );
@@ -439,14 +445,13 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         String query = "SELECT SUBSTRING_INDEX(r.name, '.', 1), r.name2, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', kgr.description) "
                 + " FROM knownGene as kg INNER JOIN knownToRefSeq kr on kr.name=kg.name inner join kgXref kgr on kgr.kgID=kg.name "
                 + " INNER JOIN " + REFSEQ_TABLE + " r ON r.name=kr.value  WHERE "
-                + "((kg.txStart >= ? AND kg.txEnd <= ?) OR (kg.txStart <= ? AND kg.txEnd >= ?) OR "
-                + "(kg.txStart >= ?  AND kg.txStart <= ?) OR  (kg.txEnd >= ? AND  kg.txEnd <= ? )) and kg.chrom = ? ";
+                + overlaps( "kg" );
 
         if ( strand != null ) {
             query = query + " AND kg.strand = ? ";
         }
 
-        Collection<GeneProduct> known2refseq = this.findGenesByQuery( start, end, searchChrom, strand, query );
+        Collection<GeneProduct> known2refseq = this.findGenesByQuery( start, end, searchChrom, strand, query, "knownGene" );
         Collection<GeneProduct> result = new HashSet<>( known2refseq );
 
         /*
@@ -455,13 +460,12 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         query = "SELECT kgxr.mRNA, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds, CONCAT('Known gene: ', kgxr.description) "
                 + " FROM knownGene as kg INNER JOIN"
                 + " kgXref AS kgxr ON kg.name=kgxr.kgID LEFT OUTER JOIN knownToRefSeq kr on kr.name=kg.name WHERE kr.value IS NULL AND "
-                + "((kg.txStart >= ? AND kg.txEnd <= ?) OR (kg.txStart <= ? AND kg.txEnd >= ?) OR "
-                + "(kg.txStart >= ?  AND kg.txStart <= ?) OR  (kg.txEnd >= ? AND  kg.txEnd <= ? )) and kg.chrom = ? ";
+                + overlaps( "kg" );
 
         if ( strand != null ) {
             query = query + " AND kg.strand = ? ";
         }
-        Collection<GeneProduct> knowng = this.findGenesByQuery( start, end, searchChrom, strand, query );
+        Collection<GeneProduct> knowng = this.findGenesByQuery( start, end, searchChrom, strand, query, "knownGene" );
         result.addAll( knowng );
 
         return result;
@@ -495,13 +499,12 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
          */
         String query = "SELECT SUBSTRING_INDEX(r.name, '.', 1), r.name2, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', l.product) "
                 + "FROM " + REFSEQ_TABLE + " AS r LEFT OUTER JOIN " + REFSEQ_LINK_TABLE + " AS l ON l.id = r.name WHERE "
-                + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
-                + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
+                + overlaps( "r" );
 
         if ( strand != null ) {
             query = query + " AND r.strand = ?  ";
         }
-        return this.findGenesByQuery( start, end, searchChrom, strand, query );
+        return this.findGenesByQuery( start, end, searchChrom, strand, query, REFSEQ_TABLE );
     }
 
     /**
@@ -868,20 +871,39 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param query query
      * @return List of GeneProducts. This is a collection of transient instances, not from Gemma's database.
      */
-    private Collection<GeneProduct> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand,
-            String query ) {
-        // Cases:
-        // 1. gene is contained within the region: txStart > start & txEnd < end;
-        // 2. region is contained within the gene: txStart < start & txEnd > end;
-        // 3. region overlaps start of gene: txStart > start & txStart < end.
-        // 4. region overlaps end of gene: txEnd > start & txEnd < end
-        //
+    /**
+     * The condition for a transcript overlapping the region, with its parameters in the order
+     * {@link #findGenesByQuery} binds them.
+     * <p>
+     * A transcript overlaps [start, end] when {@code txStart <= end AND txEnd >= start}; that is the union of the four
+     * cases the query used to spell out (contained in, containing, overlapping the start, overlapping the end). Only
+     * {@code txStart} is indexed, and {@code txStart <= end} alone reads every transcript on the chromosome that starts
+     * before the region. No transcript that overlaps it can start earlier than {@code start} minus the longest
+     * transcript in the table, so that bound limits the index range without changing the result.
+     */
+    private static String overlaps( String alias ) {
+        return alias + ".txStart <= ? AND " + alias + ".txStart >= ? AND " + alias + ".txEnd >= ? AND " + alias + ".chrom = ? ";
+    }
 
+    /**
+     * The longest transcript span in a table, which bounds {@link #overlaps}. Read once per table; the tables do not
+     * change while a mapping runs.
+     */
+    private long getMaxTranscriptSpan( String table ) {
+        return maxTranscriptSpans.computeIfAbsent( table, t -> {
+            Long max = this.getJdbcTemplate().queryForObject( "SELECT MAX(txEnd - txStart) FROM " + t, Long.class );
+            return max != null ? max : 0L;
+        } );
+    }
+
+    private Collection<GeneProduct> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand,
+            String query, String table ) {
+        long earliestStart = Math.max( 0L, starti - this.getMaxTranscriptSpan( table ) );
         Object[] params;
         if ( strand != null ) {
-            params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome, strand };
+            params = new Object[] { endi, earliestStart, starti, chromosome, strand };
         } else {
-            params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome };
+            params = new Object[] { endi, earliestStart, starti, chromosome };
         }
 
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<GeneProduct>>() {
