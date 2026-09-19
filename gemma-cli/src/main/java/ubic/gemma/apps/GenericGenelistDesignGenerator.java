@@ -315,7 +315,11 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         log.info( "Platform has " + arrayDesignService.countCompositeSequencesWithGenes( platform, true )
                 + " 'elements' associated with genes." );
 
-        if ( !noDB ) arrayDesignReportService.generateArrayDesignReport( platform.getId() );
+        if ( !noDB && arrayDesignReportService.generateArrayDesignReport( platform.getId() ) == null ) {
+            // the platform itself is updated; carry on so the audit event is recorded and stale files are deleted
+            addErrorObject( platform.getShortName(), "The platform report could not be written or read back (see "
+                    + "the log); regenerate it with updatePlatformReports -a " + platform.getShortName() );
+        }
 
         String auditMessage = count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
                 + " updated elements; " + numWithNoTranscript + " genes had no transcript; " + geneNotFound + " genes from the file could not be found";

@@ -30,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -43,6 +44,8 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationSer
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -95,6 +98,12 @@ class ArrayDesignPipelineCliTest extends BaseCliTest5 {
         @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
         public ArrayDesignSequenceAssociationCli arrayDesignSequenceAssociationCli() {
             return new ArrayDesignSequenceAssociationCli();
+        }
+
+        @Bean
+        @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+        public ArrayDesignReportCli arrayDesignReportCli() {
+            return new ArrayDesignReportCli();
         }
 
         @Bean
@@ -204,7 +213,13 @@ class ArrayDesignPipelineCliTest extends BaseCliTest5 {
     private ObjectProvider<ArrayDesignSequenceAssociationCli> sequenceAssociationCli;
 
     @Autowired
+    private ObjectProvider<ArrayDesignReportCli> reportCli;
+
+    @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private ArrayDesignReportService arrayDesignReportService;
 
     @Autowired
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
@@ -230,7 +245,8 @@ class ArrayDesignPipelineCliTest extends BaseCliTest5 {
     @AfterEach
     void tearDown() {
         reset( arrayDesignService, arrayDesignSequenceAlignmentService, auditEventService, cliArrayDesignAuditService,
-                arrayDesignProbeMapperService, bioSequenceService, arrayDesignSequenceProcessingService, entityLocator );
+                arrayDesignProbeMapperService, bioSequenceService, arrayDesignSequenceProcessingService, entityLocator,
+                arrayDesignReportService );
     }
 
     /**
@@ -435,6 +451,33 @@ class ArrayDesignPipelineCliTest extends BaseCliTest5 {
         assertThat( sequenceAssociationCli.getObject() )
                 .withArguments( "-s", "AB000001", "-y", "EST" )
                 .fails();
+    }
+
+    /**
+     * A report that could not be written used to be logged by the report service and counted as written here.
+     */
+    @Test
+    @WithMockUser
+    void updatePlatformReportsFailsWhenAReportCannotBeWritten() {
+        ArrayDesign unwritable = platform( "GPL1", TechnologyType.ONECOLOR );
+        unwritable.setId( 1L );
+        ArrayDesign next = platform( "GPL2", TechnologyType.ONECOLOR );
+        next.setId( 2L );
+        ArrayDesignValueObject unwritableVo = new ArrayDesignValueObject( 1L );
+        ArrayDesignValueObject nextVo = new ArrayDesignValueObject( 2L );
+        when( arrayDesignService.loadAll() ).thenReturn( Arrays.asList( unwritable, next ) );
+        when( arrayDesignService.loadValueObjectsByIds( Collections.singleton( 1L ) ) )
+                .thenReturn( Collections.singletonList( unwritableVo ) );
+        when( arrayDesignService.loadValueObjectsByIds( Collections.singleton( 2L ) ) )
+                .thenReturn( Collections.singletonList( nextVo ) );
+        doThrow( new UncheckedIOException( new IOException( "No space left on device" ) ) )
+                .when( arrayDesignReportService ).generateArrayDesignReport( same( unwritableVo ) );
+
+        assertThat( reportCli.getObject() )
+                .withArguments( "-all" )
+                .fails();
+
+        verify( arrayDesignReportService ).generateArrayDesignReport( same( nextVo ) );
     }
 
     /**
