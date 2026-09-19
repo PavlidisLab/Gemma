@@ -19,18 +19,18 @@
 package ubic.gemma.core.loader.genome;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.util.ShellUtils;
+import ubic.gemma.core.util.StreamDrainer;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import org.springframework.lang.Nullable;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Simple implementation of methods for fetching sequences from blast-formatted databases, using blastdbcmd (aka
@@ -184,13 +184,18 @@ public class SimpleFastaCmd implements FastaCmd {
     }
 
     private Collection<BioSequence> getSequencesFromFastaCmdOutput( Process pr ) {
+        // read stderr while stdout is parsed: stdout used to be read to its end first, so a run that wrote more than a
+        // pipe buffer's worth to stderr blocked, and so did this
+        StreamDrainer stderr = StreamDrainer.start( pr.getErrorStream(), fastaCmdExe + " stderr" );
+        boolean exited = false;
         try {
             final FastaParser parser = new FastaParser();
             parser.parse( pr.getInputStream() );
             int exitVal = pr.waitFor();
+            exited = true;
             if ( exitVal != 0 ) {
                 // check standard error stream for specific error messages
-                String errorMessage = StringUtils.strip( IOUtils.toString( pr.getErrorStream(), StandardCharsets.UTF_8 ) );
+                String errorMessage = StringUtils.strip( stderr.await( 10, TimeUnit.SECONDS ) );
                 if ( errorMessage.contains( "Entry or entries not found in BLAST database" ) || errorMessage.contains( "Skipped" ) ) {
                     log.warn( "There are warnings in " + fastaCmdExe + " output:\n" + errorMessage );
                     return parser.getResults();
@@ -203,6 +208,10 @@ public class SimpleFastaCmd implements FastaCmd {
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );
+        } finally {
+            if ( !exited ) {
+                pr.destroy();
+            }
         }
     }
 }

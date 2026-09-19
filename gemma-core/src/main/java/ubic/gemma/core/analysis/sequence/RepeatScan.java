@@ -19,19 +19,18 @@
 package ubic.gemma.core.analysis.sequence;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.loader.genome.FastaParser;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.ShellUtils;
+import ubic.gemma.core.util.StreamDrainer;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -177,22 +176,29 @@ public class RepeatScan {
                 .redirectOutput( ProcessBuilder.Redirect.appendTo( new File( "/dev/null" ) ) )
                 .redirectError( ProcessBuilder.Redirect.PIPE )
                 .start();
+        // read stderr while RepeatMasker runs: it used to be read only after exit, so a run that wrote more than a pipe
+        // buffer's worth to it blocked, and this waited forever
+        StreamDrainer stderr = StreamDrainer.start( run.getErrorStream(), "RepeatMasker stderr" );
 
         // wait...
         StopWatch overallWatch = StopWatch.createStarted();
+        String errorMessage;
         try {
             while ( !run.waitFor( RepeatScan.UPDATE_INTERVAL_MS, TimeUnit.MILLISECONDS ) ) {
                 String minutes = StopWatchUtils.getMinutesElapsed( overallWatch );
                 RepeatScan.log.info( "RepeatMasker: " + minutes + " minutes elapsed" );
             }
+            errorMessage = StringUtils.strip( stderr.await( 10, TimeUnit.SECONDS ) );
         } catch ( InterruptedException e ) {
+            // -parallel starts worker processes
+            run.descendants().forEach( ProcessHandle::destroy );
+            run.destroy();
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );
         }
 
         int exitVal = run.exitValue();
         if ( exitVal != 0 ) {
-            String errorMessage = StringUtils.strip( IOUtils.toString( run.getErrorStream(), StandardCharsets.UTF_8 ) );
             throw new RuntimeException( "RepeatMasker failed with exit value " + exitVal + ":\n" + errorMessage );
         }
 
