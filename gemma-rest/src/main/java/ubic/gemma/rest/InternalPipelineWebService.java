@@ -12,6 +12,8 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.HeaderParam;
@@ -65,7 +67,10 @@ public class InternalPipelineWebService {
     @POST
     @Path("/jobs/{jobId}/events")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Append one event from the scheduler-side pipeline")
+    @Operation(summary = "Append one event from the scheduler-side pipeline",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The event as appended.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<PipelineJobEvent> postEvent(
             @PathParam("jobId") Long jobId,
             @HeaderParam("Authorization") String authHeader,

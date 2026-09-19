@@ -135,7 +135,7 @@ public class DatasetVisualizationWebService {
                     + "currently masked at creation time, so the flag is usually a no-op there today. "
                     + "NO ordering decisions are made server-side; the client sorts, groups, palettes, and renders.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
+                    @ApiResponse(responseCode = "200", description = "The matrix and the metadata a client needs to render the heatmap itself. Gemma renders nothing here.", useReturnTypeSchema = true,
                             content = @Content(examples = @ExampleObject("classpath:/restapidocs/examples/dataset-heatmap-data.json"))),
                     @ApiResponse(responseCode = "400", description = "Malformed query parameters.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),

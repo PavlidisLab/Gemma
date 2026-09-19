@@ -100,7 +100,7 @@ public class ExperimentSetsWebService {
                     + "public ones. `query` matches the name case-insensitively. `includeMembers=true` "
                     + "populates `expressionExperimentIds`, which is the expensive part — a set can "
                     + "hold thousands of datasets — so it is off by default.",
-            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+            responses = @ApiResponse(responseCode = "200", description = "The experiment sets, paginated.", useReturnTypeSchema = true, content = @Content()))
     public PaginatedResponseDataObject<ExpressionExperimentSetValueObject> getExperimentSets(
             @Parameter(description = "Only the sets owned by the caller.")
             @QueryParam("mine") @DefaultValue("false") boolean mine,
@@ -135,7 +135,7 @@ public class ExperimentSetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve one experiment set",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The experiment set.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionExperimentSetValueObject> getExperimentSet(
@@ -152,7 +152,7 @@ public class ExperimentSetsWebService {
     @Operation(summary = "List the datasets in an experiment set",
             description = "The members as dataset value objects rather than bare ids.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The datasets in the set, or an empty list when it has no members.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<ExpressionExperimentDetailsValueObject>> getExperimentSetDatasets(
@@ -205,7 +205,7 @@ public class ExperimentSetsWebService {
     @Operation(summary = "Rename an experiment set, or change its description",
             description = "Membership is not touched here; use `PUT /experiment-sets/{id}/datasets`.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The experiment set after the change.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionExperimentSetValueObject> updateExperimentSet(
@@ -236,7 +236,7 @@ public class ExperimentSetsWebService {
             description = "The body's `datasetIds` become the set's members exactly — this is a replace, "
                     + "not an add. Sending an empty list empties the set.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The experiment set after its membership was replaced.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "A member does not match the set's declared taxon.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",

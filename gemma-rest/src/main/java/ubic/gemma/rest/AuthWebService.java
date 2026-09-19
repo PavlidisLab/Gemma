@@ -11,6 +11,8 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
@@ -94,7 +96,10 @@ public class AuthWebService {
     @Operation(summary = "Authenticate username/password and mint an opaque bearer token",
             description = "POST a JSON body {username, password}. On success the response carries "
                     + "{token, user} where token is an opaque random string; "
-                    + "send it as Authorization: Bearer <token> on subsequent calls.")
+                    + "send it as Authorization: Bearer <token> on subsequent calls.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The minted token and the canonical user shape. Send the token as `Authorization: Bearer <token>` on subsequent calls.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+            })
     public Response login( LoginRequest req ) {
         if ( req == null || req.username == null || req.password == null
                 || req.username.isEmpty() ) {
@@ -140,7 +145,10 @@ public class AuthWebService {
     @POST
     @Path("/logout")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Revoke the presented bearer token (idempotent)")
+    @Operation(summary = "Revoke the presented bearer token (idempotent)",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The token was revoked, or was already unknown — this is idempotent either way.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+            })
     public Response logout( @Context HttpServletRequest request ) {
         String token = BearerTokenAuthenticationFilter.extractBearerToken( request.getHeader( "Authorization" ) );
         if ( token != null ) {
@@ -161,7 +169,10 @@ public class AuthWebService {
     @Path("/me")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Retrieve the authenticated user (alias of /rest/v2/users/me)")
+    @Operation(summary = "Retrieve the authenticated user (alias of /rest/v2/users/me)",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The user behind the current credential.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<UserValueObject> me() {
         User user = userManager.getCurrentUser();
         if ( user == null ) {

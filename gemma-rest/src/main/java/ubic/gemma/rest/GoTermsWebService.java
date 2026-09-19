@@ -138,7 +138,7 @@ public class GoTermsWebService {
                     + "the response carries `totalElements` so callers can show "
                     + "'N genes — refine the term or pick individually'.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The genes annotated to the term, paginated. With `propagate=true` this includes genes annotated only to the term's descendants.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Invalid termUri / taxon / limit / offset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
@@ -310,7 +310,7 @@ public class GoTermsWebService {
                     "the count. `propagate=true` includes descendants. `maxTerms` (default 0) " +
                     "caps the BFS descendant walk; useful for very broad parent terms.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The number of distinct genes annotated to the term.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Invalid termUri / taxon / maxTerms.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,

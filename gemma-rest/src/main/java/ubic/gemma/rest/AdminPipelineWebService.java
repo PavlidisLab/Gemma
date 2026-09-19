@@ -12,6 +12,8 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
@@ -79,7 +81,10 @@ public class AdminPipelineWebService {
     @Path("/registry")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "List pipeline names known to this Gemma instance")
+    @Operation(summary = "List pipeline names known to this Gemma instance",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The pipeline names this instance can run.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<String>> pipelineRegistry() {
         if ( pipelineRegistryCsv == null || pipelineRegistryCsv.isBlank() ) {
             return respond( Collections.emptyList() );
@@ -98,7 +103,10 @@ public class AdminPipelineWebService {
     @Path("/batches")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Submit a new pipeline batch")
+    @Operation(summary = "Submit a new pipeline batch",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The batch as submitted.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<PipelineJobBatch> submitBatch( SubmitBatchRequest req ) {
         if ( req == null || req.pipeline == null || req.pipeline.isBlank() ) {
             throw new BadRequestException( "pipeline is required" );
@@ -126,7 +134,10 @@ public class AdminPipelineWebService {
     @Path("/batches")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "List batches submitted by the current curator")
+    @Operation(summary = "List batches submitted by the current curator",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The batches submitted by the calling curator.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<PipelineJobBatch>> listMyBatches(
             @QueryParam("state") PipelineJobBatch.BatchState state,
             @QueryParam("limit") Integer limit ) {
@@ -143,7 +154,10 @@ public class AdminPipelineWebService {
     @Path("/batches/{batchId}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Retrieve one batch with rollup state")
+    @Operation(summary = "Retrieve one batch with rollup state",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The batch, with the rolled-up state of its jobs.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<PipelineJobBatch> getBatch( @PathParam("batchId") Long batchId ) {
         PipelineJobBatch batch = pipelineJobBatchService.get( batchId );
         if ( batch == null ) throw new NotFoundException( "no batch " + batchId );
@@ -154,7 +168,10 @@ public class AdminPipelineWebService {
     @Path("/batches/{batchId}/cancel")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Cancel every non-terminal job in the batch")
+    @Operation(summary = "Cancel every non-terminal job in the batch",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The batch after every non-terminal job was asked to cancel.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<PipelineJobBatch> cancelBatch( @PathParam("batchId") Long batchId ) {
         pipelineJobBatchService.cancelBatch( batchId );
         PipelineJobBatch batch = pipelineJobBatchService.get( batchId );
@@ -165,7 +182,10 @@ public class AdminPipelineWebService {
     @Path("/batches/{batchId}/jobs/{jobId}/events")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "List progress events for one job")
+    @Operation(summary = "List progress events for one job",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The progress events recorded for the job.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<PipelineJobEvent>> jobEvents(
             @PathParam("batchId") Long batchId,
             @PathParam("jobId") Long jobId,
@@ -181,7 +201,10 @@ public class AdminPipelineWebService {
     @Path("/batches/{batchId}/jobs/{jobId}/cancel")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Cancel one job mid-batch")
+    @Operation(summary = "Cancel one job mid-batch",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The cancellation was requested. The body is always `true`; a job that cannot be cancelled fails with an error status instead.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<Boolean> cancelJob( @PathParam("batchId") Long batchId,
             @PathParam("jobId") Long jobId ) {
         // batchId is a path-readability hint only; the service operates on jobId.

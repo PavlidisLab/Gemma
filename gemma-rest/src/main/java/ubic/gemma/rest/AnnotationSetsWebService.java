@@ -347,7 +347,10 @@ public class AnnotationSetsWebService {
                     + "`?sort=` takes `createdAt` (default), `ranAt` or `id`, prefixed `-` for descending "
                     + "(the default) or `+` for ascending. 🛑 `ranAt` is when the agent RUN happened and "
                     + "`createdAt` is when the row was stored; a queue wants the former, and sets no run "
-                    + "produced have no `ranAt` and sort last under `-ranAt`.")
+                    + "produced have no `ranAt` and sort last under `-ranAt`.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The matching annotation sets as thin summary rows, paginated. The full payload is at `GET /annotation-sets/{id}`.", useReturnTypeSchema = true, content = @Content())
+            })
     public PaginatedResponseDataObject<AnnotationSetSummaryResponse> listAnnotationSetsAcross(
             @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, `commit`, or `all` (default).")
             @QueryParam("role") @Nullable String role,
@@ -453,7 +456,10 @@ public class AnnotationSetsWebService {
     @Path("/annotation-sets/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "Fetch a single annotation set (full payload)")
+    @Operation(summary = "Fetch a single annotation set (full payload)",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The annotation set, full payload.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<AnnotationSetResponse> getAnnotationSet(
             @PathParam("id") Long id
     ) {
@@ -1025,7 +1031,10 @@ public class AnnotationSetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Clear finalized status on an annotation set")
+    @Operation(summary = "Clear finalized status on an annotation set",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The finalized status was cleared.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+            })
     public Response reopenAnnotationSet(
             @PathParam("id") Long id
     ) {

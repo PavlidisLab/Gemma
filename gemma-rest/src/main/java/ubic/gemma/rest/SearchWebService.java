@@ -100,7 +100,7 @@ public class SearchWebService {
     @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", description = "The matching results, each carrying the object it found and the score it matched with.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "400", description = "Invalid search query, taxon, platform result type or exclusion specification.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             @ApiResponse(responseCode = "503", description = "The search timed out.",
                     headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),

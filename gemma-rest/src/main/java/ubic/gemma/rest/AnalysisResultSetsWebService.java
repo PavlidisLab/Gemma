@@ -135,7 +135,7 @@ public class AnalysisResultSetsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (the user's `?sort=` is ignored); the dataset / databaseEntry / filter constraints are preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The matching result sets.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(oneOf = {
                                     FilteredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class,
                                     FilteredAndCursorPaginatedResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class
@@ -182,7 +182,10 @@ public class AnalysisResultSetsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count result sets matching the provided filter")
+    @Operation(summary = "Count result sets matching the provided filter",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The number of result sets matching the filter.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<Long> getNumberOfResultSets(
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
         return respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
@@ -214,7 +217,7 @@ public class AnalysisResultSetsWebService {
                     + "For interaction terms, `{fvId}` is structured as `{id1}_{id2}`. "
                     + "For continuous factors, `{fvId}` is empty and a single `_` delimiter is used.",
             responses = {
-                    @ApiResponse(responseCode = "200", content = {
+                    @ApiResponse(responseCode = "200", description = "The result set.", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class)),
                             @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8_Q9,
@@ -316,7 +319,7 @@ public class AnalysisResultSetsWebService {
                     + "one would mean scanning the full results table, so `column=corrected` is rejected with a 400 "
                     + "instead of silently answering with the raw distribution.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The stored p-value histogram, rebinned to the requested number of bins.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PvalueDistributionResponseDataObject.class))),
                     @ApiResponse(responseCode = "204", description = "The stored histogram is empty — it has no bins, or every bin is zero (the analysis produced no non-null p-values)."),
                     @ApiResponse(responseCode = "400", description = "`bins` does not divide the stored bin count, or `column` is not 'raw'.",

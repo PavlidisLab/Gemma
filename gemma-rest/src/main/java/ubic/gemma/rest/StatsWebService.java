@@ -60,7 +60,7 @@ public class StatsWebService {
             description = "Returns datasets / platforms / samples counts, per-taxon and per-platform-technology breakdowns, "
                     + "and the most-recently-curated experiments. The snapshot is recomputed daily; for a forced refresh, see POST /stats/home/refresh.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The cached statistics snapshot.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = "Snapshot not yet generated; retry shortly.",
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
@@ -82,6 +82,9 @@ public class StatsWebService {
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The freshly regenerated statistics snapshot.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<HomeStats> refreshHomeStats() {
         log.info( "Admin-triggered HomeStats refresh" );

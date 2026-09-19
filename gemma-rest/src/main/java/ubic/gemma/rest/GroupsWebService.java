@@ -13,6 +13,8 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
@@ -112,7 +114,10 @@ public class GroupsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List user groups",
             description = "Returns paginated group summaries. Anonymous callers get 401. "
-                    + "The underlying service filters out groups the caller cannot read.")
+                    + "The underlying service filters out groups the caller cannot read.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The user groups as summary rows, paginated.", useReturnTypeSchema = true, content = @Content())
+            })
     public PaginatedResponseDataObject<GroupSummaryValueObject> getGroups(
             @Parameter(description = "Case-insensitive substring of the group name.")
             @QueryParam("query") @Nullable String query,
@@ -151,7 +156,10 @@ public class GroupsWebService {
             description = "When includeSummaries=true the response payload is a "
                     + "GroupWithMembersValueObject (members included); otherwise the lighter "
                     + "GroupValueObject (memberCount only). The legacy snake_case spelling "
-                    + "`include_summaries` is still accepted.")
+                    + "`include_summaries` is still accepted.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The group.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<? extends GroupValueObject> getGroup(
             @PathParam("id") Long id,
             @QueryParam("includeSummaries") @DefaultValue("false") boolean includeSummaries,
@@ -181,7 +189,10 @@ public class GroupsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create a new group",
             description = "Body: {name, description?}. The authenticated user becomes the owner. "
-                    + "The three system groups (Administrators, Users, Agents) are reserved.")
+                    + "The three system groups (Administrators, Users, Agents) are reserved.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The group as created.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+            })
     public Response createGroup( GroupCreateRequest req ) {
         if ( req == null || req.getName() == null || req.getName().trim().isEmpty() ) {
             throw new BadRequestException( "name is required." );
@@ -223,7 +234,10 @@ public class GroupsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Update a group (rename + description)",
             description = "Partial update: any subset of name / description may be supplied. "
-                    + "The authenticated user must own the group (enforced at the service layer).")
+                    + "The authenticated user must own the group (enforced at the service layer).",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The group after the change.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<GroupValueObject> updateGroup(
             @PathParam("id") Long id,
             GroupUpdateRequest req
@@ -268,7 +282,10 @@ public class GroupsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Delete a group",
-            description = "The three system groups (Administrators, Users, Agents) cannot be deleted.")
+            description = "The three system groups (Administrators, Users, Agents) cannot be deleted.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The group was deleted.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+            })
     public Response deleteGroup(
             @PathParam("id") Long id
     ) {
@@ -291,7 +308,10 @@ public class GroupsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Add a member to a group",
-            description = "Body: {username} or {userId} (one required).")
+            description = "Body: {username} or {userId} (one required).",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The group, with its membership after the addition.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<GroupWithMembersValueObject> addMember(
             @PathParam("id") Long id,
             MemberAddRequest req
@@ -314,7 +334,10 @@ public class GroupsWebService {
     @Path("/{id}/members/{memberId}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Remove a member from a group")
+    @Operation(summary = "Remove a member from a group",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The member was removed from the group.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+            })
     public Response removeMember(
             @PathParam("id") Long id,
             @PathParam("memberId") Long memberId

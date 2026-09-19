@@ -3,6 +3,8 @@ package ubic.gemma.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.slf4j.Slf4j;
@@ -81,7 +83,10 @@ public class RootWebService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve an object with basic API information",
-            description = "The payload contains a list of featured external databases that Gemma uses under the `externalDatabases` field. Those are mainly genomic references and sources of gene annotations.")
+            description = "The payload contains a list of featured external databases that Gemma uses under the `externalDatabases` field. Those are mainly genomic references and sources of gene annotations.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Version and identifying information for this API instance.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<ApiInfoValueObject> getApiInfo( @Context UriInfo uriInfo ) {
         // collect various versioned entities to display on the main endpoint
         List<ExternalDatabaseValueObject> versioned;
@@ -110,7 +115,10 @@ public class RootWebService {
     @Path("/users/me")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true)
+    @Operation(summary = "Retrieve the user information associated to the authenticated session", hidden = true,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The user behind the current credential.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<UserValueObject> getMyself() {
         return respond( getUserVo( userManager.getCurrentUser() ) );
     }
@@ -196,7 +204,10 @@ public class RootWebService {
     @Path("/users/{username}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("(isAuthenticated() && principal.username == #username) || hasAuthority('GROUP_ADMIN')")
-    @Operation(summary = "Retrieve the user information associated to the given username", hidden = true)
+    @Operation(summary = "Retrieve the user information associated to the given username", hidden = true,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The named user. A caller who is not an administrator may only ask for their own username.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<UserValueObject> getUser( // Params:
             @PathParam("username") String username // Required
     ) {

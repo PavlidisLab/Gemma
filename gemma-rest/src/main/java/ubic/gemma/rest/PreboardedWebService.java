@@ -147,7 +147,7 @@ public class PreboardedWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Fetch a preboarded + latest annotation set",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The preboarded experiment and its latest annotation set.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No preboarded with that id.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = ResponseErrorObject.class)))

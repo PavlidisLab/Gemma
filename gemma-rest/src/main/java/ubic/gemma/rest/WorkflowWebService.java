@@ -112,7 +112,7 @@ public class WorkflowWebService {
                     + "transitions (oldest first). History is derived from AUDIT_EVENT filtered "
                     + "to WorkflowStateChangedEvent rows.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
+                    @ApiResponse(responseCode = "200", description = "The dataset's current workflow state, and the transitions that reached it.", useReturnTypeSchema = true,
                             content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
@@ -163,7 +163,7 @@ public class WorkflowWebService {
                     + "Disallowed transitions return 409 with the list of allowed next states. "
                     + "Unknown targetState returns 400. Public -> Curate additionally requires admin role + non-empty reason.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
+                    @ApiResponse(responseCode = "200", description = "The dataset's state after the transition.", useReturnTypeSchema = true,
                             content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing or unknown targetState.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -249,7 +249,7 @@ public class WorkflowWebService {
                     + "assignee (returns empty pending the Ticket-layer join; see TODO(ticket-integration)), "
                     + "since (ISO-8601; restrict to rows that entered the state on or after this).",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
+                    @ApiResponse(responseCode = "200", description = "The datasets currently in the requested state, paginated.", useReturnTypeSchema = true,
                             content = @Content(schema = @Schema(implementation = PaginatedResponseDataObject.class))),
                     @ApiResponse(responseCode = "400", description = "Missing or unknown state.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))

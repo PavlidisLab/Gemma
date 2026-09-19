@@ -54,7 +54,7 @@ public class TasksWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The task's current state. Tasks live in an in-memory store, so one that finished long ago may have been evicted and answer 404 instead.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The task was never submitted or has already been evicted from the in-memory store.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<TaskStatusValueObject> getTaskStatus(
@@ -83,7 +83,7 @@ public class TasksWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The cancellation request was recorded, and the body is the task's state at that moment. Cancellation is cooperative, so the task may still be running.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The task was never submitted or has already been evicted from the in-memory store.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<TaskStatusValueObject> cancelTask(
