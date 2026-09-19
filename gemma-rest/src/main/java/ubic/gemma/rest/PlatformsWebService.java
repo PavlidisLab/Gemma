@@ -886,7 +886,7 @@ public class PlatformsWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "The annotation file is not on disk and cannot be generated, because the Gene Ontology is not loaded on this instance.",
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
-                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg,// Optional, default null

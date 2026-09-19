@@ -10273,7 +10273,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve a single-cell dimension of a single-cell dataset", responses = {
             @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectSingleCellDimensionValueObject.class)),
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-dimension.tsv") })
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"), examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-dimension.tsv") })
             })
     })
     public Object getDatasetSingleCellDimension(
@@ -10345,7 +10345,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve a cell-type assignment of a single-cell dataset", responses = {
             @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectCellTypeAssignmentValueObject.class)),
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-type-assignment.tsv") })
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"), examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-type-assignment.tsv") })
             }),
             @ApiResponse(responseCode = "404",
                     description = "If the dataset, quantitation type or cell type assignment does not exist, or if a preferred cell type assignment is requested but none is available.",
@@ -10428,7 +10428,7 @@ public class DatasetsWebService {
                     + "value would become its own label.", responses = {
             @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectListCellLevelCharacteristicsValueObject.class)),
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"), examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
             })
     })
     public Object getDatasetCellLevelCharacteristics(
@@ -10541,7 +10541,7 @@ public class DatasetsWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
-                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetProcessedExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("filter") @DefaultValue("false") Boolean filtered,
@@ -10628,7 +10628,7 @@ public class DatasetsWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
-                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetRawExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
@@ -10761,7 +10761,7 @@ public class DatasetsWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "The requested file is still being generated, or too many file-generation tasks are already running. Generation has been started; retry after the delay in the `Retry-After` header.",
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
-                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetSingleCellExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,

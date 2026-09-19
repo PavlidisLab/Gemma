@@ -288,10 +288,20 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                                 && "409".equals( code ) ) {
                             continue;
                         }
-                        // Mirror the original hasEntrySatisfying("application/json", ...) semantics:
-                        // vacuously satisfied when the response has no application/json content block.
-                        // Inlined here to surface ALL violations as soft-assertion failures rather than
-                        // NPE-on-first-miss (lambda inside hasEntrySatisfying threw on null schema).
+                        // GET /metrics is a Prometheus scrape target: it answers text/plain on every
+                        // status, so an error there has no JSON body to check.
+                        if ( "scrape".equals( operation.getOperationId() ) ) {
+                            continue;
+                        }
+                        // Requiring the entry, not just checking it when present. Skipping the check for a
+                        // response with no application/json block is how four 503s came to advertise a JSON
+                        // error body under the method's text/tab-separated-values @Produces: the entry was
+                        // missing, so nothing looked. Inlined rather than hasEntrySatisfying so every
+                        // violation surfaces as a soft assertion instead of an NPE on the first miss.
+                        assertions.assertThat( response.getContent() )
+                                .describedAs( "%s %s -> %s offers no application/json error body", method, path, code )
+                                .isNotNull()
+                                .containsKey( "application/json" );
                         if ( response.getContent() != null && response.getContent().containsKey( "application/json" ) ) {
                             io.swagger.v3.oas.models.media.MediaType jsonContent = response.getContent().get( "application/json" );
                             assertions.assertThat( jsonContent.getSchema() )
@@ -413,10 +423,12 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
 
     @Test
     public void testExamplesFromClasspath() throws IOException {
+        // The key used to carry "; q=0.9", copied from the @Produces quality-of-source weight;
+        // OpenApiFactory strips that now, so the media type is the one a client actually sends.
         assertThat( spec.getPaths().get( "/resultSets/{resultSet}" ).getGet().getResponses()
                 .get( "200" )
                 .getContent()
-                .get( "text/tab-separated-values; charset=UTF-8; q=0.9" )
+                .get( "text/tab-separated-values; charset=UTF-8" )
                 .getExample() )
                 .isEqualTo( IOUtils.resourceToString( "/restapidocs/examples/result-set.tsv", StandardCharsets.UTF_8 ) );
     }
@@ -738,5 +750,89 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                 .withFailMessage( "bearerAuth is defined but not offered in the global security list, so the"
                         + " spec says no endpoint accepts it" )
                 .anySatisfy( requirement -> assertThat( requirement ).containsKey( "bearerAuth" ) );
+    }
+
+    /**
+     * A {@code content} map is keyed by media type, and a media type has no {@code q} parameter —
+     * that belongs in an {@code Accept} header. A key carrying one matches nothing a client sends.
+     *
+     * <p>They arrive from the JAX-RS quality-of-source weight: a resource serving both JSON and TSV
+     * writes {@code @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8 + ";qs=0.9")} to keep JSON the default,
+     * and swagger-core copies that into the spec as {@code ; q=0.9}. The weight has to stay in the
+     * annotation, so {@code OpenApiFactory} strips it on the way out; this pins that it happened.
+     */
+    @Test
+    public void testResponseMediaTypesCarryNoQualityParameter() {
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            for ( Operation operation : pathEntry.getValue().readOperations() ) {
+                if ( operation.getResponses() == null ) {
+                    continue;
+                }
+                for ( Map.Entry<String, ApiResponse> responseEntry : operation.getResponses().entrySet() ) {
+                    if ( responseEntry.getValue().getContent() == null ) {
+                        continue;
+                    }
+                    for ( String mediaType : responseEntry.getValue().getContent().keySet() ) {
+                        inspected++;
+                        if ( !mediaType.equals( OpenApiFactory.stripQuality( mediaType ) ) ) {
+                            offenders.add( pathEntry.getKey() + " -> " + responseEntry.getKey() + " " + mediaType );
+                        }
+                    }
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to declare many response media types; inspected only %d", inspected )
+                .isGreaterThan( 200 );
+        assertThat( offenders )
+                .withFailMessage( "response media types carrying a q/qs parameter: %s", offenders )
+                .isEmpty();
+    }
+
+    /**
+     * A non-JSON response body has to say what it is. {@code @Content} with a {@code mediaType} and no
+     * {@code schema} defaults to {@code type: object}, which for a TSV download says the body is a JSON
+     * object — three of them did. The right declaration is {@code @Schema(type = "string")}.
+     */
+    @Test
+    public void testNonJsonResponseBodiesAreTyped() {
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            for ( Operation operation : pathEntry.getValue().readOperations() ) {
+                if ( operation.getResponses() == null ) {
+                    continue;
+                }
+                for ( Map.Entry<String, ApiResponse> responseEntry : operation.getResponses().entrySet() ) {
+                    if ( responseEntry.getValue().getContent() == null ) {
+                        continue;
+                    }
+                    for ( Map.Entry<String, io.swagger.v3.oas.models.media.MediaType> media
+                            : responseEntry.getValue().getContent().entrySet() ) {
+                        if ( media.getKey().startsWith( "application/json" ) ) {
+                            continue;
+                        }
+                        inspected++;
+                        Schema<?> schema = media.getValue().getSchema();
+                        if ( schema != null && "object".equals( schema.getType() ) && schema.get$ref() == null
+                                && schema.getProperties() == null ) {
+                            offenders.add( pathEntry.getKey() + " -> " + responseEntry.getKey()
+                                    + " " + media.getKey() );
+                        }
+                    }
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to declare several non-JSON bodies; inspected only %d", inspected )
+                .isGreaterThan( 15 );
+        assertThat( offenders )
+                .withFailMessage( "non-JSON response bodies left as an untyped object — declare"
+                        + " @Schema(type = \"string\") on the @Content: %s", offenders )
+                .isEmpty();
     }
 }
