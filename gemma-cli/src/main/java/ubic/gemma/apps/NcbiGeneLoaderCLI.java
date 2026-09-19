@@ -25,9 +25,11 @@ import org.apache.commons.cli.ParseException;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.core.loader.genome.gene.ncbi.GeneProductChangeTsv;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EntityLocator;
+import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Taxon;
@@ -37,9 +39,14 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import org.springframework.lang.Nullable;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Date;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addTaxonOption;
+import static ubic.gemma.cli.util.OptionsUtils.requires;
+import static ubic.gemma.cli.util.OptionsUtils.toBeSet;
 
 /**
  * Command line interface to gene parsing and loading
@@ -51,6 +58,8 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     private static final String GENE2ACCESSION_FILE = "gene2accession.gz";
     private static final String GENE_HISTORY_FILE = "gene_history.gz";
     private static final String GENE2ENSEMBL_FILE = "gene2ensembl.gz";
+    private static final String NO_REMOVE_OPTION = "noRemove";
+    private static final String REPORT_OPTION = "report";
 
     @Autowired
     private TaxonService taxonService;
@@ -74,6 +83,9 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     @Nullable
     private Integer limit = null;
     private boolean dryRun = false;
+    private boolean noRemove = false;
+    @Nullable
+    private Path reportFile = null;
 
     public NcbiGeneLoaderCLI() {
         setRequireLogin();
@@ -119,10 +131,61 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
         options.addOption( "dryRun", "dry-run", false, "Load each gene as usual, flush it to the database, then roll it back; "
                 + "files are still downloaded. Reports the genes that would be created or updated, the gene products that would "
                 + "be removed, and every gene that fails. Combine with -limit to rehearse a few genes." );
+
+        options.addOption( Option.builder( NO_REMOVE_OPTION ).longOpt( "no-remove" )
+                .desc( "Add and update genes and gene products, but remove no gene product: a product NCBI no longer lists "
+                        + "stays attached to its gene, with the probe alignments that map probes to that gene. Each removal "
+                        + "not made is written to the -" + REPORT_OPTION + " file, from which replayGeneProductRemovals "
+                        + "applies it later. Gene products moved from one gene to another are still moved. Requires -"
+                        + REPORT_OPTION + "." )
+                .build() );
+        options.addOption( Option.builder( REPORT_OPTION ).longOpt( "report" ).hasArg().argName( "file" ).type( Path.class )
+                .desc( "Write a TSV file with one row per gene product removed (or, with -" + NO_REMOVE_OPTION + ", not "
+                        + "removed) and per gene product moved from one gene to another, with the number of BLAT and "
+                        + "annotation associations it has and the platforms they are on. The file must not already exist." )
+                .build() );
     }
 
     @Override
     protected void doAuthenticatedWork() throws Exception {
+        if ( reportFile == null ) {
+            load( null );
+        } else {
+            // CREATE_NEW: a report records removals and moves that a later run cannot reproduce, so it is never
+            // overwritten
+            try ( GeneProductChangeTsv report = new GeneProductChangeTsv(
+                    Files.newBufferedWriter( reportFile, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE ), dryRun ) ) {
+                load( report );
+            }
+        }
+
+        if ( dryRun ) {
+            log.info( "Dry run: nothing was written." + ( reportFile != null ? " " + reportFile
+                    + " lists the gene product changes that were rolled back." : "" ) );
+            return;
+        }
+
+        if ( limit != null && loader.getLoadedGeneCount() >= limit ) {
+            log.warn( "Stopped at the limit of " + limit + " genes; the " + ExternalDatabases.GENE + " database's last-updated date was not changed." );
+        } else {
+            ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE );
+            if ( ed != null ) {
+                externalDatabaseService.updateReleaseLastUpdated( ed, null, new Date() );
+            } else {
+                log.warn( String.format( "No external database with name %s.", ExternalDatabases.GENE ) );
+            }
+        }
+
+        if ( noRemove ) {
+            log.warn( "Gene product removals were NOT applied (-" + NO_REMOVE_OPTION + "): " + loader.getKeptGeneProducts()
+                    + " gene products NCBI no longer lists are still attached to their genes. They are listed in "
+                    + reportFile + "; apply them with replayGeneProductRemovals -report " + reportFile + "." );
+        }
+        log.info( "Gene records changed, so the probe-to-gene tables built from them are now stale: run updateGene2Cs, "
+                + "then makePlatformAnnotFiles." );
+    }
+
+    private void load( @Nullable GeneProductChangeTsv report ) {
         loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
         loader.setGeneWriteService( geneWriteService );
@@ -130,6 +193,8 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
         loader.setStartingNcbiId( startNcbiId );
         loader.setLimit( limit );
         loader.setDryRun( dryRun );
+        loader.setRemoveProducts( !noRemove );
+        loader.setChangeSink( report );
         loader.setTransactionManager( transactionManager );
         loader.setSessionFactory( sessionFactory );
 
@@ -157,25 +222,6 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
                 loader.load( true );
             }
         }
-
-        if ( dryRun ) {
-            log.info( "Dry run: nothing was written." );
-            return;
-        }
-
-        if ( limit != null && loader.getLoadedGeneCount() >= limit ) {
-            log.warn( "Stopped at the limit of " + limit + " genes; the " + ExternalDatabases.GENE + " database's last-updated date was not changed." );
-        } else {
-            ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GENE );
-            if ( ed != null ) {
-                externalDatabaseService.updateReleaseLastUpdated( ed, null, new Date() );
-            } else {
-                log.warn( String.format( "No external database with name %s.", ExternalDatabases.GENE ) );
-            }
-        }
-
-        log.info( "Gene records changed, so the probe-to-gene tables built from them are now stale: run updateGene2Cs, "
-                + "then makePlatformAnnotFiles." );
     }
 
     @Override
@@ -207,6 +253,10 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
             }
         }
         this.dryRun = commandLine.hasOption( "dryRun" );
+        this.noRemove = OptionsUtils.hasOption( commandLine, NO_REMOVE_OPTION, requires( toBeSet( REPORT_OPTION ) ) );
+        if ( commandLine.hasOption( REPORT_OPTION ) ) {
+            this.reportFile = commandLine.getParsedOptionValue( REPORT_OPTION );
+        }
     }
 
 }
