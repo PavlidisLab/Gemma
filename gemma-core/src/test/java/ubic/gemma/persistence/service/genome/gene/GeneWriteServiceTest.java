@@ -90,6 +90,9 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
     @Autowired
     private AnnotationAssociationService annotationAssociationService;
 
+    @Autowired
+    private GeneProductService geneProductService;
+
     /**
      * Quirk 4.3 (migration plan): NCBI ID merge with comma-separated
      * previousNcbiGeneId. NCBI sometimes merges two formerly distinct gene
@@ -443,6 +446,32 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
         assertEquals( moving.getId(), change.productId() );
         assertEquals( 1, change.blatAssociations() );
         assertEquals( List.of( platform.getShortName() ), change.platforms() );
+    }
+
+    /**
+     * A new gene whose product already exists with no gene (an orphan) takes the product over. The move called
+     * {@code getProducts()} on the missing previous gene, and the NullPointerException ended the load.
+     */
+    @Test
+    public void testNewGeneTakesOverAnOrphanProduct() {
+        Taxon human = this.getTaxon( "human" );
+        GeneProduct orphan = GeneProduct.Factory.newInstance();
+        orphan.setName( "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ) );
+        orphan.setNcbiGi( "7" + RandomStringUtils.insecure().nextNumeric( 8 ) );
+        orphan = geneProductService.create( orphan );
+
+        Gene newGene = Gene.Factory.newInstance();
+        String symbol = "TEST_" + RandomStringUtils.insecure().nextAlphabetic( 6 ).toUpperCase();
+        newGene.setName( symbol );
+        newGene.setOfficialSymbol( symbol );
+        newGene.setOfficialName( symbol );
+        newGene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 7 ) ) + 40_000_000 );
+        newGene.setTaxon( human );
+        newGene.getProducts().add( productInfo( newGene, orphan.getName(), orphan.getNcbiGi() ) );
+
+        Gene created = geneWriteService.upsert( newGene );
+
+        assertEquals( created.getId(), geneOf( orphan ) );
     }
 
     @Test

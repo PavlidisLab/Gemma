@@ -199,7 +199,9 @@ public class GeneWriteServiceImpl implements GeneWriteService {
                 if ( changeLog != null && previousGeneForProduct != null ) {
                     changeLog.moved( existingProduct, previousGeneForProduct, gene );
                 }
-                previousGeneForProduct.getProducts().remove( existingProduct );
+                if ( previousGeneForProduct != null ) {
+                    previousGeneForProduct.getProducts().remove( existingProduct );
+                }
                 product.setGene( null ); // we aren't going to make it, this isn't really necessary.
                 existingProduct.setGene( gene );
                 geneProductsForNewGene.add( existingProduct );
