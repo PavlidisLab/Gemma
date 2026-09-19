@@ -343,18 +343,22 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     @Override
     protected final void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
-        boolean hasAnyDatasetOptions = commandLine.hasOption( "all" )
-                || commandLine.hasOption( "eeset" )
-                || commandLine.hasOption( "e" )
-                || commandLine.hasOption( 'f' )
-                || commandLine.hasOption( 'q' );
+        // In single-experiment mode, buildOptions() defines -e and none of the other dataset options, so any of their
+        // keys on the command line belongs to the subclass: importDesign's -f is its design file, not a dataset list.
+        boolean datasetSelectionOptionsDefined = !singleExperimentMode;
+        boolean hasAnyDatasetOptions = commandLine.hasOption( "e" )
+                || ( datasetSelectionOptionsDefined && (
+                commandLine.hasOption( "all" )
+                        || commandLine.hasOption( "eeset" )
+                        || commandLine.hasOption( 'f' )
+                        || commandLine.hasOption( 'q' ) ) );
         if ( !hasAnyDatasetOptions && !defaultToAll ) {
             throw new MissingOptionException( "At least one of -all, -e, -eeset, -f, or -q must be provided." );
         }
         if ( defaultToAll && !hasAnyDatasetOptions ) {
             this.all = true;
         } else {
-            this.all = commandLine.hasOption( "all" );
+            this.all = datasetSelectionOptionsDefined && commandLine.hasOption( "all" );
         }
         if ( this.all && allIsLazy ) {
             // when allIsLazy is set, filtering options are not available
@@ -375,11 +379,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             }
             this.ees = StringUtils.split( optionValue, "," );
         }
-        this.eeSet = commandLine.getOptionValue( "eeset" );
-        this.file = commandLine.getParsedOptionValue( 'f' );
-        this.query = commandLine.getOptionValue( 'q' );
-        this.taxonName = commandLine.getOptionValue( 't' );
-        this.excludeFile = commandLine.getParsedOptionValue( 'x' );
+        if ( datasetSelectionOptionsDefined ) {
+            this.eeSet = commandLine.getOptionValue( "eeset" );
+            this.file = commandLine.getParsedOptionValue( 'f' );
+            this.query = commandLine.getOptionValue( 'q' );
+            this.taxonName = commandLine.getOptionValue( 't' );
+            this.excludeFile = commandLine.getParsedOptionValue( 'x' );
+        }
         for ( Option option : commandLine.getOptions() ) {
             if ( singleExperimentOptions.contains( option.getOpt() ) ) {
                 singleExperimentOptionsUsed.add( option.getOpt() );
