@@ -146,9 +146,21 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         int numNewElements = 0;
         int numUpdatedElements = 0;
         int needsDummyElement = 0;
+        int notAnId = 0;
         for ( String ncbiId : ncbiIds ) {
 
             log.debug( "> Processing element for NCBI ID = " + ncbiId );
+
+            int ncbiGeneId;
+            try {
+                ncbiGeneId = Integer.parseInt( ncbiId );
+            } catch ( NumberFormatException e ) {
+                // e.g. a header line; it would otherwise become a platform element with a dummy sequence
+                log.warn( "Skipping '" + ncbiId + "' from " + this.geneListFileName + ": not an NCBI gene ID" );
+                addWarningObject( ncbiId, "Not an NCBI gene ID; skipped, no element created" );
+                notAnId++;
+                continue;
+            }
 
             CompositeSequence csForGene = null;
             if ( existingSymbolMap.containsKey( ncbiId ) ) {
@@ -172,13 +184,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 log.info( "Gene NCBI ID=" + ncbiId + " not on platform, may add" );
             }
 
-            Gene gene = null;
-            try {
-                gene = geneService.findByNCBIId( Integer.parseInt( ncbiId ) );
-            } catch ( NumberFormatException e ) {
-                // shouldn't happen but just in case
-                log.error( "Could not parse NCBI ID = " + ncbiId + " as an integer" );
-            }
+            Gene gene = geneService.findByNCBIId( ncbiGeneId );
 
             boolean geneExists = gene != null;
             if ( !geneExists ) {
@@ -322,7 +328,8 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         }
 
         String auditMessage = count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
-                + " updated elements; " + numWithNoTranscript + " genes had no transcript; " + geneNotFound + " genes from the file could not be found";
+                + " updated elements; " + numWithNoTranscript + " genes had no transcript; " + geneNotFound + " genes from the file could not be found"
+                + ( notAnId > 0 ? "; " + notAnId + " lines were not NCBI gene IDs and were skipped" : "" );
         log.info( auditMessage );
 
         if ( !noDB ) cliArrayDesignAuditService.recordAnnotationBasedGeneMapping( platform, auditMessage );

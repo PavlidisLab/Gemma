@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -36,6 +37,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -198,6 +200,32 @@ class GenericGenelistDesignGeneratorTest extends BaseCliTest5 {
         assertThat( cli.getObject() )
                 .withArguments( "-a", platform.getShortName(), "-t", "human", "-f", genes.toString() )
                 .succeeds();
+    }
+
+    /**
+     * A line that is not an NCBI gene ID (here a header) used to become a platform element with a dummy sequence.
+     */
+    @Test
+    @WithMockUser
+    void lineThatIsNotAnIdIsSkipped() throws Exception {
+        Path genes = Files.write( dir.resolve( "genes.txt" ), List.of( "GeneID", "123" ) );
+        when( arrayDesignReportService.generateArrayDesignReport( 1L ) ).thenReturn( new ArrayDesignValueObject( 1L ) );
+
+        assertThat( cli.getObject() )
+                .withArguments( "-a", platform.getShortName(), "-t", "human", "-f", genes.toString() )
+                .succeeds()
+                .standardOutput()
+                .asString( StandardCharsets.UTF_8 )
+                .contains( "GeneID" );
+
+        ArgumentCaptor<CompositeSequence> created = ArgumentCaptor.forClass( CompositeSequence.class );
+        verify( compositeSequenceService ).create( created.capture() );
+        org.assertj.core.api.Assertions.assertThat( created.getAllValues() )
+                .extracting( CompositeSequence::getName )
+                .containsExactly( "123" );
+        verify( bioSequenceService, times( 1 ) ).create( any( BioSequence.class ) );
+        verify( cliArrayDesignAuditService ).recordAnnotationBasedGeneMapping( same( platform ),
+                contains( "1 lines were not NCBI gene IDs" ) );
     }
 
     private static <T extends AbstractIdentifiable> T withId( T entity, AtomicLong ids ) {
