@@ -713,8 +713,10 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             return chromosomeCache.get( key );
         }
 
+        // By name and taxon only, as Gemma 1.x did. The full business key also matches the sequence, and gene2accession
+        // places a gene on several genomic accessions, so each one created another chromosome of the same name.
         Session session = sessionFactory.getCurrentSession();
-        Chromosome existing = BusinessKey.find( session, chromosome );
+        Chromosome existing = BusinessKey.find( session, Chromosome.Factory.newInstance( chromosome.getName(), ct ) );
 
         Chromosome resolved;
         if ( existing == null ) {

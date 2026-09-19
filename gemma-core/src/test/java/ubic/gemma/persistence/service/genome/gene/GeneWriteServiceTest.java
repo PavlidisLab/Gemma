@@ -23,11 +23,17 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
+import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.persistence.persister.GenomePersister;
+import ubic.gemma.persistence.service.genome.ChromosomeService;
 
 import java.util.HashSet;
 
@@ -67,6 +73,9 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private GenomePersister genomePersister;
+
+    @Autowired
+    private ChromosomeService chromosomeService;
 
     /**
      * Quirk 4.3 (migration plan): NCBI ID merge with comma-separated
@@ -314,5 +323,42 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
         //   - GP.accessions size == 2
         //   - both A1 and A2 present
         fail( "fixture not yet written - see javadoc" );
+    }
+
+    /**
+     * NCBI's gene2accession places a gene on several genomic accessions (for human chromosome 1 in the loader fixture:
+     * NC_000001, NC_018912, AC_000133, NT_ and NW_ contigs, CH471 scaffolds), so one chromosome name arrives with
+     * several sequences. The chromosome lookup matched the sequence too, so each accession created another chromosome
+     * of the same name, and a later lookup without a sequence matched all of them and failed with
+     * NonUniqueResultException. Gemma 1.x looked chromosomes up by name and taxon only.
+     */
+    @Test
+    public void testChromosomeIsFoundByNameAndTaxonWhateverItsSequence() {
+        Taxon human = this.getTaxon( "human" );
+        String chromosomeName = "T" + RandomStringUtils.insecure().nextAlphanumeric( 8 );
+
+        geneWriteService.upsert( geneOn( human, chromosomeName, "NC_" + RandomStringUtils.insecure().nextNumeric( 6 ) ) );
+        geneWriteService.upsert( geneOn( human, chromosomeName, "NT_" + RandomStringUtils.insecure().nextNumeric( 6 ) ) );
+        geneWriteService.upsert( geneOn( human, chromosomeName, null ) );
+
+        assertEquals( 1, chromosomeService.find( chromosomeName, human ).size() );
+    }
+
+    private Gene geneOn( Taxon taxon, String chromosomeName, @Nullable String chromosomeSequenceName ) {
+        String symbol = "TEST_" + RandomStringUtils.insecure().nextAlphabetic( 6 ).toUpperCase();
+        Gene gene = Gene.Factory.newInstance();
+        gene.setName( symbol );
+        gene.setOfficialSymbol( symbol );
+        gene.setOfficialName( symbol );
+        gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 7 ) ) + 20_000_000 );
+        gene.setTaxon( taxon );
+        Chromosome chromosome = Chromosome.Factory.newInstance( chromosomeName, taxon );
+        if ( chromosomeSequenceName != null ) {
+            BioSequence sequence = BioSequence.Factory.newInstance( chromosomeSequenceName, taxon );
+            sequence.setType( SequenceType.WHOLE_CHROMOSOME );
+            chromosome.setSequence( sequence );
+        }
+        gene.setPhysicalLocation( PhysicalLocation.Factory.newInstance( chromosome ) );
+        return gene;
     }
 }
