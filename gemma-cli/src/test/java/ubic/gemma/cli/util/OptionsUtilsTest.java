@@ -62,6 +62,22 @@ public class OptionsUtilsTest {
                 .hasHourOfDay( 23 ).hasMinute( 12 ).hasSecond( 11 );
     }
 
+    /**
+     * The relative form the {@code -mdate} help text gives as its example. The ISO 8601 {@code yyyy} format parses a
+     * leading prefix, so it must not get the first try at these.
+     */
+    @Test
+    public void testParseRelativeDate() throws ParseException {
+        assertThat( c.apply( "-30d" ) )
+                .isCloseTo( new Date( relativeTo.getTime() - 30L * 24 * 3600 * 1000 ), 2 * 3600 * 1000 );
+        assertThat( c.apply( "-10d" ) )
+                .isCloseTo( new Date( relativeTo.getTime() - 10L * 24 * 3600 * 1000 ), 2 * 3600 * 1000 );
+        assertThat( c.apply( "+1d" ) )
+                .isCloseTo( new Date( relativeTo.getTime() + 24L * 3600 * 1000 ), 2 * 3600 * 1000 );
+        assertThat( c.apply( "-8h" ) )
+                .isCloseTo( new Date( relativeTo.getTime() - 8L * 3600 * 1000 ), 60 * 1000 );
+    }
+
     @Test
     public void testParseWords() throws ParseException {
         assertThat( c.apply( "now" ) ).isCloseTo( relativeTo, 10 );
