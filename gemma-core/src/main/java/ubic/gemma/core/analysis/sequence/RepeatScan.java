@@ -82,6 +82,7 @@ public class RepeatScan {
 
         // fill in old sequences with new information
 
+        int matched = 0;
         for ( BioSequence origSeq : sequences ) {
             String identifier = SequenceWriter.getIdentifier( origSeq );
             BioSequence maskedSeq = map.get( identifier );
@@ -93,6 +94,7 @@ public class RepeatScan {
                 RepeatScan.log.warn( "No masked sequence for " + identifier );
                 continue;
             }
+            matched++;
 
             origSeq.setSequence( maskedSeq.getSequence() );
             double fraction = this.computeFractionMasked( maskedSeq );
@@ -102,6 +104,14 @@ public class RepeatScan {
 
                 finalRes.add( origSeq );
             }
+        }
+
+        // this used to end with a warning per sequence and an empty result, which platformRepeatScan recorded as a
+        // completed scan
+        if ( matched == 0 && !sequences.isEmpty() ) {
+            throw new RuntimeException( "None of the " + sequences.size() + " sequences was found in " + outputSequencePath
+                    + ", which holds " + results.size() + " sequences; their names do not match the ones written for "
+                    + "RepeatMasker." );
         }
 
         RepeatScan.log.info( finalRes.size() + " sequences had non-zero repeat fractions." );
@@ -166,7 +176,9 @@ public class RepeatScan {
     private Path execRepeatMasker( Path querySequenceFile, Taxon taxon ) throws IOException {
         String[] cmd = new String[] { repeatMaskerExe, "-parallel", "8", "-xsmall",
                 "-species", taxon.getCommonName(),
-                // FIXME use -dir option to put output where we want; see https://github.com/PavlidisLab/Gemma/issues/53;
+                // write the output beside the query file, which is where it is read from below; without -dir, the
+                // output of the run reported in https://github.com/PavlidisLab/Gemma/issues/53 was in ./RM_*
+                "-dir", querySequenceFile.toAbsolutePath().getParent().toString(),
                 querySequenceFile.toString() };
         RepeatScan.log.info( "Running RepeatMasker like this: " + ShellUtils.join( cmd ) );
 
@@ -223,7 +235,11 @@ public class RepeatScan {
             if ( line == null || line.startsWith( nothingFound ) ) {
                 RepeatScan.log.info( "There were no repeats found" );
             } else {
-                RepeatScan.log.warn( "Something might have gone wrong with RepeatMasker. The output file reads: " + line );
+                // this used to be a warning, after which the scan returned no sequences and platformRepeatScan recorded
+                // the platform as scanned
+                throw new RuntimeException( String.format( "RepeatMasker exited normally but wrote no masked sequences (%s), "
+                        + "and its summary %s does not say that no repeats were found; it starts with: %s",
+                        outputSequencePath, outputSummary, line ) );
             }
         }
     }
