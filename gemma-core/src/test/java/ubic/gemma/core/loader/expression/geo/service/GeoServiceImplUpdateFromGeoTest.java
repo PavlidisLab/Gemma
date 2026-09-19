@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -131,6 +132,38 @@ class GeoServiceImplUpdateFromGeoTest {
 
         verify( bioMaterialService, never() ).update( any( BioMaterial.class ) );
         assertThat( bm.getCharacteristics() ).containsExactly( oldChar );
+    }
+
+    /**
+     * 🛑 A refresh that stored no document says so. The store returned early on a null document and the
+     * caller could not tell, so updateGeoSourceMetadata recorded "Stored the GEO source metadata
+     * document." for an experiment with none.
+     */
+    @Test
+    void testASourceMetadataRefreshThatBuildsNoDocumentFails() {
+        ExpressionExperiment ee = gemmaExperiment( bioAssay( "GSM1", new BioMaterial(), true ) );
+        when( generator.generateSeriesMetadataOnly( "GSE1" ) ).thenReturn( null );
+
+        assertThatThrownBy( () -> geoService.updateFromGEO( ee,
+                GeoService.GeoUpdateConfig.builder().sourceMetadata( true ).build() ) )
+                .isInstanceOf( IllegalStateException.class )
+                .hasMessageContaining( "nothing was stored" );
+        verify( expressionExperimentService, never() ).update( any( ExpressionExperiment.class ) );
+    }
+
+    /** ... and a failure to write it reaches the caller instead of being logged and dropped. */
+    @Test
+    void testASourceMetadataRefreshThatFailsToWritePropagates() {
+        ExpressionExperiment ee = gemmaExperiment( bioAssay( "GSM1", new BioMaterial(), true ) );
+        GeoSeries series = new GeoSeries();
+        series.setGeoAccession( "GSE1" );
+        when( generator.generateSeriesMetadataOnly( "GSE1" ) ).thenReturn( series );
+        when( expressionExperimentService.findByAccession( "GSE1" ) ).thenReturn( Collections.singletonList( ee ) );
+        doThrow( new RuntimeException( "write failed" ) ).when( expressionExperimentService ).update( ee );
+
+        assertThatThrownBy( () -> geoService.updateFromGEO( ee,
+                GeoService.GeoUpdateConfig.builder().sourceMetadata( true ).build() ) )
+                .hasMessage( "write failed" );
     }
 
     private ExpressionExperiment gemmaExperiment( BioAssay ba ) {
