@@ -110,7 +110,7 @@ public class PreboardedWebService {
                     + "\"identifyingMetadata\":{...}}`. Returns 409 with the existing entity's id "
                     + "and type when the accession is already known to Gemma.",
             responses = {
-                    @ApiResponse(responseCode = "201", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "201", description = "The preboarded experiment as created.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing accession.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = ResponseErrorObject.class))),

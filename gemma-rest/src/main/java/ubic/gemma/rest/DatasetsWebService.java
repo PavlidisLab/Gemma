@@ -734,7 +734,7 @@ public class DatasetsWebService {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
-            responses = { @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectArrayDesignWithUsageStatisticsValueObject"))) })
+            responses = { @ApiResponse(responseCode = "201", description = "The refreshed experiment-to-platform associations. This GET rebuilds cached state, which is why it answers 201 rather than 200.", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectArrayDesignWithUsageStatisticsValueObject"))) })
     public Response refreshDatasetsPlatforms(
             @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
@@ -1069,7 +1069,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve refreshed dataset annotations.",
             responses = {
-                    @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectAnnotationWithUsageStatisticsValueObject")))
+                    @ApiResponse(responseCode = "201", description = "The refreshed dataset annotations. This GET rebuilds cached state, which is why it answers 201 rather than 200.", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectAnnotationWithUsageStatisticsValueObject")))
             })
     public Response refreshDatasetsAnnotations(
             @QueryParam("query") QueryArg query,
@@ -8371,7 +8371,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or `accession` is blank.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response importDataset( @Nullable DatasetImportRequest body ) {
@@ -8421,7 +8421,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetPreprocess(
@@ -8443,7 +8443,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetDiagnostics(
@@ -8467,7 +8467,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetSvd(
@@ -8489,7 +8489,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetBatchInformationFetch(
@@ -8515,7 +8515,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetGeeq(
@@ -8562,7 +8562,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "400", description = "The supplied target ArrayDesign short name does not match any platform.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -8688,7 +8688,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "400", description = "The request body references factor ids that don't belong to the dataset, or names a subset factor that's also in `factorIds`.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -8720,7 +8720,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "400", description = "The request body references factor ids that don't belong to the dataset, or names a subset factor that's also in `factorIds`.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -8812,7 +8812,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset or analysis does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response redoDatasetDifferentialAnalysis(
@@ -8842,7 +8842,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset or analysis does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response removeDatasetDifferentialAnalysis(
@@ -12241,7 +12241,7 @@ public class DatasetsWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(implementation = ResponseDataObjectExpressionExperimentValueObject.class)))
+                    @ApiResponse(responseCode = "201", description = "The refreshed dataset. This GET rebuilds cached state, which is why it answers 201 rather than 200.", content = @Content(schema = @Schema(implementation = ResponseDataObjectExpressionExperimentValueObject.class)))
             })
     public Response refreshDataset(
             @PathParam("dataset") DatasetArg<?> datasetArg,

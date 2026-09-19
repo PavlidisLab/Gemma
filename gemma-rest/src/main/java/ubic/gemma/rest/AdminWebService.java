@@ -582,7 +582,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "202",
+                    @ApiResponse(responseCode = "202", description = "Accepted. The body reports how many accessions were queued once blanks were skipped, and the task id of each in the order of the cleaned list — poll them individually at `GET /tasks/{taskId}`.",
                             content = @Content(schema = @Schema(implementation = ResponseDataObjectImportGeoBatchResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Body missing, accession list empty, or batch over cap",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
@@ -648,7 +648,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "202",
+                    @ApiResponse(responseCode = "202", description = "Accepted. The body carries the task id to poll at `GET /tasks/{taskId}`, and the taxon the recompute resolved to.",
                             content = @Content(schema = @Schema(implementation = ResponseDataObjectMultifunctionalityRecomputeResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Missing or malformed taxon identifier",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -727,7 +727,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "202",
+                    @ApiResponse(responseCode = "202", description = "Accepted. The body carries the task id to poll at `GET /tasks/{taskId}`.",
                             content = @Content(schema = @Schema(implementation = ResponseDataObjectSubmittedJobResponse.class)))
             })
     public Response submitPlatformReportsRegeneration() {
@@ -863,7 +863,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "202",
+                    @ApiResponse(responseCode = "202", description = "Accepted. The body lists the entity classes whose reindex was queued; the work runs in the background and reports no further status here.",
                             content = @Content(schema = @Schema(implementation = ResponseDataObjectReindexAcceptedResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Unknown entity name.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -1936,7 +1936,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "201",
+                    @ApiResponse(responseCode = "201", description = "The user was created. The body carries a server-generated temporary password, shown exactly once and not recoverable afterwards.",
                             content = @Content(schema = @Schema(implementation = ResponseDataObjectCreateUserResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Missing or malformed username/email",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -2143,7 +2143,7 @@ public class AdminWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "201",
+                    @ApiResponse(responseCode = "201", description = "The blacklist entry as stored.",
                             content = @Content(schema = @Schema(implementation = ResponseDataObjectBlacklistedValueObject.class))),
                     @ApiResponse(responseCode = "400", description = "Body missing, accession blank, reason blank, or unrecognised prefix",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),

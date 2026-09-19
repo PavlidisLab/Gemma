@@ -54,6 +54,17 @@ public final class ApiDocs {
             + " HTTP-date (`Wed, 18 Sep 2026 21:04:11 GMT`) — so parse both.";
 
     /**
+     * The 202 every task-submitting route answers.
+     * <p>
+     * The distinction worth stating is that nothing has run when it returns: the body reports the
+     * task's state at submission, not its result, and a caller that treats 202 as "done" sees a
+     * dataset that has not been touched yet.
+     */
+    public static final String TASK_ACCEPTED_202_DESCRIPTION = "Accepted and queued — no work has"
+            + " run yet when this returns. The body carries the `taskId`; poll `GET /tasks/{taskId}`"
+            + " for progress, or `DELETE /tasks/{taskId}` to cancel.";
+
+    /**
      * The 503 a {@link ubic.gemma.rest.annotations.Costly} route answers when its budget is full.
      * <p>
      * Distinct from a timeout 503: nothing went wrong and nothing was attempted. The request was
