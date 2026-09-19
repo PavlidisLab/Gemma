@@ -126,12 +126,30 @@ public class NetUtils {
          */
         long actualSize = outputFile.length();
         if ( actualSize != expectedSize ) {
+            /*
+             * The remote can also be replaced between the listing and the transfer: NCBI regenerates its gene files
+             * daily, and a 4.68 GB gene2accession that came back 34 MB longer than the listing was discarded after a
+             * 34-minute transfer. Ask again; if the remote now has exactly the size received, the expectation was
+             * stale, not the bytes.
+             */
+            long remoteSizeNow;
+            try {
+                remoteSizeNow = checkForFile( f, seekFile );
+            } catch ( IOException e ) {
+                log.warn( "Could not re-check the remote size of " + seekFile + ": " + e.getMessage() );
+                remoteSizeNow = expectedSize;
+            }
+            if ( remoteSizeNow == actualSize ) {
+                log.warn( String.format( "%s changed on the remote during the download (%d bytes when listed, %d now); "
+                        + "the %d bytes received match the current remote file.", seekFile, expectedSize, remoteSizeNow, actualSize ) );
+                return success;
+            }
             if ( !outputFile.delete() ) {
                 log.warn( "Could not remove the incomplete download at " + outputFile );
             }
             throw new IOException( String.format(
-                    "Download of %s produced %d bytes, expected %d; removed the local copy.",
-                    seekFile, actualSize, expectedSize ) );
+                    "Download of %s produced %d bytes, expected %d (the remote now reports %d); removed the local copy.",
+                    seekFile, actualSize, expectedSize, remoteSizeNow ) );
         }
         return success;
     }
