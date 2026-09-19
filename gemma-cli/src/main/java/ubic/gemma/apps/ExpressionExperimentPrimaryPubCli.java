@@ -54,6 +54,8 @@ import java.util.Map;
  */
 public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManipulatingCLI {
 
+    private static final String PUBMED_ID_FILE_OPTION = "pubmedIDFile";
+
     @Autowired
     private ExpressionExperimentService ees;
     @Autowired
@@ -88,7 +90,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        Option pubmedOption = Option.builder( "pubmedIDFile" ).hasArg().argName( "pubmedIDFile" ).desc(
+        Option pubmedOption = Option.builder( PUBMED_ID_FILE_OPTION ).hasArg().argName( "pubmedIDFile" ).desc(
                         "A text file which contains the list of pubmed IDs associated with each experiment ID. "
                                 + "If the pubmed ID is not found, it will try to use the existing pubmed ID associated "
                                 + "with the experiment. Each row has two columns: pubmedId and experiment shortName, "
@@ -101,8 +103,8 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( "pmidFile" ) ) {
-            this.pubmedIdFilename = commandLine.getOptionValue( "pmidFile" );
+        if ( commandLine.hasOption( PUBMED_ID_FILE_OPTION ) ) {
+            this.pubmedIdFilename = commandLine.getOptionValue( PUBMED_ID_FILE_OPTION );
             try {
                 this.pubmedIds = parsePubmedIdFile( this.pubmedIdFilename );
             } catch ( IOException e ) {
