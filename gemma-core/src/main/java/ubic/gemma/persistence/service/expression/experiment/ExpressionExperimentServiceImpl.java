@@ -2608,6 +2608,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Deprecated
     @Transactional(readOnly = true)
     public boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
