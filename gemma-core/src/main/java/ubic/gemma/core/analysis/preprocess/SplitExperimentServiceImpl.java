@@ -53,6 +53,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import org.springframework.lang.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
@@ -308,13 +309,16 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         enforceOtherParts( result );
         eeService.update( result );
 
+        // the splits are committed; post-processing failures are reported once the split is complete
+        Map<String, Exception> postprocessingFailures = new LinkedHashMap<>();
         for ( ExpressionExperiment split : result ) {
             // postprocess
             if ( foundPreferred && postProcess ) {
                 try {
                     preprocessor.process( split );
                 } catch ( Exception e ) {
-                    log.error( "Failure while postprocessing (will continue): " + split + ": " + e.getMessage() );
+                    log.error( "Failure while postprocessing (will continue): " + split + ": " + e.getMessage(), e );
+                    postprocessingFailures.put( split.getShortName(), e );
                 }
             } else {
                 log.info( "Postprocessing skipped for " + split );
@@ -340,6 +344,18 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         // OR perhaps only
         securityService.makePrivate( toSplit );
         // Or mark it as troubled?
+
+        if ( !postprocessingFailures.isEmpty() ) {
+            Iterator<Exception> causes = postprocessingFailures.values().iterator();
+            RuntimeException e = new RuntimeException( String.format( "%s was split into %d parts, but post-processing failed for %d of them: %s. "
+                            + "Their processed data must be generated, e.g. with makeProcessedData.",
+                    toSplit.getShortName(), result.size(), postprocessingFailures.size(),
+                    postprocessingFailures.entrySet().stream()
+                            .map( entry -> entry.getKey() + " (" + entry.getValue().getMessage() + ")" )
+                            .collect( Collectors.joining( ", " ) ) ), causes.next() );
+            causes.forEachRemaining( e::addSuppressed );
+            throw e;
+        }
 
         return g;
     }
