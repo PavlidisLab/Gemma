@@ -33,6 +33,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.persistence.service.genome.gene.GeneProductChange;
 import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -45,6 +46,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 /**
  * Load or update information about genes from the NCBI Gene database.
@@ -85,6 +87,9 @@ public class NcbiGeneLoader {
     private SessionFactory sessionFactory;
     private int queueSize = QUEUE_SIZE;
     private volatile boolean limitReached = false;
+    private boolean removeProducts = true;
+    @Nullable
+    private Consumer<GeneProductChange> changeSink;
 
     // summary
     private final List<Integer> createdGenes = new ArrayList<>();
@@ -97,6 +102,11 @@ public class NcbiGeneLoader {
     private int genesLosingProductsCount = 0;
     private long removedGeneProducts = 0;
     private long removedSequenceAssociations = 0;
+    private final List<Integer> genesKeepingProducts = new ArrayList<>();
+    private int genesKeepingProductsCount = 0;
+    private long keptGeneProducts = 0;
+    private long keptSequenceAssociations = 0;
+    private long switchedGeneProducts = 0;
 
     public NcbiGeneLoader() {
         generatorDone = new AtomicBoolean( false );
@@ -191,6 +201,26 @@ public class NcbiGeneLoader {
         return dryRun;
     }
 
+    /**
+     * Whether to delete the gene products that NCBI no longer lists for their gene (the default). When false, those
+     * products stay attached to their gene with their sequence associations, and each is sent to the
+     * {@link #setChangeSink(Consumer) change sink} as a removal that was not applied.
+     *
+     * @see GeneWriteService#upsert(Gene, boolean, Consumer)
+     */
+    public void setRemoveProducts( boolean removeProducts ) {
+        this.removeProducts = removeProducts;
+    }
+
+    /**
+     * Receives every gene product removal (made or not) and every move of a gene product between genes, on the loader
+     * thread, once the gene's transaction has ended: after its commit, or after its rollback in a dry run. Nothing is
+     * sent for a gene that fails. An exception from the sink fails the run like a failed upsert.
+     */
+    public void setChangeSink( @Nullable Consumer<GeneProductChange> changeSink ) {
+        this.changeSink = changeSink;
+    }
+
     public void setTransactionManager( PlatformTransactionManager transactionManager ) {
         this.transactionTemplate = new TransactionTemplate( transactionManager );
     }
@@ -224,6 +254,17 @@ public class NcbiGeneLoader {
 
     public long getRemovedGeneProducts() {
         return removedGeneProducts;
+    }
+
+    /**
+     * Gene products that would have been removed, but were kept because removing them was off.
+     */
+    public long getKeptGeneProducts() {
+        return keptGeneProducts;
+    }
+
+    public long getSwitchedGeneProducts() {
+        return switchedGeneProducts;
     }
 
     /**
@@ -334,18 +375,38 @@ public class NcbiGeneLoader {
         long productsDeleted = stats != null ? stats.getEntityStatistics( GeneProduct.class.getName() ).getDeleteCount() : 0;
         long associationsDeleted = stats != null ? countDeletedSequenceAssociations( stats ) : 0;
 
+        // held until the transaction has ended, so that nothing is reported for a gene whose changes were not committed
+        List<GeneProductChange> changes = new ArrayList<>();
         if ( dryRun ) {
             if ( transactionTemplate == null || sessionFactory == null ) {
                 throw new IllegalStateException( "A dry run needs a transaction manager and a session factory." );
             }
             transactionTemplate.executeWithoutResult( status -> {
-                geneWriteService.upsert( gene );
+                geneWriteService.upsert( gene, removeProducts, changes::add );
                 // run the SQL, so constraint violations and flush-time failures show up
                 sessionFactory.getCurrentSession().flush();
                 status.setRollbackOnly();
             } );
         } else {
-            geneWriteService.upsert( gene );
+            geneWriteService.upsert( gene, removeProducts, changes::add );
+        }
+
+        boolean keptProducts = false;
+        for ( GeneProductChange change : changes ) {
+            if ( change.kind() == GeneProductChange.Kind.SWITCH ) {
+                switchedGeneProducts++;
+            } else if ( !change.applied() ) {
+                keptProducts = true;
+                keptGeneProducts++;
+                keptSequenceAssociations += change.blatAssociations() + change.annotationAssociations();
+            }
+            if ( changeSink != null ) {
+                changeSink.accept( change );
+            }
+        }
+        if ( keptProducts ) {
+            if ( genesKeepingProducts.size() < SUMMARY_EXAMPLES ) genesKeepingProducts.add( gene.getNcbiGeneId() );
+            genesKeepingProductsCount++;
         }
 
         if ( stats == null ) {
@@ -437,6 +498,11 @@ public class NcbiGeneLoader {
         this.genesLosingProductsCount = 0;
         this.removedGeneProducts = 0;
         this.removedSequenceAssociations = 0;
+        this.genesKeepingProducts.clear();
+        this.genesKeepingProductsCount = 0;
+        this.keptGeneProducts = 0;
+        this.keptSequenceAssociations = 0;
+        this.switchedGeneProducts = 0;
 
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator( supportedTaxa );
         sdog.setDoDownload( doDownload );
@@ -490,7 +556,8 @@ public class NcbiGeneLoader {
     private void logSummary() {
         String prefix = dryRun ? "Dry run (every change rolled back): " : "";
         if ( sessionFactory == null || !sessionFactory.getStatistics().isStatisticsEnabled() ) {
-            log.info( prefix + loadedGeneCount + " genes processed; no breakdown, Hibernate statistics are unavailable." );
+            log.info( prefix + loadedGeneCount + " genes processed; no breakdown, Hibernate statistics are unavailable."
+                    + productChangeSummary() );
             return;
         }
         StringBuilder sb = new StringBuilder();
@@ -508,7 +575,25 @@ public class NcbiGeneLoader {
         sb.append( "\n" );
         sb.append( "  sequence-to-gene-product associations removed with them: " ).append( removedSequenceAssociations ).append( "\n" );
         sb.append( "  genes held in Gemma but no longer listed by NCBI are not touched" );
+        sb.append( productChangeSummary() );
         log.info( sb );
+    }
+
+    /**
+     * The lines about gene products kept (removal off) and moved between genes, which do not depend on Hibernate's
+     * statistics.
+     */
+    private String productChangeSummary() {
+        StringBuilder sb = new StringBuilder();
+        if ( !removeProducts ) {
+            sb.append( "\n  gene products NOT removed (removal is off): " ).append( keptGeneProducts );
+            if ( keptGeneProducts > 0 ) {
+                sb.append( ", from " ).append( genesKeepingProductsCount ).append( " genes" ).append( examples( genesKeepingProducts, genesKeepingProductsCount ) )
+                        .append( ", holding " ).append( keptSequenceAssociations ).append( " sequence-to-gene-product associations" );
+            }
+        }
+        sb.append( "\n  gene products moved from one gene to another: " ).append( switchedGeneProducts );
+        return sb.toString();
     }
 
     private static String examples( List<?> examples, int total ) {

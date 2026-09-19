@@ -18,10 +18,13 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
+import org.springframework.lang.Nullable;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 
 /**
  * Gene write-side business logic lifted out of
@@ -56,6 +59,40 @@ public interface GeneWriteService {
      * @return the persistent gene (existing-updated or newly-created)
      */
     Gene upsert( Gene gene );
+
+    /**
+     * Like {@link #upsert(Gene)}, optionally without removing any gene product, and reporting the products it removes
+     * or moves between genes.
+     * <p>
+     * With {@code removeProducts} false, every gene product that {@link #upsert(Gene)} would delete stays in the
+     * database, still attached to its gene, with its BLAT and annotation associations; genes and the other products
+     * are added and updated as usual. A product whose GI another product without a gene already holds keeps its old
+     * GI, and the other product stays: see {@link #handleGeneProductChangedGIs}. Moves of a product from one gene to
+     * another are made either way.
+     *
+     * @param removeProducts whether to delete the gene products that NCBI no longer lists for the gene
+     * @param changes        receives each removal (made or not) and each move, in this transaction, before anything
+     *                       is deleted; null to report nothing, which also skips the queries that count associations
+     */
+    Gene upsert( Gene gene, boolean removeProducts, @Nullable Consumer<GeneProductChange> changes );
+
+    /**
+     * Apply a removal that {@link #upsert(Gene, boolean, Consumer)} recorded and did not make, if it still holds.
+     * <p>
+     * It holds if the product exists, is not a dummy, belongs to the same gene (by NCBI id; no gene if the removal
+     * recorded none) and still has the recorded GI. Otherwise nothing is deleted and the outcome says why.
+     * <p>
+     * Without {@code platforms}, the product is deleted with all its BLAT and annotation associations, as
+     * {@link #upsert(Gene)} would have done. With {@code platforms}, only the product's associations whose sequence is
+     * that of an element of one of those platforms are deleted; since an association is between a sequence and a
+     * product, one whose sequence is also used by another platform's elements goes for that platform too. The product
+     * is deleted once no association to it is left.
+     *
+     * @param removal   a {@link GeneProductChange.Kind#REMOVE} that was not applied
+     * @param platforms platforms to limit the deletion to, or null for no limit
+     * @param dryRun    check and count, but delete nothing
+     */
+    GeneProductRemovalOutcome replayGeneProductRemoval( GeneProductChange removal, @Nullable Collection<ArrayDesign> platforms, boolean dryRun );
 
     /**
      * Create-path body for a brand-new gene with its products. Handles the
