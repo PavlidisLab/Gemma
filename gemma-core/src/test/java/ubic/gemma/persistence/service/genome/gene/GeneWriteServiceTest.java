@@ -24,8 +24,12 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -474,6 +478,50 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
         assertEquals( created.getId(), geneOf( orphan ) );
     }
 
+    /**
+     * A new gene takes over a product Gemma already has, and has another product Gemma does not.
+     *
+     * <p>Resolving a product's accessions runs a query when the accession's external database is not one the new
+     * products carry, and a taken-over product's accessions come from the database, not from NCBI's file. The query
+     * flushes the session. While the still-unsaved products were attached to the saved gene before they were
+     * resolved, that flush reached a product whose physical location still pointed at the unsaved Chromosome the
+     * gene was converted with, and Hibernate threw
+     * {@code TransientObjectException: persistent instance references an unsaved transient instance of Chromosome}.
+     * In a real run that ends the load; 24 human genes hit it in the 2026-09-19 dry run.</p>
+     */
+    @Test
+    public void testNewGeneTakesOverAProductWhileAnotherProductIsStillUnsaved() {
+        Taxon human = this.getTaxon( "human" );
+
+        // The chromosome has to be one Gemma already has. When it is new, the gene's own Chromosome instance is the
+        // one saved, so the products that share it are never left pointing at an unsaved instance.
+        String chromosomeName = "T" + RandomStringUtils.insecure().nextAlphanumeric( 8 );
+        geneWriteService.upsert( geneOn( human, chromosomeName, null ) );
+
+        // create() resolves the products in the order of a HashSet, which for a GeneProduct is its GI's. The failure
+        // needs an unresolved product behind the one whose accessions are queried, so pin the order.
+        String takenOverGi = giInEarlyBucket();
+        String newGi = giInLateBucket();
+
+        // Gemma gives a product it maps from the known-gene track an Ensembl accession
+        // (GoldenPathSequenceAnalysis), and NCBI's file only ever gives one from GenBank.
+        Gene otherGene = persistGene( human, "NR_" + RandomStringUtils.insecure().nextNumeric( 6 ), takenOverGi,
+                externalDatabase( "Ensembl" ) );
+        GeneProduct takenOver = otherGene.getProducts().iterator().next();
+
+        Gene newGene = geneOn( human, chromosomeName, null );
+        Chromosome converted = newGene.getPhysicalLocation().getChromosome();
+        fromNcbi( newGene, takenOver.getName(), takenOverGi, converted );
+        fromNcbi( newGene, "NM_" + RandomStringUtils.insecure().nextNumeric( 6 ), newGi, converted );
+        assertEquals( takenOverGi, new HashSet<>( newGene.getProducts() ).iterator().next().getNcbiGi(),
+                "the taken-over product has to be resolved first for this to exercise the flush" );
+
+        Gene created = geneWriteService.upsert( newGene );
+
+        assertEquals( created.getId(), geneOf( takenOver ) );
+        assertEquals( 2, countProductsOf( created ) );
+    }
+
     @Test
     public void testReplayWithoutPlatformsDeletesTheProductAndItsAssociations() {
         Taxon human = this.getTaxon( "human" );
@@ -594,6 +642,72 @@ public class GeneWriteServiceTest extends BaseSpringContextTest5 {
         gene.setTaxon( taxon );
         gene.getProducts().add( productInfo( gene, productName, RandomStringUtils.insecure().nextNumeric( 9 ) ) );
         return genomePersister.persistGene( gene );
+    }
+
+    /**
+     * A gene with one product carrying an accession from the given database, as a product Gemma already holds would.
+     */
+    private Gene persistGene( Taxon taxon, String productName, String gi, ExternalDatabase accessionSource ) {
+        String symbol = "TEST_" + RandomStringUtils.insecure().nextAlphabetic( 6 ).toUpperCase();
+        Gene gene = Gene.Factory.newInstance();
+        gene.setName( symbol );
+        gene.setOfficialSymbol( symbol );
+        gene.setOfficialName( symbol );
+        gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.insecure().nextNumeric( 7 ) ) + 50_000_000 );
+        gene.setTaxon( taxon );
+        GeneProduct product = productInfo( gene, productName, gi );
+        product.getAccessions().add( accession( productName, accessionSource ) );
+        gene.getProducts().add( product );
+        return genomePersister.persistGene( gene );
+    }
+
+    /**
+     * A product as {@link ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneConverter} builds it: a GenBank accession
+     * and a location sharing the gene's own, still-unsaved, chromosome.
+     */
+    private GeneProduct fromNcbi( Gene gene, String name, String gi, Chromosome chromosome ) {
+        GeneProduct product = productInfo( gene, name, gi );
+        product.getAccessions().add( accession( name, GenBankUtils.getGenBank() ) );
+        product.setPhysicalLocation( PhysicalLocation.Factory.newInstance( chromosome ) );
+        gene.getProducts().add( product );
+        return product;
+    }
+
+    private DatabaseEntry accession( String accession, ExternalDatabase source ) {
+        DatabaseEntry entry = DatabaseEntry.Factory.newInstance();
+        entry.setAccession( accession );
+        entry.setExternalDatabase( source );
+        return entry;
+    }
+
+    private ExternalDatabase externalDatabase( String name ) {
+        ExternalDatabase database = externalDatabaseService.findByName( name );
+        if ( database != null ) {
+            return database;
+        }
+        return externalDatabaseService.create( ExternalDatabase.Factory.newInstance( name, DatabaseType.OTHER ) );
+    }
+
+    /**
+     * {@code create()} collects the gene's products in a HashSet, so it resolves them in the order of
+     * {@link GeneProduct#hashCode()}, which is the GI's. These pick a GI for the first and the last of 16 buckets.
+     */
+    private String giInEarlyBucket() {
+        return giInBucket( 0, 3 );
+    }
+
+    private String giInLateBucket() {
+        return giInBucket( 12, 15 );
+    }
+
+    private String giInBucket( int first, int last ) {
+        while ( true ) {
+            String gi = "9" + RandomStringUtils.insecure().nextNumeric( 8 );
+            int bucket = ( gi.hashCode() ^ ( gi.hashCode() >>> 16 ) ) & 15;
+            if ( bucket >= first && bucket <= last ) {
+                return gi;
+            }
+        }
     }
 
     private Gene newInfo( Gene gene ) {

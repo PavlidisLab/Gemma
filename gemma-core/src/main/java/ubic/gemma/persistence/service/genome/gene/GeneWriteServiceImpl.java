@@ -215,11 +215,17 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             }
         }
 
-        // attach the products.
-        gene.setProducts( geneProductsForNewGene );
-        for ( GeneProduct gp : gene.getProducts() ) {
+        // Resolve the products BEFORE attaching them to the saved gene. A lookup here is a query whenever the cache
+        // misses — a taken-over product's accessions come from the database, so its external database need not be one
+        // the new products carry — and a query auto-flushes. Once the products hang off the saved gene, that flush
+        // cascades into them, and any product still holding the gene's unsaved Chromosome fails the flush with
+        // TransientObjectException, which ends a gene load.
+        for ( GeneProduct gp : geneProductsForNewGene ) {
             this.fillInGeneProductAssociations( gp, externalDbCache, chromosomeCache );
         }
+
+        // attach the products.
+        gene.setProducts( geneProductsForNewGene );
 
         try {
             // we do a separate create because the cascade doesn't trigger auditing correctly - otherwise the
