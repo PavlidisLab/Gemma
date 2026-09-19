@@ -654,7 +654,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
             for ( BioAssay ba : ee.getBioAssays() ) {
                 // this BA is from Gemma, it might lack an accession (although very unlikely!)
-                if ( ba.getAccession() == null || ba.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+                if ( ba.getAccession() == null || !ba.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
                     log.warn( ba + " does not have a GEO accession, ignoring." );
                     continue;
                 }
@@ -686,8 +686,12 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                  */
                 Set<Characteristic> bmchars = bm.getCharacteristics();
                 int numOldChars = bmchars.size();
+                // Copied before the clear: remove() used to be handed the set after clear() had emptied
+                // it, so it deleted nothing. The mapping has no orphan removal, so the replaced rows
+                // stayed in CHARACTERISTIC with their biomaterial link nulled.
+                List<Characteristic> oldChars = new ArrayList<>( bmchars );
                 bmchars.clear();
-                characteristicService.remove( bmchars );
+                characteristicService.remove( oldChars );
                 Collection<Characteristic> freshCharacteristics = freshBAsByGSM.get( gsmID ).getSampleUsed().getCharacteristics();
                 if ( log.isDebugEnabled() )
                     log.debug( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );
