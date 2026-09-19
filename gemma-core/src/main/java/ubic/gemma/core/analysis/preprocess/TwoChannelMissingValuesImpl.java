@@ -77,7 +77,9 @@ import java.util.HashSet;
  * </ol>
  *
  * @author pavlidis
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
  */
+@Deprecated
 @Component
 public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
