@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
@@ -59,6 +60,7 @@ import static java.util.function.Function.identity;
 @Service
 @Path("/search")
 @Slf4j
+@Tag(name = "Search", description = "Free-text search across every indexed result type")
 public class SearchWebService {
 
     /**

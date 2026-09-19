@@ -977,4 +977,42 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                         + " OpenAPI 3.0 requires one, so the document is invalid without it: %s", offenders )
                 .isEmpty();
     }
+
+    /**
+     * Every operation must carry a tag, because a tag is how a generated client is organised.
+     *
+     * <p>204 of 286 operations had none, so swagger-codegen put them all in one {@code DefaultApi}
+     * — a 170-method class with no structure, which is what gemmapy generates against today. Tags
+     * split that into one class per resource.
+     *
+     * <p>The {@code /custom} paths are excluded for the same reason as in
+     * {@link #testEveryResponseHasADescription}: they are Jersey fixtures on this module's test
+     * classpath, not deployed routes.
+     */
+    @Test
+    public void testEveryOperationIsTagged() {
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            if ( pathEntry.getKey().startsWith( "/custom" ) ) {
+                continue;
+            }
+            for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathEntry.getValue().readOperationsMap().entrySet() ) {
+                Operation operation = opEntry.getValue();
+                inspected++;
+                if ( operation.getTags() == null || operation.getTags().isEmpty() ) {
+                    offenders.add( opEntry.getKey() + " " + pathEntry.getKey()
+                            + " (" + operation.getOperationId() + ")" );
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to declare many operations; inspected only %d", inspected )
+                .isGreaterThan( 250 );
+        assertThat( offenders )
+                .withFailMessage( "operations with no tag — they would all land in the generated client's"
+                        + " DefaultApi. Put a class-level @Tag on the resource: %s", offenders )
+                .isEmpty();
+    }
 }

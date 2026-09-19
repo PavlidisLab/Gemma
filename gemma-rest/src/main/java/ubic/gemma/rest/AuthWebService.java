@@ -13,6 +13,7 @@ package ubic.gemma.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
@@ -71,6 +72,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Service
 @Path("/")
 @Slf4j
+@Tag(name = "Authentication", description = "Bearer-token login and logout")
 public class AuthWebService {
 
     @Autowired

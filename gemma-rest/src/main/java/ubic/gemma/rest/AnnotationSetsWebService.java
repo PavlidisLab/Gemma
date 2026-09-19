@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -111,6 +112,7 @@ import ubic.gemma.rest.util.args.OffsetArg;
 @Service
 @Path("/")
 @Slf4j
+@Tag(name = "Annotation Sets", description = "Agent- and curator-proposed annotation sets, with triage and per-finding dispositions")
 public class AnnotationSetsWebService {
 
     @Autowired

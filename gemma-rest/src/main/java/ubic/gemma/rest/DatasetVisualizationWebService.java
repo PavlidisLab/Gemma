@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +70,7 @@ import java.util.List;
 @Service
 @Path("/datasets")
 @Slf4j
+@Tag(name = "Datasets", description = "Expression experiments: metadata, samples, design, expression data and analyses")
 public class DatasetVisualizationWebService {
 
     /** Hard upper bound on {@code ?sampleSize=}. */

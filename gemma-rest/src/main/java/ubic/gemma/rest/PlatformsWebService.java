@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,6 +99,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Service
 @Path("/platforms")
 @Slf4j
+@Tag(name = "Platforms", description = "Array designs, their elements and the datasets using them")
 public class PlatformsWebService {
 
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "The %s annotation file for platform %s does not exist or can not be accessed.";

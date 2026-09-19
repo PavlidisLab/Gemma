@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.models.OpenAPI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +88,7 @@ public class RootWebService {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Version and identifying information for this API instance.", useReturnTypeSchema = true, content = @Content())
             })
+    @Tag(name = "Root")
     public ResponseDataObject<ApiInfoValueObject> getApiInfo( @Context UriInfo uriInfo ) {
         // collect various versioned entities to display on the main endpoint
         List<ExternalDatabaseValueObject> versioned;
@@ -119,6 +121,7 @@ public class RootWebService {
             responses = {
                     @ApiResponse(responseCode = "200", description = "The user behind the current credential.", useReturnTypeSchema = true, content = @Content())
             })
+    @Tag(name = "Users")
     public ResponseDataObject<UserValueObject> getMyself() {
         return respond( getUserVo( userManager.getCurrentUser() ) );
     }
@@ -154,6 +157,7 @@ public class RootWebService {
                             content = @io.swagger.v3.oas.annotations.media.Content(
                                     schema = @io.swagger.v3.oas.annotations.media.Schema(
                                             implementation = ubic.gemma.rest.util.ResponseErrorObject.class ) ) ) })
+    @Tag(name = "Users")
     public Response changeMyPassword( ChangePasswordRequest req ) {
         if ( req == null || req.currentPassword == null || req.currentPassword.isEmpty()
                 || req.newPassword == null || req.newPassword.isEmpty() ) {
@@ -208,6 +212,7 @@ public class RootWebService {
             responses = {
                     @ApiResponse(responseCode = "200", description = "The named user. A caller who is not an administrator may only ask for their own username.", useReturnTypeSchema = true, content = @Content())
             })
+    @Tag(name = "Users")
     public ResponseDataObject<UserValueObject> getUser( // Params:
             @PathParam("username") String username // Required
     ) {

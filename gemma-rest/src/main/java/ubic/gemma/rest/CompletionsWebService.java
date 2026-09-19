@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -68,6 +69,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Service
 @Path("/completions")
 @Slf4j
+@Tag(name = "Completions", description = "Prefix lookups backing the CLI and curation-UI pickers")
 public class CompletionsWebService {
 
     /** Default {@code limit} when the client does not supply one. */

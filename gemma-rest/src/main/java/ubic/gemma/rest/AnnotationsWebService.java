@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -110,6 +111,7 @@ import ubic.gemma.rest.annotations.Costly;
 @Service
 @Slf4j
 @Path("/annotations")
+@Tag(name = "Annotations", description = "Ontology terms, the annotations using them, and search over both")
 public class AnnotationsWebService {
 
 

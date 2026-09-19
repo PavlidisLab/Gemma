@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -255,6 +256,7 @@ import static ubic.gemma.rest.util.Responders.sendfile;
 @Service
 @Path("/datasets")
 @Slf4j
+@Tag(name = "Datasets", description = "Expression experiments: metadata, samples, design, expression data and analyses")
 public class DatasetsWebService {
 
     public static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";

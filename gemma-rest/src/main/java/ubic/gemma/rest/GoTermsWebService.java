@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -72,6 +73,7 @@ import ubic.gemma.rest.annotations.Costly;
 @Service
 @Path("/goTerms")
 @Slf4j
+@Tag(name = "GO Terms", description = "Reverse Gene2GO lookups over the Gene Ontology")
 public class GoTermsWebService {
 
     /** Per-request bound on ontology subtree expansion when {@code propagate=true}. */
