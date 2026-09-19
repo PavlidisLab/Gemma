@@ -3,12 +3,13 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.file.PathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.locking.FileLockManager;
+import ubic.gemma.core.util.locking.LockedPath;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -67,21 +68,25 @@ public class FactorValueOntologyWriterCli extends AbstractAuthenticatedCLI {
     protected void doAuthenticatedWork() throws Exception {
         Collection<String> uris = factorValueOntologyService.getFactorValueUris();
         log.info( "Writing " + uris.size() + " factor values to " + outputFile + "..." );
-        try ( Writer writer = openFile( outputFile ) ) {
-            factorValueOntologyService.writeToRdfIgnoreAcls( uris, writer );
-        }
-    }
-
-    private Writer openFile( Path outputFile ) throws IOException {
         if ( !force && Files.exists( outputFile ) ) {
             throw new IllegalArgumentException( "Output file already exists: " + outputFile + ". Use -force,--force to overwrite it." );
         }
-        PathUtils.createParentDirectories( outputFile );
+        boolean compressed = outputFile.getFileName().toString().endsWith( ".gz" );
+        // a failure leaves the previous file in place, not a truncated one that a rerun without -force refuses to replace
+        try ( LockedPath ignored = compressed ? fileLockManager.acquirePathLock( outputFile, true ) : null ) {
+            FileUtils.writeAtomically( outputFile, tmp -> {
+                try ( Writer writer = openFile( tmp, compressed ) ) {
+                    factorValueOntologyService.writeToRdfIgnoreAcls( uris, writer );
+                }
+            } );
+        }
+    }
 
-        if ( outputFile.getFileName().toString().endsWith( ".gz" ) ) {
-            return new OutputStreamWriter( new GZIPOutputStream( fileLockManager.newOutputStream( outputFile ) ) );
+    private Writer openFile( Path file, boolean compressed ) throws IOException {
+        if ( compressed ) {
+            return new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file ) ) );
         } else {
-            return Files.newBufferedWriter( outputFile );
+            return Files.newBufferedWriter( file );
         }
     }
 }
