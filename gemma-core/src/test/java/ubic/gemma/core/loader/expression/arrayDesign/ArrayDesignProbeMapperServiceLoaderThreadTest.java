@@ -156,6 +156,66 @@ class ArrayDesignProbeMapperServiceLoaderThreadTest {
     }
 
     /**
+     * Alignments from another assembly are matched against the wrong stretch of genome. Which assembly a platform
+     * was aligned against is readable from the data only since a BLAT result began naming it; before that it was
+     * answerable only from the operator's notes.
+     */
+    @Test
+    void alignmentsAgainstAnotherAssemblyAreReported() {
+        String warning = ArrayDesignProbeMapperServiceImpl.alignedAgainstAnotherAssembly( arrayDesign, rat(), "rn8",
+                alignedAgainst( "rn7", 11254L, "rn8", 3L ) );
+
+        assertThat( warning )
+                .contains( "11254 against rn7" )
+                .contains( "being mapped against rn8" )
+                .doesNotContain( "3 against rn8" );
+    }
+
+    /**
+     * 13,223,868 alignments name the taxon rather than an assembly, because the searched database did not record one
+     * until 2026-09-19. "rat" does not contradict rn8 — it says nothing — and a warning that fired on the whole
+     * historical corpus would be ignored within a day.
+     */
+    @Test
+    void alignmentsThatNameTheTaxonAreNotReported() {
+        assertThat( ArrayDesignProbeMapperServiceImpl.alignedAgainstAnotherAssembly( arrayDesign, rat(), "rn8",
+                alignedAgainst( "rat", 3241056L, "rn8", 3L ) ) ).isNull();
+    }
+
+    @Test
+    void aPlatformAlignedAgainstTheAssemblyInUseIsNotReported() {
+        assertThat( ArrayDesignProbeMapperServiceImpl.alignedAgainstAnotherAssembly( arrayDesign, rat(), "rn8",
+                alignedAgainst( "rn8", 93855L ) ) ).isNull();
+    }
+
+    /**
+     * The mapping goes ahead: this reports what the platform holds, it does not decide the campaign's ordering.
+     */
+    @Test
+    void anotherAssemblyDoesNotStopTheMapping() {
+        when( arrayDesignService.countBlatResultsBySearchedDatabase( arrayDesign ) )
+                .thenReturn( alignedAgainst( "rn7", 11254L ) );
+        when( goldenPathDb.getDatabaseName() ).thenReturn( "rn8" );
+        when( genomePersister.persistBlatAssociation( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
+
+        assertTimeoutPreemptively( Duration.ofSeconds( 60 ), this::map );
+
+        verify( genomePersister, times( PROBES ) ).persistBlatAssociation( any() );
+    }
+
+    private static Taxon rat() {
+        return Taxon.Factory.newInstance( "Rattus norvegicus", "rat", 10116, true );
+    }
+
+    private static Map<String, Long> alignedAgainst( Object... nameThenCount ) {
+        Map<String, Long> aligned = new HashMap<>();
+        for ( int i = 0; i < nameThenCount.length; i += 2 ) {
+            aligned.put( ( String ) nameThenCount[i], ( Long ) nameThenCount[i + 1] );
+        }
+        return aligned;
+    }
+
+    /**
      * A platform whose mapping aborts after the delete keeps only what the loader had saved by then, and the caller
      * used to get a stack trace that said nothing about it: GPL6887 went from 35,376 mapped probes to 1,604 on a
      * transient GoldenPath connection fault, and only a driver that counted beforehand noticed.

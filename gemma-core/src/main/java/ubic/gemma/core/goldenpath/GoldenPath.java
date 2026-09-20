@@ -85,6 +85,13 @@ public abstract class GoldenPath implements AutoCloseable {
         return searchedDatabase;
     }
 
+    /**
+     * @return the name of the GoldenPath database being read, which is the genome assembly: hg38, mm39, rn8
+     */
+    public String getDatabaseName() {
+        return searchedDatabase.getName();
+    }
+
     public Taxon getTaxon() {
         return taxon;
     }

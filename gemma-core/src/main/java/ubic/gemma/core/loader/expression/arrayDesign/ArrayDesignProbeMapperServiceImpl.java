@@ -40,6 +40,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
@@ -66,6 +67,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -179,6 +181,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 // before the delete: a missing GoldenPath table used to fail the first probe query, after the
                 // platform's associations were already gone
                 goldenPathDb.checkTablesForProbeMapping( config );
+                this.warnIfAlignedAgainstAnotherAssembly( arrayDesign, taxon, goldenPathDb.getDatabaseName() );
 
                 if ( useDB ) {
                     ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old alignment-based associations" );
@@ -246,6 +249,60 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
         this.deleteOldFiles( arrayDesign );
+    }
+
+    /**
+     * Say when a platform's alignments were made against a different assembly than the one its probes are about to be
+     * mapped against.
+     * <p>
+     * The mapping matches a probe's aligned coordinates to transcript coordinates read from GoldenPath, so alignments
+     * from another assembly are matched against the wrong stretch of genome. Nothing detected this until a BLAT
+     * result recorded its assembly; whether a platform had been re-aligned for the assembly in use was answerable
+     * only from the operator's notes, and on 2026-09-19 those notes were confidently wrong for five hours.
+     * <p>
+     * A warning, not a refusal, and silent about alignments that name the taxon rather than an assembly — 13,223,868
+     * of them at the time of writing. "rat" does not contradict rn8; it just does not say anything.
+     */
+    private void warnIfAlignedAgainstAnotherAssembly( ArrayDesign arrayDesign, Taxon taxon, String assembly ) {
+        String warning = ArrayDesignProbeMapperServiceImpl.alignedAgainstAnotherAssembly( arrayDesign, taxon, assembly,
+                arrayDesignService.countBlatResultsBySearchedDatabase( arrayDesign ) );
+        if ( warning != null ) {
+            ArrayDesignProbeMapperServiceImpl.log.warn( warning );
+        }
+    }
+
+    /**
+     * @param alignedAgainst how many of the platform's alignments name each searched database
+     * @return the warning, or null when nothing the platform holds contradicts the assembly being mapped against
+     * @see #warnIfAlignedAgainstAnotherAssembly(ArrayDesign, Taxon, String)
+     */
+    @Nullable
+    static String alignedAgainstAnotherAssembly( ArrayDesign arrayDesign, Taxon taxon, String assembly,
+            Map<String, Long> alignedAgainst ) {
+        Map<String, Long> others = new TreeMap<>();
+        for ( Map.Entry<String, Long> aligned : alignedAgainst.entrySet() ) {
+            String name = aligned.getKey();
+            if ( name == null || name.equalsIgnoreCase( assembly )
+                    || name.equalsIgnoreCase( taxon.getCommonName() ) ) {
+                continue;
+            }
+            others.put( name, aligned.getValue() );
+        }
+        if ( others.isEmpty() ) {
+            return null;
+        }
+        StringBuilder counts = new StringBuilder();
+        for ( Map.Entry<String, Long> other : others.entrySet() ) {
+            if ( counts.length() > 0 ) {
+                counts.append( ", " );
+            }
+            counts.append( other.getValue() ).append( " against " ).append( other.getKey() );
+        }
+        return String.format(
+                "%s holds alignments made against another assembly (%s), but its probes are being mapped against %s. "
+                        + "Coordinates from one assembly do not name the same genes in another. Align the platform "
+                        + "against %s before mapping it.",
+                arrayDesign, counts, assembly, assembly );
     }
 
     /**
