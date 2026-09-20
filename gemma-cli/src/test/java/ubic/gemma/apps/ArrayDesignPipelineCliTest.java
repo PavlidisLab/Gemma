@@ -290,6 +290,68 @@ class ArrayDesignPipelineCliTest extends BaseCliTest5 {
     }
 
     /*
+     * -markOnly. BLAT results and gene mappings are held per sequence, so running one platform does the work for
+     * every platform sharing its sequences, while the audit event propagates only down the merge tree: those
+     * platforms end up with fresh data and a trail saying they were never processed.
+     */
+
+    @Test
+    @WithMockUser
+    void blatMarkOnlyRecordsTheEventAndRunsNoBlat() {
+        ArrayDesign platform = platform( "GPL6885", TechnologyType.ONECOLOR );
+        when( entityLocator.locateArrayDesign( "GPL6885" ) ).thenReturn( platform );
+
+        assertThat( blatCli.getObject() )
+                .withArguments( "-a", "GPL6885", "-markOnly", "sequences aligned by GPL6887" )
+                .succeeds();
+
+        verify( cliArrayDesignAuditService ).recordSequenceAnalysis( same( platform ), eq( "sequences aligned by GPL6887" ) );
+        verifyNoInteractions( arrayDesignSequenceAlignmentService );
+    }
+
+    @Test
+    @WithMockUser
+    void probeMapperMarkOnlyRecordsTheEventAndMapsNothing() {
+        ArrayDesign platform = platform( "GPL6885", TechnologyType.ONECOLOR );
+        when( entityLocator.locateArrayDesign( "GPL6885" ) ).thenReturn( platform );
+
+        assertThat( probeMapperCli.getObject() )
+                .withArguments( "-a", "GPL6885", "-markOnly", "sequences mapped by GPL6887" )
+                .succeeds();
+
+        verify( cliArrayDesignAuditService ).recordAlignmentBasedGeneMapping( same( platform ), eq( "sequences mapped by GPL6887" ) );
+        verifyNoInteractions( arrayDesignProbeMapperService );
+    }
+
+    /**
+     * The event says the platform was processed, so marking a set nobody enumerated would put a claim in the audit
+     * trail about platforms no one looked at.
+     */
+    @Test
+    @WithMockUser
+    void markOnlyRefusesPlatformsItWasNotGiven() {
+        assertThat( probeMapperCli.getObject() )
+                .withArguments( "-auto", "-markOnly", "sequences mapped by GPL6887" )
+                .fails()
+                .exitCause()
+                .hasMessageContaining( "name the platforms to mark with -a or -f" );
+
+        verifyNoInteractions( arrayDesignProbeMapperService, cliArrayDesignAuditService );
+    }
+
+    @Test
+    @WithMockUser
+    void markOnlyRefusesTheOptionsThatWouldDoWork() {
+        assertThat( blatCli.getObject() )
+                .withArguments( "-a", "GPL6885", "-sensitive", "-markOnly", "sequences aligned by GPL6887" )
+                .fails()
+                .exitCause()
+                .hasMessageContaining( "cannot be combined with -sensitive" );
+
+        verifyNoInteractions( arrayDesignSequenceAlignmentService, cliArrayDesignAuditService );
+    }
+
+    /*
      * The modes below select their own platforms (or none) and were rejected by the base class's "No platforms
      * matched" guard before they were reached.
      */

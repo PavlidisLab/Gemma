@@ -54,6 +54,11 @@ import static ubic.gemma.cli.util.EntityOptionsUtils.addCommaDelimitedPlatformOp
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSeekingCLI<ArrayDesign> {
 
+    /**
+     * @see #getMarkOnlyReason(CommandLine, String...)
+     */
+    protected static final String MARK_ONLY_OPTION = "markOnly";
+
     @Autowired
     protected ArrayDesignReportService arrayDesignReportService;
     @Autowired
@@ -122,6 +127,51 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
 
+    }
+
+    /**
+     * Read the reason given for {@code -markOnly}, or return null if it was not used.
+     * <p>
+     * A platform's BLAT results and gene mappings are held per sequence, so running one platform does the work for
+     * every platform that shares its sequences — but the audit event propagates only down the merge tree, leaving
+     * those platforms with fresh data and an audit trail that says they were never processed. {@code -markOnly}
+     * writes the event and nothing else.
+     * <p>
+     * The event is a claim that the work was done, so the platforms have to be ones the operator named: {@code -all},
+     * {@code -auto} and {@code -mdate} each select a set nobody enumerated.
+     *
+     * @param optionsThatDoWork options of the calling CLI that make it do work, which {@code -markOnly} contradicts
+     */
+    @Nullable
+    protected String getMarkOnlyReason( CommandLine commandLine, String... optionsThatDoWork ) throws ParseException {
+        if ( !commandLine.hasOption( MARK_ONLY_OPTION ) ) {
+            return null;
+        }
+        String reason = commandLine.getOptionValue( MARK_ONLY_OPTION );
+        if ( reason == null || reason.trim().isEmpty() ) {
+            throw new ParseException( "Give a reason with -" + MARK_ONLY_OPTION
+                    + " (e.g. 'sequences mapped by GPL6887'); it is recorded in the audit event." );
+        }
+        List<String> conflicting = new ArrayList<>();
+        for ( String option : optionsThatDoWork ) {
+            if ( commandLine.hasOption( option ) ) {
+                conflicting.add( option );
+            }
+        }
+        if ( !conflicting.isEmpty() ) {
+            throw new ParseException( "-" + MARK_ONLY_OPTION + " does no work, so it cannot be combined with -"
+                    + String.join( ", -", conflicting ) + "." );
+        }
+        for ( String option : new String[] { "all", "auto", "mdate" } ) {
+            if ( commandLine.hasOption( option ) ) {
+                throw new ParseException( "-" + MARK_ONLY_OPTION + " records that a platform was processed, "
+                        + "so name the platforms to mark with -a or -f rather than selecting them with -" + option + "." );
+            }
+        }
+        if ( !commandLine.hasOption( 'a' ) && !commandLine.hasOption( 'f' ) ) {
+            throw new ParseException( "Name the platforms to mark with -a or -f." );
+        }
+        return reason.trim();
     }
 
     @Override

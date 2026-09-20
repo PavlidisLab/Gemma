@@ -59,6 +59,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     private String blatResultFile = null;
     private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
     private boolean sensitive = false;
+    private String markOnlyReason = null;
 
     @Override
     public String getCommandName() {
@@ -95,10 +96,21 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         // this.addThreadsOption( options );
         options.addOption( blatScoreThresholdOption );
         options.addOption( blatResultOption );
+
+        options.addOption( Option.builder( MARK_ONLY_OPTION ).hasArg().argName( "reason" )
+                .desc( "Record the sequence analysis event for the platforms named with -a or -f and do nothing else: "
+                        + "no BLAT, no results persisted. For a platform whose sequences another platform's run has "
+                        + "already aligned — BLAT results are held per sequence, so the work is done, but the event "
+                        + "only propagates down the merge tree. The reason is recorded in the event, e.g. 'sequences "
+                        + "aligned by GPL6887'. Only the platforms named are marked, and platforms selected by "
+                        + "-taxon, -auto or -mdate are refused." )
+                .build() );
     }
 
     @Override
     protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
+
+        this.markOnlyReason = getMarkOnlyReason( commandLine, "b", "s", "sensitive", "t" );
 
         if ( commandLine.hasOption( "sensitive" ) ) {
             this.sensitive = true;
@@ -131,6 +143,14 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
+
+        if ( this.markOnlyReason != null ) {
+            for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
+                this.audit( arrayDesign, this.markOnlyReason );
+                addSuccessObject( arrayDesign, "marked as aligned without running: " + this.markOnlyReason );
+            }
+            return;
+        }
 
         if ( !arrayDesignsToProcess.isEmpty() ) {
 
