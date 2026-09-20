@@ -139,12 +139,36 @@ public class ShellDelegatingBlat implements Blat {
         }
     }
 
+    /**
+     * The database a BLAT result was searched against, named for the assembly (rn8, hg38) so that the result records
+     * which assembly its coordinates belong to.
+     * <p>
+     * It used to be named for the taxon — "rat" — which an rn7 and an rn8 alignment of the same probe share, along
+     * with the chromosome row and everything else but the coordinates themselves. A half-migrated corpus was
+     * therefore undetectable: 13,223,868 results carried a taxon-named row on 2026-09-19. Alignments read from
+     * GoldenPath's own tables have always been named this way ({@link ubic.gemma.core.goldenpath.GoldenPathQuery}),
+     * which is where the hg38 / mm39 / rn7 rows come from.
+     */
     public static ExternalDatabase getSearchedGenome( Taxon taxon ) {
-        BlattableGenome genome = ShellDelegatingBlat.inferBlatDatabase( taxon );
         ExternalDatabase searchedDatabase = ExternalDatabase.Factory.newInstance();
         searchedDatabase.setType( DatabaseType.SEQUENCE );
-        searchedDatabase.setName( genome.toString().toLowerCase() );
+        searchedDatabase.setName( ShellDelegatingBlat.getSearchedGenomeName( taxon ) );
         return searchedDatabase;
+    }
+
+    /**
+     * @return the assembly BLAT is configured to search for this taxon, or the taxon's own name when there is none
+     */
+    private static String getSearchedGenomeName( Taxon taxon ) {
+        // also rejects a taxon we cannot BLAT at all
+        String genome = ShellDelegatingBlat.inferBlatDatabase( taxon ).toString().toLowerCase();
+        String assembly = Settings.getString( "gemma.goldenpath.db." + genome );
+        if ( assembly == null || assembly.trim().isEmpty() ) {
+            ShellDelegatingBlat.log.warn( "gemma.goldenpath.db." + genome + " is not set, so BLAT results for "
+                    + taxon + " will not record which assembly they were aligned against." );
+            return genome;
+        }
+        return assembly.trim();
     }
 
     private static BlattableGenome inferBlatDatabase( Taxon taxon ) {
