@@ -91,6 +91,37 @@ class ArrayDesignSequenceAlignmentServiceDeletionTest {
     }
 
     /**
+     * Agilent reuses identical 60-mers across species and Gemma holds one BioSequence row per sequence, carrying
+     * whichever taxon loaded it first, so a platform can carry a handful of sequences whose row names another taxon.
+     * Aligning those against that taxon's genome made a second BLAT run whose gfServer need not even be up — nine
+     * such rows made three rat platforms unBLATtable on 2026-09-20 — and where both servers were up it gave those
+     * probes coordinates in a genome that mapPlatformToGenes, which keys on the platform's taxon, does not read.
+     */
+    @Test
+    void everySequenceIsAlignedAgainstThePlatformsOwnGenome() throws IOException {
+        Taxon mouse = Taxon.Factory.newInstance( "Mus musculus", "mouse", 10090, true );
+        BioSequence sharedWithAMousePlatform = BioSequence.Factory.newInstance( "1915", mouse );
+        sharedWithAMousePlatform.setId( 11L );
+        sharedWithAMousePlatform.setSequence( "TTTTACGTACGTACGTACGT" );
+        sharedWithAMousePlatform.setLength( 20L );
+        arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "probe1", arrayDesign,
+                sharedWithAMousePlatform ) );
+        when( arrayDesignService.getTaxaFromBioSequences( arrayDesign ) )
+                .thenReturn( new HashSet<>( Arrays.asList( human, mouse ) ) );
+        Map<BioSequence, List<BlatResult>> results = new HashMap<>();
+        results.put( sequence, new ArrayList<>( Collections.singleton( blatResult( sequence ) ) ) );
+        results.put( sharedWithAMousePlatform,
+                new ArrayList<>( Collections.singleton( blatResult( sharedWithAMousePlatform ) ) ) );
+        when( blat.blatQuery( anyCollection(), anyBoolean(), any() ) ).thenReturn( results );
+
+        service.processArrayDesign( arrayDesign, blat );
+
+        // one run, against the platform's genome, carrying both sequences
+        verify( blat ).blatQuery( argThat( seqs -> seqs.size() == 2 ), anyBoolean(), same( human ) );
+        verify( blat, never() ).blatQuery( anyCollection(), anyBoolean(), same( mouse ) );
+    }
+
+    /**
      * From a file: the old alignments were deleted before the results were matched to the platform's sequences by
      * name. A result for a sequence not on the platform then threw a NullPointerException ("Cannot hash a transient
      * entity") when it was set aside, so the run failed with every alignment deleted and none saved.

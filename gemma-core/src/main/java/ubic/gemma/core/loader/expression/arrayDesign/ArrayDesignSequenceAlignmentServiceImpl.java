@@ -414,77 +414,84 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         if ( sensitive )
             ArrayDesignSequenceAlignmentServiceImpl.log.info( "Running in 'sensitive' mode if possible" );
 
-        Collection<Taxon> taxa = arrayDesignService.getTaxaFromBioSequences( ad );
-        boolean oldResultsRemoved = false;
-        int numSequences = 0;
-        for ( Taxon taxon : taxa ) {
-
-            Collection<BioSequence> sequencesToBlat = ArrayDesignSequenceAlignmentServiceImpl.getSequences( ad, taxon );
-
-            Map<BioSequence, Collection<BlatResult>> results = this
-                    .getAlignments( sequencesToBlat, sensitive, taxon, blat );
-
-            ArrayDesignSequenceAlignmentServiceImpl.log
-                    .info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
-
-            Map<String, BioSequence> nameMap = new HashMap<>();
-            for ( BioSequence bs : results.keySet() ) {
-                if ( nameMap.containsKey( bs.getName() ) ) {
-                    throw new IllegalStateException(
-                            "All distinct sequences on the array must have unique names; found " + bs.getName()
-                                    + " more than once." );
-                }
-                nameMap.put( bs.getName(), bs );
-            }
-
-            int noResults = 0;
-            int count = 0;
-            numSequences += sequencesToBlat.size();
-
-            // We only remove the old results once there is at least one set of new ones to replace them. This used to
-            // test only that this was the first taxon, so a BLAT run that returned nothing (e.g. a gfServer serving
-            // the wrong genome) deleted every alignment and saved none.
-            if ( !oldResultsRemoved && !results.isEmpty() ) {
-                ArrayDesignSequenceAlignmentServiceImpl.log.info( "Looking for old results to remove..." );
-                arrayDesignService.deleteAlignmentData( ad );
-                oldResultsRemoved = true;
-            }
-
-            for ( BioSequence sequence : sequencesToBlat ) {
-                if ( sequence == null ) {
-                    ArrayDesignSequenceAlignmentServiceImpl.log.warn( "Null sequence!" );
-                    continue;
-                }
-                Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
-                if ( brs == null ) {
-                    ++noResults;
-                    continue;
-                }
-                for ( BlatResult result : brs ) {
-                    result.setQuerySequence( sequence ); // must do this to replace
-                    // placeholder instance.
-                }
-                allResults.addAll( this.persistBlatResults( brs ) );
-
-                if ( ++count % 2000 == 0 ) {
-                    ArrayDesignSequenceAlignmentServiceImpl.log
-                            .info( "Checked results for " + count + " queries, " + allResults.size()
-                                    + " blat results so far." );
-                }
-
-            }
-
-            ArrayDesignSequenceAlignmentServiceImpl.log
-                    .info( noResults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
+        /*
+         * Every sequence on the platform is aligned against the platform's own genome. This used to make one BLAT run
+         * per taxon found among the platform's BioSequences: Agilent reuses identical 60-mers across species and
+         * Gemma holds one row per sequence, carrying whichever taxon loaded it first, so nine such rows gave a rat
+         * platform a mouse run — and the mouse gfServer not being up failed the platform before a single rat sequence
+         * was aligned. A probe on a rat array measures rat RNA whatever the sequence row says, and a control or a
+         * spike-in has no species at all: the platform decides which genome to align against, not the sequence.
+         */
+        Taxon taxon = ad.getPrimaryTaxon();
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( ad + " has no primary taxon, so there is no genome to align it against." );
         }
 
-        if ( !oldResultsRemoved && numSequences == 0 ) {
+        Collection<BioSequence> sequencesToBlat = ArrayDesignSequenceAlignmentServiceImpl.getSequences( ad );
+
+        Map<BioSequence, Collection<BlatResult>> results = this
+                .getAlignments( sequencesToBlat, sensitive, taxon, blat );
+
+        ArrayDesignSequenceAlignmentServiceImpl.log
+                .info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
+
+        Map<String, BioSequence> nameMap = new HashMap<>();
+        for ( BioSequence bs : results.keySet() ) {
+            if ( nameMap.containsKey( bs.getName() ) ) {
+                throw new IllegalStateException(
+                        "All distinct sequences on the array must have unique names; found " + bs.getName()
+                                + " more than once." );
+            }
+            nameMap.put( bs.getName(), bs );
+        }
+
+        int noResults = 0;
+        int count = 0;
+
+        // The old results are removed only once there are new ones to replace them, so a BLAT run that returns
+        // nothing (a gfServer serving the wrong genome, say) does not empty the platform and save none.
+        boolean oldResultsRemoved = false;
+        if ( !results.isEmpty() ) {
+            ArrayDesignSequenceAlignmentServiceImpl.log.info( "Looking for old results to remove..." );
+            arrayDesignService.deleteAlignmentData( ad );
+            oldResultsRemoved = true;
+        }
+
+        for ( BioSequence sequence : sequencesToBlat ) {
+            if ( sequence == null ) {
+                ArrayDesignSequenceAlignmentServiceImpl.log.warn( "Null sequence!" );
+                continue;
+            }
+            Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
+            if ( brs == null ) {
+                ++noResults;
+                continue;
+            }
+            for ( BlatResult result : brs ) {
+                result.setQuerySequence( sequence ); // must do this to replace
+                // placeholder instance.
+            }
+            allResults.addAll( this.persistBlatResults( brs ) );
+
+            if ( ++count % 2000 == 0 ) {
+                ArrayDesignSequenceAlignmentServiceImpl.log
+                        .info( "Checked results for " + count + " queries, " + allResults.size()
+                                + " blat results so far." );
+            }
+
+        }
+
+        ArrayDesignSequenceAlignmentServiceImpl.log
+                .info( noResults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
+
+        if ( !oldResultsRemoved && sequencesToBlat.isEmpty() ) {
             throw new IllegalStateException( ad + " has no sequences with sequence data to align; its existing "
                     + "alignments were kept." );
         } else if ( !oldResultsRemoved ) {
-            throw new IllegalStateException( "No alignments were found for any of the " + numSequences + " sequences of "
-                    + ad + ", so its existing alignments were kept. Check that the gfServer for "
-                    + ( taxa.size() == 1 ? taxa.iterator().next() : taxa ) + " is running and serving the right genome." );
+            throw new IllegalStateException(
+                    "No alignments were found for any of the " + sequencesToBlat.size() + " sequences of " + ad
+                            + ", so its existing alignments were kept. Check that the gfServer for " + taxon
+                            + " is running and serving the right genome." );
         }
 
         arrayDesignReportService.generateArrayDesignReport( ad.getId() );
