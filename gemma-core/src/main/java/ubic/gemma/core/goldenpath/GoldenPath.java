@@ -47,8 +47,8 @@ public abstract class GoldenPath implements AutoCloseable {
     /**
      * Create a GoldenPath database for a given taxon.
      * <p>
-     * If any post-{@link #createDataSource} step throws (typically the {@code USE &lt;db&gt;}
-     * probe inside {@link #createJdbcTemplateFromConfig} when the configured goldenpath host
+     * If any post-{@link #createDataSource} step throws (typically the probe inside
+     * {@link #createJdbcTemplateFromConfig} when the configured goldenpath host
      * is unreachable or the per-taxon schema does not exist), the partially-allocated
      * {@link HikariDataSource} is closed before the exception propagates. Without this
      * cleanup the Hikari pool leaks on every failed construction — try-with-resources at the
@@ -102,17 +102,38 @@ public abstract class GoldenPath implements AutoCloseable {
         dataSource.setJdbcUrl( url );
         dataSource.setUsername( user );
         dataSource.setPassword( password );
+        // the pool applies this to every connection it opens. The configured URL names a server and no database, and
+        // one `use <db>` would only reach the connection it was issued on: a connection the pool opens later, growing
+        // or replacing one the server closed, would arrive with no database selected and fail the next query with
+        // "No database selected" (1046 / 3D000). That killed mapPlatformToGenes on GPL6887 2,400 probes in, after it
+        // had already deleted the platform's associations.
+        dataSource.setCatalog( getDbNameForTaxon( taxon ) );
         dataSource.setMaximumPoolSize( Settings.getInt( "gemma.goldenpath.db.maximumPoolSize" ) );
         dataSource.addDataSourceProperty( "relaxAutoCommit", "true" );
 
         return dataSource;
     }
 
+    /**
+     * Take a connection from the pool and confirm the database is selected on it.
+     * <p>
+     * This is what fails when the configured host is unreachable or the per-taxon schema does not exist, and it also
+     * catches the pool's catalog not reaching the connection at all — a driver configured with
+     * {@code databaseTerm=SCHEMA} ignores {@link HikariDataSource#setCatalog}, which would otherwise surface only as a
+     * failed query partway through a run.
+     */
     private static JdbcTemplate createJdbcTemplateFromConfig( HikariDataSource dataSource, Taxon taxon ) {
         String databaseName = getDbNameForTaxon( taxon );
         JdbcTemplate jdbcTemplate = new JdbcTemplate( dataSource );
         GoldenPath.log.info( "Connecting to " + databaseName );
-        jdbcTemplate.execute( "use " + databaseName );
+        String selected = jdbcTemplate.queryForObject( "SELECT DATABASE()", String.class );
+        if ( selected == null || !selected.equalsIgnoreCase( databaseName ) ) {
+            throw new IllegalStateException( String.format(
+                    "Connected to the GoldenPath server, but the selected database is %s and not %s. The pool is "
+                            + "configured with %s as its catalog; check that the driver applies it (a JDBC URL with "
+                            + "databaseTerm=SCHEMA makes setCatalog a no-op).",
+                    selected == null ? "none" : selected, databaseName, databaseName ) );
+        }
         return jdbcTemplate;
     }
 
