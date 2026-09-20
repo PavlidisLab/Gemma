@@ -156,6 +156,22 @@ class ArrayDesignProbeMapperServiceLoaderThreadTest {
     }
 
     /**
+     * A platform whose mapping aborts after the delete keeps only what the loader had saved by then, and the caller
+     * used to get a stack trace that said nothing about it: GPL6887 went from 35,376 mapped probes to 1,604 on a
+     * transient GoldenPath connection fault, and only a driver that counted beforehand noticed.
+     */
+    @Test
+    void aFailureAfterTheDeleteSaysThePlatformIsLeftIncomplete() {
+        when( blatResultService.findByBioSequence( any() ) )
+                .thenThrow( new IllegalStateException( "No database selected" ) );
+
+        assertThatThrownBy( this::map ).hasMessage( "No database selected" );
+
+        verify( arrayDesignService ).deleteGeneProductAlignmentAssociations( arrayDesign );
+        verify( arrayDesignService ).countCompositeSequencesWithGenes( arrayDesign, false );
+    }
+
+    /**
      * The GoldenPath connection was opened after the delete, so a database without the tables the mapping reads
      * failed on the first probe with the platform's associations already gone.
      */
@@ -184,6 +200,8 @@ class ArrayDesignProbeMapperServiceLoaderThreadTest {
 
         verify( genomePersister, times( PROBES ) ).persistBlatAssociation( any() );
         verify( arrayDesignReportService ).generateArrayDesignReport( 1L );
+        // no "left incomplete" alarm on a mapping that finished
+        verify( arrayDesignService, never() ).countCompositeSequencesWithGenes( any(), anyBoolean() );
         loaderThreads.get( 0 ).join( 10_000 );
         assertThat( loaderThreads.get( 0 ).isAlive() ).isFalse();
     }

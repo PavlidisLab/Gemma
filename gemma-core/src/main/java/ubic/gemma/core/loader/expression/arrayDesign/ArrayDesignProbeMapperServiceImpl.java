@@ -170,6 +170,10 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         int count = 0;
         int hits = 0;
         int numWithNoResults = 0;
+        // the delete below is not undone by a later failure: this method holds no transaction across the mapping, so
+        // an abort leaves the platform with whatever the loader had persisted by then
+        boolean deletedOldAssociations = false;
+        boolean finished = false;
         try {
             try ( GoldenPathSequenceAnalysis goldenPathDb = goldenPathSequenceAnalysisFactory.create( taxon ) ) {
                 // before the delete: a missing GoldenPath table used to fail the first probe query, after the
@@ -179,6 +183,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 if ( useDB ) {
                     ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old alignment-based associations" );
                     arrayDesignService.deleteGeneProductAlignmentAssociations( arrayDesign );
+                    deletedOldAssociations = true;
                 }
 
                 ArrayDesignProbeMapperServiceImpl.log
@@ -219,12 +224,16 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 Thread.sleep( 1000 );
             }
             this.checkLoader( loaderFailure, arrayDesign, useDB );
+            finished = true;
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( "Interrupted while mapping " + arrayDesign + " to genes.", e );
         } finally {
             // before, a failure here left the loader polling forever for a generator that would never finish
             stopLoader.set( true );
+            if ( deletedOldAssociations && !finished ) {
+                this.warnAssociationsAreIncomplete( arrayDesign );
+            }
         }
 
         ArrayDesignProbeMapperServiceImpl.log
@@ -237,6 +246,28 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
         this.deleteOldFiles( arrayDesign );
+    }
+
+    /**
+     * Say that a platform has been left holding part of its mappings.
+     * <p>
+     * Nothing else does: the old associations are deleted before the mapping starts, no transaction spans the mapping,
+     * and a failure part way through is reported as a stack trace and a non-zero exit. Whether the platform kept 95%
+     * of its mappings or 5% is visible only to someone who counted them beforehand — a transient GoldenPath
+     * connection fault took GPL6887 from 35,376 mapped probes to 1,604 without a word about it.
+     */
+    private void warnAssociationsAreIncomplete( ArrayDesign arrayDesign ) {
+        String remaining;
+        try {
+            remaining = String.valueOf( arrayDesignService.countCompositeSequencesWithGenes( arrayDesign, false ) );
+        } catch ( Exception e ) {
+            // a diagnostic must not replace the failure that prompted it
+            remaining = "an unknown number of";
+        }
+        ArrayDesignProbeMapperServiceImpl.log.error( String.format(
+                "%s IS LEFT WITH INCOMPLETE GENE MAPPINGS: its alignment-based associations were deleted and the "
+                        + "mapping did not finish, so %s of its probes map to a gene. Map it to genes again.",
+                arrayDesign, remaining ) );
     }
 
     @Override
