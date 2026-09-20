@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.goldenpath;
 
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.object.MappingSqlQuery;
 import ubic.gemma.core.loader.genome.BlatResultParser;
@@ -33,6 +34,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * @author pavlidis
@@ -42,6 +46,8 @@ public class GoldenPathQuery extends GoldenPath {
     private static final int TEST_PORT = 3306;
     private final EstQuery estQuery;
     private final MrnaQuery mrnaQuery;
+    /** probe mapping queries from several threads, and each table is to be reported once */
+    private final Set<String> missingTables = new CopyOnWriteArraySet<>();
 
     public GoldenPathQuery( Taxon taxon ) {
         super( taxon );
@@ -57,12 +63,50 @@ public class GoldenPathQuery extends GoldenPath {
      * @return blat results
      */
     public Collection<BlatResult> findAlignments( String accession ) {
-        Collection<BlatResult> results = estQuery.execute( accession );
-        if ( results.size() > 0 ) {
+        Collection<BlatResult> results = this.execute( estQuery, "all_est", accession );
+        if ( !results.isEmpty() ) {
             return results;
         }
 
-        return mrnaQuery.execute( accession );
+        return this.execute( mrnaQuery, "all_mrna", accession );
+    }
+
+    /**
+     * Run one of the alignment queries, treating the table not being there as "no alignment on record".
+     * <p>
+     * A goldenpath database built from a UCSC assembly hub has no {@code all_est} or {@code all_mrna} — those exist
+     * only for full browser assemblies — and blatPlatform died on the first probe carrying an accession. Having no
+     * precomputed alignment to reuse is what the caller already handles: it sends the sequence to a real BLAT. That
+     * is also the right answer during an assembly migration, where UCSC's precomputed alignments are against the
+     * assembly being migrated away from.
+     */
+    private Collection<BlatResult> execute( MappingSqlQuery<BlatResult> query, String table, String accession ) {
+        if ( missingTables.contains( table ) ) {
+            return Collections.emptyList();
+        }
+        try {
+            return query.execute( accession );
+        } catch ( BadSqlGrammarException e ) {
+            if ( !GoldenPathQuery.isMissingTable( e ) ) {
+                throw e;
+            }
+            if ( missingTables.add( table ) ) {
+                GoldenPath.log.warn( String.format( "%s has no %s table, so no alignment will be read from it and "
+                                + "sequences will be aligned with BLAT instead. A goldenpath database built from a "
+                                + "UCSC assembly hub has neither all_est nor all_mrna.",
+                        this.getSearchedDatabase().getName(), table ) );
+            }
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * @return true if the exception is MySQL's "table doesn't exist" (1146 / 42S02) rather than a query this code got
+     *         wrong, which must still fail
+     */
+    static boolean isMissingTable( BadSqlGrammarException e ) {
+        SQLException cause = e.getSQLException();
+        return cause != null && ( cause.getErrorCode() == 1146 || "42S02".equals( cause.getSQLState() ) );
     }
 
     private BlatResult convertResult( ResultSet rs ) throws SQLException {
