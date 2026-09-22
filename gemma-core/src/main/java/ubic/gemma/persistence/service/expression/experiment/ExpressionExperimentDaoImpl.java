@@ -5265,12 +5265,18 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( !newVectors.isEmpty(), "At least one vectors must be provided, use removeAllRawDataVectors() to delete vectors instead." );
         // each set of raw vectors must have a *distinct* QT
-        Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
+        // Read the names off the MANAGED copy. The caller's instance can be detached with its
+        // quantitationTypes collection never initialized -- affyFromCel reads the experiment, computes for
+        // minutes with no session open, then writes (DataUpdaterImpl.reprocessAffyDataFromCel) -- and
+        // navigating it there throws LazyInitializationException. checkVectors below keeps the CALLER's
+        // instance on purpose: it asserts by reference that the vectors point at that very object.
+        ExpressionExperiment managedEe = ensureEeInSession( ee );
+        Set<String> existingNames = DescribableUtils.getNames( managedEe.getQuantitationTypes() );
         Assert.notNull( newQt.getName(), "The quantitation type must have a name." );
         Assert.isTrue( !existingNames.contains( newQt.getName() ),
                 "There is already a quantitation type named " + newQt.getName() + " in " + ee + "." );
         checkVectors( ee, newQt, newVectors );
-        ee = ensureEeInSession( ee );
+        ee = managedEe;
         if ( newQt.getIsPreferred() ) {
             for ( QuantitationType qt : ee.getQuantitationTypes() ) {
                 if ( qt.getIsPreferred() && !qt.equals( newQt ) ) {

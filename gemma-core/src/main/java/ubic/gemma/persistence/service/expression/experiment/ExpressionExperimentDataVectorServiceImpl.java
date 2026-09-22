@@ -28,6 +28,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -112,9 +113,17 @@ public class ExpressionExperimentDataVectorServiceImpl implements ExpressionExpe
             throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }
 
-        Set<QuantitationType> existingQts = ee.getRawExpressionDataVectors().stream()
-                .map( DataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
+        // Queried rather than read off ee.getRawExpressionDataVectors(). The experiment arrives DETACHED from
+        // every caller that computes before it writes — affyFromCel reads it, spends minutes in
+        // apt-probeset-summarize with no session open, then lands here via
+        // DataUpdaterImpl.reprocessAffyDataFromCel — so navigating that lazy collection threw
+        // LazyInitializationException ("no Session") on every such run: the collection belongs to the session
+        // that closed, and the one this method opens cannot initialize it. FRB reproduced it on GSE37623 and on
+        // GSE14263, the second after 632 s of successful CEL processing (2026-09-22). Below this line the DAO
+        // reattaches the experiment itself (ensureEeInSession). The query is also what keeps every raw vector's
+        // data blob out of memory when all we want is the set of quantitation types.
+        Set<QuantitationType> existingQts = new HashSet<>(
+                quantitationTypeService.findByExpressionExperiment( ee, RawExpressionDataVector.class ) );
 
         Set<QuantitationType> newQts = newVectors.stream()
                 .map( RawExpressionDataVector::getQuantitationType )

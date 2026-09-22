@@ -17,8 +17,10 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.SessionFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +49,11 @@ import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
 /**
  * Fast H2-backed regression guard for the QT entity-identity collision that
@@ -143,6 +149,26 @@ public class ReplaceAllRawDataVectorsQtCollisionTest extends BaseDatabaseTest5 {
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
+
+    /**
+     * {@code replaceAllRawDataVectors} asks the quantitation-type service which QTs the experiment's raw
+     * vectors use, rather than walking {@code ee.getRawExpressionDataVectors()}. The service is a mock in this
+     * context, so stand in for it with the query the real one runs; the mock is shared across methods through
+     * the cached context, hence the reset.
+     */
+    @BeforeEach
+    public void stubRawQuantitationTypeLookup() {
+        reset( quantitationTypeService );
+        when( quantitationTypeService.findByExpressionExperiment( any( ExpressionExperiment.class ), eq( RawExpressionDataVector.class ) ) )
+                .thenAnswer( a -> sessionFactory.getCurrentSession()
+                        .createQuery( "select distinct qt from RawExpressionDataVector v join v.quantitationType qt "
+                                + "where v.expressionExperiment = :ee", QuantitationType.class )
+                        .setParameter( "ee", a.getArgument( 0 ) )
+                        .list() );
+    }
 
     /**
      * Reproduce the {@link NonUniqueObjectException} bug from commit {@code ef838e08fc}.
@@ -251,6 +277,89 @@ public class ReplaceAllRawDataVectorsQtCollisionTest extends BaseDatabaseTest5 {
                 .doesNotThrowAnyException();
 
         // --- assertions: old QT/vectors gone, new QT/vectors present ---
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ExpressionExperiment eeAfter = expressionExperimentDao.load( eeId );
+        assertThat( eeAfter ).isNotNull();
+        assertThat( eeAfter.getQuantitationTypes() )
+                .extracting( QuantitationType::getName )
+                .containsExactly( "Counts-new" );
+        assertThat( eeAfter.getRawExpressionDataVectors() )
+                .hasSize( newVectors.size() )
+                .allSatisfy( v -> assertThat( v.getQuantitationType().getName() ).isEqualTo( "Counts-new" ) );
+    }
+
+    /**
+     * The same replace, but with the caller's experiment holding an UNINITIALIZED raw-vector collection.
+     * <p>
+     * That is the shape {@code affyFromCel} hands over: {@code DataUpdaterImpl.reprocessAffyDataFromCel} reads
+     * the experiment, runs apt-probeset-summarize for minutes with no session open, and only then writes. The
+     * sibling test above initialises the collection before detaching, so it never touched the case FRB hit on
+     * 2026-09-22 — every run died with {@code LazyInitializationException: failed to lazily initialize a
+     * collection of role: …ExpressionExperiment.rawExpressionDataVectors: could not initialize proxy - no
+     * Session}, GSE14263's after 632 s of successful CEL processing.
+     */
+    @Test
+    public void replaceAllRawDataVectorsWithUninitializedRawVectorsDoesNotTouchTheDetachedCollection() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        QuantitationType qtOld = newQt( "Counts-old", true );
+        sessionFactory.getCurrentSession().persist( qtOld );
+        ee.getQuantitationTypes().add( qtOld );
+
+        ArrayDesign platform = createPlatform();
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            RawExpressionDataVector v = new RawExpressionDataVector();
+            v.setBioAssayDimension( bad );
+            v.setDesignElement( cs );
+            v.setExpressionExperiment( ee );
+            v.setQuantitationType( qtOld );
+            v.setData( new byte[0] );
+            ee.getRawExpressionDataVectors().add( v );
+        }
+        ee = expressionExperimentDao.create( ee );
+        Long eeId = ee.getId();
+        Long badId = bad.getId();
+        Long platformId = platform.getId();
+
+        // The caller's handle: loaded, then left detached with nothing initialised.
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ExpressionExperiment detached = expressionExperimentDao.load( eeId );
+        assertThat( detached ).isNotNull();
+        // The bioassays ARE initialised, as they are in the real caller — reprocessAffyDataFromCel has just
+        // walked them to switch their platform. The vectors and the quantitation types are the two collections
+        // it never touches, and the two that broke.
+        detached.getBioAssays().size();
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        assertThat( Hibernate.isInitialized( detached.getRawExpressionDataVectors() ) )
+                .withFailMessage( "the raw vectors must still be uninitialised, or this test proves nothing" )
+                .isFalse();
+        assertThat( Hibernate.isInitialized( detached.getQuantitationTypes() ) )
+                .withFailMessage( "the quantitation types must still be uninitialised, or this test proves nothing" )
+                .isFalse();
+
+        BioAssayDimension badManaged = sessionFactory.getCurrentSession().get( BioAssayDimension.class, badId );
+        ArrayDesign platformManaged = sessionFactory.getCurrentSession().get( ArrayDesign.class, platformId );
+        QuantitationType qtNew = newQt( "Counts-new", true );
+        sessionFactory.getCurrentSession().persist( qtNew );
+
+        Collection<RawExpressionDataVector> newVectors = new ArrayList<>();
+        for ( CompositeSequence cs : platformManaged.getCompositeSequences() ) {
+            RawExpressionDataVector nv = new RawExpressionDataVector();
+            nv.setBioAssayDimension( badManaged );
+            nv.setDesignElement( cs );
+            nv.setExpressionExperiment( detached );
+            nv.setQuantitationType( qtNew );
+            nv.setData( new byte[0] );
+            newVectors.add( nv );
+        }
+
+        assertThatCode( () -> dataVectorService.replaceAllRawDataVectors( detached, newVectors ) )
+                .doesNotThrowAnyException();
+
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
         ExpressionExperiment eeAfter = expressionExperimentDao.load( eeId );
