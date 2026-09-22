@@ -563,21 +563,9 @@ public class DataUpdaterImpl implements DataUpdater {
          * Postprocessing, all of which is non-serious if it fails.
          */
 
-        /*
-         * Clean up any unused bioassaydimensions. We always make new ones here. At this point they should be freed up.
-         */
         try {
             sampleCorService.removeForExperiment( ee );
             pcaService.removeForExperiment( ee );
-            for ( BioAssayDimension bad : allOldBioAssayDims ) {
-                try {
-                    bioAssayDimensionService.remove( bad );
-                    DataUpdaterImpl.log.info( "Removed bioAssayDimension ID=" + bad.getId() );
-                } catch ( Exception e ) {
-                    DataUpdaterImpl.log.warn( "Failed to clean up old bioassaydimension with ID=" + bad.getId() + ": " + e
-                            .getMessage() );
-                }
-            }
         } catch ( Exception e ) {
             DataUpdaterImpl.log.warn( "Error during cleanup: " + e.getMessage() );
         }
@@ -604,6 +592,26 @@ public class DataUpdaterImpl implements DataUpdater {
 
         if ( needsPost )
             this.postprocess( ee, "replaced" );
+
+        /*
+         * Clean up the old bioassaydimensions. We always make new ones here, so nothing should be using these --
+         * but only once the PROCESSED vectors have been rebuilt. Attempted before postprocess, every -force
+         * re-run logged `Cannot delete or update a parent row ... PROCESSED_EXPRESSION_DATA_VECTOR ...
+         * BIO_ASSAY_DIMENSION_FK` and swallowed it, because the old processed vectors were still pointing at the
+         * old dimension; createProcessedDataVectors replaces them wholesale off the new raw vectors, so by here
+         * nothing references it. The rows survived as orphans and the error was noise in every run's log (19 of
+         * 19 in FRB's custom-CDF campaign, 2026-09-22). Still best-effort: a failure here leaves a stale
+         * dimension, which is not worth failing a completed reprocess over.
+         */
+        for ( BioAssayDimension bad : allOldBioAssayDims ) {
+            try {
+                bioAssayDimensionService.remove( bad );
+                DataUpdaterImpl.log.info( "Removed bioAssayDimension ID=" + bad.getId() );
+            } catch ( Exception e ) {
+                DataUpdaterImpl.log.warn( "Failed to clean up old bioassaydimension with ID=" + bad.getId() + ": " + e
+                        .getMessage() );
+            }
+        }
     }
 
     /**
