@@ -60,7 +60,7 @@ public class AffyPowerToolsProbesetSummarize {
      */
     protected static final String GEO_CEL_FILE_NAME_REGEX = "^(GSM[0-9]+).*\\.(?i)CEL(\\.gz)?";
 
-    private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
+    static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.cdfs.properties";
     static final String AFFY_CHIPNAME_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.celmappings.properties";
     private static final String AFFY_MPS_PROPERTIES_FILE_NAME = "ubic/gemma/core/loader/affy.mps.properties";
 
