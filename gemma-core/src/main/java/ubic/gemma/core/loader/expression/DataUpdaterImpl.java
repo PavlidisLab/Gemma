@@ -599,9 +599,15 @@ public class DataUpdaterImpl implements DataUpdater {
          * re-run logged `Cannot delete or update a parent row ... PROCESSED_EXPRESSION_DATA_VECTOR ...
          * BIO_ASSAY_DIMENSION_FK` and swallowed it, because the old processed vectors were still pointing at the
          * old dimension; createProcessedDataVectors replaces them wholesale off the new raw vectors, so by here
-         * nothing references it. The rows survived as orphans and the error was noise in every run's log (19 of
-         * 19 in FRB's custom-CDF campaign, 2026-09-22). Still best-effort: a failure here leaves a stale
-         * dimension, which is not worth failing a completed reprocess over.
+         * nothing references it. 19 of 19 -force runs in FRB's custom-CDF campaign logged it (2026-09-22).
+         *
+         * What that left behind was NOT established: a count of orphaned dimensions attributable to those 19
+         * experiments came back 0, so the failed delete either rolls back and is retried successfully somewhere
+         * else, or the row survives in a shape that count does not reach. The reason to run the sweep here is
+         * that a delete which fails is not a sweep; the disposal of what it missed is a separate question.
+         *
+         * Still best-effort: a failure here leaves a stale dimension, which is not worth failing a completed
+         * reprocess over.
          */
         for ( BioAssayDimension bad : allOldBioAssayDims ) {
             try {
