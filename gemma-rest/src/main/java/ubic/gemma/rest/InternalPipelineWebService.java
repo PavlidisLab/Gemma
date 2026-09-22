@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
+import ubic.gemma.model.pipeline.PipelineJobEventValueObject;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
 import ubic.gemma.rest.util.ResponseDataObject;
 
@@ -71,7 +72,7 @@ public class InternalPipelineWebService {
             responses = {
                     @ApiResponse(responseCode = "200", description = "The event as appended.", useReturnTypeSchema = true, content = @Content())
             })
-    public ResponseDataObject<PipelineJobEvent> postEvent(
+    public ResponseDataObject<PipelineJobEventValueObject> postEvent(
             @PathParam("jobId") Long jobId,
             @HeaderParam("Authorization") String authHeader,
             PostEventRequest req ) {
@@ -80,7 +81,9 @@ public class InternalPipelineWebService {
             throw new BadRequestException( "kind is required" );
         }
         PipelineJobEvent event = pipelineJobBatchService.recordEvent( jobId, req.kind, req.payloadJson );
-        return respond( event );
+        // from() reads only scalars and the owning job's id, which is available on the proxy
+        // without initializing it, so this is safe on the detached entity recordEvent returns
+        return respond( PipelineJobEventValueObject.from( event ) );
     }
 
     private void verifyToken( String authHeader ) {

@@ -33,8 +33,10 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
+import ubic.gemma.model.pipeline.PipelineJobBatchValueObject;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.model.pipeline.PipelineJobEventValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -105,9 +107,9 @@ public class AdminPipelineWebService {
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Submit a new pipeline batch",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The batch as submitted.", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "The batch as submitted, with one entry in `jobs` per experiment.", useReturnTypeSchema = true, content = @Content())
             })
-    public ResponseDataObject<PipelineJobBatch> submitBatch( SubmitBatchRequest req ) {
+    public ResponseDataObject<PipelineJobBatchValueObject> submitBatch( SubmitBatchRequest req ) {
         if ( req == null || req.pipeline == null || req.pipeline.isBlank() ) {
             throw new BadRequestException( "pipeline is required" );
         }
@@ -127,7 +129,9 @@ public class AdminPipelineWebService {
             throw new BadRequestException( "no resolvable experiments in experimentIds" );
         }
         PipelineJobBatch batch = pipelineJobBatchService.submit( req.pipeline, ees, curator, req.paramsJson, req.note );
-        return respond( batch );
+        // re-read as a projection: submit() returns the entity detached, and the jobs it just
+        // created are behind a lazy collection on it
+        return respond( pipelineJobBatchService.loadValueObject( batch.getId() ) );
     }
 
     @GET
@@ -136,18 +140,17 @@ public class AdminPipelineWebService {
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "List batches submitted by the current curator",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The batches submitted by the calling curator.", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "The batches submitted by the calling curator. `jobs` is empty on every row — a listing does not fetch them; read one batch to get its jobs.", useReturnTypeSchema = true, content = @Content())
             })
-    public ResponseDataObject<List<PipelineJobBatch>> listMyBatches(
+    public ResponseDataObject<List<PipelineJobBatchValueObject>> listMyBatches(
             @QueryParam("state") PipelineJobBatch.BatchState state,
             @QueryParam("limit") Integer limit ) {
         User curator = userManager.getCurrentUser();
         if ( curator == null ) {
             throw new BadRequestException( "no authenticated user resolved" );
         }
-        List<PipelineJobBatch> batches = pipelineJobBatchService.findByOwner( curator.getId(), state,
-                limit != null ? limit : 50 );
-        return respond( batches );
+        return respond( pipelineJobBatchService.loadValueObjectsByOwner( curator.getId(), state,
+                limit != null ? limit : 50 ) );
     }
 
     @GET
@@ -156,10 +159,10 @@ public class AdminPipelineWebService {
     @PreAuthorize("hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Retrieve one batch with rollup state",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The batch, with the rolled-up state of its jobs.", useReturnTypeSchema = true, content = @Content())
+                    @ApiResponse(responseCode = "200", description = "The batch, with one entry in `jobs` per experiment it was submitted against.", useReturnTypeSchema = true, content = @Content())
             })
-    public ResponseDataObject<PipelineJobBatch> getBatch( @PathParam("batchId") Long batchId ) {
-        PipelineJobBatch batch = pipelineJobBatchService.get( batchId );
+    public ResponseDataObject<PipelineJobBatchValueObject> getBatch( @PathParam("batchId") Long batchId ) {
+        PipelineJobBatchValueObject batch = pipelineJobBatchService.loadValueObject( batchId );
         if ( batch == null ) throw new NotFoundException( "no batch " + batchId );
         return respond( batch );
     }
@@ -172,10 +175,9 @@ public class AdminPipelineWebService {
             responses = {
                     @ApiResponse(responseCode = "200", description = "The batch after every non-terminal job was asked to cancel.", useReturnTypeSchema = true, content = @Content())
             })
-    public ResponseDataObject<PipelineJobBatch> cancelBatch( @PathParam("batchId") Long batchId ) {
+    public ResponseDataObject<PipelineJobBatchValueObject> cancelBatch( @PathParam("batchId") Long batchId ) {
         pipelineJobBatchService.cancelBatch( batchId );
-        PipelineJobBatch batch = pipelineJobBatchService.get( batchId );
-        return respond( batch );
+        return respond( pipelineJobBatchService.loadValueObject( batchId ) );
     }
 
     @GET
@@ -186,15 +188,14 @@ public class AdminPipelineWebService {
             responses = {
                     @ApiResponse(responseCode = "200", description = "The progress events recorded for the job.", useReturnTypeSchema = true, content = @Content())
             })
-    public ResponseDataObject<List<PipelineJobEvent>> jobEvents(
+    public ResponseDataObject<List<PipelineJobEventValueObject>> jobEvents(
             @PathParam("batchId") Long batchId,
             @PathParam("jobId") Long jobId,
             @QueryParam("sinceMillis") Long sinceMillis,
             @QueryParam("limit") Integer limit ) {
         // batchId is a path-readability hint only; events are scoped by jobId.
         Date since = sinceMillis != null ? new Date( sinceMillis ) : null;
-        List<PipelineJobEvent> events = pipelineJobBatchService.findEvents( jobId, since, limit != null ? limit : 200 );
-        return respond( events );
+        return respond( pipelineJobBatchService.loadEventValueObjects( jobId, since, limit != null ? limit : 200 ) );
     }
 
     @POST

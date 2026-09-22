@@ -1015,4 +1015,41 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                         + " DefaultApi. Put a class-level @Tag on the resource: %s", offenders )
                 .isEmpty();
     }
+
+    /**
+     * No Hibernate entity may appear in the published specification.
+     *
+     * <p>{@code AdminPipelineWebService} used to return {@code PipelineJobBatch} directly. Its jobs
+     * are a lazy {@code @OneToMany}, and each job holds a lazy {@code @ManyToOne} to
+     * {@code ExpressionExperiment} — so following one field pulled in the experiment graph and 44
+     * entity schemas with 466 properties arrived in the document through it and nothing else.
+     * Nothing had marked them {@code @JsonIgnore}, and nothing initialized them either, so the same
+     * field was a serialization hazard as well as specification noise.
+     *
+     * <p>The rule is the general one rather than a list of those 44: an entity reaching the wire is
+     * a missing value object, whichever entity it is.
+     */
+    @Test
+    public void testNoHibernateEntityIsPublishedAsASchema() {
+        ClassPathScanningCandidateComponentProvider scanner =
+                new ClassPathScanningCandidateComponentProvider( false );
+        scanner.addIncludeFilter( new AnnotationTypeFilter( jakarta.persistence.Entity.class ) );
+        Set<String> entities = new TreeSet<>();
+        for ( BeanDefinition definition : scanner.findCandidateComponents( "ubic.gemma.model" ) ) {
+            String name = Objects.requireNonNull( definition.getBeanClassName() );
+            entities.add( name.substring( name.lastIndexOf( '.' ) + 1 ) );
+        }
+
+        assertThat( entities )
+                .withFailMessage( "the @Entity scan found almost nothing, so this test would pass vacuously" )
+                .hasSizeGreaterThan( 50 );
+
+        Set<String> published = new TreeSet<>( entities );
+        published.retainAll( spec.getComponents().getSchemas().keySet() );
+        assertThat( published )
+                .withFailMessage( "Hibernate entities published as schemas. An endpoint is returning an"
+                        + " entity where it should return a value object — the entity's lazy associations"
+                        + " become both specification bloat and a serialization hazard: %s", published )
+                .isEmpty();
+    }
 }
