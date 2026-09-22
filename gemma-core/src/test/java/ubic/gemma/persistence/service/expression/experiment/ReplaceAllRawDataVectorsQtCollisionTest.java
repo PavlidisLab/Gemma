@@ -372,6 +372,82 @@ public class ReplaceAllRawDataVectorsQtCollisionTest extends BaseDatabaseTest5 {
                 .allSatisfy( v -> assertThat( v.getQuantitationType().getName() ).isEqualTo( "Counts-new" ) );
     }
 
+    /**
+     * A re-analysis mints a fresh quantitation type carrying the SAME name as the one it supersedes, which is
+     * what every {@code affyFromCel} re-run does: {@code makeAffyQuantitationType()} then {@code create()}, so
+     * "rma value" arrives as a new row each time. The superseded one has to be gone before the new vectors are
+     * added, or {@code addRawDataVectors} refuses the name (7ab05158a8, #1564) — {@code There is already a
+     * quantitation type named rma value}, which is what FRB got on GSE37623, GSE43134 and GSE56500 once the
+     * lazy-initialization failures above it were out of the way (2026-09-22).
+     */
+    @Test
+    public void replaceAllRawDataVectorsWithANewQtOfTheSameNameSupersedesTheOldOne() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        QuantitationType qtOld = newQt( "rma value", true );
+        sessionFactory.getCurrentSession().persist( qtOld );
+        ee.getQuantitationTypes().add( qtOld );
+        Long qtOldId = qtOld.getId();
+
+        ArrayDesign platform = createPlatform();
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            RawExpressionDataVector v = new RawExpressionDataVector();
+            v.setBioAssayDimension( bad );
+            v.setDesignElement( cs );
+            v.setExpressionExperiment( ee );
+            v.setQuantitationType( qtOld );
+            v.setData( new byte[0] );
+            ee.getRawExpressionDataVectors().add( v );
+        }
+        ee = expressionExperimentDao.create( ee );
+        Long eeId = ee.getId();
+        Long platformId = platform.getId();
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ExpressionExperiment detached = expressionExperimentDao.load( eeId );
+        assertThat( detached ).isNotNull();
+        detached.getBioAssays().size();
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        // A new dimension, as the reprocess builds one ("We always make new ones here").
+        ArrayDesign platformManaged = sessionFactory.getCurrentSession().get( ArrayDesign.class, platformId );
+        BioAssayDimension badNew = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( badNew );
+        QuantitationType qtNew = newQt( "rma value", true );
+        sessionFactory.getCurrentSession().persist( qtNew );
+        Long qtNewId = qtNew.getId();
+        assertThat( qtNewId ).isNotEqualTo( qtOldId );
+
+        Collection<RawExpressionDataVector> newVectors = new ArrayList<>();
+        for ( CompositeSequence cs : platformManaged.getCompositeSequences() ) {
+            RawExpressionDataVector nv = new RawExpressionDataVector();
+            nv.setBioAssayDimension( badNew );
+            nv.setDesignElement( cs );
+            nv.setExpressionExperiment( detached );
+            nv.setQuantitationType( qtNew );
+            nv.setData( new byte[0] );
+            newVectors.add( nv );
+        }
+
+        assertThatCode( () -> dataVectorService.replaceAllRawDataVectors( detached, newVectors ) )
+                .doesNotThrowAnyException();
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ExpressionExperiment eeAfter = expressionExperimentDao.load( eeId );
+        assertThat( eeAfter ).isNotNull();
+        // One "rma value", and it is the new row — not two, and not the one that was superseded.
+        assertThat( eeAfter.getQuantitationTypes() )
+                .extracting( QuantitationType::getId )
+                .containsExactly( qtNewId );
+        assertThat( eeAfter.getRawExpressionDataVectors() )
+                .hasSize( newVectors.size() )
+                .allSatisfy( v -> assertThat( v.getQuantitationType().getId() ).isEqualTo( qtNewId ) );
+    }
+
     private QuantitationType newQt( String name, boolean preferred ) {
         QuantitationType qt = new QuantitationType();
         qt.setName( name );

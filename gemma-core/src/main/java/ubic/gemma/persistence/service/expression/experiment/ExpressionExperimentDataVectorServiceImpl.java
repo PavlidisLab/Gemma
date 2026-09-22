@@ -140,18 +140,35 @@ public class ExpressionExperimentDataVectorServiceImpl implements ExpressionExpe
         Map<QuantitationType, Set<RawExpressionDataVector>> vectorsByQt = newVectors.stream()
                 .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toSet() ) );
 
+        // Drop the superseded quantitation types BEFORE adding the new ones. A re-analysis mints a fresh QT
+        // row rather than reusing the old one -- affyFromCel calls makeAffyQuantitationType() then
+        // qtService.create() on every run -- so the new QT is a different entity carrying the SAME name, and
+        // addRawDataVectors refuses a second QT named like one the experiment already has (7ab05158a8, #1564).
+        // Removing last, the old one was still there when the add ran: `There is already a quantitation type
+        // named rma value`, on every -force re-run (FRB, 2026-09-22: GSE37623, GSE43134, GSE56500). The two
+        // sets are disjoint from the loop below, which only touches QTs the new vectors carry, so this is the
+        // same work in a workable order.
+        Set<BioAssayDimension> newDimensions = newVectors.stream()
+                .map( BulkExpressionDataVector::getBioAssayDimension )
+                .collect( Collectors.toSet() );
+        for ( QuantitationType qt : existingQts ) {
+            if ( !newQts.contains( qt ) ) {
+                // Removing first means the new vectors are not in the database yet when the dimension sweep
+                // counts the dimension's users, so a dimension the new vectors reuse would look unused and be
+                // deleted out from under them. Ask before removing rather than after.
+                boolean keepDimension = expressionExperimentDao
+                        .getBioAssayDimensions( ee, qt, RawExpressionDataVector.class ).stream()
+                        .anyMatch( newDimensions::contains );
+                removeRawDataVectors( ee, qt, keepDimension );
+            }
+        }
+
         int replaced = 0;
         for ( Map.Entry<QuantitationType, Set<RawExpressionDataVector>> e : vectorsByQt.entrySet() ) {
             if ( existingQts.contains( e.getKey() ) ) {
                 replaced += replaceRawDataVectors( ee, e.getKey(), e.getValue() );
             } else {
                 replaced += addRawDataVectors( ee, e.getKey(), e.getValue() );
-            }
-        }
-
-        for ( QuantitationType qt : existingQts ) {
-            if ( !newQts.contains( qt ) ) {
-                removeRawDataVectors( ee, qt );
             }
         }
 
