@@ -601,10 +601,13 @@ public class DataUpdaterImpl implements DataUpdater {
          * old dimension; createProcessedDataVectors replaces them wholesale off the new raw vectors, so by here
          * nothing references it. 19 of 19 -force runs in FRB's custom-CDF campaign logged it (2026-09-22).
          *
-         * What that left behind was NOT established: a count of orphaned dimensions attributable to those 19
-         * experiments came back 0, so the failed delete either rolls back and is retried successfully somewhere
-         * else, or the row survives in a shape that count does not reach. The reason to run the sweep here is
-         * that a delete which fails is not a sweep; the disposal of what it missed is a separate question.
+         * It left nothing behind, which took a measurement to say: 0 orphaned dimensions are attributable to
+         * those 19 experiments, and GSE167387's log shows why -- dimension 48118 failed here ("has 29129 other
+         * vectors using it, it will not be deleted"), then was removed about a minute later in the same run,
+         * once the processed-vector replace had swapped the vectors over and its own removeUnusedDimensions
+         * found it free. So the error was noise and a later sweep collected the row. Running this one after
+         * postprocess makes the first attempt the one that succeeds, rather than leaving a failed delete in
+         * every -force run's log for a reader to work out.
          *
          * Still best-effort: a failure here leaves a stale dimension, which is not worth failing a completed
          * reprocess over.
