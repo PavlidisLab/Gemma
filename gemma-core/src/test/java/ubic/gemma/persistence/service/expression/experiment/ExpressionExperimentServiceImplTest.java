@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.security.SecurityService;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -1381,6 +1382,43 @@ public class ExpressionExperimentServiceImplTest extends BaseTest5 {
         assertThat( report.getBlockers() )
                 .extracting( DesignPreflightReport.Blocker::getType )
                 .containsExactly( "STATEMENT_HALF_PAIR" );
+    }
+
+    /**
+     * A free-text value longer than {@code FACTOR_VALUE.VALUE} is refused by the preflight rather than by the
+     * flush. On experiment 38401 the curation UI sent back Gemma's own statement summary as the free-text label
+     * — 318 characters on 7 of that design's 18 factor values — and the apply wrote it through, so MySQL
+     * answered {@code Data too long for column 'VALUE'} and the curator got a 500 on a commit the UI had
+     * already shown as applied.
+     */
+    @Test
+    public void testPreviewRefusesAFreeTextValueLongerThanTheColumn() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        //noinspection deprecation
+        proposalFv( proposal, 100L ).setValue( StringUtils.repeat( "a", FactorValue.MAX_VALUE_LENGTH + 1 ) );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() )
+                .extracting( DesignPreflightReport.Blocker::getType )
+                .containsExactly( "FACTOR_VALUE_VALUE_TOO_LONG" );
+        assertThat( report.getBlockers().get( 0 ).getMessage() )
+                .contains( "256 characters long", "the limit is 255" );
+        assertThat( report.getBlockers().get( 0 ).getFactorValueId() ).isEqualTo( 100L );
+    }
+
+    /** One of exactly the length the column holds is not refused -- the guard is off-by-one otherwise. */
+    @Test
+    public void testPreviewAcceptsAFreeTextValueThatExactlyFillsTheColumn() {
+        buildFixture();
+        ExperimentalDesignValueObject proposal = mirrorProposal();
+        //noinspection deprecation
+        proposalFv( proposal, 100L ).setValue( StringUtils.repeat( "a", FactorValue.MAX_VALUE_LENGTH ) );
+
+        DesignPreflightReport report = svc.previewDesignChange( fixture, proposal );
+
+        assertThat( report.getBlockers() ).isEmpty();
     }
 
     private static FactorValueBasicValueObject proposalFv( ExperimentalDesignValueObject vo, long fvId ) {

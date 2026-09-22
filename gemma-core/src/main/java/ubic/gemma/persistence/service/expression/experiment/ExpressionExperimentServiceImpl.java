@@ -651,6 +651,25 @@ public class ExpressionExperimentServiceImpl
                                 }
                             }
                         }
+                        // The deprecated free-text value is stored in FACTOR_VALUE.VALUE, a VARCHAR(255) column,
+                        // and the apply path writes it through verbatim. Unchecked, an over-long one reaches the
+                        // flush and MySQL raises `Data too long for column 'VALUE'`, which the REST layer can only
+                        // report as a 500 -- and by then the client has already been told the edit was accepted.
+                        // Measured in code points because the schema is utf8mb4 and MySQL counts characters.
+                        //noinspection deprecation
+                        String pvValue = pv.getValue();
+                        if ( pvValue != null ) {
+                            int len = pvValue.codePointCount( 0, pvValue.length() );
+                            if ( len > FactorValue.MAX_VALUE_LENGTH ) {
+                                DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                        "FACTOR_VALUE_VALUE_TOO_LONG",
+                                        "The free-text value proposed for factor value "
+                                                + ( pv.getId() != null ? pv.getId() : "(new)" ) + " is " + len
+                                                + " characters long; the limit is " + FactorValue.MAX_VALUE_LENGTH + "." );
+                                b.setFactorValueId( pv.getId() );
+                                report.getBlockers().add( b );
+                            }
+                        }
                         if ( pv.getId() != null ) {
                             proposedFvIds.add( pv.getId() );
                             if ( pf.getId() != null ) {

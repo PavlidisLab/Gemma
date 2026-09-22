@@ -65,6 +65,12 @@ import java.util.stream.Collectors;
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class FactorValue extends AbstractIdentifiable implements SecuredChild<ExpressionExperiment> {
 
+    /**
+     * Maximum length of {@link #getValue()}, in characters: the {@code VALUE} column is {@code VARCHAR(255)} and
+     * the schema is {@code utf8mb4}, so MySQL counts code points, not bytes.
+     */
+    public static final int MAX_VALUE_LENGTH = 255;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "EXPERIMENTAL_FACTOR_FK", nullable = false, columnDefinition = "BIGINT")
     private ExperimentalFactor experimentalFactor;
