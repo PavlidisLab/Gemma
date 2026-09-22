@@ -125,8 +125,8 @@ public class GeneWebService {
                             }))),
             })
     public Object getGenes(
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         if ( cursorArg != null ) {
@@ -182,9 +182,9 @@ public class GeneWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<GeneValueObject>> searchGenes(
-            @QueryParam("query") String query,
-            @QueryParam("taxon") TaxonArg<?> taxonArg,
-            @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") String query,
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit
     ) {
         if ( query == null || query.trim().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -413,7 +413,7 @@ public class GeneWebService {
                     @ApiResponse(responseCode = "200", description = "The genes the identifiers resolved to.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<List<GeneValueObject>> getGenesByIds( // Params:
-            @PathParam("genes") GeneArrayArg genes // Required
+            @Parameter(description = "Gene identifiers, comma-separated.") @PathParam("genes") GeneArrayArg genes // Required
     ) {
         SortArg<Gene> sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
@@ -438,7 +438,7 @@ public class GeneWebService {
                     @ApiResponse(responseCode = "200", description = "The gene's physical locations.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocations( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return respond( geneArgService.getGeneLocation( geneArg ) );
     }
@@ -469,9 +469,9 @@ public class GeneWebService {
                             }))),
             })
     public Object getGeneProbes( // Params:
-            @PathParam("gene") GeneArg<?> geneArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg, // Required
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "When true, each element is enriched with the gene-list this probe maps to and the BLAT-hit count (the legacy `getGeneCsSummaries` shape).")
             @QueryParam("summary") @DefaultValue("false") boolean summary
@@ -576,7 +576,7 @@ public class GeneWebService {
                     @ApiResponse(responseCode = "200", description = "The GO terms annotated to the gene.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return respond( geneArgService.getGeneGoTerms( geneArg ) );
     }
@@ -604,7 +604,7 @@ public class GeneWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<GeneValueObject> getGeneOverview( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         Gene gene = geneArgService.getEntity( geneArg );
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( gene.getId() );
@@ -635,7 +635,7 @@ public class GeneWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<Collection<GeneValueObject>> getGeneHomologues( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         Gene gene = geneArgService.getEntity( geneArg );
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( gene.getId() );
@@ -676,7 +676,7 @@ public class GeneWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<GeneDifferentialExpressionGroupValueObject>> getGeneDifferentialExpression( // Params:
-            @PathParam("gene") GeneArg<?> geneArg, // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg, // Required
             @Parameter(description = "Maximum threshold on the corrected P-value to retain a result (inclusive). Default 1.0 returns all.",
                     schema = @Schema(minimum = "0.0", maximum = "1.0"))
             @QueryParam("threshold") @DefaultValue("1.0") double threshold,

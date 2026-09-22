@@ -1,6 +1,7 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -214,7 +215,7 @@ public class RootWebService {
             })
     @Tag(name = "Users")
     public ResponseDataObject<UserValueObject> getUser( // Params:
-            @PathParam("username") String username // Required
+            @Parameter(description = "The user's login name.") @PathParam("username") String username // Required
     ) {
         User user = userManager.findByUserName( username );
         if ( user == null ) {

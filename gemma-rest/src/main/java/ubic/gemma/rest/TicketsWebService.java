@@ -261,8 +261,8 @@ public class TicketsWebService {
             @QueryParam("targetType") @Nullable TicketTargetType targetType,
             @Parameter(description = "ISO-8601 date/time; restrict to tickets with `updatedAt >=` this value.")
             @QueryParam("updatedSince") @Nullable Date updatedSince,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.")
             @QueryParam("cursor") CursorArg cursorArg
     ) {
@@ -596,7 +596,7 @@ public class TicketsWebService {
                     @ApiResponse(responseCode = "200", description = "The ticket, with its full event log.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<TicketValueObject> getTicket(
-            @PathParam("id") Long id
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id
     ) {
         // Use the service-side VO projection so the lazy collections (reporter, events,
         // each event's actor) initialize INSIDE the service's @Transactional rather than
@@ -643,7 +643,7 @@ public class TicketsWebService {
                     @ApiResponse(responseCode = "404", description = "The ticket does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getTicketEvents(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
@@ -904,7 +904,7 @@ public class TicketsWebService {
                     @ApiResponse(responseCode = "200", description = "The ticket after the change.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<TicketValueObject> updateTicket(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             UpdateTicketRequest req
     ) {
         if ( req == null ) {
@@ -1004,7 +1004,7 @@ public class TicketsWebService {
                     @ApiResponse(responseCode = "200", description = "The ticket after the change.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<TicketValueObject> patchTicket(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             UpdateTicketRequest req
     ) {
         return updateTicket( id, req );
@@ -1054,7 +1054,7 @@ public class TicketsWebService {
                     @ApiResponse(responseCode = "200", description = "Which targets were added, which were already on the ticket, and the ticket as it now stands.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<AddTargetsResult> addTicketTarget(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             AddTargetRequest req
     ) {
         if ( req == null || req.getTargets() == null || req.getTargets().isEmpty() ) {
@@ -1124,9 +1124,9 @@ public class TicketsWebService {
                     @ApiResponse(responseCode = "200", description = "The target was removed from the ticket.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
             })
     public Response removeTicketTarget(
-            @PathParam("id") Long id,
-            @PathParam("targetType") TicketTargetType targetType,
-            @PathParam("targetId") Long targetId
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
+            @Parameter(description = "Type of the ticket target, for example EXPRESSION_EXPERIMENT or ARRAY_DESIGN.") @PathParam("targetType") TicketTargetType targetType,
+            @Parameter(description = "Identifier of the target entity, within its target type.") @PathParam("targetId") Long targetId
     ) {
         Ticket ticket = ticketService.load( id );
         if ( ticket == null ) {
@@ -1164,8 +1164,8 @@ public class TicketsWebService {
                     @ApiResponse(responseCode = "200", description = "The ticket after the target's status changed.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<TicketValueObject> updateTargetStatus(
-            @PathParam("id") Long id,
-            @PathParam("targetRowId") Long targetRowId,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket-target row.") @PathParam("targetRowId") Long targetRowId,
             UpdateTargetStatusRequest req
     ) {
         if ( req == null || ( req.getStatus() == null && !req.hasScreeningResult() ) ) {
@@ -1214,7 +1214,7 @@ public class TicketsWebService {
                     @ApiResponse(responseCode = "200", description = "The ticket was cancelled.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
             })
     public Response deleteTicket(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             @Parameter(description = "Optional human-readable reason; recorded on the CANCELLED event.")
             @QueryParam("reason") @Nullable String reason
     ) {

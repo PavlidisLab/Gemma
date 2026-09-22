@@ -130,8 +130,8 @@ public class CompletionsWebService {
                     + "are valid as 'generic gene' targets.",
             responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getPlatformCompletions(
-            @QueryParam("prefix") @DefaultValue("") String prefix,
-            @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit,
+            @Parameter(description = "Case-insensitive prefix to match against the candidate value. Empty returns the first `limit` entries.") @QueryParam("prefix") @DefaultValue("") String prefix,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit,
             @Parameter(description = "If true, restrict the candidate set to generic-gene-capable platforms.")
             @QueryParam("generic") @DefaultValue("false") boolean generic ) {
         Builder b = new Builder( prefix, limit );
@@ -155,8 +155,8 @@ public class CompletionsWebService {
     @Operation(summary = "Prefix-aware completions for protocols",
             responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getProtocolCompletions(
-            @QueryParam("prefix") @DefaultValue("") String prefix,
-            @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
+            @Parameter(description = "Case-insensitive prefix to match against the candidate value. Empty returns the first `limit` entries.") @QueryParam("prefix") @DefaultValue("") String prefix,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
         Builder b = new Builder( prefix, limit );
         for ( Protocol protocol : protocolReadService.loadAllUniqueByName() ) {
             b.add( String.valueOf( protocol.getId() ), protocol.getName() );
@@ -172,8 +172,8 @@ public class CompletionsWebService {
     @Operation(summary = "Prefix-aware completions for dataset (expression-experiment) groups",
             responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getDatasetGroupCompletions(
-            @QueryParam("prefix") @DefaultValue("") String prefix,
-            @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
+            @Parameter(description = "Case-insensitive prefix to match against the candidate value. Empty returns the first `limit` entries.") @QueryParam("prefix") @DefaultValue("") String prefix,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
         Builder b = new Builder( prefix, limit );
         for ( ExpressionExperimentSet eeSet : expressionExperimentSetService.loadAll() ) {
             b.add( String.valueOf( eeSet.getId() ), eeSet.getName() );
@@ -192,8 +192,8 @@ public class CompletionsWebService {
                     + "so the lookup avoids fetching full VOs.",
             responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getDatasetCompletions(
-            @QueryParam("prefix") @DefaultValue("") String prefix,
-            @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
+            @Parameter(description = "Case-insensitive prefix to match against the candidate value. Empty returns the first `limit` entries.") @QueryParam("prefix") @DefaultValue("") String prefix,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
         Builder b = new Builder( prefix, limit );
         for ( var entry : expressionExperimentService.loadAllIdentifiersAndName( false ).entrySet() ) {
             b.add( entry.getKey(), entry.getValue() );
@@ -210,8 +210,8 @@ public class CompletionsWebService {
                     + "Backed by CharacteristicReadService.findValueGroupedByValueUri.",
             responses = @ApiResponse(responseCode = "200", description = "The matching completions as `{ value, description }` tuples, in the underlying service's natural order — they are not ranked by how well they match. An empty `prefix` returns the first `limit` entries.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<List<CompletionValueObject>> getOntologyTermCompletions(
-            @QueryParam("prefix") @DefaultValue("") String prefix,
-            @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
+            @Parameter(description = "Case-insensitive prefix to match against the candidate value. Empty returns the first `limit` entries.") @QueryParam("prefix") @DefaultValue("") String prefix,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("" + DEFAULT_LIMIT) int limit ) {
         Builder b = new Builder( prefix, limit );
         characteristicService.findValueGroupedByValueUri( null, true, false, true, -1 )
                 .forEach( ( uri, label ) -> {

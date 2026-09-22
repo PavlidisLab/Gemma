@@ -1052,4 +1052,43 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                         + " become both specification bloat and a serialization hazard: %s", published )
                 .isEmpty();
     }
+
+    /**
+     * Every parameter must be described. A parameter is what a caller actually sets, so an
+     * undescribed one is the gap they hit first — 412 of 652 had nothing.
+     *
+     * <p>Only parameters the specification publishes are covered, which is the right scope: a
+     * {@code @Parameter(hidden = true)} legacy alias never reaches a client and has nothing to
+     * document. The {@code /custom} paths are test fixtures, excluded as elsewhere.
+     */
+    @Test
+    public void testEveryParameterHasADescription() {
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            if ( pathEntry.getKey().startsWith( "/custom" ) ) {
+                continue;
+            }
+            for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathEntry.getValue().readOperationsMap().entrySet() ) {
+                Operation operation = opEntry.getValue();
+                if ( operation.getParameters() == null ) {
+                    continue;
+                }
+                for ( Parameter parameter : operation.getParameters() ) {
+                    inspected++;
+                    if ( parameter.getDescription() == null || parameter.getDescription().trim().isEmpty() ) {
+                        offenders.add( opEntry.getKey() + " " + pathEntry.getKey() + " ?" + parameter.getName()
+                                + " (" + operation.getOperationId() + ")" );
+                    }
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected the spec to declare many parameters; inspected only %d", inspected )
+                .isGreaterThan( 500 );
+        assertThat( offenders )
+                .withFailMessage( "parameters with no description: %s", offenders )
+                .isEmpty();
+    }
 }

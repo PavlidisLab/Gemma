@@ -144,15 +144,15 @@ public class DatasetVisualizationWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<HeatmapDataValueObject> getDatasetHeatmapData(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("genes") @Nullable String genesCsv,
-            @QueryParam("probes") @Nullable String probesCsv,
-            @QueryParam("resultSet") @Nullable Long resultSetId,
-            @QueryParam("threshold") @Nullable Double threshold,
-            @QueryParam("pcaComponent") @Nullable Integer pcaComponent,
-            @QueryParam("pcaCount") @Nullable Integer pcaCount,
-            @QueryParam("sampleSize") @Nullable Integer sampleSize,
-            @QueryParam("encoding") @DefaultValue("json") String encoding,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Gene identifiers, comma-separated.") @QueryParam("genes") @Nullable String genesCsv,
+            @Parameter(description = "Probe identifiers, comma-separated.") @QueryParam("probes") @Nullable String probesCsv,
+            @Parameter(description = "Identifier of the differential expression analysis result set.") @QueryParam("resultSet") @Nullable Long resultSetId,
+            @Parameter(description = "Only include results at or below this p-value threshold.") @QueryParam("threshold") @Nullable Double threshold,
+            @Parameter(description = "Rank probes by their loading on this principal component, 1-based.") @QueryParam("pcaComponent") @Nullable Integer pcaComponent,
+            @Parameter(description = "How many probes to take from the ranked principal component.") @QueryParam("pcaCount") @Nullable Integer pcaCount,
+            @Parameter(description = "Take a random sample of this many probes instead of a targeted selection.") @QueryParam("sampleSize") @Nullable Integer sampleSize,
+            @Parameter(description = "How the matrix values are encoded: `json` (the default) for plain numbers, or `base64f32` for a base64-encoded 32-bit float array.") @QueryParam("encoding") @DefaultValue("json") String encoding,
             @Parameter(description = "Restrict the heatmap to a single subset's samples — useful for cell-type-resolved views on single-cell data. When omitted, the full matrix is returned.")
             @QueryParam("subSet") @Nullable Long subSetId,
             @Parameter(description = "Quantitation-type selector (id or name). When omitted, the dataset's processed QT is used. A non-processed QT is served from its raw vectors and supports the genes / probes selection modes and the random-sample fallback; resultSet and pcaComponent are rejected.")

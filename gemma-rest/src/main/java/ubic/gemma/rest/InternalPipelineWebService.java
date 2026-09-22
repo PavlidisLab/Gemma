@@ -12,6 +12,7 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -73,8 +74,8 @@ public class InternalPipelineWebService {
                     @ApiResponse(responseCode = "200", description = "The event as appended.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<PipelineJobEventValueObject> postEvent(
-            @PathParam("jobId") Long jobId,
-            @HeaderParam("Authorization") String authHeader,
+            @Parameter(description = "Identifier of the pipeline job.") @PathParam("jobId") Long jobId,
+            @Parameter(description = "Shared-secret bearer token for the scheduler callback.") @HeaderParam("Authorization") String authHeader,
             PostEventRequest req ) {
         verifyToken( authHeader );
         if ( req == null || req.kind == null || req.kind.isBlank() ) {

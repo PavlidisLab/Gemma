@@ -1,6 +1,7 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -60,7 +61,7 @@ public class TasksWebService {
                     @ApiResponse(responseCode = "404", description = "The task was never submitted or has already been evicted from the in-memory store.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<TaskStatusValueObject> getTaskStatus(
-            @PathParam("taskId") String taskId
+            @Parameter(description = "Identifier of the submitted task, as returned when it was accepted.") @PathParam("taskId") String taskId
     ) {
         SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
         if ( task == null ) {
@@ -89,7 +90,7 @@ public class TasksWebService {
                     @ApiResponse(responseCode = "404", description = "The task was never submitted or has already been evicted from the in-memory store.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<TaskStatusValueObject> cancelTask(
-            @PathParam("taskId") String taskId
+            @Parameter(description = "Identifier of the submitted task, as returned when it was accepted.") @PathParam("taskId") String taskId
     ) {
         SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
         if ( task == null ) {

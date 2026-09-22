@@ -950,7 +950,7 @@ public class AnnotationsWebService {
                     + "carried, so the terms have to be reachable by someone asking why one is missing. No "
                     + "effect on a bulk dataset or a term-seeded read, neither of which is cut.")
             @QueryParam("includeCellTypeSubjects") @DefaultValue("false") boolean includeCellTypeSubjects,
-            @QueryParam("limit") @DefaultValue("50") int limit
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("50") int limit
     ) {
         if ( StringUtils.isBlank( subject ) && StringUtils.isBlank( object ) && datasetId == null ) {
             throw new BadRequestException( "One of 'subject', 'object' or 'dataset' must be supplied; the whole relation table is not a question." );
@@ -1087,7 +1087,7 @@ public class AnnotationsWebService {
                     + "0 (the default) does not filter.") @QueryParam("maxObjectBreadth") @DefaultValue("0") int maxObjectBreadth,
             @Parameter(description = "Include per-experiment parameters. Off by default -- a dose or a "
                     + "duration cannot imply an annotation, so a gate has no use for them.") @QueryParam("includeExperimentLevel") @DefaultValue("false") boolean includeExperimentLevel,
-            @QueryParam("limit") @DefaultValue("100") int limit
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("100") int limit
     ) {
         if ( StringUtils.isBlank( from ) ) {
             throw new BadRequestException( "'from' is required: the terms the experiment already carries." );
@@ -1886,10 +1886,10 @@ public class AnnotationsWebService {
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.") @QueryParam("query") @DefaultValue("") StringArrayArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -1943,10 +1943,10 @@ public class AnnotationsWebService {
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.")
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
         return searchDatasets( query, filterArg, offset, limit, sortArg );
     }
@@ -1969,13 +1969,13 @@ public class AnnotationsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.")
             @QueryParam("query") @DefaultValue("") StringArrayArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -2024,13 +2024,13 @@ public class AnnotationsWebService {
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.")
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         return searchTaxonDatasets( taxonArg, query, filter, offset, limit, sort );
     }
@@ -6163,7 +6163,7 @@ public class AnnotationsWebService {
                     @ApiResponse(responseCode = "409", description = "An annotation with the same (category, value) already exists.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response addDatasetAnnotation(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable AnnotationDto body,
             @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
                     + "linkage is parked until the source-set → emitted-event audit link lands.")
@@ -6255,8 +6255,8 @@ public class AnnotationsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset or annotation does not exist on this dataset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response removeDatasetAnnotation(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("annotationId") Long annotationId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the annotation to remove.") @PathParam("annotationId") Long annotationId,
             @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
                     + "it. The authenticated credential stays the performer on the audit row; this names the "
                     + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
@@ -6315,7 +6315,7 @@ public class AnnotationsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<AnnotationReplaceReport> replaceDatasetAnnotations(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable AnnotationsReplaceRequest body,
             @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
                     + "it. The authenticated credential stays the performer on the audit row; this names the "

@@ -118,7 +118,7 @@ public class WorkflowWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<WorkflowStateResponse> getDatasetWorkflow(
-            @PathParam("id") Long datasetId
+            @Parameter(description = "Identifier of the dataset.") @PathParam("id") Long datasetId
     ) {
         ExpressionExperiment ee = loadDatasetOrThrow( datasetId );
         WorkflowState current = workflowService.getCurrentState( ee );
@@ -176,7 +176,7 @@ public class WorkflowWebService {
                                     schema = @Schema(description = "{ error, currentState, targetState, allowedNextStates }")))
             })
     public Response advanceDatasetWorkflow(
-            @PathParam("id") Long datasetId,
+            @Parameter(description = "Identifier of the dataset.") @PathParam("id") Long datasetId,
             @Nullable AdvanceWorkflowRequest req
     ) {
         if ( req == null || req.targetState == null || req.targetState.isEmpty() ) {
@@ -268,8 +268,8 @@ public class WorkflowWebService {
             @QueryParam("assignee") @Nullable String assignee,
             @Parameter(description = "Optional ISO-8601 timestamp; restrict to entries on or after.")
             @QueryParam("since") @Nullable Date since,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         if ( datasetType == null ) {
             datasetType = datasetTypeLegacy;

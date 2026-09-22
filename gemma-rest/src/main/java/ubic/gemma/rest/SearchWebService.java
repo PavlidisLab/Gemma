@@ -109,11 +109,11 @@ public class SearchWebService {
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public SearchResultsResponseDataObject search(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("taxon") TaxonArg<?> taxonArg,
-            @QueryParam("platform") PlatformArg<?> platformArg,
-            @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @QueryParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @QueryParam("platform") PlatformArg<?> platformArg,
+            @Parameter(description = "Restrict the search to these result types. Omit to search every type `GET /search` supports.", array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
             @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless `resultObject` is excluded.", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_SEARCH_RESULTS)) @QueryParam("limit") LimitArg limit,
             @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg,
             @Parameter(description = "Expand a gene search through Gene Ontology terms (GO term → annotated genes). "

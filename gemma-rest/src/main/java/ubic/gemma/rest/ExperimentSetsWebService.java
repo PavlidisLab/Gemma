@@ -108,8 +108,8 @@ public class ExperimentSetsWebService {
             @QueryParam("query") @Nullable String query,
             @Parameter(description = "Populate the member dataset ids.")
             @QueryParam("includeMembers") @DefaultValue("false") boolean includeMembers,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         List<ExpressionExperimentSetValueObject> all = new ArrayList<>( mine
                 ? expressionExperimentSetService.loadMySetValueObjects( includeMembers )
@@ -139,7 +139,7 @@ public class ExperimentSetsWebService {
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionExperimentSetValueObject> getExperimentSet(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id,
             @Parameter(description = "Populate the member dataset ids.")
             @QueryParam("includeMembers") @DefaultValue("true") boolean includeMembers
     ) {
@@ -156,7 +156,7 @@ public class ExperimentSetsWebService {
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<ExpressionExperimentDetailsValueObject>> getExperimentSetDatasets(
-            @PathParam("id") Long id
+            @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id
     ) {
         requireSet( id );
         Collection<ExpressionExperimentDetailsValueObject> members =
@@ -209,7 +209,7 @@ public class ExperimentSetsWebService {
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionExperimentSetValueObject> updateExperimentSet(
-            @PathParam("id") Long id, ExperimentSetRequest req
+            @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id, ExperimentSetRequest req
     ) {
         ExpressionExperimentSetValueObject vo = requireSet( id );
         if ( req == null || ( req.name == null && req.description == null ) ) {
@@ -242,7 +242,7 @@ public class ExperimentSetsWebService {
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionExperimentSetValueObject> updateExperimentSetMembers(
-            @PathParam("id") Long id, ExperimentSetMembersRequest req
+            @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id, ExperimentSetMembersRequest req
     ) {
         requireSet( id );
         if ( req == null || req.datasetIds == null ) {
@@ -265,7 +265,7 @@ public class ExperimentSetsWebService {
                     @ApiResponse(responseCode = "204", description = "Deleted."),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response deleteExperimentSet( @PathParam("id") Long id ) {
+    public Response deleteExperimentSet( @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id ) {
         expressionExperimentSetValueObjectHelper.delete( requireSet( id ) );
         return Response.noContent().build();
     }

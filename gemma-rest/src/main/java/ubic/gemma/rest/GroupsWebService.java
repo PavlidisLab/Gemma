@@ -121,8 +121,8 @@ public class GroupsWebService {
     public PaginatedResponseDataObject<GroupSummaryValueObject> getGroups(
             @Parameter(description = "Case-insensitive substring of the group name.")
             @QueryParam("query") @Nullable String query,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
@@ -161,8 +161,8 @@ public class GroupsWebService {
                     @ApiResponse(responseCode = "200", description = "The group.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<? extends GroupValueObject> getGroup(
-            @PathParam("id") Long id,
-            @QueryParam("includeSummaries") @DefaultValue("false") boolean includeSummaries,
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id,
+            @Parameter(description = "Populate the per-row summary fields.") @QueryParam("includeSummaries") @DefaultValue("false") boolean includeSummaries,
             // Legacy spelling, accepted so a stale caller gets the behaviour it asked for rather
             // than silently falling back to the default. Remove once no client sends it.
             @Parameter(hidden = true)
@@ -239,7 +239,7 @@ public class GroupsWebService {
                     @ApiResponse(responseCode = "200", description = "The group after the change.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<GroupValueObject> updateGroup(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id,
             GroupUpdateRequest req
     ) {
         if ( req == null ) {
@@ -287,7 +287,7 @@ public class GroupsWebService {
                     @ApiResponse(responseCode = "200", description = "The group was deleted.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
             })
     public Response deleteGroup(
-            @PathParam("id") Long id
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id
     ) {
         UserGroup g = loadGroupById( id );
         rejectSystemGroupName( g.getName() );
@@ -313,7 +313,7 @@ public class GroupsWebService {
                     @ApiResponse(responseCode = "200", description = "The group, with its membership after the addition.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<GroupWithMembersValueObject> addMember(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id,
             MemberAddRequest req
     ) {
         if ( req == null || ( ( req.getUsername() == null || req.getUsername().isEmpty() ) && req.getUserId() == null ) ) {
@@ -339,8 +339,8 @@ public class GroupsWebService {
                     @ApiResponse(responseCode = "200", description = "The member was removed from the group.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
             })
     public Response removeMember(
-            @PathParam("id") Long id,
-            @PathParam("memberId") Long memberId
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the group member (Contact).") @PathParam("memberId") Long memberId
     ) {
         UserGroup g = loadGroupById( id );
         User u = userReadService.load( memberId );

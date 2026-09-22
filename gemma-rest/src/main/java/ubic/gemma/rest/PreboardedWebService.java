@@ -152,7 +152,7 @@ public class PreboardedWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public PreboardedResponse getPreboarded( @PathParam("id") Long id ) {
+    public PreboardedResponse getPreboarded( @Parameter(description = "Identifier of the preboarded experiment.") @PathParam("id") Long id ) {
         PreboardedExperiment skel = loadPreboardedOrThrow( id );
         AnnotationSet latest = annotationSetService.findLatestByInvestigation( skel, AnnotationSetRole.PROPOSAL );
         long total = annotationSetService.countByInvestigation( skel, AnnotationSetRole.PROPOSAL );
@@ -233,7 +233,7 @@ public class PreboardedWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public Response attachAnnotationSet( @PathParam("id") Long id,
+    public Response attachAnnotationSet( @Parameter(description = "Identifier of the preboarded experiment.") @PathParam("id") Long id,
             @Nullable AttachAnnotationSetRequest req ) {
         if ( req == null || req.runId == null || req.runId.trim().isEmpty() ) {
             throw new BadRequestException( "Request body must include a non-blank `runId`." );
@@ -279,7 +279,7 @@ public class PreboardedWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(description = "{ error, preboardedId }")))
             })
-    public Response promotePreboarded( @PathParam("id") Long id,
+    public Response promotePreboarded( @Parameter(description = "Identifier of the preboarded experiment.") @PathParam("id") Long id,
             @Nullable PromoteRequest req ) {
         if ( req == null || req.eeId == null ) {
             throw new BadRequestException( "Request body must include `eeId`." );

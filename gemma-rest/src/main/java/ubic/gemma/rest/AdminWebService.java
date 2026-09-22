@@ -421,7 +421,7 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "404", description = "No cache registered under that name",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public Response clearCache( @PathParam("cacheName") String cacheName ) {
+    public Response clearCache( @Parameter(description = "Name of the cache, as `GET /admin/caches` lists it.") @PathParam("cacheName") String cacheName ) {
         Cache cache = cacheManager.getCache( cacheName );
         if ( cache == null ) {
             throw new NotFoundException( "No cache found with name=" + cacheName );
@@ -655,7 +655,7 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "404", description = "No taxon matches the supplied identifier",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public Response submitMultifunctionalityRecompute( @QueryParam("taxon") TaxonArg<?> taxonArg ) {
+    public Response submitMultifunctionalityRecompute( @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @QueryParam("taxon") TaxonArg<?> taxonArg ) {
         if ( taxonArg == null ) {
             throw new BadRequestException( "`taxon` query parameter is required." );
         }
@@ -704,7 +704,7 @@ public class AdminWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<ArrayDesignValueObject> regeneratePlatformReport(
-            @PathParam("platform") PlatformArg<?> platformArg ) {
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArg<?> platformArg ) {
         ArrayDesign platform = platformArgService.getEntity( platformArg );
         return respond( arrayDesignReportService.generateArrayDesignReport( platform.getId() ) );
     }
@@ -871,7 +871,7 @@ public class AdminWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response reindexSearchIndices(
-            @QueryParam("entity") @Nullable String entity ) {
+            @Parameter(description = "Restrict the reindex to one entity type, by simple class name. Omit to reindex every indexed type.") @QueryParam("entity") @Nullable String entity ) {
         List<Class<? extends Identifiable>> targets = new ArrayList<>();
         if ( entity == null || entity.trim().isEmpty() || "all".equalsIgnoreCase( entity.trim() ) ) {
             targets.addAll( INDEXABLE_ENTITIES.values() );
@@ -1059,7 +1059,7 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "200", description = "Which ontologies are loaded, and how far along the ones still loading are.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<OntologiesResponse> getOntologies(
-            @QueryParam("includeTermCount") @DefaultValue("false") boolean includeTermCount ) {
+            @Parameter(description = "Populate each ontology's term count. Off by default because counting is not free.") @QueryParam("includeTermCount") @DefaultValue("false") boolean includeTermCount ) {
         List<OntologyStatusValueObject> rows = new ArrayList<>( ontologies.size() );
         int enabled = 0, loaded = 0, initializing = 0;
         for ( OntologyService o : ontologies ) {
@@ -1116,8 +1116,8 @@ public class AdminWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response refreshOntology(
-            @PathParam("name") String name,
-            @QueryParam("forceIndexing") @DefaultValue("false") boolean forceIndexing ) {
+            @Parameter(description = "Name of the ontology, as `GET /admin/ontologies` lists it.") @PathParam("name") String name,
+            @Parameter(description = "Re-index the ontology even when its content has not changed.") @QueryParam("forceIndexing") @DefaultValue("false") boolean forceIndexing ) {
         OntologyService match = OntologyServiceResolver.resolve( ontologies, name )
                 .orElseThrow( () -> new NotFoundException( "No ontology found with name=" + name
                         + ". Accepted names are listed as `acceptedNames` by GET /admin/ontologies." ) );
@@ -1246,7 +1246,7 @@ public class AdminWebService {
                             headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public Response rebuildOntologySlim( @PathParam("name") String name ) {
+    public Response rebuildOntologySlim( @Parameter(description = "Name of the ontology, as `GET /admin/ontologies` lists it.") @PathParam("name") String name ) {
         // Resolve the path argument the same way the refresh endpoint does (abbreviation / identifier /
         // class name / dc:title), then require the bean to actually support slimming. Restricting the
         // candidate list up front keeps a non-slimmable ontology whose name happens to match from
@@ -1874,7 +1874,7 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "200", description = "Every user account.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<UsersListResponse> getUsers(
-            @QueryParam("includeDeleted") @DefaultValue("false") boolean includeDeleted ) {
+            @Parameter(description = "Include user accounts that have been deleted.") @QueryParam("includeDeleted") @DefaultValue("false") boolean includeDeleted ) {
         Collection<User> users = userManager.loadAll();
         List<UserValueObject> rows = new ArrayList<>( users.size() );
         int enabled = 0, pending = 0, deleted = 0;
@@ -1996,7 +1996,7 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "404", description = "No user with that username",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public ResponseDataObject<UserValueObject> patchUser( @PathParam("username") String username, UpdateUserRequest req ) {
+    public ResponseDataObject<UserValueObject> patchUser( @Parameter(description = "The user's login name.") @PathParam("username") String username, UpdateUserRequest req ) {
         if ( req == null || ( req.enabled == null && req.isAdmin == null ) ) {
             throw new BadRequestException( "request body must specify at least one of: enabled, isAdmin" );
         }
@@ -2058,7 +2058,7 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "409", description = "User is soft-deleted",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public ResponseDataObject<ResetPasswordResponse> resetUserPassword( @PathParam("username") String username ) {
+    public ResponseDataObject<ResetPasswordResponse> resetUserPassword( @Parameter(description = "The user's login name.") @PathParam("username") String username ) {
         User u = userManager.findByUserName( username );
         if ( u == null ) {
             throw new NotFoundException( "No user with name=" + username );
@@ -2095,7 +2095,7 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "404", description = "No user with that username",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public Response deleteUser( @PathParam("username") String username ) {
+    public Response deleteUser( @Parameter(description = "The user's login name.") @PathParam("username") String username ) {
         User u = userManager.findByUserName( username );
         if ( u == null ) {
             throw new NotFoundException( "No user with name=" + username );
@@ -2211,7 +2211,7 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "404", description = "No blacklist entry for that accession",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
-    public Response deleteBlacklistEntry( @PathParam("accession") String accession ) {
+    public Response deleteBlacklistEntry( @Parameter(description = "The accession, spelled as the source database spells it.") @PathParam("accession") String accession ) {
         BlacklistedEntity entity = blacklistedEntityService.findByAccession( accession );
         if ( entity == null ) {
             throw new NotFoundException( "No blacklist entry for accession=" + accession );
@@ -2242,8 +2242,8 @@ public class AdminWebService {
                     @ApiResponse(responseCode = "200", description = "The blacklist entries.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<BlacklistListResponse> listBlacklistEntries(
-            @QueryParam("limit") @DefaultValue("100") int limit,
-            @QueryParam("offset") @DefaultValue("0") int offset ) {
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("100") int limit,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") int offset ) {
         if ( limit < 0 ) {
             throw new BadRequestException( "`limit` must be non-negative" );
         }

@@ -144,12 +144,12 @@ public class AnalysisResultSetsWebService {
                             }))),
             })
     public Object getResultSets(
-            @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
-            @Parameter(schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionAnalysisResultSet> sort,
+            @Parameter(description = "Dataset identifiers, comma-separated. Each is an ExpressionExperiment id or short name.", schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
+            @Parameter(description = "Database entry identifiers, comma-separated.", schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit,
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionAnalysisResultSet> sort,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg ) {
         Collection<BioAssaySet> bas = null;
         if ( datasets != null ) {
@@ -189,7 +189,7 @@ public class AnalysisResultSetsWebService {
                     @ApiResponse(responseCode = "200", description = "The number of result sets matching the filter.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<Long> getNumberOfResultSets(
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
         return respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
     }
 
@@ -229,10 +229,10 @@ public class AnalysisResultSetsWebService {
                     @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getResultSet(
-            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
-            @QueryParam("threshold") Double threshold,
-            @QueryParam("offset") OffsetArg offsetArg,
-            @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = "Identifier of the differential expression analysis result set.") @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
+            @Parameter(description = "Only include results at or below this p-value threshold.") @QueryParam("threshold") Double threshold,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = "Include complete factor values in contrasts instead of only populating `factorValueId` and `secondFactorValueId`. In 2.9.0, this will default to false.", schema = @Schema(defaultValue = "true")) @QueryParam("includeFactorValuesInContrasts") Boolean includeFactorValuesInContrasts,
             @Parameter(description = "Include complete taxon in genes instead of only populating `taxonId`. When this is set to true, a `taxa` collection will be included in `DifferentialExpressionAnalysisResultSetValueObject`. In 2.9.0, this will default to false.", schema = @Schema(defaultValue = "true")) @QueryParam("includeTaxonInGenes") Boolean includeTaxonInGenes,
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults,
@@ -329,7 +329,7 @@ public class AnalysisResultSetsWebService {
                     @ApiResponse(responseCode = "404", description = "The analysis result set could not be found, or it has no stored p-value distribution.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getPvalueDistribution(
-            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
+            @Parameter(description = "Identifier of the differential expression analysis result set.") @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Parameter(description = "Number of bins. Must divide the stored bin count (100) exactly: 1, 2, 4, 5, 10, 20, 25, 50 or 100.",
                     schema = @Schema(defaultValue = "20", minimum = "1", maximum = "100"))
             @QueryParam("bins") @DefaultValue("20") int bins,

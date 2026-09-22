@@ -148,9 +148,9 @@ public class GoTermsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             })
     public PaginatedResponseDataObject<GeneValueObject> getGenesByGoTerm(
-            @PathParam("termUri") String termUri,
-            @QueryParam("taxon") TaxonArg<?> taxonArg,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Full URI of the ontology term.") @PathParam("termUri") String termUri,
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @Parameter(description = "Maximum genes per page; capped at 200.")
             @QueryParam("limit") @DefaultValue("100") LimitArg limitArg,
             @Parameter(description = "Walk GO subClassOf descendants of {termUri} and union the gene sets. Default false.")
@@ -320,9 +320,9 @@ public class GoTermsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             })
     public ubic.gemma.rest.util.ResponseDataObject<GoTermGeneCountValueObject> countGenesByGoTerm(
-            @PathParam("termUri") String termUri,
-            @QueryParam("taxon") TaxonArg<?> taxonArg,
-            @QueryParam("propagate") @DefaultValue("false") boolean propagate,
+            @Parameter(description = "Full URI of the ontology term.") @PathParam("termUri") String termUri,
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @Parameter(description = "Include genes annotated only to the term's descendants.") @QueryParam("propagate") @DefaultValue("false") boolean propagate,
             @Parameter(description = "When `propagate=true`, cap the breadth-first descendant walk at this many terms (including the root). Default 0 = unbounded.")
             @QueryParam("maxTerms") @DefaultValue("0") int maxTerms
     ) {
