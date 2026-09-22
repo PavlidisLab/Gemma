@@ -43,4 +43,19 @@ public class GeoPlatformTest {
 
     }
 
+    /**
+     * Two custom-CDF platforms affyFromCel refused as "not recognized as an Affymetrix platform" until they were
+     * mapped (FRB, 2026-09-22: GSE286181 on GPL35276, GSE227261 on GPL33245). Both resolve to the array their own
+     * GEO title names in brackets, which is the chip type their CEL files carry.
+     */
+    @Test
+    public void testBrainarrayAlternativesResolveToTheirAffymetrixArray() {
+        // [RAE230A] Affymetrix Rat Expression Set 230 [CDF: Brainarray Entrez Gene version 25.0]
+        assertTrue( GeoPlatform.isAffyPlatform( "GPL35276" ) );
+        assertEquals( "GPL341", GeoPlatform.alternativeToProperAffyPlatform( "GPL35276" ) );
+        // [Clariom_S_Human] Affymetrix Clariom S Human array [ClariomSHuman_Hs_ENTREZG_23.0.0]
+        assertTrue( GeoPlatform.isAffyPlatform( "GPL33245" ) );
+        assertEquals( "GPL23159", GeoPlatform.alternativeToProperAffyPlatform( "GPL33245" ) );
+    }
+
 }

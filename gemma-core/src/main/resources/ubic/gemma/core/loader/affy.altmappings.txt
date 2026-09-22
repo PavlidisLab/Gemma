@@ -218,6 +218,7 @@ GPL15401=GPL6244
 # Clariom_s_Human
 GPL23159=GPL23159
 GPL26070=GPL23159
+GPL33245=GPL23159
 # GPL26710=GPL23159? ClariomSHuman_Hs_ENSG_22 no data sets anyway.
 
 # Clariom_s_Mouse
@@ -468,6 +469,7 @@ GPL98=GPL98
 GPL341=GPL341
 GPL8627=GPL341
 GPL14122=GPL341
+GPL35276=GPL341
 # note that in GEO this is incorrectly listed as being alt to another, may get fixed
 GPL27768=GPL341
 
