@@ -224,6 +224,11 @@ GPL33245=GPL23159
 # Clariom_s_Mouse
 GPL23038=GPL23038
 
+# Clariom_s_Mouse_HT
+# Its own platform, not an alternative to GPL23038: the plate format is a distinct chip type and has
+# its own library set. Same treatment as the other HT arrays (HT_HG-U133A, HT_MG-430_PM, HT_Rat-Focus).
+GPL24242=GPL24242
+
 # Clariom_d_human
 GPL23126=GPL23126
 GPL25401=GPL23126

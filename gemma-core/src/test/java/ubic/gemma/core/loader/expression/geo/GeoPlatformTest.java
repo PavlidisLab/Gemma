@@ -58,4 +58,18 @@ public class GeoPlatformTest {
         assertEquals( "GPL23159", GeoPlatform.alternativeToProperAffyPlatform( "GPL33245" ) );
     }
 
+    /**
+     * GPL24242 is Affymetrix's HT plate format of the Clariom S Mouse array, not an alternative CDF of it: it
+     * resolves to ITSELF and carries its own library set. Its CEL files declare
+     * {@code affymetrix-array-type=Clariom_S_Mouse_HT} (checked on GSE167387 and GSE254912, 2026-09-22), and
+     * GPL23038's library declares {@code #%chip_type=Clariom_S_Mouse}, so resolving it there would hand apt a
+     * library for a different chip.
+     */
+    @Test
+    public void testClariomSMouseHTResolvesToItselfRatherThanTheNonHTArray() {
+        assertTrue( GeoPlatform.isAffyPlatform( "GPL24242" ) );
+        assertEquals( "GPL24242", GeoPlatform.alternativeToProperAffyPlatform( "GPL24242" ) );
+        assertTrue( GeoPlatform.isGEOAffyDataUsable( "GPL24242" ) );
+    }
+
 }

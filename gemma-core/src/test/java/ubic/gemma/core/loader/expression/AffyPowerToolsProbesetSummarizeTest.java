@@ -44,6 +44,24 @@ public class AffyPowerToolsProbesetSummarizeTest {
 
     }
 
+    /**
+     * getMPSCommand reads all four names for a platform and hands each to checkFileReadable, so a quartet
+     * missing one member fails at the apt call rather than here. GPL24242 (Clariom_S_Mouse_HT) needs its own
+     * set: its CEL files carry {@code affymetrix-array-type=Clariom_S_Mouse_HT}, which apt matches against
+     * {@code #%chip_type} in the pgf, so GPL23038's non-HT library cannot summarize them.
+     */
+    @Test
+    public void testClariomSMouseHTHasItsOwnCompleteLibrarySet() {
+        AffyPowerToolsProbesetSummarize t = new AffyPowerToolsProbesetSummarize();
+        Map<String, String> ht = t.loadMpsNames().get( "GPL24242" );
+
+        assertNotNull( ht, "GPL24242 has no entry in affy.mps.properties" );
+        assertEquals( "Clariom_S_Mouse_HT.r1.pgf", ht.get( "pgf" ) );
+        assertEquals( "Clariom_S_Mouse_HT.r1.clf", ht.get( "clf" ) );
+        assertEquals( "Clariom_S_Mouse_HT.r1.mps", ht.get( "mps" ) );
+        assertEquals( "Clariom_S_Mouse_HT.r1.qcc", ht.get( "qcc" ) );
+    }
+
     @Test
     public void testCELnameregex() {
         Pattern regex = Pattern.compile( AffyPowerToolsProbesetSummarize.GEO_CEL_FILE_NAME_REGEX );
