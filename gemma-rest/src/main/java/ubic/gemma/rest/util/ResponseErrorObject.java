@@ -14,6 +14,7 @@
  */
 package ubic.gemma.rest.util;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
@@ -31,6 +32,7 @@ public class ResponseErrorObject {
     /**
      * API version.
      */
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Version of the API that produced the error.")
     String apiVersion;
 
     /**
@@ -38,10 +40,12 @@ public class ResponseErrorObject {
      * <p>
      * This is an extension to the Google JSON style-guide.
      */
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Build the error came from. This is an extension to the Google JSON style guide.")
     BuildInfoValueObject buildInfo;
 
     /**
      * Error beign reported.
      */
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "The error itself.")
     WellComposedErrorBody error;
 }

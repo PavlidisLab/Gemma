@@ -1091,4 +1091,56 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                 .withFailMessage( "parameters with no description: %s", offenders )
                 .isEmpty();
     }
+
+    /**
+     * Ceiling on undescribed schema properties. It may only go down.
+     *
+     * <p>3018 of 3177 properties had no description when this was measured. Removing the leaked
+     * Hibernate entities took 466 of them off the board, and describing the response envelopes took
+     * another 450 — 39 annotations on the shared containers, which every parameterised container
+     * inherits. What is left is roughly 450 value objects in gemma-core, and hand-writing those is
+     * its own piece of work rather than something to finish in passing.
+     *
+     * <p>A ratchet rather than a rule, because the rule would fail today. Lower the number when you
+     * describe more; the test fails if it rises, so a new value object cannot arrive undocumented
+     * and disappear into the pile.
+     */
+    private static final int UNDESCRIBED_PROPERTY_BUDGET = 2020;
+
+    /**
+     * @see #UNDESCRIBED_PROPERTY_BUDGET
+     */
+    @Test
+    public void testUndescribedSchemaPropertiesDoNotIncrease() {
+        int undescribed = 0, total = 0, bareRef = 0;
+        for ( Schema<?> schema : spec.getComponents().getSchemas().values() ) {
+            if ( schema.getProperties() == null ) {
+                continue;
+            }
+            for ( Object value : schema.getProperties().values() ) {
+                Schema<?> property = ( Schema<?> ) value;
+                total++;
+                if ( property.getDescription() != null && !property.getDescription().trim().isEmpty() ) {
+                    continue;
+                }
+                undescribed++;
+                // a property that resolves to a bare $ref cannot carry a description: OpenAPI 3.0
+                // discards keywords sitting beside a $ref. Its description belongs on the schema it
+                // points at, which is where it would be read from anyway.
+                if ( property.get$ref() != null ) {
+                    bareRef++;
+                }
+            }
+        }
+
+        assertThat( total )
+                .withFailMessage( "expected the spec to declare many properties; inspected only %d", total )
+                .isGreaterThan( 2000 );
+        assertThat( undescribed )
+                .withFailMessage( "undescribed schema properties rose to %d, over the budget of %d"
+                                + " (%d of them are bare $refs, which cannot carry a description)."
+                                + " Describe the new properties, or lower the budget if you have described others.",
+                        undescribed, UNDESCRIBED_PROPERTY_BUDGET, bareRef )
+                .isLessThanOrEqualTo( UNDESCRIBED_PROPERTY_BUDGET );
+    }
 }

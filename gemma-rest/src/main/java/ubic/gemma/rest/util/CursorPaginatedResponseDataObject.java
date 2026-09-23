@@ -14,6 +14,7 @@
  */
 package ubic.gemma.rest.util;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import ubic.gemma.persistence.util.CursorPage;
 
@@ -30,11 +31,17 @@ import java.util.List;
 @Getter
 public class CursorPaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
+    @Schema(description = "The properties the results are grouped by.")
     private final String[] groupBy;
+    @Schema(description = "How the results are ordered. Cursor mode currently forces an ascending `id` sort.")
     private final SortValueObject sort;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "The page size that was applied.")
     private final Integer limit;
+    @Schema(description = "Token for the page after this one, or null when this is the last page.")
     private final String nextCursor;
+    @Schema(description = "Token for the page before this one, or null when this is the first page.")
     private final String prevCursor;
+    @Schema(description = "How many results match in total. Null by default in cursor mode, which does not run a count query per request — unlike offset mode, where it is always populated.")
     private final Long totalElements;
 
     public CursorPaginatedResponseDataObject( CursorPage<T> payload, String[] groupBy ) {

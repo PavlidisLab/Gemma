@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
@@ -13,8 +14,11 @@ import java.util.List;
 @Getter
 public class FilteredResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
+    @Schema(description = "The filter that was applied, echoed back as it was parsed. Null when the request gave none.")
     private final String filter;
+    @Schema(description = "The properties the results are grouped by.")
     private final String[] groupBy;
+    @Schema(description = "How the results are ordered.")
     private final SortValueObject sort;
 
     /**

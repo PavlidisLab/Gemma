@@ -14,6 +14,7 @@
  */
 package ubic.gemma.rest.util;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
@@ -32,6 +33,7 @@ import org.springframework.lang.Nullable;
 @Getter
 public class QueriedAndFilteredAndCursorPaginatedResponseDataObject<T> extends FilteredAndCursorPaginatedResponseDataObject<T> {
 
+    @Schema(description = "The full-text query that was applied, echoed back. Null when the request gave none.")
     private final String query;
 
     public QueriedAndFilteredAndCursorPaginatedResponseDataObject( CursorPage<T> payload, @Nullable String query, @Nullable Filters filters, @Nullable String[] groupBy ) {
