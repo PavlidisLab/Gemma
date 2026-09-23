@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.genome.BlatResultParser;
@@ -43,6 +44,7 @@ import java.util.Map;
 
 import static org.junit.Assume.assumeNoException;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Unaware of the Gemma database but uses the hg19 and mm10 databases (tests will not work with hg38)
@@ -58,6 +60,7 @@ public class ProbeMapperTest {
     private static GoldenPathSequenceAnalysis humangp = null;
     private static Collection<BlatResult> blatres;
     private static List<Double> tester;
+    private static boolean refSeqTablesPresent = false;
 
     @BeforeAll
     public static void setUp() throws Exception {
@@ -69,6 +72,15 @@ public class ProbeMapperTest {
             humangp = new GoldenPathSequenceAnalysis( humanTaxon );
         } catch ( CannotGetJdbcConnectionException e ) {
             assumeNoException( e );
+        }
+
+        try {
+            humangp.findRefGenesByLocation( "1", 1L, 2L, null );
+            mousegp.findRefGenesByLocation( "1", 1L, 2L, null );
+            refSeqTablesPresent = true;
+        } catch ( BadSqlGrammarException e ) {
+            // a GoldenPath copy loaded before the switch to ncbiRefSeqCurated
+            log.warn( "GoldenPath lacks the RefSeq tables, the tests that query it will be skipped: " + e.getMessage() );
         }
 
         tester = new ArrayList<>();
@@ -132,6 +144,7 @@ public class ProbeMapperTest {
      */
     @Test
     public void testLocateGene() {
+        assumeTrue( refSeqTablesPresent, "GoldenPath has no ncbiRefSeqCurated" );
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", 73461505L, 73462405L, "+" );
         Assertions.assertEquals( 6, products.size() );
         GeneProduct gprod = products.iterator().next();
@@ -144,6 +157,7 @@ public class ProbeMapperTest {
      */
     @Test
     public void testLocateGeneOnWrongStrand() {
+        assumeTrue( refSeqTablesPresent, "GoldenPath has no ncbiRefSeqCurated" );
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", 32916471L, 32918445L, null );
         Assertions.assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
@@ -176,6 +190,7 @@ public class ProbeMapperTest {
 
     @Test
     public void testIntronIssues() {
+        assumeTrue( refSeqTablesPresent, "GoldenPath has no ncbiRefSeqCurated" );
         ProbeMapperConfig config = new ProbeMapperConfig();
         Collection<BlatAssociation> results = humangp
                 .findAssociations( "chr1", 145517370L, 145518088L, "145517370,145518070", "18,18", null,

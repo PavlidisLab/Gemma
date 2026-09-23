@@ -79,13 +79,18 @@ public interface ExpressionDataFileService {
      * Delete all data files for a given QT.
      * <p>
      * This includes all the possible file types enumerated in {@link ExpressionExperimentDataFileType}.
+     *
+     * @throws java.io.UncheckedIOException if a file could not be deleted; the others are deleted first
      */
     int deleteAllDataFiles( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Delete all the processed files for a given experiment.
      * <p>
-     * This includes all the possible file types enumerated in {@link ExpressionExperimentDataFileType}.
+     * This includes all the possible file types enumerated in {@link ExpressionExperimentDataFileType} and the
+     * processed data design file.
+     *
+     * @throws java.io.UncheckedIOException if a file could not be deleted; the others are deleted first
      */
     int deleteAllProcessedDataFiles( ExpressionExperiment ee );
 

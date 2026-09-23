@@ -19,6 +19,9 @@ import ubic.gemma.core.util.locking.FileLockManagerImpl;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
@@ -42,16 +45,24 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.times;
@@ -193,6 +204,9 @@ public class ExpressionDataFileServiceTest extends BaseTest5 {
 
     @Autowired
     private FileLockManager fileLockManager;
+
+    @Autowired
+    private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
 
     @Value("${gemma.appdata.home}")
     private Path appdataHome;
@@ -384,6 +398,81 @@ public class ExpressionDataFileServiceTest extends BaseTest5 {
                 .hasValue( reportFile );
     }
 
+    /**
+     * The catch that deletes the destination after a failed copy also enclosed the lock acquisition, so a lock that
+     * could not be acquired deleted a valid metadata file this call never wrote.
+     */
+    @Test
+    public void testCopyMetadataFileWhenTheLockFailsKeepsTheExistingFile() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setShortName( "lockFailure" );
+        Path destination = appdataHome.resolve( "metadata/lockFailure/notes.txt" );
+        PathUtils.createParentDirectories( destination );
+        Files.write( destination, "valid".getBytes( StandardCharsets.UTF_8 ) );
+        // a directory where the lock file goes makes acquiring the lock fail
+        Files.createDirectories( destination.resolveSibling( "notes.txt.lock" ) );
+        Path source = Files.createTempFile( "notes", ".txt" );
+
+        assertThatThrownBy( () -> expressionDataFileService.copyMetadataFile( ee, source, "notes.txt", true ) )
+                .hasMessageStartingWith( "Failed to acquire exclusive lock" );
+        assertThat( destination ).hasContent( "valid" );
+    }
+
+    /**
+     * A data file that could not be deleted was only logged: deleteProcessedData reported "Deleted processed data."
+     * and exited 0, and writeOrLocateProcessedDataFile went on serving the stale file.
+     */
+    @Test
+    public void testFailedProcessedDataFileDeleteReachesTheCaller() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9009L );
+        ee.setShortName( "undeletableProcessed" );
+        Path readOnly = makeUndeletable( appdataHome.resolve( "dataFiles" ).resolve( getDataOutputFilename( ee, false, TABULAR_BULK_DATA_FILE_SUFFIX ) ) );
+        try {
+            assumeFalse( Files.isWritable( readOnly ), "file permissions are not enforced for this user" );
+            assertThatThrownBy( () -> expressionDataFileService.deleteAllProcessedDataFiles( ee ) )
+                    .isInstanceOf( UncheckedIOException.class )
+                    .hasMessageStartingWith( "Failed to delete 1 data file(s)" );
+        } finally {
+            Files.setPosixFilePermissions( readOnly, PosixFilePermissions.fromString( "rwxr-xr-x" ) );
+        }
+    }
+
+    /**
+     * As for processed data: deleteRawData reported "Deleted raw data." when a file could not be deleted.
+     */
+    @Test
+    public void testFailedRawDataFileDeleteReachesTheCaller() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9010L );
+        ee.setShortName( "undeletableRaw" );
+        QuantitationType qt = new QuantitationType();
+        qt.setId( 9011L );
+        qt.setName( "counts" );
+        Path readOnly = makeUndeletable( appdataHome.resolve( "dataFiles" ).resolve( getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX ) ) );
+        try {
+            assumeFalse( Files.isWritable( readOnly ), "file permissions are not enforced for this user" );
+            assertThatThrownBy( () -> expressionDataFileService.deleteAllDataFiles( ee, qt ) )
+                    .isInstanceOf( UncheckedIOException.class )
+                    .hasMessageStartingWith( "Failed to delete 1 data file(s)" );
+        } finally {
+            Files.setPosixFilePermissions( readOnly, PosixFilePermissions.fromString( "rwxr-xr-x" ) );
+        }
+    }
+
+    /**
+     * Make {@code path} a directory the service cannot delete: it holds a file in a read-only sub-directory.
+     *
+     * @return the read-only sub-directory, whose permissions the caller restores
+     */
+    private static Path makeUndeletable( Path path ) throws IOException {
+        Path readOnly = path.resolve( "readOnly" );
+        Files.createDirectories( readOnly );
+        Files.createFile( readOnly.resolve( "file" ) );
+        Files.setPosixFilePermissions( readOnly, PosixFilePermissions.fromString( "r-xr-xr-x" ) );
+        return readOnly;
+    }
+
     @Test
     public void testDeleteMetadata() throws IOException {
         ExpressionExperiment ee = new ExpressionExperiment();
@@ -398,5 +487,126 @@ public class ExpressionDataFileServiceTest extends BaseTest5 {
         assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.RNASEQ_PIPELINE_REPORT, false )
                 .map( LockedPath::closeAndGetPath ) )
                 .hasValue( reportFile );
+    }
+
+    /**
+     * A failed DEA archive build must not leave the truncated file behind: the next request finds it and serves it as
+     * the archive. 304 of the 774 archives on gemma2 were 0 bytes.
+     */
+    @Test
+    public void testFailedDiffExArchiveBuildLeavesNoFile() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9001L );
+        ee.setShortName( "failedDiffExArchive" );
+        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+        analysis.setId( 9002L );
+        analysis.setExperimentAnalyzed( ee );
+        when( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ( BioAssaySet ) ee ) )
+                .thenThrow( new IllegalStateException( "confound test failed" ) );
+
+        assertThatThrownBy( () -> expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, false ) )
+                .hasMessage( "confound test failed" );
+        assertThat( appdataHome.resolve( "dataFiles" ).resolve( ExpressionDataFileUtils.getDiffExArchiveFileName( analysis ) ) )
+                .doesNotExist();
+    }
+
+    /**
+     * Nothing may be at the archive's path while it is being built. A JVM that dies at that point, or a daemon writer
+     * thread halted by {@code System.exit}, leaves whatever is there, and it is then served as the archive.
+     */
+    @Test
+    public void testDiffExArchiveIsNotAtItsPathWhileBeingBuilt() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9003L );
+        ee.setShortName( "diffExArchiveInFlight" );
+        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+        analysis.setId( 9004L );
+        analysis.setExperimentAnalyzed( ee );
+        Path archive = appdataHome.resolve( "dataFiles" ).resolve( ExpressionDataFileUtils.getDiffExArchiveFileName( analysis ) );
+        AtomicReference<Boolean> existedDuringBuild = new AtomicReference<>();
+        when( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ( BioAssaySet ) ee ) )
+                .thenAnswer( inv -> {
+                    existedDuringBuild.set( Files.exists( archive ) );
+                    throw new IllegalStateException( "build stopped" );
+                } );
+
+        assertThatThrownBy( () -> expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, false ) )
+                .hasMessage( "build stopped" );
+        assertThat( existedDuringBuild.get() ).isFalse();
+    }
+
+    /**
+     * An {@link Error} is not caught by a catch of {@link Exception}, so the partial archive stayed at its path.
+     */
+    @Test
+    public void testErrorDuringDiffExArchiveBuildLeavesNoFile() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9005L );
+        ee.setShortName( "diffExArchiveError" );
+        DifferentialExpressionAnalysis analysis = new DifferentialExpressionAnalysis();
+        analysis.setId( 9006L );
+        analysis.setExperimentAnalyzed( ee );
+        String archiveName = ExpressionDataFileUtils.getDiffExArchiveFileName( analysis );
+        when( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ( BioAssaySet ) ee ) )
+                .thenThrow( new StackOverflowError( "simulated" ) );
+
+        assertThatThrownBy( () -> expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, false ) )
+                .isInstanceOf( StackOverflowError.class );
+        assertThat( appdataHome.resolve( "dataFiles" ).resolve( archiveName ) ).doesNotExist();
+        try ( Stream<Path> files = Files.list( appdataHome.resolve( "dataFiles" ) ) ) {
+            assertThat( files.map( f -> f.getFileName().toString() ) )
+                    .noneMatch( name -> name.contains( archiveName ) );
+        }
+    }
+
+    /**
+     * The JSON processed-data writer returned {@code toShared()} of the shared lock that {@code toExclusive()} had
+     * already closed, which throws {@link IllegalStateException}.
+     */
+    @Test
+    public void testWriteOrLocateJsonProcessedDataFile() throws Exception {
+        ExpressionExperiment ee = setUpExperimentWithRandomMatrix( "jsonProcessed", 104L );
+        when( expressionExperimentService.hasProcessedExpressionData( ee ) ).thenReturn( true );
+        assertThat( expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, false )
+                .map( LockedPath::closeAndGetPath ) )
+                .hasValueSatisfying( p -> assertThat( p ).exists().isNotEmptyFile() );
+    }
+
+    /**
+     * The delete-on-failure catch also covered the lock upgrade, so a timed-out upgrade deleted the file that another
+     * holder had locked.
+     */
+    @Test
+    public void testTimedOutLockUpgradeDoesNotDeleteTheFile() throws Exception {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 9007L );
+        ee.setShortName( "timedOutUpgrade" );
+        QuantitationType qt = new QuantitationType();
+        qt.setId( 9008L );
+        qt.setName( "counts" );
+        Path rawFile = appdataHome.resolve( "dataFiles" ).resolve( getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX ) );
+        PathUtils.createParentDirectories( rawFile );
+        Files.write( rawFile, "complete".getBytes( StandardCharsets.UTF_8 ) );
+
+        CountDownLatch held = new CountDownLatch( 1 );
+        CountDownLatch release = new CountDownLatch( 1 );
+        Thread reader = new Thread( () -> {
+            try ( LockedPath ignored = fileLockManager.acquirePathLock( rawFile, false ) ) {
+                held.countDown();
+                release.await();
+            } catch ( Exception e ) {
+                throw new RuntimeException( e );
+            }
+        }, "raw-data-file-reader" );
+        reader.start();
+        held.await();
+        try {
+            assertThatThrownBy( () -> expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, true, 100, TimeUnit.MILLISECONDS ) )
+                    .isInstanceOf( TimeoutException.class );
+            assertThat( rawFile ).hasContent( "complete" );
+        } finally {
+            release.countDown();
+            reader.join();
+        }
     }
 }

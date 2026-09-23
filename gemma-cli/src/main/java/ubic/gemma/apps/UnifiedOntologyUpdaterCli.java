@@ -124,6 +124,7 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
         List<Path> downloadedFiles = new ArrayList<>();
         if ( skipDownload ) {
             log.info( "Skipping download of ontology files, will only create the TDB dataset from existing files." );
+            List<String> missing = new ArrayList<>();
             for ( String urlS : urls ) {
                 URL url = new URL( urlS );
                 String fileName = Paths.get( url.getFile() ).getFileName().toString();
@@ -131,8 +132,15 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
                 if ( Files.exists( dest ) ) {
                     downloadedFiles.add( dest );
                 } else {
-                    log.warn( "There is no downloaded file for " + url + ", it will not be included in the TDB dataset." );
+                    missing.add( dest + " (" + url + ")" );
                 }
+            }
+            // Refused before anything is built: a missing source used to be a WARN, and the dataset
+            // built without it then replaced the live one.
+            if ( !missing.isEmpty() ) {
+                throw new IllegalStateException( "Cannot build the unified ontology with -skipDownload: "
+                        + missing.size() + " source file(s) are missing: " + String.join( ", ", missing )
+                        + ". Download them, or run without -skipDownload." );
             }
         } else {
             ExecutorService executor = Executors.newVirtualThreadPerTaskExecutorIfAvailable();

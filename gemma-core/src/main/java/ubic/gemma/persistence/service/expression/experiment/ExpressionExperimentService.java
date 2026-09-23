@@ -1131,7 +1131,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Test if this experiment was run on a two-color microarray platform.
+     *
+     * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
      */
+    @Deprecated
     boolean isTwoChannel( ExpressionExperiment expressionExperiment );
 
     /**

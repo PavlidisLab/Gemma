@@ -17,8 +17,10 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.SessionFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +49,11 @@ import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
 /**
  * Fast H2-backed regression guard for the QT entity-identity collision that
@@ -143,6 +149,26 @@ public class ReplaceAllRawDataVectorsQtCollisionTest extends BaseDatabaseTest5 {
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
+
+    /**
+     * {@code replaceAllRawDataVectors} asks the quantitation-type service which QTs the experiment's raw
+     * vectors use, rather than walking {@code ee.getRawExpressionDataVectors()}. The service is a mock in this
+     * context, so stand in for it with the query the real one runs; the mock is shared across methods through
+     * the cached context, hence the reset.
+     */
+    @BeforeEach
+    public void stubRawQuantitationTypeLookup() {
+        reset( quantitationTypeService );
+        when( quantitationTypeService.findByExpressionExperiment( any( ExpressionExperiment.class ), eq( RawExpressionDataVector.class ) ) )
+                .thenAnswer( a -> sessionFactory.getCurrentSession()
+                        .createQuery( "select distinct qt from RawExpressionDataVector v join v.quantitationType qt "
+                                + "where v.expressionExperiment = :ee", QuantitationType.class )
+                        .setParameter( "ee", a.getArgument( 0 ) )
+                        .list() );
+    }
 
     /**
      * Reproduce the {@link NonUniqueObjectException} bug from commit {@code ef838e08fc}.
@@ -261,6 +287,165 @@ public class ReplaceAllRawDataVectorsQtCollisionTest extends BaseDatabaseTest5 {
         assertThat( eeAfter.getRawExpressionDataVectors() )
                 .hasSize( newVectors.size() )
                 .allSatisfy( v -> assertThat( v.getQuantitationType().getName() ).isEqualTo( "Counts-new" ) );
+    }
+
+    /**
+     * The same replace, but with the caller's experiment holding an UNINITIALIZED raw-vector collection.
+     * <p>
+     * That is the shape {@code affyFromCel} hands over: {@code DataUpdaterImpl.reprocessAffyDataFromCel} reads
+     * the experiment, runs apt-probeset-summarize for minutes with no session open, and only then writes. The
+     * sibling test above initialises the collection before detaching, so it never touched the case FRB hit on
+     * 2026-09-22 — every run died with {@code LazyInitializationException: failed to lazily initialize a
+     * collection of role: …ExpressionExperiment.rawExpressionDataVectors: could not initialize proxy - no
+     * Session}, GSE14263's after 632 s of successful CEL processing.
+     */
+    @Test
+    public void replaceAllRawDataVectorsWithUninitializedRawVectorsDoesNotTouchTheDetachedCollection() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        QuantitationType qtOld = newQt( "Counts-old", true );
+        sessionFactory.getCurrentSession().persist( qtOld );
+        ee.getQuantitationTypes().add( qtOld );
+
+        ArrayDesign platform = createPlatform();
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            RawExpressionDataVector v = new RawExpressionDataVector();
+            v.setBioAssayDimension( bad );
+            v.setDesignElement( cs );
+            v.setExpressionExperiment( ee );
+            v.setQuantitationType( qtOld );
+            v.setData( new byte[0] );
+            ee.getRawExpressionDataVectors().add( v );
+        }
+        ee = expressionExperimentDao.create( ee );
+        Long eeId = ee.getId();
+        Long badId = bad.getId();
+        Long platformId = platform.getId();
+
+        // The caller's handle: loaded, then left detached with nothing initialised.
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ExpressionExperiment detached = expressionExperimentDao.load( eeId );
+        assertThat( detached ).isNotNull();
+        // The bioassays ARE initialised, as they are in the real caller — reprocessAffyDataFromCel has just
+        // walked them to switch their platform. The vectors and the quantitation types are the two collections
+        // it never touches, and the two that broke.
+        detached.getBioAssays().size();
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        assertThat( Hibernate.isInitialized( detached.getRawExpressionDataVectors() ) )
+                .withFailMessage( "the raw vectors must still be uninitialised, or this test proves nothing" )
+                .isFalse();
+        assertThat( Hibernate.isInitialized( detached.getQuantitationTypes() ) )
+                .withFailMessage( "the quantitation types must still be uninitialised, or this test proves nothing" )
+                .isFalse();
+
+        BioAssayDimension badManaged = sessionFactory.getCurrentSession().get( BioAssayDimension.class, badId );
+        ArrayDesign platformManaged = sessionFactory.getCurrentSession().get( ArrayDesign.class, platformId );
+        QuantitationType qtNew = newQt( "Counts-new", true );
+        sessionFactory.getCurrentSession().persist( qtNew );
+
+        Collection<RawExpressionDataVector> newVectors = new ArrayList<>();
+        for ( CompositeSequence cs : platformManaged.getCompositeSequences() ) {
+            RawExpressionDataVector nv = new RawExpressionDataVector();
+            nv.setBioAssayDimension( badManaged );
+            nv.setDesignElement( cs );
+            nv.setExpressionExperiment( detached );
+            nv.setQuantitationType( qtNew );
+            nv.setData( new byte[0] );
+            newVectors.add( nv );
+        }
+
+        assertThatCode( () -> dataVectorService.replaceAllRawDataVectors( detached, newVectors ) )
+                .doesNotThrowAnyException();
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ExpressionExperiment eeAfter = expressionExperimentDao.load( eeId );
+        assertThat( eeAfter ).isNotNull();
+        assertThat( eeAfter.getQuantitationTypes() )
+                .extracting( QuantitationType::getName )
+                .containsExactly( "Counts-new" );
+        assertThat( eeAfter.getRawExpressionDataVectors() )
+                .hasSize( newVectors.size() )
+                .allSatisfy( v -> assertThat( v.getQuantitationType().getName() ).isEqualTo( "Counts-new" ) );
+    }
+
+    /**
+     * A re-analysis mints a fresh quantitation type carrying the SAME name as the one it supersedes, which is
+     * what every {@code affyFromCel} re-run does: {@code makeAffyQuantitationType()} then {@code create()}, so
+     * "rma value" arrives as a new row each time. The superseded one has to be gone before the new vectors are
+     * added, or {@code addRawDataVectors} refuses the name (7ab05158a8, #1564) — {@code There is already a
+     * quantitation type named rma value}, which is what FRB got on GSE37623, GSE43134 and GSE56500 once the
+     * lazy-initialization failures above it were out of the way (2026-09-22).
+     */
+    @Test
+    public void replaceAllRawDataVectorsWithANewQtOfTheSameNameSupersedesTheOldOne() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        QuantitationType qtOld = newQt( "rma value", true );
+        sessionFactory.getCurrentSession().persist( qtOld );
+        ee.getQuantitationTypes().add( qtOld );
+        Long qtOldId = qtOld.getId();
+
+        ArrayDesign platform = createPlatform();
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            RawExpressionDataVector v = new RawExpressionDataVector();
+            v.setBioAssayDimension( bad );
+            v.setDesignElement( cs );
+            v.setExpressionExperiment( ee );
+            v.setQuantitationType( qtOld );
+            v.setData( new byte[0] );
+            ee.getRawExpressionDataVectors().add( v );
+        }
+        ee = expressionExperimentDao.create( ee );
+        Long eeId = ee.getId();
+        Long platformId = platform.getId();
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ExpressionExperiment detached = expressionExperimentDao.load( eeId );
+        assertThat( detached ).isNotNull();
+        detached.getBioAssays().size();
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        // A new dimension, as the reprocess builds one ("We always make new ones here").
+        ArrayDesign platformManaged = sessionFactory.getCurrentSession().get( ArrayDesign.class, platformId );
+        BioAssayDimension badNew = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( badNew );
+        QuantitationType qtNew = newQt( "rma value", true );
+        sessionFactory.getCurrentSession().persist( qtNew );
+        Long qtNewId = qtNew.getId();
+        assertThat( qtNewId ).isNotEqualTo( qtOldId );
+
+        Collection<RawExpressionDataVector> newVectors = new ArrayList<>();
+        for ( CompositeSequence cs : platformManaged.getCompositeSequences() ) {
+            RawExpressionDataVector nv = new RawExpressionDataVector();
+            nv.setBioAssayDimension( badNew );
+            nv.setDesignElement( cs );
+            nv.setExpressionExperiment( detached );
+            nv.setQuantitationType( qtNew );
+            nv.setData( new byte[0] );
+            newVectors.add( nv );
+        }
+
+        assertThatCode( () -> dataVectorService.replaceAllRawDataVectors( detached, newVectors ) )
+                .doesNotThrowAnyException();
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ExpressionExperiment eeAfter = expressionExperimentDao.load( eeId );
+        assertThat( eeAfter ).isNotNull();
+        // One "rma value", and it is the new row — not two, and not the one that was superseded.
+        assertThat( eeAfter.getQuantitationTypes() )
+                .extracting( QuantitationType::getId )
+                .containsExactly( qtNewId );
+        assertThat( eeAfter.getRawExpressionDataVectors() )
+                .hasSize( newVectors.size() )
+                .allSatisfy( v -> assertThat( v.getQuantitationType().getId() ).isEqualTo( qtNewId ) );
     }
 
     private QuantitationType newQt( String name, boolean preferred ) {

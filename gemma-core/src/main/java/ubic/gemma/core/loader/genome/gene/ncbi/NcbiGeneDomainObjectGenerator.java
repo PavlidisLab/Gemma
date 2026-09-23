@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Combines information from the gene2accession and gene_info files from NCBI Gene.
@@ -50,6 +51,9 @@ public class NcbiGeneDomainObjectGenerator {
     private static final String GENEHISTORY_FILE = "gene_history";
     private static final String GENEENSEMBL_FILE = "gene2ensembl";
     private AtomicBoolean producerDone = new AtomicBoolean( false );
+    private AtomicReference<Throwable> failure = new AtomicReference<>();
+    private volatile boolean stopped = false;
+    private Thread parseThread;
     private Map<Integer, Taxon> supportedTaxa = null;
     private Collection<Taxon> supportedTaxaWithNCBIGenes = null;
     private boolean filter = true;
@@ -129,6 +133,23 @@ public class NcbiGeneDomainObjectGenerator {
 
     public void setStartingNcbiId( Integer startingNcbiId ) {
         this.startingNcbiId = startingNcbiId;
+    }
+
+    /**
+     * Where the gene2accession parsing thread records the exception that ended it; the loader waits on this.
+     */
+    public void setFailure( AtomicReference<Throwable> failure ) {
+        this.failure = failure;
+    }
+
+    /**
+     * Stop the gene2accession parsing thread, if it is running.
+     */
+    public void stop() {
+        stopped = true;
+        if ( parseThread != null ) {
+            parseThread.interrupt();
+        }
     }
 
     private void processFiles( final File geneInfoFile, final File gene2AccessionFile,
@@ -216,15 +237,20 @@ public class NcbiGeneDomainObjectGenerator {
         // all accessions for the gene are done.
         // 1b) Create a Collection<Gene2Accession>, and push into BlockingQueue
 
-        Thread parseThread = ThreadUtils.newThread( new Runnable() {
+        parseThread = ThreadUtils.newThread( new Runnable() {
             @Override
             public void run() {
                 try {
                     NcbiGeneDomainObjectGenerator.log.debug( "Parsing gene2accession=" + gene2AccessionFile.getAbsolutePath() );
                     accParser.setStartingNbiId( startingNcbiId );
                     accParser.parse( gene2AccessionFile, geneDataQueue, geneInfoMap );
-                } catch ( IOException e ) {
-                    throw new RuntimeException( e );
+                } catch ( Throwable e ) {
+                    // an uncaught exception here used to end the thread without setting producerDone, and the
+                    // loader then waited for it forever; the same holds for an Error
+                    if ( !stopped ) {
+                        failure.compareAndSet( null, new RuntimeException( "Failed to parse " + gene2AccessionFile + ".", e ) );
+                    }
+                    return;
                 }
                 NcbiGeneDomainObjectGenerator.log.debug( "Domain object generator done" );
                 producerDone.set( true );

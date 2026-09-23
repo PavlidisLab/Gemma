@@ -19,7 +19,6 @@
 
 package ubic.gemma.core.analysis.report;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -39,6 +38,11 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 /**
@@ -112,24 +116,12 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
 
-        // remove file first
-        File f = new File( appdataHome + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
-        if ( f.exists() ) {
-            if ( !f.canWrite() || !f.delete() ) {
-                ArrayDesignReportServiceImpl.log.warn( "Cannot write to file." );
-                return;
-            }
-        }
-        try ( FileOutputStream fos = new FileOutputStream( appdataHome + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
-                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
-            oos.writeObject( adVo );
-        } catch ( Throwable e ) {
-            // cannot write to file. Just fail gracefully.
-            ArrayDesignReportServiceImpl.log.error( "Cannot write to file." );
+        Path f = Paths.get( appdataHome, ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR,
+                ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
+        try {
+            writeReport( f, adVo );
+        } catch ( IOException e ) {
+            throw new UncheckedIOException( "Failed to write the all-platforms report to " + f, e );
         }
         ArrayDesignReportServiceImpl.log.info( "Done making reports" );
     }
@@ -142,7 +134,12 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         Collection<ArrayDesignValueObject> ads = arrayDesignService.loadAllValueObjects();
         ArrayDesignReportServiceImpl.log.info( "Creating reports for " + ads.size() + " platforms" );
         for ( ArrayDesignValueObject ad : ads ) {
-            this.generateArrayDesignReport( ad );
+            try {
+                this.generateArrayDesignReport( ad );
+            } catch ( UncheckedIOException e ) {
+                // one platform's report must not stop the others
+                ArrayDesignReportServiceImpl.log.error( e.getMessage(), e.getCause() );
+            }
         }
 
         ArrayDesignReportServiceImpl.log.info( "Generating global report" );
@@ -173,38 +170,38 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
 
-        // check the directory exists.
-        String reportDir = appdataHome + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR;
-        File reportDirF = new File( reportDir );
+        Path f = Paths.get( appdataHome, ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR,
+                ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + adVo.getId() );
         try {
-            FileUtils.forceMkdir( reportDirF );
+            writeReport( f, adVo );
         } catch ( IOException e ) {
-            log.error( "Failed to create report parent directory: " + reportDirF );
-            return;
-        }
-
-        String reportFileName =
-                reportDir + File.separatorChar + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "."
-                        + adVo.getId();
-        File f = new File( reportFileName );
-
-        if ( f.exists() ) {
-            if ( !f.canWrite() || !f.delete() ) {
-                ArrayDesignReportServiceImpl.log
-                        .warn( "Report exists but cannot overwrite, leaving the old one in place: " + reportFileName );
-                return;
-            }
-        }
-
-        try ( FileOutputStream fos = new FileOutputStream( reportFileName );
-                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
-            oos.writeObject( adVo );
-        } catch ( Throwable e ) {
-            ArrayDesignReportServiceImpl.log.error( "Cannot write to file: " + reportFileName, e );
-            return;
+            throw new UncheckedIOException( "Failed to write the report for " + ad + " to " + f, e );
         }
         ArrayDesignReportServiceImpl.log.info( "Generated report for " + ad );
+    }
+
+    /**
+     * Write a report next to its final location and move it into place, so that a failed write leaves the previous
+     * report (if any) untouched rather than deleted or truncated.
+     */
+    private static void writeReport( Path target, Serializable report ) throws IOException {
+        Files.createDirectories( target.getParent() );
+        // not Files.createTempFile(), which creates the file readable by its owner only (0600); the report keeps the
+        // permissions the umask gives, as the previous in-place write did
+        Path tmp = target.resolveSibling( target.getFileName() + "." + UUID.randomUUID() + ".tmp" );
+        try {
+            try ( ObjectOutputStream oos = new ObjectOutputStream( Files.newOutputStream( tmp, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE ) ) ) {
+                oos.writeObject( report );
+            }
+            Files.move( tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE );
+        } catch ( IOException | RuntimeException e ) {
+            try {
+                Files.deleteIfExists( tmp );
+            } catch ( IOException e2 ) {
+                e.addSuppressed( e2 );
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -212,7 +209,15 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         Collection<ArrayDesignValueObject> adVo = arrayDesignService
                 .loadValueObjectsByIds( Collections.singleton( id ) );
         if ( adVo != null && !adVo.isEmpty() ) {
-            this.generateArrayDesignReport( adVo.iterator().next() );
+            try {
+                this.generateArrayDesignReport( adVo.iterator().next() );
+            } catch ( UncheckedIOException e ) {
+                // Most callers regenerate the report as a side effect of other work (sometimes inside a transaction),
+                // which a report that cannot be written must not undo. Callers that need to know use
+                // generateArrayDesignReport(ArrayDesignValueObject), which throws.
+                ArrayDesignReportServiceImpl.log.error( e.getMessage(), e.getCause() );
+                return null;
+            }
             return this.getSummaryObject( id );
         }
         ArrayDesignReportServiceImpl.log.warn( "No value objects return for requested platforms" );

@@ -320,6 +320,12 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long countBlatResults( ArrayDesign arrayDesign );
 
+    /**
+     * @see ArrayDesignDao#countBlatResultsBySearchedDatabase(ArrayDesign)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long countCompositeSequencesWithBioSequences( ArrayDesign arrayDesign );
 

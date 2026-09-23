@@ -5,6 +5,7 @@ import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataSortBySample;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
+import ubic.gemma.core.util.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -104,20 +105,21 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
         sbs.setSampleColumnName( "donor_id" );
         sbs.setInputFile( fileToUse, SingleCellDataType.ANNDATA );
 
-        if( cellXGeneTransposedPath == null) {
-            fileToUse = singleCellDataTransformationFactory.createTemporaryFile( SingleCellDataType.ANNDATA );
-        } else{
-            Files.createDirectories( cellXGeneTransposedPath );
-            fileToUse = cellXGeneTransposedPath.resolve( annDataFile.getFileName() );
+        if ( cellXGeneTransposedPath != null ) {
+            // every later load uses this file once it exists, so it is moved into place only when complete
+            Path transposedFile = cellXGeneTransposedPath.resolve( annDataFile.getFileName() );
+            FileUtils.writeAtomically( transposedFile, tmp -> {
+                sbs.setOutputFile( tmp, SingleCellDataType.ANNDATA );
+                sbs.perform();
+            } );
+            return transposedFile;
         }
 
+        fileToUse = singleCellDataTransformationFactory.createTemporaryFile( SingleCellDataType.ANNDATA );
         try {
             sbs.setOutputFile( fileToUse, SingleCellDataType.ANNDATA );
         } finally {
-            if (cellXGeneTransposedPath == null){
-                // preserve fileToUse if a specific path is provided
-                tempFiles.add( fileToUse );
-            }
+            tempFiles.add( fileToUse );
         }
         sbs.perform();
 

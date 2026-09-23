@@ -996,6 +996,23 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign ) {
+        //noinspection unchecked
+        List<Object[]> counts = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ed.name, count(br) from ArrayDesign ad join ad.compositeSequences as cs "
+                        + "join cs.biologicalCharacteristic bs, BlatResult br join br.searchedDatabase ed "
+                        + "where br.querySequence = bs and ad = :ad "
+                        + "group by ed.name" )
+                .setParameter( "ad", arrayDesign )
+                .list();
+        Map<String, Long> result = new HashMap<>();
+        for ( Object[] row : counts ) {
+            result.put( ( String ) row[0], ( Long ) row[1] );
+        }
+        return result;
+    }
+
+    @Override
     public long countCompositeSequences( ArrayDesign arrayDesign ) {
         return ( Long ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select count(*) from  CompositeSequence as cs join cs.arrayDesign as ar where ar = :ad" )

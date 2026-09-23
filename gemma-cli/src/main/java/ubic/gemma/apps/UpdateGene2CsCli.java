@@ -66,6 +66,7 @@ public class UpdateGene2CsCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
+        platformIdentifier = commandLine.getOptionValue( PLATFORM_OPTION );
         sinceLastUpdate = OptionsUtils.getParsedOptionValue( commandLine, SINCE_OPTION,
                 requires( allOf( toBeUnset( PLATFORM_OPTION ), toBeUnset( TRUNCATE_OPTION ) ) ) );
         truncate = hasOption( commandLine, TRUNCATE_OPTION,

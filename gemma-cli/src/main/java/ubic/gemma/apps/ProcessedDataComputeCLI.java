@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.QuantitationTypeDetectionRelatedPreprocessingException;
 import ubic.gemma.core.analysis.preprocess.detect.SuspiciousValuesForQuantitationException;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -91,6 +92,11 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         getPipelineJobReporter().stage( "processed-data:" + ee.getShortName() );
         if ( expressionExperimentService.isTroubled( ee ) && !isForce() ) {
             addWarningObject( ee, "Skipping troubled experiment " + ee.getShortName() + ", use -" + FORCE_OPTION + " to process." );
+            return;
+        }
+
+        // -mdate: skip datasets whose processed data was computed after the limiting date; noNeedToRun records why
+        if ( getLimitingDate() != null && noNeedToRun( ee, ProcessedVectorComputationEvent.class ) ) {
             return;
         }
 

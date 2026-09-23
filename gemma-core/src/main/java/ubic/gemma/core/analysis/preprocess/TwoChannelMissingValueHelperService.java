@@ -21,7 +21,9 @@ import java.util.Collection;
 
 /**
  * @author paul
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
  */
+@Deprecated
 public interface TwoChannelMissingValueHelperService {
 
     Collection<RawExpressionDataVector> persist( ExpressionExperiment source,

@@ -405,28 +405,39 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 null, GOEvidenceCode.TAS, null, null );
     }
 
+    /**
+     * Best-effort store at import time: a failure is logged and the import carries on.
+     */
     private void storeSourceMetadata( ExpressionExperiment ee, GeoSeries series, boolean split, Date harvestedAt ) {
         try {
-            Set<String> sampleAccessions = new HashSet<>();
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                if ( ba.getAccession() != null && ba.getAccession().getAccession() != null ) {
-                    sampleAccessions.add( ba.getAccession().getAccession() );
-                }
-            }
-            GeoSourceMetadataBuilder.ExperimentIdentity identity = new GeoSourceMetadataBuilder.ExperimentIdentity(
-                    ee.getShortName(), ee.getId(), split,
-                    sampleAccessions.isEmpty() ? null : sampleAccessions );
-            String document = sourceMetadataBuilder.build( series, identity, harvestedAt );
-            if ( document == null ) {
-                return;
-            }
-            ee.setSourceMetadata( document );
-            ee.setSourceMetadataSchemaVersion( GeoSourceMetadataBuilder.SCHEMA_VERSION );
-            expressionExperimentService.update( ee );
+            writeSourceMetadata( ee, series, split, harvestedAt );
         } catch ( Exception e ) {
             GeoServiceImpl.log.warn( "Failed to store source metadata for " + ee.getShortName()
                     + "; the import is unaffected and the document can be rebuilt from GEO.", e );
         }
+    }
+
+    /**
+     * @return false when the builder produced no document, in which case nothing was written
+     */
+    private boolean writeSourceMetadata( ExpressionExperiment ee, @Nullable GeoSeries series, boolean split, Date harvestedAt ) {
+        Set<String> sampleAccessions = new HashSet<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getAccession() != null && ba.getAccession().getAccession() != null ) {
+                sampleAccessions.add( ba.getAccession().getAccession() );
+            }
+        }
+        GeoSourceMetadataBuilder.ExperimentIdentity identity = new GeoSourceMetadataBuilder.ExperimentIdentity(
+                ee.getShortName(), ee.getId(), split,
+                sampleAccessions.isEmpty() ? null : sampleAccessions );
+        String document = sourceMetadataBuilder.build( series, identity, harvestedAt );
+        if ( document == null ) {
+            return false;
+        }
+        ee.setSourceMetadata( document );
+        ee.setSourceMetadataSchemaVersion( GeoSourceMetadataBuilder.SCHEMA_VERSION );
+        expressionExperimentService.update( ee );
+        return true;
     }
 
     @Override
@@ -483,9 +494,15 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
      * the {@code isSplitSubseries} flag, but the sample list it travels with would then describe a
      * whole series while claiming to be one part of it.
      */
-    private void refreshSourceMetadata( ExpressionExperiment ee, GeoSeries series ) {
+    private void refreshSourceMetadata( ExpressionExperiment ee, @Nullable GeoSeries series ) {
         ExpressionExperiment thawed = expressionExperimentService.thawLite( ee );
-        storeSourceMetadata( thawed, series, isSplitOfItsSeries( thawed ), new Date() );
+        // Not the import path's best-effort store: storing this document is all a refresh asked for, so
+        // a failure propagates and a missing document is an error. Swallowed, the backfill CLI recorded
+        // "Stored the GEO source metadata document." for experiments where nothing was written.
+        if ( !writeSourceMetadata( thawed, series, isSplitOfItsSeries( thawed ), new Date() ) ) {
+            throw new IllegalStateException( "No source metadata document could be built for " + thawed.getShortName()
+                    + ( series == null ? ": GEO returned no series" : "" ) + "; nothing was stored." );
+        }
     }
 
     /**
@@ -654,7 +671,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
             for ( BioAssay ba : ee.getBioAssays() ) {
                 // this BA is from Gemma, it might lack an accession (although very unlikely!)
-                if ( ba.getAccession() == null || ba.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+                if ( ba.getAccession() == null || !ba.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
                     log.warn( ba + " does not have a GEO accession, ignoring." );
                     continue;
                 }
@@ -686,8 +703,12 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                  */
                 Set<Characteristic> bmchars = bm.getCharacteristics();
                 int numOldChars = bmchars.size();
+                // Copied before the clear: remove() used to be handed the set after clear() had emptied
+                // it, so it deleted nothing. The mapping has no orphan removal, so the replaced rows
+                // stayed in CHARACTERISTIC with their biomaterial link nulled.
+                List<Characteristic> oldChars = new ArrayList<>( bmchars );
                 bmchars.clear();
-                characteristicService.remove( bmchars );
+                characteristicService.remove( oldChars );
                 Collection<Characteristic> freshCharacteristics = freshBAsByGSM.get( gsmID ).getSampleUsed().getCharacteristics();
                 if ( log.isDebugEnabled() )
                     log.debug( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );

@@ -20,5 +20,9 @@ package ubic.gemma.core.tasks.analysis.expression;
 
 import ubic.gemma.core.job.Task;
 
+/**
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
+ */
+@Deprecated
 interface TwoChannelMissingValueTask extends Task<TwoChannelMissingValueTaskCommand> {
 }

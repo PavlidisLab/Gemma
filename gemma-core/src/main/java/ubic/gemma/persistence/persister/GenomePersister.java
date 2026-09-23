@@ -1163,8 +1163,9 @@ public class GenomePersister {
         // explicit override via t when chromosome.getTaxon() is null.
         chromosome.setTaxon( ct );
 
+        // By name and taxon only, as Gemma 1.x did; see GeneWriteServiceImpl.persistChromosome.
         Session session = getSessionFactory().getCurrentSession();
-        Chromosome existing = BusinessKey.find( session, chromosome );
+        Chromosome existing = BusinessKey.find( session, Chromosome.Factory.newInstance( chromosome.getName(), ct ) );
 
         if ( existing == null ) {
             // Persist associations only on miss (no point if it already exists). Phase 3 lift:

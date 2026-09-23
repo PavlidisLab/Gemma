@@ -228,6 +228,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
             log.warn( "Preferred data is not counts for " + ee );
             addErrorObject( ee.getShortName(), "Preferred data is not counts" );
+            return;
         }
         serv.log2cpmFromCounts( ee, qt );
         addSuccessObject( ee, "Back-filled log2cpm from " + qt + "." );
