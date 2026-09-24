@@ -26,10 +26,15 @@ import ubic.gemma.model.pipeline.SchedulerKind;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Real Nextflow-on-Slurm scheduler for the sc-annotation pipeline (task 7). Selected by
@@ -56,6 +61,24 @@ import java.util.Locale;
 @Primary
 @Slf4j
 public class NextflowSlurmScheduler implements PipelineScheduler {
+
+    /**
+     * Work-dir files served as artifacts, with their content types. Nothing outside this map is read, so a
+     * name can never reach an arbitrary file under the work-dir (task outputs, the {@code .nextflow/}
+     * cache). Pipeline outputs worth serving (MultiQC, Cell Ranger {@code web_summary.html}) join once
+     * a real run shows where they land.
+     */
+    private static final Map<String, String> ARTIFACTS = Map.of(
+            NextflowSlurmCommandBuilder.HEAD_OUTPUT, "text/plain; charset=UTF-8",
+            NextflowSlurmCommandBuilder.NEXTFLOW_LOG, "text/plain; charset=UTF-8",
+            NextflowSlurmCommandBuilder.TRACE, "text/tab-separated-values; charset=UTF-8",
+            NextflowSlurmCommandBuilder.REPORT, "text/html; charset=UTF-8" );
+
+    /**
+     * Artifacts are returned whole ({@link Artifact} holds a {@code byte[]}), so refuse anything bigger
+     * than this rather than load it into the heap; {@link #readLog} pages through files of any size.
+     */
+    static final long MAX_ARTIFACT_BYTES = 50L * 1024 * 1024;
 
     private final ExpressionExperimentService expressionExperimentService;
     private final SshCommandRunner ssh;
@@ -122,7 +145,7 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
         // Write the samplesheet + wrapper to the per-job work-dir on the shared /space mount (R10) —
         // the same absolute path the submit node reads. Per-job dir so each run's -resume cache is
         // isolated (R11).
-        Path workDir = Path.of( workDirBase, String.valueOf( jobId ) );
+        Path workDir = workDir( jobId );
         Path samplesheet = workDir.resolve( "samplesheet.csv" );
         Path script = workDir.resolve( "launch.sh" );
         try {
@@ -134,7 +157,7 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
             throw new PipelineSchedulerException( "failed to write work-dir files under " + workDir + ": " + e.getMessage(), e );
         }
 
-        SshCommandRunner.CommandResult res = ssh.run( commands.sbatchCommand( script.toString() ) );
+        SshCommandRunner.CommandResult res = ssh.run( commands.sbatchCommand( script.toString(), workDir.toString() ) );
         if ( !res.isSuccess() ) {
             throw new PipelineSchedulerException( "sbatch failed (exit " + res.getExitCode() + "): " + res.getStderr().trim() );
         }
@@ -172,6 +195,94 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
             // scancel of an already-finished/purged job is non-fatal — the job is gone either way.
             log.warn( "scancel of head job {} returned exit {}: {}", handle.getId(), res.getExitCode(), res.getStderr().trim() );
         }
+    }
+
+    @Override
+    public boolean supportsLog() {
+        return true;
+    }
+
+    /**
+     * Pages through the head job's console output ({@code head.out}): Nextflow's progress lines and, on
+     * failure, its error report — what a curator reads first. Read straight off the shared mount (R10).
+     * Before Slurm has started the job the file doesn't exist; that is an empty chunk, not an error.
+     * A slice never ends inside a UTF-8 sequence: the cursor stops before it and the next read picks it up.
+     */
+    @Override
+    public LogChunk readLog( Long gemmaJobId, SchedulerHandle handle, long offset, int limit ) throws PipelineSchedulerException {
+        Path file = workDir( gemmaJobId ).resolve( NextflowSlurmCommandBuilder.HEAD_OUTPUT );
+        long from = Math.max( offset, 0 );
+        try ( SeekableByteChannel ch = Files.newByteChannel( file ) ) {
+            long size = ch.size();
+            if ( from >= size ) {
+                return new LogChunk( "", from, true );
+            }
+            int want = ( int ) Math.min( Math.max( limit, 0 ), size - from );
+            byte[] buf = new byte[want];
+            ch.position( from );
+            int read = 0;
+            try ( InputStream in = Channels.newInputStream( ch ) ) {
+                while ( read < want ) {
+                    int n = in.read( buf, read, want - read );
+                    if ( n < 0 ) break;
+                    read += n;
+                }
+            }
+            int usable = completeUtf8Prefix( buf, read );
+            long next = from + usable;
+            return new LogChunk( new String( buf, 0, usable, StandardCharsets.UTF_8 ), next, next >= size );
+        } catch ( NoSuchFileException e ) {
+            return new LogChunk( "", from, true );
+        } catch ( IOException e ) {
+            throw new PipelineSchedulerException( "failed to read " + file + ": " + e.getMessage(), e );
+        }
+    }
+
+    @Override
+    public boolean supportsArtifacts() {
+        return true;
+    }
+
+    @Override
+    @Nullable
+    public Artifact readArtifact( Long gemmaJobId, SchedulerHandle handle, String name ) throws PipelineSchedulerException {
+        String contentType = ARTIFACTS.get( name );
+        if ( contentType == null ) {
+            return null;
+        }
+        Path file = workDir( gemmaJobId ).resolve( name );
+        try {
+            long size = Files.size( file );
+            if ( size > MAX_ARTIFACT_BYTES ) {
+                throw new PipelineSchedulerException( String.format( "%s is %d bytes, over the %d-byte artifact limit; page it through the log endpoint or read it on the mount",
+                        file, size, MAX_ARTIFACT_BYTES ) );
+            }
+            return new Artifact( name, contentType, Files.readAllBytes( file ) );
+        } catch ( NoSuchFileException e ) {
+            return null;
+        } catch ( IOException e ) {
+            throw new PipelineSchedulerException( "failed to read " + file + ": " + e.getMessage(), e );
+        }
+    }
+
+    private Path workDir( Long jobId ) {
+        return Path.of( workDirBase, String.valueOf( jobId ) );
+    }
+
+    /**
+     * Length of the longest prefix of {@code buf[0, len)} that doesn't end inside a multi-byte UTF-8
+     * sequence. Only the last three bytes can belong to a truncated one.
+     */
+    static int completeUtf8Prefix( byte[] buf, int len ) {
+        for ( int back = 1; back <= Math.min( 3, len ); back++ ) {
+            int b = buf[len - back] & 0xFF;
+            if ( ( b & 0xC0 ) == 0x80 ) {
+                continue; // continuation byte: keep looking for the lead
+            }
+            int seqLen = b >= 0xF0 ? 4 : b >= 0xE0 ? 3 : b >= 0xC0 ? 2 : 1;
+            return seqLen > back ? len - back : len;
+        }
+        return len;
     }
 
     /**

@@ -46,6 +46,8 @@ class NextflowSlurmCommandBuilderTest {
         assertThat( s ).contains( "--input /space/gemmaData/pipeline/7/samplesheet.csv" );
         assertThat( s ).contains( "-process.executor slurm" );
         assertThat( s ).contains( "-with-weblog http://gemma/rest/v2/internal/pipeline/jobs/7/weblog" );
+        assertThat( s ).contains( "-with-trace trace.txt" );
+        assertThat( s ).contains( "-with-report report.html" );
         assertThat( s ).contains( "-resume" );
         assertThat( s ).contains( "-work-dir /space/gemmaData/pipeline/7" );
     }
@@ -62,7 +64,8 @@ class NextflowSlurmCommandBuilderTest {
 
     @Test
     void slurmCommands_areWellFormed() {
-        assertThat( b.sbatchCommand( "/x/launch.sh" ) ).containsExactly( "sbatch", "--parsable", "/x/launch.sh" );
+        assertThat( b.sbatchCommand( "/x/launch.sh", "/x" ) )
+                .containsExactly( "sbatch", "--parsable", "--chdir", "/x", "--output", "/x/head.out", "/x/launch.sh" );
         assertThat( b.squeueCommand( "42" ) ).containsExactly( "squeue", "-j", "42", "-h", "-o", "%T" );
         assertThat( b.scontrolShowJobCommand( "42" ) ).containsExactly( "scontrol", "show", "job", "42" );
         assertThat( b.scancelCommand( "42" ) ).containsExactly( "scancel", "42" );
@@ -120,6 +123,7 @@ class NextflowSlurmCommandBuilderTest {
     @Test
     void blankArgs_areRejected() {
         assertThatThrownBy( () -> b.samplesheetCsv( " " ) ).isInstanceOf( IllegalArgumentException.class );
-        assertThatThrownBy( () -> b.sbatchCommand( null ) ).isInstanceOf( IllegalArgumentException.class );
+        assertThatThrownBy( () -> b.sbatchCommand( null, "/x" ) ).isInstanceOf( IllegalArgumentException.class );
+        assertThatThrownBy( () -> b.sbatchCommand( "/x/launch.sh", null ) ).isInstanceOf( IllegalArgumentException.class );
     }
 }

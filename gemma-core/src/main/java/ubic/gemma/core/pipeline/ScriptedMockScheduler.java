@@ -175,7 +175,7 @@ public class ScriptedMockScheduler implements PipelineScheduler, MockSchedulerCo
     }
 
     @Override
-    public LogChunk readLog( SchedulerHandle handle, long offset, int limit ) {
+    public LogChunk readLog( Long gemmaJobId, SchedulerHandle handle, long offset, int limit ) {
         MockJob j = jobs.get( handle.getId() );
         String full = j != null ? String.join( "\n", effectiveScenario( j ).logLines ) : "";
         byte[] bytes = full.getBytes( StandardCharsets.UTF_8 );
@@ -191,7 +191,7 @@ public class ScriptedMockScheduler implements PipelineScheduler, MockSchedulerCo
     }
 
     @Override
-    public Artifact readArtifact( SchedulerHandle handle, String name ) {
+    public Artifact readArtifact( Long gemmaJobId, SchedulerHandle handle, String name ) {
         // The mock has no real workdir; serve a small canned payload so the proxy path is exercised.
         String contentType = name.endsWith( ".html" ) ? "text/html" : "application/octet-stream";
         byte[] content = ( "mock artifact: " + name + "\n" ).getBytes( StandardCharsets.UTF_8 );

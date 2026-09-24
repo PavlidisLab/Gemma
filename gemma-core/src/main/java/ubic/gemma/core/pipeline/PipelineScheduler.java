@@ -11,6 +11,7 @@
  */
 package ubic.gemma.core.pipeline;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.pipeline.SchedulerKind;
 
 /**
@@ -85,9 +86,12 @@ public interface PipelineScheduler {
      * Read an incremental slice of a job's log — the bytes {@code [offset, offset+limit)} decoded as
      * text, plus the cursor to continue from. Enables {@code tail -f} without re-fetching (§3.5).
      *
+     * @param gemmaJobId the job's id in Gemma, as passed in {@link SubmitRequest#getGemmaJobId()} — a
+     *                   scheduler that keys files by it (the Nextflow work-dir) can't recover it from
+     *                   the handle
      * @throws UnsupportedOperationException if {@link #supportsLog()} is false
      */
-    default LogChunk readLog( SchedulerHandle handle, long offset, int limit ) throws PipelineSchedulerException {
+    default LogChunk readLog( Long gemmaJobId, SchedulerHandle handle, long offset, int limit ) throws PipelineSchedulerException {
         throw new UnsupportedOperationException( "readLog not supported by scheduler " + kind() );
     }
 
@@ -98,11 +102,15 @@ public interface PipelineScheduler {
 
     /**
      * Stream a whitelisted output file from the job's workdir (e.g. {@code web_summary.html}). The
-     * caller is responsible for rejecting unsafe / non-whitelisted names before calling.
+     * caller is responsible for rejecting unsafe names (path separators, {@code ..}) before calling; a
+     * name the scheduler doesn't serve yields null.
      *
+     * @param gemmaJobId the job's id in Gemma, as for {@link #readLog}
+     * @return the artifact, or null if the scheduler does not serve that name or it doesn't exist yet
      * @throws UnsupportedOperationException if {@link #supportsArtifacts()} is false
      */
-    default Artifact readArtifact( SchedulerHandle handle, String name ) throws PipelineSchedulerException {
+    @Nullable
+    default Artifact readArtifact( Long gemmaJobId, SchedulerHandle handle, String name ) throws PipelineSchedulerException {
         throw new UnsupportedOperationException( "readArtifact not supported by scheduler " + kind() );
     }
 

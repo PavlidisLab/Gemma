@@ -564,7 +564,7 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
             return null;
         }
         try {
-            return scheduler.readLog(
+            return scheduler.readLog( jobId,
                     new SchedulerHandle( job.getSchedulerKind(), job.getSchedulerHandle() ), offset, limit );
         } catch ( PipelineSchedulerException e ) {
             throw new RuntimeException( "failed to read log for job " + jobId + ": " + e.getMessage(), e );
@@ -581,7 +581,7 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
             return null;
         }
         try {
-            return scheduler.readArtifact(
+            return scheduler.readArtifact( jobId,
                     new SchedulerHandle( job.getSchedulerKind(), job.getSchedulerHandle() ), name );
         } catch ( PipelineSchedulerException e ) {
             throw new RuntimeException( "failed to read artifact '" + name + "' for job " + jobId + ": " + e.getMessage(), e );

@@ -20,6 +20,8 @@ import ubic.gemma.model.pipeline.JobState;
 import ubic.gemma.model.pipeline.SchedulerKind;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -94,6 +96,75 @@ class NextflowSlurmSchedulerTest {
         assertThat( ssh.lastCallStartingWith( "sbatch" ) ).isNull();
     }
 
+    @Test
+    void readLog_pagesHeadOutputWithACursor() throws Exception {
+        Path jobDir = Files.createDirectories( workDirBase.resolve( "7" ) );
+        Files.writeString( jobDir.resolve( "head.out" ), "N E X T F L O W\nexecutor > slurm\n" );
+        SchedulerHandle h = new SchedulerHandle( SchedulerKind.NEXTFLOW, "98765" );
+
+        LogChunk first = scheduler.readLog( 7L, h, 0, 5 );
+        assertThat( first.getText() ).isEqualTo( "N E X" );
+        assertThat( first.getNextOffset() ).isEqualTo( 5 );
+        assertThat( first.isEof() ).isFalse();
+
+        LogChunk rest = scheduler.readLog( 7L, h, first.getNextOffset(), 1024 );
+        assertThat( first.getText() + rest.getText() ).isEqualTo( "N E X T F L O W\nexecutor > slurm\n" );
+        assertThat( rest.isEof() ).isTrue();
+
+        // Nothing new yet: an empty chunk at the same cursor, so a poller can simply retry.
+        LogChunk idle = scheduler.readLog( 7L, h, rest.getNextOffset(), 1024 );
+        assertThat( idle.getText() ).isEmpty();
+        assertThat( idle.getNextOffset() ).isEqualTo( rest.getNextOffset() );
+        assertThat( idle.isEof() ).isTrue();
+    }
+
+    @Test
+    void readLog_beforeTheJobStarted_isEmptyNotAnError() throws Exception {
+        LogChunk c = scheduler.readLog( 7L, new SchedulerHandle( SchedulerKind.NEXTFLOW, "1" ), 0, 1024 );
+        assertThat( c.getText() ).isEmpty();
+        assertThat( c.getNextOffset() ).isZero();
+        assertThat( c.isEof() ).isTrue();
+    }
+
+    @Test
+    void readLog_neverSplitsAMultiByteCharacter() throws Exception {
+        Path jobDir = Files.createDirectories( workDirBase.resolve( "7" ) );
+        Files.writeString( jobDir.resolve( "head.out" ), "ab✓cd" ); // ✓ is 3 bytes
+        SchedulerHandle h = new SchedulerHandle( SchedulerKind.NEXTFLOW, "1" );
+
+        LogChunk c = scheduler.readLog( 7L, h, 0, 4 ); // would end inside ✓
+        assertThat( c.getText() ).isEqualTo( "ab" );
+        assertThat( c.getNextOffset() ).isEqualTo( 2 );
+        assertThat( scheduler.readLog( 7L, h, c.getNextOffset(), 1024 ).getText() ).isEqualTo( "✓cd" );
+    }
+
+    @Test
+    void readArtifact_servesOnlyTheListedWorkDirFiles() throws Exception {
+        Path jobDir = Files.createDirectories( workDirBase.resolve( "7" ) );
+        Files.writeString( jobDir.resolve( "report.html" ), "<html>report</html>" );
+        Files.writeString( jobDir.resolve( "samplesheet.csv" ), "sample,study_name,study_path\n" );
+        SchedulerHandle h = new SchedulerHandle( SchedulerKind.NEXTFLOW, "1" );
+
+        Artifact report = scheduler.readArtifact( 7L, h, "report.html" );
+        assertThat( report ).isNotNull();
+        assertThat( report.getContentType() ).startsWith( "text/html" );
+        assertThat( new String( report.getContent(), StandardCharsets.UTF_8 ) ).isEqualTo( "<html>report</html>" );
+
+        assertThat( scheduler.readArtifact( 7L, h, "samplesheet.csv" ) ).as( "exists, but not listed" ).isNull();
+        assertThat( scheduler.readArtifact( 7L, h, "trace.txt" ) ).as( "listed, not written yet" ).isNull();
+    }
+
+    @Test
+    void readArtifact_overTheSizeLimit_throwsInsteadOfLoadingIt() throws Exception {
+        Path jobDir = Files.createDirectories( workDirBase.resolve( "7" ) );
+        try ( RandomAccessFile f = new RandomAccessFile( jobDir.resolve( ".nextflow.log" ).toFile(), "rw" ) ) {
+            f.setLength( NextflowSlurmScheduler.MAX_ARTIFACT_BYTES + 1 ); // sparse: no real 50 MB written
+        }
+        assertThatThrownBy( () -> scheduler.readArtifact( 7L, new SchedulerHandle( SchedulerKind.NEXTFLOW, "1" ), ".nextflow.log" ) )
+                .isInstanceOf( PipelineSchedulerException.class )
+                .hasMessageContaining( "artifact limit" );
+    }
+
     private SubmitRequest req( String paramsJson ) {
         return new SubmitRequest( 7L, "sc-annotation", 55L, paramsJson );
     }
@@ -119,7 +190,8 @@ class NextflowSlurmSchedulerTest {
 
         // sbatch was invoked on the wrapper we wrote.
         assertThat( ssh.lastCallStartingWith( "sbatch" ) )
-                .containsExactly( "sbatch", "--parsable", jobDir.resolve( "launch.sh" ).toString() );
+                .containsExactly( "sbatch", "--parsable", "--chdir", jobDir.toString(),
+                        "--output", jobDir.resolve( "head.out" ).toString(), jobDir.resolve( "launch.sh" ).toString() );
     }
 
     @Test

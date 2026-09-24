@@ -136,13 +136,13 @@ class ScriptedMockSchedulerTest {
         SchedulerHandle h = scheduler.submit( req( 700L, 7L ) );
 
         assertThat( scheduler.supportsLog() ).isTrue();
-        LogChunk chunk = scheduler.readLog( h, 0, 64 * 1024 );
+        LogChunk chunk = scheduler.readLog( 1L, h, 0, 64 * 1024 );
         assertThat( chunk.getText() ).contains( "line one" ).contains( "line two" );
         assertThat( chunk.isEof() ).isTrue();
         assertThat( chunk.getNextOffset() ).isGreaterThan( 0 );
 
         // A read from the end is empty + eof.
-        LogChunk tail = scheduler.readLog( h, chunk.getNextOffset(), 64 * 1024 );
+        LogChunk tail = scheduler.readLog( 1L, h, chunk.getNextOffset(), 64 * 1024 );
         assertThat( tail.getText() ).isEmpty();
         assertThat( tail.isEof() ).isTrue();
     }
@@ -152,7 +152,7 @@ class ScriptedMockSchedulerTest {
         scheduler.setScenario( 8L, push( Scenario.Outcome.SUCCEED, stage( 0, "completed", "{}" ) ) );
         SchedulerHandle h = scheduler.submit( req( 800L, 8L ) );
         assertThat( scheduler.supportsArtifacts() ).isTrue();
-        Artifact a = scheduler.readArtifact( h, "web_summary.html" );
+        Artifact a = scheduler.readArtifact( 1L, h, "web_summary.html" );
         assertThat( a.getContent() ).isNotEmpty();
         assertThat( a.getContentType() ).isEqualTo( "text/html" );
         assertThat( a.getName() ).isEqualTo( "web_summary.html" );
