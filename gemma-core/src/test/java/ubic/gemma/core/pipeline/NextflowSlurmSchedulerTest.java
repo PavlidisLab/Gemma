@@ -39,6 +39,8 @@ import static org.mockito.Mockito.when;
  */
 class NextflowSlurmSchedulerTest {
 
+    private static final String SECRET = "callback-secret";
+
     /** Fake runner: records every remote command and returns a canned result keyed by argv[0]. */
     static class FakeSsh implements SshCommandRunner {
         final List<List<String>> calls = new ArrayList<>();
@@ -76,10 +78,20 @@ class NextflowSlurmSchedulerTest {
         eeService = mock( ExpressionExperimentService.class );
         ssh = new FakeSsh();
         scheduler = new NextflowSlurmScheduler( eeService, ssh,
-                "/pipe/sc-annotation", workDirBase.toString(), "conda", "nextflow", "http://gemma:8080/" );
+                "/pipe/sc-annotation", workDirBase.toString(), "conda", "nextflow", "http://gemma:8080/", SECRET );
         ExpressionExperiment ee = mock( ExpressionExperiment.class );
         when( ee.getShortName() ).thenReturn( "GSE124952" );
         when( eeService.load( 55L ) ).thenReturn( ee );
+    }
+
+    @Test
+    void submit_withoutCallbackSecret_throwsBeforeSubmitting() {
+        NextflowSlurmScheduler unconfigured = new NextflowSlurmScheduler( eeService, ssh,
+                "/pipe/sc-annotation", workDirBase.toString(), "conda", "nextflow", "http://gemma:8080/", "" );
+        assertThatThrownBy( () -> unconfigured.submit( req( "{\"organism\":\"hs\"}" ) ) )
+                .isInstanceOf( PipelineSchedulerException.class )
+                .hasMessageContaining( "gemma.pipeline.callback.token" );
+        assertThat( ssh.lastCallStartingWith( "sbatch" ) ).isNull();
     }
 
     private SubmitRequest req( String paramsJson ) {
@@ -100,7 +112,9 @@ class NextflowSlurmSchedulerTest {
                 .isEqualTo( "sample,study_name,study_path\nGSE124952,GSE124952,\n" );
         String script = Files.readString( jobDir.resolve( "launch.sh" ) );
         assertThat( script ).contains( "-params-file /pipe/sc-annotation/params.hs.json" );
-        assertThat( script ).contains( "-with-weblog http://gemma:8080/rest/v2/internal/pipeline/jobs/7/weblog" );
+        assertThat( script ).contains( "-with-weblog http://gemma:8080/rest/v2/internal/pipeline/jobs/7/weblog/"
+                + PipelineCallbackTokens.forJob( SECRET, 7L ) );
+        assertThat( script ).as( "the shared secret itself never reaches the work-dir" ).doesNotContain( SECRET );
         assertThat( script ).contains( "-work-dir " + jobDir );
 
         // sbatch was invoked on the wrapper we wrote.

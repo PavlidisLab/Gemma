@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.pipeline.PipelineCallbackTokens;
 import ubic.gemma.core.pipeline.NextflowWeblogTranslator;
 import ubic.gemma.core.pipeline.NextflowWeblogTranslator.TranslatedEvent;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
@@ -50,10 +51,16 @@ import static ubic.gemma.rest.util.Responders.respond;
  * completion / error event. The endpoint persists the event and updates the
  * job state machine (see {@link PipelineJobBatchService#recordEvent}).</p>
  *
- * <p>STUB AUTH: the bearer token validation is a TODO pending an operational
- * decision on whether to share secrets via Gemma.properties, Vault, or
- * mTLS. The handler currently rejects with 401 if no token is configured
- * and accepts any matching token otherwise.</p>
+ * <p>Nextflow's {@code -with-weblog <url>} cannot send headers, so the run posts to
+ * {@code POST /internal/pipeline/jobs/{jobId}/weblog/{token}} instead, where the token is
+ * {@link PipelineCallbackTokens#forJob} — valid for that one job only, because the URL lands in
+ * files under the work-dir that the whole group can read. The header-authenticated {@code …/weblog}
+ * stays for callers that can send one.</p>
+ *
+ * <p>No Gemma user is involved: requests arrive anonymous, and
+ * {@link PipelineJobBatchService#recordEvent} runs them as the batch's submitter. Both routes
+ * reject everything (401) while {@code gemma.pipeline.callback.token} is unset. Where the secret
+ * is kept (Gemma.properties, Vault, mTLS instead) is still an operational decision.</p>
  */
 @Service
 @Path("/internal/pipeline")
@@ -97,6 +104,29 @@ public class InternalPipelineWebService {
             @HeaderParam("Authorization") String authHeader,
             String body ) {
         verifyToken( authHeader );
+        return ingestWeblog( jobId, body );
+    }
+
+    @POST
+    @Path("/jobs/{jobId}/weblog/{token}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Ingest a raw Nextflow -with-weblog message, authenticated by the job's token in the path")
+    public Response postWeblogWithJobToken(
+            @PathParam("jobId") Long jobId,
+            @PathParam("token") String token,
+            String body ) {
+        if ( expectedToken == null || expectedToken.isBlank() ) {
+            log.warn( "InternalPipelineWebService: no gemma.pipeline.callback.token configured; rejecting" );
+            throw new NotAuthorizedException( "pipeline callbacks are not enabled" );
+        }
+        if ( !PipelineCallbackTokens.matches( expectedToken, jobId, token ) ) {
+            throw new NotAuthorizedException( "invalid token" );
+        }
+        return ingestWeblog( jobId, body );
+    }
+
+    private Response ingestWeblog( Long jobId, String body ) {
         if ( body == null || body.isBlank() ) {
             throw new BadRequestException( "empty weblog body" );
         }
