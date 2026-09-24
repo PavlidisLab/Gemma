@@ -122,6 +122,28 @@ class ArrayDesignSequenceAlignmentServiceDeletionTest {
     }
 
     /**
+     * Results are matched to sequences by name, and HuGene-FL (1007) carries 465 names held by two sequences each.
+     * Both sequences mapped to the same results, which were persisted once per sequence; the second pass found the
+     * chromosome already persistent and failed on its uninitialized sequence, after the old alignments were deleted.
+     */
+    @Test
+    void resultsSharedByTwoSequencesWithOneNameArePersistedOnce() throws IOException {
+        BioSequence sameName = BioSequence.Factory.newInstance( "seq0", human );
+        sameName.setId( 12L );
+        sameName.setSequence( "ACGTACGTACGTACGTACGT" );
+        sameName.setLength( 20L );
+        arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "probe2", arrayDesign, sameName ) );
+        Map<BioSequence, List<BlatResult>> results = new HashMap<>();
+        results.put( sequence, new ArrayList<>( Collections.singleton( blatResult( sequence ) ) ) );
+        when( blat.blatQuery( anyCollection(), anyBoolean(), any() ) ).thenReturn( results );
+
+        service.processArrayDesign( arrayDesign, blat );
+
+        verify( arrayDesignService ).deleteAlignmentData( arrayDesign );
+        verify( genomePersister, times( 1 ) ).persistBlatResults( argThat( c -> c.size() == 1 ) );
+    }
+
+    /**
      * From a file: the old alignments were deleted before the results were matched to the platform's sequences by
      * name. A result for a sequence not on the platform then threw a NullPointerException ("Cannot hash a transient
      * entity") when it was set aside, so the run failed with every alignment deleted and none saved.
