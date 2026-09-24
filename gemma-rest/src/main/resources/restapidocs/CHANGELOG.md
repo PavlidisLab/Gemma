@@ -1,9 +1,17 @@
 ## Updates
 
-### Unreleased
+### Update 3.0.0
 
 Correct the specification where it did not describe the API. None of this changes the wire; every
 change below makes the published document agree with what the server already does.
+
+The version goes to 3.0.0 rather than 2.10.0, for two reasons that are both about the number having
+stopped being informative. First, 2.9.4 no longer identifies one API: the 1.32.8 maintenance line
+publishes that same version for nine resources, while this document describes twenty-seven, so a
+client cannot tell from the version which of the two it is holding. Second, the field rename below
+is a breaking wire change that already shipped under 2.9.4, which means the number a client has
+does not tell it whether it has the renamed fields either. A major bump separates this document
+from both of those, and from here the number moves whenever the wire does.
 
 `AnnotationValueObject` renamed four of its fields and the change was never recorded here:
 `className` became `category`, `classUri` became `categoryUri`, `termName` became `value`, and
