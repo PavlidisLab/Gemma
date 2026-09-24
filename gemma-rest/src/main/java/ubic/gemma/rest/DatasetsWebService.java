@@ -2555,7 +2555,10 @@ public class DatasetsWebService {
             description = "Idempotent on `(role, runId)`: a retry returns the existing row as 200 OK "
                     + "rather than 201 Created. Body's `role` selects PROPOSAL / DRAFT / SNAPSHOT.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The annotation set as attached.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "200", description = "The annotation set as attached; 201 when this call created it.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "201", description = "The annotation set as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class)))
             })
     public Response submitDatasetAnnotationSet(
             @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
@@ -3008,7 +3011,7 @@ public class DatasetsWebService {
             description = "Releases only your own lock, unless you are an admin. 204 either way — a release "
                     + "that finds nothing has still achieved what it asked for.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The lock was released, or there was none to release.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "204", description = "The lock was released, or there was none to release.")
             })
     public Response releaseCurationLock(
             @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
@@ -3511,7 +3514,10 @@ public class DatasetsWebService {
                     + "one row, and each autosave silently overwrites the last. Honoured only for "
                     + "`GROUP_AGENT` / `GROUP_ADMIN`; refused, not ignored, for anyone else.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The draft as stored.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "200", description = "The draft as stored, having already existed.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "201", description = "The draft as created by this call.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class)))
             })
     public Response upsertDatasetDraftAnnotationSet(
             @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
@@ -9628,7 +9634,8 @@ public class DatasetsWebService {
                     + "GROUP_ADMIN.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Annotation created.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "201", description = "The annotation as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationsWebService.ResponseDataObjectAnnotationValueObject.class))),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",

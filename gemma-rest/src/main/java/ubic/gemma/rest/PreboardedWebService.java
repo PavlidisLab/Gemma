@@ -110,7 +110,8 @@ public class PreboardedWebService {
                     + "\"identifyingMetadata\":{...}}`. Returns 409 with the existing entity's id "
                     + "and type when the accession is already known to Gemma.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "The preboarded experiment as created.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "201", description = "The preboarded experiment as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PreboardedResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Missing accession.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -222,10 +223,10 @@ public class PreboardedWebService {
     @Operation(summary = "Attach an annotation set to a preboarded",
             description = "Idempotent on `(role, runId)`: a retry returns 200 with the existing row.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "New annotation set attached.",
-                            content = @Content()),
-                    @ApiResponse(responseCode = "200", description = "An annotation set with this (role, runId) already attached.",
-                            content = @Content()),
+                    @ApiResponse(responseCode = "201", description = "The annotation set as attached.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetSnapshotResponse.class))),
+                    @ApiResponse(responseCode = "200", description = "The annotation set already attached under this (role, runId); nothing was created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetSnapshotResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Missing runId.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -268,7 +269,8 @@ public class PreboardedWebService {
                     + "a no-op; the curator applies the proposal via the design-write / "
                     + "annotation-write endpoints. See STATUS_PROPOSED_EXPERIMENT_WORKFLOW.md.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Promoted.", content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The outcome of the promotion.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PromoteResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Missing eeId.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -502,41 +504,55 @@ public class PreboardedWebService {
     /** Thin annotation-set summary shown inline on the preboarded GET. */
     public static class AnnotationSetSnapshotResponse {
         @JsonProperty("annotationSetId")
+        @Schema(description = "Identifier of the annotation set.")
         public Long annotationSetId;
         @JsonProperty("preboardedId")
+        @Schema(description = "Identifier of the preboarded experiment it is attached to.")
         public Long preboardedId;
         @JsonProperty("role")
+        @Schema(description = "What the set is for. With `runId` it identifies an attachment, so re-attaching the same pair returns the existing set rather than creating one.")
         public String role;
         @JsonProperty("kind")
         @Nullable
+        @Schema(description = "What produced the set.")
         public String kind;
         @JsonProperty("runId")
+        @Schema(description = "The producing run. With `role` it identifies an attachment.")
         public String runId;
         @JsonProperty("agentVersion")
         @Nullable
+        @Schema(description = "Version of the agent that produced the set, when one did.")
         public String agentVersion;
         @Nullable
+        @Schema(description = "Model the agent ran, when one did.")
         public String model;
         @JsonProperty("ranAt")
         @Nullable
+        @Schema(description = "When the producing run happened, which is not when Gemma stored it.")
         public Date ranAt;
         @JsonProperty("payloadJson")
         @Nullable
+        @Schema(description = "The set's contents, verbatim as submitted. A JSON document held as a string, so it is not parsed or validated on the way in.")
         public String payloadJson;
     }
 
     /** Response of promote. */
     public static class PromoteResponse {
         @JsonProperty("preboardedId")
+        @Schema(description = "Identifier of the preboarded experiment that was promoted.")
         public Long preboardedId;
         @JsonProperty("eeId")
+        @Schema(description = "Identifier of the ExpressionExperiment it became.")
         public Long eeId;
         @JsonProperty("promotedAt")
+        @Schema(description = "When the promotion happened.")
         public Date promotedAt;
         @JsonProperty("annotationSetsRebound")
+        @Schema(description = "How many annotation sets were moved onto the new experiment.")
         public int annotationSetsRebound;
         @JsonProperty("appliedProposalId")
         @Nullable
+        @Schema(description = "Identifier of the proposal applied during promotion, when one was.")
         public Long appliedProposalId;
     }
 }

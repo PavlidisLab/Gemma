@@ -227,6 +227,13 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                                 assertThat( content.getContent() )
                                         .describedAs( "%s %s -> %s (%s)", method, path, responseCode, operation.getOperationId() )
                                         .isNull();
+                            } else if ( "logout".equals( operation.getOperationId() ) ) {
+                                // POST /logout answers 200 with an empty body. 204 would say that
+                                // properly, but the status is part of its published contract, so the
+                                // spec records what it does rather than what it should have done.
+                                assertThat( content.getContent() )
+                                        .describedAs( "%s %s -> %s (%s)", method, path, responseCode, operation.getOperationId() )
+                                        .isNull();
                             } else {
                                 assertThat( content.getContent() )
                                         .describedAs( "%s %s -> %s (%s)", method, path, responseCode, operation.getOperationId() )
@@ -845,36 +852,6 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
     }
 
     /**
-     * Write operations still returning a schema-less 2xx JSON body.
-     *
-     * <p>The read surface is clean and stays that way; this list is what is left on the write side,
-     * and it may only shrink. Each entry is a method returning raw {@code Response} with no
-     * {@code @ApiResponse} naming the entity. They are listed rather than tolerated by a
-     * GET-only rule so a new one fails the build instead of joining them quietly.
-     */
-    private static final List<String> SCHEMALESS_WRITE_RESPONSES = Arrays.asList(
-            "POST /annotation-sets/{id}/reopen -> 200",
-            "POST /annotations/datasets/{dataset}/annotations -> 201",
-            "POST /login -> 200",
-            "POST /logout -> 200",
-            "DELETE /datasets/{dataset}/curation/lock -> 200",
-            "POST /datasets/{dataset}/annotations -> 201",
-            "PUT /datasets/{dataset}/annotation-sets/draft -> 200",
-            "POST /datasets/{dataset}/annotation-sets -> 200",
-            "POST /experiment-sets -> 201",
-            "POST /groups -> 200",
-            "DELETE /groups/{id} -> 200",
-            "DELETE /groups/{id}/members/{memberId} -> 200",
-            "POST /preboarded/{id}/annotation-sets -> 201",
-            "POST /preboarded/{id}/annotation-sets -> 200",
-            "POST /preboarded -> 201",
-            "POST /preboarded/{id}/promote -> 200",
-            "POST /tickets -> 200",
-            "DELETE /tickets/{id} -> 200",
-            "DELETE /tickets/{id}/targets/{targetType}/{targetId} -> 200",
-            "PUT /datasets/{id}/workflow -> 200" );
-
-    /**
      * A successful JSON response must say what its body is.
      *
      * <p>{@code testEnsureThatAllEndpointHaveADefaultGetResponseOrIsARedirection} already requires a
@@ -884,12 +861,12 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
      * with a schema the spec publishes the media type and stops there, and a generated client hands
      * back an untyped blob.
      *
-     * @see #SCHEMALESS_WRITE_RESPONSES
+     * <p>The write surface was exempted behind a shrink-only list when this was written; the list is
+     * gone because it reached zero.
      */
     @Test
     public void testSuccessfulJsonResponsesDeclareASchema() {
         List<String> offenders = new ArrayList<>();
-        Set<String> known = new TreeSet<>();
         int inspected = 0;
         for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
             for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathEntry.getValue().readOperationsMap().entrySet() ) {
@@ -908,12 +885,8 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                     }
                     inspected++;
                     if ( json.getSchema() == null ) {
-                        String where = opEntry.getKey() + " " + pathEntry.getKey() + " -> " + responseEntry.getKey();
-                        if ( SCHEMALESS_WRITE_RESPONSES.contains( where ) ) {
-                            known.add( where );
-                        } else {
-                            offenders.add( where + " (" + operation.getOperationId() + ")" );
-                        }
+                        offenders.add( opEntry.getKey() + " " + pathEntry.getKey() + " -> " + responseEntry.getKey()
+                                + " (" + operation.getOperationId() + ")" );
                     }
                 }
             }
@@ -926,11 +899,6 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                 .withFailMessage( "successful JSON responses with no schema — a method returning raw Response"
                         + " needs an @ApiResponse that names the entity: %s", offenders )
                 .isEmpty();
-        assertThat( known )
-                .withFailMessage( "an entry of SCHEMALESS_WRITE_RESPONSES now declares a schema, or moved."
-                        + " Delete it from the list rather than leaving it to rot: %s",
-                        new TreeSet<>( CollectionUtils.subtract( SCHEMALESS_WRITE_RESPONSES, known ) ) )
-                .containsExactlyInAnyOrderElementsOf( SCHEMALESS_WRITE_RESPONSES );
     }
 
     /**
@@ -1112,7 +1080,7 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
      * can act on — adding two legitimate, fully-described containers raises the bare-$ref count by
      * two, because each carries a {@code sort} that is one.
      */
-    private static final int UNDESCRIBED_PROPERTY_BUDGET = 1753;
+    private static final int UNDESCRIBED_PROPERTY_BUDGET = 1744;
 
     /**
      * @see #UNDESCRIBED_PROPERTY_BUDGET

@@ -1035,7 +1035,8 @@ public class AnnotationSetsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Clear finalized status on an annotation set",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The finalized status was cleared.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "200", description = "The finalized status was cleared.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetResponse.class)))
             })
     public Response reopenAnnotationSet(
             @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id

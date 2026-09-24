@@ -693,7 +693,8 @@ public class TicketsWebService {
                     + "this call rather than by a follow-up per target. The ticket's own `body` and "
                     + "`payload` are one per ticket, so a finding that differs per target belongs here.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The ticket as opened, with the seeded OPENED event already in its log.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "201", description = "The ticket as opened, with the seeded OPENED event already in its log.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectTicketValueObject.class)))
             })
     public Response createTicket( CreateTicketRequest req ) {
         if ( req == null ) {
@@ -1121,7 +1122,9 @@ public class TicketsWebService {
                     + "is permitted and the removed status is reported, so the caller can say what it discarded; the "
                     + "membership goes but the TARGET_REMOVED event stays on the ticket log.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The target was removed from the ticket.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "200", description = "The target was removed; the body carries the ticket as it now stands.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectRemovedTargetResult.class))),
+                    @ApiResponse(responseCode = "204", description = "The ticket carried no such target, so nothing was removed.")
             })
     public Response removeTicketTarget(
             @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
@@ -1211,7 +1214,7 @@ public class TicketsWebService {
     @Operation(summary = "Cancel (soft-close) a ticket",
             description = "Transitions the ticket to CANCELLED. Append-only: the row and event log are preserved.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The ticket was cancelled.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "204", description = "The ticket was cancelled.")
             })
     public Response deleteTicket(
             @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
@@ -1560,8 +1563,11 @@ public class TicketsWebService {
 
     /** Result of removing a target: what went, and what state it was in. */
     public static class RemovedTargetResult {
+        @Schema(description = "Type of the target that was removed.")
         private final TicketTargetType targetType;
+        @Schema(description = "Identifier of the target that was removed, within its type.")
         private final Long targetId;
+        @Schema(description = "The status the target held when it was removed.")
         private final TicketTargetStatus status;
         private final TicketValueObject ticket;
 
@@ -1717,4 +1723,19 @@ public class TicketsWebService {
         /** True once the JSON carried a {@code screeningResultReason} key, even if its value was null. */
         public boolean hasScreeningResultReason() { return screeningResultReasonSet; }
     }
+
+    /**
+     * Response shape for {@link #removeTicketTarget}.
+     * <p>
+     * Doc-only: the method returns {@code Response} so it can set the status, which leaves
+     * swagger-core nothing to introspect, and naming the raw {@code ResponseDataObject} would erase
+     * the payload type. Naming a bound subclass is the only way an annotation can carry it.
+     */
+    public static class ResponseDataObjectRemovedTargetResult extends ResponseDataObject<RemovedTargetResult> {
+
+        public ResponseDataObjectRemovedTargetResult( RemovedTargetResult payload ) {
+            super( payload );
+        }
+    }
+
 }

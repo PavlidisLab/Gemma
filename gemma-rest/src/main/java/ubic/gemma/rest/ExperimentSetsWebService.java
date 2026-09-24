@@ -176,7 +176,8 @@ public class ExperimentSetsWebService {
                     + "set to span taxa; supply `taxonId` to declare the constraint explicitly, and "
                     + "every member must then match it.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Created.", content = @Content()),
+                    @ApiResponse(responseCode = "201", description = "The experiment set as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectExpressionExperimentSetValueObject.class))),
                     @ApiResponse(responseCode = "400", description = "No name, or a member does not match a declared taxon.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response createExperimentSet( ExperimentSetRequest req ) {
@@ -298,4 +299,19 @@ public class ExperimentSetsWebService {
     public static class ExperimentSetMembersRequest {
         public List<Long> datasetIds;
     }
+
+    /**
+     * Response shape for {@link #createExperimentSet}.
+     * <p>
+     * Doc-only: the method returns {@code Response} so it can set the status, which leaves
+     * swagger-core nothing to introspect, and naming the raw {@code ResponseDataObject} would erase
+     * the payload type. Naming a bound subclass is the only way an annotation can carry it.
+     */
+    public static class ResponseDataObjectExpressionExperimentSetValueObject extends ResponseDataObject<ExpressionExperimentSetValueObject> {
+
+        public ResponseDataObjectExpressionExperimentSetValueObject( ExpressionExperimentSetValueObject payload ) {
+            super( payload );
+        }
+    }
+
 }

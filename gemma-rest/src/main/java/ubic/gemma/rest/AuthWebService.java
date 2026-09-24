@@ -12,6 +12,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -100,7 +101,8 @@ public class AuthWebService {
                     + "{token, user} where token is an opaque random string; "
                     + "send it as Authorization: Bearer <token> on subsequent calls.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The minted token and the canonical user shape. Send the token as `Authorization: Bearer <token>` on subsequent calls.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "200", description = "The minted token and the canonical user shape. Send the token as `Authorization: Bearer <token>` on subsequent calls.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectLoginResponse.class)))
             })
     public Response login( LoginRequest req ) {
         if ( req == null || req.username == null || req.password == null
@@ -149,7 +151,7 @@ public class AuthWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Revoke the presented bearer token (idempotent)",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The token was revoked, or was already unknown — this is idempotent either way.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "200", description = "The token was revoked, or was already unknown — this is idempotent either way. The body is empty; the endpoint would be better as a 204, but the status is part of its published contract.")
             })
     public Response logout( @Context HttpServletRequest request ) {
         String token = BearerTokenAuthenticationFilter.extractBearerToken( request.getHeader( "Authorization" ) );
@@ -232,8 +234,24 @@ public class AuthWebService {
      */
     @lombok.Value
     public static class LoginResponse {
+        @Schema(description = "The opaque bearer token. Send it as `Authorization: Bearer <token>`, and revoke it with `POST /logout`.")
         String token;
         @Nullable
         UserValueObject user;
     }
+
+    /**
+     * Response shape for {@link #login}.
+     * <p>
+     * Doc-only: the method returns {@code Response} so it can set the status, which leaves
+     * swagger-core nothing to introspect, and naming the raw {@code ResponseDataObject} would erase
+     * the payload type. Naming a bound subclass is the only way an annotation can carry it.
+     */
+    public static class ResponseDataObjectLoginResponse extends ResponseDataObject<LoginResponse> {
+
+        public ResponseDataObjectLoginResponse( LoginResponse payload ) {
+            super( payload );
+        }
+    }
+
 }

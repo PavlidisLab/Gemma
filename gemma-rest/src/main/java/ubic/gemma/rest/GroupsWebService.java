@@ -14,6 +14,7 @@ package ubic.gemma.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
@@ -191,7 +192,8 @@ public class GroupsWebService {
             description = "Body: {name, description?}. The authenticated user becomes the owner. "
                     + "The three system groups (Administrators, Users, Agents) are reserved.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The group as created.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "201", description = "The group as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectGroupValueObject.class)))
             })
     public Response createGroup( GroupCreateRequest req ) {
         if ( req == null || req.getName() == null || req.getName().trim().isEmpty() ) {
@@ -284,7 +286,7 @@ public class GroupsWebService {
     @Operation(summary = "Delete a group",
             description = "The three system groups (Administrators, Users, Agents) cannot be deleted.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The group was deleted.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "204", description = "The group was deleted.")
             })
     public Response deleteGroup(
             @Parameter(description = "Identifier of the group.") @PathParam("id") Long id
@@ -336,7 +338,7 @@ public class GroupsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Remove a member from a group",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The member was removed from the group.", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                    @ApiResponse(responseCode = "204", description = "The member was removed from the group.")
             })
     public Response removeMember(
             @Parameter(description = "Identifier of the group.") @PathParam("id") Long id,
@@ -591,4 +593,19 @@ public class GroupsWebService {
         public String getEmail() { return email; }
         public boolean isEnabled() { return enabled; }
     }
+
+    /**
+     * Response shape for {@link #createGroup}.
+     * <p>
+     * Doc-only: the method returns {@code Response} so it can set the status, which leaves
+     * swagger-core nothing to introspect, and naming the raw {@code ResponseDataObject} would erase
+     * the payload type. Naming a bound subclass is the only way an annotation can carry it.
+     */
+    public static class ResponseDataObjectGroupValueObject extends ResponseDataObject<GroupValueObject> {
+
+        public ResponseDataObjectGroupValueObject( GroupValueObject payload ) {
+            super( payload );
+        }
+    }
+
 }
