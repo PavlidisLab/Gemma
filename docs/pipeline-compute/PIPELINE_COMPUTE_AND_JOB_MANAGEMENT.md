@@ -1077,8 +1077,13 @@ build, which existing code to extend, and its acceptance signal.
   seam (only impure edge); 18 unit tests, existing mock ITs unaffected.
   Per-pipeline `maxConcurrent` default also BUILT (O8: `PipelineDefaults`,
   sc-annotation=25, stamped at submit).
-  **Remaining:** `readLog`/`readArtifact` off the mount (later) + end-to-end
-  run. Cluster/Rachel
+  **Callback auth + identity + config BUILT (2026-09-23):** the weblog URL carries a per-job HMAC
+  token (Nextflow can't send headers, so the old header check would have 401'd every real event);
+  unauthenticated `recordEvent` runs as the batch submitter (terminal events had failed with
+  `AccessDenied`); every pipeline property is documented in `default.properties`. See
+  `NEXTFLOW_DISPATCH_RESOLUTIONS.md` §Callback authentication.
+  **Remaining:** `readLog`/`readArtifact` off the mount, a poll fallback past `scontrol`'s ~300 s
+  window, and the end-to-end run (blocked on the frink firewall for dev ports). Cluster/Rachel
   items: canonical checkout path (O5, point at the cached `PREPARE_CACHE`
   version), a partition/QOS for long-lived head jobs (O4). *(O9 reference-sharing
   resolved 2026-07-16 with Rachel — a cached `PREPARE_CACHE` means per-EE runs
