@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Setter;
@@ -36,6 +37,11 @@ import java.util.Date;
  *
  * @author paul, tesarst
  */
+// Lombok @Setter generates setQScoreOutliers(...) from the field qScoreOutliers, and swagger
+// mangles that setter name back to "qscoreOutliers" — a second, lowercase-s spelling of every
+// score. Jackson never emitted it (the field's @JsonProperty settles the wire name), so these
+// nine were phantom properties: advertised by the specification, absent from every response.
+@JsonIgnoreProperties({ "qscoreOutliers", "qscoreSampleMeanCorrelation", "qscoreSampleMedianCorrelation", "qscoreSampleCorrelationVariance", "qscorePlatformsTech", "qscoreReplicates", "qscoreBatchInfo", "qscorePublicBatchEffect", "qscorePublicBatchConfound" })
 @SuppressWarnings("unused") // Used in frontend
 @Setter
 @ToString

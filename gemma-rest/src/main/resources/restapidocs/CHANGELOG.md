@@ -5,9 +5,11 @@
 Correct the specification where it did not describe the API. None of this changes the wire; every
 change below makes the published document agree with what the server already does.
 
-`AnnotationValueObject` renamed four of its fields at some point before 2.9.4 and the change was
-never recorded here: `className` became `category`, `classUri` became `categoryUri`, `termName`
-became `value`, and `termUri` became `valueUri`. The old names are long gone from the wire. This
+`AnnotationValueObject` renamed four of its fields and the change was never recorded here:
+`className` became `category`, `classUri` became `categoryUri`, `termName` became `value`, and
+`termUri` became `valueUri`. It landed on 2026-08-31, seven months after the 2.9.4 release of
+2026-01-09, and under that same version number — the commit changed neither the version nor this
+file, so a client had no signal of any kind. The old names are gone from the wire. This
 entry exists because they vanished without one — a client reading a factor-value row also finds
 that `value` now carries the term's own label rather than a composed sentence such as
 "wild type genotype has background APP/PS1". A test now pins the wire names of the value objects
@@ -43,10 +45,14 @@ the document's own `tags` list and drop the operations carrying them — 41 of 2
 hardcoding tag names or path prefixes. `Observability` is deliberately not marked: `/health` and
 `/info` are what external uptime monitors read.
 
-Known and unchanged: `GeeqValueObject` publishes each quality score under two spellings, for example
-both `qScoreOutliers` and `qscoreOutliers`, carrying the same value. The pair has shipped since
-before 2.9.4; `qScore*` is the intended spelling. Removing the other is a breaking change and has
-not been made here.
+`GeeqValueObject` no longer advertises each quality score twice. The specification listed both
+`qScoreOutliers` and `qscoreOutliers` for all nine scores, and had since before 2.9.4. Serializing
+one and inspecting the result showed the lowercase spelling was never on the wire: Lombok's
+`@Setter` generates `setQScoreOutliers` from the field `qScoreOutliers`, swagger mangles that setter
+name back to `qscoreOutliers`, and Jackson ignores it because the field's `@JsonProperty` settles
+the name. So these were phantom properties — advertised by the document, absent from every
+response. Nothing that reads `qScore*` changes; a client written against `qscore*` was reading a
+field it never received.
 
 ### Update 2.9.4
 

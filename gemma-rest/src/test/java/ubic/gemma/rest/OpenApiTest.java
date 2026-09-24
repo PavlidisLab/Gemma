@@ -1320,10 +1320,7 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                 "batchCorrected", "corrMatIssues", "id", "lastComputed", "noVectors", "publicQualityScore",
                 "qScoreBatchInfo", "qScoreOutliers", "qScorePlatformsTech", "qScorePublicBatchConfound",
                 "qScorePublicBatchEffect", "qScoreReplicates", "qScoreSampleCorrelationVariance",
-                "qScoreSampleMeanCorrelation", "qScoreSampleMedianCorrelation", "qscoreBatchInfo",
-                "qscoreOutliers", "qscorePlatformsTech", "qscorePublicBatchConfound",
-                "qscorePublicBatchEffect", "qscoreReplicates", "qscoreSampleCorrelationVariance",
-                "qscoreSampleMeanCorrelation", "qscoreSampleMedianCorrelation", "replicatesIssues" } );
+                "qScoreSampleMeanCorrelation", "qScoreSampleMedianCorrelation", "replicatesIssues" } );
         pinned.put( "QuantitationTypeValueObject", new String[] {
                 "description", "generalType", "id", "isBackground", "isBackgroundSubtracted",
                 "isBatchCorrected", "isMaskedPreferred", "isNormalized", "isPreferred", "isRatio",
