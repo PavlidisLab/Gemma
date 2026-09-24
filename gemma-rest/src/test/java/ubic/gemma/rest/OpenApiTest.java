@@ -1255,4 +1255,116 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
         }
         return collapsed.replaceAll( "\\{\\s*(\\w+)\\s*:[^}]*}", "{$1}" );
     }
+
+    /**
+     * Wire names clients depend on. A name listed here may not disappear.
+     *
+     * <p>{@code AnnotationValueObject} renamed four fields — {@code className} to {@code category},
+     * {@code classUri} to {@code categoryUri}, {@code termName} to {@code value}, {@code termUri} to
+     * {@code valueUri} — with no deprecation, no alias and no changelog entry. Downstream found out
+     * when every column came back null, because a wrapper reading the old names off the new payload
+     * gets nulls rather than an error. Nothing in the build would have objected.
+     *
+     * <p>This is the objection. It pins only the value objects clients actually consume, and only
+     * as a subset check: adding a field is backward compatible and passes, while removing or
+     * renaming one fails and has to be a deliberate act with a changelog entry to match.
+     */
+    private static Map<String, String[]> pinnedWireNames() {
+        Map<String, String[]> pinned = new TreeMap<>();
+        pinned.put( "AnnotationValueObject", new String[] {
+                "category", "categoryUri", "evidenceCode", "id", "object", "objectClass", "objectUri",
+                "predicate", "predicateUri", "secondObject", "secondObjectUri", "secondPredicate",
+                "secondPredicateUri", "supportingEvidence", "value", "valueUri" } );
+        pinned.put( "ArrayDesignValueObject", new String[] {
+                "color", "curationNote", "description", "expressionExperimentCount", "externalReferences",
+                "geneCountsLastUpdated", "id", "isMerged", "isMergee", "lastNeedsAttentionEvent",
+                "lastNoteUpdateEvent", "lastTroubledEvent", "lastUpdated", "mergedInto", "mergees", "name",
+                "needsAttention", "numberOfExpressionExperiments", "numberOfGenes",
+                "numberOfMappedElements", "numberOfSwitchedExpressionExperiments", "releaseUrl",
+                "releaseVersion", "shortName", "taxon", "taxonID", "technologyType", "troubleDetails",
+                "troubled" } );
+        pinned.put( "BioAssayValueObject", new String[] {
+                "accession", "arrayDesign", "description", "extractedMolecule", "id", "librarySelection",
+                "libraryStrategy", "metadata", "name", "numberOfCells", "numberOfCellsByDesignElements",
+                "numberOfDesignElements", "originalPlatform", "outlier", "predictedOutlier",
+                "processingDate", "sample", "sequencePairedReads", "sequenceReadCount",
+                "sequenceReadLength", "shortName", "sourceBioAssayId", "userFlaggedOutlier" } );
+        pinned.put( "CharacteristicValueObject", new String[] {
+                "category", "categoryUri", "id", "originalValue", "supportingEvidence", "value", "valueId",
+                "valueUri" } );
+        pinned.put( "CompositeSequenceValueObject", new String[] {
+                "arrayDesign", "description", "geneMappingSummaries", "genes", "id", "name", "sequence",
+                "sequenceLength" } );
+        pinned.put( "DifferentialExpressionAnalysisResultSetValueObject", new String[] {
+                "analysis", "baselineGroup", "experimentalFactors", "id", "results", "secondBaselineGroup",
+                "taxa" } );
+        pinned.put( "ExperimentalFactorValueObject", new String[] {
+                "baselineRelevance", "baselineRelevanceReason", "category", "categoryUri", "description",
+                "factorValues", "id", "name", "type", "values" } );
+        pinned.put( "ExpressionExperimentValueObject", new String[] {
+                "accession", "batchConfound", "batchEffect", "batchEffectStatistics", "bioAssayCount",
+                "characteristics", "curationNote", "dateCreated", "description", "doi", "externalDatabase",
+                "externalDatabaseUri", "externalLabel", "externalUri", "extractedMolecules", "geeq", "id",
+                "isPublic", "isSingleCell", "lastNeedsAttentionEvent", "lastNoteUpdateEvent",
+                "lastTroubledEvent", "lastUpdated", "librarySelections", "libraryStrategies", "metadata",
+                "name", "needsAttention", "numberOfArrayDesigns", "numberOfBioAssays", "numberOfCellIds",
+                "numberOfCells", "numberOfProcessedExpressionVectors", "originalPlatforms", "otherParts",
+                "platforms", "pubmedId", "shortName", "source", "taxon", "taxonId", "technologyType",
+                "troubleDetails", "troubled" } );
+        pinned.put( "GeneValueObject", new String[] {
+                "accessions", "aliases", "associatedExperimentCount", "compositeSequenceCount",
+                "ensemblId", "geneSets", "homologues", "id", "matchType", "multifunctionalityRank",
+                "ncbiId", "ncbiUri", "numGoTerms", "officialName", "officialSymbol", "platformCount",
+                "taxon", "taxonId" } );
+        pinned.put( "GeeqValueObject", new String[] {
+                "batchCorrected", "corrMatIssues", "id", "lastComputed", "noVectors", "publicQualityScore",
+                "qScoreBatchInfo", "qScoreOutliers", "qScorePlatformsTech", "qScorePublicBatchConfound",
+                "qScorePublicBatchEffect", "qScoreReplicates", "qScoreSampleCorrelationVariance",
+                "qScoreSampleMeanCorrelation", "qScoreSampleMedianCorrelation", "qscoreBatchInfo",
+                "qscoreOutliers", "qscorePlatformsTech", "qscorePublicBatchConfound",
+                "qscorePublicBatchEffect", "qscoreReplicates", "qscoreSampleCorrelationVariance",
+                "qscoreSampleMeanCorrelation", "qscoreSampleMedianCorrelation", "replicatesIssues" } );
+        pinned.put( "QuantitationTypeValueObject", new String[] {
+                "description", "generalType", "id", "isBackground", "isBackgroundSubtracted",
+                "isBatchCorrected", "isMaskedPreferred", "isNormalized", "isPreferred", "isRatio",
+                "isRecomputedFromRawData", "isSingleCellPreferred", "name", "representation", "scale",
+                "type", "vectorType" } );
+        pinned.put( "TaxonValueObject", new String[] {
+                "commonName", "externalDatabase", "id", "ncbiId", "scientificName" } );
+        return pinned;
+    }
+
+    /**
+     * @see #pinnedWireNames()
+     */
+    @Test
+    public void testPublicWireNamesAreNotRenamedOrRemoved() {
+        Map<String, Schema> schemas = spec.getComponents().getSchemas();
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, String[]> entry : pinnedWireNames().entrySet() ) {
+            Schema<?> schema = schemas.get( entry.getKey() );
+            if ( schema == null ) {
+                offenders.add( entry.getKey() + " is no longer published at all" );
+                continue;
+            }
+            Set<String> present = schema.getProperties() != null
+                    ? schema.getProperties().keySet() : Collections.emptySet();
+            for ( String name : entry.getValue() ) {
+                inspected++;
+                if ( !present.contains( name ) ) {
+                    offenders.add( entry.getKey() + "." + name );
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected to pin many wire names; inspected only %d", inspected )
+                .isGreaterThan( 150 );
+        assertThat( offenders )
+                .withFailMessage( "wire names that clients depend on have gone. If the rename is intended,"
+                        + " update this list AND add a CHANGELOG.md entry — that is the whole point of the"
+                        + " check, since the last rename shipped without one: %s", offenders )
+                .isEmpty();
+    }
 }

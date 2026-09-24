@@ -1,5 +1,47 @@
 ## Updates
 
+### Unreleased
+
+Correct the specification where it did not describe the API. None of this changes the wire; every
+change below makes the published document agree with what the server already does.
+
+`AnnotationValueObject` renamed four of its fields at some point before 2.9.4 and the change was
+never recorded here: `className` became `category`, `classUri` became `categoryUri`, `termName`
+became `value`, and `termUri` became `valueUri`. The old names are long gone from the wire. This
+entry exists because they vanished without one — a client reading a factor-value row also finds
+that `value` now carries the term's own label rather than a composed sentence such as
+"wild type genotype has background APP/PS1". A test now pins the wire names of the value objects
+clients consume, so the next rename fails the build instead of shipping quietly.
+
+Seven write endpoints documented a status they do not return. `releaseCurationLock`, `deleteGroup`,
+`removeMember` and `deleteTicket` answer 204 with no body, not 200 with a JSON one; `createGroup`
+and `createTicket` answer 201, not 200; `removeTicketTarget` answers 204 when the ticket carried no
+such target. `upsertDatasetDraftAnnotationSet`, `submitDatasetAnnotationSet` and
+`attachAnnotationSet` answer 200 or 201 depending on whether the thing already existed, and now say
+so. Twenty write responses that declared no response body at all now declare one.
+
+`GET /datasets/{dataset}/design` accepts `quantitationType` and `useProcessedQuantitationType` on
+its tab-separated representation. Neither appeared in the specification, because the endpoint is
+served by two methods and the documented one does not take them.
+
+`GET /genes/{gene}/probes` has four response shapes, not two: `summary=true` returns
+`CompositeSequenceSummaryValueObject` rows, a type that did not appear in the specification at all.
+
+Bearer authentication is declared. `POST /login` has always minted tokens for
+`Authorization: Bearer <token>`, but the scheme was missing, so a generated client could not express
+it.
+
+Every response now carries a description, every operation a tag, and every parameter a description.
+The 503s that carry a `Retry-After` header say so, including on the eight budget-limited endpoints
+that did not document a 503 at all. Responses that serve a tab-separated body no longer describe it
+as a JSON object, and media types no longer carry the `q` weight that belonged to server-side
+content negotiation rather than to the specification.
+
+Known and unchanged: `GeeqValueObject` publishes each quality score under two spellings, for example
+both `qScoreOutliers` and `qscoreOutliers`, carrying the same value. The pair has shipped since
+before 2.9.4; `qScore*` is the intended spelling. Removing the other is a breaking change and has
+not been made here.
+
 ### Update 2.9.4
 
 Remove the GEEQ suitability score. The `publicSuitabilityScore` and the eight `sScore*` fields it averaged
