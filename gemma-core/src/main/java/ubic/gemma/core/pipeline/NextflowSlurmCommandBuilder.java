@@ -45,6 +45,12 @@ public class NextflowSlurmCommandBuilder {
     public static final String NEXTFLOW_LOG = ".nextflow.log";
     public static final String TRACE = "trace.txt";
     public static final String REPORT = "report.html";
+    /**
+     * Written by the wrapper once {@code nextflow run} exits, holding its exit status. Its presence is how
+     * Gemma knows the run is over; the value says how. Written to a temporary name and renamed, so a
+     * reader never sees a half-written file.
+     */
+    public static final String EXIT_CODE = "exitcode";
 
     /** Extracts {@code JobState=<STATE>} from {@code scontrol show job} output. */
     private static final Pattern JOB_STATE = Pattern.compile( "JobState=([A-Z_]+)" );
@@ -77,32 +83,110 @@ public class NextflowSlurmCommandBuilder {
 
     /**
      * The wrapper script body that {@code sbatch} runs as the head job. It invokes {@code nextflow run}
-     * with the shared work-dir ({@code -resume} across attempts, R2), the weblog callback (O3), and the
-     * Slurm executor (Nextflow fans its process tasks into the queue itself, R11).
+     * with the shared work-dir ({@code -resume}, R2) and the Slurm executor (Nextflow fans its process
+     * tasks into the queue itself, R11), then records the exit status in {@link #EXIT_CODE}.
+     * <p>
+     * The {@code TERM} trap keeps the wrapper alive through {@code scancel}: bash runs a trap only after
+     * its foreground child exits, so Nextflow gets to cancel its own tasks and the exit code is still
+     * written. (A trap, not an ignore: an ignored signal would be inherited by Nextflow.) A head job
+     * killed outright — out of memory, over its time limit — writes nothing; the scheduler's poll covers
+     * that case from Slurm.
+     *
+     * @param weblogUrl where Nextflow posts live events, or null to run without the weblog
      */
     public String launchScript( String checkoutDir, String profile, String paramsFile,
-            String samplesheetPath, String weblogUrl, String workDir ) {
+            String samplesheetPath, @Nullable String weblogUrl, String workDir ) {
         require( checkoutDir, "checkoutDir" );
         require( profile, "profile" );
         require( paramsFile, "paramsFile" );
         require( samplesheetPath, "samplesheetPath" );
-        require( weblogUrl, "weblogUrl" );
         require( workDir, "workDir" );
         String main = checkoutDir + "/main.nf";
         String params = checkoutDir + "/" + paramsFile;
+        String exitCode = workDir + "/" + EXIT_CODE;
         return "#!/bin/bash\n"
-                + "set -euo pipefail\n"
+                + "set -uo pipefail\n"
+                + "trap 'true' TERM\n"
                 + nextflowExecutable + " run " + main
                 + " -profile " + profile
                 + " -params-file " + params
                 + " --input " + samplesheetPath
                 + " -process.executor slurm"
-                + " -with-weblog " + weblogUrl
+                + ( weblogUrl != null ? " -with-weblog " + weblogUrl : "" )
                 + " -with-trace " + TRACE
                 + " -with-report " + REPORT
                 + " -resume"
                 + " -work-dir " + workDir
-                + "\n";
+                + "\n"
+                + "rc=$?\n"
+                + "printf '%s\\n' \"$rc\" > " + exitCode + ".tmp && mv " + exitCode + ".tmp " + exitCode + "\n"
+                + "exit \"$rc\"\n";
+    }
+
+    /**
+     * Summary of a run's {@link #TRACE} file: one row per finished task, found by the header's
+     * {@code status} and {@code name} columns rather than by position (the column set is configurable).
+     *
+     * @return null for a missing, empty or header-only trace
+     */
+    @Nullable
+    public TraceProgress parseTrace( @Nullable String traceTsv ) {
+        if ( traceTsv == null || traceTsv.isBlank() ) {
+            return null;
+        }
+        String[] lines = traceTsv.split( "\n" );
+        List<String> header = List.of( lines[0].trim().split( "\t" ) );
+        int status = header.indexOf( "status" );
+        int name = header.indexOf( "name" );
+        if ( status < 0 ) {
+            return null;
+        }
+        int completed = 0, cached = 0, failed = 0, rows = 0;
+        String last = null;
+        for ( int i = 1; i < lines.length; i++ ) {
+            if ( lines[i].isBlank() ) continue;
+            String[] cols = lines[i].split( "\t", -1 );
+            if ( cols.length <= status ) continue; // a row still being written
+            rows++;
+            switch ( cols[status].trim() ) {
+                case "COMPLETED": completed++; break;
+                case "CACHED": cached++; break;
+                case "FAILED":
+                case "ABORTED": failed++; break;
+                default: break;
+            }
+            if ( name >= 0 && cols.length > name ) {
+                last = cols[name].trim();
+            }
+        }
+        return rows == 0 ? null : new TraceProgress( completed, cached, failed, last );
+    }
+
+    /** Counts of finished tasks in a trace, and the most recent one's name (e.g. {@code LOAD_CTA (GSE124952)}). */
+    @lombok.Value
+    public static class TraceProgress {
+        int completed;
+        int cached;
+        int failed;
+        @Nullable
+        String lastTask;
+    }
+
+    /**
+     * The wrapper's {@link #EXIT_CODE} file content as a number.
+     *
+     * @return null if the content isn't one (blank or garbled: treat as not written yet)
+     */
+    @Nullable
+    public Integer parseExitCode( @Nullable String content ) {
+        if ( content == null || content.isBlank() ) {
+            return null;
+        }
+        try {
+            return Integer.valueOf( content.trim() );
+        } catch ( NumberFormatException e ) {
+            return null;
+        }
     }
 
     /**

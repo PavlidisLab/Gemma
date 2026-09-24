@@ -38,7 +38,7 @@ public class LuigiPipelineScheduler implements PipelineScheduler {
     }
 
     @Override
-    public JobSnapshot poll( SchedulerHandle handle ) throws PipelineSchedulerException {
+    public JobSnapshot poll( Long gemmaJobId, SchedulerHandle handle ) throws PipelineSchedulerException {
         throw new PipelineSchedulerException( "Luigi scheduler not yet implemented" );
     }
 

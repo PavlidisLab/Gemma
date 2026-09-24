@@ -27,6 +27,52 @@ class NextflowSlurmCommandBuilderTest {
     private final NextflowSlurmCommandBuilder b = new NextflowSlurmCommandBuilder();
 
     @Test
+    void launchScript_recordsTheExitCodeAndSurvivesScancel() {
+        String s = b.launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", null, "/w" );
+        assertThat( s ).doesNotContain( "set -e" ); // would exit before the exit code is written
+        assertThat( s ).contains( "trap 'true' TERM" );
+        assertThat( s ).contains( "rc=$?" );
+        assertThat( s ).contains( "> /w/exitcode.tmp && mv /w/exitcode.tmp /w/exitcode" );
+        assertThat( s ).endsWith( "exit \"$rc\"\n" );
+    }
+
+    @Test
+    void launchScript_withoutAWeblogUrl_omitsTheFlag() {
+        assertThat( b.launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", null, "/w" ) )
+                .doesNotContain( "-with-weblog" );
+    }
+
+    @Test
+    void parseTrace_countsFinishedTasksByStatusColumnName() {
+        String trace = "task_id\thash\tnative_id\tname\tstatus\texit\n"
+                + "1\tab/12\t101\tDOWNLOAD (GSE1)\tCACHED\t0\n"
+                + "2\tcd/34\t102\tLOAD_CTA (GSE1)\tCOMPLETED\t0\n"
+                + "3\tef/56\t103\tCLASSIFY (GSE1)\tFAILED\t137\n";
+        NextflowSlurmCommandBuilder.TraceProgress p = b.parseTrace( trace );
+        assertThat( p ).isNotNull();
+        assertThat( p.getCompleted() ).isEqualTo( 1 );
+        assertThat( p.getCached() ).isEqualTo( 1 );
+        assertThat( p.getFailed() ).isEqualTo( 1 );
+        assertThat( p.getLastTask() ).isEqualTo( "CLASSIFY (GSE1)" );
+    }
+
+    @Test
+    void parseTrace_headerOnlyOrMissingIsNull() {
+        assertThat( b.parseTrace( null ) ).isNull();
+        assertThat( b.parseTrace( "task_id\tname\tstatus\n" ) ).isNull();
+        assertThat( b.parseTrace( "task_id\tname\texit\n1\tRUN\t0\n" ) ).isNull();
+    }
+
+    @Test
+    void parseExitCode_toleratesWhitespaceAndRejectsGarbage() {
+        assertThat( b.parseExitCode( "0\n" ) ).isEqualTo( 0 );
+        assertThat( b.parseExitCode( " 143 " ) ).isEqualTo( 143 );
+        assertThat( b.parseExitCode( "" ) ).isNull();
+        assertThat( b.parseExitCode( "oops" ) ).isNull();
+        assertThat( b.parseExitCode( null ) ).isNull();
+    }
+
+    @Test
     void samplesheet_isOneStudyRow() {
         assertThat( b.samplesheetCsv( "GSE124952" ) )
                 .isEqualTo( "sample,study_name,study_path\nGSE124952,GSE124952,\n" );
@@ -38,7 +84,7 @@ class NextflowSlurmCommandBuilderTest {
                 "/space/gemmaData/pipeline/7/samplesheet.csv",
                 "http://gemma/rest/v2/internal/pipeline/jobs/7/weblog",
                 "/space/gemmaData/pipeline/7" );
-        assertThat( s ).startsWith( "#!/bin/bash\nset -euo pipefail\n" );
+        assertThat( s ).startsWith( "#!/bin/bash\nset -uo pipefail\ntrap 'true' TERM\n" );
         assertThat( s ).contains( "nextflow run /pipe/sc-annotation/main.nf" );  // default executable
         assertThat( s ).doesNotContain( "\n\n" );
         assertThat( s ).contains( "-profile conda" );

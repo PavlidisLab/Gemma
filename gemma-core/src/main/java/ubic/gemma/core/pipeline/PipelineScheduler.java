@@ -26,7 +26,7 @@ import ubic.gemma.model.pipeline.SchedulerKind;
  *   <li>Round-tripping a Gemma-side job id so push callbacks can identify
  *       the originating row.</li>
  *   <li>Mapping scheduler-side state back to {@link ubic.gemma.model.pipeline.JobState}
- *       in {@link #poll(SchedulerHandle)} (used by the reconciler when push
+ *       in {@link #poll(Long, SchedulerHandle)} (used by the reconciler when push
  *       events are missing).</li>
  * </ul>
  *
@@ -60,9 +60,13 @@ public interface PipelineScheduler {
      * {@code @Scheduled} reconciler when a job has gone too long without
      * a push event. Returns {@code null} if the scheduler doesn't recognize
      * the handle (job was purged from scheduler-side history, etc.) — caller
-     * treats {@code null} as terminal-unknown and surfaces the gap.
+     * treats {@code null} as terminal-unknown and surfaces the gap. A non-null
+     * {@link JobSnapshot#getMessage()} is the payload JSON recorded with the
+     * resulting event.
+     *
+     * @param gemmaJobId the job's id in Gemma, as for {@link #readLog}
      */
-    JobSnapshot poll( SchedulerHandle handle ) throws PipelineSchedulerException;
+    JobSnapshot poll( Long gemmaJobId, SchedulerHandle handle ) throws PipelineSchedulerException;
 
     /**
      * Request cancellation of a running job. Cooperative — the scheduler
