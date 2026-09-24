@@ -12,9 +12,17 @@
 package ubic.gemma.persistence.service.pipeline;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.pipeline.Artifact;
@@ -24,7 +32,9 @@ import ubic.gemma.core.pipeline.PipelineScheduler;
 import ubic.gemma.core.pipeline.PipelineSchedulerException;
 import ubic.gemma.core.pipeline.SchedulerHandle;
 import ubic.gemma.core.pipeline.SubmitRequest;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
@@ -105,6 +115,9 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
 
     @Autowired
     private PipelineDefaults pipelineDefaults;
+
+    @Autowired
+    private UserManager userManager;
 
     /**
      * Auto-open a Ticket on a PERMANENT/UNKNOWN job failure (§1.2 #1). Global toggle; per-pipeline
@@ -240,6 +253,52 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
         if ( job == null ) {
             throw new IllegalArgumentException( "no job " + jobId );
         }
+        // The scheduler reports as nobody: the push callback authenticates with the callback token, not
+        // a Gemma user, and the reconciler runs on a scheduled thread. The terminal side effects (audit
+        // event on the EE, failure ticket, batch close) are secured, so run them as the curator whose
+        // batch this is — the pipeline is acting for them. An authenticated caller keeps its own identity.
+        Authentication caller = SecurityContextHolder.getContext().getAuthentication();
+        if ( caller == null || caller instanceof AnonymousAuthenticationToken || !caller.isAuthenticated() ) {
+            Authentication submitter = submitterAuthentication( job );
+            if ( submitter != null ) {
+                SecurityContext previous = SecurityContextHolder.getContext();
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication( submitter );
+                SecurityContextHolder.setContext( context );
+                try {
+                    return recordEvent( job, kind, payloadJson );
+                } finally {
+                    SecurityContextHolder.setContext( previous );
+                }
+            }
+        }
+        return recordEvent( job, kind, payloadJson );
+    }
+
+    /**
+     * Authentication for the user who submitted the job's batch, or null (logged) when the submitter is a
+     * plain Contact rather than a User, or no longer resolves to one.
+     */
+    @Nullable
+    private Authentication submitterAuthentication( PipelineJob job ) {
+        Contact submitter = job.getBatch() != null ? job.getBatch().getSubmittedBy() : null;
+        Object unproxied = submitter != null ? Hibernate.unproxy( submitter ) : null;
+        if ( !( unproxied instanceof User ) ) {
+            log.warn( "job {}: batch submitter {} is not a user; recording the event as the unauthenticated caller",
+                    job.getId(), submitter != null ? submitter.getId() : null );
+            return null;
+        }
+        try {
+            UserDetails details = userManager.loadUserByUsername( ( ( User ) unproxied ).getUserName() );
+            return new UsernamePasswordAuthenticationToken( details, null, details.getAuthorities() );
+        } catch ( UsernameNotFoundException e ) {
+            log.warn( "job {}: batch submitter {} could not be loaded ({}); recording the event as the unauthenticated caller",
+                    job.getId(), submitter.getId(), e.getMessage() );
+            return null;
+        }
+    }
+
+    private PipelineJobEvent recordEvent( PipelineJob job, String kind, @Nullable String payloadJson ) {
         Date now = new Date();
         PipelineJobEvent event = new PipelineJobEvent();
         event.setJob( job );
