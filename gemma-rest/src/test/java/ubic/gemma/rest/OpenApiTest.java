@@ -1151,4 +1151,140 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                         undescribed, UNDESCRIBED_PROPERTY_BUDGET, bareRef )
                 .isLessThanOrEqualTo( UNDESCRIBED_PROPERTY_BUDGET );
     }
+
+    /**
+     * A published operation must declare every parameter the endpoint behind it accepts.
+     *
+     * <p>Two JAX-RS methods can serve one (verb, path) and differ only in {@code @Produces} —
+     * {@code GET /datasets/{dataset}/design} does, one for JSON and one for TSV. swagger-core keeps a
+     * single operation for the pair, and it takes the winner's <em>signature</em> as well as its
+     * annotation. The JSON method wins there and accepts only {@code {dataset}}, so
+     * {@code ?quantitationType=} and {@code ?useProcessedQuantitationType=} — read by the TSV branch
+     * at runtime — were absent from the spec with nothing to indicate it.
+     *
+     * <p>The file guards the response half of that merge with a comment asking that the two
+     * {@code @Operation} annotations stay identical. A comment is not enforcement, and it said
+     * nothing about parameters. This is the enforcement, and it is written as the general rule:
+     * whatever an endpoint reads, the operation says so, however many methods implement it.
+     *
+     * <p>Parameters marked {@code @Parameter(hidden = true)} are excluded — a deliberately
+     * unpublished legacy alias is not a gap.
+     */
+    @Test
+    public void testCollapsedRoutesDeclareEveryParameterTheyAccept() {
+        Map<String, Set<String>> accepted = acceptedParametersByRoute();
+        assertThat( accepted )
+                .withFailMessage( "the resource scan found almost no routes, so this test would pass vacuously" )
+                .hasSizeGreaterThan( 200 );
+
+        List<String> offenders = new ArrayList<>();
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            if ( pathEntry.getKey().startsWith( "/custom" ) ) {
+                continue;
+            }
+            for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathEntry.getValue().readOperationsMap().entrySet() ) {
+                Set<String> expected = accepted.get( opEntry.getKey() + " " + pathEntry.getKey() );
+                if ( expected == null ) {
+                    continue;
+                }
+                Set<String> declared = new TreeSet<>();
+                if ( opEntry.getValue().getParameters() != null ) {
+                    for ( Parameter parameter : opEntry.getValue().getParameters() ) {
+                        declared.add( parameter.getName() );
+                    }
+                }
+                Set<String> missing = new TreeSet<>( expected );
+                missing.removeAll( declared );
+                if ( !missing.isEmpty() ) {
+                    offenders.add( opEntry.getKey() + " " + pathEntry.getKey() + " accepts but does not declare "
+                            + missing );
+                }
+            }
+        }
+
+        assertThat( offenders )
+                .withFailMessage( "parameters an endpoint reads but its operation does not publish. Where two"
+                        + " methods share a (verb, path), declare the loser's parameters on the winner's"
+                        + " @Operation(parameters = ...): %s", offenders )
+                .isEmpty();
+    }
+
+    /**
+     * Every {@code VERB /path} the resource classes serve, mapped to the union of the JAX-RS parameter
+     * names its methods accept. Keyed the way {@link PathItem.HttpMethod} prints, so it joins onto the
+     * spec directly.
+     */
+    private static Map<String, Set<String>> acceptedParametersByRoute() {
+        ClassPathScanningCandidateComponentProvider scanner =
+                new ClassPathScanningCandidateComponentProvider( false );
+        scanner.addIncludeFilter( new AnnotationTypeFilter( jakarta.ws.rs.Path.class ) );
+        Map<String, Set<String>> byRoute = new TreeMap<>();
+        for ( BeanDefinition definition : scanner.findCandidateComponents( "ubic.gemma.rest" ) ) {
+            Class<?> resource;
+            try {
+                resource = Class.forName( Objects.requireNonNull( definition.getBeanClassName() ) );
+            } catch ( ClassNotFoundException e ) {
+                throw new RuntimeException( e );
+            }
+            jakarta.ws.rs.Path classPath = resource.getAnnotation( jakarta.ws.rs.Path.class );
+            for ( Method method : resource.getDeclaredMethods() ) {
+                String verb = httpMethodOf( method );
+                if ( verb == null ) {
+                    continue;
+                }
+                jakarta.ws.rs.Path methodPath = method.getAnnotation( jakarta.ws.rs.Path.class );
+                String path = normalizePath( ( classPath != null ? classPath.value() : "" )
+                        + "/" + ( methodPath != null ? methodPath.value() : "" ) );
+                byRoute.computeIfAbsent( verb + " " + path, k -> new TreeSet<>() )
+                        .addAll( parameterNamesOf( method ) );
+            }
+        }
+        return byRoute;
+    }
+
+    /** The verb a resource method serves, read off whichever annotation is meta-annotated {@code @HttpMethod}. */
+    @Nullable
+    private static String httpMethodOf( Method method ) {
+        for ( java.lang.annotation.Annotation annotation : method.getAnnotations() ) {
+            jakarta.ws.rs.HttpMethod httpMethod =
+                    annotation.annotationType().getAnnotation( jakarta.ws.rs.HttpMethod.class );
+            if ( httpMethod != null ) {
+                return httpMethod.value();
+            }
+        }
+        return null;
+    }
+
+    /** Named JAX-RS parameters, skipping any the resource deliberately hides. */
+    private static Set<String> parameterNamesOf( Method method ) {
+        Set<String> names = new TreeSet<>();
+        for ( java.lang.reflect.Parameter parameter : method.getParameters() ) {
+            io.swagger.v3.oas.annotations.Parameter documented =
+                    parameter.getAnnotation( io.swagger.v3.oas.annotations.Parameter.class );
+            if ( documented != null && documented.hidden() ) {
+                continue;
+            }
+            jakarta.ws.rs.QueryParam query = parameter.getAnnotation( jakarta.ws.rs.QueryParam.class );
+            if ( query != null ) {
+                names.add( query.value() );
+            }
+            jakarta.ws.rs.PathParam path = parameter.getAnnotation( jakarta.ws.rs.PathParam.class );
+            if ( path != null ) {
+                names.add( path.value() );
+            }
+        }
+        return names;
+    }
+
+    /**
+     * A JAX-RS path as the specification spells it: single slashes, no trailing slash, and the regex
+     * stripped out of a template like <code>{type:json|yaml}</code>.
+     */
+    private static String normalizePath( String path ) {
+        String collapsed = ( "/" + path ).replaceAll( "/+", "/" );
+        if ( collapsed.length() > 1 && collapsed.endsWith( "/" ) ) {
+            collapsed = collapsed.substring( 0, collapsed.length() - 1 );
+        }
+        return collapsed.replaceAll( "\\{\\s*(\\w+)\\s*:[^}]*}", "{$1}" );
+    }
 }

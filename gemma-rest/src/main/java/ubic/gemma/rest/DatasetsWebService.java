@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -10931,7 +10932,24 @@ public class DatasetsWebService {
     // JAX-RS methods collapse to a single OpenAPI operation under (GET, /{dataset}/design); duplicating the
     // annotation makes the merge result deterministic regardless of reflection order, and keeps the JSON
     // return type visible so swagger auto-registers the ResponseDataObjectExperimentalDesignValueObject schema.
-    @Operation(summary = "Retrieve the design of a dataset", responses = {
+    //
+    // 🛑 The merge takes the SIGNATURE of whichever method wins too, not just its annotation. This one wins
+    // and accepts only {dataset}, so ?quantitationType= and ?useProcessedQuantitationType= — which the
+    // endpoint really does read, on the tab-separated branch — vanished from the spec entirely until they
+    // were declared in `parameters` above. Anything the losing method accepts has to be declared here, and
+    // OpenApiTest.testCollapsedRoutesDeclareEveryParameterTheyAccept fails the build when it is not.
+    @Operation(summary = "Retrieve the design of a dataset",
+            parameters = {
+                    // Declared here rather than only on getDatasetDesign below, because that method
+                    // loses the (GET, /{dataset}/design) merge and its signature goes with it.
+                    @Parameter(name = "quantitationType", in = ParameterIn.QUERY,
+                            description = "Quantitation type to produce the experimental design for. Only works for raw data vectors; the default is the design for the experiment. Read by the tab-separated representation — the JSON one ignores it.",
+                            schema = @Schema(implementation = QuantitationTypeArg.class)),
+                    @Parameter(name = "useProcessedQuantitationType", in = ParameterIn.QUERY,
+                            description = "Produce an experimental design compatible with the preferred data vectors, rather than the design for the experiment. Read by the tab-separated representation — the JSON one ignores it.",
+                            schema = @Schema(type = "boolean", defaultValue = "false"))
+            },
+            responses = {
             @ApiResponse(responseCode = "200", description = "The dataset's experimental design, as JSON or as a tab-separated file depending on the negotiated media type.", content = {
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
                             examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv")),
@@ -11058,7 +11076,18 @@ public class DatasetsWebService {
     @Path("/{dataset}/design")
     // lowering qs sets json to default
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8 + ";qs=0.9")
-    @Operation(summary = "Retrieve the design of a dataset", responses = {
+    @Operation(summary = "Retrieve the design of a dataset",
+            parameters = {
+                    // Declared here rather than only on getDatasetDesign below, because that method
+                    // loses the (GET, /{dataset}/design) merge and its signature goes with it.
+                    @Parameter(name = "quantitationType", in = ParameterIn.QUERY,
+                            description = "Quantitation type to produce the experimental design for. Only works for raw data vectors; the default is the design for the experiment. Read by the tab-separated representation — the JSON one ignores it.",
+                            schema = @Schema(implementation = QuantitationTypeArg.class)),
+                    @Parameter(name = "useProcessedQuantitationType", in = ParameterIn.QUERY,
+                            description = "Produce an experimental design compatible with the preferred data vectors, rather than the design for the experiment. Read by the tab-separated representation — the JSON one ignores it.",
+                            schema = @Schema(type = "boolean", defaultValue = "false"))
+            },
+            responses = {
             @ApiResponse(responseCode = "200", description = "The dataset's experimental design, as JSON or as a tab-separated file depending on the negotiated media type.", content = {
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
                             examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv")),
