@@ -3,10 +3,12 @@ package ubic.gemma.rest;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
@@ -35,6 +37,7 @@ import ubic.gemma.persistence.util.UnsupportedEntityUrlException;
 import ubic.gemma.rest.annotations.Costly;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.MalformedArgException;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -57,6 +60,7 @@ import static java.util.function.Function.identity;
 @Service
 @Path("/search")
 @Slf4j
+@Tag(name = "Search", description = "Free-text search across every indexed result type")
 public class SearchWebService {
 
     /**
@@ -98,16 +102,18 @@ public class SearchWebService {
     @GZIP
     @Produces(MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Search everything in Gemma", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", description = "The matching results, each carrying the object it found and the score it matched with.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "400", description = "Invalid search query, taxon, platform result type or exclusion specification.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-            @ApiResponse(responseCode = "503", description = "The search timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = "The search timed out.",
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public SearchResultsResponseDataObject search(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("taxon") TaxonArg<?> taxonArg,
-            @QueryParam("platform") PlatformArg<?> platformArg,
-            @Parameter(array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @QueryParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @QueryParam("platform") PlatformArg<?> platformArg,
+            @Parameter(description = "Restrict the search to these result types. Omit to search every type `GET /search` supports.", array = @ArraySchema(schema = @Schema(name = RESULT_TYPES_SCHEMA_NAME, hidden = true))) @QueryParam("resultTypes") List<String> resultTypes,
             @Parameter(description = "Maximum number of search results to return; capped at " + MAX_SEARCH_RESULTS + " unless `resultObject` is excluded.", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_SEARCH_RESULTS)) @QueryParam("limit") LimitArg limit,
             @Parameter(description = "List of fields to exclude from the payload. Only `resultObject` is supported.") @QueryParam("exclude") ExcludeArg<SearchResult<?>> excludeArg,
             @Parameter(description = "Expand a gene search through Gene Ontology terms (GO term → annotated genes). "

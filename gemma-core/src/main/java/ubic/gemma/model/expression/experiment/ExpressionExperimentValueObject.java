@@ -189,6 +189,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Boolean suitableForDEA = true;
 
     // these are populated by gsec
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isPublic = false;
     @JsonIgnore
     private boolean isShared = false;
@@ -220,6 +221,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * clients inferring modality from a regex over platform and assay strings, blind to a dataset annotated
      * with none of the expected words and fooled by a title that merely mentions single cell (uib, 2026-09-03).
      */
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isSingleCell;
 
     /**

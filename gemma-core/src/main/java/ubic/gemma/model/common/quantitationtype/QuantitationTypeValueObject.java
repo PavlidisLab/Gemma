@@ -59,11 +59,18 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
     @Schema(implementation = ScaleType.class)
     private String scale;
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
+
     private boolean isBackground;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isBackgroundSubtracted;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isBatchCorrected;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isNormalized;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isRatio;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isRecomputedFromRawData;
 
     /**
@@ -78,9 +85,10 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
      * say which flag fired; {@code isPreferred && !isMaskedPreferred && !isSingleCellPreferred} is the
      * processed-data sense on its own.
      */
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isPreferred;
     @Deprecated
-    @Schema(deprecated = true)
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, deprecated = true)
     private boolean isMaskedPreferred;
     /**
      * True when this is the preferred single-cell quantitation type.
@@ -88,6 +96,7 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
      * One of the three flags {@link #isPreferred} ORs together. Exposed because it was the only one of them a
      * client could not see, which left {@code isPreferred} true with no way to tell why.
      */
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean isSingleCellPreferred;
 
     /**

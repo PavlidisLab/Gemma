@@ -11,10 +11,12 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.report.HomeStats;
 import ubic.gemma.core.analysis.report.HomeStatsService;
 import ubic.gemma.rest.annotations.CacheControl;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 
@@ -45,6 +48,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Service
 @Path("/stats")
 @Slf4j
+@Tag(name = "Stats", description = "Cached corpus-level statistics for the public home page")
 public class StatsWebService {
 
     @Autowired
@@ -58,8 +62,9 @@ public class StatsWebService {
             description = "Returns datasets / platforms / samples counts, per-taxon and per-platform-technology breakdowns, "
                     + "and the most-recently-curated experiments. The snapshot is recomputed daily; for a forced refresh, see POST /stats/home/refresh.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The cached statistics snapshot.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = "Snapshot not yet generated; retry shortly.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<HomeStats> getHomeStats() {
@@ -79,6 +84,9 @@ public class StatsWebService {
             security = {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The freshly regenerated statistics snapshot.", useReturnTypeSchema = true, content = @Content())
             })
     public ResponseDataObject<HomeStats> refreshHomeStats() {
         log.info( "Admin-triggered HomeStats refresh" );

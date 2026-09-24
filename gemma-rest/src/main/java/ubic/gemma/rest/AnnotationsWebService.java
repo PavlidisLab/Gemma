@@ -22,10 +22,12 @@ package ubic.gemma.rest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -72,6 +74,7 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.ranking.AnnotationSearchRankingStrategy;
 import ubic.gemma.rest.ranking.LuceneOrderRankingStrategy;
 import ubic.gemma.rest.ranking.QueryTokens;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.QueriedAndFilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -108,6 +111,7 @@ import ubic.gemma.rest.annotations.Costly;
 @Service
 @Slf4j
 @Path("/annotations")
+@Tag(name = "Annotations", description = "Ontology terms, the annotations using them, and search over both")
 public class AnnotationsWebService {
 
 
@@ -400,9 +404,11 @@ public class AnnotationsWebService {
             description = "Terms that are returned satisfies the [rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [part_of](http://purl.obolibrary.org/obo/BFO_0000050) relations. When `direct` is set to false, this rule is applied recursively. "
                     + "Each returned term carries `viaSubClassOf`, saying which of the two reached it: `true` for a plain subClassOf ancestor, `false` for one reachable only across `part_of` (or, on CHEBI, `has_role`). On a CHEBI term that is the structure/role split — vancomycin's `glycopeptide` is `true`, its `antibacterial drug` is `false`.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The parent terms. Each carries `viaSubClassOf`, saying whether it was reached as a plain superclass or only across a non-taxonomic relation.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> getAnnotationsParents(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
             @Parameter(description = "Only include direct children.") @QueryParam("direct") @DefaultValue("false") boolean direct ) {
@@ -421,9 +427,11 @@ public class AnnotationsWebService {
             description = "Terms that are returned satisfies the [inverse of rdfs:subClassOf](https://www.w3.org/TR/2012/REC-owl2-syntax-20121211/#Subclass_Axioms) or [has_part](http://purl.obolibrary.org/obo/BFO_0000051) relations. When `direct` is set to false, this rule is applied recursively. "
                     + "Each returned term carries `viaSubClassOf`, saying which of the two reached it: `true` for a plain subclass descendant, `false` for one reachable only across the non-taxonomic relations.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The child terms. Each carries `viaSubClassOf`, saying whether it was reached as a plain subclass or only across a non-taxonomic relation.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = "Ontology inference timed out.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> getAnnotationsChildren(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
@@ -461,7 +469,7 @@ public class AnnotationsWebService {
                     + "**Provisional.** These rows stand in for a database migration that is written and not yet "
                     + "applied; when it runs this list becomes empty, and an empty list is the finished state, "
                     + "not a failure.",
-            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+            responses = { @ApiResponse(responseCode = "200", description = "The term URIs Gemma rewrites, each with the URI it is rewritten to.", useReturnTypeSchema = true, content = @Content()) })
     public ResponseDataObject<List<CanonicalUriValueObject>> getCanonicalUris(
             @Parameter(description = "Only return the mapping for this URI, if one exists.")
             @QueryParam("uri") @Nullable String uri ) {
@@ -541,9 +549,11 @@ public class AnnotationsWebService {
     @Operation(summary = "Retrieve an ontology term by its URI",
             description = "For a term the ontology has deprecated (`obsolete: true`), the response also carries where to go next: `termReplacedBy` (the successor's full IRI, `IAO:0100001`) with `termReplacedByLabel`, the weaker `consider` candidates, and `obsoletedInVersion`. These are absent/empty for live terms.",
             responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", description = "The term. For one the ontology has deprecated, `termReplacedBy` and `consider` say where to go instead; both are absent or empty for a live term.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-            @ApiResponse(responseCode = "503", description = "Ontology lookup timed out.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = "Ontology lookup timed out.",
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<OntologyTermValueObject> getAnnotationTerm(
             @Parameter(description = "Term URI") @QueryParam("uri") String termUri,
@@ -659,7 +669,7 @@ public class AnnotationsWebService {
     @Path("/categories")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all ontology categories used in Gemma", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+            @ApiResponse(responseCode = "200", description = "Every ontology category in use across Gemma's annotations.", useReturnTypeSchema = true, content = @Content())
     })
     public ResponseDataObject<List<AnnotationCategoryValueObject>> getAnnotationCategories() {
         Map<String, List<String>> prefixesByKey = resolveCategoryPrefixes();
@@ -841,7 +851,7 @@ public class AnnotationsWebService {
     @Path("/predicates")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all ontology predicates used in Gemma", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content())
+            @ApiResponse(responseCode = "200", description = "Every ontology predicate in use across Gemma's annotations.", useReturnTypeSchema = true, content = @Content())
     })
     public ResponseDataObject<List<OntologyTermSimpleValueObject>> getAnnotationPredicates() {
         List<OntologyTermSimpleValueObject> vos = ontologyService.getRelationTerms().stream()
@@ -877,7 +887,7 @@ public class AnnotationsWebService {
                     + "is true of a fraction of the cells and not of the study. Bulk is unaffected: a constant "
                     + "cell type there is a real experiment-level property. `includeCellTypeSubjects=true` "
                     + "returns them, for seeing what the cut removed.",
-            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+            responses = { @ApiResponse(responseCode = "200", description = "The relations between the given terms, each with the basis on which it was inferred.", useReturnTypeSchema = true, content = @Content()) })
     public ResponseDataObject<List<AnnotationRelationValueObject>> getAnnotationRelations(
             @Parameter(description = "Term on the subject side, as a URI or a plain value.") @QueryParam("subject") @Nullable String subject,
             @Parameter(description = "Term on the object side, as a URI or a plain value.") @QueryParam("object") @Nullable String object,
@@ -940,7 +950,7 @@ public class AnnotationsWebService {
                     + "carried, so the terms have to be reachable by someone asking why one is missing. No "
                     + "effect on a bulk dataset or a term-seeded read, neither of which is cut.")
             @QueryParam("includeCellTypeSubjects") @DefaultValue("false") boolean includeCellTypeSubjects,
-            @QueryParam("limit") @DefaultValue("50") int limit
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("50") int limit
     ) {
         if ( StringUtils.isBlank( subject ) && StringUtils.isBlank( object ) && datasetId == null ) {
             throw new BadRequestException( "One of 'subject', 'object' or 'dataset' must be supplied; the whole relation table is not a question." );
@@ -1060,7 +1070,7 @@ public class AnnotationsWebService {
                     + "related and on what basis. Omit 'to' to get everything the 'from' terms imply. "
                     + "Ambiguity is preserved rather than resolved: every candidate is returned, because a "
                     + "membership test is right whichever one is meant.",
-            responses = { @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+            responses = { @ApiResponse(responseCode = "200", description = "The terms already implied by the others, so a caller can avoid adding a redundant annotation.", useReturnTypeSchema = true, content = @Content()) })
     public ResponseDataObject<List<AnnotationRelationValueObject>> getImpliedAnnotations(
             @Parameter(description = "Comma-separated term URIs the experiment already carries.", required = true) @QueryParam("from") @Nullable String from,
             @Parameter(description = "Comma-separated candidate term URIs to test. Omit to return everything implied.") @QueryParam("to") @Nullable String to,
@@ -1077,7 +1087,7 @@ public class AnnotationsWebService {
                     + "0 (the default) does not filter.") @QueryParam("maxObjectBreadth") @DefaultValue("0") int maxObjectBreadth,
             @Parameter(description = "Include per-experiment parameters. Off by default -- a dose or a "
                     + "duration cannot imply an annotation, so a gate has no use for them.") @QueryParam("includeExperimentLevel") @DefaultValue("false") boolean includeExperimentLevel,
-            @QueryParam("limit") @DefaultValue("100") int limit
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("100") int limit
     ) {
         if ( StringUtils.isBlank( from ) ) {
             throw new BadRequestException( "'from' is required: the terms the experiment already carries." );
@@ -1395,9 +1405,11 @@ public class AnnotationsWebService {
     @Costly("search")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Search for annotation tags", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", description = "The matching annotation tags.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-            @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public AnnotationSearchResponseDataObject searchAnnotations(
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION) @QueryParam("query") @DefaultValue("") StringArrayArg query,
@@ -1716,9 +1728,11 @@ public class AnnotationsWebService {
                     + "per-item. A per-item failure is reported in that item's `error` field and does NOT fail the "
                     + "batch. At most " + SEARCH_BATCH_MAX_ITEMS + " items per request.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "One result set per query in the batch, in the order the queries were given.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The batch is empty / oversized, or a shared parameter is invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<AnnotationSearchBatchResultValueObject>> searchAnnotationsBatch( @Nullable AnnotationSearchBatchRequest body ) {
         if ( body == null || body.getQueries() == null || body.getQueries().isEmpty() ) {
@@ -1836,7 +1850,7 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The matching annotation tags.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<AnnotationSearchResultValueObject>> searchAnnotationsByPathQuery( // Params:
@@ -1859,20 +1873,23 @@ public class AnnotationsWebService {
     @GET
     @Path("/search/datasets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve datasets associated to an annotation tags search",
+    @Operation(operationId = "searchDatasets",
+            summary = "Retrieve datasets associated to an annotation tags search",
             description = "This is deprecated in favour of the [/datasets](#/default/getDatasets) endpoint. Use the `AND` operator to intersect the results of multiple queries.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The datasets carrying annotations that match the search, paginated.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasets( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.") @QueryParam("query") @DefaultValue("") StringArrayArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -1920,16 +1937,16 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The datasets carrying annotations that match the search, paginated.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchDatasetsByQueryInPath( // Params:
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.")
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
         return searchDatasets( query, filterArg, offset, limit, sortArg );
     }
@@ -1945,18 +1962,20 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of the [/datasets](#/default/getDatasets) endpoint with a `query` parameter and a `filter` parameter with `taxon.id = {taxon} or taxon.commonName = {taxon} or taxon.scientificName = {taxon}` to restrict the taxon instead.  Use the `AND` operator to intersect the results of multiple queries.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The taxon's datasets carrying annotations that match the search, paginated.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = FIND_CHARACTERISTICS_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasets( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.")
             @QueryParam("query") @DefaultValue("") StringArrayArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         if ( query == null || query.getValue().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -2001,17 +2020,17 @@ public class AnnotationsWebService {
             description = "This is deprecated in favour of passing `query` as a query parameter.",
             deprecated = true,
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The taxon's datasets carrying annotations that match the search, paginated.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The search query is empty or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> searchTaxonDatasetsByQueryInPath( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, // Required
             @Parameter(schema = @Schema(implementation = StringArrayArg.class), explode = Explode.FALSE, description = SEARCH_QUERY_DESCRIPTION + " Matching datasets for each query are intersected.")
             @PathParam("query") @DefaultValue("") StringArrayArg query, // Required
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort // Optional, default +id
     ) {
         return searchTaxonDatasets( taxonArg, query, filter, offset, limit, sort );
     }
@@ -4598,6 +4617,7 @@ public class AnnotationsWebService {
          * {@code includeGeneCount=true}; null otherwise. Counts include propagation through
          * GO subClassOf descendants by default — set via {@code Gene2GOAssociationService.countByGOTermUris}.
          */
+        @Schema(description = "Distinct genes annotated with this term, including descendants walked under the request's `geneCountMaxTerms` cap. Populated only when the request asked for it with `includeGeneCount=true`. Null therefore means “not requested” as well as “none” — the two are not distinguishable here.")
         @Nullable Long geneCount;
         /**
          * Distinct-experiment counts grouped by the category that prior curators applied when
@@ -4628,6 +4648,7 @@ public class AnnotationsWebService {
          * {@code includeExampleUsage=true}; null when the flag is off, on synthetic gene rows, or when the
          * term has no accessible usage. Gate rendering client-side (e.g. only for low {@code usageCount}).
          */
+        @Schema(description = "One representative accessible use of the term. Populated only when the request asked for it with `includeExampleUsage=true`, and null even then on a synthetic gene row or where the term has no accessible usage.")
         @Nullable ExampleUsageValueObject exampleUsage;
         /**
          * Distinct experiments on which a prior curator annotated this term after being given the
@@ -5391,6 +5412,7 @@ public class AnnotationsWebService {
         private final NegativeEvidenceValueObject negativeEvidence;
 
         @Nullable
+        @Schema(description = "Terms prior curators applied in this situation. Populated only when the request asked for it with `includePriorCuration=true`; empty otherwise, so empty does not mean no prior curation exists.")
         private final List<PriorCurationValueObject> priorCuration;
 
         public AnnotationSearchResponseDataObject( List<AnnotationSearchResultValueObject> payload,
@@ -6134,7 +6156,8 @@ public class AnnotationsWebService {
                     + "GROUP_ADMIN.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Annotation created.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "201", description = "The annotation as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectAnnotationValueObject.class))),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",
@@ -6144,7 +6167,7 @@ public class AnnotationsWebService {
                     @ApiResponse(responseCode = "409", description = "An annotation with the same (category, value) already exists.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response addDatasetAnnotation(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable AnnotationDto body,
             @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
                     + "linkage is parked until the source-set → emitted-event audit link lands.")
@@ -6236,8 +6259,8 @@ public class AnnotationsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset or annotation does not exist on this dataset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response removeDatasetAnnotation(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("annotationId") Long annotationId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the annotation to remove.") @PathParam("annotationId") Long annotationId,
             @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
                     + "it. The authenticated credential stays the performer on the audit row; this names the "
                     + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
@@ -6288,7 +6311,7 @@ public class AnnotationsWebService {
                     + "Requires GROUP_CURATOR or GROUP_ADMIN.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "What the diff-then-apply actually changed: the annotations added, removed and left alone.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",
@@ -6296,7 +6319,7 @@ public class AnnotationsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<AnnotationReplaceReport> replaceDatasetAnnotations(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable AnnotationsReplaceRequest body,
             @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
                     + "it. The authenticated credential stays the performer on the audit row; this names the "
@@ -6518,4 +6541,19 @@ public class AnnotationsWebService {
                 && CharacteristicUtils.equals( sa.getSecondPredicate(), sa.getSecondPredicateUri(), sb.getSecondPredicate(), sb.getSecondPredicateUri() )
                 && CharacteristicUtils.equals( sa.getSecondObject(), sa.getSecondObjectUri(), sb.getSecondObject(), sb.getSecondObjectUri() );
     }
+
+    /**
+     * Response shape for {@link #addDatasetAnnotation}.
+     * <p>
+     * Doc-only: the method returns {@code Response} so it can set the status, which leaves
+     * swagger-core nothing to introspect, and naming the raw {@code ResponseDataObject} would erase
+     * the payload type. Naming a bound subclass is the only way an annotation can carry it.
+     */
+    public static class ResponseDataObjectAnnotationValueObject extends ResponseDataObject<AnnotationValueObject> {
+
+        public ResponseDataObjectAnnotationValueObject( AnnotationValueObject payload ) {
+            super( payload );
+        }
+    }
+
 }

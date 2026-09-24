@@ -14,9 +14,11 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -110,6 +112,7 @@ import ubic.gemma.rest.util.args.OffsetArg;
 @Service
 @Path("/")
 @Slf4j
+@Tag(name = "Annotation Sets", description = "Agent- and curator-proposed annotation sets, with triage and per-finding dispositions")
 public class AnnotationSetsWebService {
 
     @Autowired
@@ -346,7 +349,10 @@ public class AnnotationSetsWebService {
                     + "`?sort=` takes `createdAt` (default), `ranAt` or `id`, prefixed `-` for descending "
                     + "(the default) or `+` for ascending. 🛑 `ranAt` is when the agent RUN happened and "
                     + "`createdAt` is when the row was stored; a queue wants the former, and sets no run "
-                    + "produced have no `ranAt` and sort last under `-ranAt`.")
+                    + "produced have no `ranAt` and sort last under `-ranAt`.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The matching annotation sets as thin summary rows, paginated. The full payload is at `GET /annotation-sets/{id}`.", useReturnTypeSchema = true, content = @Content())
+            })
     public PaginatedResponseDataObject<AnnotationSetSummaryResponse> listAnnotationSetsAcross(
             @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, `commit`, or `all` (default).")
             @QueryParam("role") @Nullable String role,
@@ -362,8 +368,8 @@ public class AnnotationSetsWebService {
             @QueryParam("status") @Nullable String status,
             @Parameter(description = "Restrict to a comma-separated list of dataset (investigation) ids.")
             @QueryParam("datasetIds") @Nullable String datasetIds,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @Parameter(description = "Order by `createdAt` (default), `ranAt` or `id`; `-` descending "
                     + "(default), `+` ascending.",
                     schema = @Schema(defaultValue = "-createdAt"))
@@ -452,9 +458,12 @@ public class AnnotationSetsWebService {
     @Path("/annotation-sets/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
-    @Operation(summary = "Fetch a single annotation set (full payload)")
+    @Operation(summary = "Fetch a single annotation set (full payload)",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The annotation set, full payload.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<AnnotationSetResponse> getAnnotationSet(
-            @PathParam("id") Long id
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id
     ) {
         AnnotationSet a = requireLoad( id, "id" );
         return Responders.respond( toResponse( a, annotationSetDispositionService.standingFor( a ) ) );
@@ -491,7 +500,7 @@ public class AnnotationSetsWebService {
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response finalizeAnnotationSet(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id,
             @Parameter(description = "Who is finalizing. Agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable FinalizeRequest body
@@ -547,7 +556,7 @@ public class AnnotationSetsWebService {
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response setAnnotationSetStatus( @PathParam("id") Long id, @Nullable StatusRequest body ) {
+    public Response setAnnotationSetStatus( @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id, @Nullable StatusRequest body ) {
         if ( body == null || body.status == null || body.status.isBlank() ) {
             throw new BadRequestException( "Request body must include a non-blank `status`."
                     + " The values in use are pending, needs_changes, accepted and rejected, but any"
@@ -609,7 +618,7 @@ public class AnnotationSetsWebService {
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response triageAnnotationSet(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id,
             @Parameter(description = "Who is ruling. Agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable TriageRequest body
@@ -647,7 +656,7 @@ public class AnnotationSetsWebService {
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response withdrawTriage(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id,
             @Parameter(description = "Whose ruling to withdraw. Agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
@@ -666,8 +675,14 @@ public class AnnotationSetsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Read the triage rulings on an annotation set",
             description = "Most recent first, so the head of the list is the effective verdict. An empty "
-                    + "list means nobody has ruled.")
-    public Response getTriage( @PathParam("id") Long id ) {
+                    + "list means nobody has ruled.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The rulings, most recent first. Empty when nobody has ruled.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = TriageResponse.class)))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response getTriage( @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id ) {
         AnnotationSet set = requireLoad( id, "id" );
         List<TriageResponse> rows = new ArrayList<>();
         for ( AnnotationSetTriage t : annotationSetTriageService.findBySet( set ) ) {
@@ -762,7 +777,7 @@ public class AnnotationSetsWebService {
                             description = "The set is finalized and is not taking rulings; reopen it first.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response ruleOnFinding(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id,
             @Parameter(description = "The person ruling. Required from an agent; agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable DispositionRequest body
@@ -816,9 +831,15 @@ public class AnnotationSetsWebService {
                     + "Standing is keyed on `findingId` for rows that carry one and on `targetId` "
                     + "for rows that do not, and the two are SEPARATE — a ruling on a finding never "
                     + "supersedes a ruling on a target. So a set holding both kinds can return two "
-                    + "rows for one target, which is correct rather than a duplicate.")
+                    + "rows for one target, which is correct rather than a duplicate.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "One row per finding by default, or the full append-only sequence with `?history=true`.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = DispositionResponse.class)))),
+                    @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response getDispositions(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id,
             @Parameter(description = "Return every ruling rather than the standing one per finding.")
             @QueryParam("history") @DefaultValue("false") boolean history
     ) {
@@ -860,7 +881,7 @@ public class AnnotationSetsWebService {
                             content = @Content(schema = @Schema(implementation = ClearDispositionsResponse.class))),
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response clearDispositions( @PathParam("id") Long id ) {
+    public Response clearDispositions( @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id ) {
         AnnotationSet set = requireLoad( id, "id" );
         ClearDispositionsResponse r = new ClearDispositionsResponse();
         r.annotationSetId = set.getId();
@@ -1012,9 +1033,13 @@ public class AnnotationSetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Clear finalized status on an annotation set")
+    @Operation(summary = "Clear finalized status on an annotation set",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The finalized status was cleared.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetResponse.class)))
+            })
     public Response reopenAnnotationSet(
-            @PathParam("id") Long id
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id
     ) {
         AnnotationSet updated = annotationSetService.reopenSet( id );
         if ( updated == null ) {
@@ -1045,7 +1070,7 @@ public class AnnotationSetsWebService {
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response updateAnnotationSetProvenance(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id,
             @Nullable ProvenanceRequest body
     ) {
         // An unrecognized field name is dropped by the mapper, so a caller that misspelled one would
@@ -1078,7 +1103,7 @@ public class AnnotationSetsWebService {
                     @ApiResponse(responseCode = "404", description = "No annotation set with that id.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response deleteAnnotationSet(
-            @PathParam("id") Long id
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("id") Long id
     ) {
         boolean removed = annotationSetService.delete( id );
         if ( !removed ) {

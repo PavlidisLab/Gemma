@@ -1,5 +1,67 @@
 ## Updates
 
+### Update 3.0.0
+
+Correct the specification where it did not describe the API. None of this changes the wire; every
+change below makes the published document agree with what the server already does.
+
+The version goes to 3.0.0 rather than 2.10.0, for two reasons that are both about the number having
+stopped being informative. First, 2.9.4 no longer identifies one API: the 1.32.8 maintenance line
+publishes that same version for nine resources, while this document describes twenty-seven, so a
+client cannot tell from the version which of the two it is holding. Second, the field rename below
+is a breaking wire change that already shipped under 2.9.4, which means the number a client has
+does not tell it whether it has the renamed fields either. A major bump separates this document
+from both of those, and from here the number moves whenever the wire does.
+
+`AnnotationValueObject` renamed four of its fields and the change was never recorded here:
+`className` became `category`, `classUri` became `categoryUri`, `termName` became `value`, and
+`termUri` became `valueUri`. It landed on 2026-08-31, seven months after the 2.9.4 release of
+2026-01-09, and under that same version number — the commit changed neither the version nor this
+file, so a client had no signal of any kind. The old names are gone from the wire. This
+entry exists because they vanished without one — a client reading a factor-value row also finds
+that `value` now carries the term's own label rather than a composed sentence such as
+"wild type genotype has background APP/PS1". A test now pins the wire names of the value objects
+clients consume, so the next rename fails the build instead of shipping quietly.
+
+Seven write endpoints documented a status they do not return. `releaseCurationLock`, `deleteGroup`,
+`removeMember` and `deleteTicket` answer 204 with no body, not 200 with a JSON one; `createGroup`
+and `createTicket` answer 201, not 200; `removeTicketTarget` answers 204 when the ticket carried no
+such target. `upsertDatasetDraftAnnotationSet`, `submitDatasetAnnotationSet` and
+`attachAnnotationSet` answer 200 or 201 depending on whether the thing already existed, and now say
+so. Twenty write responses that declared no response body at all now declare one.
+
+`GET /datasets/{dataset}/design` accepts `quantitationType` and `useProcessedQuantitationType` on
+its tab-separated representation. Neither appeared in the specification, because the endpoint is
+served by two methods and the documented one does not take them.
+
+`GET /genes/{gene}/probes` has four response shapes, not two: `summary=true` returns
+`CompositeSequenceSummaryValueObject` rows, a type that did not appear in the specification at all.
+
+Bearer authentication is declared. `POST /login` has always minted tokens for
+`Authorization: Bearer <token>`, but the scheme was missing, so a generated client could not express
+it.
+
+Every response now carries a description, every operation a tag, and every parameter a description.
+The 503s that carry a `Retry-After` header say so, including on the eight budget-limited endpoints
+that did not document a 503 at all. Responses that serve a tab-separated body no longer describe it
+as a JSON object, and media types no longer carry the `q` weight that belonged to server-side
+content negotiation rather than to the specification.
+
+The `Admin`, `Admin/Pipeline` and `Internal/Pipeline` tags carry `x-internal: true`. A client
+generator that should not ship Gemma's operational surface can collect the internal tag names from
+the document's own `tags` list and drop the operations carrying them — 41 of 291 — without
+hardcoding tag names or path prefixes. `Observability` is deliberately not marked: `/health` and
+`/info` are what external uptime monitors read.
+
+`GeeqValueObject` no longer advertises each quality score twice. The specification listed both
+`qScoreOutliers` and `qscoreOutliers` for all nine scores, and had since before 2.9.4. Serializing
+one and inspecting the result showed the lowercase spelling was never on the wire: Lombok's
+`@Setter` generates `setQScoreOutliers` from the field `qScoreOutliers`, swagger mangles that setter
+name back to `qscoreOutliers`, and Jackson ignores it because the field's `@JsonProperty` settles
+the name. So these were phantom properties — advertised by the document, absent from every
+response. Nothing that reads `qScore*` changes; a client written against `qscore*` was reading a
+field it never received.
+
 ### Update 2.9.4
 
 Remove the GEEQ suitability score. The `publicSuitabilityScore` and the eight `sScore*` fields it averaged

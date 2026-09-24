@@ -30,7 +30,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.JobState;
 import ubic.gemma.model.pipeline.PipelineJob;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
+import ubic.gemma.model.pipeline.PipelineJobBatchValueObject;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
+import ubic.gemma.model.pipeline.PipelineJobEventValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import java.util.ArrayList;
@@ -120,6 +122,37 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
     @Transactional(readOnly = true)
     public List<PipelineJobBatch> findByOwner( Long contactId, @Nullable PipelineJobBatch.BatchState state, int limit ) {
         return batchDao.findByOwner( contactId, state, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PipelineJobBatchValueObject loadValueObject( Long batchId ) {
+        PipelineJobBatch batch = batchDao.load( batchId );
+        // withJobs reads the lazy jobs collection, which is why this runs here and not in the
+        // resource method: by the time the response is serialized the batch is detached.
+        return batch != null ? PipelineJobBatchValueObject.withJobs( batch ) : null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PipelineJobBatchValueObject> loadValueObjectsByOwner( Long contactId,
+            @Nullable PipelineJobBatch.BatchState state, int limit ) {
+        List<PipelineJobBatchValueObject> vos = new ArrayList<>();
+        for ( PipelineJobBatch batch : batchDao.findByOwner( contactId, state, limit ) ) {
+            // deliberately not withJobs: one query per batch for a listing nobody reads the jobs from
+            vos.add( PipelineJobBatchValueObject.from( batch ) );
+        }
+        return vos;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PipelineJobEventValueObject> loadEventValueObjects( Long jobId, @Nullable Date since, int limit ) {
+        List<PipelineJobEventValueObject> vos = new ArrayList<>();
+        for ( PipelineJobEvent event : findEvents( jobId, since, limit ) ) {
+            vos.add( PipelineJobEventValueObject.from( event ) );
+        }
+        return vos;
     }
 
     @Override

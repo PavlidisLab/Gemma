@@ -12,6 +12,11 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.HeaderParam;
@@ -27,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
+import ubic.gemma.model.pipeline.PipelineJobEventValueObject;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
 import ubic.gemma.rest.util.ResponseDataObject;
 
@@ -51,7 +57,8 @@ import static ubic.gemma.rest.util.Responders.respond;
  */
 @Service
 @Path("/internal/pipeline")
-@Tag(name = "Internal/Pipeline", description = "Scheduler push callbacks — service-to-service only")
+@Tag(name = "Internal/Pipeline", description = "Scheduler push callbacks — service-to-service only. Not part of the client-facing API: marked `x-internal` so an SDK build can drop it.",
+        extensions = @Extension(properties = @ExtensionProperty(name = "x-internal", value = "true", parseValue = true)))
 public class InternalPipelineWebService {
 
     private static final Log log = LogFactory.getLog( InternalPipelineWebService.class );
@@ -65,17 +72,22 @@ public class InternalPipelineWebService {
     @POST
     @Path("/jobs/{jobId}/events")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Append one event from the scheduler-side pipeline")
-    public ResponseDataObject<PipelineJobEvent> postEvent(
-            @PathParam("jobId") Long jobId,
-            @HeaderParam("Authorization") String authHeader,
+    @Operation(summary = "Append one event from the scheduler-side pipeline",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The event as appended.", useReturnTypeSchema = true, content = @Content())
+            })
+    public ResponseDataObject<PipelineJobEventValueObject> postEvent(
+            @Parameter(description = "Identifier of the pipeline job.") @PathParam("jobId") Long jobId,
+            @Parameter(description = "Shared-secret bearer token for the scheduler callback.") @HeaderParam("Authorization") String authHeader,
             PostEventRequest req ) {
         verifyToken( authHeader );
         if ( req == null || req.kind == null || req.kind.isBlank() ) {
             throw new BadRequestException( "kind is required" );
         }
         PipelineJobEvent event = pipelineJobBatchService.recordEvent( jobId, req.kind, req.payloadJson );
-        return respond( event );
+        // from() reads only scalars and the owning job's id, which is available on the proxy
+        // without initializing it, so this is safe on the detached entity recordEvent returns
+        return respond( PipelineJobEventValueObject.from( event ) );
     }
 
     private void verifyToken( String authHeader ) {

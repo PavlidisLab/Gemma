@@ -16,10 +16,12 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
@@ -51,7 +53,9 @@ import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -86,6 +90,7 @@ import ubic.gemma.rest.annotations.Costly;
  */
 @Service
 @Path("/genes")
+@Tag(name = "Genes", description = "Genes, their probes, locations, homologues and GO terms")
 public class GeneWebService {
 
     @Autowired
@@ -113,15 +118,15 @@ public class GeneWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing both yields a 400. "
                     + "In cursor mode `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The genes, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectGeneValueObject.class,
+                                    CursorPaginatedResponseDataObjectGeneValueObject.class
                             }))),
             })
     public Object getGenes(
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         if ( cursorArg != null ) {
@@ -169,16 +174,17 @@ public class GeneWebService {
                     + "Returns gene value-objects ordered by search score. Hard-cap on `limit` is "
                     + SEARCH_MAX_LIMIT_STR + "; default is " + SEARCH_DEFAULT_LIMIT_STR + ".",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The matching genes.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Empty / invalid query, or `limit` out of range.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "503", description = "The search timed out.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<GeneValueObject>> searchGenes(
-            @QueryParam("query") String query,
-            @QueryParam("taxon") TaxonArg<?> taxonArg,
-            @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") String query,
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @QueryParam("taxon") TaxonArg<?> taxonArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue(SEARCH_DEFAULT_LIMIT_STR) int limit
     ) {
         if ( query == null || query.trim().isEmpty() ) {
             throw new BadRequestException( "Search query cannot be empty." );
@@ -402,9 +408,12 @@ public class GeneWebService {
     @GET
     @Path("/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve genes matching gene identifiers")
+    @Operation(summary = "Retrieve genes matching gene identifiers",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The genes the identifiers resolved to.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<GeneValueObject>> getGenesByIds( // Params:
-            @PathParam("genes") GeneArrayArg genes // Required
+            @Parameter(description = "Gene identifiers, comma-separated.") @PathParam("genes") GeneArrayArg genes // Required
     ) {
         SortArg<Gene> sort = SortArg.valueOf( "+id" );
         Filters filters = Filters.empty();
@@ -424,9 +433,12 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the physical locations of a given gene")
+    @Operation(summary = "Retrieve the physical locations of a given gene",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The gene's physical locations.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<PhysicalLocationValueObject>> getGeneLocations( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return respond( geneArgService.getGeneLocation( geneArg ) );
     }
@@ -450,16 +462,18 @@ public class GeneWebService {
                     + "Pass `summary=true` to receive an enriched per-row VO with the gene-list this probe maps to and the BLAT-hit count (replaces the legacy `getGeneCsSummaries` DWR call); "
                     + "the page shape is unchanged but each element is a `CompositeSequenceSummaryValueObject` instead of the thin `CompositeSequenceValueObject`.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The probes for the gene across all platforms. Four shapes are possible: the pagination mode picks the envelope, and `summary` picks the row type \u2014 a thin `CompositeSequenceValueObject`, or a `CompositeSequenceSummaryValueObject` also carrying the genes that probe maps to and its BLAT-hit count.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    CursorPaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    PaginatedResponseDataObjectCompositeSequenceSummaryValueObject.class,
+                                    CursorPaginatedResponseDataObjectCompositeSequenceSummaryValueObject.class
                             }))),
             })
     public Object getGeneProbes( // Params:
-            @PathParam("gene") GeneArg<?> geneArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg, // Required
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "When true, each element is enriched with the gene-list this probe maps to and the BLAT-hit count (the legacy `getGeneCsSummaries` shape).")
             @QueryParam("summary") @DefaultValue("false") boolean summary
@@ -559,9 +573,12 @@ public class GeneWebService {
     @GET
     @Path("/{gene}/goTerms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the GO terms associated to a gene")
+    @Operation(summary = "Retrieve the GO terms associated to a gene",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The GO terms annotated to the gene.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<GeneOntologyTermValueObject>> getGeneGoTerms( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return respond( geneArgService.getGeneGoTerms( geneArg ) );
     }
@@ -584,12 +601,12 @@ public class GeneWebService {
     @Operation(summary = "Retrieve a fully-populated overview of a gene",
             description = "Returns the gene VO populated with aliases, multifunctionality rank, composite-sequence count, platform count, gene-set memberships, homologues, GO-term count, and associated-experiment count. Replaces the legacy `loadGeneDetails` DWR call used by the gemma-web gene page.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The gene with every field populated, which is more than the listing endpoints return.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "Gene not found",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<GeneValueObject> getGeneOverview( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         Gene gene = geneArgService.getEntity( geneArg );
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( gene.getId() );
@@ -615,12 +632,12 @@ public class GeneWebService {
     @Operation(summary = "Retrieve the homologues of a gene",
             description = "Returns the gene's homologues across all taxa (via the homologene service). The legacy gemma-web gene page surfaces this in the Overview tab.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The gene's homologues in other taxa.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "Gene not found",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<Collection<GeneValueObject>> getGeneHomologues( // Params:
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         Gene gene = geneArgService.getEntity( geneArg );
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( gene.getId() );
@@ -656,12 +673,12 @@ public class GeneWebService {
                     + "Results are scoped to experiments the caller has read access to (ACL-filtered). "
                     + "Cold-cache latency is mitigated by a scheduled warm-up of a seed gene list (`gemma.diffex.warmup.*`).",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The gene's differential expression results, grouped by experiment.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "Gene not found",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<GeneDifferentialExpressionGroupValueObject>> getGeneDifferentialExpression( // Params:
-            @PathParam("gene") GeneArg<?> geneArg, // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg, // Required
             @Parameter(description = "Maximum threshold on the corrected P-value to retain a result (inclusive). Default 1.0 returns all.",
                     schema = @Schema(minimum = "0.0", maximum = "1.0"))
             @QueryParam("threshold") @DefaultValue("1.0") double threshold,
@@ -694,6 +711,29 @@ public class GeneWebService {
     }
 
     /**
+     * Legacy-mode response shape for {@link #getGeneProbes} when {@code summary=true}.
+     * <p>
+     * Declared here rather than in {@link ubic.gemma.rest.util.OpenApiResponseTypes} because the type it
+     * binds is nested in this class. Without it the {@code oneOf} named only the thin-row containers, and
+     * {@link CompositeSequenceSummaryValueObject} appeared nowhere in the specification at all — an entire
+     * response shape a caller can ask for by flipping one query parameter.
+     */
+    public static class PaginatedResponseDataObjectCompositeSequenceSummaryValueObject extends PaginatedResponseDataObject<CompositeSequenceSummaryValueObject> {
+
+        public PaginatedResponseDataObjectCompositeSequenceSummaryValueObject( Slice<CompositeSequenceSummaryValueObject> payload, String[] groupBy ) {
+            super( payload, groupBy );
+        }
+    }
+
+    /** Cursor-mode response shape for {@link #getGeneProbes} when {@code summary=true}. */
+    public static class CursorPaginatedResponseDataObjectCompositeSequenceSummaryValueObject extends CursorPaginatedResponseDataObject<CompositeSequenceSummaryValueObject> {
+
+        public CursorPaginatedResponseDataObjectCompositeSequenceSummaryValueObject( CursorPage<CompositeSequenceSummaryValueObject> payload, String[] groupBy ) {
+            super( payload, groupBy );
+        }
+    }
+
+    /**
      * Enriched per-probe row returned by {@link #getGeneProbes} when {@code summary=true}.
      * Replaces the legacy DWR {@code CompositeSequenceController.getGeneCsSummaries} shape:
      * for each probe (composite sequence) on the page, carries the thin probe VO plus the
@@ -708,10 +748,18 @@ public class GeneWebService {
     @Data
     public static class CompositeSequenceSummaryValueObject implements Serializable {
         private static final long serialVersionUID = 1L;
+
+        @Schema(description = "The probe itself \u2014 the same thin row `summary=false` returns.")
         private final CompositeSequenceValueObject probe;
+
+        @Schema(description = "Every gene this probe maps to. Empty for a probe with no gene mapping.")
         private final List<GeneValueObject> genes;
+
+        @Schema(description = "Size of `genes`, duplicated so a caller that only wants the cardinality does not have to count.")
         private final int numGenes;
+
         @org.springframework.lang.Nullable
+        @Schema(description = "Distinct sequence-similarity hits for the probe, counted over chromosome, target start and end, target starts and query sequence. Null when the probe has no sequence-analysis rows at all, which is not the same as zero hits.")
         private final Integer numBlatHits;
     }
 }

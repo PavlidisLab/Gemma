@@ -29,11 +29,15 @@ import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -215,6 +219,7 @@ import ubic.gemma.rest.annotations.Costly;
 import ubic.gemma.rest.annotations.CacheControl;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.*;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.args.*;
 
 import org.springframework.lang.Nullable;
@@ -252,6 +257,7 @@ import static ubic.gemma.rest.util.Responders.sendfile;
 @Service
 @Path("/datasets")
 @Slf4j
+@Tag(name = "Datasets", description = "Expression experiments: metadata, samples, design, expression data and analyses")
 public class DatasetsWebService {
 
     public static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";
@@ -439,15 +445,17 @@ public class DatasetsWebService {
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "200", description = "The matching datasets, paginated. `searchResult` carries the score and highlights when a `query` was given, and is absent otherwise.", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
             @Parameter(description = "If specified, `sort` will default to `-searchResult.score` instead of `+id`. Note that sorting by `searchResult.score` is only valid if a query is specified.") @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
-            @Parameter(schema = @Schema(defaultValue = "+id")) @QueryParam("sort") SortArg<ExpressionExperiment> sortArg // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.", schema = @Schema(defaultValue = "+id")) @QueryParam("sort") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filterArg, null, inferredTerms );
@@ -554,14 +562,17 @@ public class DatasetsWebService {
     @Path("/search")
     @Costly("search")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Typeahead search for datasets by short name, accession, or title",
+    @Operation(operationId = "searchDatasetsTypeahead",
+            summary = "Typeahead search for datasets by short name, accession, or title",
             deprecated = true,
             description = "Deprecated: use `GET /datasets?query=...` instead (same search, paginated); scheduled for removal in 2.10. "
                     + "Returns a thin list of dataset hits ranked by search score.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The matching datasets as thin hits, ranked by search score.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The query parameter is missing or invalid.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<List<DatasetSearchHitValueObject>> searchDatasets(
             @Parameter(description = "The search query (e.g. a short name, accession, or fragment of the title). Required.", required = true) @QueryParam("query") QueryArg query,
@@ -635,12 +646,14 @@ public class DatasetsWebService {
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count datasets matching the provided query and filter", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "200", description = "The number of datasets matching the query and filter.", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<Long> getNumberOfDatasets(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
     ) {
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> extraIds;
@@ -661,9 +674,12 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count distinct biomaterials (samples) across datasets matching the provided filter",
             description = "Corpus-wide sample-count aggregate, used by the public home page tile. "
-                    + "Same `filter` grammar as `GET /datasets`. Cached on the same TTL as the other usage-stats endpoints.")
+                    + "Same `filter` grammar as `GET /datasets`. Cached on the same TTL as the other usage-stats endpoints.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The number of distinct biomaterials across the matching datasets — distinct, so a sample shared by several datasets counts once.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<Long> getNumberOfSamples(
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter
     ) {
         Filters filters = datasetArgService.getFilters( filter );
         return respond( expressionExperimentService.countBioMaterials( filters ) );
@@ -681,13 +697,15 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "200", description = "Each platform used by the matching datasets, with how many of them use it.", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("limit") @DefaultValue("50") LimitArg limit
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("50") LimitArg limit
     ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
@@ -722,11 +740,11 @@ public class DatasetsWebService {
                     @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
-            responses = { @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectArrayDesignWithUsageStatisticsValueObject"))) })
+            responses = { @ApiResponse(responseCode = "201", description = "The refreshed experiment-to-platform associations. This GET rebuilds cached state, which is why it answers 201 rather than 200.", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectArrayDesignWithUsageStatisticsValueObject"))) })
     public Response refreshDatasetsPlatforms(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("limit") @DefaultValue("50") LimitArg limit
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("50") LimitArg limit
     ) {
         tableMaintenanceUtil.evictEe2AdQueryCache();
         return Response.created( URI.create( "/datasets/platforms" ) )
@@ -755,13 +773,15 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "200", description = "Each annotation category used by the matching datasets, with how many of them use it.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @Parameter(description = "Excluded category URIs.", hidden = true) @QueryParam("excludedCategories") StringArrayArg excludedCategoryUris,
             @Parameter(description = "Exclude free-text categories (i.e. those with null URIs).", hidden = true) @QueryParam("excludeFreeTextCategories") @DefaultValue("false") Boolean excludeFreeTextCategories,
             @Parameter(description = "Excluded term URIs; this list is expanded with subClassOf inference.", hidden = true) @QueryParam("excludedTerms") StringArrayArg excludedTermUris,
@@ -820,12 +840,14 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "200", description = "Each annotation term used by the matching datasets, with how many of them use it.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_DATASETS_ANNOTATIONS)) @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = "Minimum number of associated datasets to report an annotation. If used, the limit will default to " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("minFrequency") Integer minFrequency,
@@ -992,12 +1014,14 @@ public class DatasetsWebService {
                     + "Cheaper than walking `GET /datasets/annotations` and counting the payload — backed by the same usage-frequency "
                     + "query with `maxResults=0` (unlimited).",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+                    @ApiResponse(responseCode = "200", description = "The number of distinct annotation terms in use.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<Long> getNumberOfAnnotations(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "Annotation category URI or label; empty for uncategorized; omitted for all categories.")
             @QueryParam("category") String category,
             @Parameter(description = "Minimum number of associated datasets per term (default 1).")
@@ -1051,11 +1075,11 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve refreshed dataset annotations.",
             responses = {
-                    @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectAnnotationWithUsageStatisticsValueObject")))
+                    @ApiResponse(responseCode = "201", description = "The refreshed dataset annotations. This GET rebuilds cached state, which is why it answers 201 rather than 200.", content = @Content(schema = @Schema(ref = "QueriedAndFilteredAndInferredAndLimitedResponseDataObjectAnnotationWithUsageStatisticsValueObject")))
             })
     public Response refreshDatasetsAnnotations(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
             @Parameter(description = "List of fields to exclude from the payload. Only `parentTerms` can be excluded.") @QueryParam("exclude") ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude,
             @Parameter(description = "Maximum number of annotations to returned; capped at " + MAX_DATASETS_ANNOTATIONS + ".", schema = @Schema(type = "integer", minimum = "1", maximum = "" + MAX_DATASETS_ANNOTATIONS)) @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = "Minimum number of associated datasets to report an annotation. If used, the limit will default to " + MAX_DATASETS_ANNOTATIONS + ".") @QueryParam("minFrequency") Integer minFrequency,
@@ -1081,12 +1105,14 @@ public class DatasetsWebService {
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            @ApiResponse(responseCode = "200", description = "Each taxon represented among the matching datasets, with how many of them it covers.", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg
     ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filterArg, null, inferredTerms );
@@ -1144,18 +1170,18 @@ public class DatasetsWebService {
                     + "the path-derived dataset-id constraint is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request). "
                     + "Mirrors GET /datasets/blacklisted step 1t.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The datasets the identifiers resolved to, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     FilteredAndInferredAndPaginatedResponseDataObjectExpressionExperimentValueObject.class,
                                     FilteredAndInferredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject.class
                             }))),
             })
     public Object getDatasetsByIds( // Params:
-            @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort, // Optional, default +id
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArrayArg datasetsArg, // Optional
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort, // Optional, default +id
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.")
             @QueryParam("cursor") CursorArg cursorArg
     ) {
@@ -1192,17 +1218,17 @@ public class DatasetsWebService {
                     + "the blacklist short-name/accession predicate is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request). "
                     + "Mirrors GET /platforms/blacklisted step 1h.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The blacklisted datasets, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     FilteredAndInferredAndPaginatedResponseDataObjectExpressionExperimentValueObject.class,
                                     FilteredAndInferredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject.class
                             }))),
             })
     public Object getBlacklistedDatasets(
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.")
             @QueryParam("cursor") CursorArg cursorArg ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
@@ -1246,11 +1272,11 @@ public class DatasetsWebService {
                     + "a large dataset — unless you remember to bound it with `?limit=`, and it answers the "
                     + "original-platform question only for the assays on the page you happened to ask for.",
             responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", description = "The platforms the dataset's samples were run on.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<ArrayDesignValueObject>> getDatasetPlatforms( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @Parameter(description = "Return the platforms the dataset was originally submitted on, rather than the ones in use. Empty when it was never switched.")
             @QueryParam("original") @DefaultValue("false") Boolean original
     ) {
@@ -1280,7 +1306,7 @@ public class DatasetsWebService {
                     + "The `quantitationType` and `useProcessedQuantitationType` query parameters narrow the assays to a specific `BioAssayDimension` and intentionally remain unpaginated "
                     + "(they sort by assay name and apply a dimension restriction that is not expressible as an `id`-only cursor); supplying `cursor` or `limit` together with either of those is a `400`.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The dataset's samples — a plain list, or the cursor envelope when a `cursor` was supplied.",
                             content = @Content(schema = @Schema(oneOf = {
                                     ResponseDataObjectListBioAssayValueObject.class,
                                     CursorPaginatedResponseDataObjectBioAssayValueObject.class
@@ -1290,9 +1316,9 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getDatasetSamples( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
-            @QueryParam("useProcessedQuantitationType") boolean useProcessedQuantitationType,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Identifier of the quantitation type. Defaults to the dataset's preferred one.") @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(description = "Resolve the samples against the preferred processed quantitation type rather than the experiment's own.") @QueryParam("useProcessedQuantitationType") boolean useProcessedQuantitationType,
             @Parameter(description = "Opaque keyset-pagination cursor token; not supported in combination with `quantitationType` or `useProcessedQuantitationType`.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Page size. Supplying it selects cursor mode, starting at the first page when no `cursor` is given; "
@@ -1418,14 +1444,14 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The sample after its outlier flag changed.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The request body is missing the `outlier` field, or the bioAssay does not belong to the dataset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset or bioAssay does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<BioAssayValueObject> markDatasetSampleOutlier(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("bioAssayId") Long bioAssayId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the sample (BioAssay).") @PathParam("bioAssayId") Long bioAssayId,
             @Nullable SampleOutlierRequest body
     ) {
         if ( body == null || body.getOutlier() == null ) {
@@ -1485,13 +1511,13 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "What the batch changed, per sample.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "An id appears in both mark and unmark, or doesn't belong to the dataset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<BatchOutlierResponse> batchMarkSampleOutliers(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable BatchOutlierRequest body
     ) {
         List<Long> mark = body != null && body.mark != null ? body.mark : Collections.emptyList();
@@ -1613,13 +1639,13 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_CURATOR" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_CURATOR" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The samples after the metadata was set.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "No field supplied, an unknown vocabulary value, or a bioAssay that does not belong to the dataset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SampleMetadataResponse> updateDatasetSampleMetadata(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable SampleMetadataRequest body
     ) {
         if ( body == null ) {
@@ -1723,8 +1749,8 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "The factor value already has an open needs-attention ticket.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response markFactorValueNeedsAttention(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("factorValueId") Long factorValueId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the factor value.") @PathParam("factorValueId") Long factorValueId,
             @Nullable FactorValueNeedsAttentionRequest body
     ) {
         FactorValue fv = resolveFactorValueForDataset( datasetArg, factorValueId );
@@ -1758,8 +1784,8 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "The factor value has no open needs-attention ticket.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response clearFactorValueNeedsAttention(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("factorValueId") Long factorValueId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the factor value.") @PathParam("factorValueId") Long factorValueId,
             @Parameter(description = "Resolution reason; recorded on every ticket transition.") @QueryParam("note") @Nullable String note
     ) {
         FactorValue fv = resolveFactorValueForDataset( datasetArg, factorValueId );
@@ -1797,11 +1823,11 @@ public class DatasetsWebService {
                     + "are excluded by default because a rejection is a record of a decision, not a "
                     + "publication of the dataset.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "Every publication associated with the dataset, primary and otherwise.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DatasetPublicationValueObject>> getDatasetAllPublications(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Also list the publications that were considered for this dataset and ruled out.")
             @QueryParam("includeRejected") @DefaultValue("false") Boolean includeRejected
     ) {
@@ -1828,11 +1854,11 @@ public class DatasetsWebService {
                     + "Not a field on the dataset value object because of its size — p95 142 KB, "
                     + "largest on production 1.09 MB — which would bloat every list response.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The source record the dataset was built from, verbatim as fetched.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<JsonNode> getDatasetSourceMetadata(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         String document = expressionExperimentService.getSourceMetadata( ee );
@@ -1888,7 +1914,7 @@ public class DatasetsWebService {
                     + "controller methods, and the workaround of noting a preprint in a curation comment.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's publications after the replacement.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or malformed, a PubMed id could not be resolved, or a publication was given as both accepted and rejected.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
@@ -1898,7 +1924,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "A publication being accepted was rejected for this dataset by an authority the caller's source does not outrank.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DatasetPublicationValueObject>> updateDatasetPublications(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable PublicationsUpdateRequest body
     ) {
         if ( body == null || body.getOtherRelevantPublications() == null ) {
@@ -2206,7 +2232,7 @@ public class DatasetsWebService {
                     + "the open-state restriction (OPEN/IN_PROGRESS) are preserved; `totalElements` is `null` by "
                     + "default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The dataset's open curation tickets — a plain list, or the cursor envelope when a `cursor` was supplied.",
                             content = @Content(schema = @Schema(oneOf = {
                                     ResponseDataObjectListTicketValueObject.class,
                                     CursorPaginatedResponseDataObjectTicketValueObject.class
@@ -2214,7 +2240,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getDatasetTickets(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
@@ -2281,7 +2307,7 @@ public class DatasetsWebService {
                     + "Datasets the caller cannot read are dropped rather than failing the request. Cap: "
                     + MAX_DATASET_TICKETS_BULK + " ids.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The open tickets holding each dataset, keyed by dataset id.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing or empty `datasetIds`, or over the cap.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Map<Long, List<TicketSummaryForTargetValueObject>>> getDatasetTicketsBulk(
@@ -2323,12 +2349,12 @@ public class DatasetsWebService {
                     + "on the dataset's ACL. The set is computed from the SecurityService union of "
                     + "groupsReadableBy + groupsEditableBy. Filtered by the current caller's ACL view.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The groups holding any permission on the dataset.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<?> getDatasetGroups(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("includeSummaries") @DefaultValue("false") boolean includeSummaries,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Populate the per-row summary fields.") @QueryParam("includeSummaries") @DefaultValue("false") boolean includeSummaries,
             // Legacy spelling, accepted so a stale caller gets the behaviour it asked for rather
             // than silently falling back to the default. Remove once no client sends it.
             @Parameter(hidden = true)
@@ -2373,7 +2399,7 @@ public class DatasetsWebService {
                     + "happens FIRST so collapsing runs over the post-filter sequence. Default for both "
                     + "options is `false` (full fidelity).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The dataset's audit events. `compact=true` collapses them to a thinner shape, and a `cursor` switches to the cursor envelope.",
                             content = @Content(schema = @Schema(oneOf = {
                                     ResponseDataObjectListAuditEventValueObject.class,
                                     ResponseDataObjectListCompactAuditEventValueObject.class,
@@ -2383,7 +2409,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getDatasetAuditEvents(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Maximum number of entries to return. In cursor mode this is the page size (default "
@@ -2527,9 +2553,15 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Attach an AnnotationSet to a dataset.",
             description = "Idempotent on `(role, runId)`: a retry returns the existing row as 200 OK "
-                    + "rather than 201 Created. Body's `role` selects PROPOSAL / DRAFT / SNAPSHOT.")
+                    + "rather than 201 Created. Body's `role` selects PROPOSAL / DRAFT / SNAPSHOT.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The annotation set as attached; 201 when this call created it.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "201", description = "The annotation set as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class)))
+            })
     public Response submitDatasetAnnotationSet(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable AnnotationSetsWebService.AnnotationSetRequest body
     ) {
         return annotationSetsWebService.submitAnnotationSet( datasetArg, body );
@@ -2561,7 +2593,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response snapshotDatasetCuration(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Optional note recorded as the snapshot's producer identity, e.g. why the backup was taken.")
             @QueryParam("createdBy") @Nullable String createdBy
     ) {
@@ -2606,8 +2638,8 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "The restore would delete analyses or strand a subset; retry with ?force=true.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<CurationCommitReport> restoreDatasetCurationFromSnapshot(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("setId") Long setId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the annotation set.") @PathParam("setId") Long setId,
             @Parameter(description = "Predict the changes without writing. This is the 'compare with the snapshot' mode.")
             @QueryParam("dryRun") @DefaultValue("false") Boolean dryRun,
             @Parameter(description = "Consent to the restore's consequences (analysis cascade, stranded subsets).")
@@ -2642,9 +2674,15 @@ public class DatasetsWebService {
     @Operation(summary = "List AnnotationSets attached to a dataset, newest first.",
             description = "`?role=` filters by role (`proposal`/`draft`/`snapshot`/`commit`/`all`). "
                     + "`?source=` filters by source. `?createdBy=` filters by producer identity. "
-                    + "`?shape=full|meta` selects response shape.")
+                    + "`?shape=full|meta` selects response shape.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Newest first. `?shape=meta` returns the summary rows instead of the full sets.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(oneOf = { AnnotationSetsWebService.AnnotationSetResponse.class, AnnotationSetsWebService.AnnotationSetSummaryResponse.class })))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response listDatasetAnnotationSets(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Filter by role: `proposal`, `draft`, `snapshot`, `commit`, or `all` (default).")
             @QueryParam("role") @Nullable String role,
             @Parameter(description = "Filter by source.")
@@ -2706,7 +2744,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "No such dataset or annotation set.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response recordCurationDecision(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "The person deciding. Required from an agent; agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable CurationDecisionRequest body
@@ -2759,9 +2797,15 @@ public class DatasetsWebService {
                     + "decides what each means.\n\n"
                     + "🛑 The scope is part of what a decision supersedes. A ruling on one item does not "
                     + "reverse a ruling on the whole key it belongs to, nor the other way round, so this can "
-                    + "return an `item` row and a `key` row that look contradictory and are not.")
+                    + "return an `item` row and a `key` row that look contradictory and are not.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The standing refusals by default, or every decision with `?history=true`.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, array = @ArraySchema(schema = @Schema(implementation = CurationDecisionResponse.class)))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response getCurationDecisions(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Return every decision rather than the standing one per key.")
             @QueryParam("history") @DefaultValue("false") boolean history
     ) {
@@ -2894,8 +2938,14 @@ public class DatasetsWebService {
                     + "swept, so an abandoned tab frees itself.\n\n"
                     + "Note this route answers with the bare object rather than the `{\"data\": …}` envelope the "
                     + "rest of the service uses. Read `locked` off the top level; reading `data.locked` yields "
-                    + "nothing, which is indistinguishable from \"not locked\".")
-    public Response getCurationLock( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+                    + "nothing, which is indistinguishable from \"not locked\".",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Always a body: `locked` is false and the other fields are absent when nobody holds the lock.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = CurationLockResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public Response getCurationLock( @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         return Response.ok( toLockResponse( curationLockService.current( ee ).orElse( null ) ) ).build();
     }
@@ -2926,7 +2976,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "Held by someone else; retry with ?steal=true.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response acquireCurationLock(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Take a lock another curator holds.")
             @QueryParam("steal") @DefaultValue("false") Boolean steal,
             @Parameter(description = "Lease length in minutes; defaults to 30.")
@@ -2959,9 +3009,12 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN') or hasAuthority('GROUP_AGENT')")
     @Operation(summary = "Release the curation lock",
             description = "Releases only your own lock, unless you are an admin. 204 either way — a release "
-                    + "that finds nothing has still achieved what it asked for.")
+                    + "that finds nothing has still achieved what it asked for.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "The lock was released, or there was none to release.")
+            })
     public Response releaseCurationLock(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Whose lock to release. Agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
@@ -3023,9 +3076,9 @@ public class DatasetsWebService {
                     + "drops them, and exactly as the commit gate does. A stale-but-unreaped lock can never "
                     + "block a write or appear in this map.\n\n"
                     + "Datasets the caller cannot read are dropped rather than failing the request.",
-            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+            responses = @ApiResponse(responseCode = "200", description = "Who holds the curation lock on each dataset, keyed by dataset id.", useReturnTypeSchema = true, content = @Content()))
     public ResponseDataObject<Map<Long, CurationLockResponse>> getCurationLocks(
-            @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE)
+            @Parameter(description = "Dataset identifiers, comma-separated. Each is an ExpressionExperiment id or short name.", schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE)
             @QueryParam("datasets") DatasetArrayArg datasets
     ) {
         if ( datasets == null ) {
@@ -3064,7 +3117,7 @@ public class DatasetsWebService {
                     + "lapsed lease is not a holder, and unreadable ids are dropped. Cap: "
                     + MAX_CURATION_LOCK_READ_BULK + " ids.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "Who holds the curation lock on each dataset, keyed by dataset id.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing or empty `datasetIds`, or over the cap.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Map<Long, CurationLockResponse>> getCurationLocksBulk(
@@ -3105,7 +3158,7 @@ public class DatasetsWebService {
                     + "Hard cap: " + MAX_CURATION_LOCK_BULK + " ids per request; a larger run chunks. IDs the "
                     + "caller cannot read are dropped rather than 404ing the batch.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The lock state of each dataset after the attempt, keyed by dataset id.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing or empty `datasetIds`, or over the cap.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Map<Long, CurationLockBulkResult>> acquireCurationLocks(
@@ -3157,7 +3210,7 @@ public class DatasetsWebService {
                     + "`released: false` rather than refused, so a batch can release its whole set without "
                     + "first working out which ones it still owns.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "Whether the lock was released on each dataset, keyed by dataset id.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Missing or empty `datasetIds`, or over the cap.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Map<Long, Boolean>> releaseCurationLocks(
@@ -3282,7 +3335,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<CurationCommitReport> signDatasetCuration(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Which curator is signing. Agents and admins only; the lock must be held by that identity.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Parameter(description = "Predict the sign without writing. Still requires the lock — a dry run of a sign a curator could not perform is a misleading answer.")
@@ -3432,9 +3485,15 @@ public class DatasetsWebService {
             description = "Defaults to the caller's own draft. `?onBehalfOf=` reads another "
                     + "curator's, and is honoured only for a caller holding `GROUP_AGENT` or "
                     + "`GROUP_ADMIN`. An agent asking for \"the draft\" without naming a curator "
-                    + "would get its own, which is never what it means.")
+                    + "would get its own, which is never what it means.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The curator's draft.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist, or the curator has no draft on it.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public Response getDatasetDraftAnnotationSet(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Whose draft to read. Agents and admins only; anyone else claiming another identity is refused.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf
     ) {
@@ -3453,9 +3512,15 @@ public class DatasetsWebService {
                     + "`UNIQUE(investigation, role, runId)` — so a client that writes several "
                     + "curators' drafts without naming them keys them all to its own identity, "
                     + "one row, and each autosave silently overwrites the last. Honoured only for "
-                    + "`GROUP_AGENT` / `GROUP_ADMIN`; refused, not ignored, for anyone else.")
+                    + "`GROUP_AGENT` / `GROUP_ADMIN`; refused, not ignored, for anyone else.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The draft as stored, having already existed.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class))),
+                    @ApiResponse(responseCode = "201", description = "The draft as created by this call.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationSetsWebService.AnnotationSetResponse.class)))
+            })
     public Response upsertDatasetDraftAnnotationSet(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Which curator this draft belongs to. Agents and admins only.")
             @QueryParam("onBehalfOf") @Nullable String onBehalfOf,
             @Nullable AnnotationSetsWebService.UpsertDraftRequest body
@@ -3478,11 +3543,11 @@ public class DatasetsWebService {
                     + "lapses rather than waiting on a sign-off, so a curator who only relabels does not leave it "
                     + "stuck on.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's curation details.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<CurationDetailsValueObject> getDatasetCurationDetails(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         // one lock read for the one dataset being described; expiry is applied by current(), so present == pending
@@ -3570,11 +3635,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The curation details after the change.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<CurationDetailsValueObject> updateDatasetCurationDetails(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable CurationDetailsUpdateRequest body
     ) {
         if ( body == null ) {
@@ -3669,7 +3734,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's short name before and after the rename.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Invalid shortName (blank, too long, or contains forbidden characters).",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -3677,7 +3742,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "The requested shortName is already in use.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<RenameDatasetResponse> renameDatasetShortName(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable RenameDatasetRequest body
     ) {
         if ( body == null || body.getShortName() == null ) {
@@ -3726,7 +3791,7 @@ public class DatasetsWebService {
                     + "dataset. Closes the name/description half of the retired gemma-web `updateBasics`.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's name and description after the change.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Neither name nor description supplied, or a blank name.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
@@ -3734,7 +3799,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<DatasetBasicsResponse> updateDatasetBasics(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable DatasetBasicsUpdateRequest body
     ) {
         if ( body == null || ( body.getName() == null && body.getDescription() == null ) ) {
@@ -3907,7 +3972,7 @@ public class DatasetsWebService {
                     + "e.g. a short name already in use).",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "What the commit changed. It is all-or-none, so a report showing no changes means nothing was applied.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Malformed body, or an unsupported section was supplied.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "Missing edit (or admin, for shortName) permission.",
@@ -3917,7 +3982,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "The dataset moved since the draft's baseline.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<CurationCommitReport> commitCuration(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Consent (admin only) to deleting differential-expression analyses that a design-section change would invalidate. Ignored unless the design section triggers such a cascade.") @QueryParam("force") @DefaultValue("false") Boolean force,
             @Parameter(description = "Which curator this commit is FOR, when an agent is carrying it. Agents and "
                     + "admins only; refused, not ignored, for anyone else. It is what attributes the restore "
@@ -3948,7 +4013,7 @@ public class DatasetsWebService {
                     + "section — that is not the same as no consequences.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "What a commit would change. Nothing is applied.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Malformed body, or an unsupported section was supplied.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
@@ -3956,7 +4021,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "The dataset moved since the draft's baseline.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<CurationCommitReport> preflightCuration(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Which curator this preflight is for, when an agent is carrying it. Changes "
                     + "nothing about the dry run's answer — accepted so a relay can send the same parameter to "
                     + "every call in the commit chain instead of special-casing this one.")
@@ -6994,11 +7059,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's permissions after the change.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<DatasetPermissionsValueObject> updateDatasetPermissions(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable PermissionsUpdateRequest body
     ) {
         if ( body == null ) {
@@ -7039,11 +7104,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's sharing permissions.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<DatasetPermissionsValueObject> getDatasetPermissions(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         return respond( new DatasetPermissionsValueObject( securityService.isPublic( ee ), securityService.isShared( ee ) ) );
@@ -7065,11 +7130,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's permissions after it was made public.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<DatasetPermissionsValueObject> makeDatasetPublic(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !securityService.isPublic( ee ) ) {
@@ -7091,11 +7156,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's permissions after it was made private.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<DatasetPermissionsValueObject> makeDatasetPrivate(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( securityService.isPublic( ee ) ) {
@@ -7124,14 +7189,14 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's permissions after publication.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The `reviewer` query parameter is missing or blank.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<DatasetPermissionsValueObject> publishDataset(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("reviewer") @Nullable String reviewer
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Records who reviewed the dataset before it was published.") @QueryParam("reviewer") @Nullable String reviewer
     ) {
         if ( reviewer == null || reviewer.trim().isEmpty() ) {
             throw new BadRequestException( "The `reviewer` query parameter is required." );
@@ -7160,9 +7225,12 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Retrieve the sharing permissions of a dataset (alias of /permissions)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
-                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The dataset's sharing permissions.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<DatasetPermissionsValueObject> getDatasetVisibility(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         return getDatasetPermissions( datasetArg );
     }
@@ -7174,9 +7242,12 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/pipeline-status")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the per-step pipeline status of a dataset (alias of /pipelineStatus)", hidden = true)
+    @Operation(summary = "Retrieve the per-step pipeline status of a dataset (alias of /pipelineStatus)", hidden = true,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The dataset's per-step pipeline status.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<PipelineStatusValueObject> getDatasetPipelineStatusAlias(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         return getDatasetPipelineStatus( datasetArg );
     }
@@ -7259,11 +7330,11 @@ public class DatasetsWebService {
                     + "curator notes, and `lastUpdate.eventType` is the stable half to key logic off. The "
                     + "`curationNote` field is admin-only.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's per-step pipeline status.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<PipelineStatusValueObject> getDatasetPipelineStatus(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         CurationDetails cd = ee.getCurationDetails();
@@ -7384,11 +7455,11 @@ public class DatasetsWebService {
                     + "never has to diff what it asked for against what came back. The `curationNote` field is "
                     + "admin-only.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The per-step pipeline status of each requested dataset.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "One of the datasets does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<PipelineStatusValueObject>> getDatasetsPipelineStatus(
-            @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE)
+            @Parameter(description = "Dataset identifiers, comma-separated. Each is an ExpressionExperiment id or short name.", schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE)
             @QueryParam("datasets") DatasetArrayArg datasets
     ) {
         if ( datasets == null ) {
@@ -7532,10 +7603,10 @@ public class DatasetsWebService {
                     + STALE_SCAN_BATCH + " candidate datasets, one ACL-filtered load and the 18 audit-event "
                     + "queries the per-step assembly needs. Nothing is issued per dataset.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()) })
+                    @ApiResponse(responseCode = "200", description = "The datasets owing pipeline work, paginated.", useReturnTypeSchema = true, content = @Content()) })
     public PaginatedResponseDataObject<StaleDatasetValueObject> getStaleDatasets(
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit
     ) {
         int offsetValue = offset.getValue();
         int limitValue = limit.getValue();
@@ -7849,7 +7920,7 @@ public class DatasetsWebService {
                     + "ACL behaviour: IDs the caller cannot read are silently dropped from the result map (no 403 for the batch). "
                     + "Hard cap: " + MAX_PIPELINE_STATUS_BULK + " IDs per request.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "Per-step pipeline status keyed by dataset id.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The request body is missing, empty, or exceeds the per-request ID cap.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Map<Long, PipelineStatusValueObject>> getDatasetPipelineStatusBulk(
@@ -8020,11 +8091,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's GEEQ scores.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist or GEEQ has not been computed for it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<GeeqValueObject> getDatasetGeeq(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         ee = expressionExperimentService.thawLiter( ee );
@@ -8063,11 +8134,11 @@ public class DatasetsWebService {
                     + "`otherIssues`) are omitted. Returns 404 when GEEQ has never been computed for "
                     + "the dataset.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The per-factor GEEQ breakdown that is safe to show publicly.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist or GEEQ has not been computed for it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<GeeqValueObject> getDatasetGeeqPublic(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         ee = expressionExperimentService.thawLiter( ee );
@@ -8098,12 +8169,12 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The GEEQ scores after the recompute.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<GeeqValueObject> recomputeDatasetGeeq(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("mode") @DefaultValue("all") GeeqService.ScoreMode mode
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Which part of the GEEQ score to recompute.") @QueryParam("mode") @DefaultValue("all") GeeqService.ScoreMode mode
     ) {
         return doRecomputeDatasetGeeq( datasetArg, mode );
     }
@@ -8147,11 +8218,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The GEEQ scores after the recompute.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<GeeqValueObject> recomputeDatasetGeeqViaPost(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable GeeqRecomputeRequest body
     ) {
         GeeqService.ScoreMode mode = ( body != null && body.getMode() != null )
@@ -8170,9 +8241,12 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Recompute GEEQ scores for a dataset (alias of /geeq/recompute)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
-                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The GEEQ scores after the recompute.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<GeeqValueObject> recomputeDatasetGeeqViaPostAlias(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable GeeqRecomputeRequest body
     ) {
         return recomputeDatasetGeeqViaPost( datasetArg, body );
@@ -8327,7 +8401,7 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or `accession` is blank.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response importDataset( @Nullable DatasetImportRequest body ) {
@@ -8377,11 +8451,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetPreprocess(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
@@ -8399,11 +8473,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetDiagnostics(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         PreprocessTaskCommand cmd = new PreprocessTaskCommand( ee );
@@ -8423,11 +8497,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetSvd(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         SvdTaskCommand cmd = new SvdTaskCommand( ee );
@@ -8445,11 +8519,11 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetBatchInformationFetch(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         BatchInfoFetchTaskCommand cmd = new BatchInfoFetchTaskCommand( ee );
@@ -8471,12 +8545,12 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetGeeq(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("mode") @DefaultValue("all") GeeqService.ScoreMode mode
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Which part of the GEEQ score to recompute.") @QueryParam("mode") @DefaultValue("all") GeeqService.ScoreMode mode
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         GeeqTaskCommand cmd = new GeeqTaskCommand( ee, mode );
@@ -8518,13 +8592,13 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "400", description = "The supplied target ArrayDesign short name does not match any platform.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetSwitchPlatform(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable PlatformSwitchRequest body
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -8550,9 +8624,13 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Run preprocessing run for a dataset (alias of /tasks/preprocess)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
-                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION,
+                            content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject")))
+            })
     public Response runDatasetPreprocessAlias(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         return runDatasetPreprocess( datasetArg );
     }
@@ -8567,9 +8645,13 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Submit a diagnostics-only preprocessing run for a dataset (alias of /tasks/diagnostics)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
-                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION,
+                            content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject")))
+            })
     public Response runDatasetDiagnosticsAlias(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         return runDatasetDiagnostics( datasetArg );
     }
@@ -8584,9 +8666,13 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Run a batch-information fetch for a dataset (alias of /tasks/batchInfo)", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
-                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION,
+                            content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject")))
+            })
     public Response runDatasetBatchInformationFetchAlias(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         return runDatasetBatchInformationFetch( datasetArg );
     }
@@ -8644,13 +8730,13 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "400", description = "The request body references factor ids that don't belong to the dataset, or names a subset factor that's also in `factorIds`.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetDifferentialAnalysis(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable DifferentialAnalysisRunRequest body
     ) {
         return doRunDatasetDifferentialAnalysis( datasetArg, body );
@@ -8676,13 +8762,13 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "400", description = "The request body references factor ids that don't belong to the dataset, or names a subset factor that's also in `factorIds`.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response runDatasetDifferentialAnalysisAlias(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable DifferentialAnalysisRunRequest body
     ) {
         return doRunDatasetDifferentialAnalysis( datasetArg, body );
@@ -8768,12 +8854,12 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset or analysis does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response redoDatasetDifferentialAnalysis(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("analysisId") Long analysisId
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the differential expression analysis.") @PathParam("analysisId") Long analysisId
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         DifferentialExpressionAnalysis toRedo = differentialExpressionAnalysisService
@@ -8798,12 +8884,12 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "202", content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION, content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject"))),
                     @ApiResponse(responseCode = "404", description = "The dataset or analysis does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response removeDatasetDifferentialAnalysis(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("analysisId") Long analysisId
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the differential expression analysis.") @PathParam("analysisId") Long analysisId
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         DifferentialExpressionAnalysis toRemove = differentialExpressionAnalysisService
@@ -8829,10 +8915,14 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Redo an existing differential expression analysis (alias of /tasks/redo/{analysisId})", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
-                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION,
+                            content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject")))
+            })
     public Response redoDatasetDifferentialAnalysisAlias(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("analysisId") Long analysisId
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the differential expression analysis.") @PathParam("analysisId") Long analysisId
     ) {
         return redoDatasetDifferentialAnalysis( datasetArg, analysisId );
     }
@@ -8847,10 +8937,14 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Remove a differential expression analysis (alias of /tasks/differential/{analysisId})", hidden = true,
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
-                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) })
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
+            responses = {
+                    @ApiResponse(responseCode = "202", description = ApiDocs.TASK_ACCEPTED_202_DESCRIPTION,
+                            content = @Content(schema = @Schema(ref = "ResponseDataObjectTaskStatusValueObject")))
+            })
     public Response removeDatasetDifferentialAnalysisAlias(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("analysisId") Long analysisId
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the differential expression analysis.") @PathParam("analysisId") Long analysisId
     ) {
         return removeDatasetDifferentialAnalysis( datasetArg, analysisId );
     }
@@ -8882,7 +8976,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response deleteDatasetRawData(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Optional quantitation-type selector; defaults to the dataset's preferred raw QT.")
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
             @Parameter(description = "Must be `true` to authorize the destructive delete.")
@@ -8927,7 +9021,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response deleteDatasetProcessedData(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Must be `true` to authorize the destructive delete.")
             @QueryParam("confirm") @DefaultValue("false") boolean confirm
     ) {
@@ -8973,11 +9067,11 @@ public class DatasetsWebService {
                     + "sample metadata separately via `/datasets/{id}/samples`). Set `includeAssays=true` to opt back "
                     + "into the pre-2.0 behaviour.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's differential expression analyses, with surface-level statistics for each.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @Parameter(deprecated = true, description = "This parameter is ignored and will be removed in the 2.10 release.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
             @Parameter(deprecated = true, description = "This parameter is ignored and will be removed in the 2.10 release.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
             @Parameter(description = "When true, populate the `bioAssaysAnalyzed` collection on each analysis. Defaults to false because thawing every BioAssay is expensive and the field is rarely consumed.") @QueryParam("includeAssays") @DefaultValue("false") boolean includeAssays // Optional, default false
@@ -9009,7 +9103,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "302", description = "If the dataset is found, a redirection to the corresponding getResultSets operation."),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDifferentialExpressionAnalysisResultSets(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Context UriInfo uriInfo ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         URI resultSetUri = uriInfo.getBaseUriBuilder()
@@ -9043,17 +9137,17 @@ public class DatasetsWebService {
             summary = "Retrieve the differential expression results for a given gene among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
-                    @ApiResponse(responseCode = "200", content = {
+                    @ApiResponse(responseCode = "200", description = "The gene's differential expression results across the matching datasets, in whichever pagination envelope the request selected.", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
                             @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string"))
                     })
             })
     public Object getDatasetsDifferentialExpressionAnalysisResultsForGene(
-            @PathParam("gene") GeneArg<?> geneArg,
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("offset") OffsetArg offsetArg,
-            @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold,
             @Context HttpHeaders headers
     ) {
@@ -9080,18 +9174,18 @@ public class DatasetsWebService {
             summary = "Retrieve the differential expression results for a given gene and taxa among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
-                    @ApiResponse(responseCode = "200", content = {
+                    @ApiResponse(responseCode = "200", description = "The gene's differential expression results across the taxon's matching datasets, in whichever pagination envelope the request selected.", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
                             @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"))
                     })
             })
     public Object getDatasetsDifferentialExpressionAnalysisResultsForGeneInTaxon(
-            @PathParam("taxon") TaxonArg<?> taxonArg,
-            @PathParam("gene") GeneArg<?> geneArg,
-            @QueryParam("query") QueryArg query,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
-            @QueryParam("offset") OffsetArg offsetArg,
-            @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg,
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg query,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION, schema = @Schema(minimum = "0.0", maximum = "1.0")) @QueryParam("threshold") @DefaultValue("1.0") Double threshold,
             @Context HttpHeaders headers
     ) {
@@ -9251,11 +9345,11 @@ public class DatasetsWebService {
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the annotations of a dataset", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", description = "The dataset's annotations, direct and inferred.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> getDatasetAnnotations( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @Parameter(description = "Return tags that carry no ontology mapping. ON BY DEFAULT: "
                     + "the complete list is the safe one, because a caller cannot tell an incomplete "
                     + "list from a complete one by inspecting it. Set false only for a grounded-only "
@@ -9467,7 +9561,7 @@ public class DatasetsWebService {
                     + "when the call actually changes the set. Requires `ACL_SECURABLE_EDIT` on the dataset.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's direct annotations after the replacement.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
@@ -9475,7 +9569,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> updateDatasetAnnotations(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable AnnotationsUpdateRequest body,
             @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
                     + "it. The authenticated credential stays the performer on the audit row; this names the "
@@ -9540,7 +9634,8 @@ public class DatasetsWebService {
                     + "GROUP_ADMIN.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Annotation created.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "201", description = "The annotation as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AnnotationsWebService.ResponseDataObjectAnnotationValueObject.class))),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks curator privileges.",
@@ -9550,7 +9645,7 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "An annotation with the same (category, value) already exists.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response addDatasetAnnotationTag(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Nullable AnnotationsWebService.AnnotationDto body,
             @Parameter(description = "Optional id of the AnnotationSet this tag is being applied from; "
                     + "linkage is parked until the source-set → emitted-event audit link lands.")
@@ -9580,8 +9675,8 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset or annotation does not exist on this dataset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response removeDatasetAnnotationTag(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("annotationId") Long annotationId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the annotation to remove.") @PathParam("annotationId") Long annotationId,
             @Parameter(description = "The curator this write is being carried FOR, when an agent is carrying "
                     + "it. The authenticated credential stays the performer on the audit row; this names the "
                     + "person in charge. Agents and admins only — anyone else naming someone else is a 403.")
@@ -9756,12 +9851,12 @@ public class DatasetsWebService {
                     + "underlying biomaterial.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The sample's characteristics.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset or sample does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> getSampleCharacteristics(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("bioAssayId") Long bioAssayId
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the sample (BioAssay).") @PathParam("bioAssayId") Long bioAssayId
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         BioMaterial bm = resolveSampleBioMaterial( ee, bioAssayId );
@@ -9781,7 +9876,7 @@ public class DatasetsWebService {
                     + "`ACL_SECURABLE_EDIT` on the dataset.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The sample's characteristics after the replacement.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
@@ -9789,8 +9884,8 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset or sample does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> updateSampleCharacteristics(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("bioAssayId") Long bioAssayId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the sample (BioAssay).") @PathParam("bioAssayId") Long bioAssayId,
             @Nullable AnnotationsUpdateRequest body
     ) {
         if ( body == null || body.getAnnotations() == null ) {
@@ -9827,7 +9922,7 @@ public class DatasetsWebService {
                     + "`ACL_SECURABLE_EDIT` on the dataset.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The characteristic as added.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The request body is missing or malformed.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
@@ -9837,8 +9932,8 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "409", description = "A tag with the same (category, value) already exists on the sample.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<AnnotationValueObject> addSampleCharacteristic(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("bioAssayId") Long bioAssayId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the sample (BioAssay).") @PathParam("bioAssayId") Long bioAssayId,
             @Nullable AnnotationTagInput body
     ) {
         if ( body == null ) {
@@ -9873,15 +9968,15 @@ public class DatasetsWebService {
                     + "not present on the sample. Requires `ACL_SECURABLE_EDIT` on the dataset.",
             security = { @SecurityRequirement(name = "basicAuth"), @SecurityRequirement(name = "cookieAuth") },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The characteristic that was removed.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "403", description = "The caller lacks edit permission on the dataset.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset, sample, or characteristic does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<AnnotationValueObject> removeSampleCharacteristic(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("bioAssayId") Long bioAssayId,
-            @PathParam("characteristicId") Long characteristicId
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the sample (BioAssay).") @PathParam("bioAssayId") Long bioAssayId,
+            @Parameter(description = "Identifier of the characteristic.") @PathParam("characteristicId") Long characteristicId
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         BioMaterial bm = resolveSampleBioMaterial( ee, bioAssayId );
@@ -9898,8 +9993,11 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/quantitationTypes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve quantitation types of a dataset")
-    public ResponseDataObject<Set<QuantitationTypeValueObject>> getDatasetQuantitationTypes( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+    @Operation(summary = "Retrieve quantitation types of a dataset",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The dataset's quantitation types.", useReturnTypeSchema = true, content = @Content())
+            })
+    public ResponseDataObject<Set<QuantitationTypeValueObject>> getDatasetQuantitationTypes( @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg ) {
         return respond( datasetArgService.getQuantitationTypes( datasetArg ) );
     }
 
@@ -9943,14 +10041,14 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The quantitation type after its preferred flag changed.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The QT has no data vectors / no resolvable vector type.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset or quantitation type does not exist (or the QT does not belong to the dataset).",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<QuantitationTypeValueObject> setDatasetQuantitationTypePreferred(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("qtId") Long qtId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the quantitation type.") @PathParam("qtId") Long qtId,
             @Nullable QuantitationTypePreferredRequest body
     ) {
         return doSetDatasetQuantitationTypePreferred( datasetArg, qtId, body );
@@ -10126,14 +10224,14 @@ public class DatasetsWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The quantitation type after the correction.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "The patch body is empty or invalid.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset or quantitation type does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<QuantitationTypeValueObject> patchDatasetQuantitationType(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("qtId") Long qtId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the quantitation type.") @PathParam("qtId") Long qtId,
             @Nullable QuantitationTypePatchRequest body
     ) {
         if ( body == null ) {
@@ -10252,14 +10350,14 @@ public class DatasetsWebService {
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/singleCellDimension")
     @Operation(summary = "Retrieve a single-cell dimension of a single-cell dataset", responses = {
-            @ApiResponse(responseCode = "200", content = {
+            @ApiResponse(responseCode = "200", description = "The single-cell dimension, as JSON or as TSV depending on the negotiated media type.", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectSingleCellDimensionValueObject.class)),
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-dimension.tsv") })
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"), examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-dimension.tsv") })
             })
     })
     public Object getDatasetSingleCellDimension(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the quantitation type. Defaults to the dataset's preferred one.") @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             @Parameter(description = "Exclude cell IDs from the output") @QueryParam("exclude") ExcludeArg<SingleCellDimensionValueObject> excludeArg,
             @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayIds,
             @Context HttpHeaders headers
@@ -10324,17 +10422,17 @@ public class DatasetsWebService {
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellTypeAssignment")
     @Operation(summary = "Retrieve a cell-type assignment of a single-cell dataset", responses = {
-            @ApiResponse(responseCode = "200", content = {
+            @ApiResponse(responseCode = "200", description = "The cell-type assignment, as JSON or as TSV depending on the negotiated media type.", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectCellTypeAssignmentValueObject.class)),
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-type-assignment.tsv") })
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"), examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-type-assignment.tsv") })
             }),
             @ApiResponse(responseCode = "404",
                     description = "If the dataset, quantitation type or cell type assignment does not exist, or if a preferred cell type assignment is requested but none is available.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public Object getDatasetCellTypeAssignment(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the quantitation type. Defaults to the dataset's preferred one.") @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             // TODO: implement CellTypeAssignmentArg
             @Parameter(description = "The name of the cell type assignment to retrieve. If left unset, this the preferred one is returned.") @QueryParam("cellTypeAssignment") String ctaName,
             @Parameter(description = "The protocol of the cell type assignment to retrieve. This cannot be used in combination with `cellTypeAssignment`.") @QueryParam("protocol") String protocolName,
@@ -10407,14 +10505,14 @@ public class DatasetsWebService {
                     + "`characteristicIds` gives, for each cell of the single-cell dimension, the id of its label, or "
                     + "null when it has none. A continuous per-cell measurement does not fit this shape: every distinct "
                     + "value would become its own label.", responses = {
-            @ApiResponse(responseCode = "200", content = {
+            @ApiResponse(responseCode = "200", description = "The cell-level characteristics, as JSON or as TSV depending on the negotiated media type. Each is a grouping of cells, not a value per cell.", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectListCellLevelCharacteristicsValueObject.class)),
-                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"), examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
             })
     })
     public Object getDatasetCellLevelCharacteristics(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the quantitation type. Defaults to the dataset's preferred one.") @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
             @Context HttpHeaders headers
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -10484,7 +10582,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead. " + DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(responseCode = "200", description = "The processed expression matrix as a tab-separated file.", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
@@ -10492,8 +10590,8 @@ public class DatasetsWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) },
             deprecated = true)
     public Response getDatasetExpression( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("filter") @DefaultValue("false") Boolean filterData, // Optional, default false
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("false") Boolean filterData, // Optional, default false
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
@@ -10514,15 +10612,18 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(responseCode = "200", description = "The processed expression matrix as a tab-separated file.", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-processed-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty. Only applicable if filter is set to true."),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetProcessedExpression(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("filter") @DefaultValue("false") Boolean filtered,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("false") Boolean filtered,
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
@@ -10599,14 +10700,17 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve raw expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(responseCode = "200", description = "The raw expression matrix as a tab-separated file.", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-raw-data.tsv") })),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetRawExpression(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the quantitation type. Defaults to the dataset's preferred one.") @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
@@ -10675,14 +10779,14 @@ public class DatasetsWebService {
                     + "contrast files. The archive is cached on disk under <dataDir> and rebuilt on first access; "
                     + "for datasets with multiple differential-expression analyses, pass `analysisId` to select one.",
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM,
+                    @ApiResponse(responseCode = "200", description = "The differential expression analysis archive, as a binary download.", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM,
                             schema = @Schema(type = "string", format = "binary"))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not have any differential-expression analyses, or the supplied analysis ID does not belong to this dataset.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "The dataset has more than one differential-expression analysis; pass `analysisId` to select one.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDiffExAnalysisArchive(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Identifier of the differential-expression analysis to retrieve. Required when the dataset has more than one analysis.") @QueryParam("analysisId") Long analysisId,
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
@@ -10726,6 +10830,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve single-cell expression data of a dataset",
             responses = {
                     @ApiResponse(responseCode = "200",
+                            description = "The single-cell expression data, as a 10x MEX archive or as a tab-separated file depending on the negotiated media type.",
                             content = {
                                     @Content(mediaType = APPLICATION_10X_MEX, schema = @Schema(description = "Sample files are bundled in a TAR archive according to the 10x MEX format.", type = "string", format = "binary", externalDocs = @ExternalDocumentation(url = "https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices")),
                                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.mex") }),
@@ -10733,10 +10838,13 @@ public class DatasetsWebService {
                                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.tsv") })
                             }),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "The requested file is still being generated, or too many file-generation tasks are already running. Generation has been started; retry after the delay in the `Retry-After` header.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetSingleCellExpression(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the quantitation type. Defaults to the dataset's preferred one.") @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
             @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force,
             @Context HttpHeaders headers
@@ -10831,16 +10939,36 @@ public class DatasetsWebService {
     // JAX-RS methods collapse to a single OpenAPI operation under (GET, /{dataset}/design); duplicating the
     // annotation makes the merge result deterministic regardless of reflection order, and keeps the JSON
     // return type visible so swagger auto-registers the ResponseDataObjectExperimentalDesignValueObject schema.
-    @Operation(summary = "Retrieve the design of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = {
+    //
+    // 🛑 The merge takes the SIGNATURE of whichever method wins too, not just its annotation. This one wins
+    // and accepts only {dataset}, so ?quantitationType= and ?useProcessedQuantitationType= — which the
+    // endpoint really does read, on the tab-separated branch — vanished from the spec entirely until they
+    // were declared in `parameters` above. Anything the losing method accepts has to be declared here, and
+    // OpenApiTest.testCollapsedRoutesDeclareEveryParameterTheyAccept fails the build when it is not.
+    @Operation(summary = "Retrieve the design of a dataset",
+            parameters = {
+                    // Declared here rather than only on getDatasetDesign below, because that method
+                    // loses the (GET, /{dataset}/design) merge and its signature goes with it.
+                    @Parameter(name = "quantitationType", in = ParameterIn.QUERY,
+                            description = "Quantitation type to produce the experimental design for. Only works for raw data vectors; the default is the design for the experiment. Read by the tab-separated representation — the JSON one ignores it.",
+                            schema = @Schema(implementation = QuantitationTypeArg.class)),
+                    @Parameter(name = "useProcessedQuantitationType", in = ParameterIn.QUERY,
+                            description = "Produce an experimental design compatible with the preferred data vectors, rather than the design for the experiment. Read by the tab-separated representation — the JSON one ignores it.",
+                            schema = @Schema(type = "boolean", defaultValue = "false"))
+            },
+            responses = {
+            @ApiResponse(responseCode = "200", description = "The dataset's experimental design, as JSON or as a tab-separated file depending on the negotiated media type.", content = {
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
                             examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv")),
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))
             }),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "503", description = "The design file is still being generated. Retry after the delay in the `Retry-After` header.",
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExperimentalDesignValueObject> getDatasetDesignJson(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         return respond( datasetArgService.getExperimentalDesign( datasetArg ) );
     }
@@ -10860,13 +10988,13 @@ public class DatasetsWebService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Dry-run preflight for a proposed experimental design replacement", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
+            @ApiResponse(responseCode = "200", description = "What the replacement would change, including anything that blocks it. Nothing is applied.", content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
             @ApiResponse(responseCode = "400", description = "Request body is missing or malformed.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<DesignPreflightReport> previewDatasetDesignChange(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             ExperimentalDesignValueObject proposed
     ) {
         return respond( datasetArgService.previewDesignChange( datasetArg, proposed ) );
@@ -10897,7 +11025,7 @@ public class DatasetsWebService {
     // method and has never had a role gate. A dataset owner could therefore rewrite their design through one
     // route and not the other, which is a difference no caller could have predicted from the docs.
     @Operation(summary = "Replace the experimental design of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = @Content(schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))),
+            @ApiResponse(responseCode = "200", description = "The design after the replacement.", content = @Content(schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))),
             @ApiResponse(responseCode = "400", description = "The proposed design has validation blockers; see the report in the response body.",
                     content = @Content(schema = @Schema(ref = "ResponseDataObjectDesignPreflightReport"))),
             @ApiResponse(responseCode = "409", description = "The proposed change would delete differential-expression analyses, or strand a subset on deleted factor values; retry with ?force=true to consent.",
@@ -10905,7 +11033,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response replaceDatasetDesign(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Set to true to consent to the change's consequences: deleting the differential-expression analyses it invalidates, and leaving subsets anchored on factor values that would no longer exist. An analysis is invalidated when the change reaches a factor it uses: the factor is deleted, one of its values is deleted or added, a sample moves between its values, or its baseline or a measurement on it changes. Adding a factor, deleting a factor no analysis uses, and relabelling kept factor values invalidate nothing. An analysis whose factors cannot be read is invalidated by any structural change.") @QueryParam("force") @DefaultValue("false") Boolean force,
             @Parameter(description = "Optional id of the PROPOSAL annotation set driving this apply. On success the apply is recorded as a COMMIT annotation set carrying that proposal's run reference and parented to it, so the trail reads proposal -> decision -> effect. The set must belong to this dataset and must be a PROPOSAL.") @QueryParam("agentProposalId") @Nullable Long agentProposalId,
             ExperimentalDesignValueObject proposed
@@ -10955,16 +11083,30 @@ public class DatasetsWebService {
     @Path("/{dataset}/design")
     // lowering qs sets json to default
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8 + ";qs=0.9")
-    @Operation(summary = "Retrieve the design of a dataset", responses = {
-            @ApiResponse(responseCode = "200", content = {
+    @Operation(summary = "Retrieve the design of a dataset",
+            parameters = {
+                    // Declared here rather than only on getDatasetDesign below, because that method
+                    // loses the (GET, /{dataset}/design) merge and its signature goes with it.
+                    @Parameter(name = "quantitationType", in = ParameterIn.QUERY,
+                            description = "Quantitation type to produce the experimental design for. Only works for raw data vectors; the default is the design for the experiment. Read by the tab-separated representation — the JSON one ignores it.",
+                            schema = @Schema(implementation = QuantitationTypeArg.class)),
+                    @Parameter(name = "useProcessedQuantitationType", in = ParameterIn.QUERY,
+                            description = "Produce an experimental design compatible with the preferred data vectors, rather than the design for the experiment. Read by the tab-separated representation — the JSON one ignores it.",
+                            schema = @Schema(type = "boolean", defaultValue = "false"))
+            },
+            responses = {
+            @ApiResponse(responseCode = "200", description = "The dataset's experimental design, as JSON or as a tab-separated file depending on the negotiated media type.", content = {
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string"),
                             examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv")),
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(ref = "ResponseDataObjectExperimentalDesignValueObject"))
             }),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "503", description = "The design file is still being generated. Retry after the delay in the `Retry-After` header.",
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @Parameter(description = "Quantitation type to produce the experimental design for. This only works for raw data vectors. The default is to produce the design for the experiment.") @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
             @Parameter(description = "Produce an experimental design compatible with the preferred data vectors. The default is to produce the design for the experiment.") @QueryParam("useProcessedQuantitationType") @DefaultValue("false") Boolean useProcessedQuantitationType, // Optional, default false
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
@@ -11038,11 +11180,11 @@ public class DatasetsWebService {
                     + "a human-readable display name, the download filename, the MIME content-type, "
                     + "and a flag indicating whether the metadata is organized as a directory.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The preprocessing-metadata files available for the dataset.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DatasetMetadataFileValueObject>> getDatasetMetadataFiles( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         List<DatasetMetadataFileValueObject> entries = new ArrayList<>();
@@ -11082,15 +11224,15 @@ public class DatasetsWebService {
                     + "The response Content-Type reflects the type's native MIME (e.g. text/plain, "
                     + "application/json, text/html); pass ?download=true to force application/octet-stream.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The requested metadata file, as a binary download.",
                             content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM, schema = @Schema(type = "string", format = "binary"))),
                     @ApiResponse(responseCode = "400", description = "The metadata type is not a recognised enum value, or it refers to a directory-organised metadata.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no metadata of the requested type.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetMetadataFile( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @PathParam("type") String typeArg, // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Which metadata file to serve, as `GET /datasets/{dataset}/metadata` lists it.") @PathParam("type") String typeArg, // Required
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
     ) {
         ExpressionExperimentMetaFileType type;
@@ -11178,9 +11320,12 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Path("/{dataset}/hasbatch")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Indicate of a dataset has batch information", hidden = true)
+    @Operation(summary = "Indicate of a dataset has batch information", hidden = true,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Whether the dataset has batch information.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<Boolean> getDatasetHasBatchInformation( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         return respond( expressionExperimentBatchInformationService.checkHasBatchInfo( ee ) );
@@ -11190,9 +11335,12 @@ public class DatasetsWebService {
     @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{dataset}/batchInformation")
-    @Operation(summary = "Retrieve the batch information of a dataset", hidden = true)
+    @Operation(summary = "Retrieve the batch information of a dataset", hidden = true,
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The dataset's batch information.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<BatchInformationValueObject> getDatasetBatchInformation(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
@@ -11304,11 +11452,14 @@ public class DatasetsWebService {
                     + "drawn most points fall where another has already been painted. Points with a non-finite "
                     + "mean or variance are omitted.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The per-probe mean and variance.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no mean-variance relation.",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<MeanVarianceValueObject> getDatasetMeanVariance( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         // Re-load via loadWithMeanVarianceRelation: the entity from getEntity() carries a lazy
         // MVR proxy, so accessing getMeans()/getVariances() outside the open session throws
@@ -11344,11 +11495,14 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve the sample-sample correlation matrix + outlier classifications",
             description = "Returns a sample correlation matrix UNMASKED, plus two parallel outlier-id lists: `actualOutlierBioAssayIds` (curator-flagged) and `predictedOutlierBioAssayIds` (algorithmic). The UI applies any visualization masking it wants.\n\nGemma stores two matrices per analysis and `?matrix=` picks one: `regressed` (the dataset's important factors regressed out), `full` (none regressed), or `best` (the default: regressed where it exists, else full). The response's `matrix` field says which one it holds. `matrix=regressed` 404s on a dataset that has no regressed matrix -- it is only computed when the design has factors above the SVD importance threshold.\n\nCorrelations are rounded to three decimals; at full precision the digits are incompressible and dominate the payload.\n\n404 if no correlation analysis has been computed for the dataset. **Single-cell datasets return 404 by design**: their matrix is the pseudo-bulk grid (samples x cell types), so it correlates across cell types rather than across samples, and it is withheld while that is revised.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The sample-sample correlation matrix, with each sample's outlier classification.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist, has no sample correlation matrix, or is single-cell (see description).",
-                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SampleCorrelationMatrixValueObject> getDatasetSampleCorrelation(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Which stored matrix to return: `best` (the regressed one where it exists, else the full one), `regressed`, or `full`.")
             @QueryParam("matrix") @DefaultValue("best") CorrelationMatrixChoice which
     ) {
@@ -11448,11 +11602,11 @@ public class DatasetsWebService {
                     + "half of all datasets carry a report, since the pipeline writes one only for RNA-Seq; "
                     + "microarray datasets have no equivalent here.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "Per-sample sequencing QC metrics.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist, or has neither a MultiQC report nor any sequencing read counts.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SequencingQcMetricsValueObject> getDatasetQcMetrics( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         // the service reads accessions and read counts off the assays, which are lazy on the entity
@@ -11646,11 +11800,14 @@ public class DatasetsWebService {
     @Costly("viz")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data", responses = {
-            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", description = "The dataset's singular value decomposition.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+                    content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+            @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                    headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         SVDResult svd = svdService.getSvd( ee );
@@ -11693,13 +11850,13 @@ public class DatasetsWebService {
                     + "Each row carries the genes the probe maps to, in the same `genes` shape heatmap-data rows "
                     + "use. 404 if SVD has not been computed.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The probes loading most heavily on the requested principal component.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "Invalid pc, top, or direction.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist or has no SVD analysis.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<PcLoadingsValueObject> getDatasetSvdLoadings( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @Parameter(description = "1-indexed principal component number.", required = true) @QueryParam("pc") Integer pc,
             @Parameter(description = "Number of top loadings to return (max " + SVD_LOADINGS_MAX_TOP + ").",
                     schema = @Schema(type = "integer", defaultValue = "" + SVD_LOADINGS_DEFAULT_TOP, minimum = "1", maximum = "" + SVD_LOADINGS_MAX_TOP))
@@ -11776,20 +11933,20 @@ public class DatasetsWebService {
                     + "the user-supplied `?filter=` and optional `?query=` constraints are preserved (both modes intersect the search-resolved dataset ids identically); "
                     + "`totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The gene's expression levels across the matching datasets, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectExperimentExpressionLevelsValueObject.class,
                                     QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObjectExperimentExpressionLevelsValueObject.class
                             }))),
             })
     public Object getDatasetsExpressionLevelsForGene(
-            @PathParam("gene") GeneArg<?> geneArg,
-            @QueryParam("query") QueryArg queryArg,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg queryArg,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Keep probes that map to more than one gene; they are dropped by default.") @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
+            @Parameter(description = "How to collapse several probes mapping to one gene into a single row. Omit to return every vector.") @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
@@ -11809,21 +11966,21 @@ public class DatasetsWebService {
                     + "In cursor mode the dataset list is always sorted by ascending `datasetId`; the path-derived `{taxon}` scope is preserved at gene-resolution time identically to the offset variant; "
                     + "`totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The gene's expression levels across the taxon's matching datasets, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
                                     QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectExperimentExpressionLevelsValueObject.class,
                                     QueriedAndFilteredAndInferredAndCursorPaginatedResponseDataObjectExperimentExpressionLevelsValueObject.class
                             }))),
             })
     public Object getDatasetsExpressionLevelsForGeneInTaxon(
-            @PathParam("taxon") TaxonArg<?> taxonArg,
-            @PathParam("gene") GeneArg<?> geneArg,
-            @QueryParam("query") QueryArg queryArg,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg,
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg,
+            @Parameter(description = "Restrict the results to those matching a full-text query.") @QueryParam("query") QueryArg queryArg,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Keep probes that map to more than one gene; they are dropped by default.") @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
+            @Parameter(description = "How to collapse several probes mapping to one gene into a single row. Omit to return every vector.") @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
@@ -12000,13 +12157,16 @@ public class DatasetsWebService {
     @GET
     @Path("/{datasets}/expressions/taxa/{taxon}/genes/{genes}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
+    @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The expression matrix for the requested genes across the requested datasets, restricted to the taxon.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionLevelsForGenesInTaxon( // Params:
-            @PathParam("datasets") DatasetArrayArg datasets, // Required
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @PathParam("genes") GeneArrayArg genes, // Required
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
+            @Parameter(description = "Dataset identifiers, comma-separated. Each is an ExpressionExperiment id or short name.") @PathParam("datasets") DatasetArrayArg datasets, // Required
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(description = "Gene identifiers, comma-separated.") @PathParam("genes") GeneArrayArg genes, // Required
+            @Parameter(description = "Keep probes that map to more than one gene; they are dropped by default.") @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
+            @Parameter(description = "How to collapse several probes mapping to one gene into a single row. Omit to return every vector.") @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
             @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
         return respond( applyJsonPrecision( processedExpressionDataVectorService
@@ -12021,13 +12181,19 @@ public class DatasetsWebService {
     @Path("/{datasets}/expressions/genes/{genes}")
     @Costly("vectors")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes")
+    @Operation(summary = "Retrieve the expression data matrix of a set of datasets and genes",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The expression matrix for the requested genes across the requested datasets.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionLevelsForGenes( // Params:
-            @PathParam("datasets") DatasetArrayArg datasets, // Required
-            @PathParam("genes") GeneArrayArg genes, // Required
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+            @Parameter(description = "Dataset identifiers, comma-separated. Each is an ExpressionExperiment id or short name.") @PathParam("datasets") DatasetArrayArg datasets, // Required
+            @Parameter(description = "Gene identifiers, comma-separated.") @PathParam("genes") GeneArrayArg genes, // Required
+            @Parameter(description = "Keep probes that map to more than one gene; they are dropped by default.") @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
                     keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg
+            @Parameter(description = "How to collapse several probes mapping to one gene into a single row. Omit to return every vector.") @QueryParam("consolidate") ExpLevelConsolidationArg
                     consolidate, // Optional, default everything is returned
             @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
@@ -12065,14 +12231,20 @@ public class DatasetsWebService {
     @Path("/{datasets}/expressions/pca")
     @Costly("viz")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets")
+    @Operation(summary = "Retrieve the principal components (PCA) of a set of datasets",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The principal components of the requested datasets.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsExpressionPca( // Params:
-            @PathParam("datasets") DatasetArrayArg datasets, // Required
-            @QueryParam("component") @DefaultValue("1") Integer component, // Required, default 1
-            @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
-            @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
+            @Parameter(description = "Dataset identifiers, comma-separated. Each is an ExpressionExperiment id or short name.") @PathParam("datasets") DatasetArrayArg datasets, // Required
+            @Parameter(description = "Which principal component to return, 1-based.") @QueryParam("component") @DefaultValue("1") Integer component, // Required, default 1
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
+            @Parameter(description = "Keep probes that map to more than one gene; they are dropped by default.") @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean
                     keepNonSpecific, // Optional, default false
-            @QueryParam("consolidate") ExpLevelConsolidationArg
+            @Parameter(description = "How to collapse several probes mapping to one gene into a single row. Omit to return every vector.") @QueryParam("consolidate") ExpLevelConsolidationArg
                     consolidate, // Optional, default everything is returned
             @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
     ) {
@@ -12120,12 +12292,18 @@ public class DatasetsWebService {
                     + "single contrast on that row — or, for multi-contrast result sets, from the "
                     + "contrast with the smallest uncorrected p-value on that row. When a gene maps "
                     + "to several probes, the most-significant probe row is used. All five fields are "
-                    + "nullable and are additive — existing fields are unchanged.")
+                    + "nullable and are additive — existing fields are unchanged.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The expression levels of the requested datasets, restricted by the differential expression threshold.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "503", description = ApiDocs.CAPACITY_503_DESCRIPTION,
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
     public ResponseDataObject<List<ExperimentExpressionLevelsValueObject>> getDatasetsDifferentialExpression( // Params:
-            @PathParam("datasets") DatasetArrayArg datasets, // Required
-            @QueryParam("diffExSet") Long diffExSet, // Required
+            @Parameter(description = "Dataset identifiers, comma-separated. Each is an ExpressionExperiment id or short name.") @PathParam("datasets") DatasetArrayArg datasets, // Required
+            @Parameter(description = "Identifier of the result set whose differential expression threshold selects the datasets.") @QueryParam("diffExSet") Long diffExSet, // Required
             @Parameter(description = PVALUE_THRESHOLD_DESCRIPTION) @QueryParam("threshold") @DefaultValue("1.0") Double threshold, // Optional, default 1.0
-            @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("100") LimitArg limit, // Optional, default 100
             @Parameter(description = "Keep results from non-specific probes.") @QueryParam("keepNonSpecific") @DefaultValue("false") Boolean keepNonSpecific, // Optional, default false
             @Parameter(description = "Strategy for consolidating expression of multiple probes for a given gene.") @QueryParam("consolidate") ExpLevelConsolidationArg consolidate, // Optional, default everything is returned
             @Parameter(description = PRECISE_DESCRIPTION) @QueryParam("precise") @DefaultValue("false") Boolean precise
@@ -12155,10 +12333,10 @@ public class DatasetsWebService {
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
             },
             responses = {
-                    @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(implementation = ResponseDataObjectExpressionExperimentValueObject.class)))
+                    @ApiResponse(responseCode = "201", description = "The refreshed dataset. This GET rebuilds cached state, which is why it answers 201 rather than 200.", content = @Content(schema = @Schema(implementation = ResponseDataObjectExpressionExperimentValueObject.class)))
             })
     public Response refreshDataset(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
             @Parameter(description = "Refresh processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
             @Parameter(description = "Refresh experiment reports which include differential expression analyses and batch effects.") @QueryParam("refreshReports") @DefaultValue("false") Boolean refreshReports
     ) {
@@ -12190,9 +12368,12 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/subSetGroups")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Obtain all the subset groups of a dataset")
+    @Operation(summary = "Obtain all the subset groups of a dataset",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The dataset's subset groups.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<ExpressionExperimentSubSetGroupValueObject>> getDatasetSubSetGroups(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         return respond( expressionExperimentService.getSubSetsByDimension( ee )
@@ -12212,10 +12393,13 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/subSetGroups/{subSetGroup}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Obtain a specific subset group of a dataset")
+    @Operation(summary = "Obtain a specific subset group of a dataset",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The subset group.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<ExpressionExperimentSubSetGroupValueObject> getDatasetSubSetGroup(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("subSetGroup") Long bioAssayDimensionId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the dataset subset group.") @PathParam("subSetGroup") Long bioAssayDimensionId,
             @Parameter(description = "Include `predictedOutlier` on each subset's assays. Off by default: it loads the "
                     + "dataset's whole sample-correlation matrix. The curated `outlier` flag is always returned.")
             @QueryParam("includePredictedOutliers") @DefaultValue("false") boolean includePredictedOutliers
@@ -12282,9 +12466,12 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/subSets")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Obtain all subsets of a dataset")
+    @Operation(summary = "Obtain all subsets of a dataset",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The dataset's subsets.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<ExpressionExperimentSubSetWithGroupsValueObject>> getDatasetSubSets(
-            @PathParam("dataset") DatasetArg<?> datasetArg
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
         Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = datasetArgService.getSubSetsGroupIds( datasetArg );
         return respond( datasetArgService.getSubSets( datasetArg ).stream()
@@ -12295,10 +12482,13 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/subSets/{subSet}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Obtain a specific subset of a dataset")
+    @Operation(summary = "Obtain a specific subset of a dataset",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The subset.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<ExpressionExperimentSubSetWithGroupsValueObject> getDatasetSubSetById(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("subSet") Long subSetId
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the dataset subset.") @PathParam("subSet") Long subSetId
     ) {
         ExpressionExperimentSubSet subset = datasetArgService.getSubSet( datasetArg, subSetId );
         List<Long> subSetGroups = datasetArgService.getSubSetGroupIds( datasetArg, subset );
@@ -12328,7 +12518,7 @@ public class DatasetsWebService {
                     + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
                     + "the path-derived `subSet.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The subset's samples — a plain list, or the cursor envelope when a `cursor` was supplied.",
                             content = @Content(schema = @Schema(oneOf = {
                                     ResponseDataObjectListBioAssayValueObject.class,
                                     CursorPaginatedResponseDataObjectBioAssayValueObject.class
@@ -12336,8 +12526,8 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "404", description = "The dataset or subset does not exist.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getDatasetSubSetSamples(
-            @PathParam("dataset") DatasetArg<?> datasetArg,
-            @PathParam("subSet") Long subSetId,
+            @Parameter(description = "Dataset identifier: either the ExpressionExperiment id or its short name (e.g. GSE1234). Resolving by id is faster.") @PathParam("dataset") DatasetArg<?> datasetArg,
+            @Parameter(description = "Identifier of the dataset subset.") @PathParam("subSet") Long subSetId,
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Page size. Supplying it selects cursor mode, starting at the first page when no `cursor` is given; "
@@ -13044,22 +13234,6 @@ public class DatasetsWebService {
 
         public FilteredAndInferredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject( CursorPage<ExpressionExperimentValueObject> payload, @Nullable Filters filters, @Nullable String[] groupBy, Collection<OntologyTerm> inferredTerms ) {
             super( payload, filters, groupBy, inferredTerms );
-        }
-    }
-
-    /** Legacy shape for {@link #getDatasetTickets}. */
-    public static class ResponseDataObjectListTicketValueObject extends ResponseDataObject<List<TicketValueObject>> {
-
-        public ResponseDataObjectListTicketValueObject( List<TicketValueObject> payload ) {
-            super( payload );
-        }
-    }
-
-    /** Cursor shape for {@link #getDatasetTickets}. */
-    public static class CursorPaginatedResponseDataObjectTicketValueObject extends CursorPaginatedResponseDataObject<TicketValueObject> {
-
-        public CursorPaginatedResponseDataObjectTicketValueObject( CursorPage<TicketValueObject> payload, String[] groupBy ) {
-            super( payload, groupBy );
         }
     }
 

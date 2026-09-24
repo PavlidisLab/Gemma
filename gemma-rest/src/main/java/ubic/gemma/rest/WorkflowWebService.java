@@ -112,13 +112,13 @@ public class WorkflowWebService {
                     + "transitions (oldest first). History is derived from AUDIT_EVENT filtered "
                     + "to WorkflowStateChangedEvent rows.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
+                    @ApiResponse(responseCode = "200", description = "The dataset's current workflow state, and the transitions that reached it.", useReturnTypeSchema = true,
                             content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<WorkflowStateResponse> getDatasetWorkflow(
-            @PathParam("id") Long datasetId
+            @Parameter(description = "Identifier of the dataset.") @PathParam("id") Long datasetId
     ) {
         ExpressionExperiment ee = loadDatasetOrThrow( datasetId );
         WorkflowState current = workflowService.getCurrentState( ee );
@@ -163,8 +163,8 @@ public class WorkflowWebService {
                     + "Disallowed transitions return 409 with the list of allowed next states. "
                     + "Unknown targetState returns 400. Public -> Curate additionally requires admin role + non-empty reason.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
-                            content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The dataset's state after the transition.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectWorkflowTransitionResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Missing or unknown targetState.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "Insufficient role for this transition.",
@@ -176,7 +176,7 @@ public class WorkflowWebService {
                                     schema = @Schema(description = "{ error, currentState, targetState, allowedNextStates }")))
             })
     public Response advanceDatasetWorkflow(
-            @PathParam("id") Long datasetId,
+            @Parameter(description = "Identifier of the dataset.") @PathParam("id") Long datasetId,
             @Nullable AdvanceWorkflowRequest req
     ) {
         if ( req == null || req.targetState == null || req.targetState.isEmpty() ) {
@@ -249,7 +249,7 @@ public class WorkflowWebService {
                     + "assignee (returns empty pending the Ticket-layer join; see TODO(ticket-integration)), "
                     + "since (ISO-8601; restrict to rows that entered the state on or after this).",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
+                    @ApiResponse(responseCode = "200", description = "The datasets currently in the requested state, paginated.", useReturnTypeSchema = true,
                             content = @Content(schema = @Schema(implementation = PaginatedResponseDataObject.class))),
                     @ApiResponse(responseCode = "400", description = "Missing or unknown state.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
@@ -268,8 +268,8 @@ public class WorkflowWebService {
             @QueryParam("assignee") @Nullable String assignee,
             @Parameter(description = "Optional ISO-8601 timestamp; restrict to entries on or after.")
             @QueryParam("since") @Nullable Date since,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         if ( datasetType == null ) {
             datasetType = datasetTypeLegacy;
@@ -387,16 +387,21 @@ public class WorkflowWebService {
     /** Response of {@link #advanceDatasetWorkflow(Long, AdvanceWorkflowRequest)}. */
     public static class WorkflowTransitionResponse {
         @com.fasterxml.jackson.annotation.JsonProperty("datasetId")
+        @Schema(description = "Identifier of the dataset that moved.")
         public Long datasetId;
         @com.fasterxml.jackson.annotation.JsonProperty("previousState")
+        @Schema(description = "The state the dataset was in before this call.")
         public String previousState;
         @com.fasterxml.jackson.annotation.JsonProperty("currentState")
+        @Schema(description = "The state it is in now.")
         public String currentState;
         @com.fasterxml.jackson.annotation.JsonProperty("enteredCurrentStateAt")
         @Nullable
+        @Schema(description = "When it entered the current state.")
         public Date enteredCurrentStateAt;
         @com.fasterxml.jackson.annotation.JsonProperty("auditEventId")
         @Nullable
+        @Schema(description = "Identifier of the audit event recording the transition.")
         public Long auditEventId;
     }
 
@@ -423,4 +428,19 @@ public class WorkflowWebService {
     static Set<WorkflowState> allowedNext( WorkflowState s ) {
         return s.allowedNextStates();
     }
+
+    /**
+     * Response shape for {@link #advanceDatasetWorkflow}.
+     * <p>
+     * Doc-only: the method returns {@code Response} so it can set the status, which leaves
+     * swagger-core nothing to introspect, and naming the raw {@code ResponseDataObject} would erase
+     * the payload type. Naming a bound subclass is the only way an annotation can carry it.
+     */
+    public static class ResponseDataObjectWorkflowTransitionResponse extends ResponseDataObject<WorkflowTransitionResponse> {
+
+        public ResponseDataObjectWorkflowTransitionResponse( WorkflowTransitionResponse payload ) {
+            super( payload );
+        }
+    }
+
 }

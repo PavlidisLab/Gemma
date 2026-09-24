@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -63,7 +64,7 @@ public class OpenApiWebService {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, APPLICATION_YAML })
-    public Response getOpenApi( @PathParam("type") String type, @HeaderParam(HttpHeaders.ACCEPT_ENCODING) String acceptEncoding ) throws JsonProcessingException {
+    public Response getOpenApi( @Parameter(description = "Serialization to return: `json` or `yaml`.") @PathParam("type") String type, @HeaderParam(HttpHeaders.ACCEPT_ENCODING) String acceptEncoding ) throws JsonProcessingException {
         OpenAPI spec = FutureUtils.get( openApi );
         boolean yaml = "yaml".equals( type );
         String entity = yaml ? Yaml.mapper().writeValueAsString( spec ) : Json.mapper().writeValueAsString( spec );

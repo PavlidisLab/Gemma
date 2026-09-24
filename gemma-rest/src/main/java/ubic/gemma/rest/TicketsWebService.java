@@ -45,6 +45,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketSer
 import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -239,10 +240,10 @@ public class TicketsWebService {
                     + "list, not a workload figure, so it is not filtered — the exclusion applies to the counts "
                     + "on `GET /tickets/summary`. Use `GET /tickets/scratchpad` for the caller's own.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The matching tickets, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectTicketValueObject.class,
+                                    CursorPaginatedResponseDataObjectTicketValueObject.class
                             }))),
             })
     public Object getTickets(
@@ -260,8 +261,8 @@ public class TicketsWebService {
             @QueryParam("targetType") @Nullable TicketTargetType targetType,
             @Parameter(description = "ISO-8601 date/time; restrict to tickets with `updatedAt >=` this value.")
             @QueryParam("updatedSince") @Nullable Date updatedSince,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.")
             @QueryParam("cursor") CursorArg cursorArg
     ) {
@@ -309,7 +310,7 @@ public class TicketsWebService {
     @Operation(summary = "List tickets assigned to the calling admin",
             description = "Convenience view over `GET /tickets?assignee={me}`. Returns two lists: `open` (OPEN + IN_PROGRESS, capped at `limit`, default 50) sorted by `updatedAt desc`; and `recentlyResolved` (RESOLVED + CANCELLED with updatedAt within the last `resolvedWithinDays` days, default 7, capped at `limit`). Sorted by updatedAt desc. Both lists carry the lightweight TicketValueObject (no event log). Use `GET /tickets/{id}` for the full ticket including events.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The calling admin's assigned tickets, split into open and recently-resolved, each bucket capped per request.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<MyQueueResponse> getMyQueue(
@@ -366,7 +367,7 @@ public class TicketsWebService {
     @Operation(summary = "Workload summary for the calling admin",
             description = "Returns counts of open (OPEN+IN_PROGRESS) and total tickets assigned to the calling admin, plus the age of the oldest open ticket in days. No event logs, no list of tickets — see `/tickets/mine` for those.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "Counts describing the calling admin's workload.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<MyQueueSummaryResponse> getMyQueueSummary() {
@@ -440,7 +441,7 @@ public class TicketsWebService {
                     + "`scratchpadOpen` and the `byType` breakdown still carries its `SCRATCHPAD` entry, so "
                     + "`totalOpen + scratchpadOpen == sum(byType)`.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "Open-ticket counts across the whole corpus.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<OpenTicketSummaryResponse> getOpenTicketSummary() {
@@ -509,7 +510,7 @@ public class TicketsWebService {
                     + "`GET /tickets/summary` (reported separately as `scratchpadOpen`) because a ticket that is "
                     + "never resolved is not outstanding work.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The caller's scratchpad ticket, created on this request if they did not have one.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<TicketValueObject> getScratchpad() {
@@ -548,7 +549,10 @@ public class TicketsWebService {
                     + "is not — and to nobody when the caller is anonymous. This is a relevance rule, not an access "
                     + "control: a scratchpad left out here is still readable through `GET /tickets` and "
                     + "`GET /tickets/{id}`.\n\n"
-                    + "`limit` defaults to 20 and is refused with a 400 above 100 rather than silently clamped.")
+                    + "`limit` defaults to 20 and is refused with a 400 above 100 rather than silently clamped.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The matching tickets as thin picker rows.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<TicketSearchHitValueObject>> searchTickets(
             @Parameter(description = "A ticket id typed verbatim, or a fragment of a ticket title. Required.", required = true)
             @QueryParam("query") String query,
@@ -587,9 +591,12 @@ public class TicketsWebService {
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve a single ticket by id, with full event log")
+    @Operation(summary = "Retrieve a single ticket by id, with full event log",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The ticket, with its full event log.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<TicketValueObject> getTicket(
-            @PathParam("id") Long id
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id
     ) {
         // Use the service-side VO projection so the lazy collections (reporter, events,
         // each event's actor) initialize INSIDE the service's @Transactional rather than
@@ -628,15 +635,15 @@ public class TicketsWebService {
                     + "ticket events are append-only so id-asc tracks occurredAt-asc in practice); the path-derived "
                     + "ticket scope is preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The ticket's event log — a plain list, or the cursor envelope when a `cursor` was supplied.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    ResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    ResponseDataObjectListTicketEventValueObject.class,
+                                    CursorPaginatedResponseDataObjectTicketEventValueObject.class
                             }))),
                     @ApiResponse(responseCode = "404", description = "The ticket does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getTicketEvents(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")
@@ -684,7 +691,11 @@ public class TicketsWebService {
                     + "Each entry in `targets` may carry its own `payload` — opaque JSON text, with an "
                     + "optional `payloadSchemaVersion` — holding the task for that one target, written in "
                     + "this call rather than by a follow-up per target. The ticket's own `body` and "
-                    + "`payload` are one per ticket, so a finding that differs per target belongs here.")
+                    + "`payload` are one per ticket, so a finding that differs per target belongs here.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "The ticket as opened, with the seeded OPENED event already in its log.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectTicketValueObject.class)))
+            })
     public Response createTicket( CreateTicketRequest req ) {
         if ( req == null ) {
             throw new BadRequestException( "Request body is required." );
@@ -889,9 +900,12 @@ public class TicketsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Update a ticket (state, assignee, comment, metadata)",
             description = "Partial update: any subset of state / assigneeId / comment / priority / dueDate "
-                    + "may be supplied. Each populated field triggers the corresponding service call and event.")
+                    + "may be supplied. Each populated field triggers the corresponding service call and event.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The ticket after the change.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<TicketValueObject> updateTicket(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             UpdateTicketRequest req
     ) {
         if ( req == null ) {
@@ -986,9 +1000,12 @@ public class TicketsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Update a ticket (PATCH alias for PUT)",
             description = "Partial update; same fields and semantics as PUT /tickets/{id}. "
-                    + "Provided so PATCH-leaning callers can use the verb that matches their intent.")
+                    + "Provided so PATCH-leaning callers can use the verb that matches their intent.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The ticket after the change.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<TicketValueObject> patchTicket(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             UpdateTicketRequest req
     ) {
         return updateTicket( id, req );
@@ -1033,9 +1050,12 @@ public class TicketsWebService {
                     + "an empty `targets` array is a 400, since an add that adds nothing is the bug. Each entry "
                     + "may carry its own `payload` / `payloadSchemaVersion`, the task for that target; a target "
                     + "already on the ticket is left exactly as it is, payload included, so a re-add cannot "
-                    + "overwrite the task a curator is working from.")
+                    + "overwrite the task a curator is working from.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Which targets were added, which were already on the ticket, and the ticket as it now stands.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<AddTargetsResult> addTicketTarget(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             AddTargetRequest req
     ) {
         if ( req == null || req.getTargets() == null || req.getTargets().isEmpty() ) {
@@ -1100,11 +1120,16 @@ public class TicketsWebService {
                     + "ticket does not have is a 204, not a 404 — the caller has already reached the state it asked "
                     + "for. A RESOLVED or CANCELLED ticket is a 409. Removing a target whose status is past NOT_DONE "
                     + "is permitted and the removed status is reported, so the caller can say what it discarded; the "
-                    + "membership goes but the TARGET_REMOVED event stays on the ticket log.")
+                    + "membership goes but the TARGET_REMOVED event stays on the ticket log.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The target was removed; the body carries the ticket as it now stands.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectRemovedTargetResult.class))),
+                    @ApiResponse(responseCode = "204", description = "The ticket carried no such target, so nothing was removed.")
+            })
     public Response removeTicketTarget(
-            @PathParam("id") Long id,
-            @PathParam("targetType") TicketTargetType targetType,
-            @PathParam("targetId") Long targetId
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
+            @Parameter(description = "Type of the ticket target, for example EXPRESSION_EXPERIMENT or ARRAY_DESIGN.") @PathParam("targetType") TicketTargetType targetType,
+            @Parameter(description = "Identifier of the target entity, within its target type.") @PathParam("targetId") Long targetId
     ) {
         Ticket ticket = ticketService.load( id );
         if ( ticket == null ) {
@@ -1137,10 +1162,13 @@ public class TicketsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Update one target's status on a multi-target ticket",
             description = "Sets status on the specified TicketTarget row. Idempotent on no-op; "
-                    + "writes a TARGET_STATUS_CHANGED event + audit row when status actually changes.")
+                    + "writes a TARGET_STATUS_CHANGED event + audit row when status actually changes.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The ticket after the target's status changed.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<TicketValueObject> updateTargetStatus(
-            @PathParam("id") Long id,
-            @PathParam("targetRowId") Long targetRowId,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket-target row.") @PathParam("targetRowId") Long targetRowId,
             UpdateTargetStatusRequest req
     ) {
         if ( req == null || ( req.getStatus() == null && !req.hasScreeningResult() ) ) {
@@ -1184,9 +1212,12 @@ public class TicketsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Cancel (soft-close) a ticket",
-            description = "Transitions the ticket to CANCELLED. Append-only: the row and event log are preserved.")
+            description = "Transitions the ticket to CANCELLED. Append-only: the row and event log are preserved.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "The ticket was cancelled.")
+            })
     public Response deleteTicket(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the ticket.") @PathParam("id") Long id,
             @Parameter(description = "Optional human-readable reason; recorded on the CANCELLED event.")
             @QueryParam("reason") @Nullable String reason
     ) {
@@ -1532,8 +1563,11 @@ public class TicketsWebService {
 
     /** Result of removing a target: what went, and what state it was in. */
     public static class RemovedTargetResult {
+        @Schema(description = "Type of the target that was removed.")
         private final TicketTargetType targetType;
+        @Schema(description = "Identifier of the target that was removed, within its type.")
         private final Long targetId;
+        @Schema(description = "The status the target held when it was removed.")
         private final TicketTargetStatus status;
         private final TicketValueObject ticket;
 
@@ -1689,4 +1723,19 @@ public class TicketsWebService {
         /** True once the JSON carried a {@code screeningResultReason} key, even if its value was null. */
         public boolean hasScreeningResultReason() { return screeningResultReasonSet; }
     }
+
+    /**
+     * Response shape for {@link #removeTicketTarget}.
+     * <p>
+     * Doc-only: the method returns {@code Response} so it can set the status, which leaves
+     * swagger-core nothing to introspect, and naming the raw {@code ResponseDataObject} would erase
+     * the payload type. Naming a bound subclass is the only way an annotation can carry it.
+     */
+    public static class ResponseDataObjectRemovedTargetResult extends ResponseDataObject<RemovedTargetResult> {
+
+        public ResponseDataObjectRemovedTargetResult( RemovedTargetResult payload ) {
+            super( payload );
+        }
+    }
+
 }

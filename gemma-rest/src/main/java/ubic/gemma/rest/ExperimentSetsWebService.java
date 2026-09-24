@@ -100,7 +100,7 @@ public class ExperimentSetsWebService {
                     + "public ones. `query` matches the name case-insensitively. `includeMembers=true` "
                     + "populates `expressionExperimentIds`, which is the expensive part — a set can "
                     + "hold thousands of datasets — so it is off by default.",
-            responses = @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()))
+            responses = @ApiResponse(responseCode = "200", description = "The experiment sets, paginated.", useReturnTypeSchema = true, content = @Content()))
     public PaginatedResponseDataObject<ExpressionExperimentSetValueObject> getExperimentSets(
             @Parameter(description = "Only the sets owned by the caller.")
             @QueryParam("mine") @DefaultValue("false") boolean mine,
@@ -108,8 +108,8 @@ public class ExperimentSetsWebService {
             @QueryParam("query") @Nullable String query,
             @Parameter(description = "Populate the member dataset ids.")
             @QueryParam("includeMembers") @DefaultValue("false") boolean includeMembers,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         List<ExpressionExperimentSetValueObject> all = new ArrayList<>( mine
                 ? expressionExperimentSetService.loadMySetValueObjects( includeMembers )
@@ -135,11 +135,11 @@ public class ExperimentSetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve one experiment set",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The experiment set.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionExperimentSetValueObject> getExperimentSet(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id,
             @Parameter(description = "Populate the member dataset ids.")
             @QueryParam("includeMembers") @DefaultValue("true") boolean includeMembers
     ) {
@@ -152,11 +152,11 @@ public class ExperimentSetsWebService {
     @Operation(summary = "List the datasets in an experiment set",
             description = "The members as dataset value objects rather than bare ids.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The datasets in the set, or an empty list when it has no members.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<ExpressionExperimentDetailsValueObject>> getExperimentSetDatasets(
-            @PathParam("id") Long id
+            @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id
     ) {
         requireSet( id );
         Collection<ExpressionExperimentDetailsValueObject> members =
@@ -176,7 +176,8 @@ public class ExperimentSetsWebService {
                     + "set to span taxa; supply `taxonId` to declare the constraint explicitly, and "
                     + "every member must then match it.",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "Created.", content = @Content()),
+                    @ApiResponse(responseCode = "201", description = "The experiment set as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectExpressionExperimentSetValueObject.class))),
                     @ApiResponse(responseCode = "400", description = "No name, or a member does not match a declared taxon.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response createExperimentSet( ExperimentSetRequest req ) {
@@ -205,11 +206,11 @@ public class ExperimentSetsWebService {
     @Operation(summary = "Rename an experiment set, or change its description",
             description = "Membership is not touched here; use `PUT /experiment-sets/{id}/datasets`.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The experiment set after the change.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionExperimentSetValueObject> updateExperimentSet(
-            @PathParam("id") Long id, ExperimentSetRequest req
+            @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id, ExperimentSetRequest req
     ) {
         ExpressionExperimentSetValueObject vo = requireSet( id );
         if ( req == null || ( req.name == null && req.description == null ) ) {
@@ -236,13 +237,13 @@ public class ExperimentSetsWebService {
             description = "The body's `datasetIds` become the set's members exactly — this is a replace, "
                     + "not an add. Sending an empty list empties the set.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The experiment set after its membership was replaced.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "400", description = "A member does not match the set's declared taxon.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<ExpressionExperimentSetValueObject> updateExperimentSetMembers(
-            @PathParam("id") Long id, ExperimentSetMembersRequest req
+            @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id, ExperimentSetMembersRequest req
     ) {
         requireSet( id );
         if ( req == null || req.datasetIds == null ) {
@@ -265,7 +266,7 @@ public class ExperimentSetsWebService {
                     @ApiResponse(responseCode = "204", description = "Deleted."),
                     @ApiResponse(responseCode = "404", description = "No such set, or the caller cannot read it.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response deleteExperimentSet( @PathParam("id") Long id ) {
+    public Response deleteExperimentSet( @Parameter(description = "Identifier of the experiment set.") @PathParam("id") Long id ) {
         expressionExperimentSetValueObjectHelper.delete( requireSet( id ) );
         return Response.noContent().build();
     }
@@ -298,4 +299,19 @@ public class ExperimentSetsWebService {
     public static class ExperimentSetMembersRequest {
         public List<Long> datasetIds;
     }
+
+    /**
+     * Response shape for {@link #createExperimentSet}.
+     * <p>
+     * Doc-only: the method returns {@code Response} so it can set the status, which leaves
+     * swagger-core nothing to introspect, and naming the raw {@code ResponseDataObject} would erase
+     * the payload type. Naming a bound subclass is the only way an annotation can carry it.
+     */
+    public static class ResponseDataObjectExpressionExperimentSetValueObject extends ResponseDataObject<ExpressionExperimentSetValueObject> {
+
+        public ResponseDataObjectExpressionExperimentSetValueObject( ExpressionExperimentSetValueObject payload ) {
+            super( payload );
+        }
+    }
+
 }
