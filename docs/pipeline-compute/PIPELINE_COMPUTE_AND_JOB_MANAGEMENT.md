@@ -48,19 +48,39 @@ Legend: ✅ shipped · 🟡 partial (skeleton exists, gaps noted) · ⬜ not sta
 | **Ticket layer** (Spine 1) | ✅ | `TICKET` / `TICKET_TARGET` / `TICKET_EVENT` tables (`V3__ticket_layer.sql`, `V19__ticket_mode_and_target_status.sql`); `TicketService`, `TicketDao*`, `TicketsWebService`; events `TicketOpenedEvent`, `TicketStateChangedEvent`, `TicketAssignedEvent`, `TicketMetadataChangedEvent`, `TicketTargetStatusChangedEvent` |
 | **PipelineJob model** (Spine 2) | ✅ | `PIPELINE_JOB_BATCH` / `PIPELINE_JOB` / `PIPELINE_JOB_EVENT` (mysql `V18__pipeline_jobs.sql` + h2 sister `V23_1__pipeline_jobs.sql`); `model/pipeline/*`, `persistence/service/pipeline/*` |
 | **Scheduler SPI** | ✅ | `PipelineScheduler {kind, submit, poll, cancel}` + `SubmitRequest(gemmaJobId,…)`, `SchedulerHandle`, `JobSnapshot`, and the additive optional caps `supportsLog`/`readLog`, `supportsArtifacts`/`readArtifact`, `supportsSuspend`/`suspend`/`resume` (tasks 5, 6). |
-| **Schedulers (impls)** | 🟡 | `ScriptedMockScheduler` (deterministic virtual clock, PUSH/POLL, failure-capable, profile `scheduler-mock`; task 1). `NextflowSlurmScheduler` **built** — `submit`/`poll`/`cancel` (sbatch head job + squeue/sacct/scancel + weblog ingest), unit-tested; per-pipeline `maxConcurrent` default wired (O8). Remaining = end-to-end run (task 7). `LuigiScheduler` = stub that throws. |
+| **Schedulers (impls)** | 🟡 | `ScriptedMockScheduler` (deterministic virtual clock, PUSH/POLL, failure-capable, profile `scheduler-mock`; task 1). `NextflowSlurmScheduler` **built** — `submit`/`poll`/`cancel` (sbatch head job + squeue/sacct/scancel + weblog ingest), unit-tested; per-pipeline `maxConcurrent` default wired (O8). Remaining = `readLog`/`readArtifact` off the mount (not overridden yet — the log/artifact endpoints 404 for real runs) + end-to-end run (task 7). `LuigiPipelineScheduler` = stub that throws. |
 | **Reconciler** | ✅ | `JobReconciler` `@Scheduled` poll of stale non-terminal jobs via the `(state, last_event_at)` index. |
 | **Batch service** | ✅ | `PipelineJobBatchService` — base ops + `retryFailed`/`retryJob`/`computeRollup` (task 3), `holdBatch`/`resumeBatch`/`updateBatch`/`dispatchPending` (task 4), `readJobLog`/`readJobArtifact` (task 5), `capabilities`/`suspendJob`/`resumeJob` (task 6). |
 | **REST — admin** | ✅ | `AdminPipelineWebService` at `/admin/pipeline` — submit/list/get/cancel + events, retry-failed/retry, hold/resume, `PATCH` maxConcurrent, log, artifacts, rollup, capabilities, suspend/resume (409 stub). SSE stream deferred (task 12). |
 | **REST — push callback** | ✅ | `InternalPipelineWebService`: `POST /internal/pipeline/jobs/{jobId}/events` (Gemma-native `{kind,payloadJson}`) **and** `POST …/jobs/{jobId}/weblog` (raw Nextflow `-with-weblog` → `NextflowWeblogTranslator` → `recordEvent`; task 7/O3). Bearer-token auth; keyed by Gemma's `jobId`. |
 | **CLI reporter** | ✅ | `PipelineJobReporter`. |
-| **Attempt/retry chain** | ✅ | `ATTEMPT`/`RETRY_OF_FK`/`SUPERSEDED_BY_FK`/`FAILURE_CLASS`/`PARAMS_JSON` on `PIPELINE_JOB` (mysql V23 + h2 V24); `FailureClass`, `BatchRollup`, `RetrySpec`; attempt-chain (not counter) via `retryFailed`/`retryJob` (task 3). |
+| **Attempt/retry chain** | ✅ | `ATTEMPT`/`RETRY_OF_FK`/`SUPERSEDED_BY_FK`/`FAILURE_CLASS`/`PARAMS_JSON` on `PIPELINE_JOB` (mysql V57 + h2 V49); `FailureClass`, `BatchRollup`, `RetrySpec`; attempt-chain (not counter) via `retryFailed`/`retryJob` (task 3). |
 | **Mop-up / control surface** | ✅ | retry-failed/retry, batch hold/`maxConcurrent`/dispatcher throttle, log/artifact proxy, capabilities, suspend stub (tasks 3–6). SSE deferred (task 12). |
 | **Scripted mock + `_mock` REST** | ✅ | `ScriptedMockScheduler` — deterministic, virtual clock, PUSH/POLL, `succeedOnAttempt`; `MockSchedulerControl` + `/admin/pipeline/_mock` (advance clock, set scenario, emit) drive it over HTTP (task 1). |
-| **WorkflowGroup** (Spine 3) | ⬜ | Not built. Design in `WORKFLOW_GROUPS_RECCE.md`; lands as Flyway V23+. |
+| **WorkflowGroup** (Spine 3) | ⬜ | Not built. Design in `WORKFLOW_GROUPS_RECCE.md`; lands as the next free Flyway version (mysql V59+ / h2 V51+). |
 | **Real Nextflow dispatch** | 🟡 | Design **resolved** (see `NEXTFLOW_DISPATCH_RESOLUTIONS.md`, R1–R13): SSH-to-submit-node, one run per EE, `sbatch` the head process, `/space/gemmaData` mount, per-pipeline `maxConcurrent`. **O3 built**: `-with-weblog` → translator → `recordEvent`. Remaining: `NextflowSlurmScheduler.submit/poll/cancel` + end-to-end run (retires the Jenkins button). rnaseq still **Luigi** (task 8). |
 | **Curator UI (Pipelines tab / bulk view)** | ⬜ | In gemma-curation-ui ("UIB"); replaces the RNA-seq + Single-Cell Tracker Google Sheets. |
 | **Prior task-dispatch foundation** | ✅ (reuse) | `TaskRunningService` + `TasksWebService` + `@POST /datasets/{ee}/tasks/{preprocess,diagnostics,batchInfo,differential}` (202 + `Location:`). The pattern PipelineJob extends. |
+
+
+### Migration numbering (2026-09-23)
+
+The `pipelines` branch originally shipped the attempt/retry and batch-throttle migrations as
+mysql V24/V25 and h2 V25/V26. Those versions collided with hotfix-2.0 migrations
+(`V24__investigation_source_metadata`, `V25__publication_association`, and their h2 twins)
+**that prod `gemd` has already applied**, so the hotfix-2.0 merge moved them to the tip:
+
+| Migration | mysql | h2 |
+|---|---|---|
+| `pipeline_jobs` (base tables) | V18 (unchanged) | V23_1 (unchanged) |
+| `pipeline_job_attempts` | V24 → **V57** | V25 → **V49** |
+| `pipeline_batch_throttle` | V25 → **V58** | V26 → **V50** |
+
+🛑 Prod `gemd` has V18 but not the attempt/throttle columns (`prod-migrations.md`,
+`TOMCAT10_PRODUCTION_MIGRATION_PLAN.md` §6). `staging-gemma` reads the same database, so
+**V57 and V58 must be applied to `gemd` before any build containing the pipeline entities is
+deployed** — Hibernate maps `ATTEMPT`/`RETRY_OF_FK`/…/`MAX_CONCURRENT`/`HELD` and nothing in
+the runtime applies migrations.
 
 ---
 
@@ -126,7 +146,8 @@ back-of-house compute bookkeeping. "Dispatch this group" mints a batch
 from the group's current EE members (§1.2 edge 2). Do **not** try to host
 `WorkflowGroup` on `PipelineJobBatch` (no ordering, no screening UUIDs,
 wrong lifespan) nor on `ExpressionExperimentSet`. `WorkflowGroup` lands as
-a future Flyway migration (V23+); the live schema tip is V22.
+a future Flyway migration (mysql V59+ / h2 V51+; the tips after the
+2026-09-23 hotfix-2.0 merge are mysql V58 / h2 V50).
 
 ### 1.2 The edges between the spines (where the value is)
 
@@ -262,7 +283,7 @@ port all remain open.
 Build per `WORKFLOW_GROUPS_RECCE.md` §3–§4 when the curation-UI
 set-navigator is greenlit: entity + `/groups` CRUD +
 `/datasets/{id}/groups`, VO snake-case via `@JsonProperty`, ~1,700 LOC,
-landing as Flyway V23+ with an h2 sister migration. Do not host it on an
+landing as Flyway mysql V59+ with an h2 sister migration (V51+). Do not host it on an
 existing table (§1.1).
 
 ---
@@ -961,7 +982,7 @@ build, which existing code to extend, and its acceptance signal.
 - [x] **3. Attempt/retry model + mop-up surface** (§3.2). **LANDED 2026-07-13
   (attempt-chain, per the task-3 decision — not the counter).** Added
   `ATTEMPT`/`RETRY_OF_FK`/`SUPERSEDED_BY_FK`/`FAILURE_CLASS`/`PARAMS_JSON` to
-  `PIPELINE_JOB` (mysql **V23** + h2 **V24**) + `FailureClass` enum + `BatchRollup`
+  `PIPELINE_JOB` (mysql **V57** + h2 **V49**, originally V23/V24 → renumbered, see §Migration numbering) + `FailureClass` enum + `BatchRollup`
   VO (snake_case) + `RetrySpec`; `retryFailed`/`retryJob` mint attempt N+1 via
   `jobDao.create` (never through the `batch.jobs` Set — hashCode pitfall) and set
   `supersededBy`; `computeRollup` over current attempts; `recordEvent` parses
@@ -982,7 +1003,7 @@ build, which existing code to extend, and its acceptance signal.
 
 - [x] **4. Batch hold + `maxConcurrent` + dispatcher throttle** (§3.4 #1).
   **LANDED 2026-07-13.** `MAX_CONCURRENT`/`HELD` on `PIPELINE_JOB_BATCH` (mysql
-  **V24** + h2 **V25**); `submit` overload throttles at dispatch (budget =
+  **V58** + h2 **V50**); `submit` overload throttles at dispatch (budget =
   `maxConcurrent − in-flight`, where in-flight = QUEUED/RUNNING/CANCELLING, NOT
   PENDING); `dispatchPending(batchId)`/`()` + `@Scheduled PipelineJobDispatcher`
   (profile `scheduler`) top up; `holdBatch`/`resumeBatch`/`updateBatch`; REST
@@ -1083,7 +1104,7 @@ build, which existing code to extend, and its acceptance signal.
   of a `Ticket` targeting the EE on `FAILED`/attention-needed
   (auto-ticket PERMANENT, auto-retry TRANSIENT).
 
-- [ ] **10. WorkflowGroup entity + `/groups` CRUD** (§2.3), Flyway V23+.
+- [ ] **10. WorkflowGroup entity + `/groups` CRUD** (§2.3), Flyway mysql V59+ / h2 V51+.
   Per `WORKFLOW_GROUPS_RECCE.md` §3–§4; VO snake-case via `@JsonProperty`.
   Wire the "dispatch group → batch" edge (§1.2 #2). *Acceptance:
   `POST /groups`, `GET /datasets/{id}/groups`, and "dispatch" mints a
