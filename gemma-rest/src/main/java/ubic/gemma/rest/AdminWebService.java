@@ -2599,6 +2599,7 @@ public class AdminWebService {
         public Boolean processImports;
         /** Populated only when the request specifies `includeTermCount=true` AND the ontology is loaded. -1 on query failure. */
         @Nullable
+        @Schema(description = "Number of terms in the ontology. Populated only when the request asked for it with `includeTermCount=true`, because counting is not free. Null therefore means “not requested” as well as “none” — the two are not distinguishable here.")
         public Long termCount;
         /** True if the underlying bean implements {@code SlimmableOntologyService} — i.e.
          *  it supports the {@code /admin/ontologies/{name}/rebuild-slim} endpoint. Drives

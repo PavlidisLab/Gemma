@@ -1080,7 +1080,7 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
      * can act on — adding two legitimate, fully-described containers raises the bare-$ref count by
      * two, because each carries a {@code sort} that is one.
      */
-    private static final int UNDESCRIBED_PROPERTY_BUDGET = 1735;
+    private static final int UNDESCRIBED_PROPERTY_BUDGET = 1730;
 
     /**
      * @see #UNDESCRIBED_PROPERTY_BUDGET

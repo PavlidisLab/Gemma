@@ -4617,6 +4617,7 @@ public class AnnotationsWebService {
          * {@code includeGeneCount=true}; null otherwise. Counts include propagation through
          * GO subClassOf descendants by default — set via {@code Gene2GOAssociationService.countByGOTermUris}.
          */
+        @Schema(description = "Distinct genes annotated with this term, including descendants walked under the request's `geneCountMaxTerms` cap. Populated only when the request asked for it with `includeGeneCount=true`. Null therefore means “not requested” as well as “none” — the two are not distinguishable here.")
         @Nullable Long geneCount;
         /**
          * Distinct-experiment counts grouped by the category that prior curators applied when
@@ -4647,6 +4648,7 @@ public class AnnotationsWebService {
          * {@code includeExampleUsage=true}; null when the flag is off, on synthetic gene rows, or when the
          * term has no accessible usage. Gate rendering client-side (e.g. only for low {@code usageCount}).
          */
+        @Schema(description = "One representative accessible use of the term. Populated only when the request asked for it with `includeExampleUsage=true`, and null even then on a synthetic gene row or where the term has no accessible usage.")
         @Nullable ExampleUsageValueObject exampleUsage;
         /**
          * Distinct experiments on which a prior curator annotated this term after being given the
@@ -5410,6 +5412,7 @@ public class AnnotationsWebService {
         private final NegativeEvidenceValueObject negativeEvidence;
 
         @Nullable
+        @Schema(description = "Terms prior curators applied in this situation. Populated only when the request asked for it with `includePriorCuration=true`; empty otherwise, so empty does not mean no prior curation exists.")
         private final List<PriorCurationValueObject> priorCuration;
 
         public AnnotationSearchResponseDataObject( List<AnnotationSearchResultValueObject> payload,
