@@ -172,14 +172,18 @@ a future Flyway migration (mysql V59+ / h2 V51+; the tips after the
 
 ### 1.3 Wire-shape convention (cross-cutting)
 
-The curation UI (gemma-curation-ui, "UIB") was built against a FastAPI
-mock and expects **snake_case**; Gemma VOs are camelCase. Settled
-convention (`PIPELINESTATUS_WIRE_AUDIT.md` precedent):
+**The API serves camelCase only** (changed 2026-09-23, with the hotfix-2.0
+merge). hotfix-2.0 added `OpenApiTest#testWireNamesAreCamelCaseEverywhere`, which fails
+the build on any `_` in a property or parameter name anywhere in the spec. The pipeline
+VOs (`BatchRollup`, `PipelineCapabilities`, `LogChunk`) were switched from snake_case to
+camelCase to match. The curation UI (gemma-curation-ui, "UIB") was built against a
+FastAPI mock that expects **snake_case**, so its fetch adapter has to map the names; the
+earlier rule — `@JsonProperty("snake_case")` on the UI-facing VO,
+`PIPELINESTATUS_WIRE_AUDIT.md` precedent — is retired. Enum *values*
+(`expression_experiment`, …) are data, not keys, and stay as stored.
 
-- **Cosmetic snake/camel mismatch** → fix Java-side with
-  `@JsonProperty("snake_case")` on the UI-facing VO
-  (`PipelineStatusValueObject`, `TicketValueObject`, future
-  `WorkflowGroupValueObject`), plus a unit test asserting the wire keys.
+- **Cosmetic snake/camel mismatch** → UI-side, in the fetch adapter. Keep a unit test
+  that pins the camelCase wire keys on any new VO.
 - **Structural mismatch** (object-of-steps vs list-of-steps, vocabulary,
   collapsed diagnostics) → fix UI-side with a thin fetch adapter; do not
   bloat the wire with duplicated/derived shapes.
@@ -282,7 +286,7 @@ port all remain open.
 
 Build per `WORKFLOW_GROUPS_RECCE.md` §3–§4 when the curation-UI
 set-navigator is greenlit: entity + `/groups` CRUD +
-`/datasets/{id}/groups`, VO snake-case via `@JsonProperty`, ~1,700 LOC,
+`/datasets/{id}/groups`, VO camelCase (§1.3), ~1,700 LOC,
 landing as Flyway mysql V59+ with an h2 sister migration (V51+). Do not host it on an
 existing table (§1.1).
 
@@ -600,7 +604,7 @@ New:
 | GET | `/admin/pipeline/batches/{id}/jobs/{jobId}` | single current-attempt detail + attempt chain |
 | GET | `/admin/pipeline/batches/{id}/stream` *(optional)* | SSE; add only if poll lags |
 
-Wire-shape: snake_case via `@JsonProperty` (§1.3), with a key-pinning unit
+Wire-shape: camelCase (§1.3), with a key-pinning unit
 test. Auth stays `GROUP_ADMIN` for now; the curator-vs-admin split is
 Tickets Decision 5.
 
@@ -983,7 +987,7 @@ build, which existing code to extend, and its acceptance signal.
   (attempt-chain, per the task-3 decision — not the counter).** Added
   `ATTEMPT`/`RETRY_OF_FK`/`SUPERSEDED_BY_FK`/`FAILURE_CLASS`/`PARAMS_JSON` to
   `PIPELINE_JOB` (mysql **V57** + h2 **V49**, originally V23/V24 → renumbered, see §Migration numbering) + `FailureClass` enum + `BatchRollup`
-  VO (snake_case) + `RetrySpec`; `retryFailed`/`retryJob` mint attempt N+1 via
+  VO (camelCase since 2026-09-23, §1.3) + `RetrySpec`; `retryFailed`/`retryJob` mint attempt N+1 via
   `jobDao.create` (never through the `batch.jobs` Set — hashCode pitfall) and set
   `supersededBy`; `computeRollup` over current attempts; `recordEvent` parses
   `failureClass` from the `error` payload; `maybeCloseBatch` now keeps a batch OPEN
@@ -1022,7 +1026,7 @@ build, which existing code to extend, and its acceptance signal.
 
 - [x] **5. Log + artifact proxy endpoints** (§3.5). **LANDED 2026-07-14.** First
   (additive-default) `PipelineScheduler` SPI change: `supportsLog`/`readLog →
-  LogChunk{text,next_offset,eof}` + `supportsArtifacts`/`readArtifact → Artifact`.
+  LogChunk{text,nextOffset,eof}` + `supportsArtifacts`/`readArtifact → Artifact`.
   Service `readJobLog`/`readJobArtifact` proxy through the scheduler (null → 404,
   never persisted); REST `GET …/jobs/{jobId}/log?offset=&limit=` (JSON) +
   `…/artifacts/{name}` (raw stream). Mock serves `Scenario.logLines` (finally
@@ -1038,8 +1042,8 @@ build, which existing code to extend, and its acceptance signal.
 
 - [x] **6. Capabilities endpoint + per-job suspend stub** (§3.4 #2).
   **LANDED 2026-07-14.** SPI `supportsSuspend`/`suspend`/`resume` (additive
-  defaults: false/throw); `PipelineCapabilities` VO (snake_case);
-  `GET /admin/pipeline/capabilities` (kind + `supports_suspend`/`_log`/`_artifacts`);
+  defaults: false/throw); `PipelineCapabilities` VO (camelCase since 2026-09-23, §1.3);
+  `GET /admin/pipeline/capabilities` (kind + `supportsSuspend`/`Log`/`Artifacts`);
   `POST …/jobs/{jobId}/suspend`·`/resume` → **409** via a `capabilities().supportsSuspend`
   guard (all schedulers report false today, so it always 409s — the intended stub). No
   `SUSPENDED` job state added (deferred until a Slurm scheduler that supports it lands).
@@ -1105,7 +1109,7 @@ build, which existing code to extend, and its acceptance signal.
   (auto-ticket PERMANENT, auto-retry TRANSIENT).
 
 - [ ] **10. WorkflowGroup entity + `/groups` CRUD** (§2.3), Flyway mysql V59+ / h2 V51+.
-  Per `WORKFLOW_GROUPS_RECCE.md` §3–§4; VO snake-case via `@JsonProperty`.
+  Per `WORKFLOW_GROUPS_RECCE.md` §3–§4; VO camelCase (§1.3).
   Wire the "dispatch group → batch" edge (§1.2 #2). *Acceptance:
   `POST /groups`, `GET /datasets/{id}/groups`, and "dispatch" mints a
   `PIPELINE_JOB_BATCH` from the group's current EE members.*

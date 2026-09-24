@@ -151,7 +151,7 @@ public class AdminPipelineWebServiceRetryTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .hasFieldOrPropertyWithValue( "data.total", 12 )
-                .hasFieldOrPropertyWithValue( "data.needs_attention", true );
+                .hasFieldOrPropertyWithValue( "data.needsAttention", true );
         verify( pipelineJobBatchService ).computeRollup( 5L );
     }
 
@@ -214,8 +214,8 @@ public class AdminPipelineWebServiceRetryTest extends BaseJerseyTest5 {
                 .hasStatus( Response.Status.OK )
                 .entity()
                 .hasFieldOrPropertyWithValue( "data.kind", "mock" )
-                .hasFieldOrPropertyWithValue( "data.supports_log", true )
-                .hasFieldOrPropertyWithValue( "data.supports_suspend", false );
+                .hasFieldOrPropertyWithValue( "data.supportsLog", true )
+                .hasFieldOrPropertyWithValue( "data.supportsSuspend", false );
     }
 
     @Test
