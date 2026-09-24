@@ -462,10 +462,12 @@ public class GeneWebService {
                     + "Pass `summary=true` to receive an enriched per-row VO with the gene-list this probe maps to and the BLAT-hit count (replaces the legacy `getGeneCsSummaries` DWR call); "
                     + "the page shape is unchanged but each element is a `CompositeSequenceSummaryValueObject` instead of the thin `CompositeSequenceValueObject`.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The probes for the gene across all platforms, in whichever pagination envelope the request selected. With `summary=true` each row also carries the genes that probe maps to and its BLAT-hit count.",
+                    @ApiResponse(responseCode = "200", description = "The probes for the gene across all platforms. Four shapes are possible: the pagination mode picks the envelope, and `summary` picks the row type \u2014 a thin `CompositeSequenceValueObject`, or a `CompositeSequenceSummaryValueObject` also carrying the genes that probe maps to and its BLAT-hit count.",
                             content = @Content(schema = @Schema(oneOf = {
                                     PaginatedResponseDataObjectCompositeSequenceValueObject.class,
-                                    CursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
+                                    CursorPaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    PaginatedResponseDataObjectCompositeSequenceSummaryValueObject.class,
+                                    CursorPaginatedResponseDataObjectCompositeSequenceSummaryValueObject.class
                             }))),
             })
     public Object getGeneProbes( // Params:
@@ -709,6 +711,29 @@ public class GeneWebService {
     }
 
     /**
+     * Legacy-mode response shape for {@link #getGeneProbes} when {@code summary=true}.
+     * <p>
+     * Declared here rather than in {@link ubic.gemma.rest.util.OpenApiResponseTypes} because the type it
+     * binds is nested in this class. Without it the {@code oneOf} named only the thin-row containers, and
+     * {@link CompositeSequenceSummaryValueObject} appeared nowhere in the specification at all — an entire
+     * response shape a caller can ask for by flipping one query parameter.
+     */
+    public static class PaginatedResponseDataObjectCompositeSequenceSummaryValueObject extends PaginatedResponseDataObject<CompositeSequenceSummaryValueObject> {
+
+        public PaginatedResponseDataObjectCompositeSequenceSummaryValueObject( Slice<CompositeSequenceSummaryValueObject> payload, String[] groupBy ) {
+            super( payload, groupBy );
+        }
+    }
+
+    /** Cursor-mode response shape for {@link #getGeneProbes} when {@code summary=true}. */
+    public static class CursorPaginatedResponseDataObjectCompositeSequenceSummaryValueObject extends CursorPaginatedResponseDataObject<CompositeSequenceSummaryValueObject> {
+
+        public CursorPaginatedResponseDataObjectCompositeSequenceSummaryValueObject( CursorPage<CompositeSequenceSummaryValueObject> payload, String[] groupBy ) {
+            super( payload, groupBy );
+        }
+    }
+
+    /**
      * Enriched per-probe row returned by {@link #getGeneProbes} when {@code summary=true}.
      * Replaces the legacy DWR {@code CompositeSequenceController.getGeneCsSummaries} shape:
      * for each probe (composite sequence) on the page, carries the thin probe VO plus the
@@ -723,10 +748,18 @@ public class GeneWebService {
     @Data
     public static class CompositeSequenceSummaryValueObject implements Serializable {
         private static final long serialVersionUID = 1L;
+
+        @Schema(description = "The probe itself \u2014 the same thin row `summary=false` returns.")
         private final CompositeSequenceValueObject probe;
+
+        @Schema(description = "Every gene this probe maps to. Empty for a probe with no gene mapping.")
         private final List<GeneValueObject> genes;
+
+        @Schema(description = "Size of `genes`, duplicated so a caller that only wants the cardinality does not have to count.")
         private final int numGenes;
+
         @org.springframework.lang.Nullable
+        @Schema(description = "Distinct sequence-similarity hits for the probe, counted over chromosome, target start and end, target starts and query sequence. Null when the probe has no sequence-analysis rows at all, which is not the same as zero hits.")
         private final Integer numBlatHits;
     }
 }

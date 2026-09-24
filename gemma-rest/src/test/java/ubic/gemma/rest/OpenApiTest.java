@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import lombok.Data;
 import org.apache.commons.collections4.CollectionUtils;
@@ -1104,8 +1105,14 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
      * <p>A ratchet rather than a rule, because the rule would fail today. Lower the number when you
      * describe more; the test fails if it rises, so a new value object cannot arrive undocumented
      * and disappear into the pile.
+     *
+     * <p>Counts only properties that <em>can</em> be described. A property resolving to a bare
+     * {@code $ref} cannot: OpenAPI 3.0 discards keywords beside a {@code $ref}, so its description
+     * belongs on the schema it points at. Including them would move this number for reasons nobody
+     * can act on — adding two legitimate, fully-described containers raises the bare-$ref count by
+     * two, because each carries a {@code sort} that is one.
      */
-    private static final int UNDESCRIBED_PROPERTY_BUDGET = 2020;
+    private static final int UNDESCRIBED_PROPERTY_BUDGET = 1753;
 
     /**
      * @see #UNDESCRIBED_PROPERTY_BUDGET
@@ -1123,12 +1130,13 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                 if ( property.getDescription() != null && !property.getDescription().trim().isEmpty() ) {
                     continue;
                 }
-                undescribed++;
                 // a property that resolves to a bare $ref cannot carry a description: OpenAPI 3.0
                 // discards keywords sitting beside a $ref. Its description belongs on the schema it
-                // points at, which is where it would be read from anyway.
+                // points at, which is where it would be read from anyway, so it is not counted here.
                 if ( property.get$ref() != null ) {
                     bareRef++;
+                } else {
+                    undescribed++;
                 }
             }
         }
@@ -1137,8 +1145,8 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                 .withFailMessage( "expected the spec to declare many properties; inspected only %d", total )
                 .isGreaterThan( 2000 );
         assertThat( undescribed )
-                .withFailMessage( "undescribed schema properties rose to %d, over the budget of %d"
-                                + " (%d of them are bare $refs, which cannot carry a description)."
+                .withFailMessage( "describable schema properties left undescribed rose to %d, over the budget of %d"
+                                + " (a further %d are bare $refs, which cannot carry one)."
                                 + " Describe the new properties, or lower the budget if you have described others.",
                         undescribed, UNDESCRIBED_PROPERTY_BUDGET, bareRef )
                 .isLessThanOrEqualTo( UNDESCRIBED_PROPERTY_BUDGET );
