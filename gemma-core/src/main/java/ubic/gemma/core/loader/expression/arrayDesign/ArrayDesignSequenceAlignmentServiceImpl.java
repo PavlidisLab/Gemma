@@ -446,17 +446,17 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         }
 
         int noResults = 0;
-        int count = 0;
 
-        // The old results are removed only once there are new ones to replace them, so a BLAT run that returns
-        // nothing (a gfServer serving the wrong genome, say) does not empty the platform and save none.
-        boolean oldResultsRemoved = false;
-        if ( !results.isEmpty() ) {
-            ArrayDesignSequenceAlignmentServiceImpl.log.info( "Looking for old results to remove..." );
-            arrayDesignService.deleteAlignmentData( ad );
-            oldResultsRemoved = true;
-        }
-
+        /*
+         * Results are matched to sequences by name, and a platform can carry two sequences with the same name (465 on
+         * HuGene-FL, 1007). Both then map to the same results, which were persisted twice: the second pass found each
+         * result's chromosome already replaced by the persistent one and failed on its uninitialized sequence, after
+         * the old alignments had been deleted. Each result is now taken once, and everything is gathered before the
+         * old results are touched.
+         */
+        Collection<BlatResult> toPersist = new ArrayList<>();
+        Set<Collection<BlatResult>> taken = Collections.newSetFromMap( new IdentityHashMap<>() );
+        int sharedName = 0;
         for ( BioSequence sequence : sequencesToBlat ) {
             if ( sequence == null ) {
                 ArrayDesignSequenceAlignmentServiceImpl.log.warn( "Null sequence!" );
@@ -467,22 +467,33 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
                 ++noResults;
                 continue;
             }
+            if ( !taken.add( brs ) ) {
+                ++sharedName;
+                continue;
+            }
             for ( BlatResult result : brs ) {
                 result.setQuerySequence( sequence ); // must do this to replace
                 // placeholder instance.
             }
-            allResults.addAll( this.persistBlatResults( brs ) );
-
-            if ( ++count % 2000 == 0 ) {
-                ArrayDesignSequenceAlignmentServiceImpl.log
-                        .info( "Checked results for " + count + " queries, " + allResults.size()
-                                + " blat results so far." );
-            }
-
+            toPersist.addAll( brs );
         }
 
         ArrayDesignSequenceAlignmentServiceImpl.log
                 .info( noResults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
+        if ( sharedName > 0 ) {
+            ArrayDesignSequenceAlignmentServiceImpl.log.warn( sharedName + " sequences share a name with another "
+                    + "sequence on " + ad + "; their alignments are stored against the other sequence only." );
+        }
+
+        // The old results are removed only once there are new ones to replace them, so a BLAT run that returns
+        // nothing (a gfServer serving the wrong genome, say) does not empty the platform and save none.
+        boolean oldResultsRemoved = false;
+        if ( !toPersist.isEmpty() ) {
+            ArrayDesignSequenceAlignmentServiceImpl.log.info( "Looking for old results to remove..." );
+            arrayDesignService.deleteAlignmentData( ad );
+            oldResultsRemoved = true;
+            allResults.addAll( this.persistBlatResults( toPersist ) );
+        }
 
         if ( !oldResultsRemoved && sequencesToBlat.isEmpty() ) {
             throw new IllegalStateException( ad + " has no sequences with sequence data to align; its existing "
