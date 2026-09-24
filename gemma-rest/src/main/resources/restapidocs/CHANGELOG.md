@@ -37,6 +37,12 @@ that did not document a 503 at all. Responses that serve a tab-separated body no
 as a JSON object, and media types no longer carry the `q` weight that belonged to server-side
 content negotiation rather than to the specification.
 
+The `Admin`, `Admin/Pipeline` and `Internal/Pipeline` tags carry `x-internal: true`. A client
+generator that should not ship Gemma's operational surface can collect the internal tag names from
+the document's own `tags` list and drop the operations carrying them — 41 of 291 — without
+hardcoding tag names or path prefixes. `Observability` is deliberately not marked: `/health` and
+`/info` are what external uptime monitors read.
+
 Known and unchanged: `GeeqValueObject` publishes each quality score under two spellings, for example
 both `qScoreOutliers` and `qscoreOutliers`, carrying the same value. The pair has shipped since
 before 2.9.4; `qScore*` is the intended spelling. Removing the other is a breaking change and has

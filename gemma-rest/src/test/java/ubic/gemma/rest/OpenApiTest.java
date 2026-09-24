@@ -1367,4 +1367,65 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                         + " check, since the last rename shipped without one: %s", offenders )
                 .isEmpty();
     }
+
+    /**
+     * Everything under {@code /admin} and {@code /internal} must be reachable as internal surface.
+     *
+     * <p>gemmapy prunes Gemma's specification before generating, and its filter is "drop the
+     * non-GET operations" — which keeps every admin <em>read</em>, so its published SDK carries
+     * admin_api, admin_pipeline_api and observability_api. Dropping writes is not the same as
+     * dropping admin surface, and there was no marker to drop the right thing by.
+     *
+     * <p>There is one now: the Admin, Admin/Pipeline and Internal/Pipeline tags carry
+     * {@code x-internal: true}, so a consumer collects the internal tag names from the document's
+     * own {@code tags} list and drops the operations carrying them — no hardcoded tag names, no
+     * path prefixes. This pins that every operation under those prefixes is actually covered, so a
+     * new admin endpoint cannot slip out of the marked set.
+     *
+     * <p>swagger-codegen's own {@code -Dapis=<Tag>} is not a substitute. It selects API classes but
+     * generates no models unless {@code -Dmodels} is also passed, and passing both selected no APIs
+     * at all when tried — and it cannot drop the schemas that only the excluded operations reach.
+     */
+    @Test
+    public void testAdminAndInternalSurfaceIsMarkedInternal() {
+        Set<String> internalTags = new TreeSet<>();
+        if ( spec.getTags() != null ) {
+            for ( io.swagger.v3.oas.models.tags.Tag tag : spec.getTags() ) {
+                // parseValue = true makes swagger store this as a Jackson BooleanNode rather than a
+                // java.lang.Boolean, so Boolean.TRUE.equals() misses it. The emitted YAML is a real
+                // boolean either way, which is what a consumer reads.
+                Object internal = tag.getExtensions() != null ? tag.getExtensions().get( "x-internal" ) : null;
+                if ( internal != null && "true".equals( String.valueOf( internal ) ) ) {
+                    internalTags.add( tag.getName() );
+                }
+            }
+        }
+        assertThat( internalTags )
+                .withFailMessage( "no tag carries x-internal, so a consumer has nothing to prune by" )
+                .isNotEmpty();
+
+        List<String> unmarked = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, PathItem> pathEntry : spec.getPaths().entrySet() ) {
+            if ( !pathEntry.getKey().startsWith( "/admin" ) && !pathEntry.getKey().startsWith( "/internal" ) ) {
+                continue;
+            }
+            for ( Map.Entry<PathItem.HttpMethod, Operation> opEntry : pathEntry.getValue().readOperationsMap().entrySet() ) {
+                inspected++;
+                List<String> tags = opEntry.getValue().getTags();
+                if ( tags == null || Collections.disjoint( tags, internalTags ) ) {
+                    unmarked.add( opEntry.getKey() + " " + pathEntry.getKey()
+                            + " (" + opEntry.getValue().getOperationId() + ")" );
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected many admin/internal operations; inspected only %d", inspected )
+                .isGreaterThan( 30 );
+        assertThat( unmarked )
+                .withFailMessage( "admin or internal operations a downstream prune would keep, because no"
+                        + " x-internal tag covers them: %s", unmarked )
+                .isEmpty();
+    }
 }

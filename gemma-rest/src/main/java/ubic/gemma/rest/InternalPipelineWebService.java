@@ -13,6 +13,8 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -55,7 +57,8 @@ import static ubic.gemma.rest.util.Responders.respond;
  */
 @Service
 @Path("/internal/pipeline")
-@Tag(name = "Internal/Pipeline", description = "Scheduler push callbacks — service-to-service only")
+@Tag(name = "Internal/Pipeline", description = "Scheduler push callbacks — service-to-service only. Not part of the client-facing API: marked `x-internal` so an SDK build can drop it.",
+        extensions = @Extension(properties = @ExtensionProperty(name = "x-internal", value = "true", parseValue = true)))
 public class InternalPipelineWebService {
 
     private static final Log log = LogFactory.getLog( InternalPipelineWebService.class );

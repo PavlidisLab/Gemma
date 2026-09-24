@@ -13,6 +13,8 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -58,7 +60,8 @@ import java.util.List;
  */
 @Service
 @Path("/admin/pipeline")
-@Tag(name = "Admin/Pipeline", description = "Curator-driven pipeline batch submissions — admin only")
+@Tag(name = "Admin/Pipeline", description = "Curator-driven pipeline batch submissions — admin only. Not part of the client-facing API: marked `x-internal` so an SDK build can drop it.",
+        extensions = @Extension(properties = @ExtensionProperty(name = "x-internal", value = "true", parseValue = true)))
 public class AdminPipelineWebService {
 
     private static final Log log = LogFactory.getLog( AdminPipelineWebService.class );
